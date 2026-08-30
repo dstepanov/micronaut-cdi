@@ -161,7 +161,65 @@ public final class CdiQualifiers {
                 qualifiers.add(synthesized);
             }
         }
+        collectRepeated(annotationMetadata, qualifiers);
         return qualifiers;
+    }
+
+    /**
+     * Adds the qualifiers written more than once on the element. A repeatable annotation written twice is
+     * recorded as the container annotation holding both, and the container is not itself a qualifier — so
+     * what the author wrote is found by looking inside it (section 2.1.3).
+     */
+    private static void collectRepeated(AnnotationMetadata annotationMetadata, Set<Annotation> qualifiers) {
+        for (String name : annotationMetadata.getAnnotationNames()) {
+            Class<? extends Annotation> repeated = repeatedQualifierOf(name);
+            if (repeated == null) {
+                continue;
+            }
+            AnnotationValue<Annotation> container = annotationMetadata.getAnnotation(name);
+            if (container == null) {
+                continue;
+            }
+            for (AnnotationValue<Annotation> each
+                : container.getAnnotations(AnnotationMetadata.VALUE_MEMBER)) {
+                Annotation synthesized = CdiAnnotations.annotationOf(repeated, each);
+                if (synthesized != null) {
+                    qualifiers.add(synthesized);
+                }
+            }
+        }
+    }
+
+    /**
+     * The qualifier a container annotation holds repetitions of, when that is what the annotation is.
+     */
+    @SuppressWarnings("unchecked")
+    private static @Nullable Class<? extends Annotation> repeatedQualifierOf(String name) {
+        Class<? extends Annotation> container;
+        try {
+            container = (Class<? extends Annotation>) Class.forName(
+                name, false, CdiQualifiers.class.getClassLoader());
+        } catch (ClassNotFoundException | LinkageError e) {
+            return null;
+        }
+        java.lang.reflect.Method value;
+        try {
+            value = container.getDeclaredMethod(AnnotationMetadata.VALUE_MEMBER);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+        Class<?> component = value.getReturnType().getComponentType();
+        if (component == null || !Annotation.class.isAssignableFrom(component)) {
+            return null;
+        }
+        Class<? extends Annotation> repeatable = (Class<? extends Annotation>) component;
+        java.lang.annotation.Repeatable marker =
+            repeatable.getAnnotation(java.lang.annotation.Repeatable.class);
+        if (marker == null || !marker.value().equals(container)
+            || !ExtensionQualifiers.isQualifier(repeatable)) {
+            return null;
+        }
+        return repeatable;
     }
 
     /**

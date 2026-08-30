@@ -134,6 +134,36 @@ and `wrapExpressionFactory` wraps a factory so that what it creates evaluates wi
 reach; without it, both say the module is missing. The manager is implemented because a program
 written against the specification reaches for it — the kit's own tests do — not because CDI Full is claimed.
 
+### A producer compiles wherever it is declared
+
+*Section 2.2.2 / annotated discovery.* Under Lite's annotated discovery a class with no bean defining
+annotation is not a bean, and a producer it declares is inert. Here the producer is compiled regardless,
+because bean-archive membership is a per-deployment question a global compilation cannot answer — the SE
+bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
+deployment ever admits is the difference visible to code that counts beans.
+
+### A qualifier written more than once on a parameter is not read
+
+*Section 2.1.3.* A `@Repeatable` qualifier is recorded by the compiler in its container annotation, and
+Micronaut keeps that container in the metadata of a field, a class and a method — but not of a *parameter*,
+where neither the qualifier nor its container survives. An observer method written
+`void on(@Observes @Start("A") Event e)` therefore reads as having no qualifiers, and is notified of every
+event of its type. The limitation is the container's, not this module's: the annotation is gone before any
+visitor runs. Repeatable qualifiers on beans, producers and fields work. The kit's
+`RepeatableQualifiersTest` is excluded by name for this reason.
+
+### Known limitations a review has named
+
+Three findings of an internal review are documented rather than coded around. A dependent bean reached from an
+EL expression through `getELResolver` is created but not destroyed when the evaluation completes — the EL
+contract offers the resolver no end-of-evaluation moment to hook; EL is provided beyond Lite, and a program
+that needs the destruction can look the bean up and destroy it itself. Ending a request begun with
+`RequestContextController.activate()` from a different thread than began it silently does nothing — the
+controller's bookkeeping is per-thread, as the specification's enter-and-exit shape assumes; the `run`/`supply`
+/`call` forms are safe across threads. And two beans in different normal scopes whose creations reach into each
+other's scope concurrently can, in principle, deadlock on the two contexts' locks — creation runs under the
+scope's lock, which is also what guarantees one instance per context.
+
 ## The technology compatibility kit
 
 The `micronaut-cdi-tck` module resolves `jakarta.enterprise:cdi-tck-core-impl` from Maven Central at build time,

@@ -111,8 +111,11 @@ public final class ApplicationScope extends AbstractConcurrentCustomScope<CdiApp
             io.micronaut.inject.BeanDefinition<?> held = created.definition();
             if (held.equals(definition)
                 || targetType != null && held.getClass().getName().equals(targetType)) {
-                beans.remove(created.id());
-                created.close();
+                // taken out of the map first so nobody is served a destroyed instance, then closed outside
+                // the scope's lock: a @PreDestroy must neither run under it nor have its failure swallowed
+                if (beans.remove(created.id(), created)) {
+                    created.close();
+                }
                 return true;
             }
         }
@@ -126,10 +129,11 @@ public final class ApplicationScope extends AbstractConcurrentCustomScope<CdiApp
                 continue;
             }
             if (beanType.isAssignableFrom(created.definition().getBeanType())) {
-                // taken out of the map before it is closed: the scope's own remove closes the bean but leaves
-                // the entry behind, and a destroyed instance must not be served again
-                instances.remove(created.id());
-                created.close();
+                // taken out of the map first so nobody is served a destroyed instance, then closed outside
+                // the scope's lock: a @PreDestroy must neither run under it nor have its failure swallowed
+                if (instances.remove(created.id(), created)) {
+                    created.close();
+                }
                 return true;
             }
         }

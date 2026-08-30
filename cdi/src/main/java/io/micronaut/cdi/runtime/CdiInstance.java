@@ -64,7 +64,10 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
     CdiInstance(BeanContext beanContext,
                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
                 Argument<T> type, Annotation... qualifiers) {
-        this(beanContext, injectedAt, new java.util.ArrayList<>(2), type, qualifiers);
+        // synchronized: the lookup of an injected Instance lives in whatever scope its owner does, and a
+        // singleton owner uses it from every thread at once
+        this(beanContext, injectedAt,
+            java.util.Collections.synchronizedList(new java.util.ArrayList<>(2)), type, qualifiers);
     }
 
     private CdiInstance(BeanContext beanContext,
@@ -206,11 +209,19 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
      */
     @Override
     public void close() {
-        java.util.List<io.micronaut.context.BeanRegistration<?>> toClose =
-            java.util.List.copyOf(transientlyCreated);
-        transientlyCreated.clear();
-        for (io.micronaut.context.BeanRegistration<?> registration : toClose) {
-            registration.close();
+        destroyTransients();
+    }
+
+    /**
+     * Everything tracked so far, taken out atomically so that no registration is destroyed twice and none is
+     * lost to a concurrent add.
+     */
+    private java.util.List<io.micronaut.context.BeanRegistration<?>> drainTransients() {
+        synchronized (transientlyCreated) {
+            java.util.List<io.micronaut.context.BeanRegistration<?>> drained =
+                new java.util.ArrayList<>(transientlyCreated);
+            transientlyCreated.clear();
+            return drained;
         }
     }
 
@@ -220,11 +231,22 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
      * disposal functions, whose dependent instances are destroyed once the function's work is done with.
      */
     public void destroyTransients() {
-        java.util.List<io.micronaut.context.BeanRegistration<?>> toDestroy =
-            java.util.List.copyOf(transientlyCreated);
-        transientlyCreated.clear();
-        for (io.micronaut.context.BeanRegistration<?> registration : toDestroy) {
-            destroyRegistration(beanContext, registration);
+        // one throwing @PreDestroy must not leave the rest undestroyed: every registration is attempted, and
+        // the first failure is what comes out
+        RuntimeException failure = null;
+        for (io.micronaut.context.BeanRegistration<?> registration : drainTransients()) {
+            try {
+                destroyRegistration(beanContext, registration);
+            } catch (RuntimeException e) {
+                if (failure == null) {
+                    failure = e;
+                } else {
+                    failure.addSuppressed(e);
+                }
+            }
+        }
+        if (failure != null) {
+            throw failure;
         }
     }
 
@@ -275,17 +297,21 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
     public void destroy(T instance) {
         // the instance this lookup created is destroyed through the registration that created it, which is
         // what knows the dependents that were created along with it
-        for (java.util.Iterator<io.micronaut.context.BeanRegistration<?>> created =
-             transientlyCreated.iterator(); created.hasNext();) {
-            io.micronaut.context.BeanRegistration<?> registration = created.next();
-            if (registration.bean() == instance) {
-                created.remove();
-                // destroyed through the context rather than closed: closing is a no-op for a registration
-                // whose definition has nothing of its own to dispose, and the disposer of a produced bean is
-                // invoked by a listener the context notifies
-                destroyRegistration(beanContext, registration);
-                return;
+        io.micronaut.context.BeanRegistration<?> tracked = null;
+        synchronized (transientlyCreated) {
+            for (java.util.Iterator<io.micronaut.context.BeanRegistration<?>> created =
+                 transientlyCreated.iterator(); created.hasNext();) {
+                io.micronaut.context.BeanRegistration<?> registration = created.next();
+                if (registration.bean() == instance) {
+                    created.remove();
+                    tracked = registration;
+                    break;
+                }
             }
+        }
+        if (tracked != null) {
+            destroyRegistration(beanContext, tracked);
+            return;
         }
         for (BeanDefinition<T> definition : definitions()) {
             if (definition.getBeanType().isInstance(instance)) {
@@ -459,6 +485,9 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
                         }
                     }
                     registration = created;
+                    // a dependent obtained through a handle is a dependent of the lookup like any other, and
+                    // goes when the lookup goes — unless the handle destroys it first
+                    transientlyCreated.add(created);
                     resolved = created.bean();
                 } else {
                     resolved = beanContext.getBean(definition);
@@ -494,7 +523,11 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
             if (!destroyed) {
                 io.micronaut.context.BeanRegistration<T> created = registration;
                 if (created != null) {
-                    CdiInstance.destroyRegistration(beanContext, created);
+                    // taken off the lookup's list first: if it is no longer there the lookup already
+                    // destroyed it, and destroying it twice would run its @PreDestroy twice
+                    if (transientlyCreated.remove(created)) {
+                        CdiInstance.destroyRegistration(beanContext, created);
+                    }
                 } else {
                     CdiInstance.destroyResolved(beanContext, definition, resolved);
                 }

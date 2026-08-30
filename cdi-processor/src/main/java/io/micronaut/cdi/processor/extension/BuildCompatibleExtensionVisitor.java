@@ -78,6 +78,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     public BuildCompatibleExtensionVisitor() {
         current = this;
+        // a fresh compilation starts clean: in a build daemon the processor classes — and these statics —
+        // outlive any one compilation, and a removal recorded last build must not linger into this one
+        RemovedAnnotations.reset();
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
         List<BuildCompatibleExtension> overridden = overriddenExtensions;
         if (overridden != null) {
@@ -397,9 +400,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             io.micronaut.inject.ast.ParameterElement observed = null;
             boolean async = false;
             for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
-                if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.Observes")) {
+                if (Cdi.declares(parameter, "jakarta.enterprise.event.Observes")) {
                     observed = parameter;
-                } else if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.ObservesAsync")) {
+                } else if (Cdi.declares(parameter, "jakarta.enterprise.event.ObservesAsync")) {
                     observed = parameter;
                     async = true;
                 }
@@ -601,16 +604,71 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
 
         /**
-         * Whether the class, or one of the members it declares, carries the annotation the enhancement asked for.
+         * Whether the class carries the annotation the enhancement asked for, anywhere the specification says
+         * to look: on the type, on any member, on any parameter of any member, or as a meta-annotation of any
+         * of those. {@code java.lang.annotation.Annotation} asks for types that use any annotation at all.
          */
         private static boolean carries(ClassElement element, String annotation) {
-            if (element.hasDeclaredAnnotation(annotation)) {
+            boolean any = "java.lang.annotation.Annotation".equals(annotation);
+            // the class probe reads what the class itself declares: hasStereotype would also match an
+            // annotation Micronaut merged down from a supertype, which the specification does not ask for
+            if (any
+                ? !element.getDeclaredAnnotationNames().isEmpty()
+                : element.hasDeclaredAnnotation(annotation)
+                    || carriedAsMetaAnnotation(element.getAnnotationMetadata(), annotation)) {
                 return true;
             }
-            return element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
-                .anyMatch(method -> method.hasDeclaredAnnotation(annotation))
-                || element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-                .anyMatch(field -> field.hasDeclaredAnnotation(annotation));
+            for (io.micronaut.inject.ast.MethodElement method
+                : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
+                if (memberCarries(method, annotation, any)) {
+                    return true;
+                }
+            }
+            for (io.micronaut.inject.ast.ConstructorElement constructor
+                : element.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {
+                if (memberCarries(constructor, annotation, any)) {
+                    return true;
+                }
+            }
+            for (io.micronaut.inject.ast.FieldElement field
+                : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
+                if (any
+                    ? !field.getDeclaredAnnotationNames().isEmpty()
+                    : field.hasDeclaredAnnotation(annotation)
+                        || carriedAsMetaAnnotation(field.getAnnotationMetadata(), annotation)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean memberCarries(io.micronaut.inject.ast.MethodElement method, String annotation,
+                                             boolean any) {
+            if (any
+                ? !method.getDeclaredAnnotationNames().isEmpty()
+                : method.hasDeclaredAnnotation(annotation)
+                    || carriedAsMetaAnnotation(method.getAnnotationMetadata(), annotation)) {
+                return true;
+            }
+            for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
+                if (any
+                    ? !parameter.getDeclaredAnnotationNames().isEmpty()
+                    : parameter.hasDeclaredAnnotation(annotation)
+                        || carriedAsMetaAnnotation(parameter.getAnnotationMetadata(), annotation)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Whether an annotation the element declares is itself annotated with the one asked for, which the
+         * specification counts as the annotation being used.
+         */
+        private static boolean carriedAsMetaAnnotation(io.micronaut.core.annotation.AnnotationMetadata metadata,
+                                                       String annotation) {
+            return metadata.getDeclaredAnnotationNames().stream()
+                .anyMatch(declared -> metadata.getAnnotationNamesByStereotype(declared).contains(annotation));
         }
 
         private void enhance(ClassElement element, Messages messages, VisitorContext context) {

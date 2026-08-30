@@ -179,6 +179,9 @@ public final class CdiBean<T> implements Bean<T> {
         } else {
             types.addAll(closure);
         }
+        // a parameterized type containing a wildcard is not a legal bean type (section 2.2.1): a supertype
+        // written that way is simply not among the types the bean can be resolved by
+        types.removeIf(type -> !CdiAssignability.isLegalBeanType(type));
         // every bean has Object among its types, whatever it narrowed them to
         types.add(Object.class);
         return types;
@@ -376,7 +379,10 @@ public final class CdiBean<T> implements Bean<T> {
      */
     static @io.micronaut.core.annotation.Nullable Throwable deepestForeignCause(Throwable thrown) {
         Throwable foreign = null;
-        for (Throwable cause = thrown.getCause(); cause != null && cause != cause.getCause();
+        // guarded against cause cycles of any length, which the platform permits
+        java.util.Set<Throwable> walked = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        walked.add(thrown);
+        for (Throwable cause = thrown.getCause(); cause != null && walked.add(cause);
              cause = cause.getCause()) {
             if (!cause.getClass().getName().startsWith("io.micronaut.")) {
                 foreign = cause;

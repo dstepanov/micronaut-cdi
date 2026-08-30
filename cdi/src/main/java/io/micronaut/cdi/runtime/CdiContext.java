@@ -119,15 +119,28 @@ public final class CdiContext implements AlterableContext {
             // the dependent pseudo-scope holds nothing: what is created belongs to whoever asked
             return contextual.create(creationalContext);
         }
-        Held<T> held = existing(store, contextual);
-        if (held != null) {
-            return held.instance();
+        synchronized (store) {
+            Held<T> held = existing(store, contextual);
+            if (held != null) {
+                return held.instance();
+            }
         }
+        // created outside the lock — creation may be arbitrarily slow, or reach back into this context
         T instance = contextual.create(creationalContext);
-        if (instance != null) {
-            store.put(contextual, new Held<>(contextual, instance, creationalContext));
+        if (instance == null) {
+            return null;
         }
-        return instance;
+        Held<T> raced;
+        synchronized (store) {
+            raced = existing(store, contextual);
+            if (raced == null) {
+                store.put(contextual, new Held<>(contextual, instance, creationalContext));
+                return instance;
+            }
+        }
+        // another thread stored first: one instance per contextual per context, so ours is let go
+        contextual.destroy(instance, creationalContext);
+        return raced.instance();
     }
 
     @Override
@@ -137,8 +150,10 @@ public final class CdiContext implements AlterableContext {
         if (store == null) {
             return null;
         }
-        Held<T> held = existing(store, contextual);
-        return held == null ? null : held.instance();
+        synchronized (store) {
+            Held<T> held = existing(store, contextual);
+            return held == null ? null : held.instance();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -156,7 +171,10 @@ public final class CdiContext implements AlterableContext {
         requireActive();
         Map<Contextual<?>, Held<?>> store = store(false);
         if (store != null) {
-            Held<?> held = store.remove(contextual);
+            Held<?> held;
+            synchronized (store) {
+                held = store.remove(contextual);
+            }
             if (held != null) {
                 held.destroy();
                 return;
@@ -257,10 +275,26 @@ public final class CdiContext implements AlterableContext {
 
                 @Override
                 public void close() {
-                    for (Held<?> held : List.copyOf(store.values())) {
-                        held.destroy();
+                    List<Held<?>> drained;
+                    synchronized (store) {
+                        drained = List.copyOf(store.values());
+                        store.clear();
                     }
-                    store.clear();
+                    RuntimeException failure = null;
+                    for (Held<?> held : drained) {
+                        try {
+                            held.destroy();
+                        } catch (RuntimeException e) {
+                            if (failure == null) {
+                                failure = e;
+                            } else {
+                                failure.addSuppressed(e);
+                            }
+                        }
+                    }
+                    if (failure != null) {
+                        throw failure;
+                    }
                 }
             };
         }

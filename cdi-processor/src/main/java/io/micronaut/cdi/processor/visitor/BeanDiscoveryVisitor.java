@@ -92,6 +92,15 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
             notABean(element);
             return;
         }
+        for (String typedName : element.getAnnotationMetadata()
+            .stringValues(Cdi.TYPED)) {
+            // section 2.2.2: every type named by @Typed must be a type the class actually has
+            if (!"java.lang.Object".equals(typedName) && !element.isAssignable(typedName)) {
+                context.fail("The class " + element.getName() + " restricts its bean types to "
+                    + typedName + ", which is not one of its types (section 2.2.2)", element);
+                return;
+            }
+        }
         if (element.hasDeclaredAnnotation("jakarta.decorator.Decorator")) {
             // decorators belong to CDI Full; a class written as one is not a bean of CDI Lite, and treating it
             // as a plain bean would be worse than leaving it out — its delegate injection point would be an

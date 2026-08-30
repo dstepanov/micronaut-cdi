@@ -127,8 +127,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         Argument<?>[] arguments = method.getArguments();
         Class<?>[] parameterTypes = candidate.getParameterTypes();
         for (int i = 0; i < arguments.length; i++) {
-            if (!parameterTypes[i].isAssignableFrom(arguments[i].getType())
-                && !arguments[i].getType().isAssignableFrom(parameterTypes[i])) {
+            Class<?> compiled = arguments[i].getType();
+            Class<?> reflective = parameterTypes[i];
+            // exact erasure, or the compiled erasure of a type variable widened to its bound: mutual
+            // assignability alone would let on(String) answer for a sibling on(CharSequence) overload
+            if (reflective != compiled && !reflective.isAssignableFrom(compiled)) {
                 return false;
             }
         }
@@ -240,24 +243,42 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
         java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
-        for (int i = 0; i < arguments.length; i++) {
-            if (i == observedParameter) {
-                parameters[i] = event;
-            } else if (arguments[i].getType() == jakarta.enterprise.inject.spi.EventMetadata.class) {
-                // the metadata of the firing is supplied by the notification rather than resolved
-                parameters[i] = metadata;
-            } else {
-                parameters[i] = resolve(arguments[i], transientArguments);
-            }
-        }
+        // the try begins before the parameters resolve: a parameter that fails to resolve must not leave the
+        // dependent observer instance — or the parameters resolved before it — undestroyed
         try {
+            for (int i = 0; i < arguments.length; i++) {
+                if (i == observedParameter) {
+                    parameters[i] = event;
+                } else if (arguments[i].getType() == jakarta.enterprise.inject.spi.EventMetadata.class) {
+                    // the metadata of the firing is supplied by the notification rather than resolved
+                    parameters[i] = metadata;
+                } else {
+                    parameters[i] = resolve(arguments[i], transientArguments);
+                }
+            }
             invoke(target, parameters);
         } finally {
+            RuntimeException destructionFailure = null;
             if (transientTarget != null) {
-                destroy(transientTarget);
+                try {
+                    destroy(transientTarget);
+                } catch (RuntimeException e) {
+                    destructionFailure = e;
+                }
             }
             for (io.micronaut.context.BeanRegistration<?> registration : transientArguments) {
-                destroy(registration);
+                try {
+                    destroy(registration);
+                } catch (RuntimeException e) {
+                    if (destructionFailure == null) {
+                        destructionFailure = e;
+                    } else {
+                        destructionFailure.addSuppressed(e);
+                    }
+                }
+            }
+            if (destructionFailure != null) {
+                throw destructionFailure;
             }
         }
     }

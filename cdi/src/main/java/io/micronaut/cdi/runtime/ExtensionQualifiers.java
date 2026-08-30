@@ -18,7 +18,6 @@ package io.micronaut.cdi.runtime;
 import io.micronaut.core.annotation.Internal;
 
 import java.lang.annotation.Annotation;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,8 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Internal
 public final class ExtensionQualifiers {
 
-    private static final Set<String> NAMES = ConcurrentHashMap.newKeySet();
-    private static final Set<String> NONBINDING_MEMBERS = ConcurrentHashMap.newKeySet();
+    private static final java.util.Map<String, Integer> NAMES = new ConcurrentHashMap<>();
+    private static final java.util.Map<String, Integer> NONBINDING_MEMBERS = new ConcurrentHashMap<>();
 
     private ExtensionQualifiers() {
     }
@@ -47,7 +46,7 @@ public final class ExtensionQualifiers {
      * @return Whether the member is excluded
      */
     public static boolean isNonbindingMember(String annotationName, String memberName) {
-        return NONBINDING_MEMBERS.contains(annotationName + "#" + memberName);
+        return NONBINDING_MEMBERS.containsKey(annotationName + "#" + memberName);
     }
 
     /**
@@ -57,7 +56,28 @@ public final class ExtensionQualifiers {
      * @param memberName     The member's name
      */
     public static void registerNonbindingMember(String annotationName, String memberName) {
-        NONBINDING_MEMBERS.add(annotationName + "#" + memberName);
+        NONBINDING_MEMBERS.merge(annotationName + "#" + memberName, 1, Integer::sum);
+    }
+
+    /**
+     * Forgets one container's registrations, made as it shut down: what its extensions said stops mattering,
+     * while another container that said the same keeps its say.
+     *
+     * @param name The qualifier annotation's name
+     */
+    public static void deregister(String name) {
+        NAMES.computeIfPresent(name, (key, count) -> count > 1 ? count - 1 : null);
+    }
+
+    /**
+     * Forgets one container's nonbinding-member registration.
+     *
+     * @param annotationName The qualifier annotation's name
+     * @param memberName     The member's name
+     */
+    public static void deregisterNonbindingMember(String annotationName, String memberName) {
+        NONBINDING_MEMBERS.computeIfPresent(annotationName + "#" + memberName,
+            (key, count) -> count > 1 ? count - 1 : null);
     }
 
     /**
@@ -67,7 +87,7 @@ public final class ExtensionQualifiers {
      * @return Whether it is a qualifier
      */
     public static boolean isQualifier(Class<? extends Annotation> type) {
-        return type.isAnnotationPresent(jakarta.inject.Qualifier.class) || NAMES.contains(type.getName());
+        return type.isAnnotationPresent(jakarta.inject.Qualifier.class) || NAMES.containsKey(type.getName());
     }
 
     /**
@@ -76,6 +96,6 @@ public final class ExtensionQualifiers {
      * @param name The annotation's name
      */
     public static void register(String name) {
-        NAMES.add(name);
+        NAMES.merge(name, 1, Integer::sum);
     }
 }

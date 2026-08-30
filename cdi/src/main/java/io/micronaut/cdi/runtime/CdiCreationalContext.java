@@ -77,15 +77,28 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
         incompleteInstance = null;
         java.util.List<io.micronaut.context.BeanRegistration<?>> toClose = java.util.List.copyOf(tracked);
         tracked.clear();
+        // one throwing @PreDestroy must not leave the rest undestroyed
+        RuntimeException failure = null;
         for (io.micronaut.context.BeanRegistration<?> registration : toClose) {
-            if (beanContext != null) {
-                // the registration's own close is a no-op for a definition with nothing of its own to dispose:
-                // destruction that has to reach the pre-destroy listeners — the disposer methods of section
-                // 3.3.4 — goes through the context
-                destroy(beanContext, registration);
-            } else {
-                registration.close();
+            try {
+                if (beanContext != null) {
+                    // the registration's own close is a no-op for a definition with nothing of its own to
+                    // dispose: destruction that has to reach the pre-destroy listeners — the disposer methods
+                    // of section 3.3.4 — goes through the context
+                    destroy(beanContext, registration);
+                } else {
+                    registration.close();
+                }
+            } catch (RuntimeException e) {
+                if (failure == null) {
+                    failure = e;
+                } else {
+                    failure.addSuppressed(e);
+                }
             }
+        }
+        if (failure != null) {
+            throw failure;
         }
     }
 

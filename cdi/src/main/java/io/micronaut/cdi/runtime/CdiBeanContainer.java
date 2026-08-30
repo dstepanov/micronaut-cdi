@@ -157,9 +157,12 @@ public final class CdiBeanContainer implements BeanManager {
                 // the built-in event and lookup exist for whatever legal type an injection point asks them
                 // for, so the one bean of each answers every parameterization of its type — and the raw type
                 // itself
-                if (beanType.equals(builtIn.getBeanType())
-                    || beanType instanceof java.lang.reflect.ParameterizedType parameterized
-                    && parameterized.getRawType().equals(builtIn.getBeanType())) {
+                java.lang.reflect.Type raw = beanType instanceof java.lang.reflect.ParameterizedType parameterized
+                    ? parameterized.getRawType() : beanType;
+                if (raw.equals(builtIn.getBeanType())
+                    // the built-in lookup has Provider among its bean types: Instance extends it
+                    || raw.equals(jakarta.inject.Provider.class)
+                        && jakarta.inject.Provider.class.isAssignableFrom(builtIn.getBeanType())) {
                     beans.add(bean);
                 }
                 continue;

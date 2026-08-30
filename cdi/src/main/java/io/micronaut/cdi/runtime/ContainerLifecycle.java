@@ -61,10 +61,35 @@ public final class ContainerLifecycle {
 
     @PreDestroy
     void stopping() {
-        // and the mirror on the way down: Shutdown first, then the application context says it is going
-        fire(new Shutdown(), Shutdown.class, Set.of());
-        fire(new Object(), Object.class, Set.of(BeforeDestroyed.Literal.of(ApplicationScoped.class)));
-        fire(new Object(), Object.class, Set.of(Destroyed.Literal.of(ApplicationScoped.class)));
+        // and the mirror on the way down: Shutdown first, then the application context says it is going.
+        // One observer throwing must not silence the events after it — cleanup keyed on Destroyed still runs
+        RuntimeException failure = null;
+        try {
+            fire(new Shutdown(), Shutdown.class, Set.of());
+        } catch (RuntimeException e) {
+            failure = e;
+        }
+        try {
+            fire(new Object(), Object.class, Set.of(BeforeDestroyed.Literal.of(ApplicationScoped.class)));
+        } catch (RuntimeException e) {
+            if (failure == null) {
+                failure = e;
+            } else {
+                failure.addSuppressed(e);
+            }
+        }
+        try {
+            fire(new Object(), Object.class, Set.of(Destroyed.Literal.of(ApplicationScoped.class)));
+        } catch (RuntimeException e) {
+            if (failure == null) {
+                failure = e;
+            } else {
+                failure.addSuppressed(e);
+            }
+        }
+        if (failure != null) {
+            throw failure;
+        }
     }
 
     private void fire(Object event, Class<?> type, Set<Annotation> qualifiers) {

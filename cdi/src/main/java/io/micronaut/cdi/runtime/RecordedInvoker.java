@@ -98,17 +98,16 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
         }
 
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
-        io.micronaut.context.@Nullable BeanRegistration<?> lookedUpInstance = null;
         try {
             Object target;
             if (staticMethod) {
                 target = null;
             } else if (instanceLookup) {
+                // resolved the way the specification's lookup resolves — the @Default bean of the class, by
+                // the rules of typesafe resolution — rather than by Micronaut's own null-qualifier rules
                 @SuppressWarnings("unchecked")
-                io.micronaut.context.BeanRegistration<Object> registration =
-                    beanContext.getBeanRegistration((Argument<Object>) Argument.of(beanClass), null);
-                lookedUpInstance = registration;
-                target = registration.bean();
+                Object looked = lookup.selectArgument((Argument<Object>) Argument.of(beanClass)).get();
+                target = looked;
             } else {
                 if (instance == null) {
                     throw new NullPointerException("The method " + beanClassName + "#" + methodName
@@ -131,11 +130,9 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
             }
             return method.invoke(target, invocationArguments);
         } finally {
-            // what an invocation looked up as dependent instances lives only as long as the invocation
+            // what an invocation looked up — the instance included, when it was looked up — lives only as
+            // long as the invocation; a dependent among it is destroyed here
             lookup.destroyTransients();
-            if (lookedUpInstance != null && CdiResolution.isDependent(lookedUpInstance.definition())) {
-                CdiInstance.destroyRegistration(beanContext, lookedUpInstance);
-            }
         }
     }
 

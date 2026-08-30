@@ -57,9 +57,8 @@ public final class CdiRunning {
      * @return The most recently started container, or {@code null} when none is running
      */
     public static @Nullable CdiBeanContainer current() {
-        if (RUNNING.isEmpty()) {
-            return null;
-        }
-        return RUNNING.get(RUNNING.size() - 1);
+        // one snapshot: a container going down on another thread must not turn the read into an index error
+        Object[] running = RUNNING.toArray();
+        return running.length == 0 ? null : (CdiBeanContainer) running[running.length - 1];
     }
 }

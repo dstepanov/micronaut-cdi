@@ -429,16 +429,21 @@ public final class SynthesisRunner {
             }
         }
         if (bean.priority() != null) {
-            // the priority selects and ranks an alternative; it is carried as the order, negated, the same
-            // way the compiler writes it for a selected alternative
+            // the priority selects and ranks an alternative; it is carried as itself and as the order,
+            // negated, the same way the compiler writes it for a selected alternative
+            metadata.addDeclaredAnnotation("jakarta.annotation.Priority",
+                Map.of(AnnotationMetadata.VALUE_MEMBER, bean.priority()));
             metadata.addDeclaredAnnotation("io.micronaut.core.annotation.Order",
                 Map.of(AnnotationMetadata.VALUE_MEMBER, -bean.priority()));
             metadata.addDeclaredAnnotation("io.micronaut.context.annotation.Primary", Map.of());
         }
-        if (bean.scope() != null) {
+        Class<? extends Annotation> effectiveScope = scopeOf(bean);
+        if (effectiveScope != null) {
+            // the effective scope, a stereotype-carried one included: the runtime reads this to know the bean
+            // is not dependent
             metadata.addDeclaredAnnotation(CdiScope.class.getName(), Map.of(
-                AnnotationMetadata.VALUE_MEMBER, bean.scope().getName(),
-                "normal", bean.scope().isAnnotationPresent(jakarta.enterprise.context.NormalScope.class)));
+                AnnotationMetadata.VALUE_MEMBER, effectiveScope.getName(),
+                "normal", effectiveScope.isAnnotationPresent(jakarta.enterprise.context.NormalScope.class)));
         }
         if (bean.alternative()) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
@@ -491,15 +496,22 @@ public final class SynthesisRunner {
             io.micronaut.cdi.runtime.CurrentInjectionPoint.enter(injectionPoint);
         }
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
+        boolean handedOver = false;
         try {
             T instance = creator.create(lookup, new CdiParameters(bean.parameters()));
             if (instance != null) {
                 // what the creation function looked up as dependent instances belongs to the instance it
                 // created, and is destroyed with it (section 2.10.5)
                 creatorLookups.put(instance, lookup);
+                handedOver = true;
             }
             return instance;
         } finally {
+            if (!handedOver) {
+                // a creation that failed, or made nothing, leaves nothing to hand the lookups to: what it
+                // looked up is let go here rather than leaking
+                lookup.destroyTransients();
+            }
             if (injectionPoint != null) {
                 io.micronaut.cdi.runtime.CurrentInjectionPoint.leave();
             }
@@ -512,7 +524,8 @@ public final class SynthesisRunner {
      */
     private io.micronaut.cdi.runtime.@io.micronaut.core.annotation.Nullable CdiInjectionPoint currentInjectionPointOf(
         SyntheticBean<?> bean) {
-        if (bean.scope() != null && !"jakarta.enterprise.context.Dependent".equals(bean.scope().getName())) {
+        Class<? extends Annotation> scope = scopeOf(bean);
+        if (scope != null && !"jakarta.enterprise.context.Dependent".equals(scope.getName())) {
             // for anything but a dependent bean the specification leaves the answer open, and null it is
             return null;
         }

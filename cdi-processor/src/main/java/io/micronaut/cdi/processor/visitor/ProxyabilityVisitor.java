@@ -51,7 +51,7 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        if (element.isAbstract() || element.isInterface() || element.isEnum() || element.isRecord()) {
+        if (element.isAbstract() || element.isInterface() || element.isEnum()) {
             return;
         }
         if (element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")) {

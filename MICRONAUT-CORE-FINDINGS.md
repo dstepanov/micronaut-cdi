@@ -185,3 +185,15 @@ is never tracked as a dependent of whoever asked for it, and never destroyed wit
 `IllegalStateException` means in the JDK's own vocabulary — and CDI requires exactly that of a contextual
 reference used after the container shut down. Patched locally: `assertContextState` throws
 `IllegalStateException`.
+
+### 23. A repeatable annotation on a method parameter is dropped from the annotation metadata
+A qualifier written on a method parameter survives into the compiled metadata — unless it is `@Repeatable`.
+`@Repeatable`-annotated types are normalized into their container annotation (a field annotated once with
+`@Start("X")` reports `Bootable`, the container, in its metadata), but on a *parameter* neither the repeatable
+nor its container survives: an observer parameter written `@Observes @Start("A") Event e` reports only
+`Observes`, at compile time as well as at runtime. Verified by probing `ParameterElement.getAnnotationMetadata()`
+from a `TypeElementVisitor` — the qualifier is already gone before any visitor runs, so no downstream
+processing can recover it. This makes CDI's repeatable qualifiers (section 2.1.3) unimplementable for observer
+methods and for any parameter injection point: the qualifiers cannot be read, so every such observer matches
+every event of its type. Field, class and method targets are unaffected. Fixing it upstream means retaining a
+repeatable annotation's container on parameter metadata the way it is retained on fields.

@@ -99,20 +99,54 @@ public final class CdiInjectionPoint implements InjectionPoint {
                     // declared further up
                 }
             } else if ("<init>".equals(memberName)) {
+                java.lang.reflect.Constructor<?> fallback = null;
                 for (java.lang.reflect.Constructor<?> constructor : type.getDeclaredConstructors()) {
-                    if (!constructor.isSynthetic()) {
+                    if (constructor.isSynthetic()) {
+                        continue;
+                    }
+                    // the bean constructor is the injected one where one is marked; else the one that takes
+                    // what this point injects
+                    if (constructor.isAnnotationPresent(jakarta.inject.Inject.class)
+                        || takesTheArgument(constructor.getParameterTypes())) {
                         return constructor;
                     }
+                    if (fallback == null) {
+                        fallback = constructor;
+                    }
+                }
+                if (fallback != null) {
+                    return fallback;
                 }
             } else {
+                Method fallback = null;
                 for (Method method : type.getDeclaredMethods()) {
-                    if (method.getName().equals(memberName)) {
+                    if (!method.getName().equals(memberName)) {
+                        continue;
+                    }
+                    // of same-named overloads, the injected member is the one that takes what this point
+                    // injects
+                    if (takesTheArgument(method.getParameterTypes())) {
                         return method;
                     }
+                    if (fallback == null) {
+                        fallback = method;
+                    }
+                }
+                if (fallback != null) {
+                    return fallback;
                 }
             }
         }
         return null;
+    }
+
+    private boolean takesTheArgument(Class<?>[] parameterTypes) {
+        for (Class<?> parameterType : parameterTypes) {
+            if (parameterType.equals(memberArgument.getType())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

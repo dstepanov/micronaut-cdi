@@ -216,7 +216,10 @@ public final class ElementBeanInfo implements InterceptorInfo {
 
     @Override
     public @Nullable String name() {
-        return declaration().getAnnotationMetadata().stringValue("jakarta.inject.Named").orElse(null);
+        return declaration().getAnnotationMetadata().stringValue("jakarta.inject.Named")
+            // a stereotype-supplied default name is recorded as CdiName, with no Named materialized
+            .or(() -> declaration().getAnnotationMetadata().stringValue("io.micronaut.cdi.annotation.CdiName"))
+            .orElse(null);
     }
 
     @Override

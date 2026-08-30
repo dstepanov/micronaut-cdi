@@ -65,8 +65,17 @@ public final class RemovedAnnotations {
 
     private static String keyOf(Element element) {
         if (element instanceof ParameterElement parameter) {
-            return parameter.getMethodElement().getDeclaringType().getName()
-                + "#" + parameter.getMethodElement().getName() + ":" + parameter.getName();
+            return keyOf(parameter.getMethodElement()) + ":" + parameter.getName();
+        }
+        if (element instanceof io.micronaut.inject.ast.MethodElement method) {
+            // the signature is part of the key: a removal from one overload's parameter says nothing about
+            // the other overload's
+            StringBuilder key = new StringBuilder(method.getDeclaringType().getName())
+                .append('#').append(method.getName()).append('(');
+            for (ParameterElement parameter : method.getParameters()) {
+                key.append(parameter.getType().getName()).append(',');
+            }
+            return key.append(')').toString();
         }
         if (element instanceof MemberElement member) {
             return member.getDeclaringType().getName() + "#" + member.getName();

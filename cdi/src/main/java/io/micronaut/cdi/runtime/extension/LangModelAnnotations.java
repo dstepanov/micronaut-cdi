@@ -192,8 +192,24 @@ final class LangModelAnnotations {
                 int valueHash;
                 if (value == null) {
                     valueHash = 0;
-                } else if (value.getClass().isArray()) {
-                    valueHash = java.util.Arrays.deepHashCode(new Object[]{value});
+                } else if (value instanceof Object[] objects) {
+                    valueHash = java.util.Arrays.hashCode(objects);
+                } else if (value instanceof int[] ints) {
+                    valueHash = java.util.Arrays.hashCode(ints);
+                } else if (value instanceof long[] longs) {
+                    valueHash = java.util.Arrays.hashCode(longs);
+                } else if (value instanceof short[] shorts) {
+                    valueHash = java.util.Arrays.hashCode(shorts);
+                } else if (value instanceof byte[] bytes) {
+                    valueHash = java.util.Arrays.hashCode(bytes);
+                } else if (value instanceof char[] chars) {
+                    valueHash = java.util.Arrays.hashCode(chars);
+                } else if (value instanceof boolean[] booleans) {
+                    valueHash = java.util.Arrays.hashCode(booleans);
+                } else if (value instanceof float[] floats) {
+                    valueHash = java.util.Arrays.hashCode(floats);
+                } else if (value instanceof double[] doubles) {
+                    valueHash = java.util.Arrays.hashCode(doubles);
                 } else {
                     valueHash = value.hashCode();
                 }

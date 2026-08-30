@@ -73,7 +73,8 @@ final class StaticObserverMethod<T> implements ObserverMethod<T>, CdiNotifiable 
     public Set<Annotation> getObservedQualifiers() {
         Set<Annotation> qualifiers = new LinkedHashSet<>();
         for (Annotation annotation : method.getParameterAnnotations()[observedParameter]) {
-            if (annotation.annotationType().isAnnotationPresent(jakarta.inject.Qualifier.class)) {
+            // through the bridge, so an annotation the discovery phase made a qualifier of counts too
+            if (ExtensionQualifiers.isQualifier(annotation.annotationType())) {
                 qualifiers.add(annotation);
             }
         }

@@ -409,6 +409,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      * nothing it would have produced.</p>
      */
     private static boolean isABean(ClassElement element) {
+        // deliberately more lenient than Lite's annotated discovery: a producer compiles wherever it is
+        // declared, because whether its class is a bean of a given deployment is decided per deployment — the
+        // SE bootstrap's addBeanClasses makes a class with no bean defining annotation a bean by fiat
         List<ConstructorElement> constructors = element.getEnclosedElements(ElementQuery.CONSTRUCTORS);
         if (constructors.isEmpty()) {
             // the implicit constructor takes no parameters
@@ -490,6 +493,36 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      * produces and their qualifiers are the same, which is the resolution rule of the specification narrowed to
      * the one class the two are declared on.</p>
      */
+    /**
+     * Whether the produced type's arguments fit the disposed parameter's: a disposer of {@code List<String>}
+     * does not dispose of what a producer of {@code List<Integer>} produces, though the two erase alike. A
+     * raw side fits any parameterization, and a variable or wildcard on the disposer's side admits what the
+     * producer wrote.
+     */
+    private static boolean typeArgumentsCompatible(ClassElement produced, ClassElement disposed) {
+        java.util.Collection<ClassElement> producedArguments = produced.getTypeArguments().values();
+        java.util.Collection<ClassElement> disposedArguments = disposed.getTypeArguments().values();
+        if (producedArguments.isEmpty() || disposedArguments.isEmpty()
+            || producedArguments.size() != disposedArguments.size()) {
+            return true;
+        }
+        java.util.Iterator<ClassElement> producedEach = producedArguments.iterator();
+        java.util.Iterator<ClassElement> disposedEach = disposedArguments.iterator();
+        while (producedEach.hasNext()) {
+            ClassElement producedArgument = producedEach.next();
+            ClassElement disposedArgument = disposedEach.next();
+            if (disposedArgument.isGenericPlaceholder() || disposedArgument.isWildcard()
+                || producedArgument.isGenericPlaceholder() || producedArgument.isWildcard()) {
+                continue;
+            }
+            if (!producedArgument.getName().equals(disposedArgument.getName())
+                || !typeArgumentsCompatible(producedArgument, disposedArgument)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private @Nullable MethodElement findDisposer(MemberElement producer,
                                                  List<MethodElement> disposers,
                                                  VisitorContext context) {
@@ -498,8 +531,10 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         for (MethodElement disposer : disposers) {
             ParameterElement disposed = disposer.getParameters()[disposedParameter(disposer)];
             // section 3.3.7 matches the disposed parameter by the rules of typesafe resolution: a disposer of
-            // the supertype disposes of what a producer of the subtype produces
-            if (!produced.isAssignable(disposed.getGenericType())) {
+            // the supertype disposes of what a producer of the subtype produces — and the type arguments take
+            // part, which Micronaut's erased assignability alone would miss
+            if (!produced.isAssignable(disposed.getGenericType())
+                || !typeArgumentsCompatible(produced, disposed.getGenericType())) {
                 continue;
             }
             // a disposed parameter qualified Any disposes of what every producer of the type produced, however

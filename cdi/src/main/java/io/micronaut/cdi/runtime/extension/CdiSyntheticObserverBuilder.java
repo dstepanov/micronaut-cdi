@@ -40,6 +40,8 @@ import java.util.Map;
 @Internal
 public final class CdiSyntheticObserverBuilder<T> implements SyntheticObserverBuilder<T> {
 
+    private final ClassLoader deploymentLoader;
+
     private final Type eventType;
     private final List<Annotation> qualifiers = new ArrayList<>();
     private final Map<String, Object> parameters = new LinkedHashMap<>();
@@ -48,7 +50,8 @@ public final class CdiSyntheticObserverBuilder<T> implements SyntheticObserverBu
     private TransactionPhase transactionPhase = TransactionPhase.IN_PROGRESS;
     private @Nullable Class<? extends SyntheticObserver<T>> observer;
 
-    CdiSyntheticObserverBuilder(Type eventType) {
+    CdiSyntheticObserverBuilder(Type eventType, ClassLoader deploymentLoader) {
+        this.deploymentLoader = deploymentLoader;
         this.eventType = eventType;
     }
 
@@ -196,8 +199,7 @@ public final class CdiSyntheticObserverBuilder<T> implements SyntheticObserverBu
     @Override
     public SyntheticObserverBuilder<T> withParam(String key, AnnotationInfo value) {
         return param(key, LangModelAnnotations.annotationOf(value,
-            Thread.currentThread().getContextClassLoader() != null
-                ? Thread.currentThread().getContextClassLoader() : getClass().getClassLoader()));
+            deploymentLoader));
     }
 
     @Override
@@ -208,8 +210,7 @@ public final class CdiSyntheticObserverBuilder<T> implements SyntheticObserverBu
     @Override
     public SyntheticObserverBuilder<T> withParam(String key, AnnotationInfo[] value) {
         java.lang.annotation.Annotation[] annotations = new java.lang.annotation.Annotation[value.length];
-        ClassLoader loader = Thread.currentThread().getContextClassLoader() != null
-            ? Thread.currentThread().getContextClassLoader() : getClass().getClassLoader();
+        ClassLoader loader = deploymentLoader;
         for (int i = 0; i < value.length; i++) {
             annotations[i] = LangModelAnnotations.annotationOf(value[i], loader);
         }

@@ -214,7 +214,14 @@ public final class CdiAssignability {
     /**
      * Whether the type is one a bean may have: a wildcard anywhere in it makes it not one.
      */
-    private static boolean isLegalBeanType(Type type) {
+    /**
+     * Whether the type may be a bean type: section 2.2.1 excludes a parameterized type that contains a
+     * wildcard, at any depth, from the types a bean can be resolved by.
+     *
+     * @param type The type
+     * @return Whether it is a legal bean type
+     */
+    static boolean isLegalBeanType(Type type) {
         if (type instanceof WildcardType) {
             return false;
         }
@@ -284,9 +291,9 @@ public final class CdiAssignability {
             Type[] observedArguments = observedParameterized.getActualTypeArguments();
             Type[] eventArguments = eventParameterized.getActualTypeArguments();
             if (observedArguments.length != eventArguments.length) {
-                // the observed supertype may be parameterized differently from the event's own class; only the
-                // directly comparable case is compared
-                return true;
+                // not the comparable pair: the event's closure carries the properly-parameterized supertype
+                // as its own entry, and that one is what the observed type is judged against
+                return false;
             }
             for (int i = 0; i < observedArguments.length; i++) {
                 if (!eventArgumentMatches(observedArguments[i], eventArguments[i])) {
@@ -415,6 +422,25 @@ public final class CdiAssignability {
                 Class<?> boundRaw = rawTypeOf(bound);
                 Class<?> requiredRaw = rawTypeOf(required);
                 if (boundRaw == null || requiredRaw == null || !boundRaw.isAssignableFrom(requiredRaw)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (required instanceof ParameterizedType requiredParameterized
+            && candidate instanceof ParameterizedType candidateParameterized) {
+            // two actual parameterized arguments: identical raw types with pairwise-matching arguments, the
+            // first case of section 2.4.2.1 applied recursively
+            if (!requiredParameterized.getRawType().equals(candidateParameterized.getRawType())) {
+                return false;
+            }
+            Type[] requiredArguments = requiredParameterized.getActualTypeArguments();
+            Type[] candidateArguments = candidateParameterized.getActualTypeArguments();
+            if (requiredArguments.length != candidateArguments.length) {
+                return false;
+            }
+            for (int i = 0; i < requiredArguments.length; i++) {
+                if (!argumentMatches(requiredArguments[i], candidateArguments[i])) {
                     return false;
                 }
             }

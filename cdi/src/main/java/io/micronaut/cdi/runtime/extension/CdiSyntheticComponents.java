@@ -45,14 +45,14 @@ public final class CdiSyntheticComponents implements SyntheticComponents {
 
     @Override
     public <T> SyntheticBeanBuilder<T> addBean(Class<T> implementationClass) {
-        CdiSyntheticBeanBuilder<T> builder = new CdiSyntheticBeanBuilder<>(implementationClass);
+        CdiSyntheticBeanBuilder<T> builder = new CdiSyntheticBeanBuilder<>(implementationClass, classLoader);
         beans.add(builder);
         return builder;
     }
 
     @Override
     public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
-        CdiSyntheticObserverBuilder<T> builder = new CdiSyntheticObserverBuilder<>(eventType);
+        CdiSyntheticObserverBuilder<T> builder = new CdiSyntheticObserverBuilder<>(eventType, classLoader);
         observers.add(builder);
         return builder;
     }
@@ -60,7 +60,7 @@ public final class CdiSyntheticComponents implements SyntheticComponents {
     @Override
     public <T> SyntheticObserverBuilder<T> addObserver(jakarta.enterprise.lang.model.types.Type eventType) {
         CdiSyntheticObserverBuilder<T> builder = new CdiSyntheticObserverBuilder<>(
-            LangModelTypes.reflectiveOf(eventType, classLoader));
+            LangModelTypes.reflectiveOf(eventType, classLoader), classLoader);
         observers.add(builder);
         return builder;
     }

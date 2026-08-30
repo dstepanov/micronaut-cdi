@@ -46,6 +46,8 @@ import java.util.Map;
 @Internal
 public final class CdiSyntheticBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
+    private final ClassLoader deploymentLoader;
+
     private final Class<T> implementationClass;
     private final List<Class<?>> types = new ArrayList<>();
     private final List<Annotation> qualifiers = new ArrayList<>();
@@ -58,7 +60,8 @@ public final class CdiSyntheticBeanBuilder<T> implements SyntheticBeanBuilder<T>
     private @Nullable Class<? extends SyntheticBeanCreator<T>> creator;
     private @Nullable Class<? extends SyntheticBeanDisposer<T>> disposer;
 
-    CdiSyntheticBeanBuilder(Class<T> implementationClass) {
+    CdiSyntheticBeanBuilder(Class<T> implementationClass, ClassLoader deploymentLoader) {
+        this.deploymentLoader = deploymentLoader;
         this.implementationClass = implementationClass;
     }
 
@@ -147,8 +150,7 @@ public final class CdiSyntheticBeanBuilder<T> implements SyntheticBeanBuilder<T>
     @SuppressWarnings("unchecked")
     @Override
     public SyntheticBeanBuilder<T> stereotype(ClassInfo stereotypeAnnotation) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader() != null
-            ? Thread.currentThread().getContextClassLoader() : getClass().getClassLoader();
+        ClassLoader loader = deploymentLoader;
         try {
             stereotypes.add((Class<? extends Annotation>) Class.forName(
                 stereotypeAnnotation.name(), false, loader));
@@ -254,8 +256,7 @@ public final class CdiSyntheticBeanBuilder<T> implements SyntheticBeanBuilder<T>
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, AnnotationInfo value) {
         return param(key, LangModelAnnotations.annotationOf(value,
-            Thread.currentThread().getContextClassLoader() != null
-                ? Thread.currentThread().getContextClassLoader() : getClass().getClassLoader()));
+            deploymentLoader));
     }
 
     @Override
@@ -266,8 +267,7 @@ public final class CdiSyntheticBeanBuilder<T> implements SyntheticBeanBuilder<T>
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, AnnotationInfo[] value) {
         java.lang.annotation.Annotation[] annotations = new java.lang.annotation.Annotation[value.length];
-        ClassLoader loader = Thread.currentThread().getContextClassLoader() != null
-            ? Thread.currentThread().getContextClassLoader() : getClass().getClassLoader();
+        ClassLoader loader = deploymentLoader;
         for (int i = 0; i < value.length; i++) {
             annotations[i] = LangModelAnnotations.annotationOf(value[i], loader);
         }

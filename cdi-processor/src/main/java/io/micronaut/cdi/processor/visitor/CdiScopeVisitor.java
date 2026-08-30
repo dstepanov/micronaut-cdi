@@ -28,6 +28,9 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Decides which scope a class is in, the way section 2.3.1 says it is decided, and records it.
  *
@@ -66,11 +69,140 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         readClass(element, context);
+        for (io.micronaut.inject.ast.MemberElement member : element.getEnclosedElements(
+            io.micronaut.inject.ast.ElementQuery.of(io.micronaut.inject.ast.MemberElement.class).onlyDeclared())) {
+            if (member.hasDeclaredAnnotation(Cdi.PRODUCES)
+                && !checkScopesOf(member, "The producer " + element.getName() + "#" + member.getName(),
+                    context)) {
+                // reported; the scopes — and what the mappers read them into — are taken off, so that the
+                // proxy writer does not report the same mistake in different words
+                for (String name : member.getDeclaredAnnotationNames()) {
+                    if (Cdi.isScope(name)) {
+                        member.removeAnnotation(name);
+                    }
+                }
+                member.removeAnnotation("io.micronaut.cdi.annotation.CdiScope");
+                member.removeAnnotation("io.micronaut.cdi.annotation.CdiApplicationScope");
+                member.removeAnnotation("io.micronaut.cdi.annotation.CdiRequestScope");
+                member.removeAnnotation("io.micronaut.runtime.context.scope.ScopedProxy");
+            }
+        }
         element.getEnclosedElements(ElementQuery.ALL_METHODS).forEach(CdiScopeVisitor::readMember);
         element.getEnclosedElements(ElementQuery.ALL_FIELDS).forEach(CdiScopeVisitor::readMember);
     }
 
+    /**
+     * Whether the element declares at most one scope, which is what section 2.3.2 allows.
+     *
+     * @param element The element
+     * @param described What to call it in the message
+     * @param context The visitor context
+     * @return Whether it is well formed
+     */
+    static boolean checkScopesOf(io.micronaut.inject.ast.Element element, String described,
+                                 VisitorContext context) {
+        List<String> declared = new ArrayList<>();
+        for (String name : element.getDeclaredAnnotationNames()) {
+            if (Cdi.isScope(name)) {
+                declared.add(name);
+            }
+        }
+        if (declared.size() > 1) {
+            context.fail(described + " declares more than one scope " + declared
+                + ", and a bean has at most one (section 2.3.2)", element);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Whether a stereotype is well formed: section 2.7.1 lets it carry at most one scope, and its
+     * {@code Named} — if it declares one — must have no value of its own.
+     */
+    private static boolean checkStereotype(ClassElement element, VisitorContext context) {
+        if (!checkScopesOf(element, "The stereotype " + element.getName(), context)) {
+            return false;
+        }
+        String named = element.getAnnotationMetadata()
+            .stringValue("jakarta.inject.Named").orElse(null);
+        if (named != null && !named.isEmpty()) {
+            context.fail("The stereotype " + element.getName() + " declares a Named with the value \""
+                + named + "\"; a stereotype's Named names nothing itself (section 2.7.1)", element);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Whether the stereotypes a class carries agree: two that name different default scopes are a conflict
+     * unless the class settles it by declaring a scope of its own (section 2.7.1), and two that name
+     * different priorities are a conflict outright.
+     */
+    private static boolean checkStereotypesOf(ClassElement element, VisitorContext context) {
+        List<String> stereotypes = element.getAnnotationMetadata()
+            .getAnnotationNamesByStereotype(Cdi.STEREOTYPE);
+        if (stereotypes.isEmpty()) {
+            return true;
+        }
+        java.util.Set<String> scopes = new java.util.LinkedHashSet<>();
+        java.util.Set<Integer> priorities = new java.util.LinkedHashSet<>();
+        for (String stereotype : stereotypes) {
+            ClassElement declaration = context.getClassElement(stereotype).orElse(null);
+            if (declaration == null) {
+                continue;
+            }
+            for (String name : declaration.getDeclaredAnnotationNames()) {
+                if (Cdi.isScope(name)) {
+                    scopes.add(name);
+                }
+            }
+            declaration.getAnnotationMetadata()
+                .intValue(Cdi.PRIORITY, io.micronaut.core.annotation.AnnotationMetadata.VALUE_MEMBER)
+                .ifPresent(priorities::add);
+            // a stereotype's own Named names nothing: the bean it is on takes the default name, so a value
+            // written on the stereotype is a definition error wherever it is used (section 2.7.1)
+            String named = declaration.getAnnotationMetadata()
+                .stringValue("jakarta.inject.Named").orElse(null);
+            if (named != null && !named.isEmpty()) {
+                context.fail("The stereotype " + stereotype + " on " + element.getName() + " declares a "
+                    + "Named with the value \"" + named + "\"; a stereotype's Named names nothing itself "
+                    + "(section 2.7.1)", element);
+                return false;
+            }
+        }
+        boolean declaresItsOwnScope = element.getDeclaredAnnotationNames().stream().anyMatch(Cdi::isScope);
+        if (scopes.size() > 1 && stereotypes.size() == 1) {
+            // one stereotype naming two scopes is malformed in itself; the bean cannot settle that
+            context.fail("The stereotype " + stereotypes.get(0) + " on " + element.getName() + " names more "
+                + "than one scope " + scopes + ", and a stereotype names at most one (section 2.7.1)",
+                element);
+            return false;
+        }
+        if (scopes.size() > 1 && !declaresItsOwnScope) {
+            context.fail("The class " + element.getName() + " carries stereotypes naming different default "
+                + "scopes " + scopes + " and declares no scope of its own to settle it (section 2.7.1)",
+                element);
+            return false;
+        }
+        if (priorities.size() > 1) {
+            context.fail("The class " + element.getName() + " carries stereotypes naming different "
+                + "priorities " + priorities + " (section 2.7.1)", element);
+            return false;
+        }
+        return true;
+    }
+
     private static void readClass(ClassElement element, VisitorContext context) {
+
+        if (!checkScopesOf(element, element.getName(), context)) {
+            return;
+        }
+        if (element.hasDeclaredAnnotation(Cdi.STEREOTYPE) && !checkStereotype(element, context)) {
+            return;
+        }
+        if (!checkStereotypesOf(element, context)) {
+            return;
+        }
         if (element.hasDeclaredAnnotation(CdiScope.class)) {
             // a mapper has already read what the class declares
             takeOffTheDependentPseudoScope(element);

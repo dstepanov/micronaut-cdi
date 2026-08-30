@@ -64,10 +64,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     private final Set<String> selectedAlternatives = new LinkedHashSet<>();
     private final Set<String> selectedAlternativeStereotypes = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
+    private static volatile @org.jspecify.annotations.Nullable Set<String> restrictedClasspath;
+
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-    private static volatile @org.jspecify.annotations.Nullable Set<String> restrictedClasspath;
 
     /**
      * Restricts what a bootstrap on this JVM may discover, in place of the classpath it cannot have: what a

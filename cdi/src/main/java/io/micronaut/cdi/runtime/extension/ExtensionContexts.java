@@ -57,8 +57,22 @@ public final class ExtensionContexts {
     private final Map<String, List<AlterableContext>> contextsByScope = new LinkedHashMap<>();
     private final Map<String, Class<? extends Annotation>> scopeAnnotations = new LinkedHashMap<>();
 
+    private final List<String> registeredQualifiers = new ArrayList<>();
+    private final List<String[]> registeredNonbindingMembers = new ArrayList<>();
+
     public ExtensionContexts(BeanContext beanContext) {
         this.beanContext = beanContext;
+    }
+
+    @jakarta.annotation.PreDestroy
+    void standDown() {
+        // this container's say is withdrawn: another container that registered the same names keeps its own
+        for (String name : registeredQualifiers) {
+            io.micronaut.cdi.runtime.ExtensionQualifiers.deregister(name);
+        }
+        for (String[] member : registeredNonbindingMembers) {
+            io.micronaut.cdi.runtime.ExtensionQualifiers.deregisterNonbindingMember(member[0], member[1]);
+        }
     }
 
     @PostConstruct
@@ -75,6 +89,7 @@ public final class ExtensionContexts {
                 // an annotation an extension made a qualifier of does not say so on its own class: what the
                 // compiled metadata knows, the runtime checks are told
                 io.micronaut.cdi.runtime.ExtensionQualifiers.register(qualifierName);
+                registeredQualifiers.add(qualifierName);
             }
             AnnotationValue<io.micronaut.cdi.annotation.CdiExtensionQualifiers> qualifiers =
                 definition.getAnnotationMetadata()
@@ -83,10 +98,12 @@ public final class ExtensionContexts {
                 for (String entry : qualifiers.stringValues()) {
                     String[] parts = entry.split("\\|", -1);
                     io.micronaut.cdi.runtime.ExtensionQualifiers.register(parts[0]);
+                    registeredQualifiers.add(parts[0]);
                     if (parts.length > 1 && !parts[1].isEmpty()) {
                         for (String member : parts[1].split(";")) {
                             io.micronaut.cdi.runtime.ExtensionQualifiers
                                 .registerNonbindingMember(parts[0], member);
+                            registeredNonbindingMembers.add(new String[] {parts[0], member});
                         }
                     }
                 }

@@ -147,6 +147,19 @@ public final class Cdi {
     }
 
     /**
+     * Whether the annotation name is one of the scopes this implementation serves.
+     *
+     * @param name The annotation name
+     * @return Whether it is a scope
+     */
+    public static boolean isScope(String name) {
+        return "jakarta.enterprise.context.ApplicationScoped".equals(name)
+            || "jakarta.enterprise.context.RequestScoped".equals(name)
+            || DEPENDENT.equals(name)
+            || "jakarta.inject.Singleton".equals(name);
+    }
+
+    /**
      * Whether the element declares the annotation and no build compatible extension took it off: a removal
      * from some elements does not reach every reader, so what was removed is recorded and consulted here.
      *

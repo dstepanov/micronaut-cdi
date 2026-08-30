@@ -49,7 +49,10 @@ final class VisitorTypes implements Types {
             return ofVoid();
         }
         if (clazz.isArray()) {
-            return ofArray(of(clazz.getComponentType()), 1);
+            return ElementTypes.of(ClassElement.of(clazz));
+        }
+        if (clazz.isPrimitive()) {
+            return ElementTypes.of(io.micronaut.inject.ast.PrimitiveElement.valueOf(clazz.getName()));
         }
         return element(clazz.getName());
     }
@@ -85,7 +88,13 @@ final class VisitorTypes implements Types {
 
     @Override
     public ArrayType ofArray(Type componentType, int dimensions) {
-        throw new UnsupportedOperationException("An array type is not composed here yet");
+        // composed from the component's own element, raised a dimension at a time: a primitive, a class and
+        // an array all have one, and none of them survives a round trip through a name
+        ClassElement component = ElementTypes.elementOf(componentType);
+        for (int i = 0; i < dimensions; i++) {
+            component = component.toArray();
+        }
+        return (ArrayType) ElementTypes.of(component);
     }
 
     @Override

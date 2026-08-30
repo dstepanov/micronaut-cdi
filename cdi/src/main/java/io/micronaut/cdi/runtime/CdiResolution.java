@@ -105,6 +105,13 @@ public final class CdiResolution {
     }
 
     public static int priorityOf(BeanDefinition<?> definition) {
+        // the priority itself where the metadata kept it — zero is a legal priority, which the order encoding
+        // alone cannot say apart from none
+        java.util.OptionalInt priority = definition.getAnnotationMetadata()
+            .intValue("jakarta.annotation.Priority", io.micronaut.core.annotation.AnnotationMetadata.VALUE_MEMBER);
+        if (priority.isPresent()) {
+            return priority.getAsInt();
+        }
         int order = definition.getOrder();
         return order == 0 ? Integer.MIN_VALUE : -order;
     }

@@ -78,6 +78,33 @@ public final class ElementTypes {
     }
 
     /**
+     * The Micronaut element a type of this model stands for: what {@link #of(ClassElement)} was given, so that
+     * a type handed back by a builder can be composed with rather than only read.
+     *
+     * @param type The type
+     * @return The element
+     */
+    public static ClassElement elementOf(Type type) {
+        if (type instanceof Void) {
+            return io.micronaut.inject.ast.PrimitiveElement.VOID;
+        }
+        if (type instanceof Primitive primitive) {
+            return io.micronaut.inject.ast.PrimitiveElement.valueOf(primitive.name());
+        }
+        if (type instanceof Array array) {
+            return elementOf(array.componentType()).toArray();
+        }
+        if (type instanceof Class classType && classType.declaration() instanceof ElementClassInfo info) {
+            return info.classElement();
+        }
+        if (type instanceof Parameterized parameterized
+            && parameterized.genericClass().declaration() instanceof ElementClassInfo info) {
+            return info.classElement();
+        }
+        throw new IllegalArgumentException("The type " + type + " was not composed by this model");
+    }
+
+    /**
      * The annotations of a type, which are none: Micronaut records the annotations of a declaration rather than
      * the ones written on a use of a type.
      */
