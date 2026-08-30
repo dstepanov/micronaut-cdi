@@ -51,6 +51,12 @@ import java.util.Set;
 @Internal
 public final class CdiQualifiers {
 
+    /**
+     * What each annotation name turned out to be: the qualifier a container holds repetitions of, or nothing.
+     */
+    private static final java.util.Map<String, java.util.Optional<Class<? extends Annotation>>>
+        REPEATED_QUALIFIERS = new java.util.concurrent.ConcurrentHashMap<>();
+
     private CdiQualifiers() {
     }
 
@@ -195,6 +201,17 @@ public final class CdiQualifiers {
      */
     @SuppressWarnings("unchecked")
     private static @Nullable Class<? extends Annotation> repeatedQualifierOf(String name) {
+        // what an annotation name turns out to be is a property of the classpath, and reading a bean's
+        // qualifiers is on the injection path: the answer — including "not a container" — is remembered
+        return REPEATED_QUALIFIERS.computeIfAbsent(name, CdiQualifiers::readRepeatedQualifierOf)
+            .orElse(null);
+    }
+
+    private static java.util.Optional<Class<? extends Annotation>> readRepeatedQualifierOf(String name) {
+        return java.util.Optional.ofNullable(loadRepeatedQualifierOf(name));
+    }
+
+    private static @Nullable Class<? extends Annotation> loadRepeatedQualifierOf(String name) {
         Class<? extends Annotation> container;
         try {
             container = (Class<? extends Annotation>) Class.forName(

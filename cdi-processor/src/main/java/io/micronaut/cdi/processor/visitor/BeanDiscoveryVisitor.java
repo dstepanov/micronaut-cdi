@@ -95,7 +95,10 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
         for (String typedName : element.getAnnotationMetadata()
             .stringValues(Cdi.TYPED)) {
             // section 2.2.2: every type named by @Typed must be a type the class actually has
-            if (!"java.lang.Object".equals(typedName) && !element.isAssignable(typedName)) {
+            // the metadata holds binary names, in which a nested type is Outer$Inner; assignability is asked
+            // with the source form
+            if (!"java.lang.Object".equals(typedName) && !element.isAssignable(typedName)
+                && !element.isAssignable(typedName.replace('$', '.'))) {
                 context.fail("The class " + element.getName() + " restricts its bean types to "
                     + typedName + ", which is not one of its types (section 2.2.2)", element);
                 return;

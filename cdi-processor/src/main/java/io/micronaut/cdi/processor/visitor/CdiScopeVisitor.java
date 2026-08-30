@@ -116,6 +116,17 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
+     * Whether the annotation is a scope of the specification's kind: one meta-annotated {@code Scope} or
+     * {@code NormalScope}, which an application may declare as well as the container.
+     */
+    private static boolean isDeclaredScopeAnnotation(String name, VisitorContext context) {
+        return context.getClassElement(name)
+            .map(declaration -> declaration.hasDeclaredAnnotation("jakarta.inject.Scope")
+                || declaration.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE))
+            .orElse(false);
+    }
+
+    /**
      * Whether a stereotype is well formed: section 2.7.1 lets it carry at most one scope, and its
      * {@code Named} — if it declares one — must have no value of its own.
      */
@@ -170,7 +181,10 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                 return false;
             }
         }
-        boolean declaresItsOwnScope = element.getDeclaredAnnotationNames().stream().anyMatch(Cdi::isScope);
+        // any scope settles it, including one the application declared: the specification says "a scope",
+        // not one of the built-in four
+        boolean declaresItsOwnScope = element.getDeclaredAnnotationNames().stream()
+            .anyMatch(name -> Cdi.isScope(name) || isDeclaredScopeAnnotation(name, context));
         if (scopes.size() > 1 && stereotypes.size() == 1) {
             // one stereotype naming two scopes is malformed in itself; the bean cannot settle that
             context.fail("The stereotype " + stereotypes.get(0) + " on " + element.getName() + " names more "
@@ -184,9 +198,11 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                 element);
             return false;
         }
-        if (priorities.size() > 1) {
+        boolean declaresItsOwnPriority = element.getDeclaredAnnotationNames().contains(Cdi.PRIORITY);
+        if (priorities.size() > 1 && !declaresItsOwnPriority) {
             context.fail("The class " + element.getName() + " carries stereotypes naming different "
-                + "priorities " + priorities + " (section 2.7.1)", element);
+                + "priorities " + priorities + " and declares no priority of its own to settle it "
+                + "(section 2.7.1)", element);
             return false;
         }
         return true;

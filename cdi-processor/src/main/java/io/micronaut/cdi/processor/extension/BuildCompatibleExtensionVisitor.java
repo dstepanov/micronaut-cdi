@@ -667,8 +667,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
          */
         private static boolean carriedAsMetaAnnotation(io.micronaut.core.annotation.AnnotationMetadata metadata,
                                                        String annotation) {
-            return metadata.getDeclaredAnnotationNames().stream()
-                .anyMatch(declared -> metadata.getAnnotationNamesByStereotype(declared).contains(annotation));
+            // what carries the asked-for annotation as a meta-annotation: the query answers the annotations
+            // that lead to it, and any of them being declared here is what counts
+            java.util.List<String> carriers = metadata.getAnnotationNamesByStereotype(annotation);
+            return metadata.getDeclaredAnnotationNames().stream().anyMatch(carriers::contains);
         }
 
         private void enhance(ClassElement element, Messages messages, VisitorContext context) {

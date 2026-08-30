@@ -242,6 +242,12 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     private record NextInContext(InvocationContext invocation, ProceedsTo next) implements InvocationContext {
 
         @Override
+        public java.util.Set<Annotation> getInterceptorBindings() {
+            // the bindings are the caller's: the wrapper only moves the chain along
+            return invocation.getInterceptorBindings();
+        }
+
+        @Override
         public Object getTarget() {
             return invocation.getTarget();
         }

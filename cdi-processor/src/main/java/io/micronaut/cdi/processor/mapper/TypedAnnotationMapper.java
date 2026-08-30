@@ -49,6 +49,11 @@ public final class TypedAnnotationMapper implements NamedAnnotationMapper {
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         AnnotationClassValue<?>[] types = annotation.annotationClassValues(AnnotationMetadata.VALUE_MEMBER);
+        if (types.length == 0) {
+            // a Typed naming nothing leaves the bean with Object as its only bean type (section 2.2.4); an
+            // empty typed member reads to Micronaut as no restriction at all, so Object is named outright
+            types = new AnnotationClassValue<?>[] {new AnnotationClassValue<>(Object.class)};
+        }
         return List.of(annotation, AnnotationValue.builder(Bean.class)
             .member("typed", types)
             .build());
