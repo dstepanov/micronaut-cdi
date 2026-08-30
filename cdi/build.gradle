@@ -1,0 +1,21 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-module"
+}
+
+dependencies {
+    annotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
+
+    api libs.managed.jakarta.cdi.api
+    api libs.managed.jakarta.inject.api
+    api libs.managed.jakarta.annotation.api
+    api libs.managed.jakarta.interceptor.api
+    api libs.managed.micronaut.jakarta.interceptors
+    api mn.micronaut.core
+    api mn.micronaut.aop
+    api mn.micronaut.inject
+    api mn.micronaut.context
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

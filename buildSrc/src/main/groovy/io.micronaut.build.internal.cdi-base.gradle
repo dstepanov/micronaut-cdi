@@ -1,0 +1,18 @@
+repositories {
+    // a Micronaut built from a checkout beside this one, published with publishToMavenLocal. It is consulted
+    // first so that a fix being worked on in Micronaut itself can be built against here before it is released;
+    // where nothing has been published locally, the snapshot below is what resolves
+    mavenLocal()
+    mavenCentral()
+    // the 5.2 snapshot of Micronaut Core; remove once 5.2 is released
+    maven {
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}

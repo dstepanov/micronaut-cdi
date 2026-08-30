@@ -1,0 +1,97 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<!-- The part of the kit that runs through the Arquillian adapter. It grows as conformance does: a package is
+     added when the implementation is ready to be held to it, and what is not on it is not yet claimed. -->
+<suite name="CDI Lite TCK" verbose="1" configfailurepolicy="continue">
+    <!-- core mode: what the kit marks as CDI Full does not run against CDI Lite -->
+    <groups>
+        <run>
+            <exclude name="cdi-full"/>
+        </run>
+    </groups>
+    <test name="definition">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.definition.qualifier"/>
+            <package name="org.jboss.cdi.tck.tests.definition.scope"/>
+            <package name="org.jboss.cdi.tck.tests.definition.stereotype"/>
+            <package name="org.jboss.cdi.tck.tests.definition.name"/>
+            <package name="org.jboss.cdi.tck.tests.definition.bean"/>
+            <package name="org.jboss.cdi.tck.tests.definition.bean.genericbroken"/>
+            <package name="org.jboss.cdi.tck.tests.vetoed"/>
+        </packages>
+    </test>
+    <test name="discovery-and-resolution">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.inheritance.generics"/>
+            <package name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier"/>
+            <package name="org.jboss.cdi.tck.tests.alternative.selection"/>
+            <package name="org.jboss.cdi.tck.tests.alternative.selection.priority"/>
+            <package name="org.jboss.cdi.tck.tests.alternative.selection.stereotype.priority"/>
+            <package name="org.jboss.cdi.tck.tests.deployment.discovery"/>
+            <package name="org.jboss.cdi.tck.tests.beanContainer"/>
+            <package name="org.jboss.cdi.tck.tests.beanContainer.assignability"/>
+            <package name="org.jboss.cdi.tck.tests.beanContainer.bytype"/>
+            <package name="org.jboss.cdi.tck.tests.beanContainer.injection"/>
+            <package name="org.jboss.cdi.tck.tests.context"/>
+            <package name="org.jboss.cdi.tck.tests.context.alterable"/>
+            <package name="org.jboss.cdi.tck.tests.context.dependent"/>
+            <package name="org.jboss.cdi.tck.tests.context.dependent.instance"/>
+            <package name="org.jboss.cdi.tck.tests.context.dependent.transientreference"/>
+        </packages>
+    </test>
+    <test name="lookup">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.lookup.*"/>
+        </packages>
+    </test>
+    <test name="implementation">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.implementation.*"/>
+        </packages>
+    </test>
+    <test name="interceptors">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.interceptors.*"/>
+            <package name="org.jboss.cdi.tck.interceptors.tests.*"/>
+        </packages>
+    </test>
+    <test name="build-compatible-extensions">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.build.compatible.extensions.*"/>
+        </packages>
+    </test>
+    <test name="event">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.event.*"/>
+        </packages>
+    </test>
+    <!-- The SE bootstrap tests, listed by class: the ones left out depend on what belongs to CDI Full and is
+         not pretended here - portable extensions (customClassloader, customCDIProvider's neighbours aside,
+         context.custom), decorators, and InterceptionFactory (discovery.trimmed) - each recorded in
+         CONFORMANCE.md -->
+    <test name="invokers">
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.invokers.*"/>
+        </packages>
+    </test>
+    <test name="se">
+        <classes>
+            <class name="org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest">
+                <methods>
+                    <!-- portable extensions and decorators belong to CDI Full -->
+                    <exclude name="testAddExtensionAsExtensionInstance"/>
+                    <exclude name="testAddExtensionAsClass"/>
+                    <exclude name="testAddDecorator"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.container.contextualReference.InvalidContextualReferenceTest"/>
+            <class name="org.jboss.cdi.tck.tests.se.context.ContextSETest"/>
+            <class name="org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest"/>
+            <class name="org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest"/>
+            <class name="org.jboss.cdi.tck.tests.se.context.request.RequestContextTest"/>
+            <class name="org.jboss.cdi.tck.tests.se.customCDIProvider.CustomCDIProviderTest"/>
+            <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveSETest"/>
+            <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveWithSystemPropertyTest"/>
+            <class name="org.jboss.cdi.tck.tests.se.events.lifecycle.StartupShutdownTest"/>
+        </classes>
+    </test>
+</suite>

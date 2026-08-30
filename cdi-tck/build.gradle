@@ -1,0 +1,210 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+}
+
+// The scenarios of the Jakarta Contexts and Dependency Injection technology compatibility kit, compiled against
+// this implementation and exercised by the tests of this project.
+//
+// The kit's own test classes drive a container through Arquillian: each of them builds a deployment archive out of
+// its package, deploys it and asserts against a BeanManager. None of that can run here, because a bean of this
+// implementation is a bean by the time it has been compiled and there is nothing to deploy. What can run are the
+// scenarios themselves: the beans, the producers, the qualifiers and the observers the specification's own authors
+// wrote. They are fetched here, compiled with the annotation processor of this module, and the assertions the kit
+// makes about them are ported into the tests of this project, package by package.
+//
+// Nothing is vendored: the sources are resolved from Maven Central at build time. They are Apache 2.0 licensed, as
+// this project is.
+configurations {
+    tckSources {
+        canBeConsumed = false
+        transitive = false
+    }
+}
+
+dependencies {
+    tckSources(variantOf(libs.cdi.tck.core) { classifier('sources') })
+    tckSources(variantOf(libs.cdi.tck.api) { classifier('sources') })
+}
+
+// The packages of the kit that are compiled here, and so the part of the specification this module is held to.
+// The list grows as the implementation does; what is not on it is not yet claimed.
+def liteScenarios = [
+    'org/jboss/cdi/tck/tests/**',
+    // the interceptors kit, which the core kit runs as its own tree
+    'org/jboss/cdi/tck/interceptors/tests/**',
+    // the helpers the scenarios use: the recorder they log their invocations with, which is what the assertions
+    // here read, and the odds and ends they are written against
+    'org/jboss/cdi/tck/util/**',
+    'org/jboss/cdi/tck/api/**',
+    'org/jboss/cdi/tck/spi/**',
+    'org/jboss/cdi/tck/impl/*.java',
+]
+
+// The deployments the kit expects a container to reject. They are not compiled with the rest: each is compiled
+// on its own when its test deploys it, and what the compiler rejects there is what a container rejects as it
+// deploys — deployment is compilation here. The same patterns are handed to the suite so the adapter knows
+// which archives take that road.
+def brokenScenarios = [
+    // a deployment the kit expects a container to reject, which is not compiled with the rest: the kit keeps
+    // such scenarios in packages named broken, or names the classes themselves Broken
+    '**/broken/**',
+    '**/*_Broken.java',
+    '**/*Broken.java',
+    // whole families of deployments the specification requires a container to reject, because a bean in a
+    // normal scope has to be proxyable and these are not: an array, a primitive, an intercepted bean whose
+    // methods cannot be overridden. Section 2.2.10 has the container detect them, and this container detects
+    // them as the deployment compiles. An unproxyable CLASS, by contrast, deploys and fails only on
+    // resolution (section 3.11), so implementation/simple/lifecycle/unproxyable is compiled with the module
+    'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/array/**',
+    'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/primitive/**',
+    'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/interceptor/**',
+    // deployments the kit expects rejected whose packages are named for the mistake rather than named broken:
+    // a bean constructor that tries to observe or dispose, one constructor too many, and a public field on a
+    // bean in a normal scope
+    'org/jboss/cdi/tck/tests/implementation/simple/definition/constructorHasObservesParameter/**',
+    'org/jboss/cdi/tck/tests/implementation/simple/definition/constructorHasDisposesParameter/**',
+    'org/jboss/cdi/tck/tests/implementation/simple/definition/constructorHasAsyncObservesParameter/**',
+    'org/jboss/cdi/tck/tests/implementation/simple/definition/tooManyInitializerAnnotatedConstructors/**',
+    'org/jboss/cdi/tck/tests/implementation/simple/definition/normalScopedWithPublicField/**',
+    // the deployments that carry build compatible extensions are always compiled as they deploy, with their
+    // own extensions running: definitions the shared compilation would produce for them would not carry what
+    // the extensions changed, and would shadow the ones that do
+    'org/jboss/cdi/tck/tests/build/compatible/extensions/**',
+]
+
+// The scenarios that cannot be built here, and why. Each is a deliberate exclusion rather than a silent one.
+def unbuildableScenarios = brokenScenarios + [
+    // CDI Full, which this module does not implement
+    'org/jboss/cdi/tck/tests/full/**',
+]
+
+def tckScenarios = tasks.register('tckScenarios', Sync) {
+    description = 'Unpacks the CDI Lite scenarios of the technology compatibility kit.'
+    from({ configurations.tckSources.files.collect { zipTree(it) } }) {
+        include liteScenarios
+        exclude unbuildableScenarios
+    }
+    into layout.buildDirectory.dir('generated/tck')
+    // a scenario that reaches for the container itself, or for the kit's own audit annotations, cannot be built
+    // here: there is no container to reach for, and the audit annotations are not published
+    eachFile { details ->
+        def text = details.file.text
+        // the kit's test classes are recognised by what they reach for rather than by their name: a scenario
+        // may well be named SystemTest and be a qualifier annotation rather than a test.
+        //
+        // Only what cannot be compiled is dropped. A scenario that names a BeanManager compiles perfectly well —
+        // the type is in the api of the specification, and it is only this implementation that has no bean of it
+        // — so it is kept, and it is the assertions that are written against it that are not ported
+        if (text.contains('org.jboss.arquillian') || text.contains('org.jboss.shrinkwrap')
+            || text.contains('org.jboss.cdi.tck.shrinkwrap')
+            || text.contains('org.jboss.test.audit') || text.contains('org.jboss.cdi.tck.AbstractTest')
+            || text.contains('jakarta.enterprise.inject.spi.Extension')) {
+            details.exclude()
+        }
+    }
+}
+
+sourceSets.test.java.srcDir tckScenarios
+
+// The whole scenario source tree, broken deployments included, for the archives that are compiled as they are
+// deployed: the adapter reads the sources of an archive's classes from here and compiles them in memory.
+def deployableTckSources = tasks.register('deployableTckSources', Sync) {
+    description = 'Unpacks every CDI Lite scenario source for per-deployment compilation.'
+    from({ configurations.tckSources.files.collect { zipTree(it) } }) {
+        include liteScenarios
+        exclude 'org/jboss/cdi/tck/tests/full/**'
+    }
+    into layout.buildDirectory.dir('generated/tck-deployable')
+}
+
+// The kit's own suite, driven by the kit's own test classes through the Arquillian adapter. It is a task of its
+// own rather than part of `test`: the ported assertions run on JUnit, and this runs on TestNG the way the kit
+// distributes it. What is on the suite is decided by the suite file, which grows as conformance does.
+def tckLibraryDir = layout.buildDirectory.dir('tck-library')
+def prepareTckLibrary = tasks.register('prepareTckLibrary') {
+    outputs.dir(tckLibraryDir)
+    doLast {
+        tckLibraryDir.get().asFile.mkdirs()
+    }
+}
+
+def tckSuite = tasks.register('tckSuite', Test) {
+    description = 'Runs the technology compatibility kit through the Arquillian adapter.'
+    group = 'verification'
+    dependsOn prepareTckLibrary
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useTestNG {
+        suites file('src/test/resources/tck-suite.xml')
+    }
+    // core mode is what the kit calls running against CDI Lite: the properties of the full profile — a data
+    // source, JMS — are not required and the suite holds the implementation to Lite
+    systemProperty 'org.jboss.cdi.tck.cdiCoreMode', 'true'
+    systemProperty 'org.jboss.cdi.tck.libraryDirectory', tckLibraryDir.get().asFile.absolutePath
+    systemProperty 'org.jboss.cdi.tck.testTimeoutFactor', '100'
+    // deployment is compilation: the adapter compiles a broken archive's sources as the kit deploys it
+    dependsOn deployableTckSources
+    systemProperty 'io.micronaut.cdi.tck.deployableSources',
+        layout.buildDirectory.dir('generated/tck-deployable').get().asFile.absolutePath
+    systemProperty 'io.micronaut.cdi.tck.brokenScenarios', brokenScenarios.join(',')
+    // every deployment the suite makes is one container starting and stopping; they are quick, but there are many
+    maxHeapSize = '2g'
+    // the whole suite passes: a failing test is a broken build now, not a finding
+    ignoreFailures = false
+    // the tests come from the suite file rather than from scanning the compiled classes, which hold none
+    failOnNoDiscoveredTests = false
+    scanForTestClasses = false
+}
+
+// the kit is the measure of done, so the build is not done without it
+tasks.named('check') {
+    dependsOn 'tckSuite'
+}
+
+dependencies {
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    // the kit's EL assertions evaluate through the optional expression-language bridge
+    testImplementation projects.micronautCdiEl
+    testImplementation projects.micronautCdiReflection
+    testRuntimeOnly libs.managed.micronaut.jakarta.el.interpreter
+    testImplementation mn.micronaut.core
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+    // the compiler the adapter deploys broken archives through, and the processor it compiles them with
+    testImplementation mn.micronaut.inject.java.test
+    testImplementation projects.micronautCdiProcessor
+    // the kit's audit annotations, so that a test class whose nested classes are the deployment's beans can be
+    // compiled as it deploys: the annotations are compile-time references of every kit source
+    testRuntimeOnly 'org.jboss.test-audit:jboss-test-audit-api:2.0.0.Final'
+    // the SE bootstrap tests build their deployment through the SE container API's ClassPath archive
+    testImplementation 'org.jboss.arquillian.container:container-se-api:1.0.2.Final'
+
+    // the kit's scenarios assert with TestNG, which the ported assertions use as a library and the kit's own
+    // test classes are run with
+    testImplementation libs.testng
+
+    // the kit's own test classes, compiled: they drive a container through Arquillian, and the adapter under
+    // io.micronaut.cdi.tck.arquillian is the container they drive. The scenario classes this module compiles
+    // itself shadow the jar's copies, which is what gives them their bean definitions
+    testImplementation(libs.cdi.tck.core) {
+        transitive = false
+    }
+    testImplementation(libs.cdi.tck.api) {
+        transitive = false
+    }
+    testImplementation libs.arquillian.testng
+    testImplementation libs.arquillian.container.spi
+    testRuntimeOnly libs.arquillian.container.impl
+    testRuntimeOnly libs.arquillian.container.test.impl
+    testRuntimeOnly libs.shrinkwrap.impl
+    testRuntimeOnly libs.shrinkwrap.descriptors
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

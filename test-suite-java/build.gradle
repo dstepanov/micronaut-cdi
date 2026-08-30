@@ -1,0 +1,25 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+}
+
+dependencies {
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    // the interceptor methods of an interceptor class are recorded by the Jakarta Interceptors processor
+    testAnnotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
+    // a build compatible extension runs while the classes it enhances are compiled, so it goes here
+    testAnnotationProcessor projects.testSuiteExtension
+
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    // the optional module that describes to the registration phase the beans the compiler never saw
+    testImplementation projects.micronautCdiReflection
+    testImplementation projects.testSuiteExtension
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

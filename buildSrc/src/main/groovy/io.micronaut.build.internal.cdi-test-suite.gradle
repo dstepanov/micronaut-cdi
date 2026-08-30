@@ -1,0 +1,16 @@
+plugins {
+    id 'io.micronaut.build.internal.cdi-base'
+    id 'java'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+configurations.all {
+    resolutionStrategy.preferProjectModules()
+}
+
+dependencies {
+    testRuntimeOnly(libs.junit.platform.launcher)
+}

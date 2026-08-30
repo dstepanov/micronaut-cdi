@@ -1,0 +1,65 @@
+[versions]
+managed-jakarta-cdi = "4.1.0"
+managed-jakarta-inject = "2.0.1"
+managed-jakarta-interceptor = "2.2.0"
+managed-jakarta-annotation = "3.0.0"
+
+micronaut = "5.2.0-SNAPSHOT"
+managed-micronaut-jakarta-interceptors = "1.0.0-SNAPSHOT"
+managed-micronaut-jakarta-el = "1.0.1-SNAPSHOT"
+
+junit = "5.14.4"
+cdi-tck = "4.1.0"
+testng = "7.10.2"
+arquillian = "1.9.1.Final"
+shrinkwrap = "1.2.6"
+shrinkwrap-descriptors = "2.0.0"
+
+errorprone-gradle-plugin = "5.1.0"
+error_prone_core = "2.50.0"
+nullaway = "0.14.0"
+graalvm-buildtools = "0.11.5"
+
+[libraries]
+# core
+micronaut-core = { module = 'io.micronaut:micronaut-core-bom', version.ref = 'micronaut' }
+
+# managed dependencies
+managed-jakarta-cdi-api = { module = 'jakarta.enterprise:jakarta.enterprise.cdi-api', version.ref = 'managed-jakarta-cdi' }
+managed-jakarta-inject-api = { module = 'jakarta.inject:jakarta.inject-api', version.ref = 'managed-jakarta-inject' }
+managed-jakarta-interceptor-api = { module = 'jakarta.interceptor:jakarta.interceptor-api', version.ref = 'managed-jakarta-interceptor' }
+managed-jakarta-annotation-api = { module = 'jakarta.annotation:jakarta.annotation-api', version.ref = 'managed-jakarta-annotation' }
+
+# the sibling implementation of Jakarta Interceptors, which this module defers the interception of a bean to
+managed-micronaut-jakarta-interceptors = { module = 'io.micronaut.interceptor:micronaut-jakarta-interceptors', version.ref = 'managed-micronaut-jakarta-interceptors' }
+managed-micronaut-jakarta-interceptors-processor = { module = 'io.micronaut.interceptor:micronaut-jakarta-interceptors-processor', version.ref = 'managed-micronaut-jakarta-interceptors' }
+managed-micronaut-jakarta-el = { module = 'io.micronaut.el:micronaut-jakarta-el', version.ref = 'managed-micronaut-jakarta-el' }
+managed-micronaut-jakarta-el-interpreter = { module = 'io.micronaut.el:micronaut-jakarta-el-interpreter', version.ref = 'managed-micronaut-jakarta-el' }
+
+# nullability
+nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+error-prone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "error_prone_core" }
+
+# gradle plugins
+gradle-errorprone = { module = "net.ltgt.errorprone:net.ltgt.errorprone.gradle.plugin", version.ref = "errorprone-gradle-plugin" }
+gradle-graalvm-native = { module = "org.graalvm.buildtools:native-gradle-plugin", version.ref = "graalvm-buildtools" }
+
+# the technology compatibility kit of this specification
+cdi-tck-core = { module = 'jakarta.enterprise:cdi-tck-core-impl', version.ref = 'cdi-tck' }
+# the kit's scenarios assert with TestNG, and record their invocations with its own ActionSequence
+testng = { module = 'org.testng:testng', version.ref = 'testng' }
+
+# the harness the kit's own test classes drive a container through
+cdi-tck-api = { module = 'jakarta.enterprise:cdi-tck-api', version.ref = 'cdi-tck' }
+arquillian-testng = { module = 'org.jboss.arquillian.testng:arquillian-testng-container', version.ref = 'arquillian' }
+arquillian-container-spi = { module = 'org.jboss.arquillian.container:arquillian-container-test-spi', version.ref = 'arquillian' }
+arquillian-container-impl = { module = 'org.jboss.arquillian.container:arquillian-container-impl-base', version.ref = 'arquillian' }
+arquillian-container-test-impl = { module = 'org.jboss.arquillian.container:arquillian-container-test-impl-base', version.ref = 'arquillian' }
+shrinkwrap-impl = { module = 'org.jboss.shrinkwrap:shrinkwrap-impl-base', version.ref = 'shrinkwrap' }
+shrinkwrap-descriptors = { module = 'org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee', version.ref = 'shrinkwrap-descriptors' }
+
+# testing
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

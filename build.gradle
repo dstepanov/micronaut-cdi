@@ -1,0 +1,21 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-base"
+    id "io.micronaut.build.internal.parent"
+}
+
+// The specification this module implements, fetched rather than vendored, so that what the implementation is read
+// against is the published document itself and stays a download rather than a copy in this repository.
+tasks.register('fetchSpec') {
+    description = 'Downloads the Jakarta Contexts and Dependency Injection 4.0 specification.'
+    def target = layout.projectDirectory.file('spec/jakarta-cdi-spec-4.0.html')
+    outputs.file(target)
+    doLast {
+        def file = target.asFile
+        file.parentFile.mkdirs()
+        file.withOutputStream { out ->
+            new URI('https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0').toURL()
+                .withInputStream { from -> out << from }
+        }
+        logger.lifecycle("Fetched the specification into ${file}")
+    }
+}

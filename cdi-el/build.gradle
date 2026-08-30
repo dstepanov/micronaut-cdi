@@ -1,0 +1,27 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-module"
+}
+
+// The bridge between this container and the Jakarta Expression Language.
+//
+// Evaluating an expression is the business of that specification, implemented by micronaut-jakarta-el; what
+// belongs here is only the joint between the two: a resolver that answers a name with the bean of that name, and
+// the bean the bean manager finds it through. An application that evaluates no expressions does not carry an
+// expression language, which is why this is a module of its own rather than part of the runtime.
+dependencies {
+    api projects.micronautCdi
+    api libs.managed.micronaut.jakarta.el
+
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+    // the runtime parser, so that an expression arrived at only at runtime still evaluates
+    testRuntimeOnly libs.managed.micronaut.jakarta.el.interpreter
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

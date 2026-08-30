@@ -1,0 +1,57 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'io.micronaut.build.shared.settings' version '8.0.1'
+}
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        // the 5.2 snapshot of Micronaut Core, whose version catalog is imported below; remove once 5.2 is released
+        maven {
+            url = 'https://central.sonatype.com/repository/maven-snapshots/'
+            mavenContent {
+                snapshotsOnly()
+            }
+        }
+    }
+}
+
+rootProject.name = 'cdi-parent'
+
+include 'cdi'
+include 'cdi-bom'
+include 'cdi-el'
+include 'cdi-processor'
+include 'cdi-reflection'
+include 'cdi-tck'
+include 'test-suite-extension'
+include 'test-suite-java'
+
+// Jakarta Interceptors is implemented by a sibling project rather than again here: the interception of a bean is
+// the business of that specification, and Contexts and Dependency Injection defers to it. It has no published
+// snapshot yet, so it is substituted from a checkout beside this one when there is one.
+def interceptors = file("${rootDir}/../micronaut-jakarta-interceptors")
+if (interceptors.directory) {
+    // the coordinates it publishes are substituted for its projects automatically
+    includeBuild(interceptors)
+}
+
+// Jakarta Expression Language likewise: evaluating an expression is the business of its own specification, and
+// the module bridging it to this container substitutes the sibling checkout the same way.
+def el = file("${rootDir}/../micronaut-jakarta-el")
+if (el.directory) {
+    includeBuild(el)
+}
+
+micronautBuild {
+    useStandardizedProjectNames.set(true)
+    importMicronautCatalog()
+}

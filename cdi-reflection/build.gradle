@@ -1,0 +1,20 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-module"
+}
+
+// The parts of the specification that can only be answered by reading the application back with reflection.
+//
+// Micronaut resolves and injects a bean without reflecting, and this module implements the specification the same
+// way: what a bean is was decided while it was compiled. The registration phase of a build compatible extension
+// asks for something else — it describes every bean and every observer of the finished container to an extension,
+// in the terms of the specification's own language model, and there is no compiler around to describe them with.
+//
+// That is why it is a module of its own rather than part of the runtime: an application that does not use the
+// phase does not have it, and one that does asks for it by adding this dependency.
+dependencies {
+    api projects.micronautCdi
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

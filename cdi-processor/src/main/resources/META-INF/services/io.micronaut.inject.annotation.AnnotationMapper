@@ -1,0 +1,7 @@
+io.micronaut.cdi.processor.mapper.ApplicationScopedAnnotationMapper
+io.micronaut.cdi.processor.mapper.DependentAnnotationMapper
+io.micronaut.cdi.processor.mapper.RequestScopedAnnotationMapper
+io.micronaut.cdi.processor.mapper.TypedAnnotationMapper
+io.micronaut.cdi.processor.mapper.NormalScopeAnnotationMapper
+io.micronaut.cdi.processor.mapper.StereotypeAnnotationMapper
+io.micronaut.cdi.processor.mapper.TransientReferenceAnnotationMapper

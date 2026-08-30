@@ -1,0 +1,10 @@
+io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor
+io.micronaut.cdi.processor.visitor.CdiScopeVisitor
+io.micronaut.cdi.processor.visitor.BeanNameVisitor
+io.micronaut.cdi.processor.visitor.BeanDiscoveryVisitor
+io.micronaut.cdi.processor.visitor.ProducerVisitor
+io.micronaut.cdi.processor.visitor.ObserverVisitor
+io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor
+io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor
+io.micronaut.cdi.processor.visitor.ProxyabilityVisitor
+io.micronaut.cdi.processor.extension.RegistrationVisitor

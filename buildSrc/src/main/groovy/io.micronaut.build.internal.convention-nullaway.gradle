@@ -1,0 +1,25 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+plugins {
+    id 'io.micronaut.build.internal.cdi-base'
+    id 'net.ltgt.errorprone'
+}
+
+dependencies {
+    errorprone libs.nullaway
+    errorprone libs.error.prone.core
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        check("NullAway", CheckSeverity.ERROR)
+        check("MissingOverride", CheckSeverity.ERROR)
+        option("NullAway:AnnotatedPackages", "io.micronaut")
+    }
+    // the nullability of the test sources is not enforced
+    if (name.toLowerCase().contains("test")) {
+        options.errorprone {
+            disable("NullAway")
+        }
+    }
+}

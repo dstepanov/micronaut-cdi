@@ -1,0 +1,3 @@
+io.micronaut.cdi.test.extension.AuditingExtension
+io.micronaut.cdi.test.extension.ScanAndChangeExtension
+io.micronaut.cdi.test.extension.ReviewScenariosExtension
