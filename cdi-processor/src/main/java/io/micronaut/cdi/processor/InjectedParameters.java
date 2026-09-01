@@ -47,12 +47,36 @@ public final class InjectedParameters {
      */
     public static void readAsInjectionPoints(MethodElement method) {
         for (ParameterElement parameter : method.getParameters()) {
+            java.util.Set<String> written = writtenOn(parameter);
             for (String qualifier : parameter.getAnnotationMetadata()
                 .getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
-                if (!parameter.hasDeclaredAnnotation(qualifier)) {
+                if (!written.contains(qualifier)) {
                     parameter.removeAnnotation(qualifier);
                 }
             }
         }
     }
+
+    /**
+     * The names of the qualifiers written on the parameter itself: the annotations it declares, and — for a
+     * qualifier written more than once, or written once and so recorded in its container — the annotations
+     * that container holds. Asking {@code hasDeclaredAnnotation} for the name a repeatable qualifier is known
+     * by would answer no, because what the metadata declares is the container.
+     */
+    private static java.util.Set<String> writtenOn(ParameterElement parameter) {
+        java.util.Set<String> written = new java.util.LinkedHashSet<>(parameter.getDeclaredAnnotationNames());
+        for (String declared : parameter.getDeclaredAnnotationNames()) {
+            io.micronaut.core.annotation.AnnotationValue<?> container =
+                parameter.getAnnotationMetadata().getAnnotation(declared);
+            if (container == null) {
+                continue;
+            }
+            for (io.micronaut.core.annotation.AnnotationValue<?> each
+                : container.getAnnotations(io.micronaut.core.annotation.AnnotationMetadata.VALUE_MEMBER)) {
+                written.add(each.getAnnotationName());
+            }
+        }
+        return written;
+    }
+
 }

@@ -32,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RepeatableQualifierTest {
 
     @Test
-    @org.junit.jupiter.api.Disabled("Micronaut drops a repeatable annotation from a method parameter's "
-        + "metadata before any visitor sees it, so the qualifiers cannot be read — core finding 23")
     void aRepeatableQualifierNarrowsTheObserversItWasWrittenOn() {
         try (ApplicationContext context = ApplicationContext.run()) {
             Watcher.A.set(0);

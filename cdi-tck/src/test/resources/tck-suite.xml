@@ -8,17 +8,7 @@
             <exclude name="cdi-full"/>
         </run>
     </groups>
-    <!-- RepeatableQualifiersTest is excluded: a repeatable annotation on a method parameter is dropped from
-         Micronaut's annotation metadata before any visitor sees it (core finding 23), so an observer's
-         repeated qualifiers cannot be read. Recorded in CONFORMANCE.md -->
     <test name="definition">
-        <classes>
-            <class name="org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-        </classes>
         <packages>
             <package name="org.jboss.cdi.tck.tests.definition.qualifier.*"/>
             <package name="org.jboss.cdi.tck.tests.definition.scope.*"/>

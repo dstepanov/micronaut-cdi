@@ -186,14 +186,30 @@ is never tracked as a dependent of whoever asked for it, and never destroyed wit
 reference used after the container shut down. Patched locally: `assertContextState` throws
 `IllegalStateException`.
 
-### 23. A repeatable annotation on a method parameter is dropped from the annotation metadata
-A qualifier written on a method parameter survives into the compiled metadata — unless it is `@Repeatable`.
-`@Repeatable`-annotated types are normalized into their container annotation (a field annotated once with
-`@Start("X")` reports `Bootable`, the container, in its metadata), but on a *parameter* neither the repeatable
-nor its container survives: an observer parameter written `@Observes @Start("A") Event e` reports only
-`Observes`, at compile time as well as at runtime. Verified by probing `ParameterElement.getAnnotationMetadata()`
-from a `TypeElementVisitor` — the qualifier is already gone before any visitor runs, so no downstream
-processing can recover it. This makes CDI's repeatable qualifiers (section 2.1.3) unimplementable for observer
-methods and for any parameter injection point: the qualifiers cannot be read, so every such observer matches
-every event of its type. Field, class and method targets are unaffected. Fixing it upstream means retaining a
-repeatable annotation's container on parameter metadata the way it is retained on fields.
+### 23. RETRACTED — the repeatable qualifier was dropped by this project, not by core
+Recorded as core dropping a `@Repeatable` annotation from a method parameter's metadata. It does not: probing
+`origin/5.2.x` directly shows a parameter keeps the container exactly as a field does. What dropped it was this
+project's own `InjectedParameters.readAsInjectionPoints`, which strips the qualifiers a parameter did not
+declare itself and asked the question two incompatible ways — `getAnnotationNamesByStereotype` answers with the
+name the author wrote (`Start`), while the metadata declares the container (`Bootable`), so
+`hasDeclaredAnnotation("Start")` said no and the removal took the container with it. Fixed by comparing against
+the annotations written on the parameter, container members included.
+
+The one real observation underneath it is a trap worth knowing: for a repeatable annotation,
+`getAnnotationNamesByStereotype` reports a name that `hasDeclaredAnnotation` then denies, on every element
+kind, and `getDeclaredAnnotationNamesByStereotype` reports nothing at all. Code that pairs those queries will
+be wrong about repeatable annotations.
+
+### 16. RETRACTED — inherited executable methods do resolve their type variables
+Recorded as an inherited `@Executable` method keeping the declaring class's unresolved variables. On
+`origin/5.2.x` it does not: `JavaMethodElement.getDeclaringType()` resolves the declaring superclass through
+the owning subclass's type arguments, and every shape probed — deep chains, interface defaults, precompiled
+superclasses, two subclasses in one round, AOP proxies, bridge methods, recursive and intersection bounds, and
+the Groovy path — reports the substituted type. The visit-order clobbering half is not reproducible either.
+
+What remains true is narrower and is a different gap: a wildcard degrades to its bound
+(`Foo<?>` is compiled as `Foo<Object>`, `List<? extends Number>` as `List<Number>`), because
+`io.micronaut.core.type.Argument` has no wildcard representation. That is why this project still rebuilds an
+observed type reflectively — for wildcards alone, not for inheritance. Fixing it upstream means extending the
+runtime `Argument` model, which is a larger, API-breaking change than the processor-side substitution first
+assumed.

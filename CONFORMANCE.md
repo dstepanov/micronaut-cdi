@@ -142,16 +142,6 @@ because bean-archive membership is a per-deployment question a global compilatio
 bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
 deployment ever admits is the difference visible to code that counts beans.
 
-### A qualifier written more than once on a parameter is not read
-
-*Section 2.1.3.* A `@Repeatable` qualifier is recorded by the compiler in its container annotation, and
-Micronaut keeps that container in the metadata of a field, a class and a method — but not of a *parameter*,
-where neither the qualifier nor its container survives. An observer method written
-`void on(@Observes @Start("A") Event e)` therefore reads as having no qualifiers, and is notified of every
-event of its type. The limitation is the container's, not this module's: the annotation is gone before any
-visitor runs. Repeatable qualifiers on beans, producers and fields work. The kit's
-`RepeatableQualifiersTest` is excluded by name for this reason.
-
 ### Known limitations a review has named
 
 Three findings of an internal review are documented rather than coded around. A dependent bean reached from an

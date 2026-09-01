@@ -46,6 +46,10 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
                              BeanContext context,
                              Argument<?> type,
                              Set<Annotation> qualifiers) {
+        // an injection point that named no qualifier has the default one, and the event carries the
+        // qualifiers of the point it was injected into (section 10.2.1)
+        Set<Annotation> injected = qualifiers.isEmpty()
+            ? Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE) : qualifiers;
         jakarta.enterprise.inject.spi.InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
@@ -54,6 +58,6 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
         }
         // an Argument is itself a Type, so the conversion is spelled out rather than left to overloading
         return new CdiEvent<>(context.getBean(ObserverRegistry.class),
-            CdiTypes.requiredTypeOf(type), qualifiers, injectedAt);
+            CdiTypes.requiredTypeOf(type), injected, injectedAt);
     }
 }
