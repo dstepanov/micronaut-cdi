@@ -236,7 +236,7 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
         RuntimeException failure = null;
         for (io.micronaut.context.BeanRegistration<?> registration : drainTransients()) {
             try {
-                destroyRegistration(beanContext, registration);
+                registration.close();
             } catch (RuntimeException e) {
                 if (failure == null) {
                     failure = e;
@@ -310,7 +310,7 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
             }
         }
         if (tracked != null) {
-            destroyRegistration(beanContext, tracked);
+            tracked.close();
             return;
         }
         for (BeanDefinition<T> definition : definitions()) {
@@ -320,12 +320,6 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
             }
         }
         beanContext.destroyBean(instance);
-    }
-
-    @SuppressWarnings("unchecked")
-    static void destroyRegistration(BeanContext beanContext,
-                                    io.micronaut.context.BeanRegistration<?> registration) {
-        beanContext.destroyBean((io.micronaut.context.BeanRegistration<Object>) registration);
     }
 
     /**
@@ -526,7 +520,7 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
                     // taken off the lookup's list first: if it is no longer there the lookup already
                     // destroyed it, and destroying it twice would run its @PreDestroy twice
                     if (transientlyCreated.remove(created)) {
-                        CdiInstance.destroyRegistration(beanContext, created);
+                        created.close();
                     }
                 } else {
                     CdiInstance.destroyResolved(beanContext, definition, resolved);

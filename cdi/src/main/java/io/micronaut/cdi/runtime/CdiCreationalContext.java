@@ -36,16 +36,10 @@ import org.jspecify.annotations.Nullable;
 @Internal
 public final class CdiCreationalContext<T> implements CreationalContext<T> {
 
-    private final io.micronaut.context.@Nullable BeanContext beanContext;
     private @Nullable T incompleteInstance;
     private final java.util.List<io.micronaut.context.BeanRegistration<?>> tracked = new java.util.ArrayList<>(2);
 
     public CdiCreationalContext() {
-        this(null);
-    }
-
-    public CdiCreationalContext(io.micronaut.context.@Nullable BeanContext beanContext) {
-        this.beanContext = beanContext;
     }
 
     @Override
@@ -81,14 +75,9 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
         RuntimeException failure = null;
         for (io.micronaut.context.BeanRegistration<?> registration : toClose) {
             try {
-                if (beanContext != null) {
-                    // the registration's own close is a no-op for a definition with nothing of its own to
-                    // dispose: destruction that has to reach the pre-destroy listeners — the disposer methods
-                    // of section 3.3.4 — goes through the context
-                    destroy(beanContext, registration);
-                } else {
-                    registration.close();
-                }
+                // closing a registration the context created destroys through the context, so the pre-destroy
+                // listeners — the disposer methods of section 3.3.4 — are notified
+                registration.close();
             } catch (RuntimeException e) {
                 if (failure == null) {
                     failure = e;
@@ -100,11 +89,6 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
         if (failure != null) {
             throw failure;
         }
-    }
-
-    private static <B> void destroy(io.micronaut.context.BeanContext beanContext,
-                                    io.micronaut.context.BeanRegistration<B> registration) {
-        beanContext.destroyBean(registration);
     }
 
     /**

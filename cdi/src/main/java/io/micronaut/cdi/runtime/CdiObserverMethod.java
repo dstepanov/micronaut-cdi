@@ -261,14 +261,14 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             RuntimeException destructionFailure = null;
             if (transientTarget != null) {
                 try {
-                    destroy(transientTarget);
+                    transientTarget.close();
                 } catch (RuntimeException e) {
                     destructionFailure = e;
                 }
             }
             for (io.micronaut.context.BeanRegistration<?> registration : transientArguments) {
                 try {
-                    destroy(registration);
+                    registration.close();
                 } catch (RuntimeException e) {
                     if (destructionFailure == null) {
                         destructionFailure = e;
@@ -349,14 +349,6 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             return beanContext.getBean(io.micronaut.cdi.context.RequestScope.class).isActive();
         }
         return true;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <B> void destroy(io.micronaut.context.BeanRegistration<B> registration) {
-        // registration.close() is a no-op for a definition with nothing of its own to dispose; destruction that
-        // has to reach the pre-destroy listeners — the disposer methods of section 3.3.4 — goes through the
-        // context
-        beanContext.destroyBean(registration);
     }
 
     @SuppressWarnings("unchecked")

@@ -144,7 +144,7 @@ public final class CdiBeanContainer implements BeanManager {
 
     @Override
     public <T> CreationalContext<T> createCreationalContext(@Nullable Contextual<T> contextual) {
-        return new CdiCreationalContext<>(beanContext);
+        return new CdiCreationalContext<>();
     }
 
     @Override
