@@ -54,8 +54,21 @@ public final class CdiELResolver extends ELResolver {
             return null;
         }
         context.setPropertyResolved(base, property);
-        return beans.getReference(bean, bean.getBeanClass(),
-            beans.createCreationalContext(bean));
+        return unproxied(beans.getReference(bean, bean.getBeanClass(),
+            beans.createCreationalContext(bean)));
+    }
+
+    /**
+     * The instance behind a client proxy, which is what an expression is evaluated against: the expression
+     * language reads a type through the introspection compiled for it, and the proxy of a normal scoped bean
+     * is a class of the container's own making with no introspection of its own.
+     */
+    private static Object unproxied(Object reference) {
+        if (reference instanceof io.micronaut.aop.InterceptedProxy<?> proxy) {
+            Object target = proxy.interceptedTarget();
+            return target == null ? reference : target;
+        }
+        return reference;
     }
 
     @Override

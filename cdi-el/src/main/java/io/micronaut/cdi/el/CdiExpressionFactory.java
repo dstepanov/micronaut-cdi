@@ -95,8 +95,11 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
         BeanReachingContext(ELContext wrapped, ELResolver beans) {
             this.wrapped = wrapped;
+            // the container's names first, then everything Micronaut's own chain resolves — which is what
+            // reaches a bean's executable methods — and finally whatever the caller's context adds
             this.resolver = new jakarta.el.CompositeELResolver();
             ((jakarta.el.CompositeELResolver) resolver).add(beans);
+            ((jakarta.el.CompositeELResolver) resolver).add(io.micronaut.el.resolver.ELResolvers.standard());
             ((jakarta.el.CompositeELResolver) resolver).add(wrapped.getELResolver());
         }
 

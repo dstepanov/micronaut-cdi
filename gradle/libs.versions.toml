@@ -35,6 +35,7 @@ managed-micronaut-jakarta-interceptors = { module = 'io.micronaut.interceptor:mi
 managed-micronaut-jakarta-interceptors-processor = { module = 'io.micronaut.interceptor:micronaut-jakarta-interceptors-processor', version.ref = 'managed-micronaut-jakarta-interceptors' }
 managed-micronaut-jakarta-el = { module = 'io.micronaut.el:micronaut-jakarta-el', version.ref = 'managed-micronaut-jakarta-el' }
 managed-micronaut-jakarta-el-interpreter = { module = 'io.micronaut.el:micronaut-jakarta-el-interpreter', version.ref = 'managed-micronaut-jakarta-el' }
+managed-micronaut-jakarta-el-interpreter-reflection = { module = 'io.micronaut.el:micronaut-jakarta-el-interpreter-reflection', version.ref = 'managed-micronaut-jakarta-el' }
 
 # nullability
 nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }

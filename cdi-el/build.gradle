@@ -20,6 +20,10 @@ dependencies {
     testImplementation mn.micronaut.context
     // the runtime parser, so that an expression arrived at only at runtime still evaluates
     testRuntimeOnly libs.managed.micronaut.jakarta.el.interpreter
+    // the interpreter resolves a method through the ELMethodExecutor services on the classpath; without this
+    // module only an introspected type has one, and a bean of the container carries executable metadata
+    // rather than an introspection
+    testRuntimeOnly libs.managed.micronaut.jakarta.el.interpreter.reflection
 
     testImplementation platform(libs.junit.bom)
     testImplementation libs.junit.jupiter

@@ -39,6 +39,7 @@ class ExpressionLanguageTest {
             return "hello";
         }
 
+        @io.micronaut.context.annotation.Executable
         public String greet(String whom) {
             return "hello " + whom;
         }

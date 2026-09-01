@@ -58,13 +58,14 @@ import java.util.StringJoiner;
 @Internal
 public final class MicronautSeContainerInitializer extends SeContainerInitializer {
 
+    private static volatile @org.jspecify.annotations.Nullable Set<String> restrictedClasspath;
+
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
     private final Set<String> recursivePackages = new LinkedHashSet<>();
     private final Set<String> selectedAlternatives = new LinkedHashSet<>();
     private final Set<String> selectedAlternativeStereotypes = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
-    private static volatile @org.jspecify.annotations.Nullable Set<String> restrictedClasspath;
 
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

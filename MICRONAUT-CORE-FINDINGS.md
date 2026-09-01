@@ -105,7 +105,7 @@ unless the definition is disposable or dependents exist — destruction that mus
 `BeanPreDestroyEventListener` (this project's disposer invocation) has to go through
 `beanContext.destroyBean(registration)` instead.
 
-### 13a. The `BeanRegistration.close()` no-op trap — fix applied locally, upstream as #12938
+### 13a. The `BeanRegistration.close()` no-op trap — FIXED upstream (#12943)
 `BeanRegistration.of(context, ...)` returned a plain registration — whose `close()` is a no-op — unless the
 definition had dispose logic, dependents, or was a `LifeCycle`; destruction listeners were silently skipped
 for everything else. The local tree now always returns the disposing registration (closing destroys through
@@ -134,7 +134,7 @@ record erased metadata onto the shared method element, clobbering the subclass's
 the observed type reflectively (`getGenericParameterTypes()` + a substitution map walked from the concrete
 class) — core substituting variables when copying inherited executable methods would remove that need.
 
-### 17. `getProxyTargetBean` skips `resolveNullBeanRegistration`
+### 17. `getProxyTargetBean` skips `resolveNullBeanRegistration` — FIXED upstream (#12951)
 The lazy proxy target path (`DefaultBeanContext.getProxyTargetBean`) returns `registration.bean` directly, so a
 factory/producer that legitimately returned null (allowed via `shouldAllowNullBean`) hands the proxy a null
 target and the intercepted call throws NPE — while the ordinary lookup path routes the null through
@@ -142,7 +142,7 @@ target and the intercepted call throws NPE — while the ordinary lookup path ro
 `IllegalProductException` for a non-dependent producer). Patched locally: both overloads now consult
 `resolveNullBeanRegistration` when the resolved bean is null.
 
-### 18. `@InjectScope` destruction misses pre-destroy listeners; the scope instance was JVM-global
+### 18. `@InjectScope` destruction misses pre-destroy listeners; the scope instance was JVM-global — FIXED upstream (#12934)
 `DefaultCustomScopeRegistry.InjectScopeImpl.stop()` called `CreatedBean.close()`, which is a no-op for a
 registration whose definition has no pre-destroy of its own (`BeanRegistration.of` only returns a disposing
 registration for `DisposableBeanDefinition`/`LifeCycle`/dependents) — so `BeanPreDestroyEventListener`s (CDI's
@@ -150,7 +150,7 @@ disposer methods) never ran for `@InjectScope`-destroyed beans. Also `INJECT_SCO
 singleton with a mutable `currentCreatedBeans` list, shared by every `ApplicationContext` in the JVM. Patched
 locally: one `InjectScopeImpl` per registry, and `stop()` destroys through the `BeanContext` so listeners run.
 
-### 19. `@ClassImport` is never processed as a top-level trigger
+### 19. `@ClassImport` is never processed as a top-level trigger — FIXED upstream (#12952)
 `BeanDefinitionInjectProcessor` filters the round's annotations with
 `lookupOrBuildForType(ann).hasStereotype(ANNOTATION_STEREOTYPES)`; `ClassImport` is listed in that array, but an
 annotation type never carries itself as a stereotype, so a class annotated only with `@ClassImport` (plus, say,
@@ -160,7 +160,7 @@ class must not carry `@Generated`. Patched locally: the filter admits `ClassImpo
 project generates a `@ClassImport` source to turn extension-scanned classes (CDI `ScannedClasses.add`) into
 beans.
 
-### 20. No way to observe the resolution path from outside a resolution
+### 20. No way to observe the resolution path from outside a resolution — RESOLVED upstream (#12937)
 Nothing tells an integration *why* the bean it is constructing at runtime is being constructed — CDI 2.10.5
 requires a synthetic (runtime-registered) dependent bean's creation function to see the `InjectionPoint` it is
 being created for, but a `RuntimeBeanDefinition` supplier receives no `BeanResolutionContext`. Patched locally:
@@ -172,14 +172,14 @@ for later, not the resolution under way), popped in `close()` — exposed as sta
 the segment whose argument matches the synthetic bean's type. A cleaner upstream shape might be passing the
 resolution context (or the current segment) to `RuntimeBeanDefinition` suppliers directly.
 
-### 21. `RuntimeBeanDefinition.Builder.singleton(boolean)` ignores its argument
+### 21. `RuntimeBeanDefinition.Builder.singleton(boolean)` ignores its argument — FIXED upstream (#12946)
 `DefaultRuntimeBeanDefinition.Builder.singleton(boolean isSingleton)` sets `this.singleton = true`
 unconditionally, so `singleton(false)` still builds a singleton definition. A runtime-registered bean meant to
 be prototype/dependent (CDI's synthetic beans default to `@Dependent`) is created once in the singleton scope,
 is never tracked as a dependent of whoever asked for it, and never destroyed with it. Patched locally:
 `this.singleton = isSingleton`.
 
-### 22. Resolving from a stopped context throws `BeanContextException` rather than `IllegalStateException`
+### 22. Resolving from a stopped context throws `BeanContextException` rather than `IllegalStateException` — FIXED upstream (#12948)
 `DefaultBeanContext.assertContextState` reports resolution against a context that is not running as a
 `BeanContextException` extending plain `RuntimeException`. Using an object in the wrong lifecycle state is what
 `IllegalStateException` means in the JDK's own vocabulary — and CDI requires exactly that of a contextual
