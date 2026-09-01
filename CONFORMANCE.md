@@ -175,6 +175,6 @@ than pretended here: `BootstrapSEContainerTest`'s `testAddExtensionAsExtensionIn
 
 The `tckSuite` task runs the suite of `tck-suite.xml`: the whole of the kit's CDI Lite `tests/**` packages —
 the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit
-(`interceptors/tests/**`): 771 tests, all passing, and part of `check`. A handful of ported assertions and
+(`interceptors/tests/**`): 807 tests, all passing, and part of `check`. A handful of ported assertions and
 `ScenarioSweepTckTest` — which reads every scenario bean through one container at once — remain as local
 regression tests beside the kit's own.
