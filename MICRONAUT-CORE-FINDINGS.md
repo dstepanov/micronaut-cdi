@@ -129,6 +129,16 @@ This project keeps its own bookkeeping (removing a registration from the lookup'
 the handle's `destroyed` flag) because the non-registration path still goes through `destroyBean`, but
 correctness no longer depends on that bookkeeping being perfect.
 
+### 13c. `ExecutableMethod` exposes no modifiers — not worth asking core for
+`ExecutableMethod` declares only `isAbstract()`/`isSuspend()`; asking whether a compiled method is public means
+`getTargetMethod()`, which `AbstractExecutable` resolves through `ReflectionUtils.getRequiredMethod` +
+`setAccessible(true)` (and `AbstractExecutableMethodsDefinition` logs it as "Reflectively accessing method").
+So a compile-time-known fact cost a reflective lookup that throws `NoSuchMethodError` where the method is not
+registered for reflection.
+
+Not raised upstream: the answer is known while the disposer is compiled, so `@CdiDisposer` simply records it
+(`publicMethod`). No core change, no metadata beyond one boolean on an annotation this project already writes.
+
 ### 14. `ThreadLocal` custom scope destroys beans only with `lifecycle = true` (not a bug — a doc trap)
 `@ThreadLocal` beans are not destroyed on scope end unless `lifecycle = true` is set; the flag is easy to miss
 and initially read as a dependent-destruction bug during this project (it was not — behaviour is by design and

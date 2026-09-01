@@ -75,7 +75,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             invokeStatic(declaringType.get(), methodName, disposedParameter, bean);
             return bean;
         }
-        invoke(declaringType.get(), methodName, disposedParameter, bean);
+        invoke(declaringType.get(), methodName, disposedParameter, bean,
+            disposer.booleanValue("publicMethod").orElse(false));
         return bean;
     }
 
@@ -100,7 +101,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
     }
 
-    private void invoke(Class<?> declaringType, String methodName, int disposedParameter, Object bean) {
+    private void invoke(Class<?> declaringType, String methodName, int disposedParameter, Object bean,
+                        boolean publicMethod) {
         BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
         ExecutableMethod<?, ?> method = declaring.findPossibleMethods(methodName)
             .findFirst()
@@ -131,7 +133,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
         try {
             Object host = beanContext.getBean(declaring);
-            if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !isPublic(method)) {
+            if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !publicMethod) {
                 // a disposer may be protected, which a client proxy does not delegate — but a public one is
                 // invoked through the proxy, so that the interceptors bound to it interpose (section 2.7)
                 host = proxy.interceptedTarget();
@@ -145,11 +147,6 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     private io.micronaut.context.BeanRegistration<?> registrationOf(BeanDefinition<?> declaring) {
         // the registration of this very definition, rather than of whatever re-resolving its type would pick
         return beanContext.getBeanRegistration(declaring);
-    }
-
-    private static boolean isPublic(ExecutableMethod<?, ?> method) {
-        java.lang.reflect.Method reflective = method.getTargetMethod();
-        return reflective != null && java.lang.reflect.Modifier.isPublic(reflective.getModifiers());
     }
 
     @SuppressWarnings({"unchecked", "NullAway"})

@@ -222,11 +222,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 allowReflectionIfNeeded(disposer);
                 InjectedParameters.readAsInjectionPoints(disposer);
                 boolean staticDisposer = disposer.isStatic();
+                boolean publicDisposer = disposer.isPublic();
                 producer.annotate(CdiDisposer.class, builder -> builder
                     .member("declaringType", new AnnotationClassValue<>(element.getName()))
                     .member("method", disposer.getName())
                     .member("disposedParameter", disposedParameter(disposer))
-                    .member("staticMethod", staticDisposer));
+                    .member("staticMethod", staticDisposer)
+                    .member("publicMethod", publicDisposer));
             }
         }
         for (MethodElement disposer : disposers) {

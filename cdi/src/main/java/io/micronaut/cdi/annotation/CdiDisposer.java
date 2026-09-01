@@ -69,4 +69,12 @@ public @interface CdiDisposer {
      * @return Whether the disposer is static
      */
     boolean staticMethod() default false;
+
+    /**
+     * Whether the disposer is public, which decides whether a client proxy of the declaring bean delegates the
+     * call. Recorded while the disposer is compiled, so that deciding it needs no reflection.
+     *
+     * @return Whether it is public
+     */
+    boolean publicMethod() default false;
 }
