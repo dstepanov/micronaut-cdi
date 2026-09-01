@@ -42,10 +42,13 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
     private final ExpressionFactory delegate;
     private final ELResolver beans;
+    private final io.micronaut.context.BeanContext beanContext;
 
-    CdiExpressionFactory(ExpressionFactory delegate, ELResolver beans) {
+    CdiExpressionFactory(ExpressionFactory delegate, ELResolver beans,
+                         io.micronaut.context.BeanContext beanContext) {
         this.delegate = delegate;
         this.beans = beans;
+        this.beanContext = beanContext;
     }
 
     @Override
@@ -82,7 +85,7 @@ final class CdiExpressionFactory extends ExpressionFactory {
     }
 
     private ELContext reaching(ELContext context) {
-        return new BeanReachingContext(context, beans);
+        return new BeanReachingContext(context, beans, beanContext);
     }
 
     /**
@@ -92,9 +95,12 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
         private final ELContext wrapped;
         private final ELResolver resolver;
+        private final io.micronaut.context.BeanContext beanContext;
 
-        BeanReachingContext(ELContext wrapped, ELResolver beans) {
+        BeanReachingContext(ELContext wrapped, ELResolver beans,
+                            io.micronaut.context.BeanContext beanContext) {
             this.wrapped = wrapped;
+            this.beanContext = beanContext;
             // the container's names first, then everything Micronaut's own chain resolves — which is what
             // reaches a bean's executable methods — and finally whatever the caller's context adds
             this.resolver = new jakarta.el.CompositeELResolver();
@@ -119,8 +125,19 @@ final class CdiExpressionFactory extends ExpressionFactory {
         }
 
         @Override
+        @org.jspecify.annotations.Nullable
         public Object getContext(Class<?> key) {
-            return wrapped.getContext(key);
+            Object registered = wrapped.getContext(key);
+            if (registered != null) {
+                return registered;
+            }
+            // resolving a method through the executable metadata a bean already carries needs the context that
+            // compiled it, which the resolver reads from here rather than from a static holder
+            if (key == io.micronaut.context.BeanDefinitionRegistry.class
+                || key == io.micronaut.context.BeanContext.class) {
+                return beanContext;
+            }
+            return null;
         }
 
         @Override

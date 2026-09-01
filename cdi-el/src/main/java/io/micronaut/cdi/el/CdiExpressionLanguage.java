@@ -16,6 +16,7 @@
 package io.micronaut.cdi.el;
 
 import io.micronaut.cdi.runtime.ExpressionLanguageBridge;
+import io.micronaut.context.BeanContext;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;
 import jakarta.enterprise.inject.spi.BeanContainer;
@@ -31,9 +32,11 @@ import jakarta.inject.Singleton;
 final class CdiExpressionLanguage implements ExpressionLanguageBridge {
 
     private final BeanContainer beans;
+    private final BeanContext beanContext;
 
-    CdiExpressionLanguage(BeanContainer beans) {
+    CdiExpressionLanguage(BeanContainer beans, BeanContext beanContext) {
         this.beans = beans;
+        this.beanContext = beanContext;
     }
 
     @Override
@@ -43,6 +46,6 @@ final class CdiExpressionLanguage implements ExpressionLanguageBridge {
 
     @Override
     public ExpressionFactory wrap(ExpressionFactory factory) {
-        return new CdiExpressionFactory(factory, resolver());
+        return new CdiExpressionFactory(factory, resolver(), beanContext);
     }
 }
