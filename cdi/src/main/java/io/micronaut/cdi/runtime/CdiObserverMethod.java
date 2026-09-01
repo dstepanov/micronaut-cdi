@@ -59,6 +59,10 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private final boolean staticMethod;
     private final int priority;
     private final String during;
+    // what the observer observes never changes, and resolving it walks the declaring class's methods: every
+    // event fired asks every observer, so the answer is worked out once and kept
+    private volatile @Nullable Type observedType;
+    private volatile @Nullable Set<Annotation> observedQualifiers;
 
     CdiObserverMethod(BeanContext beanContext,
                       BeanDefinition<?> declaring,
@@ -94,11 +98,16 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Type getObservedType() {
-        // the source of truth is the method itself: the compiled argument erases a wildcard or a variable,
-        // and an inherited observer method keeps its declaring class's variables — the reflective signature
-        // has both, and the bean class resolves the variables
-        Type reflective = reflectiveObservedType();
-        return reflective != null ? reflective : CdiTypes.requiredTypeOf(observed());
+        Type resolved = observedType;
+        if (resolved == null) {
+            // the source of truth is the method itself: the compiled argument erases a wildcard or a variable,
+            // and an inherited observer method keeps its declaring class's variables — the reflective signature
+            // has both, and the bean class resolves the variables
+            Type reflective = reflectiveObservedType();
+            resolved = reflective != null ? reflective : CdiTypes.requiredTypeOf(observed());
+            observedType = resolved;
+        }
+        return resolved;
     }
 
     private @Nullable Type reflectiveObservedType() {
@@ -164,7 +173,14 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Set<Annotation> getObservedQualifiers() {
-        return CdiQualifiers.declared(observed().getAnnotationMetadata());
+        Set<Annotation> resolved = observedQualifiers;
+        if (resolved == null) {
+            // kept unmodifiable: the set is now shared by every resolution rather than built for each
+            resolved = java.util.Collections.unmodifiableSet(
+                CdiQualifiers.declared(observed().getAnnotationMetadata()));
+            observedQualifiers = resolved;
+        }
+        return resolved;
     }
 
     @Override
