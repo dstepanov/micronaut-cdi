@@ -216,15 +216,11 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             MethodElement disposer = findDisposer(producer, disposers, context);
             if (disposer != null) {
                 matchedDisposers.add(disposer);
-                if (disposer.isStatic()) {
-                    // Micronaut writes no executable method for a static method, so a static disposer is
-                    // dispatched reflectively
-                    disposer.annotate(ReflectiveAccess.class);
-                } else {
-                    // the disposer is invoked through the executable method Micronaut generates for it
-                    disposer.annotate(Executable.class);
-                    InjectedParameters.readAsInjectionPoints(disposer);
-                }
+                // the disposer is invoked through the executable method Micronaut generates for it — a
+                // static one included, which is invoked without an instance of the class declaring it
+                disposer.annotate(Executable.class);
+                allowReflectionIfNeeded(disposer);
+                InjectedParameters.readAsInjectionPoints(disposer);
                 boolean staticDisposer = disposer.isStatic();
                 producer.annotate(CdiDisposer.class, builder -> builder
                     .member("declaringType", new AnnotationClassValue<>(element.getName()))

@@ -22,6 +22,7 @@ import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
@@ -69,8 +70,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             return bean;
         }
         if (disposer.booleanValue("staticMethod").orElse(false)) {
-            // a static disposer has no executable method — Micronaut writes none for a static method — and no
-            // instance to be invoked on, so it is dispatched reflectively
+            // a static disposer is invoked without an instance of the class that declares it: no bean of that
+            // class is created for the disposal, which is the whole point of writing one static
             invokeStatic(declaringType.get(), methodName, disposedParameter, bean);
             return bean;
         }
@@ -79,53 +80,21 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     }
 
     private void invokeStatic(Class<?> declaringType, String methodName, int disposedParameter, Object bean) {
-        java.lang.reflect.Method reflective = null;
-        for (java.lang.reflect.Method candidate : declaringType.getDeclaredMethods()) {
-            if (candidate.getName().equals(methodName)
-                && java.lang.reflect.Modifier.isStatic(candidate.getModifiers())
-                && candidate.getParameterCount() > disposedParameter) {
-                reflective = candidate;
-                break;
-            }
-        }
-        if (reflective == null) {
-            throw new IllegalStateException("The static disposer method " + methodName + " of "
-                + declaringType.getName() + " could not be found");
-        }
-        java.lang.reflect.Parameter[] reflectiveParameters = reflective.getParameters();
-        Object[] parameters = new Object[reflectiveParameters.length];
+        BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
+        ExecutableMethod<?, ?> method = declaring.findPossibleMethods(methodName)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("The static disposer method " + methodName + " of "
+                + declaringType.getName() + " has no executable method. It was resolved while the producer it "
+                + "disposes of was compiled, so the two were compiled apart from one another"));
+        Argument<?>[] arguments = method.getArguments();
+        Object[] parameters = new Object[arguments.length];
         java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
-        for (int i = 0; i < reflectiveParameters.length; i++) {
-            if (i == disposedParameter) {
-                parameters[i] = bean;
-                continue;
-            }
-            java.util.List<java.lang.annotation.Annotation> qualifiers = new java.util.ArrayList<>(1);
-            for (java.lang.annotation.Annotation annotation : reflectiveParameters[i].getAnnotations()) {
-                if (annotation.annotationType().isAnnotationPresent(jakarta.inject.Qualifier.class)) {
-                    qualifiers.add(annotation);
-                }
-            }
-            Argument<Object> argument = (Argument<Object>) CdiTypes.<Object>argumentOf(
-                reflectiveParameters[i].getParameterizedType());
-            io.micronaut.context.BeanRegistration<Object> registration = beanContext.getBeanRegistration(
-                argument, CdiQualifiers.of(qualifiers.toArray(new java.lang.annotation.Annotation[0])));
-            if (CdiResolution.isDependent(registration.getBeanDefinition())) {
-                transientArguments.add(registration);
-            }
-            parameters[i] = registration.bean();
-        }
         try {
-            reflective.setAccessible(true);
-            reflective.invoke(null, parameters);
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException("The static disposer method " + methodName + " of "
-                + declaringType.getName() + " is not accessible", e);
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            if (e.getCause() instanceof RuntimeException runtime) {
-                throw runtime;
+            for (int i = 0; i < arguments.length; i++) {
+                parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], transientArguments);
             }
-            throw new IllegalStateException(e.getCause());
+            // the executable method of a static method ignores the instance it is given
+            invoke(method, null, parameters);
         } finally {
             close(transientArguments);
         }
@@ -191,8 +160,10 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         return reflective != null && java.lang.reflect.Modifier.isPublic(reflective.getModifiers());
     }
 
-    @SuppressWarnings("unchecked")
-    private static void invoke(ExecutableMethod<?, ?> method, Object target, Object[] parameters) {
+    @SuppressWarnings({"unchecked", "NullAway"})
+    private static void invoke(ExecutableMethod<?, ?> method, @Nullable Object target, Object[] parameters) {
+        // the executable method of a static disposer is dispatched without reading the target at all, so
+        // there is no instance to pass and none is expected
         ((ExecutableMethod<Object, ?>) method).invoke(target, parameters);
     }
 

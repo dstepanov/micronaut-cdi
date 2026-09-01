@@ -71,7 +71,6 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         boolean interceptorClass = element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
-        java.util.List<String> staticObservers = new java.util.ArrayList<>();
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             int observed = -1;
             boolean async = false;
@@ -139,33 +138,6 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
                 .member("staticMethod", isStatic)
                 .member("during", during)
                 .member("priority", priority));
-            if (isStatic) {
-                // Micronaut generates no executable method for a static method, so the observer is recorded
-                // on the class and dispatched reflectively — by its full signature, so that two same-name
-                // overloads stay two observers
-                StringBuilder signature = new StringBuilder();
-                for (io.micronaut.inject.ast.ParameterElement observerParameter : parameters) {
-                    if (signature.length() > 0) {
-                        signature.append(';');
-                    }
-                    io.micronaut.inject.ast.ClassElement parameterType = observerParameter.getType();
-                    signature.append(parameterType.getName());
-                    for (io.micronaut.inject.ast.ClassElement component = parameterType;
-                         component.isArray(); component = component.fromArray()) {
-                        signature.append("[]");
-                    }
-                }
-                staticObservers.add(method.getName() + "|" + signature + "|" + position + "|"
-                    + asynchronous + "|" + priority + "|" + during);
-                if (!method.hasDeclaredAnnotation(ReflectiveAccess.class)) {
-                    method.annotate(ReflectiveAccess.class);
-                }
-            }
-        }
-        if (!staticObservers.isEmpty()) {
-            String[] entries = staticObservers.toArray(new String[0]);
-            element.annotate("io.micronaut.cdi.annotation.CdiStaticObservers",
-                builder -> builder.member("value", entries));
         }
     }
 

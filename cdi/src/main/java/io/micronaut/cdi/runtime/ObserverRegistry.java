@@ -95,62 +95,15 @@ public final class ObserverRegistry {
         for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
             for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
                 AnnotationValue<CdiObserver> observer = method.getAnnotation(CdiObserver.class);
-                if (observer != null && !observer.booleanValue("staticMethod").orElse(false)) {
-                    found.add(new CdiObserverMethod<>(beanContext, definition, method, observer));
-                }
-            }
-            // a static observer has no executable method — Micronaut generates none for a static method — so
-            // it was recorded on the class and is dispatched reflectively
-            for (String entry : definition.getAnnotationMetadata()
-                .stringValues("io.micronaut.cdi.annotation.CdiStaticObservers")) {
-                ObserverMethod<?> observer = staticObserverOf(definition, entry);
                 if (observer != null) {
-                    found.add(observer);
+                    // a static observer has an executable method of its own, which is invoked without an
+                    // instance of the bean that declares it
+                    found.add(new CdiObserverMethod<>(beanContext, definition, method, observer));
                 }
             }
         }
         found.sort(Comparator.comparingInt(ObserverMethod::getPriority));
         return List.copyOf(found);
-    }
-
-    private @Nullable ObserverMethod<?> staticObserverOf(BeanDefinition<?> definition, String entry) {
-        String[] parts = entry.split("\\|");
-        if (parts.length < 6) {
-            return null;
-        }
-        String name = parts[0];
-        String[] parameterTypeNames = parts[1].isEmpty() ? new String[0] : parts[1].split(";");
-        Class<?> declaringClass = definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy
-            ? proxy.getTargetType() : definition.getBeanType();
-        for (Class<?> type = declaringClass; type != null && type != Object.class; type = type.getSuperclass()) {
-            for (java.lang.reflect.Method method : type.getDeclaredMethods()) {
-                if (method.getName().equals(name)
-                    && java.lang.reflect.Modifier.isStatic(method.getModifiers())
-                    && signatureMatches(method, parameterTypeNames)) {
-                    return new StaticObserverMethod<>(beanContext, definition, method,
-                        Integer.parseInt(parts[2]), Boolean.parseBoolean(parts[3]),
-                        Integer.parseInt(parts[4]), parts[5]);
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Whether the method's parameters are the recorded ones, compared by their erasure: what tells two
-     * same-name observer overloads apart.
-     */
-    private static boolean signatureMatches(java.lang.reflect.Method method, String[] parameterTypeNames) {
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        if (parameterTypes.length != parameterTypeNames.length) {
-            return false;
-        }
-        for (int i = 0; i < parameterTypes.length; i++) {
-            if (!parameterTypes[i].getTypeName().equals(parameterTypeNames[i])) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

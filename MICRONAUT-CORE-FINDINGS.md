@@ -113,17 +113,42 @@ the context), matching the open upstream PR #12938. A custom scope's `destroySco
 now reaches `BeanPreDestroyEventListener`s — which is what lets a request-scoped synthetic bean's disposal
 function run when the request ends.
 
+### 13b. Closing a registration twice destroyed the bean twice — FIXED upstream (#12956)
+A consequence of 13a: once `BeanRegistration.of(context, ...)` always returned a `BeanDisposingRegistration`,
+its `close()` ran `beanContext.destroyBean(this)` every time it was called, so a second `close()` ran
+`@PreDestroy` a second time. CDI reaches this easily — a lookup destroys the dependent instances it created
+when it is closed, and an `Instance.Handle` may already have destroyed one of them. `BeanDisposingRegistration`
+now guards with an `AtomicBoolean`, so the first close destroys and later ones are no-ops.
+
+This project keeps its own bookkeeping (removing a registration from the lookup's list before closing it, and
+the handle's `destroyed` flag) because the non-registration path still goes through `destroyBean`, but
+correctness no longer depends on that bookkeeping being perfect.
+
 ### 14. `ThreadLocal` custom scope destroys beans only with `lifecycle = true` (not a bug — a doc trap)
 `@ThreadLocal` beans are not destroyed on scope end unless `lifecycle = true` is set; the flag is easy to miss
 and initially read as a dependent-destruction bug during this project (it was not — behaviour is by design and
 documented on the annotation).
 
-### 15. Static methods get no `ExecutableMethod` — even with `@Executable`/`@ReflectiveAccess`
-`BeanDefinitionWriter` only writes executable-method entries for instance methods; a `static` method annotated
-into executability is silently absent from `BeanDefinition.getExecutableMethods()`. CDI allows static observer
-and disposer methods, so this project records them at compile time into a class-level annotation
-(`@CdiStaticObservers`, with `@ReflectiveAccess` for the member) and dispatches reflectively. Core could either
-write executable entries for statics (invoke ignores the instance) or document the gap.
+### 15. A static method meta-annotated `@Executable` got no `ExecutableMethod` — FIXED upstream (#12957)
+Stated too broadly at first: a `static` method annotated **directly** with `@Executable` already worked —
+`DeclaredBeanElementCreator` had a carve-out for it and `DispatchWriter` emitted `invokestatic`. The real gap
+was narrower: the gate asked `hasDeclaredAnnotation(Executable.class)`, which is false for an annotation that
+is itself meta-annotated `@Executable` — so essentially every executable annotation in the ecosystem
+(`@Get`, `@Scheduled`, and this project's `@CdiObserver`) was silently dropped on statics. The gate now asks
+for the `@Executable` **stereotype** on the method's own metadata, with adapter advice (`@EventListener`)
+still excluded because it adapts an instance method and cannot apply to a static.
+
+Adopted here: static observers are dispatched through their generated `ExecutableMethod` like any other, so
+the class-level `@CdiStaticObservers` index, its signature encoding, `StaticObserverMethod`, and the
+`@ReflectiveAccess` marking of static observers are all gone — roughly 200 lines of reflective dispatch, and
+one fewer reason for this container to reflect at runtime. Observers needed the fix because `@CdiObserver`
+carries `@Executable` as a meta-annotation.
+
+Static **disposers** were a separate matter, and the fault was entirely ours: `ProducerVisitor` writes a
+*direct* `@Executable` on a disposer, which already worked on statics before #12957. The reflective
+`invokeStatic` in `DisposerInvoker` rested on the same over-broad belief and never needed to exist. It is
+gone too, and `StaticDisposerTest` now covers the case — there is no static disposer anywhere in the TCK, so
+that path had no test at all before.
 
 ### 16. Inherited executable methods keep the declaring class's unresolved type variables
 An executable method declared on a generic superclass and inherited into a concrete subclass keeps the
