@@ -339,8 +339,8 @@ public final class CdiBean<T> implements Bean<T> {
             if (isDependent() && creationalContext instanceof CdiCreationalContext<T> tracking) {
                 // a dependent instance belongs to whoever asked for it, and what was created along with it
                 // belongs to it: the registration carries both, and releasing the creational context closes it
-                io.micronaut.context.BeanRegistration<T> registration = beanContext.getBeanRegistration(
-                    definition.asArgument(), thisDefinitionOnly());
+                io.micronaut.context.BeanRegistration<T> registration =
+                    beanContext.getBeanRegistration(definition);
                 tracking.track(registration);
                 return registration.bean();
             }
@@ -411,20 +411,6 @@ public final class CdiBean<T> implements Bean<T> {
 
     private boolean isDependent() {
         return !definition.isSingleton() && getScope() == jakarta.enterprise.context.Dependent.class;
-    }
-
-    /**
-     * A qualifier that resolves to this very definition, so that creating through the bean creates what the
-     * bean is rather than re-resolving among candidates.
-     */
-    private io.micronaut.context.Qualifier<T> thisDefinitionOnly() {
-        return new io.micronaut.context.Qualifier<T>() {
-            @Override
-            public <BT extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<BT> reduce(
-                Class<T> beanType, java.util.stream.Stream<BT> candidates) {
-                return candidates.filter(candidate -> candidate == definition || candidate.equals(definition));
-            }
-        };
     }
 
     @Override

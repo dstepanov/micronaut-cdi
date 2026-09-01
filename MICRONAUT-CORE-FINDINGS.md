@@ -68,11 +68,16 @@ while every Micronaut lookup resolves as it goes (replacement filtering, primary
 carries the same predicate twice (`DeploymentBeanFilter`). Exposing the configured predicate on
 `BeanContext`/`ApplicationContextConfiguration` would remove the duplication.
 
-### 10. No `getBeanRegistration(BeanDefinition)` overload
-To create an instance *of a specific definition* with dependents tracked (CDI's `Bean.create` +
-`CreationalContext.release` destroying dependents), this project pins the definition with a custom
-`Qualifier` that filters candidates by identity (`CdiBean.thisDefinitionOnly()`). A direct overload would be
-cleaner and faster.
+### 10. RETRACTED — `getBeanRegistration(BeanDefinition)` has existed since 3.5.0
+Claimed that creating an instance *of a specific definition* with dependents tracked (CDI's `Bean.create` +
+`CreationalContext.release`) needed a new overload, and pinned the definition with a custom `Qualifier`
+filtering candidates by identity. `BeanDefinitionRegistry.getBeanRegistration(BeanDefinition<T>)` is marked
+`@since 3.5.0` and does exactly this — `DefaultBeanContext` implements it as
+`resolveBeanRegistration(null, beanDefinition)`, bypassing candidate reduction entirely, which is what the
+hand-rolled qualifier was emulating. The finding was never checked against the API surface.
+
+Three copies of that workaround (`CdiBean.thisDefinitionOnly`, `DisposerInvoker.registrationOf`,
+`CdiObserverMethod.registrationOfDeclaring`) are gone in favour of the overload.
 
 ### 11. `@InjectScope` on a constructor/factory parameter never destroys — two compounding bugs — FIXED locally
 (a) `BeanDefinitionWriter.hasInjectScope()` passes the constructor/factory `MethodElement` into the

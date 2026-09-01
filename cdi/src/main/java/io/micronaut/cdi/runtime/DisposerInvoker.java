@@ -142,17 +142,9 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
     }
 
-    @SuppressWarnings("unchecked")
     private io.micronaut.context.BeanRegistration<?> registrationOf(BeanDefinition<?> declaring) {
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) declaring;
-        return beanContext.getBeanRegistration(definition.asArgument(),
-            new io.micronaut.context.Qualifier<Object>() {
-                @Override
-                public <BT extends io.micronaut.inject.BeanType<Object>> java.util.stream.Stream<BT> reduce(
-                    Class<Object> beanType, java.util.stream.Stream<BT> candidates) {
-                    return candidates.filter(candidate -> candidate == declaring || candidate.equals(declaring));
-                }
-            });
+        // the registration of this very definition, rather than of whatever re-resolving its type would pick
+        return beanContext.getBeanRegistration(declaring);
     }
 
     private static boolean isPublic(ExecutableMethod<?, ?> method) {

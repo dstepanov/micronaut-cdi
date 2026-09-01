@@ -291,17 +291,9 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             io.micronaut.cdi.annotation.CdiRequestScope.class);
     }
 
-    @SuppressWarnings("unchecked")
     private io.micronaut.context.BeanRegistration<?> registrationOfDeclaring() {
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) declaring;
-        return beanContext.getBeanRegistration(definition.asArgument(),
-            new io.micronaut.context.Qualifier<Object>() {
-                @Override
-                public <BT extends io.micronaut.inject.BeanType<Object>> java.util.stream.Stream<BT> reduce(
-                    Class<Object> beanType, java.util.stream.Stream<BT> candidates) {
-                    return candidates.filter(candidate -> candidate == declaring || candidate.equals(declaring));
-                }
-            });
+        // the registration of this very definition, rather than of whatever re-resolving its type would pick
+        return beanContext.getBeanRegistration(declaring);
     }
 
     @SuppressWarnings({"unchecked", "NullAway"})
