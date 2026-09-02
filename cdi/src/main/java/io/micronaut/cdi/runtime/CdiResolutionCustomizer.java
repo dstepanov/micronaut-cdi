@@ -58,6 +58,13 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         double.class, Double.class,
         char.class, Character.class);
 
+    // the bean types of a definition, worked out once: every parameterized lookup asks them of every candidate,
+    // and working them out walks the class's supertypes. Definitions are compared by identity here — two runtime
+    // definitions of one class are equal to each other, and are not the same bean — and the map lives as long
+    // as the context this customizer was built for
+    private final java.util.concurrent.ConcurrentHashMap<DefinitionKey, java.util.Set<Type>> beanTypes =
+        new java.util.concurrent.ConcurrentHashMap<>();
+
     @Override
     public Argument<?> resolveBeanLookupArgument(Argument<?> beanType) {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type; Micronaut keeps them
@@ -159,10 +166,12 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
             // the required argument does not satisfy
             try {
-                Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
-                    ? proxy.getTargetType() : definition.getBeanType();
-                java.util.Set<Type> beanTypes = CdiBean.typesOf(definition, beanClass);
-                return CdiAssignability.isTypeMatching(beanTypes, CdiTypes.requiredTypeOf(beanType));
+                java.util.Set<Type> types = beanTypes.computeIfAbsent(new DefinitionKey(definition), key -> {
+                    Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
+                        ? proxy.getTargetType() : definition.getBeanType();
+                    return CdiBean.typesOf(definition, beanClass);
+                });
+                return CdiAssignability.isTypeMatching(types, CdiTypes.requiredTypeOf(beanType));
             } catch (RuntimeException | LinkageError e) {
                 return candidate.isCandidateBean(beanType);
             }
@@ -178,4 +187,20 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             || definition.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.annotation.CdiScope");
     }
 
+    /**
+     * A definition as a key compared by identity rather than by its own equality.
+     *
+     * @param definition The definition
+     */
+    private record DefinitionKey(BeanDefinition<?> definition) {
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof DefinitionKey key && key.definition == definition;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(definition);
+        }
+    }
 }
