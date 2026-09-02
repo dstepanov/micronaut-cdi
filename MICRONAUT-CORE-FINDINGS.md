@@ -6,19 +6,25 @@ names where the behaviour lives and what this project does about it meanwhile.
 
 ## Bugs
 
-### 1. A `@Primary` bean with another qualifier NPEs when resolved by its produced bean — FIXED locally
+### 1. A `@Primary` bean with another qualifier NPEs when resolved by its produced bean — FIXED upstream (#12945)
 `BeanDefinitionWriter.getQualifier` maps `@Primary` to a literal null qualifier; composed with another qualifier
 that null lands in the `Qualifiers.byQualifiers(...)` array and `CompositeQualifier.filterQualified` dereferences
 it. Fixed in the local checkout by leaving `@Primary` out of composite qualifiers
 (`core-processor/.../writer/BeanDefinitionWriter.java`); regression spec added at
 `inject-java/src/test/groovy/io/micronaut/inject/cdiscenarios/PrimaryQualifiedFactorySpec.groovy`.
 
-### 2. `AbstractConcurrentCustomScope.remove(BeanIdentifier)` closes the bean but never removes it — FIXED locally
+### 2. `AbstractConcurrentCustomScope.remove(BeanIdentifier)` closes the bean but never removes it — FIXED upstream (#12947)
 `inject/.../context/scope/AbstractConcurrentCustomScope.java`: `remove` does `scopeMap.get(identifier)` +
 `close()`, so the destroyed instance stays in the map and keeps being served — a client proxy resolves the
 *destroyed* instance forever after. Found via the TCK's `AlterableContextTest`. Fixed locally with
 `scopeMap.remove(identifier)`; this project also removes-then-closes in its own scopes
 (`cdi/.../context/ApplicationScope.java`, `RequestScope.java`) so it works against the published snapshot too.
+
+### 2a. Interceptor lifecycle, two fixes made for this project — FIXED upstream (#12920, #12922)
+`@PreDestroy` methods were not invoked on a bean carrying `PRE_DESTROY` advice (#12920), and an interceptor
+instance was not the same across a bean's construction, method interception and destruction (#12922). Both
+matter to Jakarta Interceptors' lifecycle contract (one interceptor instance per intercepted instance, whose
+`@PreDestroy` sees what its `@PostConstruct` acquired), which the CDI TCK's interceptor kit asserts.
 
 ### 3. `Qualifiers.byAnnotation(Annotation)` compares by type only, ignoring members — FIXED upstream
 A bean qualified `@Chunky(true)` matched a lookup for `@Chunky(false)`. Merged into 5.2.x as
@@ -79,7 +85,7 @@ hand-rolled qualifier was emulating. The finding was never checked against the A
 Three copies of that workaround (`CdiBean.thisDefinitionOnly`, `DisposerInvoker.registrationOf`,
 `CdiObserverMethod.registrationOfDeclaring`) are gone in favour of the overload.
 
-### 11. `@InjectScope` on a constructor/factory parameter never destroys — two compounding bugs — FIXED locally
+### 11. `@InjectScope` on a constructor/factory parameter never destroys — two compounding bugs — FIXED upstream (#12934)
 (a) `BeanDefinitionWriter.hasInjectScope()` passes the constructor/factory `MethodElement` into the
 `AnnotationMetadata` overload, checking the *method's own* annotations instead of its parameters — so
 `destroyInjectScopedBeans()` is never emitted for constructor-parameter `@InjectScope` (field and
@@ -239,6 +245,24 @@ The one real observation underneath it is a trap worth knowing: for a repeatable
 `getAnnotationNamesByStereotype` reports a name that `hasDeclaredAnnotation` then denies, on every element
 kind, and `getDeclaredAnnotationNamesByStereotype` reports nothing at all. Code that pairs those queries will
 be wrong about repeatable annotations.
+
+### 24. No public way to read an annotation instance as an `AnnotationValue`
+`Qualifiers.byAnnotation(Annotation)` (#12928) reads the members off a live annotation and stores them the way
+compiled metadata does — a class as `AnnotationClassValue`, an enum by name, a nested annotation as an
+`AnnotationValue`, `@NonBinding` members left out — in `AnnotationMetadataQualifier.fromAnnotation` /
+`resolveAnnotationBindingValues` / `asMemberValue`. All three are private.
+
+CDI hands the container annotation instances constantly — `Instance.select(Annotation...)`,
+`Event.select(...)`, `BeanContainer.isMatchingBean(Set<Annotation>)`, the qualifiers an extension puts on a
+synthetic bean — so this project re-implemented the same reader (`CdiAnnotations.valueOf`/`storedForm`, and
+again in `SynthesisRunner`). The copy had drifted: it did not convert a nested annotation member, so a qualifier
+such as `@Located(region = @Region("east"))` selected by its literal was **unsatisfied** — the live `Region`
+proxy never equalled the stored `AnnotationValue`. Fixed here (`NestedAnnotationQualifierTest`), by mirroring
+core's conversion.
+
+A public `AnnotationValue.of(Annotation)` (or an `AnnotationUtil` equivalent) is zero-overhead compile-time-free
+API that core already has the body of; it would remove the duplicates downstream and, more to the point, the
+drift between them.
 
 ### 16. RETRACTED — inherited executable methods do resolve their type variables
 Recorded as an inherited `@Executable` method keeping the declaring class's unresolved variables. On

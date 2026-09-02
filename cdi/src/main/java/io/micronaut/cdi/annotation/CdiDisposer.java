@@ -63,8 +63,8 @@ public @interface CdiDisposer {
     int disposedParameter();
 
     /**
-     * Whether the disposer method is static, and so is dispatched reflectively: Micronaut writes no executable
-     * method for a static method.
+     * Whether the disposer method is static, and so is invoked through its executable method without an instance
+     * of the class that declares it.
      *
      * @return Whether the disposer is static
      */
