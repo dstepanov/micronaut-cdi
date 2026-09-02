@@ -262,7 +262,7 @@ overridden parameters plus the variable and never includes the owner. Probe: a v
 project's static `RemovedAnnotations` registry exists (its javadoc blames visitor views; the probe shows the
 owner split). Fix: drop `owningType` from the parameter and field keys. Compile-time only; zero runtime cost.
 
-### 26. Repeatable annotations are invisible to the *declared* queries by name
+### 26. Repeatable annotations are invisible to the *declared* queries by name — PR #12963
 `DefaultAnnotationMetadata.getDeclaredAnnotationNamesByStereotype` filters the stereotype index — which lists
 the **member** (`Q`) — against `declaredAnnotations`, which holds the **container** (`Qs`) → always empty.
 `hasDeclaredAnnotation(String)` likewise ignores the container while the `Class` overload maps through
@@ -285,7 +285,7 @@ creating another application-scoped bean deadlocks. The class javadoc admits it 
 beans". Fix: per-key creation (`computeIfAbsent`-style) with `doCreate` outside any lock, as an opt-in base or
 flag. Medium; existing subclasses unchanged. micronaut-http's `RequestCustomScope` has the same exposure.
 
-### 29. `DefaultCustomScopeRegistry` caches negative lookups forever
+### 29. `DefaultCustomScopeRegistry` caches negative lookups forever — FIXED upstream (#12961)
 `findScope` is `scopes.computeIfAbsent(name, …findBean…)` and stores `Optional.empty()` permanently;
 `registerBeanDefinition` purges the candidate caches but never the scope registry. A `CustomScope` registered
 at runtime (extension-declared contexts, `extension/ExtensionContexts.java`) is invisible if any bean of that
@@ -293,7 +293,7 @@ scope was resolved first — and such a bean silently becomes dependent. Works t
 Fix: `CustomScopeRegistry.invalidate()` (default method) called from `registerBeanDefinition` when the
 definition's type is a `CustomScope`. Zero cost on resolution.
 
-### 30. `RuntimeBeanDefinition.Builder` has no disposer hook
+### 30. `RuntimeBeanDefinition.Builder` has no disposer hook — PR #12964
 The builder offers qualifier/replaces/named/scope/singleton/exposedTypes/typeArguments/annotationMetadata;
 `DefaultRuntimeBeanDefinition` is not a `DisposableBeanDefinition`. A synthetic bean's disposal function is
 therefore run from a JVM-wide `BeanPreDestroyEventListener<Object>` plus an identity map
@@ -323,6 +323,21 @@ does not fire there. Core's own lifecycle table lists this row as the exception.
 `bean instanceof Intercepted i` and `i.$interceptorRegistrations()` is non-empty, pass the non-singleton ones
 as dependents. Only that fallback path is touched. Relevant to micronaut-jakarta-interceptors, whose weak-map
 per-target bookkeeping #12922 otherwise made redundant.
+
+### 34. `MethodArgumentSegment.getOuterInjectionPoint()` throws for a plain `@Inject` method argument
+Found while fixing #32: the segment's `outer` is only set when the previous segment happens to be a
+`MethodSegment`, and every production caller pushes method arguments through the
+`(BeanDefinition, String, Argument, Argument[])` overload with no `MethodInjectionPoint` at hand — so `outer` is
+absent and the accessor throws `IllegalStateException("Outer argument inaccessible")`. After #32 a customizer can
+tell a field (`instanceof FieldInjectionPoint`) and a constructor argument (`outer instanceof
+ConstructorInjectionPoint`) apart, but still cannot call `outer` safely on a method argument. Fix: return `null`
+as `FieldSegment` now does, or carry the method injection point on that overload. Zero overhead.
+
+### 35. `SingletonScope.getOrCreate` releases its per-identity lock after a *failed* creation
+Observed while implementing #28: `SingletonScope` removes the per-identity lock object in `finally`, so when a
+creation throws, two waiters that arrive afterwards can each create under a fresh lock and both succeed — two
+instances of a singleton. `AbstractConcurrentCustomScope`'s new per-bean mode deliberately keeps its lock
+objects for the scope's life to avoid exactly this. Unverified by a test; recorded for a reproduction.
 
 ## Project-side follow-ups the same audit produced (not core's)
 - Replace the static cross-visitor registries with `VisitorContext` attributes (`MutableConvertibleValues`,
