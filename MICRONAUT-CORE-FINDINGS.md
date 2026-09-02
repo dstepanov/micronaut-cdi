@@ -253,7 +253,7 @@ The one real observation underneath it is a trap worth knowing: for a repeatable
 kind, and `getDeclaredAnnotationNamesByStereotype` reports nothing at all. Code that pairs those queries will
 be wrong about repeatable annotations.
 
-### 25. Mutations of an inherited parameter or field are cached per *owning type* — invisible through a subclass
+### 25. Mutations of an inherited parameter or field are cached per *owning type* — invisible through a subclass — PR #12971
 `AbstractElementAnnotationMetadataFactory` keys parameter metadata as `lookupOrBuildForParameter(owningType,
 method, parameter)` (`Key3`) and fields as `(owningType, field)`, although the parameter hierarchy is built from
 overridden parameters plus the variable and never includes the owner. Probe: a visitor on `Base` that removed
@@ -262,7 +262,7 @@ overridden parameters plus the variable and never includes the owner. Probe: a v
 project's static `RemovedAnnotations` registry exists (its javadoc blames visitor views; the probe shows the
 owner split). Fix: drop `owningType` from the parameter and field keys. Compile-time only; zero runtime cost.
 
-### 26. Repeatable annotations are invisible to the *declared* queries by name — PR #12963
+### 26. Repeatable annotations are invisible to the *declared* queries by name — PR #12963 (narrowed: only `getDeclaredAnnotationNamesByStereotype`; widening the by-name `has*` queries broke Kotlin data-class configuration metadata, which relies on "declared under its own name" meaning explicitly written)
 `DefaultAnnotationMetadata.getDeclaredAnnotationNamesByStereotype` filters the stereotype index — which lists
 the **member** (`Q`) — against `declaredAnnotations`, which holds the **container** (`Qs`) → always empty.
 `hasDeclaredAnnotation(String)` likewise ignores the container while the `Class` overload maps through
@@ -270,7 +270,7 @@ the **member** (`Q`) — against `declaredAnnotations`, which holds the **contai
 `declaredByStereotype=[]`, `hasDeclared(Q)=false`, `hasDeclared(Qs)=true`. Fix: accept `s` when
 `declaredAnnotations` contains its container. Tiny, zero overhead. This is the trap behind retracted #23.
 
-### 27. `AbstractConcurrentCustomScope` cannot answer "the instance held for this definition"
+### 27. `AbstractConcurrentCustomScope` cannot answer "the instance held for this definition" — PR #12969 (also fixes `destroyProxyTargetBean` for `@ScopedProxy` beans on such a scope)
 `CustomScope.findBeanRegistration(BeanDefinition)` has a default returning empty since 3.5; the abstract scope
 implements only the `(T bean)` overload, `remove(BeanIdentifier)` is `final` and the identifier core stores
 under (`DefaultBeanContext.BeanKey`) is package-private — so an `AlterableContext.destroy(Contextual)` has to
@@ -278,7 +278,7 @@ scan every `CreatedBean` and match proxy target *names* (`context/ApplicationSco
 two ~40-line copies). Fix: implement `findBeanRegistration(BeanDefinition)` in the abstract scope and add a
 non-final `remove(BeanDefinition)` that removes under the lock and closes outside it. Additive.
 
-### 28. `AbstractConcurrentCustomScope.getOrCreate` holds the scope-wide write lock around `doCreate`
+### 28. `AbstractConcurrentCustomScope.getOrCreate` holds the scope-wide write lock around `doCreate` — PR #12973 (opt-in `lockPerBean` constructor flag)
 Every scoped bean's constructor and `@PostConstruct` in the JVM runs mutually exclusively per scope, even where
 the scope hands back a per-request map. An application-scoped `@PostConstruct` that waits on another thread
 creating another application-scoped bean deadlocks. The class javadoc admits it is for "a small amount of
@@ -302,20 +302,20 @@ BiConsumer<BeanContext, B>)` making the built definition disposable. Additive, z
 the creator lookup's transient registrations should go through `resolutionContext.addDependentBean` — core
 already collects dependents into the registration.)
 
-### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition`
+### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition` — PR #12974
 Only `getTargetDefinitionType()` (a `Class`) and `getTargetType()`; `getProxyTargetBeanDefinition(Argument,
 Qualifier)` re-resolves by type. Six sites here match definition class names (`CdiBean.targetDefinition`,
 `canonicalDefinitionName`, `CdiBeanContainer`, `CdiInstance.dedupProxies`, both scopes, `RecordedInvoker`);
 core itself does the same internally. Fix: `ProxyBeanDefinition.findTargetDefinition(BeanDefinitionRegistry)`
 or `BeanDefinitionRegistry.findBeanDefinition(Class<? extends BeanDefinition<?>>)`. Read-only, off the hot path.
 
-### 32. A resolution segment's kind is only knowable through `@Internal` classes
+### 32. A resolution segment's kind is only knowable through `@Internal` classes — PR #12970
 `FieldSegment` implements `InjectionPoint`/`ArgumentInjectionPoint` but not `FieldInjectionPoint`, and its
 `getOuterInjectionPoint()` throws `UnsupportedOperationException`, so `CdiInjectionPoint.of` must `instanceof`
 `AbstractBeanResolutionContext.FieldSegment`/`ConstructorSegment` (`@Internal`). Fix: implement
 `FieldInjectionPoint` (it has name, argument, declaring bean) and return `null` rather than throw. Zero overhead.
 
-### 33. `destroyBean(Object)` for an untracked proxied bean drops its interceptor registrations
+### 33. `destroyBean(Object)` for an untracked proxied bean drops its interceptor registrations — PR #12972
 After #12922 a proxy's four interception phases share one interceptor instance, destroyed as a dependent of
 the target — except through `destroyBean(T)`'s fallback (`DefaultBeanContext.destroyBean(T)`), which builds
 `BeanRegistration.of(this, key, definition, bean)` with no dependents, so a `@PreDestroy` on the interceptor
