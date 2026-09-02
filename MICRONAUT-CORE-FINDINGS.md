@@ -53,7 +53,14 @@ priority prefers the highest value, Micronaut order the lowest — so a CDI-sele
 `@Order(-priority)` *over* the mapped value. A definition-level `getPriority()` (or documented mapping) would
 remove the trap.
 
-### 7. `getAnnotationNamesByStereotype` returns the *declared* annotation for transitive chains
+### 7. NOT REPRODUCED — `getAnnotationNamesByStereotype` names the immediate carrier, not the declared annotation
+A javac probe on `Class → @S → @RequestScoped → @NormalScope` (in-source and precompiled `@S`, `@Inherited`
+too) answers `byStereotype(NormalScope) = [RequestScoped]` — the immediate carrier, as
+`MutableAnnotationMetadata` records `CollectionUtils.last(parentAnnotations)`. Only a *repeatable* stereotype
+records the whole chain. `CdiScopeVisitor.resolveToScope` works either way, so nothing here was at risk; the
+original text below is kept for the record.
+
+#### 7 (original). `getAnnotationNamesByStereotype` returns the *declared* annotation for transitive chains
 For `Class → @SomeStereotype → @RequestScoped → @NormalScope`, asking for annotations carrying `NormalScope`
 returns `SomeStereotype`, not `RequestScoped` (`DefaultAnnotationMetadata.java:1133`, the
 `annotationsByStereotype` index). Correct for "what did the author write", but callers expecting the stereotype's
@@ -245,6 +252,94 @@ The one real observation underneath it is a trap worth knowing: for a repeatable
 `getAnnotationNamesByStereotype` reports a name that `hasDeclaredAnnotation` then denies, on every element
 kind, and `getDeclaredAnnotationNamesByStereotype` reports nothing at all. Code that pairs those queries will
 be wrong about repeatable annotations.
+
+### 25. Mutations of an inherited parameter or field are cached per *owning type* — invisible through a subclass
+`AbstractElementAnnotationMetadataFactory` keys parameter metadata as `lookupOrBuildForParameter(owningType,
+method, parameter)` (`Key3`) and fields as `(owningType, field)`, although the parameter hierarchy is built from
+overridden parameters plus the variable and never includes the owner. Probe: a visitor on `Base` that removed
+`@Marker` from `Base.inherited(a)` and added `@Added` — a visitor on `Sub`, which inherits the method, still saw
+`@Marker` and never saw `@Added`. Both removal and addition are lost across owners. This is the real reason the
+project's static `RemovedAnnotations` registry exists (its javadoc blames visitor views; the probe shows the
+owner split). Fix: drop `owningType` from the parameter and field keys. Compile-time only; zero runtime cost.
+
+### 26. Repeatable annotations are invisible to the *declared* queries by name
+`DefaultAnnotationMetadata.getDeclaredAnnotationNamesByStereotype` filters the stereotype index — which lists
+the **member** (`Q`) — against `declaredAnnotations`, which holds the **container** (`Qs`) → always empty.
+`hasDeclaredAnnotation(String)` likewise ignores the container while the `Class` overload maps through
+`findRepeatableAnnotationContainerInternal`. Probe on `@Q("a") @Q("b")`: `byStereotype=[Q]`,
+`declaredByStereotype=[]`, `hasDeclared(Q)=false`, `hasDeclared(Qs)=true`. Fix: accept `s` when
+`declaredAnnotations` contains its container. Tiny, zero overhead. This is the trap behind retracted #23.
+
+### 27. `AbstractConcurrentCustomScope` cannot answer "the instance held for this definition"
+`CustomScope.findBeanRegistration(BeanDefinition)` has a default returning empty since 3.5; the abstract scope
+implements only the `(T bean)` overload, `remove(BeanIdentifier)` is `final` and the identifier core stores
+under (`DefaultBeanContext.BeanKey`) is package-private — so an `AlterableContext.destroy(Contextual)` has to
+scan every `CreatedBean` and match proxy target *names* (`context/ApplicationScope.java`, `RequestScope.java`,
+two ~40-line copies). Fix: implement `findBeanRegistration(BeanDefinition)` in the abstract scope and add a
+non-final `remove(BeanDefinition)` that removes under the lock and closes outside it. Additive.
+
+### 28. `AbstractConcurrentCustomScope.getOrCreate` holds the scope-wide write lock around `doCreate`
+Every scoped bean's constructor and `@PostConstruct` in the JVM runs mutually exclusively per scope, even where
+the scope hands back a per-request map. An application-scoped `@PostConstruct` that waits on another thread
+creating another application-scoped bean deadlocks. The class javadoc admits it is for "a small amount of
+beans". Fix: per-key creation (`computeIfAbsent`-style) with `doCreate` outside any lock, as an opt-in base or
+flag. Medium; existing subclasses unchanged. micronaut-http's `RequestCustomScope` has the same exposure.
+
+### 29. `DefaultCustomScopeRegistry` caches negative lookups forever
+`findScope` is `scopes.computeIfAbsent(name, …findBean…)` and stores `Optional.empty()` permanently;
+`registerBeanDefinition` purges the candidate caches but never the scope registry. A `CustomScope` registered
+at runtime (extension-declared contexts, `extension/ExtensionContexts.java`) is invisible if any bean of that
+scope was resolved first — and such a bean silently becomes dependent. Works today only by eager-bean ordering.
+Fix: `CustomScopeRegistry.invalidate()` (default method) called from `registerBeanDefinition` when the
+definition's type is a `CustomScope`. Zero cost on resolution.
+
+### 30. `RuntimeBeanDefinition.Builder` has no disposer hook
+The builder offers qualifier/replaces/named/scope/singleton/exposedTypes/typeArguments/annotationMetadata;
+`DefaultRuntimeBeanDefinition` is not a `DisposableBeanDefinition`. A synthetic bean's disposal function is
+therefore run from a JVM-wide `BeanPreDestroyEventListener<Object>` plus an identity map
+(`extension/SyntheticDisposerListener.java`, `SynthesisRunner.creatorLookups`). Fix: `Builder.disposer(
+BiConsumer<BeanContext, B>)` making the built definition disposable. Additive, zero overhead. (Project side:
+the creator lookup's transient registrations should go through `resolutionContext.addDependentBean` — core
+already collects dependents into the registration.)
+
+### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition`
+Only `getTargetDefinitionType()` (a `Class`) and `getTargetType()`; `getProxyTargetBeanDefinition(Argument,
+Qualifier)` re-resolves by type. Six sites here match definition class names (`CdiBean.targetDefinition`,
+`canonicalDefinitionName`, `CdiBeanContainer`, `CdiInstance.dedupProxies`, both scopes, `RecordedInvoker`);
+core itself does the same internally. Fix: `ProxyBeanDefinition.findTargetDefinition(BeanDefinitionRegistry)`
+or `BeanDefinitionRegistry.findBeanDefinition(Class<? extends BeanDefinition<?>>)`. Read-only, off the hot path.
+
+### 32. A resolution segment's kind is only knowable through `@Internal` classes
+`FieldSegment` implements `InjectionPoint`/`ArgumentInjectionPoint` but not `FieldInjectionPoint`, and its
+`getOuterInjectionPoint()` throws `UnsupportedOperationException`, so `CdiInjectionPoint.of` must `instanceof`
+`AbstractBeanResolutionContext.FieldSegment`/`ConstructorSegment` (`@Internal`). Fix: implement
+`FieldInjectionPoint` (it has name, argument, declaring bean) and return `null` rather than throw. Zero overhead.
+
+### 33. `destroyBean(Object)` for an untracked proxied bean drops its interceptor registrations
+After #12922 a proxy's four interception phases share one interceptor instance, destroyed as a dependent of
+the target — except through `destroyBean(T)`'s fallback (`DefaultBeanContext.destroyBean(T)`), which builds
+`BeanRegistration.of(this, key, definition, bean)` with no dependents, so a `@PreDestroy` on the interceptor
+does not fire there. Core's own lifecycle table lists this row as the exception. Fix: when
+`bean instanceof Intercepted i` and `i.$interceptorRegistrations()` is non-empty, pass the non-singleton ones
+as dependents. Only that fallback path is touched. Relevant to micronaut-jakarta-interceptors, whose weak-map
+per-target bookkeeping #12922 otherwise made redundant.
+
+## Project-side follow-ups the same audit produced (not core's)
+- Replace the static cross-visitor registries with `VisitorContext` attributes (`MutableConvertibleValues`,
+  one context per compilation) and seed the TCK adapter's extensions through a `JavaParser` subclass rather than
+  `BuildCompatibleExtensionVisitor.overrideExtensions`.
+- `InjectedParameters.readAsInjectionPoints` rests on a premise core does not have (a parameter's metadata does
+  not carry its method's annotations) — the removal loop removes nothing in the ordinary case; delete it.
+- `@Executable(processOnStartup = true)` on `CdiObserver` + `ObserverRegistry implements
+  ExecutableMethodProcessor<CdiObserver>` replaces the all-definitions walk; `CdiBeanContainer.canonicalBean`
+  wants a map; `Class.forName` for annotation types → `AnnotationMetadata.getAnnotationType(name)`.
+- Every normal-scoped bean also carries the `CdiApplicationScope` stereotype (`NormalScopeAnnotationMapper`);
+  the runtime picks the right scope by registration order alone — needs a regression test.
+- Interceptors bridge: after #12922 the weak `TargetKey`/`ReferenceQueue` bookkeeping in
+  `InterceptorLifecycleSupport` is redundant for proxied beans (a `@PreDestroy` on the advice does the same);
+  the `@Adapter`-generated index beans can be replaced by `getBeanDefinitions(Qualifiers.byStereotype(
+  "jakarta.interceptor.Interceptor"))`, which filters references before loading; docs and the TCK exclusion list
+  still say private interceptor methods are rejected while the code accepts them.
 
 ### 24. No public way to read an annotation instance as an `AnnotationValue`
 `Qualifiers.byAnnotation(Annotation)` (#12928) reads the members off a live annotation and stores them the way
