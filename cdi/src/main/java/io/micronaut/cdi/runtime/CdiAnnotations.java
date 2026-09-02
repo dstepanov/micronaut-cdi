@@ -83,8 +83,9 @@ public final class CdiAnnotations {
 
     /**
      * A member value in the form the compiled metadata stores it, so that a value read off a live annotation
-     * compares equal to the same value read out of a definition: an enum is stored by its name, and a class by
-     * its class value.
+     * compares equal to the same value read out of a definition: an enum is stored by its name, a class by its
+     * class value, and an annotation as the value of its own members — every one of them, since what is not
+     * binding is a member of the qualifier and not of an annotation it carries.
      */
     private static @Nullable Object storedForm(@Nullable Object value) {
         if (value instanceof Enum<?> constant) {
@@ -92,6 +93,21 @@ public final class CdiAnnotations {
         }
         if (value instanceof Class<?> type) {
             return new io.micronaut.core.annotation.AnnotationClassValue<>(type);
+        }
+        if (value instanceof Annotation nested) {
+            Map<CharSequence, Object> members = new LinkedHashMap<>();
+            for (Method member : nested.annotationType().getDeclaredMethods()) {
+                if (member.getParameterCount() != 0 || member.isSynthetic()) {
+                    continue;
+                }
+                try {
+                    members.put(member.getName(), storedForm(member.invoke(nested)));
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalArgumentException("The member " + member.getName() + " of "
+                        + nested.annotationType().getName() + " could not be read", e);
+                }
+            }
+            return new AnnotationValue<>(nested.annotationType().getName(), members);
         }
         if (value instanceof Object[] array) {
             Object[] stored = new Object[array.length];
