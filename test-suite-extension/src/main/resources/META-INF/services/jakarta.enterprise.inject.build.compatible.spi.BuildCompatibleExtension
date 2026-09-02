@@ -1,3 +1,4 @@
 io.micronaut.cdi.test.extension.AuditingExtension
 io.micronaut.cdi.test.extension.ScanAndChangeExtension
 io.micronaut.cdi.test.extension.ReviewScenariosExtension
+io.micronaut.cdi.test.extension.TieredExtension

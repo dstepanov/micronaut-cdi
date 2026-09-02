@@ -291,12 +291,17 @@ public final class SynthesisRunner {
         if (qualifiers.isEmpty()) {
             qualifiers.add(Default.Literal.INSTANCE);
         }
-        builder.qualifier((io.micronaut.context.Qualifier<T>) CdiQualifiers
-            .of(qualifiers.toArray(new Annotation[0])));
-        builder.annotationMetadata(metadataOf(qualifiers, bean));
+        io.micronaut.context.Qualifier<T> qualifier = (io.micronaut.context.Qualifier<T>) CdiQualifiers
+            .of(qualifiers.toArray(new Annotation[0]));
         if (bean.name() != null) {
-            builder.named(bean.name());
+            // the name is a qualifier beside the others, not in their place: naming the builder would replace
+            // what was just given it
+            io.micronaut.context.Qualifier<T> named = io.micronaut.inject.qualifiers.Qualifiers.byName(bean.name());
+            qualifier = qualifier == null ? named
+                : io.micronaut.inject.qualifiers.Qualifiers.byQualifiers(qualifier, named);
         }
+        builder.qualifier(qualifier);
+        builder.annotationMetadata(metadataOf(qualifiers, bean));
         Class<? extends Annotation> scope = scopeOf(bean);
         if (scope != null && scope.getName().equals("jakarta.inject.Singleton")) {
             builder.singleton(true);
@@ -418,9 +423,16 @@ public final class SynthesisRunner {
     private static AnnotationMetadata metadataOf(List<Annotation> qualifiers, SyntheticBean<?> bean) {
         MutableAnnotationMetadata metadata = new MutableAnnotationMetadata();
         for (Annotation qualifier : qualifiers) {
-            metadata.addDeclaredAnnotation(qualifier.annotationType().getName(), membersOf(qualifier));
+            metadata.addDeclaredAnnotation(qualifier.annotationType().getName(),
+                io.micronaut.cdi.runtime.CdiAnnotations.membersOf(qualifier));
             metadata.addDeclaredStereotype(List.of(qualifier.annotationType().getName()),
                 AnnotationUtil.QUALIFIER, Map.of());
+        }
+        if (bean.name() != null) {
+            // a named bean has the name among its qualifiers (section 2.6), and is found by it
+            metadata.addDeclaredAnnotation("jakarta.inject.Named",
+                Map.of(AnnotationMetadata.VALUE_MEMBER, bean.name()));
+            metadata.addDeclaredStereotype(List.of("jakarta.inject.Named"), AnnotationUtil.QUALIFIER, Map.of());
         }
         for (Class<? extends Annotation> stereotype : bean.stereotypes()) {
             metadata.addDeclaredAnnotation(stereotype.getName(), Map.of());
@@ -450,29 +462,6 @@ public final class SynthesisRunner {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }
         return metadata;
-    }
-
-    /**
-     * The members a qualifier was written with, read off the instance so that the bean's metadata reports
-     * {@code @Region("west")} as itself rather than as the annotation's defaults.
-     */
-    private static Map<CharSequence, Object> membersOf(Annotation annotation) {
-        Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
-        for (Method member : annotation.annotationType().getDeclaredMethods()) {
-            if (member.getParameterCount() != 0) {
-                continue;
-            }
-            try {
-                member.setAccessible(true);
-                Object value = member.invoke(annotation);
-                if (value != null) {
-                    members.put(member.getName(), value);
-                }
-            } catch (ReflectiveOperationException e) {
-                // a member that cannot be read is left to its default
-            }
-        }
-        return members;
     }
 
     /**

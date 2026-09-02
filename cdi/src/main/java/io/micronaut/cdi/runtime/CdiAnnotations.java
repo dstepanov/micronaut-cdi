@@ -82,6 +82,34 @@ public final class CdiAnnotations {
     }
 
     /**
+     * Every member an annotation was written with, in the form the compiled metadata stores members: what a
+     * bean's metadata records about an annotation put on it at runtime. Nothing is left out here — a member that
+     * does not bind a qualifier is still a member the bean's metadata has to report.
+     *
+     * @param annotation The annotation
+     * @return The members, by name
+     */
+    public static Map<CharSequence, Object> membersOf(Annotation annotation) {
+        Class<? extends Annotation> type = annotation.annotationType();
+        Map<CharSequence, Object> members = new LinkedHashMap<>();
+        for (Method member : type.getDeclaredMethods()) {
+            if (member.getParameterCount() != 0 || member.isSynthetic()) {
+                continue;
+            }
+            try {
+                Object value = storedForm(member.invoke(annotation));
+                if (value != null) {
+                    members.put(member.getName(), value);
+                }
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalArgumentException("The member " + member.getName() + " of " + type.getName()
+                    + " could not be read", e);
+            }
+        }
+        return members;
+    }
+
+    /**
      * A member value in the form the compiled metadata stores it, so that a value read off a live annotation
      * compares equal to the same value read out of a definition: an enum is stored by its name, a class by its
      * class value, and an annotation as the value of its own members — every one of them, since what is not

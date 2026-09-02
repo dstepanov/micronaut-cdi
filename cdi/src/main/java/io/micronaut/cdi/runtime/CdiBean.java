@@ -344,7 +344,7 @@ public final class CdiBean<T> implements Bean<T> {
                 tracking.track(registration);
                 return registration.bean();
             }
-            if (isNormalScoped() && beanContext instanceof io.micronaut.context.DefaultBeanContext defaultContext) {
+            if (isNormalScoped()) {
                 // creating a bean in a normal scope is creating the contextual instance the scope holds, not
                 // the client proxy in front of it: a producer that misbehaves — returning null, say — is
                 // heard from here, as the specification's create contract expects
@@ -354,7 +354,7 @@ public final class CdiBean<T> implements Bean<T> {
                         ? (io.micronaut.core.type.Argument<T>) io.micronaut.core.type.Argument.of(
                             proxy.getTargetType(), definition.asArgument().getTypeParameters())
                         : definition.asArgument();
-                return defaultContext.getProxyTargetBean(target, definition.getDeclaredQualifier());
+                return beanContext.getProxyTargetBean(target, definition.getDeclaredQualifier());
             }
             return beanContext.getBean(definition);
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
