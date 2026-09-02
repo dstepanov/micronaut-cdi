@@ -262,6 +262,14 @@ overridden parameters plus the variable and never includes the owner. Probe: a v
 project's static `RemovedAnnotations` registry exists (its javadoc blames visitor views; the probe shows the
 owner split). Fix: drop `owningType` from the parameter and field keys. Compile-time only; zero runtime cost.
 
+Measured here rather than assumed: `InheritedObserverEnhancementTest` removes `@Observes` from an inherited
+method's parameter through the class that *declares* it and fires at the subclass that is the bean. It passes
+with `RemovedAnnotations` consulted and **fails without it**, while the same-owner `FieldEnhancementTest` passes
+either way — so the registry is load-bearing for exactly the cross-owner case #12971 fixes, and for nothing
+else. When #12971 is merged and in a snapshot, `Cdi.declares` collapses to `hasDeclaredAnnotation` and
+`RemovedAnnotations` (with its `reset()` calls in `BuildCompatibleExtensionVisitor`) can be deleted; that test
+is what will prove it.
+
 ### 26. Repeatable annotations are invisible to the *declared* queries by name — PR #12963 (narrowed: only `getDeclaredAnnotationNamesByStereotype`; widening the by-name `has*` queries broke Kotlin data-class configuration metadata, which relies on "declared under its own name" meaning explicitly written)
 `DefaultAnnotationMetadata.getDeclaredAnnotationNamesByStereotype` filters the stereotype index — which lists
 the **member** (`Q`) — against `declaredAnnotations`, which holds the **container** (`Qs`) → always empty.

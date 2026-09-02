@@ -30,6 +30,18 @@ public class ScanAndChangeExtension implements BuildCompatibleExtension {
         }
     }
 
+    /**
+     * Silences an observer declared on a base class, reached through the class that declares it.
+     *
+     * @param method The method
+     */
+    @Enhancement(types = Object.class, withSubtypes = true, withAnnotations = SilenceInherited.class)
+    public void silenceInherited(jakarta.enterprise.inject.build.compatible.spi.MethodConfig method) {
+        if ("inheritedObserver".equals(method.info().name())) {
+            method.parameters().get(0).removeAllAnnotations();
+        }
+    }
+
     @Enhancement(types = Object.class, withSubtypes = true, withAnnotations = MarkTheField.class)
     public void mark(jakarta.enterprise.inject.build.compatible.spi.FieldConfig field) {
         if (field.info().hasAnnotation(MarkTheField.class)) {
