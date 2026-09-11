@@ -284,7 +284,7 @@ public final class SynthesisRunner {
     private <T> BeanDefinition<T> register(SyntheticBean<T> bean) {
         RuntimeBeanDefinition.Builder<T> builder = RuntimeBeanDefinition
             .builder(Argument.of(bean.implementationClass()),
-                resolutionContext -> create(bean, resolutionContext));
+                creationContext -> create(bean, creationContext));
         // a bean that names no qualifier has the default one, which the rule of section 2.1.3 says of a bean
         // an extension describes as much as of one a class declares
         List<Annotation> qualifiers = new ArrayList<>(bean.qualifiers());
@@ -472,9 +472,7 @@ public final class SynthesisRunner {
      * have no bean definition of its own. What it needs from the container it asks the lookup it is handed
      * for.</p>
      */
-    private <T> T create(SyntheticBean<T> bean,
-                         io.micronaut.context.@io.micronaut.core.annotation.Nullable BeanResolutionContext
-                             resolutionContext) {
+    private <T> T create(SyntheticBean<T> bean, RuntimeBeanDefinition.CreationContext creationContext) {
         SyntheticBeanCreator<T> creator;
         try {
             creator = bean.creator().getDeclaredConstructor().newInstance();
@@ -484,7 +482,7 @@ public final class SynthesisRunner {
                 + "taking no parameters", e);
         }
         io.micronaut.cdi.runtime.CdiInjectionPoint injectionPoint =
-            currentInjectionPointOf(bean, resolutionContext);
+            currentInjectionPointOf(bean, creationContext);
         if (injectionPoint != null) {
             io.micronaut.cdi.runtime.CurrentInjectionPoint.enter(injectionPoint);
         }
@@ -512,31 +510,28 @@ public final class SynthesisRunner {
     }
 
     /**
-     * The injection point a dependent synthetic bean is being created for, read off the resolution under way:
+     * The injection point a dependent synthetic bean is being created for, as the creation under way reports it:
      * section 2.10.5 hands the creation function a lookup that can answer {@code InjectionPoint}.
      */
     private io.micronaut.cdi.runtime.@io.micronaut.core.annotation.Nullable CdiInjectionPoint currentInjectionPointOf(
-        SyntheticBean<?> bean,
-        io.micronaut.context.@io.micronaut.core.annotation.Nullable BeanResolutionContext resolutionContext) {
+        SyntheticBean<?> bean, RuntimeBeanDefinition.CreationContext creationContext) {
         Class<? extends Annotation> scope = scopeOf(bean);
         if (scope != null && !"jakarta.enterprise.context.Dependent".equals(scope.getName())) {
             // for anything but a dependent bean the specification leaves the answer open, and null it is
             return null;
         }
-        if (resolutionContext == null) {
+        // the injection point the bean is created for is the segment of the resolution that asked for it, and it is
+        // absent for a lookup made directly rather than for an injection point
+        if (!(creationContext.getInjectionPoint().orElse(null)
+            instanceof io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment)) {
+            return null;
+        }
+        Argument<?> argument = segment.getArgument();
+        if (argument == null || !argument.getType().isAssignableFrom(bean.implementationClass())) {
             return null;
         }
         io.micronaut.cdi.runtime.CdiBeanContainer container =
             beanContext.getBean(io.micronaut.cdi.runtime.CdiBeanContainer.class);
-        // the resolution the creation function was called for: the path names where this bean is going
-        for (io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment : resolutionContext.getPath()) {
-            Argument<?> argument = segment.getArgument();
-            if (argument != null && argument.getType().isAssignableFrom(bean.implementationClass())
-                && !segment.getDeclaringType().getBeanType().equals(bean.implementationClass())) {
-                return io.micronaut.cdi.runtime.CdiInjectionPoint.of(
-                    container.canonicalBean(segment.getDeclaringType()), segment);
-            }
-        }
-        return null;
+        return io.micronaut.cdi.runtime.CdiInjectionPoint.of(container.canonicalBean(segment.getDeclaringType()), segment);
     }
 }
