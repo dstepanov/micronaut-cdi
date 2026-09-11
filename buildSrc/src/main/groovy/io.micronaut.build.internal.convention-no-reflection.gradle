@@ -1,0 +1,8 @@
+// The reflection boundary of the container, checked while the main sources compile. A bean of this implementation
+// is resolved and injected from what was decided while it was compiled, so a module reflects only where its build
+// allows it, and a report names the kind of reflection the call reaches for. The tests are not checked: a test that
+// holds the container to what the classes actually do has to read them.
+plugins {
+    id 'io.micronaut.build.internal.convention-nullaway'
+    id 'io.micronaut.errorprone.no-reflection'
+}

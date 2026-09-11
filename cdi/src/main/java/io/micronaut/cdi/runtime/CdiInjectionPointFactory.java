@@ -91,7 +91,7 @@ public abstract class CdiInjectionPointFactory<B>
             try {
                 closeable.close();
             } catch (Exception e) {
-                throw new IllegalStateException("The " + getBeanType().getSimpleName()
+                throw new IllegalStateException("The " + getBeanType().getName()
                     + " of an injection point could not be closed", e);
             }
         }

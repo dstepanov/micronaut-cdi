@@ -2,6 +2,12 @@ plugins {
     id "io.micronaut.build.internal.cdi-module"
 }
 
+noReflection {
+    // the processor and the build compatible extensions it runs execute inside javac while an application compiles,
+    // and none of it reaches the runtime
+    allowIn 'io.micronaut.cdi.processor.*'
+}
+
 dependencies {
     api mn.micronaut.core.processor
     api projects.micronautCdi

@@ -2,6 +2,11 @@ plugins {
     id "io.micronaut.build.internal.cdi-module"
 }
 
+noReflection {
+    // reading the application back reflectively is what this module is for
+    allowIn 'io.micronaut.cdi.reflection.*'
+}
+
 // The parts of the specification that can only be answered by reading the application back with reflection.
 //
 // Micronaut resolves and injects a bean without reflecting, and this module implements the specification the same

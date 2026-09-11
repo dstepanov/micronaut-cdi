@@ -67,6 +67,15 @@ Nothing in `micronaut-cdi` reads a class back at runtime to work out what a bean
 bean was compiled. The one part of the specification that cannot be answered that way is kept out of it, in
 `micronaut-cdi-reflection`, so that an application only reads classes back if it asks to.
 
+The boundary is checked while the modules compile, by the `NoReflection` check of
+[errorprone-no-reflection](https://github.com/micronaut-projects/errorprone-no-reflection), alongside NullAway. The
+check matches the method a call resolves to and names the kind of reflection it reaches for. The processor and
+`micronaut-cdi-reflection` are allowed all of it. In `micronaut-cdi`, each class is allowed only the kinds the
+specification's own interfaces put there, such as the `java.lang.reflect.Type` of a bean type, the annotation instance
+of a qualifier, or the `Member` of an injection point, and the synthesis phase, which runs as the container starts.
+The list, with the reason for each entry, is in [cdi/build.gradle](cdi/build.gradle). Reflection anywhere else fails
+the build.
+
 ## Conformance
 
 What is implemented, and every place where this module differs from the specification, is recorded in

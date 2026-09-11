@@ -58,7 +58,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private final boolean ifExists;
     private final boolean staticMethod;
     private final int priority;
-    private final String during;
+    private final TransactionPhase during;
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
@@ -76,7 +76,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         this.ifExists = observer.booleanValue("ifExists").orElse(false);
         this.staticMethod = observer.booleanValue("staticMethod").orElse(false);
         this.priority = observer.intValue("priority").orElse(DEFAULT_PRIORITY);
-        this.during = observer.stringValue("during").orElse("IN_PROGRESS");
+        this.during = transactionPhaseNamed(observer.stringValue("during").orElse("IN_PROGRESS"));
     }
 
     /**
@@ -192,7 +192,20 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     public TransactionPhase getTransactionPhase() {
         // there are no transactions in CDI Lite, so every observer is notified as the event fires — but the
         // phase it asked for is still what it declared
-        return TransactionPhase.valueOf(during);
+        return during;
+    }
+
+    /**
+     * The phase the processor recorded by its name, found among the constants rather than with {@code valueOf}, which
+     * builds and keeps a map of them by name reflectively.
+     */
+    private static TransactionPhase transactionPhaseNamed(String name) {
+        for (TransactionPhase phase : TransactionPhase.values()) {
+            if (phase.name().equals(name)) {
+                return phase;
+            }
+        }
+        throw new IllegalStateException("The observer records the unknown transaction phase " + name);
     }
 
     @Override

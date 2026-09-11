@@ -2,6 +2,57 @@ plugins {
     id "io.micronaut.build.internal.cdi-module"
 }
 
+// Resolving and injecting a bean reads nothing back from its class: what a bean is was decided while it was compiled.
+// The reflection allowed below is what the interfaces of the specification are written in - a bean type is a
+// java.lang.reflect.Type, a qualifier an annotation instance, an injection point a Member - and what the synthesis
+// phase of a build compatible extension needs, since it runs as the container starts rather than while anything
+// compiles. Each class is allowed only the kinds of reflection it reaches for, so that anything new, anywhere,
+// fails the build until it is either removed or listed here with its reason.
+noReflection {
+    // the types of the specification's typesafe resolution: a bean type or a required type is a
+    // java.lang.reflect.Type, and its arguments and bounds are what section 2.4.2 compares
+    allowIn 'io.micronaut.cdi.runtime.CdiAssignability', 'GENERIC_SIGNATURES'
+    allowIn 'io.micronaut.cdi.runtime.CdiParameterizedType', 'GENERIC_SIGNATURES'
+    // the bounds of a type variable are recorded by name and loaded when a Type is asked for
+    allowIn 'io.micronaut.cdi.runtime.CdiTypes', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
+    allowIn 'io.micronaut.cdi.runtime.CdiInjectionPointFactory', 'GENERIC_SIGNATURES'
+    // the bean types of a bean are the closure of its class hierarchy as Types (section 2.2.1), and its scope
+    // annotation is recorded by name
+    allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
+    // the observed type keeps the wildcards and variables the compiled argument erases, and is read once per observer
+    allowIn 'io.micronaut.cdi.runtime.CdiObserverMethod', 'GENERIC_SIGNATURES', 'CLASS_MEMBERS'
+    // the event type of a fired event is its runtime class, and a qualifier handed over is an annotation instance
+    allowIn 'io.micronaut.cdi.runtime.CdiEvent', 'GENERIC_SIGNATURES', 'ANNOTATIONS'
+
+    // the bean manager is asked about annotation classes a program hands it: whether one is a scope, a qualifier,
+    // a stereotype or an interceptor binding, and what a stereotype carries
+    allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'ANNOTATIONS', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
+    allowIn 'io.micronaut.cdi.runtime.CdiInstance', 'ANNOTATIONS'
+    allowIn 'io.micronaut.cdi.runtime.CdiInterceptor', 'ANNOTATIONS', 'CLASS_LOADING'
+    allowIn 'io.micronaut.cdi.runtime.ExtensionQualifiers', 'ANNOTATIONS'
+    // a qualifier is an annotation instance on the specification's side, materialized from what was compiled
+    allowIn 'io.micronaut.cdi.runtime.CdiQualifiers', 'ANNOTATIONS', 'CLASS_LOADING', 'CLASS_MEMBERS'
+    allowIn 'io.micronaut.cdi.runtime.CdiAnnotations', 'ANNOTATIONS', 'CLASS_MEMBERS', 'PROXY', 'REFLECTIVE_ACCESS'
+    // InjectionPoint.getMember and getAnnotated hand out the member itself, looked up only when a program asks
+    allowIn 'io.micronaut.cdi.runtime.CdiInjectionPoint', 'ANNOTATIONS', 'CLASS_MEMBERS'
+    allowIn 'io.micronaut.cdi.runtime.ReflectiveAnnotatedField', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
+    allowIn 'io.micronaut.cdi.runtime.ReflectiveAnnotatedParameter', 'ANNOTATIONS', 'CLASS_MEMBERS', 'GENERIC_SIGNATURES'
+    allowIn 'io.micronaut.cdi.runtime.ReflectiveAnnotatedType', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
+    // an invoker built at build time names its bean class, which is loaded when the invoker is first used
+    allowIn 'io.micronaut.cdi.runtime.RecordedInvoker', 'CLASS_LOADING'
+
+    // the synthesis phase: extensions are services, their phase methods are found by annotation and invoked, and
+    // the creators, disposers, observers and contexts they name are classes the container instantiates
+    allowIn 'io.micronaut.cdi.runtime.extension.SynthesisRunner', 'SERVICE_LOADING', 'CLASS_MEMBERS', 'ANNOTATIONS', 'REFLECTIVE_ACCESS'
+    allowIn 'io.micronaut.cdi.runtime.extension.SyntheticObserverMethod', 'CLASS_MEMBERS', 'REFLECTIVE_ACCESS'
+    allowIn 'io.micronaut.cdi.runtime.extension.ExtensionContexts', 'CLASS_LOADING', 'CLASS_MEMBERS', 'REFLECTIVE_ACCESS'
+    allowIn 'io.micronaut.cdi.runtime.extension.CdiSyntheticBeanBuilder', 'CLASS_LOADING'
+    // what an extension composed in the language model is read back as the classes, types and annotation
+    // instances it describes
+    allowIn 'io.micronaut.cdi.runtime.extension.LangModelTypes', 'CLASS_LOADING', 'GENERIC_SIGNATURES', 'REFLECTIVE_ACCESS'
+    allowIn 'io.micronaut.cdi.runtime.extension.LangModelAnnotations', 'ANNOTATIONS', 'CLASS_LOADING', 'CLASS_MEMBERS', 'ENUM_CONSTANTS', 'PROXY', 'REFLECTIVE_ACCESS'
+}
+
 dependencies {
     annotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
 

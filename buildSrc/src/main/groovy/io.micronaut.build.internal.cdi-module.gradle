@@ -2,6 +2,7 @@ plugins {
     id 'io.micronaut.build.internal.cdi-base'
     id 'io.micronaut.build.internal.module'
     id 'io.micronaut.build.internal.convention-nullaway'
+    id 'io.micronaut.build.internal.convention-no-reflection'
 }
 
 micronautBuild {
