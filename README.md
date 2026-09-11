@@ -95,7 +95,7 @@ git clone https://github.com/dstepanov/micronaut-jakarta-interceptors ../microna
 The local Maven repository is consulted before the snapshot repository, so a Micronaut built from a checkout
 beside this one and published with `publishToMavenLocal` is what this builds against. That is how a fix being
 worked on in Micronaut itself is built against here before it is released; where nothing has been published
-locally, the published snapshot resolves as usual.
+locally, the release on Maven Central resolves as usual.
 
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.

@@ -4,7 +4,7 @@ managed-jakarta-inject = "2.0.1"
 managed-jakarta-interceptor = "2.2.0"
 managed-jakarta-annotation = "3.0.0"
 
-micronaut = "5.2.0-SNAPSHOT"
+micronaut = "5.2.0"
 managed-micronaut-jakarta-interceptors = "1.0.0-SNAPSHOT"
 managed-micronaut-jakarta-el = "1.0.1-SNAPSHOT"
 
