@@ -534,8 +534,18 @@ placeholder (#41) `lookupTypeAnnotationsForGenericPlaceholder` already knows whe
 in `JavaNativeElement.Placeholder`. Verify against `inject-kotlin`: nothing here touches the by-name `has*`
 semantics KSP data-class configuration relies on (finding #26), but the Kotlin suite is the evidence.
 
-This one change retires `MirrorAnnotationInfo`, `MirrorAnnotationMember`, `ExtensionAnnotations.declaredOn`'s
-mirror half, and the `typeUseOnly` filter in `MirrorTypes.Annotated` (with #40). It also covers a fourth case
+Until it lands the processor strips what it can recognise as Micronaut's own: every annotation of Micronaut's
+annotation packages (`io.micronaut.core.annotation`, `io.micronaut.context.annotation`, `io.micronaut.inject.annotation`,
+`io.micronaut.aop`, `io.micronaut.runtime` and this project's `io.micronaut.cdi.annotation` — mapper and remapper
+output; `ExtensionAnnotations.isSynthesised`), and on a type whose declaring class or package is null-marked any
+annotation carrying Micronaut's non-null stereotype (`ElementTypes.of(element, nullMarked)`), which is exactly
+when `JavaMethodElement.returnType`/`JavaFieldElement.getType` write it — it arrives as
+`jakarta.annotation.Nonnull`, not under jspecify's name, because the builder remaps it. `ModelAnnotationsTest`
+in `test-suite-java` pins both. Two things it cannot restore, which the source view does: a user-written
+non-null annotation in a null-marked scope is stripped with the synthesised one, and a remapped annotation's
+original name is gone from the record — `@Priority` becomes `@Order` (finding #6) and jspecify's own
+`@NullMarked` becomes `io.micronaut.core.annotation.NullMarked`, so a null-marked class reports no `@NullMarked`
+at all. It also covers a fourth case
 the AST-only run surfaced: an annotation interface's *own* meta-annotations — `AnnotationMembers` asserts that
 `@Retention` is the one annotation of `AnnotationMembers` — are `INTERNAL_ANNOTATION_NAMES` and never reach the
 metadata of the interface, while the source view reports them (PR #13163 lists "meta-annotations of an

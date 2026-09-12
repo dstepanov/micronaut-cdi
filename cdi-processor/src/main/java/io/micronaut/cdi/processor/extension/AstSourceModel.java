@@ -52,6 +52,9 @@ final class AstSourceModel implements SourceModel {
     static final AstSourceModel INSTANCE = new AstSourceModel();
 
     private static final String OBJECT = "java.lang.Object";
+    // jspecify's marker as written, and as Micronaut remaps it
+    private static final String[] NULL_MARKED = {"org.jspecify.annotations.NullMarked",
+        "io.micronaut.core.annotation.NullMarked"};
 
     private AstSourceModel() {
     }
@@ -94,17 +97,30 @@ final class AstSourceModel implements SourceModel {
 
     @Override
     public Type typeOf(FieldElement field) {
-        return ElementTypes.of(field.getType());
+        return ElementTypes.of(field.getType(), isNullMarked(field.getDeclaringType()));
     }
 
     @Override
     public Type typeOf(ParameterElement parameter) {
-        return ElementTypes.of(parameter.getType());
+        return ElementTypes.of(parameter.getType(), isNullMarked(parameter.getMethodElement().getDeclaringType()));
     }
 
     @Override
     public Type returnTypeOf(MethodElement method) {
-        return ElementTypes.of(method.getReturnType());
+        return ElementTypes.of(method.getReturnType(), isNullMarked(method.getDeclaringType()));
+    }
+
+    /**
+     * Whether a class is in a null-marked scope, where Micronaut writes {@code NonNull} on every type its
+     * members declare that is not nullable, which the source did not write.
+     */
+    private static boolean isNullMarked(ClassElement declaring) {
+        for (String name : NULL_MARKED) {
+            if (declaring.hasStereotype(name) || declaring.getPackage().hasStereotype(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

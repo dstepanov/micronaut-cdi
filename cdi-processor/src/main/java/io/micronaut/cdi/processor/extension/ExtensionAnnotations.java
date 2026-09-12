@@ -35,6 +35,15 @@ import java.util.List;
 @Internal
 final class ExtensionAnnotations {
 
+    /**
+     * The packages of the annotations Micronaut's mappers and remappers write into its record, this project's
+     * own included.
+     */
+    private static final String[] MICRONAUT_PACKAGES = {
+        "io.micronaut.core.annotation.", "io.micronaut.context.annotation.", "io.micronaut.inject.annotation.",
+        "io.micronaut.aop.", "io.micronaut.runtime.", "io.micronaut.cdi.annotation.", "io.micronaut.cdi.processor.",
+    };
+
     private ExtensionAnnotations() {
     }
 
@@ -138,6 +147,26 @@ final class ExtensionAnnotations {
      */
     static boolean isReported(Element element, String annotation) {
         return ExtensionAnnotationTypes.isRuntimeRetained(annotation)
+            && !isSynthesised(annotation)
             && !RemovedAnnotations.isRemoved(element, annotation);
     }
+
+    /**
+     * Whether an annotation of the given name is one Micronaut writes into its record rather than one the
+     * source wrote: what its mappers and remappers add lives in Micronaut's own packages, and the source of a
+     * class read by a build compatible extension does not. Until Micronaut records the annotations as written
+     * ({@code MICRONAUT-CORE-FINDINGS.md}, finding 39), these are left out.
+     *
+     * @param annotation The annotation interface's binary name
+     * @return Whether it is Micronaut's own
+     */
+    static boolean isSynthesised(String annotation) {
+        for (String prefix : MICRONAUT_PACKAGES) {
+            if (annotation.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
