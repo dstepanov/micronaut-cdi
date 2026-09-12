@@ -18,22 +18,25 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.MethodElement;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * One member of an annotation, read from the value Micronaut recorded for it.
+ * A member of an annotation, read from the value Micronaut recorded for it.
  *
- * <p>Micronaut records the value of an annotation member as whatever object it was written as — a boxed
- * primitive, a string, an {@link AnnotationClassValue} for a class, a nested {@link AnnotationValue}, an array of
- * any of those. The language model asks instead what kind of member it is and then for the value of that kind,
- * so what is recorded is read back into those terms.</p>
+ * <p>Micronaut records an enum constant by its name and a class by its name, so what the value is of is read
+ * off the member's declaration in the annotation interface: the type the member returns says whether a string
+ * is an enum constant, and which enum it belongs to.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -42,9 +45,17 @@ import java.util.List;
 public final class ElementAnnotationMember implements AnnotationMember {
 
     private final Object value;
+    private final @Nullable String annotation;
+    private final @Nullable String member;
 
     ElementAnnotationMember(Object value) {
+        this(value, null, null);
+    }
+
+    ElementAnnotationMember(Object value, @Nullable String annotation, @Nullable String member) {
         this.value = value;
+        this.annotation = annotation;
+        this.member = member;
     }
 
     @Override
@@ -85,7 +96,9 @@ public final class ElementAnnotationMember implements AnnotationMember {
         if (value.getClass().isArray() || value instanceof Iterable<?>) {
             return Kind.ARRAY;
         }
-        return Kind.STRING;
+        // a constant of an enum is recorded by its name
+        ClassElement declared = memberType();
+        return declared != null && declared.isEnum() ? Kind.ENUM : Kind.STRING;
     }
 
     @Override
@@ -125,7 +138,7 @@ public final class ElementAnnotationMember implements AnnotationMember {
 
     @Override
     public char asChar() {
-        return (Character) value;
+        return value instanceof Character character ? character : value.toString().charAt(0);
     }
 
     @Override
@@ -144,7 +157,15 @@ public final class ElementAnnotationMember implements AnnotationMember {
 
     @Override
     public ClassInfo asEnumClass() {
-        throw new IllegalStateException("The class an enum constant belongs to is not recorded with the constant");
+        if (value instanceof Enum<?> constant) {
+            return ElementTypes.ofName(constant.getDeclaringClass().getName()).asClass().declaration();
+        }
+        ClassElement declared = memberType();
+        if (declared == null) {
+            throw new IllegalStateException("The enum the member " + member + " of " + annotation
+                + " belongs to cannot be resolved in this compilation");
+        }
+        return ElementClassInfo.declarationOf(declared);
     }
 
     @Override
@@ -154,8 +175,10 @@ public final class ElementAnnotationMember implements AnnotationMember {
 
     @Override
     public Type asType() {
-        throw new IllegalStateException("A class named by an annotation member is recorded by name, and the type "
-            + "it names is not resolved here");
+        if (value instanceof AnnotationClassValue<?> classValue) {
+            return ElementTypes.ofName(classValue.getName());
+        }
+        return ElementTypes.ofName(value.toString());
     }
 
     @Override
@@ -167,14 +190,36 @@ public final class ElementAnnotationMember implements AnnotationMember {
     public List<AnnotationMember> asArray() {
         List<AnnotationMember> members = new ArrayList<>();
         if (value instanceof Iterable<?> values) {
-            values.forEach(element -> members.add(new ElementAnnotationMember(element)));
+            values.forEach(element -> members.add(new ElementAnnotationMember(element, annotation, member)));
             return members;
         }
         int length = Array.getLength(value);
         for (int i = 0; i < length; i++) {
-            members.add(new ElementAnnotationMember(Array.get(value, i)));
+            members.add(new ElementAnnotationMember(Array.get(value, i), annotation, member));
         }
         return members;
+    }
+
+    /**
+     * The type the member's declaration in the annotation interface returns, a component of it for an array
+     * member, or {@code null} where the declaration cannot be resolved.
+     */
+    private @Nullable ClassElement memberType() {
+        if (annotation == null || member == null) {
+            return null;
+        }
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation);
+        if (declaration == null) {
+            return null;
+        }
+        MethodElement declared = declaration
+            .getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().named(member)).stream()
+            .findFirst().orElse(null);
+        if (declared == null) {
+            return null;
+        }
+        ClassElement type = declared.getReturnType();
+        return type.isArray() ? type.fromArray() : type;
     }
 
     @Override

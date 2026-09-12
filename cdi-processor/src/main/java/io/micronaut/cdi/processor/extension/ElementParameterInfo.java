@@ -55,11 +55,7 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
 
     @Override
     public Type type() {
-        // the compiler's own type, which carries the annotations written on the use of it
-        if (ExtensionSourceModel.sourceOf(element) instanceof javax.lang.model.element.Element source) {
-            return MirrorTypes.ofDeclared(source.asType(), source);
-        }
-        return ElementTypes.of(element.getGenericType());
+        return SourceModel.active().typeOf(element);
     }
 
     @Override

@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -27,7 +28,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * One annotation written on a declaration, read from what Micronaut recorded for it.
+ * An annotation, read from the values Micronaut recorded for it.
+ *
+ * <p>The members are the ones the use wrote and, for the rest, the defaults the annotation interface declares:
+ * Micronaut records the defaults beside the written values, but leaves an empty string or array out, so the
+ * interface is asked for those.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -36,6 +41,7 @@ import java.util.Map;
 public final class ElementAnnotationInfo implements AnnotationInfo {
 
     private final AnnotationValue<?> annotation;
+    private @Nullable Map<CharSequence, Object> resolvedMembers;
 
     ElementAnnotationInfo(AnnotationValue<?> annotation) {
         this.annotation = annotation;
@@ -74,9 +80,9 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
 
     @Override
     public @Nullable AnnotationMember member(String name) {
-        for (Map.Entry<CharSequence, Object> member : annotation.getValues().entrySet()) {
+        for (Map.Entry<CharSequence, Object> member : values().entrySet()) {
             if (name.contentEquals(member.getKey())) {
-                return new ElementAnnotationMember(member.getValue());
+                return new ElementAnnotationMember(member.getValue(), name(), name);
             }
         }
         return null;
@@ -85,9 +91,25 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
     @Override
     public Map<String, AnnotationMember> members() {
         Map<String, AnnotationMember> members = new LinkedHashMap<>();
-        annotation.getValues().forEach((name, value) ->
-            members.put(name.toString(), new ElementAnnotationMember(value)));
+        values().forEach((name, value) ->
+            members.put(name.toString(), new ElementAnnotationMember(value, name(), name.toString())));
         return members;
+    }
+
+    private Map<CharSequence, Object> values() {
+        if (resolvedMembers == null) {
+            Map<CharSequence, Object> values = new LinkedHashMap<>(annotation.getValues());
+            Map<CharSequence, Object> recorded = annotation.getDefaultValues();
+            if (recorded != null) {
+                recorded.forEach(values::putIfAbsent);
+            }
+            VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
+            if (context != null) {
+                context.getAnnotationDefaultValues(annotation.getAnnotationName()).forEach(values::putIfAbsent);
+            }
+            resolvedMembers = values;
+        }
+        return resolvedMembers;
     }
 
     @Override

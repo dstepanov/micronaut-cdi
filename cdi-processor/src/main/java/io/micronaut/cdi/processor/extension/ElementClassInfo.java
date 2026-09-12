@@ -16,8 +16,10 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.EnumElement;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -27,8 +29,6 @@ import jakarta.enterprise.lang.model.declarations.RecordComponentInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 import org.jspecify.annotations.Nullable;
-
-import javax.lang.model.element.TypeElement;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,10 +50,24 @@ import java.util.Set;
 public final class ElementClassInfo extends ElementDeclarationInfo implements ClassInfo {
 
     private final ClassElement element;
+    private @Nullable ClassElement declaration;
 
     ElementClassInfo(ClassElement element) {
         super(element);
         this.element = element;
+    }
+
+    /**
+     * The class a type names, as a declaration: a Micronaut element built for a use of a type answers for the use
+     * (its arguments, the annotations written on it), and is resolved to the declaration of its name where the
+     * compilation can see it.
+     *
+     * @param element The class, as used somewhere or as declared
+     * @return The class
+     */
+    static ElementClassInfo declarationOf(ClassElement element) {
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(element.getName());
+        return new ElementClassInfo(declaration != null ? declaration : element);
     }
 
     /**
@@ -63,6 +77,23 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      */
     public ClassElement classElement() {
         return element;
+    }
+
+    /**
+     * The element that answers what kind of class this is. Micronaut describes an enum and an annotation
+     * interface by elements of their own, but only where it resolves the class by name; a use of the class is
+     * a plain class element.
+     */
+    private ClassElement declaration() {
+        if (declaration == null) {
+            if (element instanceof AnnotationElement || element instanceof EnumElement) {
+                declaration = element;
+            } else {
+                ClassElement resolved = ExtensionAnnotationTypes.declarationOf(element.getName());
+                declaration = resolved != null ? resolved : element;
+            }
+        }
+        return declaration;
     }
 
     /**
@@ -130,52 +161,34 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public List<TypeVariable> typeParameters() {
-        // Micronaut records the arguments a type was used with rather than the variables its declaration
-        // introduces, and an extension that reads them would be reading something else
-        if (source() instanceof TypeElement source) {
-            return source.getTypeParameters().stream().map(MirrorTypes::ofParameter).toList();
-        }
-        return List.of();
+        return SourceModel.active().typeParametersOf(element);
     }
 
     @Override
     public @Nullable Type superClass() {
-        // the compiler's own type, which carries the annotations and the arguments the extends clause wrote
-        if (source() instanceof TypeElement source) {
-            return MirrorTypes.ofPresent(source.getSuperclass());
-        }
-        return element.getSuperType().map(ElementTypes::of).orElse(null);
+        return SourceModel.active().superClassOf(element);
     }
 
     @Override
     public @Nullable ClassInfo superClassDeclaration() {
-        return element.getSuperType().map(ElementClassInfo::new).orElseGet(() -> {
+        return element.getSuperType().map(ElementClassInfo::declarationOf).orElseGet(() -> {
             // a class whose superclass is Object still has one, though Micronaut's model leaves it implicit
             if (element.isInterface() || "java.lang.Object".equals(element.getName())) {
                 return null;
             }
-            io.micronaut.inject.visitor.VisitorContext context =
-                BuildCompatibleExtensionVisitor.activeVisitorContext();
-            return context == null ? null
-                : context.getClassElement("java.lang.Object").map(ElementClassInfo::new).orElse(null);
+            ClassElement object = ExtensionAnnotationTypes.declarationOf("java.lang.Object");
+            return object == null ? null : new ElementClassInfo(object);
         });
     }
 
     @Override
     public List<Type> superInterfaces() {
-        if (source() instanceof TypeElement source) {
-            return source.getInterfaces().stream().map(MirrorTypes::of).toList();
-        }
-        return element.getInterfaces().stream().map(ElementTypes::of).toList();
-    }
-
-    private javax.lang.model.element.@Nullable Element source() {
-        return ExtensionSourceModel.sourceOf(element);
+        return SourceModel.active().superInterfacesOf(element);
     }
 
     @Override
     public List<ClassInfo> superInterfacesDeclarations() {
-        return element.getInterfaces().stream().map(i -> (ClassInfo) new ElementClassInfo(i)).toList();
+        return element.getInterfaces().stream().map(i -> (ClassInfo) declarationOf(i)).toList();
     }
 
     @Override
@@ -185,46 +198,35 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public boolean isInterface() {
-        return isKind(javax.lang.model.element.ElementKind.INTERFACE, element.isInterface() && !isAnnotation());
+        // Groovy describes an annotation interface as an interface too
+        return element.isInterface() && !isAnnotation();
     }
 
     @Override
     public boolean isEnum() {
-        return isKind(javax.lang.model.element.ElementKind.ENUM, element.isEnum());
+        return element.isEnum() || declaration() instanceof EnumElement;
     }
 
     @Override
     public boolean isAnnotation() {
-        // Micronaut has no kind of its own for an annotation interface, and neither being assignable to
-        // Annotation nor being an interface is what makes a class one
-        return isKind(javax.lang.model.element.ElementKind.ANNOTATION_TYPE,
-            element.isAssignable(java.lang.annotation.Annotation.class) && element.isInterface());
+        return declaration() instanceof AnnotationElement;
     }
 
     @Override
     public boolean isRecord() {
-        return isKind(javax.lang.model.element.ElementKind.RECORD, element.isRecord());
+        return element.isRecord();
     }
 
     @Override
     public boolean isAbstract() {
-        if (source() instanceof TypeElement source) {
-            if (source.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT)) {
-                return true;
-            }
-            // an enum that declares an abstract method, for its constants to implement, is abstract in its class
-            // file, which is what the model describes; the compiler's element does not say so while the class is
-            // compiled, since the source may not write the modifier on an enum
-            return source.getKind() == javax.lang.model.element.ElementKind.ENUM
-                && source.getEnclosedElements().stream().anyMatch(member ->
-                    member.getKind() == javax.lang.model.element.ElementKind.METHOD
-                        && member.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT));
+        if (element.isAbstract()) {
+            return true;
         }
-        return element.isAbstract();
-    }
-
-    private boolean isKind(javax.lang.model.element.ElementKind kind, boolean otherwise) {
-        return source() instanceof TypeElement source ? source.getKind() == kind : otherwise;
+        // an enum that declares an abstract method, for its constants to implement, is abstract in its class
+        // file, which is what the model describes; no compiler says so of the enum itself, since the source may
+        // not write the modifier on an enum
+        return isEnum() && !element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().onlyAbstract())
+            .isEmpty();
     }
 
     @Override
@@ -250,7 +252,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         List<MethodInfo> methods = new ArrayList<>();
         for (io.micronaut.inject.ast.MethodElement method : ElementMembers.methodsOf(element)) {
             // the class the method was declared by, which an inherited method's is not this one
-            methods.add(new ElementMethodInfo(method, new ElementClassInfo(method.getDeclaringType())));
+            methods.add(new ElementMethodInfo(method, declarationOf(method.getDeclaringType())));
         }
         return methods;
     }
@@ -259,7 +261,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     public Collection<FieldInfo> fields() {
         List<FieldInfo> fields = new ArrayList<>();
         for (io.micronaut.inject.ast.FieldElement field : ElementMembers.fieldsOf(element)) {
-            fields.add(new ElementFieldInfo(field, new ElementClassInfo(field.getDeclaringType())));
+            fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType())));
         }
         return fields;
     }
