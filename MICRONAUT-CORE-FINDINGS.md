@@ -73,6 +73,8 @@ this project reads it off the native `javax.lang.model` element (`CdiScopeVisito
 unwrapping `ClassElement.getNativeType()` reflectively). An `ElementMetadata.isInherited()`-style accessor on
 `ClassElement` would avoid the native unwrap.
 
+RESOLVED upstream: `AnnotationElement.isInherited()` (`@since 5.2.0`) answers it for javac, KSP and Groovy; see #36.
+
 ### 9. No unfiltered, predicate-aligned view of the compiled definitions
 CDI's `getBeans` must return *unresolved* candidates — a selected alternative and the bean it outranks together —
 while every Micronaut lookup resolves as it goes (replacement filtering, primary narrowing).
@@ -394,3 +396,271 @@ What remains true is narrower and is a different gap: a wildcard degrades to its
 observed type reflectively — for wildcards alone, not for inheritance. Fixing it upstream means extending the
 runtime `Argument` model, which is a larger, API-breaking change than the processor-side substitution first
 assumed.
+
+## The CDI Lite language model on the AST — inventory and design (12 Sep 2026)
+
+`cdi-processor/.../extension/` hands a build compatible extension the language model of CDI 4.0 §2.10
+(`jakarta.enterprise.lang.model`): `ElementClassInfo`, `ElementMethodInfo`, `ElementFieldInfo`,
+`ElementParameterInfo`, `ElementPackageInfo`, `ElementAnnotationInfo`/`ElementAnnotationMember`, `ElementTypes`,
+`VisitorTypes`. The kit's language model part (`:micronaut-cdi-tck-lang-model:test`, 1263 assertions, the sources
+unpacked under `cdi-tck-lang-model/build/generated/tck/org/jboss/cdi/lang/model/tck/`) passes, but only because
+`ExtensionSourceModel.sourceOf(element)` unwraps the `javax.lang.model.element.Element` behind every Micronaut
+element (reflectively, through the `element()` accessor of `JavaNativeElement`) and `MirrorTypes`,
+`MirrorAnnotationInfo`, `MirrorAnnotationMember` and `ExtensionAnnotations` read javac's mirrors from there. Every
+such read is a place where a Groovy or KSP compilation gets the AST-only fallback, which today answers less.
+
+What follows was verified against core `v5.2.1` (`git show v5.2.1:<path>` in `../micronaut-core`; paths below
+are relative to that tree) and the `inject-java`, `inject-kotlin` and `inject-groovy` implementations, not against
+the javadoc alone. The short version: the AST already answers far more than the package uses — type-use
+annotations on declared types, type arguments, super types, thrown types, receivers and type-variable declarations
+are all reachable — and the remaining gaps are five, three of them small. Finding #8 above is closed upstream by
+`AnnotationElement.isInherited()` (`@since 5.2.0`, implemented for javac, KSP and Groovy).
+
+### 36. Inventory of the javac reach-ins and what `io.micronaut.inject.ast` 5.2.1 answers
+
+Legend: **AST** = answerable from the AST in all three languages today; **AST(J)** = answerable, javac only;
+**gap N** = needs the core change in finding N below.
+
+| Reach-in (`cdi-processor/.../extension/`) | Model question (javadoc / kit section) | AST 5.2.1 | Status |
+|---|---|---|---|
+| `ExtensionSourceModel.sourceOf`, `unwrap`, `elementUtils` (reflective `getElements()` on the context) | the seam itself | — | goes away with the rest; `JavaNativeElement` is `@Internal` and its shape changed once already (the `element()` holder), which is why the unwrap is reflective |
+| `ElementClassInfo.isKind(...)` for `isInterface/isEnum/isAnnotation/isRecord` | `ClassInfo.isAnnotation()` etc.; `Equality`, `AnnotationMembers`, `InterfaceMembers`, `EnumMembers`, `PlainClassMembers` | `isInterface()`; `element instanceof EnumElement` (or `isEnum()`); `element instanceof AnnotationElement` — `JavaElementFactory.newClassElement(TypeElement)` switches on `ENUM`/`ANNOTATION_TYPE`, `KotlinElementFactory` and `GroovyElementFactory` do the same; `isRecord()` (`JavaModelUtils.isRecord`, `ClassNode.isRecord()`) | **AST**; KSP answers `isRecord()` false for a Java record on its classpath (no `ClassKind` for it) — see #44 |
+| `ElementClassInfo.isAbstract()` (enum declaring abstract methods) | `ClassInfo.isAbstract()`; `EnumMembers` asserts `clazz.isAbstract()` | `isAbstract()` mirrors the modifier in all three (`JavaClassElement.isAbstract`, KSP `declaration.isAbstract()`, `ClassNode.isAbstract()`), so it is false; but `isEnum() && !getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().onlyAbstract()).isEmpty()` answers it — `getElements` passes `includeAbstract = true` for an `onlyDeclared` query | **AST** (no core change needed; optional #43c) |
+| `ElementClassInfo.typeParameters()` → `TypeElement.getTypeParameters()` + `MirrorTypes.ofParameter` | `ClassInfo.typeParameters()` "type parameters *declared*"; `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes` | `ClassElement.getDeclaredGenericPlaceholders()` → `GenericPlaceholderElement.getVariableName()`, `getBounds()` (an `IntersectionType` is split into one bound each, `AbstractJavaElement.resolveTypeVariable`), `getGenericTypeAnnotationMetadata()` (`JavaElementAnnotationMetadataFactory.lookupTypeAnnotationsForGenericPlaceholder` reads the `TypeParameterElement`'s annotations when the variable mirror carries none — the `TYPE_PARAMETER` ones) | **AST** for javac and KSP (`KotlinClassElement.internalDeclaredGenericPlaceholders` via `resolveTypeParameter`); Groovy returns `getBoundGenericTypes()` cast to placeholders (`GroovyClassElement.java:712`) — #43b |
+| `ElementMethodInfo.typeParameters()` → `ExecutableElement.getTypeParameters()` | `MethodInfo.typeParameters()`; `AnnotatedTypes.verifyTypeVariableMethod`, `AnnotatedThrowsTypes` | `MethodElement.getDeclaredTypeVariables()` — javac from `getTypeParameters()`, KSP from `declaredTypeArguments`, Groovy from `methodNode.getGenericsTypes()` | **AST** |
+| `ElementClassInfo.superClass()` / `superInterfaces()` → `getSuperclass()` / `getInterfaces()` mirrors | `ClassInfo.superClass()` "with annotations and type arguments as written in `extends`"; `AnnotatedSuperTypes` | `getSuperType()` / `getInterfaces()` build the element from the extends-clause mirror (`JavaClassElement.java:400-416`, `:375-393`), so `getTypeAnnotationMetadata()` holds `@AnnSuperClass` and each `getBoundGenericTypes()` entry keeps its own mirror and annotations; `getSuperType()` is empty for `Object`, which `superClassDeclaration()` already synthesises. KSP: `declaration.superTypes.map { it.resolve() }` keeps the `KSType` and `KotlinElementAnnotationMetadataFactory.lookupTypeAnnotationsForClass` reads `kotlinType.annotations`; Groovy reads `ClassNode.getTypeAnnotations()` | **AST** |
+| `ElementMethodInfo.returnType()` (method) → `MirrorTypes.ofDeclared(source.getReturnType(), source)` | `MethodInfo.returnType()` with the declaration's own type variables; `AnnotatedTypes.verifyVoidMethod`, `BridgeMethods`, `Equality` | `getReturnType()` is `returnType(Collections.emptyMap())` (declaration view, variables stay placeholders), `getGenericReturnType()` substitutes; the returned element keeps the mirror → `getTypeAnnotationMetadata()`; `void` is `PrimitiveElement.VOID` with no annotations, which is what the kit asserts | **AST** for class types and type variables; **gap #38** for an annotated primitive; **gap #39/#41** because javac's `returnType(...)` also *adds* `@org.jspecify.annotations.NonNull` to the type annotations under `@NullMarked` (`JavaMethodElement.returnType`, `JavaFieldElement.getType`) and an unannotated use of a type variable reports its declaration's annotations |
+| `ElementMethodInfo.returnType()` (constructor) → `MirrorTypes.ofConstructorReturn` filtering the constructor's annotations by `TYPE_USE` | `MethodInfo.returnType()` of a constructor is the class, carrying the annotations written before its name that *may* target a type use; `AnnotatedTypes.verifyConstructor` (`@AnnConstructor` is `CONSTRUCTOR`+`TYPE_USE`) | the class: `ElementTypes.of(getDeclaringType())`; the filter needs each annotation interface's `@Target`, which no language's metadata records: `@Target`, `@Repeatable` and `@Retention` are in `AnnotationUtil.INTERNAL_ANNOTATION_NAMES`, which `AbstractAnnotationMetadataBuilder.annotationMirrorToAnnotationValue` filters *before* the per-language `isExcludedAnnotation` hook gets a say (the javac and Groovy hooks lift the `java.lang.annotation.*` exclusion for an `ANNOTATION_TYPE` element, but only for names outside that list) | **gap #40** in all three languages |
+| `ElementMethodInfo.receiverType()` → `ExecutableElement.getReceiverType()` | `MethodInfo.receiverType()`: null for static methods and non-inner constructors, the declaring type otherwise, with the annotations of a written receiver; `AnnotatedReceiverTypes` | `MethodElement.getReceiverType()` — javac returns the written receiver (with mirror, so annotations) and *empty* when none was written (`JavaMethodElement.getReceiverType`), although the interface javadoc promises "derived from the declaring type"; KSP and Groovy have no override → always empty. The model's default is answerable: `isStatic()`, `instanceof ConstructorElement`, `getDeclaringType().isInner() && !getDeclaringType().isStatic()` (`isInner()` is `NestingKind.isNested()`, so the static check is needed) | **AST**; #42 records the javadoc/implementation mismatch |
+| `ElementMethodInfo.throwsTypes()` → `getThrownTypes()` mirrors | `MethodInfo.throwsTypes()` with annotations; `AnnotatedThrowsTypes` | `MethodElement.getThrownTypes()` — javac keeps the mirrors (`@AnnThrows1 Exception`, `@AnnThrows2 E` as a placeholder with `getGenericTypeAnnotationMetadata()`); Groovy from `methodNode.getExceptions()` (no type annotations on a `ClassNode` in a throws clause — unverified); KSP from `@Throws(exceptionClasses)` (Kotlin has no throws clause; annotations on it do not exist) | **AST** |
+| `ElementFieldInfo.type()`, `ElementParameterInfo.type()` → `MirrorTypes.ofDeclared(source.asType(), source)` | `FieldInfo.type()` / `ParameterInfo.type()` with type-use annotations at every depth; `AnnotatedTypes.verify{Class,Array,Primitive,Parameterized,TypeVariable}Field`, `verifyWildcardMethod`, `EnumMembers.verifyConstructors` | `getType()` (declaration view) keeps the use's mirror in `JavaNativeElement.Class.typeMirror`; every type argument is built from its own mirror (`AbstractJavaElement.resolveTypeArguments` → `newClassElement(getNativeType(), typeParameterMirror, ...)`), so `@AnnParameterizedField2 Map<@AnnParameterizedField3 String, @AnnParameterizedField4 A>` is fully annotated through `getTypeArguments()`/`getBoundGenericTypes()` + `getTypeAnnotationMetadata()`; a wildcard is a `JavaWildcardElement` with `getUpperBounds()`/`getLowerBounds()`/`hasExplicitUpperBound()` and `getGenericTypeAnnotationMetadata()` from the `WildcardType` mirror; the unbounded `?` gets `Object` from `getTypeElement(Object).asType()` (no annotations) and `? extends @A Object` keeps the bound mirror; `isRawType()` tells `List` from `List<E>`. KSP: `KotlinTypeArgumentElement`/`KotlinWildcardElement` with the same accessors; Groovy: `GroovyWildcardElement`/`GroovyGenericPlaceholderElement` | **AST** for class, parameterized, wildcard and type-variable uses; **gap #37** arrays; **gap #38** primitives (`EnumMembers` asserts two type annotations on a `boolean` parameter) |
+| `ExtensionAnnotations.declaredOn` → `Element.getAnnotationMirrors()` + `Elements.getElementValuesWithDefaults` | `AnnotationTarget.annotations()`: only `RUNTIME`-retained, as written (a repetition is itself, a container the source wrote is the container), members defaulted; `LangModelVerifier.ensureOnlyRuntimeAnnotations`, `RepeatableAnnotations`, `AnnotationInstances.verifyDefaultValues`, every `annotations().size()` | retention: `VisitorContext.getAnnotationRetentionPolicy(name)` (already used; implemented by all three builders; compile-time metadata records annotations of every retention, the class-file writer drops `SOURCE` later). Defaults: `AnnotationValue.getDefaultValues()` is attached at build time (`AbstractAnnotationMetadataBuilder.addDefaults`) but through `readAnnotationDefaultValues(name, type)` with `includeEmptyValues = false`, so `String x() default ""` has no default there; `VisitorContext.getAnnotationDefaultValues(name)` (`@since 5.1.0`) passes `true`. As written: **not answerable** — `MutableAnnotationMetadata.addDeclaredRepeatable` folds a single `@AnnRepeatable("single")` into `AnnRepeatableContainer`, and `getDeclaredAnnotationNames()` names the container (finding #26 circled this); mappers/remappers/transformers and `annotate()` calls (Micronaut's `@Priority`→`@Order`, jspecify `@NonNull`) are indistinguishable from source annotations | **gap #39** |
+| `MirrorAnnotationMember.asType()` / `asEnumClass()` / `asEnumConstant()` | `AnnotationMember` kinds; `AnnotationInstances` | a class member is an `AnnotationClassValue` by binary name (`MetadataAnnotationValueVisitor.visitType`: declared types and primitives; an array class literal such as `String[].class` is **dropped** — #43a) → `context.getClassElement(name)`; an enum member is the constant's simple name (`visitEnumConstant`), its enum type is the annotation interface's member return type: `annotationElement.getEnclosedElements(ElementQuery.ALL_METHODS.named(member))` → `getReturnType()` (array members: `fromArray()`); nested annotations are `AnnotationValue`s; `byte`/`short`/`char` are boxed as such | **AST** (KSP's `readAnnotationValue` value classes for byte/short need checking — #44) |
+| `ExtensionAnnotations.isInherited` → `@Inherited` on the annotation interface | `ClassInfo.annotations()` adds `@Inherited` superclass annotations, nearest first, none from interfaces; `InheritedAnnotations`, `RepeatableAnnotations` (inherited repetitions) | `((AnnotationElement) context.getClassElement(name)).isInherited()` — javac, KSP, Groovy. Do **not** use `ClassElement.getAnnotationNames()` for the inherited view: `JavaAnnotationMetadataBuilder.buildHierarchy` → `NativeElementsHelper.populateTypeHierarchy` includes *interfaces*, so `@AnnInherited5` on `AnnotatedSuperInterface` would be reported; walk `getSuperType()` with `getDeclaredAnnotationNames()` instead, as `ElementClassInfo.annotations()` already does | **AST** |
+| `ExtensionAnnotations.containerOf` → `@Repeatable` on the annotation interface | `repeatableAnnotation(...)` must find repetitions inside the container; `RepeatableAnnotations`, `EnumMembers` | not recorded in any language (`@Repeatable` is in `INTERNAL_ANNOTATION_NAMES`, see the row above). Every builder computes it (`findRepeatableContainerNameForType`, protected; `KotlinVisitorContext.getRepeatableContainerNameForType` handles the `@JvmRepeatable` typealias) but nothing public exposes it. What the AST *does* answer without the name: `getDeclaredAnnotationValuesByName(annotation)` resolves the container internally and returns the repetitions, and a container is recognisable by shape (a `value` array of nested annotations of one interface), which is what `AstSourceModel`/`ExtensionAnnotations.repeatableIn` go by | **gap #40** for the name; repetitions **AST** |
+| `ExtensionAnnotations.isTypeUse` → `@Target` | see constructor return type | as above | **gap #40** |
+| `ExtensionSourceModel.typeOf/classOf` (class member → `Type`) | `AnnotationMember.asType()` | `ExtensionAnnotationTypes.declarationOf(name)` + `ElementTypes.of`, primitives via `PrimitiveElement.valueOf`, arrays via `toArray()` | **AST** |
+| `ElementPackageInfo` (no direct reach-in; `declaredOn(PackageElement)` reaches javac through `sourceOf`) | `PackageInfo.annotations()`; `LangModelVerifier.verifyPackageAnnotation` | `JavaClassElement.getPackage()` returns a `JavaPackageElement` whose metadata is built from `package-info` (`lookupForPackage`); Groovy `GroovyPackageElement` from the `PackageNode` likewise; KSP uses the `ClassElement.getPackage()` default, `PackageElement.of(name)` — a `SimplePackageElement` with no metadata | **AST** javac/Groovy; KSP cannot (#44) |
+| not a reach-in but relied on: `ElementMembers`, `ElementDeclarationInfo.equals/hashCode`, constructors, bridge methods | `ClassInfo.methods()/fields()` every declaration of the hierarchy with the declaring class kept apart; `InheritedMethods`, `InheritedFields`, `BridgeMethods`, `DefaultConstructors`, `JavaLangObjectMethods`, `Equality` | already AST-only on this branch: `ElementQuery.ALL_METHODS.onlyDeclared().includeOverriddenMethods().includeHiddenElements()` per raw class of the hierarchy; `Element.equals` is by native element (`AbstractJavaElement.equals`; KSP `KotlinClassNativeElement.equals` also compares the `KSType`, which is null for every element `getClassElement(name)` builds, so two readings of one class are equal); javac never hands out bridge methods for a class under compilation and Groovy filters `isSynthetic()` (`GroovyClassElement.java:801`); the implicit default constructor is in javac's enclosed elements and KSP's `primaryConstructor` | **AST** |
+| `CdiScopeVisitor.inheritedOnTheSourceElement` (outside the package, finding #8) | §2.3.1 `@Inherited` | `AnnotationElement.isInherited()` | **AST** since 5.2.0 |
+
+Two facts the table leans on, both verified in `inject-java`: (1) a `ClassElement` built for a *use* of a type
+carries the use's `TypeMirror` in `JavaNativeElement.Class.typeMirror` and `getTypeAnnotationMetadata()` is
+built from exactly that mirror's `getAnnotationMirrors()` (`JavaElementAnnotationMetadataFactory.
+lookupTypeAnnotationsForClass` → `new AnnotationsElement(typeMirror)`), while an element from
+`context.getClassElement(name)` has a null mirror and answers `getTypeAnnotationMetadata()` from the declaration;
+(2) `getAnnotationMetadata()` of a use is the hierarchy of the declaration's annotations *and* the type
+annotations (`JavaClassElement.getAnnotationMetadata`), so the model must read `getTypeAnnotationMetadata()` for a
+type and `getDeclaredAnnotationNames()` on a freshly resolved declaration for a declaration, never mix them.
+
+### 37. Core gap — a type annotation on one dimension of an array is not representable
+`String[] @A1 [][] @A2 [][] @A3 [] f` (`AnnotatedTypes.verifyArrayField`) needs the annotations of each
+dimension. `AbstractJavaElement.newClassElement` recurses through an `ArrayType` passing the *current* array
+mirror down, so the leaf `JavaClassElement` is created with the innermost `String[]` mirror and every
+`toArray()` above it copies that mirror unchanged (`JavaClassElement.withArrayDimensions` only swaps to the
+component when going *down*). On top of that `JavaElementAnnotationMetadataFactory.lookupTypeAnnotationsForClass`
+deliberately answers an array's type annotations with its **component's** unless a JSpecify annotation is present
+("Backward compatibility for Micronaut type annotations support"). `ArrayableClassElement` has no per-dimension
+notion; KSP models `Array<@A String>` as a type argument so the information exists there; Groovy's
+`ClassNode.getComponentType()` chain has a `getTypeAnnotations()` per node but `newClassElement` drops to
+`PrimitiveElement`/`.toArray()` without it.
+
+Proposal (javac, ~60 lines, no behaviour change if done under #39): construct the leaf with the leaf mirror and wrap
+each dimension with a `JavaNativeElement.Class` holding *that* dimension's `ArrayType`; `withArrayDimensions(n-1)`
+takes `getComponentType()`, `withArrayDimensions(n+1)` on a synthetic array has no mirror. Leave
+`getTypeAnnotationMetadata()`'s compatibility swap as it is and expose the exact per-dimension annotations through
+the source view of #39. Changing the swap itself would alter what `@Nullable String[]`-style metadata means to
+existing Micronaut code — flag it, do not do it.
+
+### 38. Core gap — a type annotation on a primitive is dropped
+`@AnnPrimitiveField int primitiveField` (`AnnotatedTypes.verifyPrimitiveField`) and the two type annotations on
+`boolean disambiguate` / `int disambiguate` (`EnumMembers.verifyConstructors`). `newClassElement` maps a
+`PrimitiveType` to the shared `PrimitiveElement.valueOf(kind)` constant (`AbstractJavaElement.java`, the
+`PrimitiveType pt` branch; Groovy `ClassHelper.isPrimitiveType` → `PrimitiveElement.valueOf(classNode.getName())`),
+which has `AnnotationMetadata.EMPTY_METADATA` and the default `getTypeAnnotationMetadata()`. `PrimitiveElement.
+withAnnotationMetadata(AnnotationMetadata)` already returns an annotated copy; nothing calls it for a type use.
+
+Proposal (core-processor + javac + Groovy, ~60 lines, additive): when `pt.getAnnotationMirrors()` is non-empty,
+return `PrimitiveElement.valueOf(name, doc).withAnnotationMetadata(builder.lookupOrBuild(pt, new
+AnnotationsElement(pt)).getAnnotationMetadata())`, and let `PrimitiveElement.getTypeAnnotationMetadata()` expose
+the same metadata read-only. Keep `PrimitiveElement.equals`/`hashCode` on name and dimensions so the annotated
+copy still equals the constant (the `Equality` section compares types by what they are). KSP is different: `AbstractKotlinElement.newClassElement` sets `canBePrimitive = type.annotations.isEmpty() && !isMarkedNullable`,
+so an annotated `Int` is already a *class* element for `kotlin.Int` carrying the annotations — the model would
+report `java.lang.Integer` where the source meant `int`. Making it a primitive changes `isPrimitive()` for every
+annotated Kotlin primitive parameter and therefore the written `Argument` types: a behaviour change, to be
+discussed with the Kotlin maintainers rather than slipped in.
+
+### 39. Core gap — no view of a declaration's annotations as the source wrote them
+Three things the model promises are not in the metadata record, by design of the record: (a) a repeatable
+annotation written once is folded into its container (`MutableAnnotationMetadata.addDeclaredRepeatable`), so
+`@AnnRepeatable("single")` and `@AnnRepeatableContainer({@AnnRepeatable("single")})` read the same and
+`MixedRepeatableAnnotations` (`@AnnRepeatable("a")` beside a written container of two) collapses into one
+container of three (`RepeatableAnnotations.verify{Single,Mixed}RepeatableAnnotations`); (b) what Micronaut
+itself adds is indistinguishable from what the source wrote — mapper/remapper/transformer output
+(`jakarta.annotation.Priority`→`io.micronaut.core.annotation.Order`, finding #6), stereotypes, and the
+`@org.jspecify.annotations.NonNull` that `JavaMethodElement.returnType` and `JavaFieldElement.getType` write into
+a type's annotations under `@NullMarked` — every `annotations().size() == 1` in the kit would fail on it; (c)
+defaults attached at build time omit empty strings and empty arrays (`readAnnotationDefaultValues(..., false)`).
+An annotation an *extension* adds through `ElementDeclarationConfig.addAnnotation` must, by contrast, be visible —
+the processor can record those itself, as it already records removals in `RemovedAnnotations`.
+
+Proposal (core-processor ~120 lines, ~25 per language, additive, `@Experimental`):
+
+```java
+// io.micronaut.inject.ast.annotation.MutableAnnotationMetadataDelegate — so it is reachable as
+// element.getSourceAnnotations(), classElement.getTypeAnnotationMetadata().getSourceAnnotations() and
+// genericElement.getGenericTypeAnnotationMetadata().getSourceAnnotations()
+/**
+ * The annotations the source wrote on this element, type use or type variable, in source order and as written:
+ * a repeatable annotation written once is itself, a container the source wrote is the container, and nothing a
+ * mapper, remapper, transformer or a visitor's annotate(...) added appears. Each value carries the interface's
+ * retention and its defaults for the members the use left out, empty strings and arrays included. For a type
+ * variable it is what was written at this use of the variable (nothing, if the use wrote nothing), or the
+ * TYPE_PARAMETER annotations when the element is the declaration from getDeclaredGenericPlaceholders() /
+ * getDeclaredTypeVariables(). Empty for an element no source backs (reflection, SimpleClassElement).
+ * @since 5.3.0
+ */
+default List<AnnotationValue<?>> getSourceAnnotations() { return List.of(); }
+```
+
+Implementation: `AbstractAnnotationMetadataBuilder` gains `protected abstract List<? extends A>
+getWrittenAnnotations(T element)` (javac `element.getAnnotationMirrors()` — **not** `getAnnotationsForType`, which
+expands containers; KSP `annotated.annotations`; Groovy `node.getAnnotations()`) and a public
+`readSourceAnnotations(T element)` that runs `createAnnotationValue` + defaults with `includeEmptyValues = true`
+and skips `processAnnotation` (no mappers, no stereotypes), sized up front (`new ArrayList<>(size)`, `CollectionUtils.newLinkedHashMap(size)`);
+`CachedAnnotationMetadata` caches the list; `AbstractElementAnnotationMetadata` delegates. For the javac
+placeholder (#41) `lookupTypeAnnotationsForGenericPlaceholder` already knows whether the variable mirror or the
+`TypeParameterElement` is the source; the declaration-built placeholders are the ones created with a null owner
+in `JavaNativeElement.Placeholder`. Verify against `inject-kotlin`: nothing here touches the by-name `has*`
+semantics KSP data-class configuration relies on (finding #26), but the Kotlin suite is the evidence.
+
+This one change retires `MirrorAnnotationInfo`, `MirrorAnnotationMember`, `ExtensionAnnotations.declaredOn`'s
+mirror half, and the `typeUseOnly` filter in `MirrorTypes.Annotated` (with #40). It also covers a fourth case
+the AST-only run surfaced: an annotation interface's *own* meta-annotations — `AnnotationMembers` asserts that
+`@Retention` is the one annotation of `AnnotationMembers` — are `INTERNAL_ANNOTATION_NAMES` and never reach the
+metadata of the interface, while the source view reports them (PR #13163 lists "meta-annotations of an
+annotation interface present" among its tests).
+
+### 40. Core gap — `AnnotationElement` knows `isInherited()` but not its targets, container or retention
+`AnnotationElement` (`core-processor/.../ast/AnnotationElement.java`, `@since 3.1.0`) is the natural home for
+the three other facts the model needs about an annotation *interface*, all of which every builder already
+computes privately and none of which the metadata records in any language (`@Target`, `@Repeatable` and
+`@Retention` are `INTERNAL_ANNOTATION_NAMES`, filtered before the per-language exclusion hook). Proposal
+(additive, ~60 lines core + ~40 per language):
+
+```java
+/** The element types the interface may be written on, as its @Target (or kotlin.annotation.Target) declares
+ *  them, mapped to java.lang.annotation.ElementType; JLS 9.6.4.1's default set when it declares none.
+ *  @since 5.3.0 */
+default Set<ElementType> getTargets()
+/** The annotation interface holding this one's repetitions, by binary name; empty when not repeatable
+ *  (java.lang.annotation.Repeatable, kotlin.annotation.Repeatable and @JvmRepeatable alike). @since 5.3.0 */
+default Optional<String> getRepeatableContainer()
+/** @return the interface's retention; RUNTIME when it declares none. @since 5.3.0 */
+default RetentionPolicy getRetentionPolicy()
+```
+
+javac: mirrors on the `TypeElement`, as `JavaAnnotationElement.isInherited()` does; the container is
+`JavaAnnotationMetadataBuilder.getRepeatableContainerNameForType`. KSP: `declaration.annotations`, mapping
+`AnnotationTarget` (`CLASS`→`TYPE`, `ANNOTATION_CLASS`→`ANNOTATION_TYPE`, `VALUE_PARAMETER`→`PARAMETER`,
+`FUNCTION`/`PROPERTY_GETTER`/`PROPERTY_SETTER`→`METHOD`, `TYPE`→`TYPE_USE`, `TYPE_PARAMETER`, `FIELD`,
+`CONSTRUCTOR`, `LOCAL_VARIABLE` as themselves; `PROPERTY`, `EXPRESSION`, `FILE`, `TYPEALIAS` have no `ElementType`);
+container via `KotlinVisitorContext.getRepeatableContainerNameForType`. Groovy: `classNode.getAnnotations(Target)`
+members, `GroovyAnnotationMetadataBuilder.getRepeatableContainerNameForType`. Unblocks, in every language: the
+constructor return type (`AnnotatedTypes.verifyConstructor`, the `TYPE_USE` filter) and the container name where
+the shape heuristic cannot apply; the retention accessor removes the `VisitorContext` round trip the processor
+does per name.
+
+### 41. Core divergence — an unannotated use of a type variable reports its declaration's annotations
+`JavaElementAnnotationMetadataFactory.lookupTypeAnnotationsForGenericPlaceholder` reads the `TypeVariable`
+mirror's annotations if there are any, else the `TypeParameterElement`'s. For `class C<@X T> { T field; }` the
+field's type therefore carries `@X`, which the model forbids (`TypeVariable.annotations()` of a use are the use's;
+`AnnotatedTypes.verifyTypeVariableField` relies on the use-site annotation being the only one). This is why
+`MirrorTypes.ofDeclared` special-cases `TYPEVAR` today. Changing `getGenericTypeAnnotationMetadata()` itself would
+change nullability of `T` uses for everyone (`class Foo<@Nullable T>`), so it must not change; the source view of
+#39 carries the distinction instead. No separate PR.
+
+### 42. Core divergence — `MethodElement.getReceiverType()` javadoc versus the implementations
+The interface (`MethodElement.java:131-143`) says an instance method or inner-class constructor "has a receiver
+type derived from the declaring type"; `JavaMethodElement.getReceiverType()` returns empty unless the source wrote
+`this`, and KSP/Groovy never override the default (empty). `ElementMethodInfo.receiverType()` synthesises the
+declaring type itself, which is the right place for it (and must use `isInner() && !isStatic()`, since `isInner()`
+is `NestingKind.isNested()`). Aligning the implementations with the javadoc would be a ~15-line behaviour change
+with no caller inside core (`git grep getReceiverType` finds only the two files); recommended as a separate,
+optional PR — or fix the javadoc.
+
+### 43. Small core fixes found on the way
+(a) `MetadataAnnotationValueVisitor.visitType` (`JavaAnnotationMetadataBuilder.java:650`) records a class member
+for a `DeclaredType` and a `PrimitiveType` only; `String[].class` leaves `resolvedValue` null and the member
+vanishes from the `AnnotationValue`. ~10 lines; additive; the kit has no such member. (b)
+`GroovyClassElement.getDeclaredGenericPlaceholders()` returns `getBoundGenericTypes()` cast, which for a
+parameterized *use* yields the arguments rather than the declared variables; read `classNode.redirect()
+.getGenericsTypes()` instead. ~20 lines; Groovy-only behaviour change for the better; unblocks
+`AnnotatedTypes.verifyTypeParameters`/`AnnotatedSuperTypes` on Groovy. (c) `isAbstract()` for an enum that
+declares abstract methods is false in all three implementations (and in the class file it is true); answerable by
+query, so no change proposed.
+
+### 44. What KSP (and Groovy) still cannot answer after the above
+- **Package annotations** on KSP: no `KotlinPackageElement`; `ClassElement.getPackage()` falls back to
+  `PackageElement.of(name)`. Kotlin has no `package-info`; a Java one on the classpath compiles to a synthetic
+  `package-info` interface that `Resolver.getClassDeclarationByName` may or may not surface — unverified, so treat
+  `PackageInfo.annotations()` as empty under KSP.
+- **`isRecord()`** of a Java record seen from KSP: `KSClassDeclaration.classKind` has no record kind.
+- **Primitives with type annotations** under KSP are class elements (#38).
+- **`throwsTypes()`** under KSP come from `@Throws` only, never annotated; **`receiverType()`** annotations cannot
+  exist (Kotlin's extension receiver is a different construct and must not be mapped onto it).
+- **Groovy** type annotations on a throws clause and on array dimensions are unverified; `GroovyElementAnnotationMetadataFactory.getTypeAnnotationsOnly` shows the mechanism exists for a `ClassNode`.
+- **Member value classes** from KSP (`readAnnotationValue`) for `byte`/`short`/`char` members need a check that
+  they arrive boxed as `Byte`/`Short`/`Character`, which `ElementAnnotationMember.kind()` keys on.
+None of these is on the kit's critical path except the package section (one assertion block) and #38.
+
+### 45. Design options and recommendation
+**(a) Extend the AST** (#37–#40, #43) and make the model AST-only. Everything the model asks is then answered in
+the language the visitor runs in; `ExtensionSourceModel`, `MirrorTypes`, `MirrorAnnotationInfo`,
+`MirrorAnnotationMember` and the javac half of `ExtensionAnnotations` are deleted (~1,000 lines), and the
+reflective unwrap of an `@Internal` record goes with them. Cost: a core release, and #39 is a real piece of
+design work in `AbstractAnnotationMetadataBuilder`.
+
+**(b) One seam, per-language fallbacks in `cdi-processor`**: turn `ExtensionSourceModel` into a
+`LanguageModelSource` SPI chosen by `VisitorContext.getLanguage()`, with a javac implementation (today's code), a
+KSP one reading `KSAnnotated`/`KSType` through `KotlinNativeElement.element`, and a Groovy one reading
+`AnnotatedNode`s. It needs no core change but binds the processor to three `@Internal` native-element shapes
+(`JavaNativeElement`, `KotlinNativeElement`, `GroovyNativeElement`), adds optional compile dependencies on
+`symbol-processing-api` and Groovy to `cdi-processor`, and re-implements in three places what #37–#40 add once.
+
+**Measured, 12 Sep 2026.** Stage one of option (c) is implemented on this branch: `SourceModel` is the one seam
+(`AstSourceModel` answers from the AST in any language; `JavacSourceModel` extends it and overrides only the four
+open questions), and `-PlangModelSource=ast` runs the kit against the AST path alone on a Java compilation. With
+core 5.2.1 that run fails exactly four sections, each on the predicted assertion: `AnnotatedTypes` at the
+constructor's return-type annotation (#40; with that one answer bypassed it proceeds to the primitive field's type
+annotation, #38), `AnnotationMembers` at the interface's own `@Retention` (#39), `EnumMembers` at a parameter
+carrying one repetition beside another annotation (#39), `RepeatableAnnotations` at the inherited repetitions
+(#39). The other fourteen sections — `AnnotatedSuperTypes`, `AnnotatedThrowsTypes`, `AnnotatedReceiverTypes`,
+`AnnotationInstances` (defaults, enum and class members), the four member sections, `InheritedMethods`,
+`InheritedFields`, `InheritedAnnotations`, `JavaLangObjectMethods`, `PrimitiveTypes`, `BridgeMethods`,
+`DefaultConstructors`, `Equality` and the package annotation — pass on the AST alone, as does
+`AnnotatedTypes.verifyTypeParameters` (annotated variables, bounds, intersections and a wildcard inside a bound).
+
+**(c) Staged**: move everything the AST already answers (the **AST** rows of #36) off javac now — kinds, abstract
+enums, type parameters, super types, thrown types, receivers, class/parameterized/wildcard/type-variable uses and
+their type-use annotations, `@Inherited`, defaults via `VisitorContext.getAnnotationDefaultValues`, repetitions
+via `getDeclaredAnnotationValuesByName` — and keep one small, explicit javac seam for the four remaining
+questions (array dimensions, primitive type annotations, annotations as written, targets and container of an
+annotation interface), each retired by the core PR that answers it. Recommended: it removes most of the
+duplication immediately, keeps the kit green on javac at every step, and turns the core asks into four reviewable
+PRs instead of one.
+
+### 46. Order of core PRs, size, and what each unblocks for non-javac compilations
+| # | Change | Size | Behaviour change? | Kit sections it unblocks on KSP/Groovy |
+|---|---|---|---|---|
+| 1 | #40 `AnnotationElement.getTargets()/getRepeatableContainer()/getRetentionPolicy()` | ~60 core + ~40 × 3 languages + tests | no (additive) | `AnnotatedTypes.verifyConstructor` (constructor return type) in every language; the container name on `Type.repeatableAnnotation(...)` where the shape heuristic cannot apply |
+| 2 | #39 source view `getSourceAnnotations()` on `MutableAnnotationMetadataDelegate` (+ #41, + #37's per-dimension mirror so the view is exact on arrays) | ~120 core-processor + ~25 × 3 + ~60 javac arrays + tests | no (additive; existing views untouched) | `LangModelVerifier.ensureOnlyRuntimeAnnotations` and every `annotations().size()` assertion (no remapped/synthesised annotations), `RepeatableAnnotations.verify{Single,Mixed}…`, `AnnotationInstances.verifyDefaultValues` (empty defaults), `AnnotatedTypes.verify{TypeVariableField,ArrayField}`; must be run against `inject-kotlin`'s suite before merging |
+| 3 | #38 annotated `PrimitiveElement` for javac and Groovy | ~60 + tests | no for javac/Groovy (today nothing is recorded); **yes** for KSP if its boxing is changed — leave KSP out of this PR | `AnnotatedTypes.verifyPrimitiveField`, `EnumMembers.verifyConstructors` type annotations |
+| 4 | #43b Groovy `getDeclaredGenericPlaceholders()` | ~20 + tests | Groovy only, corrective | `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes`, `AnnotatedThrowsTypes` on Groovy |
+| 5 | #43a array class literals; #42 receiver default (optional) | ~10; ~15 | no; **yes** (contract) | none in the kit; `AnnotatedReceiverTypes` already passes via the processor's own default |
+
+All of it is additive except where marked; collections in the new builder paths are sized with the
+`CollectionUtils` helpers (`newLinkedHashMap(size)`, `newHashSet(size)`; there is no list helper, so lists get `new ArrayList<>(size)`), and PR 2 in particular must be checked
+against `inject-kotlin` because KSP's configuration metadata relies on by-name `has*` semantics that any change
+near `addDeclaredRepeatable` can disturb. On javac nothing in the kit is waiting on core: the processor can move to
+option (c)'s first stage against 5.2.1 today.
