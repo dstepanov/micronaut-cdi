@@ -88,6 +88,11 @@ public final class CdiTypes {
             && parameterized.getRawType() instanceof Class<?> raw) {
             return raw;
         }
+        if (type instanceof java.lang.reflect.GenericArrayType array) {
+            // the raw class of an array of a parameterized type is the array of the raw component
+            Class<?> component = rawClassOf(array.getGenericComponentType());
+            return component == null ? null : component.arrayType();
+        }
         return null;
     }
 

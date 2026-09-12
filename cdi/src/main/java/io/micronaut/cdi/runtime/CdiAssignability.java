@@ -177,14 +177,7 @@ public final class CdiAssignability {
                 }
             }
         }
-        boolean assignable = false;
-        for (Type eventType : typeClosureOf(specifiedType)) {
-            if (isEventAssignable(observedEventType, eventType)) {
-                assignable = true;
-                break;
-            }
-        }
-        if (!assignable) {
+        if (!isEventTypeMatching(observedEventType, specifiedType)) {
             return false;
         }
         // the qualifiers an event was fired with always include Any
@@ -212,8 +205,23 @@ public final class CdiAssignability {
     }
 
     /**
-     * Whether the type is one a bean may have: a wildcard anywhere in it makes it not one.
+     * Whether an event of the given type notifies an observer of the observed type, by the type rules of section
+     * 2.8.3 alone: the qualifiers of either side, and what the container's own API refuses of an event type, are
+     * not looked at.
+     *
+     * @param observedEventType The type the observer observes
+     * @param eventType         The type of the event
+     * @return Whether the types match
      */
+    public static boolean isEventTypeMatching(Type observedEventType, Type eventType) {
+        for (Type type : typeClosureOf(eventType)) {
+            if (isEventAssignable(observedEventType, type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Whether the type may be a bean type: section 2.2.1 excludes a parameterized type that contains a
      * wildcard, at any depth, from the types a bean can be resolved by.
@@ -259,25 +267,20 @@ public final class CdiAssignability {
         }
         if (observed instanceof TypeVariable<?> variable) {
             // an observed type variable observes whatever fits its bounds
-            Class<?> eventRaw = upperRawOf(event);
-            if (eventRaw == null) {
-                return false;
-            }
-            for (Type bound : variable.getBounds()) {
-                Class<?> boundRaw = upperRawOf(bound);
-                if (boundRaw != null && !boundRaw.isAssignableFrom(eventRaw)) {
-                    return false;
-                }
-            }
-            return true;
+            return assignableToAll(uppermostBoundsOf(variable), event);
         }
-        if (observed instanceof java.lang.reflect.GenericArrayType observedArray) {
-            Type eventComponent = event instanceof java.lang.reflect.GenericArrayType eventArray
-                ? eventArray.getGenericComponentType()
-                : event instanceof Class<?> eventClass && eventClass.isArray()
-                    ? eventClass.getComponentType() : null;
-            return eventComponent != null
-                && isEventAssignable(observedArray.getGenericComponentType(), eventComponent);
+        if (isArray(observed) || isArray(event)) {
+            // arrays are observed by their components, as the language assigns them: covariantly for classes,
+            // with no boxing, and by these rules again for a parameterized component
+            Type observedComponent = componentOf(observed);
+            Type eventComponent = componentOf(event);
+            if (observedComponent == null || eventComponent == null) {
+                return observed == Object.class;
+            }
+            if (observedComponent instanceof Class<?> observedClass && eventComponent instanceof Class<?> eventClass) {
+                return observedClass.isAssignableFrom(eventClass);
+            }
+            return isEventAssignable(observedComponent, eventComponent);
         }
         Class<?> observedRaw = rawTypeOf(observed);
         Class<?> eventRaw = rawTypeOf(event);
@@ -315,6 +318,19 @@ public final class CdiAssignability {
     private static boolean isAssignable(Type required, Type candidate) {
         if (required.equals(candidate)) {
             return true;
+        }
+        if (isArray(required) || isArray(candidate)) {
+            // two array types match when their element types do, by these rules again; a class component is the
+            // same type or not, with no boxing, since an int[] is not an Integer[]
+            Type requiredComponent = componentOf(required);
+            Type candidateComponent = componentOf(candidate);
+            if (requiredComponent == null || candidateComponent == null) {
+                return required == Object.class;
+            }
+            if (requiredComponent instanceof Class<?> && candidateComponent instanceof Class<?>) {
+                return requiredComponent.equals(candidateComponent);
+            }
+            return isAssignable(requiredComponent, candidateComponent);
         }
         Class<?> requiredRaw = rawTypeOf(required);
         Class<?> candidateRaw = rawTypeOf(candidate);
@@ -364,17 +380,8 @@ public final class CdiAssignability {
             return withinBounds(event, wildcard);
         }
         if (observed instanceof TypeVariable<?> variable) {
-            Class<?> eventRaw = upperRawOf(event);
-            if (eventRaw == null) {
-                return false;
-            }
-            for (Type bound : variable.getBounds()) {
-                Class<?> boundRaw = upperRawOf(bound);
-                if (boundRaw != null && !boundRaw.isAssignableFrom(eventRaw)) {
-                    return false;
-                }
-            }
-            return true;
+            // the event type parameter is assignable to the upper bound of the observed variable
+            return assignableToAll(uppermostBoundsOf(variable), event);
         }
         if (observed.equals(event)) {
             return true;
@@ -402,7 +409,12 @@ public final class CdiAssignability {
     }
 
     /**
-     * Whether one pair of type arguments matches, per the cases of section 2.4.2.1.
+     * Whether one pair of type arguments matches, per the five cases of section 2.4.2.1.
+     *
+     * <p>Where a case speaks of a type being assignable to a bound, it means assignable as the language has it:
+     * a parameterized bound is assignable from the same parameterization, and from a subtype that keeps it, not
+     * from any type of the same raw class. And the upper bound of a type variable that is bounded by another
+     * variable is that variable's bound, all the way up.</p>
      */
     private static boolean argumentMatches(Type required, Type candidate) {
         if (required instanceof WildcardType wildcard) {
@@ -410,32 +422,41 @@ public final class CdiAssignability {
         }
         if (required instanceof TypeVariable<?> requiredVariable) {
             if (candidate instanceof TypeVariable<?> beanVariable) {
-                // both are variables: the required one's bounds must fit inside the bean one's
-                return boundsInside(requiredVariable.getBounds(), beanVariable.getBounds());
+                // both are variables: the upper bound of the required one is assignable to the upper bound of the
+                // bean one - every bound of the bean variable is satisfied by some bound of the required one
+                return boundsSatisfied(uppermostBoundsOf(beanVariable), uppermostBoundsOf(requiredVariable));
             }
-            // a required type variable matches no actual bean argument
+            // the specification has no case for a required type variable and an actual bean argument
             return false;
         }
         if (candidate instanceof TypeVariable<?> variable) {
-            // an actual required argument matches a variable whose upper bounds it fits
-            for (Type bound : variable.getBounds()) {
-                Class<?> boundRaw = rawTypeOf(bound);
-                Class<?> requiredRaw = rawTypeOf(required);
-                if (boundRaw == null || requiredRaw == null || !boundRaw.isAssignableFrom(requiredRaw)) {
-                    return false;
-                }
-            }
+            // an actual required argument matches a variable whose upper bounds it is assignable to
+            return assignableToAll(uppermostBoundsOf(variable), required);
+        }
+        // two actual arguments: the same raw type, and the parameters of a parameterized one matching by these
+        // rules again. An argument is not a type: Object here is Object alone, and matches nothing else
+        return actualArgumentsMatch(required, candidate);
+    }
+
+    private static boolean actualArgumentsMatch(Type required, Type candidate) {
+        if (required.equals(candidate)) {
             return true;
         }
-        if (required instanceof ParameterizedType requiredParameterized
-            && candidate instanceof ParameterizedType candidateParameterized) {
-            // two actual parameterized arguments: identical raw types with pairwise-matching arguments, the
-            // first case of section 2.4.2.1 applied recursively
-            if (!requiredParameterized.getRawType().equals(candidateParameterized.getRawType())) {
-                return false;
-            }
-            Type[] requiredArguments = requiredParameterized.getActualTypeArguments();
-            Type[] candidateArguments = candidateParameterized.getActualTypeArguments();
+        if (isArray(required) || isArray(candidate)) {
+            Type requiredComponent = componentOf(required);
+            Type candidateComponent = componentOf(candidate);
+            return requiredComponent != null && candidateComponent != null
+                && actualArgumentsMatch(requiredComponent, candidateComponent);
+        }
+        Class<?> requiredRaw = rawTypeOf(required);
+        if (requiredRaw == null || !requiredRaw.equals(rawTypeOf(candidate))) {
+            return false;
+        }
+        boolean requiredParameterized = required instanceof ParameterizedType;
+        boolean candidateParameterized = candidate instanceof ParameterizedType;
+        if (requiredParameterized && candidateParameterized) {
+            Type[] requiredArguments = ((ParameterizedType) required).getActualTypeArguments();
+            Type[] candidateArguments = ((ParameterizedType) candidate).getActualTypeArguments();
             if (requiredArguments.length != candidateArguments.length) {
                 return false;
             }
@@ -446,105 +467,194 @@ public final class CdiAssignability {
             }
             return true;
         }
-        return required.equals(candidate);
+        // one of them raw: the other's parameters must say nothing
+        return saysNothing(((ParameterizedType) (requiredParameterized ? required : candidate)).getActualTypeArguments());
     }
 
     /**
-     * Whether every bound of the outer set is satisfied by the inner set: for each outer bound, some inner
-     * bound is a subtype of it, so that anything within the inner bounds is within the outer.
-     */
-    private static boolean boundsInside(Type[] inner, Type[] outer) {
-        for (Type outerBound : outer) {
-            Class<?> outerRaw = upperRawOf(outerBound);
-            if (outerRaw == null || outerRaw == Object.class) {
-                continue;
-            }
-            boolean covered = false;
-            for (Type innerBound : inner) {
-                Class<?> innerRaw = upperRawOf(innerBound);
-                if (innerRaw != null && outerRaw.isAssignableFrom(innerRaw)) {
-                    covered = true;
-                    break;
-                }
-            }
-            if (!covered) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * The raw type a bound reaches: a bound that is itself a type variable is bounded by its own first bound,
-     * transitively.
-     */
-    private static @Nullable Class<?> upperRawOf(Type bound) {
-        if (bound instanceof TypeVariable<?> variable) {
-            Type[] bounds = variable.getBounds();
-            return bounds.length == 0 ? Object.class : upperRawOf(bounds[0]);
-        }
-        return rawTypeOf(bound);
-    }
-
-    /**
-     * Whether the candidate argument fits within the wildcard's bounds.
+     * Whether the candidate argument fits within the wildcard's bounds: assignable to its upper bound and from
+     * its lower bound. A type variable is relaxed, as section 2.4.2.1 relaxes it: its upper bound may be
+     * assignable to or from the wildcard's upper bound, and must be assignable from the wildcard's lower bound.
      */
     private static boolean withinBounds(Type candidate, WildcardType wildcard) {
+        // an upper bound that is a variable is every bound of that variable at once, so they are resolved; a
+        // lower bound that is a variable is the variable, assignable to a type as soon as one of its bounds is
+        java.util.List<Type> uppers = uppermostBoundsOf(wildcard.getUpperBounds());
+        java.util.List<Type> lowers = java.util.List.of(wildcard.getLowerBounds());
         if (candidate instanceof TypeVariable<?> variable) {
-            // section 2.4.2.1 relaxes the wildcard for a variable: its upper bound may be assignable to or
-            // from the wildcard's upper bound, and must be assignable from the wildcard's lower bound
-            Type[] beanBounds = variable.getBounds();
-            Class<?> variableUpper = beanBounds.length == 0 ? Object.class : upperRawOf(beanBounds[0]);
-            if (variableUpper == null) {
+            java.util.List<Type> beanBounds = uppermostBoundsOf(variable);
+            if (!boundsSatisfied(uppers, beanBounds) && !boundsSatisfied(beanBounds, uppers)) {
                 return false;
             }
-            for (Type upper : wildcard.getUpperBounds()) {
-                Class<?> upperRaw = upperRawOf(upper);
-                if (upperRaw != null && !upperRaw.isAssignableFrom(variableUpper)
-                    && !variableUpper.isAssignableFrom(upperRaw)) {
+            for (Type lower : lowers) {
+                if (!assignableToAll(beanBounds, lower)) {
                     return false;
-                }
-            }
-            for (Type lower : wildcard.getLowerBounds()) {
-                if (lower instanceof TypeVariable<?> lowerVariable) {
-                    // whatever satisfies the lower variable must satisfy the bean variable's bounds
-                    if (!boundsInside(lowerVariable.getBounds(), beanBounds)) {
-                        return false;
-                    }
-                    continue;
-                }
-                Class<?> lowerRaw = rawTypeOf(lower);
-                if (lowerRaw == null) {
-                    continue;
-                }
-                for (Type beanBound : beanBounds) {
-                    Class<?> beanRaw = upperRawOf(beanBound);
-                    if (beanRaw != null && !beanRaw.isAssignableFrom(lowerRaw)) {
-                        return false;
-                    }
                 }
             }
             return true;
         }
-        Class<?> candidateRaw = rawTypeOf(candidate);
-        if (candidateRaw == null) {
+        if (!assignableToAll(uppers, candidate)) {
             return false;
         }
-        for (Type upper : wildcard.getUpperBounds()) {
-            Class<?> upperRaw = rawTypeOf(upper);
-            if (upperRaw != null && !upperRaw.isAssignableFrom(candidateRaw)) {
-                return false;
-            }
-        }
-        for (Type lower : wildcard.getLowerBounds()) {
-            Class<?> lowerRaw = lower instanceof TypeVariable<?> lowerVariable
-                ? upperRawOf(lowerVariable.getBounds().length == 0 ? Object.class : lowerVariable.getBounds()[0])
-                : rawTypeOf(lower);
-            if (lowerRaw != null && !candidateRaw.isAssignableFrom(lowerRaw)) {
+        for (Type lower : lowers) {
+            if (!isJavaAssignable(candidate, lower)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Whether every bound of the first set is assignable from some bound of the second: what a type within the
+     * second set's bounds is then within the first set's as well.
+     */
+    private static boolean boundsSatisfied(java.util.List<Type> bounds, java.util.List<Type> from) {
+        for (Type bound : bounds) {
+            boolean satisfied = false;
+            for (Type candidate : from) {
+                if (isJavaAssignable(bound, candidate)) {
+                    satisfied = true;
+                    break;
+                }
+            }
+            if (!satisfied) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean assignableToAll(java.util.List<Type> bounds, Type type) {
+        for (Type bound : bounds) {
+            if (!isJavaAssignable(bound, type)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The upper bounds a type variable resolves to: a bound that is itself a variable stands for its own bounds,
+     * all the way up, and a variable without a bound is bounded by {@code Object}.
+     */
+    private static java.util.List<Type> uppermostBoundsOf(TypeVariable<?> variable) {
+        java.util.List<Type> uppermost = uppermostBoundsOf(variable.getBounds());
+        return uppermost.isEmpty() ? java.util.List.of(Object.class) : uppermost;
+    }
+
+    /**
+     * The given bounds with every variable among them replaced by its own uppermost bounds. Empty when there are
+     * none, as a wildcard's lower bounds usually are.
+     */
+    private static java.util.List<Type> uppermostBoundsOf(Type[] bounds) {
+        java.util.List<Type> uppermost = new java.util.ArrayList<>(bounds.length);
+        for (Type bound : bounds) {
+            if (bound instanceof TypeVariable<?> variable) {
+                uppermost.addAll(uppermostBoundsOf(variable));
+            } else {
+                uppermost.add(bound);
+            }
+        }
+        return uppermost;
+    }
+
+    /**
+     * Whether a value of one type may be assigned to the other, as the language decides it: a class from its
+     * subclasses, a parameterized type from the same parameterization of a subtype - an argument that is not a
+     * wildcard admitting only itself - a wildcard from what fits its bounds, a variable from what fits all of
+     * its bounds and from any of its bounds, and an array from an array of an assignable component.
+     */
+    private static boolean isJavaAssignable(Type to, Type from) {
+        if (to.equals(from)) {
+            return true;
+        }
+        if (from instanceof TypeVariable<?> variable) {
+            for (Type bound : uppermostBoundsOf(variable)) {
+                if (isJavaAssignable(to, bound)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (from instanceof WildcardType wildcard) {
+            for (Type bound : uppermostBoundsOf(wildcard.getUpperBounds())) {
+                if (isJavaAssignable(to, bound)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (to instanceof TypeVariable<?> variable) {
+            return assignableToAll(uppermostBoundsOf(variable), from);
+        }
+        if (to instanceof WildcardType wildcard) {
+            return withinBounds(from, wildcard);
+        }
+        if (isArray(to) || isArray(from)) {
+            Type toComponent = componentOf(to);
+            Type fromComponent = componentOf(from);
+            if (toComponent == null || fromComponent == null) {
+                return to == Object.class;
+            }
+            if (toComponent instanceof Class<?> toClass && fromComponent instanceof Class<?> fromClass) {
+                return toClass.isAssignableFrom(fromClass);
+            }
+            return isJavaAssignable(toComponent, fromComponent);
+        }
+        Class<?> toRaw = rawTypeOf(to);
+        Class<?> fromRaw = rawTypeOf(from);
+        if (toRaw == null || fromRaw == null || !toRaw.isAssignableFrom(fromRaw)) {
+            return false;
+        }
+        if (!(to instanceof ParameterizedType toParameterized)) {
+            return true;
+        }
+        Type[] toArguments = toParameterized.getActualTypeArguments();
+        // the parameterization of the target's class that the source type carries, found among its supertypes
+        for (Type supertype : CdiTypes.closureOf(from)) {
+            if (!toRaw.equals(rawTypeOf(supertype))) {
+                continue;
+            }
+            if (!(supertype instanceof ParameterizedType fromParameterized)) {
+                // a raw source is assignable only to a parameterization that asks nothing of its arguments
+                return saysNothing(toArguments);
+            }
+            Type[] fromArguments = fromParameterized.getActualTypeArguments();
+            if (toArguments.length != fromArguments.length) {
+                return false;
+            }
+            for (int i = 0; i < toArguments.length; i++) {
+                Type toArgument = toArguments[i];
+                Type fromArgument = fromArguments[i];
+                // an argument is invariant, a type variable among them: only a wildcard admits other than itself
+                boolean assignable = toArgument instanceof WildcardType
+                    ? isJavaAssignable(toArgument, fromArgument)
+                    : toArgument.equals(fromArgument);
+                if (!assignable) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isArray(Type type) {
+        return type instanceof java.lang.reflect.GenericArrayType
+            || type instanceof Class<?> aClass && aClass.isArray();
+    }
+
+    /**
+     * The component type of an array type, or {@code null} for a type that is not an array.
+     */
+    private static @Nullable Type componentOf(Type type) {
+        if (type instanceof java.lang.reflect.GenericArrayType array) {
+            return array.getGenericComponentType();
+        }
+        if (type instanceof Class<?> aClass && aClass.isArray()) {
+            return aClass.getComponentType();
+        }
+        return null;
     }
 
     /**
