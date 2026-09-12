@@ -56,7 +56,9 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
 
     @Override
     public String name() {
-        return element.getName();
+        // a constructor is named after the class it constructs, where Micronaut names it the way the class file
+        // does
+        return isConstructor() ? declaringClass.name() : element.getName();
     }
 
     @Override
@@ -70,6 +72,10 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
 
     @Override
     public Type returnType() {
+        // a constructor returns the class it constructs, where Micronaut reports the void a class file declares
+        if (isConstructor()) {
+            return ElementTypes.of(element.getDeclaringType());
+        }
         return ElementTypes.of(element.getGenericReturnType());
     }
 
