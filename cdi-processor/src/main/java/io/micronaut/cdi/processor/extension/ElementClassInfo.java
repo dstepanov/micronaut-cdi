@@ -166,20 +166,19 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public Collection<MethodInfo> methods() {
         List<MethodInfo> methods = new ArrayList<>();
-        // overridden declarations included: the model describes every method the class has, and an extension
-        // filtering by the declaring type expects to find an interface's own declaration under the interface
-        element.getEnclosedElements(ElementQuery.ALL_METHODS.includeOverriddenMethods())
-            .forEach(method -> methods.add(new ElementMethodInfo(method,
-                // the class the method was declared by, which an inherited method's is not this one
-                new ElementClassInfo(method.getDeclaringType()))));
+        for (io.micronaut.inject.ast.MethodElement method : ElementMembers.methodsOf(element)) {
+            // the class the method was declared by, which an inherited method's is not this one
+            methods.add(new ElementMethodInfo(method, new ElementClassInfo(method.getDeclaringType())));
+        }
         return methods;
     }
 
     @Override
     public Collection<FieldInfo> fields() {
         List<FieldInfo> fields = new ArrayList<>();
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS)
-            .forEach(field -> fields.add(new ElementFieldInfo(field, this)));
+        for (io.micronaut.inject.ast.FieldElement field : ElementMembers.fieldsOf(element)) {
+            fields.add(new ElementFieldInfo(field, new ElementClassInfo(field.getDeclaringType())));
+        }
         return fields;
     }
 
