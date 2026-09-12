@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
+import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
@@ -29,7 +30,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A class, read from the Micronaut element that describes it.
@@ -58,6 +61,50 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      */
     public ClassElement classElement() {
         return element;
+    }
+
+    /**
+     * The annotations of the class, which are the ones it carries itself and the ones marked {@code Inherited}
+     * that its superclasses carry. An annotation a subclass writes itself stands in for the one it would
+     * otherwise inherit, and nothing is inherited from an interface.
+     */
+    @Override
+    public Collection<AnnotationInfo> annotations() {
+        List<AnnotationInfo> found = new ArrayList<>(super.annotations());
+        Set<String> present = new HashSet<>();
+        found.forEach(annotation -> present.add(annotation.name()));
+        ClassElement superClass = element.getSuperType().orElse(null);
+        while (superClass != null) {
+            for (AnnotationInfo annotation : ExtensionAnnotations.declaredOn(superClass)) {
+                if (ExtensionAnnotations.isInherited(annotation.name()) && present.add(annotation.name())) {
+                    found.add(annotation);
+                }
+            }
+            superClass = superClass.getSuperType().orElse(null);
+        }
+        return found;
+    }
+
+    /**
+     * The repetitions of a repeatable annotation, which the nearest class of the hierarchy that carries any of
+     * them answers for, the way reflection answers it: a subclass that repeats the annotation says nothing about
+     * what its superclass repeated, so the two are never mixed.
+     */
+    @Override
+    public <T extends java.lang.annotation.Annotation> Collection<AnnotationInfo> repeatableAnnotation(
+        Class<T> annotationType) {
+        ClassElement type = element;
+        while (type != null) {
+            List<AnnotationInfo> found = ExtensionAnnotations.repeatableOn(type, annotationType.getName());
+            if (!found.isEmpty()) {
+                return found;
+            }
+            if (!ExtensionAnnotations.isInherited(annotationType.getName())) {
+                break;
+            }
+            type = type.getSuperType().orElse(null);
+        }
+        return List.of();
     }
 
     @Override

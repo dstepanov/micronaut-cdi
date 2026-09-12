@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.processor.extension;
 
-import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementModifier;
@@ -25,24 +24,19 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
 /**
- * What every declaration of the language model has in common: the annotations written on it, read from the
- * Micronaut element it describes.
+ * What every declaration of the language model has in common: the annotations written on it.
  *
- * <p>Only the annotations the element declares are reported. The annotation metadata Micronaut builds also
- * carries what a declaration inherits and what the annotations it carries are themselves annotated with, and an
- * extension asking what is written on a class is asking about what was written rather than about all of
- * that.</p>
- *
- * <p>Of those, only the annotations retained until runtime are reported. The compiler sees the ones retained in
- * the source and in the class file too, but the language model is the model a runtime extension would read, and
- * an annotation it could not find there has no place in it.</p>
+ * <p>Only the annotations the declaration itself carries are reported, and of those only the ones retained until
+ * runtime. The annotation metadata Micronaut builds also carries what a declaration inherits and what the
+ * annotations it carries are themselves annotated with, and an extension asking what is written on a class is
+ * asking about what was written rather than about all of that; the compiler sees the annotations retained in the
+ * source and in the class file too, and the language model is the model a runtime extension would read. Where the
+ * annotations come from, and what is left out of them, is {@link ExtensionAnnotations}.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -67,8 +61,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public final boolean hasAnnotation(Class<? extends Annotation> annotationType) {
-        return element.hasDeclaredAnnotation(annotationType)
-            && ExtensionAnnotationTypes.isRuntimeRetained(annotationType.getName());
+        return annotation(annotationType) != null;
     }
 
     @Override
@@ -78,23 +71,17 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public final <T extends Annotation> @Nullable AnnotationInfo annotation(Class<T> annotationType) {
-        AnnotationValue<T> annotation = element.getDeclaredAnnotation(annotationType);
-        if (annotation == null || !ExtensionAnnotationTypes.isRuntimeRetained(annotationType.getName())) {
-            return null;
+        for (AnnotationInfo annotation : annotations()) {
+            if (annotation.name().equals(annotationType.getName())) {
+                return annotation;
+            }
         }
-        return new ElementAnnotationInfo(annotation);
+        return null;
     }
 
     @Override
-    public final <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
-        if (!ExtensionAnnotationTypes.isRuntimeRetained(annotationType.getName())) {
-            return List.of();
-        }
-        List<AnnotationInfo> found = new ArrayList<>();
-        for (AnnotationValue<T> annotation : element.getDeclaredAnnotationValuesByType(annotationType)) {
-            found.add(new ElementAnnotationInfo(annotation));
-        }
-        return found;
+    public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
+        return ExtensionAnnotations.repeatableOn(element, annotationType.getName());
     }
 
     @Override
@@ -103,15 +90,8 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
     }
 
     @Override
-    public final Collection<AnnotationInfo> annotations() {
-        List<AnnotationInfo> found = new ArrayList<>();
-        for (String name : element.getDeclaredAnnotationNames()) {
-            AnnotationValue<Annotation> annotation = element.getDeclaredAnnotation(name);
-            if (annotation != null && ExtensionAnnotationTypes.isRuntimeRetained(name)) {
-                found.add(new ElementAnnotationInfo(annotation));
-            }
-        }
-        return found;
+    public Collection<AnnotationInfo> annotations() {
+        return ExtensionAnnotations.declaredOn(element);
     }
 
     /**
