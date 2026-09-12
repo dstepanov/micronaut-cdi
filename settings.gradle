@@ -58,10 +58,8 @@ def includedCheckout = { String property, String name, String url, String branch
     return dir
 }
 
-// the branch of dstepanov/micronaut-jakarta-interceptors#5, which destroys an object's interceptor instances with
-// the object; back to main once it is merged
 includeBuild(includedCheckout('jakartaInterceptorsDir', 'micronaut-jakarta-interceptors',
-    'https://github.com/dstepanov/micronaut-jakarta-interceptors.git', 'claude/interceptor-instance-lifecycle'))
+    'https://github.com/dstepanov/micronaut-jakarta-interceptors.git', 'main'))
 includeBuild(includedCheckout('jakartaElDir', 'micronaut-jakarta-el',
     'https://github.com/micronaut-projects/micronaut-jakarta-el.git', '1.1.x'))
 

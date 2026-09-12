@@ -88,6 +88,10 @@ final class DeploymentCompiler {
             if (message.contains("Cannot apply AOP advice")
                 || message.contains("inherits AOP advice but is declared final")
                 || message.contains("cannot be proxied")
+                // the interceptors implementation's own report of a final method under a class level binding:
+                // a definition error to Jakarta Interceptors (section 3.3), which this specification treats as
+                // a deployment problem (section 9.4)
+                || message.contains("must not be final unless it is private or static")
                 // an extension that reported a deployment problem itself: the exception's type survives only
                 // in the diagnostic's text once the compiler has reported it
                 || message.contains("jakarta.enterprise.inject.spi.DeploymentException")) {
