@@ -188,3 +188,14 @@ the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta
 (`interceptors/tests/**`): 807 tests, all passing, and part of `check`. A handful of ported assertions and
 `ScenarioSweepTckTest` — which reads every scenario bean through one container at once — remain as local
 regression tests beside the kit's own.
+
+The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 1263 assertions about the language model of
+section 2.10 — the `ClassInfo`, `MethodInfo`, `Type` and `AnnotationInfo` a build compatible extension reads a
+class through — with one entry point, `LangModelVerifier.verify(ClassInfo)`, which asks the model everything
+about the verifier's own class: its members, inherited and declared, its enum constants and annotation members,
+bridge methods, repeatable and inherited annotations, the annotations on every use of a type, and the equality
+of two readings of one thing. The `micronaut-cdi-tck-lang-model` module resolves its sources the same way,
+compiles them with this module's processor and runs the verifier from a build compatible extension as they
+compile — the runner the kit ships for the reference implementation, written the same way. All of it passes,
+the type annotation assertions included: the model is read from the source of the class as it compiles, rather
+than from a class file, which is what loses them (JDK-8225377) and why other implementations skip them.
