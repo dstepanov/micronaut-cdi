@@ -21,7 +21,6 @@ import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
@@ -31,16 +30,16 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 /**
- * Where the language model reads what Micronaut's model of a declaration does not record.
+ * What the language model reads of a declaration beyond what one Micronaut element answers on its own.
  *
  * <p>The AST answers nearly every question the language model of the specification asks, and
  * {@link AstSourceModel} answers them from it, in whichever language the compilation is in. Four questions it
  * cannot answer yet: the annotations of a declaration exactly as the source wrote them (a repeatable annotation
  * written once is folded into its container, and what Micronaut itself adds is not told apart), the annotation
  * written on one dimension of an array or on a primitive, and the targets and the container of an annotation
- * interface. For a Java compilation {@link JavacSourceModel} answers those from the compiler's own elements;
- * everything else comes from the AST. Each of the four retires when the core change that answers it lands, so
- * the seam is the one place the two paths meet.</p>
+ * interface. Each is a finding against Micronaut core ({@code MICRONAUT-CORE-FINDINGS.md}, 37 to 40) and each
+ * is answered here once the core change that records it lands; until then the sections of the kit that turn on
+ * them are pending.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -49,25 +48,11 @@ import java.util.List;
 interface SourceModel {
 
     /**
-     * The system property selecting the source: {@code ast} forces the language-neutral path, which is how the
-     * AST path is verified against the kit on a Java compilation; {@code javac} forces the compiler's.
-     */
-    String SOURCE_PROPERTY = "io.micronaut.cdi.langModel.source";
-
-    /**
      * The model for the compilation under way.
      *
      * @return The model
      */
     static SourceModel active() {
-        String forced = System.getProperty(SOURCE_PROPERTY);
-        if ("ast".equals(forced)) {
-            return AstSourceModel.INSTANCE;
-        }
-        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
-        if ("javac".equals(forced) || context == null || context.getLanguage() == VisitorContext.Language.JAVA) {
-            return JavacSourceModel.INSTANCE;
-        }
         return AstSourceModel.INSTANCE;
     }
 

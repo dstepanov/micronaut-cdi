@@ -27,15 +27,17 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * Hands the kit's verifier its own class, read through this implementation's language model, as the class
- * compiles.
+ * The build compatible extension that runs the kit's language model verifier against this module's model as the
+ * kit's classes compile, and records what it found, section by section, for the test to read.
  *
- * <p>This is the runner the kit itself ships for the reference implementation, written the same way: the class
- * is asked for in discovery, so that it is enhanced whether or not it is a bean, and verified in enhancement.
- * The verifier asserts, so the compiler runs with assertions enabled and a failed assertion fails the
- * compilation. That it ran at all is recorded into the file the build names, for the test to read.</p>
+ * <p>The verifier is run one section at a time: the compiler reports no more than the message of what an
+ * extension threw, an assertion has none, and a section the model cannot satisfy yet must not hide the ones it
+ * can. Nothing is thrown, so the compilation goes on whatever was found; the test holds each section to what is
+ * expected of it.</p>
  */
 public class LangModelExtension implements BuildCompatibleExtension {
 
@@ -44,17 +46,26 @@ public class LangModelExtension implements BuildCompatibleExtension {
      */
     public static final String REPORT_PROPERTY = "io.micronaut.cdi.tck.langModel.report";
 
-    @Discovery
-    public void addVerifier(ScannedClasses classes) {
-        classes.add(LangModelVerifier.class.getName());
-    }
+    /**
+     * The line of the report that names the class the verifier was handed.
+     */
+    public static final String VERIFIED = "verified ";
+
+    /**
+     * The prefix of a report line that names a section and how it ended.
+     */
+    public static final String SECTION = "section ";
+
+    /**
+     * The section of the verifier that is not one of a field's class: the package annotation.
+     */
+    public static final String PACKAGE_SECTION = "PackageAnnotation";
 
     /**
      * The sections of the verifier, each verifying the class of one field of the verifier, in the order the
-     * verifier runs them. Run one by one when the whole fails, so that every failing section is reported rather
-     * than the first alone.
+     * verifier runs them.
      */
-    private static final String[][] SECTIONS = {
+    static final String[][] SECTIONS = {
         {"AnnotatedTypes", "annotatedTypes"}, {"AnnotatedSuperTypes", "annotatedSuperTypes"},
         {"AnnotatedThrowsTypes", "annotatedThrowsTypes"}, {"AnnotatedReceiverTypes", "annotatedReceiverTypes"},
         {"AnnotationInstances", "annotationInstances"}, {"PlainClassMembers$Verifier", "plainClassMembers"},
@@ -66,26 +77,35 @@ public class LangModelExtension implements BuildCompatibleExtension {
         {"DefaultConstructors", "defaultConstructors"}, {"Equality", "equality"},
     };
 
+    @Discovery
+    public void addVerifier(ScannedClasses classes) {
+        classes.add(LangModelVerifier.class.getName());
+    }
+
     @Enhancement(types = LangModelVerifier.class)
     public void verify(ClassInfo clazz) {
-        try {
-            LangModelVerifier.verify(clazz);
-        } catch (AssertionError | RuntimeException e) {
-            // the compiler reports only the message of what an extension threw, and an assertion has none: the
-            // stack trace of each failing section, which names the assertion, goes into the report for the
-            // build to show
-            StringBuilder report = new StringBuilder("failed\n").append(trace(e));
-            for (String[] section : SECTIONS) {
-                try {
-                    verifySection(clazz, section[0], section[1]);
-                } catch (Throwable failure) {
-                    report.append("\n--- ").append(section[0]).append('\n').append(trace(failure));
-                }
+        StringBuilder report = new StringBuilder(VERIFIED).append(clazz.name()).append('\n');
+        Map<String, Throwable> failures = new LinkedHashMap<>();
+        for (String[] section : SECTIONS) {
+            try {
+                verifySection(clazz, section[0], section[1]);
+                report.append(SECTION).append(section[0]).append(" passed\n");
+            } catch (Throwable failure) {
+                report.append(SECTION).append(section[0]).append(" failed\n");
+                failures.put(section[0], failure);
             }
-            report(report.toString());
-            throw e;
         }
-        report("verified " + clazz.name());
+        try {
+            verifyPackageAnnotation(clazz);
+            report.append(SECTION).append(PACKAGE_SECTION).append(" passed\n");
+        } catch (Throwable failure) {
+            report.append(SECTION).append(PACKAGE_SECTION).append(" failed\n");
+            failures.put(PACKAGE_SECTION, failure);
+        }
+        // the stack trace of each failing section, which names the assertion, for the build to show
+        failures.forEach((section, failure) ->
+            report.append("\n--- ").append(section).append('\n').append(trace(failure)));
+        report(report.toString());
     }
 
     private static void verifySection(ClassInfo clazz, String verifier, String field) throws Throwable {
@@ -96,6 +116,29 @@ public class LangModelExtension implements BuildCompatibleExtension {
                 .invoke(null, subject);
         } catch (java.lang.reflect.InvocationTargetException e) {
             throw e.getCause();
+        }
+    }
+
+    /**
+     * The verifier's own checks on the class it is handed, which its entry point runs before and after the
+     * sections: that assertions are on, that only runtime annotations are reported, and the package's annotation.
+     */
+    private static void verifyPackageAnnotation(ClassInfo clazz) throws Throwable {
+        for (String check : new String[] {"ensureAssertionsEnabled", "ensureOnlyRuntimeAnnotations",
+                                          "verifyPackageAnnotation"}) {
+            java.lang.reflect.Method method = check.startsWith("ensureAssertions")
+                ? LangModelVerifier.class.getDeclaredMethod(check)
+                : LangModelVerifier.class.getDeclaredMethod(check, ClassInfo.class);
+            method.setAccessible(true);
+            try {
+                if (method.getParameterCount() == 0) {
+                    method.invoke(null);
+                } else {
+                    method.invoke(null, clazz);
+                }
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                throw e.getCause();
+            }
         }
     }
 

@@ -50,8 +50,7 @@ import java.util.function.Predicate;
  * in their {@link io.micronaut.inject.ast.GenericElement#getGenericTypeAnnotationMetadata() generic type
  * annotations}, and every type argument, bound, super type and thrown type is a use of its own. That is what is
  * read here, in whichever language the compilation is in. Two things the model cannot reach this way are the
- * annotations of one dimension of an array and of a primitive; for a Java compilation {@link MirrorTypes} reads
- * those from the compiler.</p>
+ * annotations of one dimension of an array and of a primitive, which Micronaut does not record yet.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

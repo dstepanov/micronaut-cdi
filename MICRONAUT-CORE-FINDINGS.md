@@ -628,20 +628,23 @@ KSP one reading `KSAnnotated`/`KSType` through `KotlinNativeElement.element`, an
 (`JavaNativeElement`, `KotlinNativeElement`, `GroovyNativeElement`), adds optional compile dependencies on
 `symbol-processing-api` and Groovy to `cdi-processor`, and re-implements in three places what #37–#40 add once.
 
-**Measured, 12 Sep 2026.** Stage one of option (c) is implemented on this branch: `SourceModel` is the one seam
-(`AstSourceModel` answers from the AST in any language; `JavacSourceModel` extends it and overrides only the four
-open questions), and `-PlangModelSource=ast` runs the kit against the AST path alone on a Java compilation. With
-core 5.2.1 that run fails exactly four sections, each on the predicted assertion: `AnnotatedTypes` at the
-constructor's return-type annotation (#40; with that one answer bypassed it proceeds to the primitive field's type
-annotation, #38), `AnnotationMembers` at the interface's own `@Retention` (#39), `EnumMembers` at a parameter
-carrying one repetition beside another annotation (#39), `RepeatableAnnotations` at the inherited repetitions
-(#39). The other fourteen sections — `AnnotatedSuperTypes`, `AnnotatedThrowsTypes`, `AnnotatedReceiverTypes`,
-`AnnotationInstances` (defaults, enum and class members), the four member sections, `InheritedMethods`,
-`InheritedFields`, `InheritedAnnotations`, `JavaLangObjectMethods`, `PrimitiveTypes`, `BridgeMethods`,
-`DefaultConstructors`, `Equality` and the package annotation — pass on the AST alone, as does
+**Done, 12 Sep 2026.** The processor no longer reads the compiler at all: `SourceModel` is the one seam and
+`AstSourceModel` its only implementation; `MirrorTypes`, `MirrorAnnotationInfo`, `MirrorAnnotationMember`,
+`ExtensionSourceModel` and the `javax.lang.model` unwrap in `CdiScopeVisitor` are gone. The kit runs section by
+section and reports each; with core 5.2.1 exactly four sections fail, each on the predicted assertion, and the
+kit test carries them as skipped, pending tests naming the finding each waits on: `AnnotatedTypes` at the
+constructor's return-type annotation (#40; with that one answer bypassed it proceeds to the primitive field's
+type annotation, #38), `AnnotationMembers` at the interface's own `@Retention` (#39), `EnumMembers` at a
+parameter carrying one repetition beside another annotation (#39), `RepeatableAnnotations` at the inherited
+repetitions (#39). The other fourteen — `AnnotatedSuperTypes`, `AnnotatedThrowsTypes`, `AnnotatedReceiverTypes`,
+`AnnotationInstances` (defaults, enum and class members), the plain-class and interface member sections,
+`InheritedMethods`, `InheritedFields`, `InheritedAnnotations`, `JavaLangObjectMethods`, `PrimitiveTypes`,
+`BridgeMethods`, `DefaultConstructors`, `Equality` and the package annotation — pass on the AST alone, as does
 `AnnotatedTypes.verifyTypeParameters` (annotated variables, bounds, intersections and a wildcard inside a bound).
+A pending section that starts passing fails the kit test, so that it is taken off the list when core lands.
 
-**(c) Staged**: move everything the AST already answers (the **AST** rows of #36) off javac now — kinds, abstract
+**(c) Staged** (what was done, minus the seam's javac half, which was removed outright): move everything the
+AST already answers (the **AST** rows of #36) off javac now — kinds, abstract
 enums, type parameters, super types, thrown types, receivers, class/parameterized/wildcard/type-variable uses and
 their type-use annotations, `@Inherited`, defaults via `VisitorContext.getAnnotationDefaultValues`, repetitions
 via `getDeclaredAnnotationValuesByName` — and keep one small, explicit javac seam for the four remaining

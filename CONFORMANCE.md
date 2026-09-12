@@ -215,9 +215,16 @@ about the verifier's own class: its members, inherited and declared, its enum co
 bridge methods, repeatable and inherited annotations, the annotations on every use of a type, and the equality
 of two readings of one thing. The `micronaut-cdi-tck-lang-model` module resolves its sources the same way,
 compiles them with this module's processor and runs the verifier from a build compatible extension as they
-compile — the runner the kit ships for the reference implementation, written the same way. All of it passes,
-the type annotation assertions included: the model is read from the source of the class as it compiles, rather
-than from a class file, which is what loses them (JDK-8225377) and why other implementations skip them.
+compile — the runner the kit ships for the reference implementation, written the same way. The model is read
+from Micronaut's AST alone, so that it is the same model in a Java, a Kotlin and a Groovy compilation, and from
+the source of the class as it compiles rather than from a class file, which is what loses the type annotations
+(JDK-8225377) and why other implementations skip those assertions. Fourteen of the kit's eighteen sections pass;
+four are pending on what Micronaut's AST does not record yet and are run as skipped tests that name the core
+change each waits on (`MICRONAUT-CORE-FINDINGS.md`, findings 37 to 40): the annotations of a declaration exactly
+as written — a repeatable annotation written once is folded into its container, and an annotation interface's
+own `@Retention` is stripped — which `AnnotationMembers`, `EnumMembers` and `RepeatableAnnotations` stop at, and
+the targets of an annotation interface and the annotation on a primitive or on one dimension of an array, which
+`AnnotatedTypes` stops at.
 
 ## What other implementations' tests found
 

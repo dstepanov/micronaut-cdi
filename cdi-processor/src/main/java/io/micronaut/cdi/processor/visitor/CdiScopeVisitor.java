@@ -21,6 +21,7 @@ import io.micronaut.cdi.annotation.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
@@ -390,17 +391,13 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     /**
      * Whether the scope annotation is marked {@code Inherited}, which is what lets a subclass inherit it.
      *
-     * <p>An annotation compiled in the same round is read as an element; one that is already compiled — the
-     * scopes of the specification itself, for instance — is read off the compiler's classpath, which is where
-     * an annotation processor's own dependencies live.</p>
+     * <p>An annotation the compilation can see answers for itself; one it cannot — which should not happen for
+     * a scope a bean declares — is read off the compiler's classpath, which is where an annotation processor's
+     * own dependencies live.</p>
      */
     private static boolean isInherited(String scope, VisitorContext context) {
-        ClassElement annotation = context.getClassElement(scope).orElse(null);
-        if (annotation != null) {
-            Boolean fromSource = inheritedOnTheSourceElement(annotation);
-            if (fromSource != null) {
-                return fromSource;
-            }
+        if (context.getClassElement(scope).orElse(null) instanceof AnnotationElement annotation) {
+            return annotation.isInherited();
         }
         try {
             return Class.forName(scope, false, CdiScopeVisitor.class.getClassLoader())
@@ -408,46 +405,6 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         } catch (ClassNotFoundException | LinkageError e) {
             return false;
         }
-    }
-
-    /**
-     * Whether the annotation the element describes is marked {@code Inherited}, read off the compiler's own
-     * element rather than off Micronaut's metadata: Micronaut leaves the {@code java.lang.annotation}
-     * meta-annotations out of what it records, so the marker is only visible where the compiler put it.
-     *
-     * @return Whether it is marked, or {@code null} when the native element cannot be reached
-     */
-    private static @Nullable Boolean inheritedOnTheSourceElement(ClassElement annotation) {
-        Object nativeType = annotation.getNativeType();
-        javax.lang.model.element.Element source = unwrap(nativeType);
-        if (source == null) {
-            return null;
-        }
-        for (javax.lang.model.element.AnnotationMirror mirror : source.getAnnotationMirrors()) {
-            if (mirror.getAnnotationType().toString().equals("java.lang.annotation.Inherited")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * The compiler's element inside whatever Micronaut wrapped it in, which differs between Micronaut
-     * versions: the element itself, or a holder with an {@code element()} accessor.
-     */
-    private static javax.lang.model.element.@Nullable Element unwrap(Object nativeType) {
-        if (nativeType instanceof javax.lang.model.element.Element element) {
-            return element;
-        }
-        try {
-            Object unwrapped = nativeType.getClass().getMethod("element").invoke(nativeType);
-            if (unwrapped instanceof javax.lang.model.element.Element element) {
-                return element;
-            }
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            // not a holder this build knows
-        }
-        return null;
     }
 
     /**

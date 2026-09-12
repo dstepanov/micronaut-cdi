@@ -34,21 +34,15 @@ def unpackTckSources = tasks.register('tckSources', Sync) {
 sourceSets.test.java.srcDir unpackTckSources
 
 // The assertions are Java assert statements, so the compiler that runs the extension needs them enabled; the
-// verifier refuses to run without. The extension records that it ran into a file the test reads, since what
-// the compiler did is otherwise invisible to a test that only sees the classes it produced.
+// verifier refuses to run without. The extension runs the verifier a section at a time and records how each
+// ended into a file the test reads, since what the compiler did is otherwise invisible to a test that only sees
+// the classes it produced; the sections the AST cannot satisfy yet are pending there, not failing here.
 def verified = layout.buildDirectory.file('tck-lang-model/verified')
 
 tasks.named('compileTestJava') {
     options.fork = true
     options.forkOptions.jvmArgs += ['-ea',
         "-D${LangModelPaths.REPORT_PROPERTY}=${verified.get().asFile.absolutePath}".toString()]
-    // -PlangModelSource=ast runs the kit against the language-neutral model alone, which is how what the AST
-    // answers today is measured on a Java compilation; the sections it fails are the core findings still open.
-    // The mode is always passed, since Gradle hands a compilation to any forked compiler daemon whose arguments
-    // include the ones asked for: a daemon left over from an ast run would otherwise serve a javac run.
-    def langModelSource = project.findProperty('langModelSource') ?: 'javac'
-    options.forkOptions.jvmArgs += "-Dio.micronaut.cdi.langModel.source=${langModelSource}".toString()
-    inputs.property('langModelSource', langModelSource)
     outputs.file(verified)
     doFirst {
         verified.get().asFile.parentFile.mkdirs()

@@ -47,13 +47,13 @@ import java.util.List;
  * @since 1.0
  */
 @Internal
-class AstSourceModel implements SourceModel {
+final class AstSourceModel implements SourceModel {
 
     static final AstSourceModel INSTANCE = new AstSourceModel();
 
     private static final String OBJECT = "java.lang.Object";
 
-    AstSourceModel() {
+    private AstSourceModel() {
     }
 
     @Override
@@ -74,13 +74,20 @@ class AstSourceModel implements SourceModel {
     @Override
     public List<AnnotationInfo> repeatableOn(Element element, String annotation) {
         // Micronaut resolves the container of a repeatable annotation itself when asked for the annotations of
-        // one name, whether they were written one by one or inside the container
+        // one name, whether they were written one by one or inside the container; an annotation that is not
+        // repeatable it answers for by name alone
         if (!ExtensionAnnotations.isReported(element, annotation)) {
             return List.of();
         }
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationValue<Annotation> value : element.getDeclaredAnnotationValuesByName(annotation)) {
             found.add(new ElementAnnotationInfo(value));
+        }
+        if (found.isEmpty()) {
+            AnnotationValue<Annotation> single = element.getDeclaredAnnotation(annotation);
+            if (single != null) {
+                found.add(new ElementAnnotationInfo(single));
+            }
         }
         return found;
     }
