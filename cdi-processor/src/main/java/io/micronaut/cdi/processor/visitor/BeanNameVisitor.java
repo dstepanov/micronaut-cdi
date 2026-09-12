@@ -62,7 +62,10 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        if (element.getAnnotationMetadata().hasStereotype(CdiScope.class)) {
+        // the singleton pseudo-scope is read as Micronaut's own rather than into a CdiScope, and a class written
+        // with it is a bean of the specification (section 2.5.1) that may ask for the default name like any other
+        if (element.getAnnotationMetadata().hasStereotype(CdiScope.class)
+            || element.getAnnotationMetadata().hasStereotype("jakarta.inject.Singleton")) {
             nameIfAskedFor(element, defaultClassName(unqualified(element.getSimpleName())));
         }
         element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
