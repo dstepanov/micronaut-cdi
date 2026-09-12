@@ -67,7 +67,9 @@ public final class ElementTypes {
             return new Primitive(element.getName());
         }
         ClassType raw = new Class(new ElementClassInfo(element));
-        if (element.getTypeArguments().isEmpty()) {
+        // a generic class named without its arguments is a class type, not a parameterized one; Micronaut fills
+        // the arguments of a raw use in from the declaration's bounds, so the raw use has to be asked about
+        if (element.isRawType() || element.getTypeArguments().isEmpty()) {
             return raw;
         }
         List<Type> arguments = new ArrayList<>();
