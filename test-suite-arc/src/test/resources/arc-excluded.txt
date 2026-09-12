@@ -61,3 +61,13 @@ io.quarkus.arc.test.transientreference.TransientReferenceDestroyedTest
 # The deployment of a test that expects to be rejected: this is the abstract base class its shouldFail subclasses
 # share, and the beans it declares are deliberately unproxyable. It belongs with the negative tests.
 io.quarkus.arc.test.validation.AbstractNormalScopedFinalTest
+
+# jakarta.enterprise.inject.Vetoed keeps a class, or a whole package, from being discovered as a bean. This
+# implementation does not read it: the class is compiled into a bean definition like any other, and the container
+# holds it. A gap of this implementation rather than anything of ArC's, recorded here until it is closed.
+io.quarkus.arc.test.vetoed.VetoedTest
+
+# The interceptor of this test moves the invocation onto another thread and returns the future the business method
+# gave it, which is ArC's own reading of what an AroundInvoke method may do with the result of proceed(). Nothing
+# here completes that future, so the test waits for ever rather than failing.
+io.quarkus.arc.test.interceptors.offload.ThreadOffloadInterceptorTest

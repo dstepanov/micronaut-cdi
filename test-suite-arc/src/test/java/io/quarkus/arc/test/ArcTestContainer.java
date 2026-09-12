@@ -20,7 +20,6 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
-import io.quarkus.arc.Vetoed;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -141,7 +140,7 @@ public class ArcTestContainer implements BeforeEachCallback, AfterEachCallback {
                 && !declaring.equals(bean.getBeanType())) {
                 // a produced bean belongs to the class that declares its producer, whatever type it produces:
                 // a produced String carries no package of its own to be filtered by
-                return deployed.contains(beanClassOf(declaring.getName())) && !isVetoed(declaring);
+                return deployed.contains(beanClassOf(declaring.getName()));
             }
         }
         Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
@@ -149,7 +148,7 @@ public class ArcTestContainer implements BeforeEachCallback, AfterEachCallback {
         if (!name.startsWith(SUITE)) {
             return true;
         }
-        return deployed.contains(name) && !isVetoed(type);
+        return deployed.contains(name);
     }
 
     /**
@@ -173,18 +172,6 @@ public class ArcTestContainer implements BeforeEachCallback, AfterEachCallback {
             simple = simple.substring(0, generated);
         }
         return packagePrefix + simple;
-    }
-
-    /**
-     * Whether ArC's own {@code @Vetoed} keeps the class out, on the class itself or on its package.
-     */
-    private static boolean isVetoed(Class<?> type) {
-        for (Class<?> each = type; each != null; each = each.getEnclosingClass()) {
-            if (each.isAnnotationPresent(Vetoed.class)) {
-                return true;
-            }
-        }
-        return type.getPackage() != null && type.getPackage().isAnnotationPresent(Vetoed.class);
     }
 
     /**

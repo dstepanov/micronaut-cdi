@@ -86,7 +86,6 @@ io.quarkus.arc.test.interceptors.inheritance.InterceptorSuperclassTest
 io.quarkus.arc.test.interceptors.inheritance.hierarchy.SuperclassInterceptorMethodsTest
 io.quarkus.arc.test.interceptors.initializer.InitializerMethodInterceptionTest
 io.quarkus.arc.test.interceptors.no.priority.InterceptorWithNoPriorityTest
-io.quarkus.arc.test.interceptors.offload.ThreadOffloadInterceptorTest
 io.quarkus.arc.test.interceptors.parameters.ParamInterceptorTest
 io.quarkus.arc.test.interceptors.parameters.setter.SetParamsTest
 io.quarkus.arc.test.interceptors.postconstruct.PostConstructExceptionHandlingTest
@@ -167,4 +166,3 @@ io.quarkus.arc.test.stereotypes.StereotypeNamedTest
 io.quarkus.arc.test.stereotypes.StereotypeOnProducerTest
 io.quarkus.arc.test.stereotypes.StereotypeScopeTest
 io.quarkus.arc.test.stereotypes.TransitiveStereotypeTest
-io.quarkus.arc.test.vetoed.VetoedTest

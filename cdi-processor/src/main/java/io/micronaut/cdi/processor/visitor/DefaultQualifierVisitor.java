@@ -75,7 +75,11 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
         Cdi.REQUEST_SCOPED,
         Cdi.SESSION_SCOPED,
         Cdi.CONVERSATION_SCOPED,
-        Cdi.DEPENDENT
+        Cdi.DEPENDENT,
+        // the singleton pseudo-scope is a scope of the specification as much as the others, and a bean-defining
+        // annotation in its own right (section 2.5.1): a bean written with it and nothing else is still a bean
+        // that an injection point naming no qualifier has to resolve to
+        "jakarta.inject.Singleton"
     );
 
     @Override

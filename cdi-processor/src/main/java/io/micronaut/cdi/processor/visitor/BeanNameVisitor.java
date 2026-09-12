@@ -63,7 +63,7 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         if (element.getAnnotationMetadata().hasStereotype(CdiScope.class)) {
-            nameIfAskedFor(element, defaultClassName(element.getSimpleName()));
+            nameIfAskedFor(element, defaultClassName(unqualified(element.getSimpleName())));
         }
         element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
             .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
@@ -90,6 +90,18 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
         // the name came through a stereotype: the bean has the name, but not the Named qualifier — writing
         // the jakarta annotation would put Named among the bean's qualifiers, which section 2.6 does not
         element.annotate("io.micronaut.cdi.annotation.CdiName", builder -> builder.value(defaultName));
+    }
+
+    /**
+     * The unqualified name of a class, which for a nested one is its own name and not its outer class's.
+     *
+     * <p>Section 2.6.3 gives a bean the unqualified name of its class, and the simple name Micronaut reports for a
+     * nested class is the binary one, with the outer class in front of a dollar: {@code Outer$Inner} where the
+     * language calls it {@code Inner}.</p>
+     */
+    private static String unqualified(String simpleName) {
+        int nested = simpleName.lastIndexOf('$');
+        return nested < 0 ? simpleName : simpleName.substring(nested + 1);
     }
 
     /**

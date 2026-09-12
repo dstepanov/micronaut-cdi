@@ -74,6 +74,12 @@ def arcSources = tasks.register('arcSources') {
 
 sourceSets.test.java.srcDir arcSources
 
+tasks.named('test') {
+    // a test of ArC's that waits on something this container never completes would otherwise wait for ever, and a
+    // suite fetched from elsewhere is not one to trust with the build's liveness
+    systemProperty 'junit.jupiter.execution.timeout.default', '60 s'
+}
+
 dependencies {
     testAnnotationProcessor platform(libs.micronaut.core)
     testAnnotationProcessor projects.micronautCdiProcessor

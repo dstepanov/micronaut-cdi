@@ -90,5 +90,3 @@ io.quarkus.arc.test.qualifiers.defaultvalues.Cat
 io.quarkus.arc.test.qualifiers.defaultvalues.Owl
 io.quarkus.arc.test.stereotypes.SimpleBinding
 io.quarkus.arc.test.stereotypes.SimpleInterceptor
-io.quarkus.arc.test.vetoed.Logging
-io.quarkus.arc.test.vetoed.subpkg.PackageVetoed
