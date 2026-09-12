@@ -152,8 +152,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     recordObservedType(parameter.getGenericType(), parameter);
                     continue;
                 }
-                checkParameter(parameter, method, normalScoped, disposer, observer, genericClass,
-                    element, allowedMetadataType, context);
+                checkParameter(parameter, method, producer ? isNormalScopedProducer(method) : normalScoped,
+                    disposer, observer, genericClass, element, allowedMetadataType, context);
             }
         }
     }
@@ -353,6 +353,22 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
     private boolean isInjected(io.micronaut.inject.ast.Element element) {
         return element.hasDeclaredAnnotation(AnnotationUtil.INJECT)
             || element.hasDeclaredAnnotation("jakarta.inject.Inject");
+    }
+
+    /**
+     * Whether what a producer method produces lives in a normal scope.
+     *
+     * <p>A produced bean has the scope the producer declares rather than the scope of the class that declares the
+     * producer, and the two are different often enough to matter: a dependent instance produced by a method of an
+     * application scoped bean may be told which injection point it was produced for (section 2.5.2.5), and
+     * reading the class's scope instead would refuse it. The producer carries the scope of the bean it produces
+     * by the time this runs, written there by the visitor that reads producers.</p>
+     */
+    private static boolean isNormalScopedProducer(MethodElement producer) {
+        // read from what the member itself declares: the annotation metadata of a member carries what its class
+        // declares as well, and the class's scope is the one this must not be answered with
+        return producer.getAnnotationMetadata().getDeclaredMetadata()
+            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false);
     }
 
     private static boolean isNormalScoped(ClassElement element) {
