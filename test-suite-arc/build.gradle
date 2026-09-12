@@ -1,0 +1,97 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+}
+
+// The portable part of the test suite of ArC, the container of Quarkus, run against this implementation.
+//
+// ArC is another build time container: it decides what a bean is while the application is built, as this one
+// does while the bean is compiled, and its suite is a second reading of the specification written by people who
+// had to make the same decisions. Where the kit in micronaut-cdi-tck says what the specification requires and
+// test-suite-weld says what the reference implementation makes of the assignability rules, this says what a
+// second build time container makes of the whole of CDI Lite.
+//
+// The suite boots a container per test method from an extension registered with @RegisterExtension, which names
+// the classes the container is to hold. There is nothing to boot here - a bean of this implementation is a bean
+// by the time it has been compiled - so the sources are compiled once with this module's annotation processor,
+// and the extension under src/test/java starts an application context narrowed to the classes the test named.
+// That is the same trick the kit's Arquillian adapter plays, and for the same reason.
+//
+// Nothing is vendored: the sources are fetched from the Quarkus repository at a fixed commit. ArC does publish
+// an arc-tests artifact, but it carries no sources, so the repository is the only place they can come from. They
+// are Apache 2.0 licensed, as this project is.
+def arcCommit = '9b145f8bf52d6cad6d8398a4de88979e69b2eac1'
+def arcPath = 'independent-projects/arc/tests/src/test/java'
+
+// What runs is the list in src/test/resources/arc-tests.txt, with the classes those tests need beside them in
+// arc-support.txt. The lists were built from the tree at that commit by keeping a test class only when none of
+// these appear in its source, because none of them can mean anything here:
+//
+//   * io.quarkus.arc.processor and org.jboss.jandex - ArC's own build time model, and the index it reads a
+//     class from. This implementation reads a class from the compiler's own model instead, so a test that
+//     registers a BeanRegistrar, transforms annotations or asserts over a Jandex ClassInfo is about ArC's
+//     build rather than about CDI.
+//   * io.quarkus.arc.impl - ArC's internals.
+//   * features ArC adds to the specification: InterceptionProxy, @Lock, @All, @DefaultBean, @Unremovable,
+//     @NoClassInterceptors, ActiveResult, unused bean removal, the invoker API, and ClientProxy and Subclass,
+//     which name the shapes ArC generates.
+//   * jakarta.decorator. Decorators are CDI Full, which this module does not implement.
+//   * the builder options that only an ArC build has: removeUnusedBeans, excludeType, strictCompatibility,
+//     optimizeContexts, testMode, alternativePriorities, the registrars and the transformers.
+//   * buildCompatibleExtensions. An extension of section 2.10 runs while the classes it enhances are compiled,
+//     so a test that carries one needs its own compilation; those are the next step, not this one.
+//
+// A test that passed that filter and still cannot run here is named in arc-excluded.txt with the reason, and a
+// test that fails for a reason worth keeping is a bug to fix rather than a line in that file.
+def arcTests = file('src/test/resources/arc-tests.txt')
+def arcSupport = file('src/test/resources/arc-support.txt')
+
+def arcSources = tasks.register('arcSources') {
+    description = "Fetches the selected ArC tests at commit ${arcCommit.take(7)}."
+    def target = layout.buildDirectory.dir('generated/arc')
+    inputs.property('commit', arcCommit)
+    inputs.file(arcTests)
+    inputs.file(arcSupport)
+    outputs.dir(target)
+    doLast {
+        def into = target.get().asFile
+        // the tree is rebuilt from the lists every time they change, so a source dropped from a list stops being
+        // compiled rather than lingering as a file nobody asked for
+        project.delete(into)
+        def names = (arcTests.readLines() + arcSupport.readLines())
+            *.trim().findAll { !it.isEmpty() && !it.startsWith('#') }
+        names.each { name ->
+            def path = name.replace('.', '/') + '.java'
+            def file = new File(into, path)
+            file.parentFile.mkdirs()
+            file.withOutputStream { out ->
+                new URI("https://raw.githubusercontent.com/quarkusio/quarkus/${arcCommit}/${arcPath}/${path}")
+                    .toURL().withInputStream { from -> out << from }
+            }
+        }
+        logger.lifecycle("Fetched ${names.size()} ArC sources")
+    }
+}
+
+sourceSets.test.java.srcDir arcSources
+
+dependencies {
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    // the interceptor methods of an interceptor class are recorded by the Jakarta Interceptors processor
+    testAnnotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
+
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    testImplementation mn.micronaut.core
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+    testImplementation libs.managed.jakarta.cdi.api
+
+    // ArC's tests assert with AssertJ as often as with JUnit
+    testImplementation 'org.assertj:assertj-core:3.27.3'
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}
