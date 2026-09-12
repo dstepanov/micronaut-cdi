@@ -100,11 +100,13 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
      *
      * <p>Section 2.6.3 gives a bean the unqualified name of its class, and the simple name Micronaut reports for a
      * nested class is the binary one, with the outer class in front of a dollar: {@code Outer$Inner} where the
-     * language calls it {@code Inner}.</p>
+     * language calls it {@code Inner}. A dollar the class was named with is part of its name: a top level class
+     * called {@code $Money} is named {@code $money}, so only a dollar with a name in front of it separates a
+     * nested class from the class it is nested in.</p>
      */
     private static String unqualified(String simpleName) {
         int nested = simpleName.lastIndexOf('$');
-        return nested < 0 ? simpleName : simpleName.substring(nested + 1);
+        return nested < 1 ? simpleName : simpleName.substring(nested + 1);
     }
 
     /**
