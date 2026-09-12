@@ -84,18 +84,19 @@ out, so that what is not covered is as visible in a test report as what is.
 
 ## Building
 
-The build resolves [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors)
-from a checkout beside this one when there is one, since it has no published snapshot yet:
+The build includes [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors)
+at its `main` branch and [Micronaut Jakarta EL](https://github.com/micronaut-projects/micronaut-jakarta-el) at its
+`1.1.x` branch as composite builds. The first build clones each into `.included-builds/`, and it is left as it is
+afterwards, so `git -C .included-builds/<name>-<branch> pull` brings one up to date. To build against a checkout of your own,
+name its directory:
 
 ```
-git clone https://github.com/dstepanov/micronaut-jakarta-interceptors ../micronaut-jakarta-interceptors
-./gradlew build
+./gradlew build -PjakartaInterceptorsDir=../micronaut-jakarta-interceptors -PjakartaElDir=../micronaut-jakarta-el
 ```
 
-The local Maven repository is consulted before the snapshot repository, so a Micronaut built from a checkout
-beside this one and published with `publishToMavenLocal` is what this builds against. That is how a fix being
-worked on in Micronaut itself is built against here before it is released; where nothing has been published
-locally, the release on Maven Central resolves as usual.
+Micronaut itself comes from Maven Central. The local Maven repository is consulted first, so a Micronaut built from a
+checkout beside this one and published with `publishToMavenLocal` is what this builds against. That is how a fix
+being worked on in Micronaut itself is built against here before it is released.
 
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.

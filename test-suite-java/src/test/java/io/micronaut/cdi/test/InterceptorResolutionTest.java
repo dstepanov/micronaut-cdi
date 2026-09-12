@@ -88,6 +88,74 @@ class InterceptorResolutionTest {
         }
     }
 
+    /**
+     * Section 2.5 of Jakarta Interceptors has an exception travel through the chain as it was thrown, and
+     * {@code Interceptor.intercept} declares {@code Exception}: what the invocation threw reaches the caller as
+     * it is, checked or not, rather than wrapped in something the caller cannot catch.
+     */
+    @Test
+    void anInterceptorLetsACheckedExceptionOfTheInvocationThrough() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            @SuppressWarnings("unchecked")
+            Interceptor<GuardInterceptor> guard = (Interceptor<GuardInterceptor>) manager
+                .resolveInterceptors(InterceptionType.AROUND_INVOKE, new GuardedLiteral()).get(0);
+            GuardInterceptor instance = context.getBean(GuardInterceptor.class);
+            InvocationContext invocation = new FailingInvocation(new java.io.IOException("refused"));
+            java.io.IOException thrown = assertThrows(java.io.IOException.class,
+                () -> guard.intercept(InterceptionType.AROUND_INVOKE, instance, invocation));
+            assertEquals("refused", thrown.getMessage());
+        }
+    }
+
+    /** An invocation whose proceed throws what it was given. */
+    private record FailingInvocation(Exception failure) implements InvocationContext {
+
+        @Override
+        public Object proceed() throws Exception {
+            throw failure;
+        }
+
+        @Override
+        public Object getTarget() {
+            return null;
+        }
+
+        @Override
+        public Object getTimer() {
+            return null;
+        }
+
+        @Override
+        public java.lang.reflect.Method getMethod() {
+            return null;
+        }
+
+        @Override
+        public java.lang.reflect.Constructor<?> getConstructor() {
+            return null;
+        }
+
+        @Override
+        public Object[] getParameters() {
+            return new Object[0];
+        }
+
+        @Override
+        public void setParameters(Object[] params) {
+        }
+
+        @Override
+        public java.util.Map<String, Object> getContextData() {
+            return java.util.Map.of();
+        }
+
+        @Override
+        public java.util.Set<java.lang.annotation.Annotation> getInterceptorBindings() {
+            return java.util.Set.of();
+        }
+    }
+
     @Test
     void resolvingWithoutABindingIsRefused() {
         try (ApplicationContext context = ApplicationContext.run()) {

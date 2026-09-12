@@ -358,11 +358,10 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   wants a map; `Class.forName` for annotation types → `AnnotationMetadata.getAnnotationType(name)`.
 - Every normal-scoped bean also carries the `CdiApplicationScope` stereotype (`NormalScopeAnnotationMapper`);
   the runtime picks the right scope by registration order alone — needs a regression test.
-- Interceptors bridge: after #12922 the weak `TargetKey`/`ReferenceQueue` bookkeeping in
-  `InterceptorLifecycleSupport` is redundant for proxied beans (a `@PreDestroy` on the advice does the same);
-  the `@Adapter`-generated index beans can be replaced by `getBeanDefinitions(Qualifiers.byStereotype(
-  "jakarta.interceptor.Interceptor"))`, which filters references before loading; docs and the TCK exclusion list
-  still say private interceptor methods are rejected while the code accepts them.
+- Interceptors bridge: done on its `main` — the advice holds the interceptor registrations and destroys them from
+  its own `@PreDestroy`, interceptor classes are found through one index, and private interceptor methods are
+  documented as accepted. What is left is core's: a scoped proxy's method interception keeps the interceptor
+  instances resolved for the proxy while each target's lifecycle gets its own (see `RequestScopedInterceptorStateTest`).
 
 ### 24. No public way to read an annotation instance as an `AnnotationValue`
 `Qualifiers.byAnnotation(Annotation)` (#12928) reads the members off a live annotation and stores them the way

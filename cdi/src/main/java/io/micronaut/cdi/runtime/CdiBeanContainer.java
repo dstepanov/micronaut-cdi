@@ -388,14 +388,6 @@ public final class CdiBeanContainer implements BeanManager {
             if (!definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor")) {
                 continue;
             }
-            if (io.micronaut.interceptor.annotation.JakartaInterceptorIndex.class
-                    .isAssignableFrom(definition.getBeanType())
-                || io.micronaut.interceptor.annotation.JakartaVoidInterceptorIndex.class
-                    .isAssignableFrom(definition.getBeanType())) {
-                // the index beans the interceptors implementation generates beside an interceptor class carry
-                // its annotations, but the interceptor of the resolution is the class itself
-                continue;
-            }
             CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
             if (!interceptor.isEnabled() || !interceptor.intercepts(type)) {
                 continue;
@@ -404,7 +396,10 @@ public final class CdiBeanContainer implements BeanManager {
                 resolved.add(interceptor);
             }
         }
-        resolved.sort(java.util.Comparator.comparingInt(CdiInterceptor::priority));
+        // ordered as the interceptors implementation orders the chain that runs, equal priorities by class name,
+        // so that what is reported here is what is invoked
+        resolved.sort(java.util.Comparator.<CdiInterceptor<?>>comparingInt(CdiInterceptor::priority)
+            .thenComparing(interceptor -> interceptor.getBeanClass().getName()));
         return List.copyOf(resolved);
     }
 

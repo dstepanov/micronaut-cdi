@@ -35,5 +35,8 @@ test-results-native/
 # Downloaded by the fetchSpec task
 /spec/
 
+# The sibling projects cloned by settings.gradle and built with this one
+/.included-builds/
+
 # Session-local state
 .claude/

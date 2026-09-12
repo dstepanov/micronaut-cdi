@@ -6,7 +6,7 @@ managed-jakarta-annotation = "3.0.0"
 
 micronaut = "5.2.1"
 managed-micronaut-jakarta-interceptors = "1.0.0-SNAPSHOT"
-managed-micronaut-jakarta-el = "1.0.1-SNAPSHOT"
+managed-micronaut-jakarta-el = "1.1.0-SNAPSHOT"
 
 junit = "5.14.4"
 cdi-tck = "4.1.0"

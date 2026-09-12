@@ -4,13 +4,6 @@ repositories {
     // where nothing has been published locally, the release on Maven Central is what resolves
     mavenLocal()
     mavenCentral()
-    // the snapshot of Micronaut Jakarta EL
-    maven {
-        url = 'https://central.sonatype.com/repository/maven-snapshots/'
-        mavenContent {
-            snapshotsOnly()
-        }
-    }
 }
 
 configurations.all {
