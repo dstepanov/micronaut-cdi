@@ -1,0 +1,83 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+}
+
+// The language model assertions of the Jakarta Contexts and Dependency Injection technology compatibility kit,
+// verified against the language model this module's annotation processor hands a build compatible extension.
+//
+// The kit's core scenarios, in micronaut-cdi-tck, hold the container to the specification. This second part of
+// the kit holds the language model of section 2.10 - the ClassInfo, MethodInfo, Type and AnnotationInfo an
+// extension reads a class through - to the specification, with 1263 assertions in one entry point,
+// LangModelVerifier.verify(ClassInfo), which asks the model everything about the verifier's own class. The kit
+// hands it to the implementation the only way a language model can be reached: a build compatible extension
+// asks for the class in @Discovery and verifies it in @Enhancement, as the class compiles.
+//
+// Nothing is vendored: the kit's sources are resolved from Maven Central and compiled here, in the test source
+// set, so that the model is read from the source of the class rather than from a class file - a class file read
+// through javac loses its type annotations (JDK-8225377), which is why other implementations skip those
+// assertions and this one need not. The verifier that runs inside the compiler comes from the kit's own jar.
+configurations {
+    tckSources {
+        canBeConsumed = false
+        transitive = false
+    }
+}
+
+def unpackTckSources = tasks.register('tckSources', Sync) {
+    description = 'Unpacks the language model assertions of the technology compatibility kit.'
+    from({ configurations.tckSources.files.collect { zipTree(it) } }) {
+        include '**/*.java'
+    }
+    into layout.buildDirectory.dir('generated/tck')
+}
+
+sourceSets.test.java.srcDir unpackTckSources
+
+// The assertions are Java assert statements, so the compiler that runs the extension needs them enabled; the
+// verifier refuses to run without. The extension records that it ran into a file the test reads, since what
+// the compiler did is otherwise invisible to a test that only sees the classes it produced.
+def verified = layout.buildDirectory.file('tck-lang-model/verified')
+
+tasks.named('compileTestJava') {
+    options.fork = true
+    options.forkOptions.jvmArgs += ['-ea',
+        "-D${LangModelPaths.REPORT_PROPERTY}=${verified.get().asFile.absolutePath}".toString()]
+    outputs.file(verified)
+    doFirst {
+        verified.get().asFile.parentFile.mkdirs()
+        verified.get().asFile.delete()
+    }
+}
+
+tasks.named('test') {
+    systemProperty LangModelPaths.REPORT_PROPERTY, verified.get().asFile.absolutePath
+}
+
+class LangModelPaths {
+    static final String REPORT_PROPERTY = 'io.micronaut.cdi.tck.langModel.report'
+}
+
+dependencies {
+    tckSources(variantOf(libs.cdi.tck.lang.model) { classifier('sources') })
+
+    // the extension, which runs inside the compiler: it names the verifier's class and calls the verifier
+    implementation libs.managed.jakarta.cdi.api
+    implementation libs.cdi.tck.lang.model
+
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    // the extension goes on the annotation processor path, where a build compatible extension runs
+    testAnnotationProcessor sourceSets.main.output
+    testAnnotationProcessor libs.cdi.tck.lang.model
+    testAnnotationProcessor libs.managed.jakarta.cdi.api
+
+    // the processor imports what it scanned into the bean context of the compiled classes
+    testImplementation platform(libs.micronaut.core)
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+    testImplementation libs.managed.jakarta.cdi.api
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

@@ -49,6 +49,8 @@ gradle-graalvm-native = { module = "org.graalvm.buildtools:native-gradle-plugin"
 
 # the technology compatibility kit of this specification
 cdi-tck-core = { module = 'jakarta.enterprise:cdi-tck-core-impl', version.ref = 'cdi-tck' }
+# the kit's language model assertions, verified by a build compatible extension as the classes compile
+cdi-tck-lang-model = { module = 'jakarta.enterprise:cdi-tck-lang-model', version.ref = 'cdi-tck' }
 # the kit's scenarios assert with TestNG, and record their invocations with its own ActionSequence
 testng = { module = 'org.testng:testng', version.ref = 'testng' }
 
