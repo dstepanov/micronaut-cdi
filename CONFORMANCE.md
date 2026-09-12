@@ -219,14 +219,21 @@ compile — the runner the kit ships for the reference implementation, written t
 the type annotation assertions included: the model is read from the source of the class as it compiles, rather
 than from a class file, which is what loses them (JDK-8225377) and why other implementations skip them.
 
-## The reference implementation's own tests
+## What other implementations' tests found
 
-Weld, the reference implementation, holds its reading of the typesafe resolution rules of section 2.4.2 to a
-table of type pairs of its own — raw types, parameterized types, arrays, wildcards, and type variables bounded
-by other type variables, by several types at once, or by parameterized types — as two unit tests of 24 cases
-each, one for bean types and one for event types. The `test-suite-weld` module fetches the two, with the types
-they build their pairs from, from Weld's repository at a fixed commit, since Weld publishes no test sources, and
-runs them against `CdiAssignability` through a stand-in for the one method they reach Weld by. All 48 pass.
-They found what the kit had not: an array of a parameterized type was not matched at all, and a type variable's
-bound was compared by its raw class, so a variable bounded by another variable, or by a parameterized type,
-matched too much or too little.
+The tests of other implementations are read as a catalogue of cases rather than run here: Weld, the reference
+implementation, holds its reading of the type rules of section 2.4.2 to a table of type pairs — raw types,
+parameterized types, arrays, wildcards, and type variables bounded by other variables, by several types at once, or
+by parameterized types — and ArC, the container of Quarkus, which decides what a bean is while the application is
+built as this implementation does while a bean compiles, exercises corners of resolution, interception, producers,
+observers and stereotypes the kit passes over. Each case worth having is written again here, against this
+implementation and in its own terms: Weld's whole table is `AssignabilityRulesTest`, and ArC's corners are the
+tests `InterceptorLifecycleNestingTest`, `StereotypeCompositionTest`, `ObserverOrderingTest`, `ProducerVarietyTest`,
+`DependentDestructionTest`, `InjectionPointMetadataTest`, `VetoedBeanTest` and `AbstractBeanTest` cover.
+
+They found what the kit had not. From Weld's table: an array of a parameterized type was not matched at all, and a
+type variable's bound was compared by its raw class, so a variable bounded by another variable, or by a
+parameterized type, matched too much or too little. From ArC's: a class written with the singleton pseudo-scope
+and nothing else got no default qualifier and resolved at no unqualified injection point; a nested class's default
+name carried its outer class; a producer of a type with a type variable was refused the dependent scope it is
+allowed; and a dependent producer in an application scoped class was refused an `InjectionPoint` parameter.

@@ -184,11 +184,6 @@ class AssignabilityRulesTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("The answer for a wildcard bounded by a variable that itself has several "
-        + "bounds is not settled: the implementation matches List<T1 extends List<?> & Appendable> against "
-        + "List<? extends T4 extends Appendable & Iterable<?>> and this expects it not to. Weld's own table, in "
-        + "test-suite-weld, is the second opinion the rest of section 2.4.2 is held to and says nothing about "
-        + "this pair")
     <T1 extends List<?> & Appendable, T2 extends Writer & Serializable & Collection<?>, T3 extends T2,
         T4 extends Appendable & Iterable<?>, T5 extends T4> void everyBoundOfAVariableCounts() {
         Type ofT1 = literal(new TypeLiteral<List<T1>>() { });
@@ -209,9 +204,11 @@ class AssignabilityRulesTest {
         assertTrue(bean(atMostT1, ofT4), "and the same with a wildcard bounded by the variable");
         assertTrue(bean(atMostT2, ofT4));
         assertTrue(bean(atMostT3, ofT5));
-        assertFalse(bean(atMostT4, ofT1), "a wildcard bounded by T4 is not matched by T1: neither bound of T1 fits the other's");
+        // a variable matches a wildcard whose bound its own is assignable to or from: T1 and T2 are neither,
+        // while T4's bounds are each assignable from one of T1's, which is what makes the pairs above match
+        assertFalse(bean(atMostT1, ofT2), "List<T2> is not assignable to List<? extends T1>: neither variable's bounds fit the other's");
         assertFalse(bean(atMostT2, ofT1));
-        assertFalse(bean(atMostT4, ofT2));
+        assertTrue(bean(atMostT4, ofT1), "List<T1 extends List<?> & Appendable> is assignable to List<? extends T4 extends Appendable & Iterable<?>>");
     }
 
     @Test

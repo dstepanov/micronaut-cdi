@@ -9,7 +9,6 @@ managed-micronaut-jakarta-interceptors = "1.0.0-SNAPSHOT"
 managed-micronaut-jakarta-el = "1.1.0-SNAPSHOT"
 
 junit = "5.14.4"
-junit4 = "4.13.2"
 cdi-tck = "4.1.0"
 testng = "7.10.2"
 arquillian = "1.9.1.Final"
@@ -69,6 +68,3 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-# the reference implementation's unit tests are written for JUnit 4, and run here on the platform through the vintage engine
-junit4 = { module = "junit:junit", version.ref = "junit4" }
-junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }

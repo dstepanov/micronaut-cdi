@@ -28,7 +28,6 @@ include 'cdi-tck'
 include 'cdi-tck-lang-model'
 include 'test-suite-extension'
 include 'test-suite-java'
-include 'test-suite-weld'
 
 // Jakarta Interceptors and Jakarta Expression Language are implemented by sibling projects rather than again here:
 // the interception of a bean and the evaluation of an expression are the business of their own specifications, and
