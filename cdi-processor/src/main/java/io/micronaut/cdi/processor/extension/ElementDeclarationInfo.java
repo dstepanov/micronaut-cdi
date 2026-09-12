@@ -40,6 +40,10 @@ import java.util.function.Predicate;
  * extension asking what is written on a class is asking about what was written rather than about all of
  * that.</p>
  *
+ * <p>Of those, only the annotations retained until runtime are reported. The compiler sees the ones retained in
+ * the source and in the class file too, but the language model is the model a runtime extension would read, and
+ * an annotation it could not find there has no place in it.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
@@ -63,7 +67,8 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public final boolean hasAnnotation(Class<? extends Annotation> annotationType) {
-        return element.hasDeclaredAnnotation(annotationType);
+        return element.hasDeclaredAnnotation(annotationType)
+            && ExtensionAnnotationTypes.isRuntimeRetained(annotationType.getName());
     }
 
     @Override
@@ -74,11 +79,17 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
     @Override
     public final <T extends Annotation> @Nullable AnnotationInfo annotation(Class<T> annotationType) {
         AnnotationValue<T> annotation = element.getDeclaredAnnotation(annotationType);
-        return annotation == null ? null : new ElementAnnotationInfo(annotation);
+        if (annotation == null || !ExtensionAnnotationTypes.isRuntimeRetained(annotationType.getName())) {
+            return null;
+        }
+        return new ElementAnnotationInfo(annotation);
     }
 
     @Override
     public final <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
+        if (!ExtensionAnnotationTypes.isRuntimeRetained(annotationType.getName())) {
+            return List.of();
+        }
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationValue<T> annotation : element.getDeclaredAnnotationValuesByType(annotationType)) {
             found.add(new ElementAnnotationInfo(annotation));
@@ -96,7 +107,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
         List<AnnotationInfo> found = new ArrayList<>();
         for (String name : element.getDeclaredAnnotationNames()) {
             AnnotationValue<Annotation> annotation = element.getDeclaredAnnotation(name);
-            if (annotation != null) {
+            if (annotation != null && ExtensionAnnotationTypes.isRuntimeRetained(name)) {
                 found.add(new ElementAnnotationInfo(annotation));
             }
         }

@@ -17,6 +17,7 @@ package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.ClassElement;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -51,8 +52,14 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
 
     @Override
     public ClassInfo declaration() {
-        throw new IllegalStateException("The class that declares the annotation " + annotation.getAnnotationName()
-            + " is not read here: an annotation is recorded by name and by the values written for it");
+        // an annotation is recorded by name and by the values written for it, so the interface it names is asked
+        // of the compiler rather than read off the record
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation.getAnnotationName());
+        if (declaration == null) {
+            throw new IllegalStateException("The annotation interface " + annotation.getAnnotationName()
+                + " is not on the compilation's classpath");
+        }
+        return new ElementClassInfo(declaration);
     }
 
     @Override
