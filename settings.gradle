@@ -27,7 +27,6 @@ include 'cdi-reflection'
 include 'cdi-tck'
 include 'cdi-tck-lang-model'
 include 'test-suite-extension'
-include 'test-suite-arc'
 include 'test-suite-java'
 include 'test-suite-weld'
 
