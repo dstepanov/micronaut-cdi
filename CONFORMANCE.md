@@ -152,6 +152,25 @@ Micronaut's to fix, since the interception is its (the interceptors implementati
 advice Micronaut creates per intercepted object, which is the contract Micronaut documents); a dependent or
 singleton bean, which no proxy fronts, is unaffected. `RequestScopedInterceptorStateTest` is disabled until then.
 
+### An abstract class annotated with a scope still takes part in resolution
+
+Section 3.1.1 requires the class of a managed bean to be concrete, so an abstract class that carries a scope is not
+a bean. The bean manager leaves it out of `getBeans`, as it should, but the definition Micronaut compiles for it is
+still a candidate when an injection point or a programmatic lookup of the abstract type is resolved, so a lookup of
+a type whose one bean is a concrete subclass comes out ambiguous. Micronaut compiles definitions for abstract
+classes for its own reasons, and what is missing is for resolution to read the same rule the bean manager reads.
+`AbstractBeanTest.aLookupOfTheAbstractTypeResolvesToItsConcreteSubclass` is disabled until then.
+
+### Two findings of a reading of ArC's test suite, reported as the class compiles
+
+Both are reported by the compiler rather than at runtime, so neither can carry a disabled test. A disposer method is
+bound to a producer by the rules of typesafe resolution (section 3.3.7), and the qualifiers are compared here for
+equality and one occurrence at a time: a producer and a disposer qualified with the same repeatable qualifier
+written twice do not match, and every such disposer matches every such producer, so the class is refused with
+both "more than one disposer" and "no producer". And an interceptor binding declared on a class reaches the
+producer methods of that class, so what a producer of an intercepted class produces is proxied as though it were
+intercepted — which a primitive cannot be, and the class is refused.
+
 ### Known limitations a review has named
 
 Three findings of an internal review are documented rather than coded around. A dependent bean reached from an
