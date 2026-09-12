@@ -288,7 +288,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             return;
         }
         if (containsVariable(component)) {
-            if (declaresAScope(producer)) {
+            if (declaresAScopeOtherThanDependent(producer)) {
                 context.fail("A producer " + what + " whose type contains a type variable produces a "
                     + "dependent instance or nothing (section 3.3.2)", producer);
                 return;
@@ -434,6 +434,19 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 .hasDeclaredStereotype("io.micronaut.cdi.annotation.CdiRequestScope")
             || producer.getAnnotationMetadata()
                 .hasDeclaredStereotype("io.micronaut.cdi.annotation.CdiApplicationScope");
+    }
+
+    /**
+     * Whether the producer declares a scope the dependent pseudo-scope is not, which is the scope section 3.3.2
+     * allows a producer of a type containing a variable: writing the dependent scope down says what the producer
+     * would have been without it, so a producer that declares it declares nothing the rule is about.
+     */
+    private static boolean declaresAScopeOtherThanDependent(MemberElement producer) {
+        if (Cdi.DEPENDENT.equals(producer.getAnnotationMetadata()
+            .stringValue("io.micronaut.cdi.annotation.CdiScope").orElse(null))) {
+            return false;
+        }
+        return declaresAScope(producer);
     }
 
     private static boolean declaresAScope(MemberElement producer) {
