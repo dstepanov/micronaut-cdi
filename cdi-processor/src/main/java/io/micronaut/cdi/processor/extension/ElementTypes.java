@@ -154,6 +154,21 @@ public final class ElementTypes {
         public String name() {
             return "void";
         }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof VoidType;
+        }
+
+        @Override
+        public int hashCode() {
+            return VoidType.class.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return "void";
+        }
     }
 
     /**
@@ -186,6 +201,21 @@ public final class ElementTypes {
                 default -> throw new IllegalStateException("Not a primitive type: " + name);
             };
         }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof PrimitiveType other && primitiveKind() == other.primitiveKind();
+        }
+
+        @Override
+        public int hashCode() {
+            return primitiveKind().hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     /**
@@ -202,6 +232,21 @@ public final class ElementTypes {
         @Override
         public Type componentType() {
             return componentType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof ArrayType other && componentType.equals(other.componentType());
+        }
+
+        @Override
+        public int hashCode() {
+            return componentType.hashCode() * 31;
+        }
+
+        @Override
+        public String toString() {
+            return componentType + "[]";
         }
     }
 
