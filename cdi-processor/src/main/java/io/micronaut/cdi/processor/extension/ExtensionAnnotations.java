@@ -28,6 +28,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -102,9 +103,21 @@ final class ExtensionAnnotations {
      * @return The annotations, in the order they were written
      */
     static List<AnnotationInfo> repeatableOn(Element element, String annotation) {
+        return repeatableIn(declaredOn(element), annotation);
+    }
+
+    /**
+     * The annotations of one interface among the given ones, whether written one at a time or written inside the
+     * container of a repeatable annotation.
+     *
+     * @param annotations The annotations to look through
+     * @param annotation  The annotation interface's binary name
+     * @return The annotations, in the order they were written
+     */
+    static List<AnnotationInfo> repeatableIn(Collection<AnnotationInfo> annotations, String annotation) {
         String container = containerOf(annotation);
         List<AnnotationInfo> found = new ArrayList<>();
-        for (AnnotationInfo written : declaredOn(element)) {
+        for (AnnotationInfo written : annotations) {
             if (written.name().equals(annotation)) {
                 found.add(written);
             } else if (written.name().equals(container) && written.hasValue()) {
@@ -144,6 +157,40 @@ final class ExtensionAnnotations {
     static @Nullable String containerOf(String annotation) {
         TypeElement declaration = annotationType(annotation);
         return declaration == null ? null : ExtensionSourceModel.containerOf(declaration);
+    }
+
+    /**
+     * Whether an annotation of the given name may be written on a use of a type, which is what distinguishes the
+     * annotations of a constructor that belong to the class it constructs from the ones that belong to the
+     * constructor alone.
+     *
+     * @param annotation The annotation interface's binary name
+     * @return Whether {@code TYPE_USE} is among its targets
+     */
+    static boolean isTypeUse(String annotation) {
+        TypeElement declaration = annotationType(annotation);
+        if (declaration == null) {
+            return false;
+        }
+        for (AnnotationMirror mirror : declaration.getAnnotationMirrors()) {
+            if (!"java.lang.annotation.Target".equals(ExtensionSourceModel.nameOf(mirror))) {
+                continue;
+            }
+            for (javax.lang.model.element.AnnotationValue value : mirror.getElementValues().values()) {
+                if (!(value.getValue() instanceof List<?> targets)) {
+                    continue;
+                }
+                for (Object target : targets) {
+                    Object named = target instanceof javax.lang.model.element.AnnotationValue each
+                        ? each.getValue() : target;
+                    if (named instanceof javax.lang.model.element.VariableElement constant
+                        && "TYPE_USE".contentEquals(constant.getSimpleName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean isReported(Element element, String annotation) {

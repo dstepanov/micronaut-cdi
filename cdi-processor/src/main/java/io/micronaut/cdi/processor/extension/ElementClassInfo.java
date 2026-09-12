@@ -28,6 +28,8 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.TypeElement;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -130,11 +132,18 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     public List<TypeVariable> typeParameters() {
         // Micronaut records the arguments a type was used with rather than the variables its declaration
         // introduces, and an extension that reads them would be reading something else
+        if (source() instanceof TypeElement source) {
+            return source.getTypeParameters().stream().map(MirrorTypes::ofParameter).toList();
+        }
         return List.of();
     }
 
     @Override
     public @Nullable Type superClass() {
+        // the compiler's own type, which carries the annotations and the arguments the extends clause wrote
+        if (source() instanceof TypeElement source) {
+            return MirrorTypes.ofPresent(source.getSuperclass());
+        }
         return element.getSuperType().map(ElementTypes::of).orElse(null);
     }
 
@@ -154,7 +163,14 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public List<Type> superInterfaces() {
+        if (source() instanceof TypeElement source) {
+            return source.getInterfaces().stream().map(MirrorTypes::of).toList();
+        }
         return element.getInterfaces().stream().map(ElementTypes::of).toList();
+    }
+
+    private javax.lang.model.element.@Nullable Element source() {
+        return ExtensionSourceModel.sourceOf(element);
     }
 
     @Override
@@ -169,27 +185,46 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public boolean isInterface() {
-        return element.isInterface() && !isAnnotation();
+        return isKind(javax.lang.model.element.ElementKind.INTERFACE, element.isInterface() && !isAnnotation());
     }
 
     @Override
     public boolean isEnum() {
-        return element.isEnum();
+        return isKind(javax.lang.model.element.ElementKind.ENUM, element.isEnum());
     }
 
     @Override
     public boolean isAnnotation() {
-        return element.isAssignable(java.lang.annotation.Annotation.class) && element.isInterface();
+        // Micronaut has no kind of its own for an annotation interface, and neither being assignable to
+        // Annotation nor being an interface is what makes a class one
+        return isKind(javax.lang.model.element.ElementKind.ANNOTATION_TYPE,
+            element.isAssignable(java.lang.annotation.Annotation.class) && element.isInterface());
     }
 
     @Override
     public boolean isRecord() {
-        return element.isRecord();
+        return isKind(javax.lang.model.element.ElementKind.RECORD, element.isRecord());
     }
 
     @Override
     public boolean isAbstract() {
+        if (source() instanceof TypeElement source) {
+            if (source.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT)) {
+                return true;
+            }
+            // an enum that declares an abstract method, for its constants to implement, is abstract in its class
+            // file, which is what the model describes; the compiler's element does not say so while the class is
+            // compiled, since the source may not write the modifier on an enum
+            return source.getKind() == javax.lang.model.element.ElementKind.ENUM
+                && source.getEnclosedElements().stream().anyMatch(member ->
+                    member.getKind() == javax.lang.model.element.ElementKind.METHOD
+                        && member.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT));
+        }
         return element.isAbstract();
+    }
+
+    private boolean isKind(javax.lang.model.element.ElementKind kind, boolean otherwise) {
+        return source() instanceof TypeElement source ? source.getKind() == kind : otherwise;
     }
 
     @Override

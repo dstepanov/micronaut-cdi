@@ -24,6 +24,8 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.ExecutableElement;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,16 +74,41 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
 
     @Override
     public Type returnType() {
-        // a constructor returns the class it constructs, where Micronaut reports the void a class file declares
+        // a constructor returns the class it constructs, where both Micronaut and the compiler report the void a
+        // class file declares; the annotations of the use are the ones written on the constructor
         if (isConstructor()) {
+            javax.lang.model.element.Element source = source();
+            if (source != null) {
+                return MirrorTypes.ofConstructorReturn(element.getDeclaringType().getName(), source);
+            }
             return ElementTypes.of(element.getDeclaringType());
+        }
+        if (source() instanceof ExecutableElement source) {
+            return MirrorTypes.ofDeclared(source.getReturnType(), source);
         }
         return ElementTypes.of(element.getGenericReturnType());
     }
 
     @Override
     public @Nullable Type receiverType() {
-        // the receiver of an instance method is the class that declares it, and a static method has none
+        // whether a method may declare a receiver, and what was written on the one it declares, is the
+        // compiler's answer: a static method has none, nor has the constructor of a class that is not inner
+        if (source() instanceof ExecutableElement source) {
+            javax.lang.model.type.TypeMirror receiver = source.getReceiverType();
+            if (receiver.getKind() != javax.lang.model.type.TypeKind.NONE) {
+                return MirrorTypes.of(receiver);
+            }
+            // the compiler answers the same way for a method that cannot declare a receiver and for an instance
+            // method that may declare one but did not; the second still has the class that declares it as its
+            // receiver, with nothing written on it
+            if (element.isStatic() || isConstructor() && !element.getDeclaringType().isInner()) {
+                return null;
+            }
+            if (source.getEnclosingElement() instanceof javax.lang.model.element.TypeElement declaring) {
+                return MirrorTypes.of(declaring.asType());
+            }
+            return ElementTypes.of(element.getDeclaringType());
+        }
         if (element.isStatic()) {
             return null;
         }
@@ -90,12 +117,23 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
 
     @Override
     public List<Type> throwsTypes() {
+        if (source() instanceof ExecutableElement source) {
+            return source.getThrownTypes().stream().map(MirrorTypes::of).toList();
+        }
         return List.of(element.getThrownTypes()).stream().map(ElementTypes::of).toList();
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
+        if (source() instanceof ExecutableElement source) {
+            return source.getTypeParameters().stream().map(MirrorTypes::ofParameter).toList();
+        }
+        // Micronaut records the arguments a method was called with rather than the variables it introduces
         return List.of();
+    }
+
+    private javax.lang.model.element.@Nullable Element source() {
+        return ExtensionSourceModel.sourceOf(element);
     }
 
     @Override
