@@ -73,6 +73,62 @@ class InterceptorResolutionTest {
         }
     }
 
+    @InterceptorBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({TYPE, METHOD})
+    @interface Tied {
+    }
+
+    @SuppressWarnings("serial")
+    static final class TiedLiteral extends AnnotationLiteral<Tied> implements Tied {
+    }
+
+    @Tied
+    @jakarta.interceptor.Interceptor
+    @Priority(300)
+    public static class ZetaTiedInterceptor {
+        @AroundInvoke
+        Object zeta(InvocationContext ctx) throws Exception {
+            return ctx.proceed();
+        }
+    }
+
+    @Tied
+    @jakarta.interceptor.Interceptor
+    @Priority(300)
+    public static class AlphaTiedInterceptor {
+        @AroundInvoke
+        Object alpha(InvocationContext ctx) throws Exception {
+            return ctx.proceed();
+        }
+    }
+
+    @Tied
+    @jakarta.interceptor.Interceptor
+    @io.micronaut.core.annotation.Order(50)
+    public static class EarlyTiedInterceptor {
+        @AroundInvoke
+        Object early(InvocationContext ctx) throws Exception {
+            return ctx.proceed();
+        }
+    }
+
+    /**
+     * The order the bean manager reports is the order the interceptors implementation invokes: by the priority of
+     * the specification, then by Micronaut's own order where a class declares that instead, and two of one
+     * priority by their class names, so that the order is one and the same every time.
+     */
+    @Test
+    void interceptorsOfOnePriorityAreOrderedByTheirNames() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            List<Interceptor<?>> interceptors = manager.resolveInterceptors(InterceptionType.AROUND_INVOKE,
+                new TiedLiteral());
+            assertEquals(List.of(EarlyTiedInterceptor.class, AlphaTiedInterceptor.class, ZetaTiedInterceptor.class),
+                interceptors.stream().<Class<?>>map(Interceptor::getBeanClass).toList());
+        }
+    }
+
     @Test
     void anInterceptorResolvesByItsBindingAndOrdersByPriority() {
         try (ApplicationContext context = ApplicationContext.run()) {
