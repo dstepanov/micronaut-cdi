@@ -14,11 +14,13 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The language model reports a class the way its source reads, not the way Micronaut records it: what
- * Micronaut's own mappers add to a class is not an annotation the source wrote, and neither is the
- * {@code NonNull} Micronaut writes on the types a null-marked class declares.
+ * By default the language model reports a class the way Micronaut records it: what Micronaut's own mappers add
+ * to a class comes with it, and so does the non-null marker Micronaut writes on the types a null-marked class
+ * declares. A deployment narrows that by registering a {@code LanguageModelAnnotationFilter}, as the
+ * technology compatibility kit does.
  */
 class ModelAnnotationsTest {
 
@@ -43,18 +45,20 @@ class ModelAnnotationsTest {
     }
 
     @Test
-    void whatMicronautAddsToAClassIsNotReportedAsAnAnnotationOfIt() {
-        // ApplicationScoped is mapped to Micronaut's own scope annotations, which the source did not write.
-        // NullMarked is not reported either: Micronaut remaps it to a marker of its own and the name the source
-        // wrote is gone from the record, which only the annotations as written can restore
-        // (MICRONAUT-CORE-FINDINGS.md, finding 39)
-        assertEquals(Set.of(Recorded.class.getName(), ApplicationScoped.class.getName()),
-            Set.of(seen().stringValues(Seen.class, "classAnnotations")));
+    void whatMicronautAddsToAClassIsReportedWithWhatTheSourceWrote() {
+        Set<String> seen = Set.of(seen().stringValues(Seen.class, "classAnnotations"));
+        assertTrue(seen.contains(Recorded.class.getName()), seen.toString());
+        assertTrue(seen.contains(ApplicationScoped.class.getName()), seen.toString());
+        // ApplicationScoped is mapped to Micronaut's own scope annotation, which is reported too
+        assertTrue(seen.contains("io.micronaut.cdi.annotation.CdiScope"), seen.toString());
+        // NullMarked is remapped to a marker of Micronaut's own; the name the source wrote is gone from the record
+        assertTrue(seen.contains("io.micronaut.core.annotation.NullMarked"), seen.toString());
     }
 
     @Test
-    void theNonNullMicronautWritesOnATypeInANullMarkedClassIsNotReported() {
-        assertEquals(List.of(), List.of(seen().stringValues(Seen.class, "fieldTypeAnnotations")));
+    void theNonNullMicronautWritesOnATypeInANullMarkedClassIsReported() {
+        assertEquals(List.of("name:jakarta.annotation.Nonnull", "names:jakarta.annotation.Nonnull"),
+            List.of(seen().stringValues(Seen.class, "fieldTypeAnnotations")));
     }
 
     private AnnotationMetadata seen() {

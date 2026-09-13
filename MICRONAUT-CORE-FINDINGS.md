@@ -465,12 +465,9 @@ notion; KSP models `Array<@A String>` as a type argument so the information exis
 `ClassNode.getComponentType()` chain has a `getTypeAnnotations()` per node but `newClassElement` drops to
 `PrimitiveElement`/`.toArray()` without it.
 
-Proposal (javac, ~60 lines, no behaviour change if done under #39): construct the leaf with the leaf mirror and wrap
-each dimension with a `JavaNativeElement.Class` holding *that* dimension's `ArrayType`; `withArrayDimensions(n-1)`
-takes `getComponentType()`, `withArrayDimensions(n+1)` on a synthetic array has no mirror. Leave
-`getTypeAnnotationMetadata()`'s compatibility swap as it is and expose the exact per-dimension annotations through
-the source view of #39. Changing the swap itself would alter what `@Nullable String[]`-style metadata means to
-existing Micronaut code — flag it, do not do it.
+Not pursued: one annotation set per array type, standing for the component's, is how Micronaut's model reads an
+array, and a per-dimension record would exist only for the kit. `AnnotatedTypes.verifyArrayField` stays pending,
+as it is skipped by other implementations.
 
 ### 38. Core gap — a type annotation on a primitive is dropped
 `@AnnPrimitiveField int primitiveField` (`AnnotatedTypes.verifyPrimitiveField`) and the two type annotations on
@@ -490,66 +487,40 @@ report `java.lang.Integer` where the source meant `int`. Making it a primitive c
 annotated Kotlin primitive parameter and therefore the written `Argument` types: a behaviour change, to be
 discussed with the Kotlin maintainers rather than slipped in.
 
-### 39. Core gap — no view of a declaration's annotations as the source wrote them
+### 39. Not a core change — the annotations as the source wrote them are derived, not recorded
 Three things the model promises are not in the metadata record, by design of the record: (a) a repeatable
-annotation written once is folded into its container (`MutableAnnotationMetadata.addDeclaredRepeatable`), so
-`@AnnRepeatable("single")` and `@AnnRepeatableContainer({@AnnRepeatable("single")})` read the same and
-`MixedRepeatableAnnotations` (`@AnnRepeatable("a")` beside a written container of two) collapses into one
-container of three (`RepeatableAnnotations.verify{Single,Mixed}RepeatableAnnotations`); (b) what Micronaut
-itself adds is indistinguishable from what the source wrote — mapper/remapper/transformer output
-(`jakarta.annotation.Priority`→`io.micronaut.core.annotation.Order`, finding #6), stereotypes, and the
-`@org.jspecify.annotations.NonNull` that `JavaMethodElement.returnType` and `JavaFieldElement.getType` write into
-a type's annotations under `@NullMarked` — every `annotations().size() == 1` in the kit would fail on it; (c)
-defaults attached at build time omit empty strings and empty arrays (`readAnnotationDefaultValues(..., false)`).
-An annotation an *extension* adds through `ElementDeclarationConfig.addAnnotation` must, by contrast, be visible —
-the processor can record those itself, as it already records removals in `RemovedAnnotations`.
+annotation written once is folded into its container (`MutableAnnotationMetadata.addDeclaredRepeatable`); (b)
+what Micronaut itself adds — mapper and remapper output, the jspecify `@NonNull` that `JavaMethodElement.returnType`
+and `JavaFieldElement.getType` write into a type's annotations under `@NullMarked` — is indistinguishable from
+what the source wrote; (c) an annotation interface's own meta-annotations (`@Retention`, `@Target`,
+`@Repeatable`) are `INTERNAL_ANNOTATION_NAMES` and never reach its metadata.
 
-Proposal (core-processor ~120 lines, ~25 per language, additive, `@Experimental`):
+A parallel "as written" record in core (a `getSourceAnnotations()` view, with per-dimension javac array mirrors
+and a use-versus-declaration marking for type variables) was prototyped as PR #13163 and **rejected**: it exists
+only to reproduce the kit's exact-match assertions, while Micronaut's record is deliberately richer and
+differently shaped. The model derives the specification's view from the record instead, and lets a deployment
+choose how much of Micronaut's own to show:
 
-```java
-// io.micronaut.inject.ast.annotation.MutableAnnotationMetadataDelegate — so it is reachable as
-// element.getSourceAnnotations(), classElement.getTypeAnnotationMetadata().getSourceAnnotations() and
-// genericElement.getGenericTypeAnnotationMetadata().getSourceAnnotations()
-/**
- * The annotations the source wrote on this element, type use or type variable, in source order and as written:
- * a repeatable annotation written once is itself, a container the source wrote is the container, and nothing a
- * mapper, remapper, transformer or a visitor's annotate(...) added appears. Each value carries the interface's
- * retention and its defaults for the members the use left out, empty strings and arrays included. For a type
- * variable it is what was written at this use of the variable (nothing, if the use wrote nothing), or the
- * TYPE_PARAMETER annotations when the element is the declaration from getDeclaredGenericPlaceholders() /
- * getDeclaredTypeVariables(). Empty for an element no source backs (reflection, SimpleClassElement).
- * @since 5.3.0
- */
-default List<AnnotationValue<?>> getSourceAnnotations() { return List.of(); }
-```
+- a container holding exactly one repetition is reported as the repetition (`ExtensionAnnotations.
+  unfoldSingleRepetitions`, keyed on `getDeclaredAnnotationValuesByName` answering once for the repetition's
+  name). Reflection reports a single repetition the same way; a container the source wrote around one repetition
+  reads the same, which is the one shape not told apart. Covers the single and inherited cases of
+  `RepeatableAnnotations` and the declaration half of `EnumMembers`. The mixed case — a repetition written beside a
+  hand-written container, folded into one container of three — stays a deviation, accepted.
+- an annotation interface reports the `@Retention` it declares, synthesised from `VisitorContext.
+  getAnnotationRetentionPolicy`: `RUNTIME` and `SOURCE` are only ever declared, `CLASS` is what an undeclared
+  retention is and is left out (`AstSourceModel.addRetention`). Covers `AnnotationMembers`. `@Target` and
+  `@Repeatable` follow the same way once #40 lands.
+- what Micronaut writes into its record is reported by default — the Micronaut way — and narrowed by any
+  `io.micronaut.cdi.processor.extension.LanguageModelAnnotationFilter` registered as a service (all registered
+  filters must agree). The kit module registers `SpecificationAnnotationFilter`, which leaves out Micronaut's
+  annotation packages and, on a type use in a null-marked class or package, anything under the non-null stereotype
+  (the synthesised marker arrives remapped, as `jakarta.annotation.Nonnull`). `ModelAnnotationsTest` pins the
+  default; the kit pins the filtered view.
 
-Implementation: `AbstractAnnotationMetadataBuilder` gains `protected abstract List<? extends A>
-getWrittenAnnotations(T element)` (javac `element.getAnnotationMirrors()` — **not** `getAnnotationsForType`, which
-expands containers; KSP `annotated.annotations`; Groovy `node.getAnnotations()`) and a public
-`readSourceAnnotations(T element)` that runs `createAnnotationValue` + defaults with `includeEmptyValues = true`
-and skips `processAnnotation` (no mappers, no stereotypes), sized up front (`new ArrayList<>(size)`, `CollectionUtils.newLinkedHashMap(size)`);
-`CachedAnnotationMetadata` caches the list; `AbstractElementAnnotationMetadata` delegates. For the javac
-placeholder (#41) `lookupTypeAnnotationsForGenericPlaceholder` already knows whether the variable mirror or the
-`TypeParameterElement` is the source; the declaration-built placeholders are the ones created with a null owner
-in `JavaNativeElement.Placeholder`. Verify against `inject-kotlin`: nothing here touches the by-name `has*`
-semantics KSP data-class configuration relies on (finding #26), but the Kotlin suite is the evidence.
-
-Until it lands the processor strips what it can recognise as Micronaut's own: every annotation of Micronaut's
-annotation packages (`io.micronaut.core.annotation`, `io.micronaut.context.annotation`, `io.micronaut.inject.annotation`,
-`io.micronaut.aop`, `io.micronaut.runtime` and this project's `io.micronaut.cdi.annotation` — mapper and remapper
-output; `ExtensionAnnotations.isSynthesised`), and on a type whose declaring class or package is null-marked any
-annotation carrying Micronaut's non-null stereotype (`ElementTypes.of(element, nullMarked)`), which is exactly
-when `JavaMethodElement.returnType`/`JavaFieldElement.getType` write it — it arrives as
-`jakarta.annotation.Nonnull`, not under jspecify's name, because the builder remaps it. `ModelAnnotationsTest`
-in `test-suite-java` pins both. Two things it cannot restore, which the source view does: a user-written
-non-null annotation in a null-marked scope is stripped with the synthesised one, and a remapped annotation's
-original name is gone from the record — `@Priority` becomes `@Order` (finding #6) and jspecify's own
-`@NullMarked` becomes `io.micronaut.core.annotation.NullMarked`, so a null-marked class reports no `@NullMarked`
-at all. It also covers a fourth case
-the AST-only run surfaced: an annotation interface's *own* meta-annotations — `AnnotationMembers` asserts that
-`@Retention` is the one annotation of `AnnotationMembers` — are `INTERNAL_ANNOTATION_NAMES` and never reach the
-metadata of the interface, while the source view reports them (PR #13163 lists "meta-annotations of an
-annotation interface present" among its tests).
+What neither derivation nor filter restores: a remapped annotation's original name (`@Priority` → `@Order`,
+finding #6; jspecify `@NullMarked` → `io.micronaut.core.annotation.NullMarked`). That is a question of whether
+remappers should keep the original beside the replacement, to be raised on its own.
 
 ### 40. Core gap — `AnnotationElement` knows `isInherited()` but not its targets, container or retention
 `AnnotationElement` (`core-processor/.../ast/AnnotationElement.java`, `@since 3.1.0`) is the natural home for
@@ -585,10 +556,11 @@ does per name.
 `JavaElementAnnotationMetadataFactory.lookupTypeAnnotationsForGenericPlaceholder` reads the `TypeVariable`
 mirror's annotations if there are any, else the `TypeParameterElement`'s. For `class C<@X T> { T field; }` the
 field's type therefore carries `@X`, which the model forbids (`TypeVariable.annotations()` of a use are the use's;
-`AnnotatedTypes.verifyTypeVariableField` relies on the use-site annotation being the only one). This is why
-`MirrorTypes.ofDeclared` special-cases `TYPEVAR` today. Changing `getGenericTypeAnnotationMetadata()` itself would
-change nullability of `T` uses for everyone (`class Foo<@Nullable T>`), so it must not change; the source view of
-#39 carries the distinction instead. No separate PR.
+`AnnotatedTypes.verifyTypeVariableField` relies on the use-site annotation being the only one). Changing
+`getGenericTypeAnnotationMetadata()` itself would change nullability of `T` uses for everyone (`class Foo<@Nullable
+T>`), so it must not change, and with the source view of #39 rejected the divergence stands: a use of a type
+variable may report its declaration's annotations. The kit accepts either answer on the one bound it checks
+(`verifyTypeVariableField`). Recorded, not pursued.
 
 ### 42. Core divergence — `MethodElement.getReceiverType()` javadoc versus the implementations
 The interface (`MethodElement.java:131-143`) says an instance method or inner-class constructor "has a receiver
@@ -638,20 +610,19 @@ KSP one reading `KSAnnotated`/`KSType` through `KotlinNativeElement.element`, an
 (`JavaNativeElement`, `KotlinNativeElement`, `GroovyNativeElement`), adds optional compile dependencies on
 `symbol-processing-api` and Groovy to `cdi-processor`, and re-implements in three places what #37–#40 add once.
 
-**Done, 12 Sep 2026.** The processor no longer reads the compiler at all: `SourceModel` is the one seam and
+**Done, 13 Sep 2026.** The processor no longer reads the compiler at all: `SourceModel` is the one seam and
 `AstSourceModel` its only implementation; `MirrorTypes`, `MirrorAnnotationInfo`, `MirrorAnnotationMember`,
-`ExtensionSourceModel` and the `javax.lang.model` unwrap in `CdiScopeVisitor` are gone. The kit runs section by
-section and reports each; with core 5.2.1 exactly four sections fail, each on the predicted assertion, and the
-kit test carries them as skipped, pending tests naming the finding each waits on: `AnnotatedTypes` at the
-constructor's return-type annotation (#40; with that one answer bypassed it proceeds to the primitive field's
-type annotation, #38), `AnnotationMembers` at the interface's own `@Retention` (#39), `EnumMembers` at a
-parameter carrying one repetition beside another annotation (#39), `RepeatableAnnotations` at the inherited
-repetitions (#39). The other fourteen — `AnnotatedSuperTypes`, `AnnotatedThrowsTypes`, `AnnotatedReceiverTypes`,
-`AnnotationInstances` (defaults, enum and class members), the plain-class and interface member sections,
-`InheritedMethods`, `InheritedFields`, `InheritedAnnotations`, `JavaLangObjectMethods`, `PrimitiveTypes`,
-`BridgeMethods`, `DefaultConstructors`, `Equality` and the package annotation — pass on the AST alone, as does
-`AnnotatedTypes.verifyTypeParameters` (annotated variables, bounds, intersections and a wildcard inside a bound).
-A pending section that starts passing fails the kit test, so that it is taken off the list when core lands.
+`ExtensionSourceModel` and the `javax.lang.model` unwrap in `CdiScopeVisitor` are gone. The specification's view
+of annotations is derived from the record (#39) and narrowed by a `LanguageModelAnnotationFilter` service, which
+the kit module registers. The kit runs section by section and carries its pending sections as skipped tests
+naming what each waits on. With core 5.2.1: fifteen of eighteen sections pass — `AnnotatedSuperTypes`,
+`AnnotatedThrowsTypes`, `AnnotatedReceiverTypes`, `AnnotationInstances`, `AnnotationMembers`, the plain-class and
+interface member sections, `InheritedMethods`, `InheritedFields`, `InheritedAnnotations`,
+`JavaLangObjectMethods`, `PrimitiveTypes`, `BridgeMethods`, `DefaultConstructors`, `Equality` and the package
+annotation; `AnnotatedTypes.verifyTypeParameters` passes too. Pending: `AnnotatedTypes` at the constructor's
+return-type annotation (#40), then the primitive field (#38), then the array dimensions (#37, accepted);
+`EnumMembers` at the type annotations of a `boolean` parameter (#38); `RepeatableAnnotations` at the mixed case
+(#39, accepted). A pending section that starts passing fails the kit test, so the list shrinks as core lands.
 
 **(c) Staged** (what was done, minus the seam's javac half, which was removed outright): move everything the
 AST already answers (the **AST** rows of #36) off javac now — kinds, abstract
@@ -666,9 +637,9 @@ PRs instead of one.
 ### 46. Order of core PRs, size, and what each unblocks for non-javac compilations
 | # | Change | Size | Behaviour change? | Kit sections it unblocks on KSP/Groovy |
 |---|---|---|---|---|
-| 1 | #40 `AnnotationElement.getTargets()/getRepeatableContainer()/getRetentionPolicy()` | ~60 core + ~40 × 3 languages + tests | no (additive) | `AnnotatedTypes.verifyConstructor` (constructor return type) in every language; the container name on `Type.repeatableAnnotation(...)` where the shape heuristic cannot apply |
-| 2 | #39 source view `getSourceAnnotations()` on `MutableAnnotationMetadataDelegate` (+ #41, + #37's per-dimension mirror so the view is exact on arrays) | ~120 core-processor + ~25 × 3 + ~60 javac arrays + tests | no (additive; existing views untouched) | `LangModelVerifier.ensureOnlyRuntimeAnnotations` and every `annotations().size()` assertion (no remapped/synthesised annotations), `RepeatableAnnotations.verify{Single,Mixed}…`, `AnnotationInstances.verifyDefaultValues` (empty defaults), `AnnotatedTypes.verify{TypeVariableField,ArrayField}`; must be run against `inject-kotlin`'s suite before merging |
-| 3 | #38 annotated `PrimitiveElement` for javac and Groovy | ~60 + tests | no for javac/Groovy (today nothing is recorded); **yes** for KSP if its boxing is changed — leave KSP out of this PR | `AnnotatedTypes.verifyPrimitiveField`, `EnumMembers.verifyConstructors` type annotations |
+| 1 | #40 `AnnotationElement.getTargets()/getRepeatableContainer()/getRetentionPolicy()` | ~60 core + ~40 × 3 languages + tests | no (additive) | `AnnotatedTypes.verifyConstructor` (constructor return type); `@Target`/`@Repeatable` on an annotation interface, synthesised the way `@Retention` is |
+| 2 | ~~#39 source view~~ — rejected; derived in the processor instead (see #39) | — | — | — |
+| 3 | #38 annotated `PrimitiveElement` for javac and Groovy | ~60 + tests | no for javac/Groovy; **yes** for KSP if its boxing is changed — leave KSP out | `AnnotatedTypes.verifyPrimitiveField`, `EnumMembers.verifyConstructors` |
 | 4 | #43b Groovy `getDeclaredGenericPlaceholders()` | ~20 + tests | Groovy only, corrective | `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes`, `AnnotatedThrowsTypes` on Groovy |
 | 5 | #43a array class literals; #42 receiver default (optional) | ~10; ~15 | no; **yes** (contract) | none in the kit; `AnnotatedReceiverTypes` already passes via the processor's own default |
 

@@ -51,13 +51,11 @@ class LangModelTckTest {
     private static final Map<String, String> PENDING = Map.of(
         "AnnotatedTypes", "#40 the targets of an annotation interface (the constructor's return type carries the "
             + "annotations written before its name that may target a type use) and #38 the annotation on a primitive "
-            + "type; then #37 the annotation on one dimension of an array",
-        "AnnotationMembers$Verifier", "#39 the annotations of a declaration as written: an annotation interface's "
-            + "own @Retention is stripped from Micronaut's record as an internal annotation",
-        "EnumMembers$Verifier", "#39 the annotations of a declaration as written: a repeatable annotation written "
-            + "once beside another is folded into its container",
-        "RepeatableAnnotations", "#39 the annotations of a declaration as written: repetitions inherited from a "
-            + "superclass are folded into their container"
+            + "type; then #37 the annotation on one dimension of an array, which Micronaut's model does not keep",
+        "EnumMembers$Verifier", "#38 the annotation on a primitive type: the constructors' boolean and int "
+            + "parameters carry type annotations",
+        "RepeatableAnnotations", "a repeatable annotation written once beside a container the source wrote is "
+            + "folded into that container, and the two are not told apart (finding #39, mixed case); accepted"
     );
 
     @TestFactory

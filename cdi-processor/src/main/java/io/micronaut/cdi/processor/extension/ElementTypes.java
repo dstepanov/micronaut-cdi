@@ -40,7 +40,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -60,7 +59,6 @@ import java.util.function.Predicate;
 public final class ElementTypes {
 
     private static final String OBJECT = "java.lang.Object";
-    private static final String NON_NULL = io.micronaut.core.annotation.AnnotationUtil.NON_NULL;
 
     private ElementTypes() {
     }
@@ -73,7 +71,7 @@ public final class ElementTypes {
      * @return The type
      */
     public static Type of(ClassElement element) {
-        return of(element, false);
+        return of(element, null);
     }
 
     /**
@@ -82,26 +80,26 @@ public final class ElementTypes {
      * a null-marked scope.
      *
      * @param element    The Micronaut type
-     * @param nullMarked Whether the declaration the type belongs to is in a {@code NullMarked} class or package
+     * @param declaringType Whether the declaration the type belongs to is in a {@code NullMarked} class or package
      * @return The type
      */
-    static Type of(ClassElement element, boolean nullMarked) {
+    static Type of(ClassElement element, @Nullable ClassElement declaringType) {
         if (element.isVoid()) {
             return new Void();
         }
         if (element.isArray()) {
-            return new Array(of(element.fromArray(), nullMarked), typeAnnotationsOf(element, nullMarked));
+            return new Array(of(element.fromArray(), declaringType), typeAnnotationsOf(element, declaringType));
         }
         if (element.isPrimitive()) {
             return new Primitive(element.getName());
         }
         if (element instanceof WildcardElement wildcard) {
-            return wildcardOf(wildcard, nullMarked);
+            return wildcardOf(wildcard, declaringType);
         }
         if (element instanceof GenericPlaceholderElement placeholder) {
-            return variableOf(placeholder, nullMarked);
+            return variableOf(placeholder, declaringType);
         }
-        return classOf(element, typeAnnotationsOf(element, nullMarked), nullMarked);
+        return classOf(element, typeAnnotationsOf(element, declaringType), declaringType);
     }
 
     /**
@@ -112,10 +110,10 @@ public final class ElementTypes {
      * @return The type
      */
     static Type classOf(ClassElement element, List<AnnotationInfo> annotations) {
-        return classOf(element, annotations, false);
+        return classOf(element, annotations, null);
     }
 
-    private static Type classOf(ClassElement element, List<AnnotationInfo> annotations, boolean nullMarked) {
+    private static Type classOf(ClassElement element, List<AnnotationInfo> annotations, @Nullable ClassElement declaringType) {
         Class raw = new Class(element, annotations);
         // a generic class named without its arguments is a class type, not a parameterized one; Micronaut fills
         // the arguments of a raw use in from the declaration's bounds, so the raw use has to be asked about
@@ -124,7 +122,7 @@ public final class ElementTypes {
         }
         List<Type> arguments = new ArrayList<>(element.getTypeArguments().size());
         for (Map.Entry<String, ClassElement> argument : element.getTypeArguments().entrySet()) {
-            arguments.add(of(argument.getValue(), nullMarked));
+            arguments.add(of(argument.getValue(), declaringType));
         }
         return new Parameterized(raw, List.copyOf(arguments), annotations);
     }
@@ -147,25 +145,25 @@ public final class ElementTypes {
      * @return The variable
      */
     static TypeVariable variableOf(GenericPlaceholderElement placeholder) {
-        return variableOf(placeholder, false);
+        return variableOf(placeholder, null);
     }
 
-    private static TypeVariable variableOf(GenericPlaceholderElement placeholder, boolean nullMarked) {
+    private static TypeVariable variableOf(GenericPlaceholderElement placeholder, @Nullable ClassElement declaringType) {
         List<Type> bounds = new ArrayList<>(placeholder.getBounds().size());
         for (ClassElement bound : placeholder.getBounds()) {
-            bounds.add(of(bound, nullMarked));
+            bounds.add(of(bound, declaringType));
         }
         return new Variable(placeholder.getVariableName(), List.copyOf(bounds),
-            annotationsIn(placeholder.getGenericTypeAnnotationMetadata(), nullMarked));
+            annotationsIn(placeholder.getGenericTypeAnnotationMetadata(), declaringType));
     }
 
-    private static WildcardType wildcardOf(WildcardElement wildcard, boolean nullMarked) {
-        List<AnnotationInfo> annotations = annotationsIn(wildcard.getGenericTypeAnnotationMetadata(), nullMarked);
+    private static WildcardType wildcardOf(WildcardElement wildcard, @Nullable ClassElement declaringType) {
+        List<AnnotationInfo> annotations = annotationsIn(wildcard.getGenericTypeAnnotationMetadata(), declaringType);
         if (wildcard.hasExplicitLowerBound()) {
-            return new Wildcard(null, of(wildcard.getLowerBounds().get(0), nullMarked), annotations);
+            return new Wildcard(null, of(wildcard.getLowerBounds().get(0), declaringType), annotations);
         }
         if (wildcard.hasExplicitUpperBound()) {
-            return new Wildcard(of(wildcard.getUpperBounds().get(0), nullMarked), null, annotations);
+            return new Wildcard(of(wildcard.getUpperBounds().get(0), declaringType), null, annotations);
         }
         // the unbounded wildcard is the one bounded above by java.lang.Object, which is what it means and how
         // the language model reports it; Micronaut substitutes the declared bound of the type parameter, which
@@ -236,23 +234,17 @@ public final class ElementTypes {
      * declared in a null-marked scope.
      *
      * @param use        The type, as used somewhere
-     * @param nullMarked Whether the declaration the type belongs to is in a {@code NullMarked} class or package
+     * @param declaringType Whether the declaration the type belongs to is in a {@code NullMarked} class or package
      * @return The annotations
      */
-    static List<AnnotationInfo> typeAnnotationsOf(ClassElement use, boolean nullMarked) {
-        return annotationsIn(use.getTypeAnnotationMetadata(), nullMarked);
+    static List<AnnotationInfo> typeAnnotationsOf(ClassElement use, @Nullable ClassElement declaringType) {
+        return annotationsIn(use.getTypeAnnotationMetadata(), declaringType);
     }
 
-    private static List<AnnotationInfo> annotationsIn(AnnotationMetadata metadata, boolean nullMarked) {
+    private static List<AnnotationInfo> annotationsIn(AnnotationMetadata metadata, @Nullable ClassElement declaringType) {
         List<AnnotationInfo> found = new ArrayList<>();
-        // Micronaut records the NonNull it writes on a type in a null-marked scope under its own non-null
-        // stereotype, remapped from whichever non-null annotation it chose
-        Set<String> nonNull = nullMarked
-            ? Set.copyOf(metadata.getAnnotationNamesByStereotype(io.micronaut.core.annotation.AnnotationUtil.NON_NULL))
-            : Set.of();
         for (String name : metadata.getDeclaredAnnotationNames()) {
-            if (!ExtensionAnnotationTypes.isRuntimeRetained(name) || ExtensionAnnotations.isSynthesised(name)
-                || nonNull.contains(name) || (nullMarked && NON_NULL.equals(name))) {
+            if (!ExtensionAnnotations.isReportedOnType(name, declaringType)) {
                 continue;
             }
             AnnotationValue<Annotation> annotation = metadata.getDeclaredAnnotation(name);
@@ -260,7 +252,7 @@ public final class ElementTypes {
                 found.add(new ElementAnnotationInfo(annotation));
             }
         }
-        return found;
+        return ExtensionAnnotations.unfoldSingleRepetitions(found, metadata);
     }
 
     /**

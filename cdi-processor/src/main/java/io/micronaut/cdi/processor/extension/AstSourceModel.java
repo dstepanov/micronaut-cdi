@@ -17,6 +17,7 @@ package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.Element;
@@ -24,6 +25,7 @@ import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
@@ -31,17 +33,19 @@ import jakarta.enterprise.lang.model.types.TypeVariable;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * The language model read from Micronaut's AST alone, in whichever language the compilation is in.
  *
- * <p>What it cannot answer, and answers as best the record allows: the annotations of a declaration are the
- * ones Micronaut recorded, so a repeatable annotation written once is reported inside its container and an
- * annotation Micronaut's own mappers added is reported beside the written ones; a primitive and each dimension
- * of an array carry no annotations; and the targets and the container of an annotation interface are not
- * known, so a constructor's return type carries nothing.</p>
+ * <p>The annotations of a declaration are the ones Micronaut recorded, as far as the registered
+ * {@link LanguageModelAnnotationFilter}s allow, read the way the specification's model reads: a repeatable
+ * annotation Micronaut folded into its container although it was written once is reported as itself, and an
+ * annotation interface reports the {@code Retention} it declares. What the record does not hold is not
+ * reported: a primitive and each dimension of an array carry no annotations, and the targets of an annotation
+ * interface are not known, so a constructor's return type carries nothing.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -52,9 +56,7 @@ final class AstSourceModel implements SourceModel {
     static final AstSourceModel INSTANCE = new AstSourceModel();
 
     private static final String OBJECT = "java.lang.Object";
-    // jspecify's marker as written, and as Micronaut remaps it
-    private static final String[] NULL_MARKED = {"org.jspecify.annotations.NullMarked",
-        "io.micronaut.core.annotation.NullMarked"};
+    private static final String RETENTION = "java.lang.annotation.Retention";
 
     private AstSourceModel() {
     }
@@ -71,7 +73,33 @@ final class AstSourceModel implements SourceModel {
                 found.add(new ElementAnnotationInfo(annotation));
             }
         }
-        return found;
+        if (element instanceof AnnotationElement annotation) {
+            addRetention(annotation, found);
+        }
+        return ExtensionAnnotations.unfoldSingleRepetitions(found, element);
+    }
+
+    /**
+     * The {@code Retention} an annotation interface declares, which Micronaut leaves out of its record as one
+     * of the meta-annotations it reads itself. It is known from what Micronaut answers about the interface's
+     * retention: {@code RUNTIME} or {@code SOURCE} is only ever declared, while {@code CLASS} is what an
+     * interface that declares nothing has, and is left out.
+     */
+    private static void addRetention(AnnotationElement annotation, List<AnnotationInfo> found) {
+        for (AnnotationInfo present : found) {
+            if (RETENTION.equals(present.name())) {
+                return;
+            }
+        }
+        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
+        if (context == null) {
+            return;
+        }
+        RetentionPolicy retention = context.getAnnotationRetentionPolicy(annotation.getName());
+        if (retention != RetentionPolicy.CLASS && ExtensionAnnotations.isReported(annotation, RETENTION)) {
+            found.add(new ElementAnnotationInfo(
+                AnnotationValue.builder(RETENTION).member("value", retention.name()).build()));
+        }
     }
 
     @Override
@@ -97,30 +125,17 @@ final class AstSourceModel implements SourceModel {
 
     @Override
     public Type typeOf(FieldElement field) {
-        return ElementTypes.of(field.getType(), isNullMarked(field.getDeclaringType()));
+        return ElementTypes.of(field.getType(), field.getDeclaringType());
     }
 
     @Override
     public Type typeOf(ParameterElement parameter) {
-        return ElementTypes.of(parameter.getType(), isNullMarked(parameter.getMethodElement().getDeclaringType()));
+        return ElementTypes.of(parameter.getType(), parameter.getMethodElement().getDeclaringType());
     }
 
     @Override
     public Type returnTypeOf(MethodElement method) {
-        return ElementTypes.of(method.getReturnType(), isNullMarked(method.getDeclaringType()));
-    }
-
-    /**
-     * Whether a class is in a null-marked scope, where Micronaut writes {@code NonNull} on every type its
-     * members declare that is not nullable, which the source did not write.
-     */
-    private static boolean isNullMarked(ClassElement declaring) {
-        for (String name : NULL_MARKED) {
-            if (declaring.hasStereotype(name) || declaring.getPackage().hasStereotype(name)) {
-                return true;
-            }
-        }
-        return false;
+        return ElementTypes.of(method.getReturnType(), method.getDeclaringType());
     }
 
     @Override

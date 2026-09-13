@@ -218,13 +218,17 @@ compiles them with this module's processor and runs the verifier from a build co
 compile — the runner the kit ships for the reference implementation, written the same way. The model is read
 from Micronaut's AST alone, so that it is the same model in a Java, a Kotlin and a Groovy compilation, and from
 the source of the class as it compiles rather than from a class file, which is what loses the type annotations
-(JDK-8225377) and why other implementations skip those assertions. Fourteen of the kit's eighteen sections pass;
-four are pending on what Micronaut's AST does not record yet and are run as skipped tests that name the core
-change each waits on (`MICRONAUT-CORE-FINDINGS.md`, findings 37 to 40): the annotations of a declaration exactly
-as written — a repeatable annotation written once is folded into its container, and an annotation interface's
-own `@Retention` is stripped — which `AnnotationMembers`, `EnumMembers` and `RepeatableAnnotations` stop at, and
-the targets of an annotation interface and the annotation on a primitive or on one dimension of an array, which
-`AnnotatedTypes` stops at.
+(JDK-8225377) and why other implementations skip those assertions. The model reports what Micronaut records,
+read the way the specification's model reads it — a repeatable annotation Micronaut folded into its container
+although it was written once is reported as itself, an annotation interface reports the retention it declares —
+and a deployment narrows what an extension sees by registering a `LanguageModelAnnotationFilter`; the kit
+module's filter leaves out what Micronaut's mappers write into its own packages and the non-null marker it adds
+in null-marked code, since the kit asserts on the source alone. Fifteen of the kit's eighteen sections pass;
+three are pending, run as skipped tests that name what each waits on: `AnnotatedTypes` and `EnumMembers` on the
+annotations of a primitive type and of one dimension of an array, and on the targets of an annotation interface,
+which Micronaut's model does not record (`MICRONAUT-CORE-FINDINGS.md`, findings 37, 38 and 40); and one case of
+`RepeatableAnnotations`, a repetition written beside a hand-written container, which Micronaut folds into one
+container and which is accepted as a deviation.
 
 ## What other implementations' tests found
 

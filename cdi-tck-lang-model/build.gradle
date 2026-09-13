@@ -64,6 +64,8 @@ dependencies {
     // the extension, which runs inside the compiler: it names the verifier's class and calls the verifier
     implementation libs.managed.jakarta.cdi.api
     implementation libs.cdi.tck.lang.model
+    // the filter that narrows the model to what the specification's model reports of the source
+    implementation projects.micronautCdiProcessor
 
     testAnnotationProcessor platform(libs.micronaut.core)
     testAnnotationProcessor projects.micronautCdiProcessor

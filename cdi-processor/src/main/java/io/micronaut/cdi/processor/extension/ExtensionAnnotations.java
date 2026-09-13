@@ -15,11 +15,16 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
+import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.MemberElement;
+import io.micronaut.inject.ast.ParameterElement;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,15 +39,6 @@ import java.util.List;
  */
 @Internal
 final class ExtensionAnnotations {
-
-    /**
-     * The packages of the annotations Micronaut's mappers and remappers write into its record, this project's
-     * own included.
-     */
-    private static final String[] MICRONAUT_PACKAGES = {
-        "io.micronaut.core.annotation.", "io.micronaut.context.annotation.", "io.micronaut.inject.annotation.",
-        "io.micronaut.aop.", "io.micronaut.runtime.", "io.micronaut.cdi.annotation.", "io.micronaut.cdi.processor.",
-    };
 
     private ExtensionAnnotations() {
     }
@@ -138,8 +134,8 @@ final class ExtensionAnnotations {
     }
 
     /**
-     * Whether an annotation of the given name is reported on a declaration: retained until runtime, and not
-     * taken off the declaration by an extension.
+     * Whether an annotation of the given name is reported on a declaration: retained until runtime, allowed by
+     * every registered {@link LanguageModelAnnotationFilter}, and not taken off the declaration by an extension.
      *
      * @param element    The declaration
      * @param annotation The annotation interface's binary name
@@ -147,26 +143,80 @@ final class ExtensionAnnotations {
      */
     static boolean isReported(Element element, String annotation) {
         return ExtensionAnnotationTypes.isRuntimeRetained(annotation)
-            && !isSynthesised(annotation)
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false))
             && !RemovedAnnotations.isRemoved(element, annotation);
     }
 
     /**
-     * Whether an annotation of the given name is one Micronaut writes into its record rather than one the
-     * source wrote: what its mappers and remappers add lives in Micronaut's own packages, and the source of a
-     * class read by a build compatible extension does not. Until Micronaut records the annotations as written
-     * ({@code MICRONAUT-CORE-FINDINGS.md}, finding 39), these are left out.
+     * Whether an annotation of the given name, recorded on a use of a type, is reported: retained until runtime
+     * and allowed by every registered {@link LanguageModelAnnotationFilter}.
      *
-     * @param annotation The annotation interface's binary name
-     * @return Whether it is Micronaut's own
+     * @param annotation    The annotation interface's binary name
+     * @param declaringType The class the use belongs to, or {@code null} where unknown
+     * @return Whether it is reported
      */
-    static boolean isSynthesised(String annotation) {
-        for (String prefix : MICRONAUT_PACKAGES) {
-            if (annotation.startsWith(prefix)) {
-                return true;
-            }
-        }
-        return false;
+    static boolean isReportedOnType(String annotation, @Nullable ClassElement declaringType) {
+        return ExtensionAnnotationTypes.isRuntimeRetained(annotation)
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(null, declaringType, true));
     }
 
+    /**
+     * The annotations as the language model reports them, from the ones Micronaut recorded: a repeatable
+     * annotation that Micronaut folded into its container although it was written once is reported as itself,
+     * which is what reflection reports of a single repetition too. A container the source wrote around one
+     * repetition reads the same way, which is the one shape this cannot tell apart.
+     *
+     * @param found    The annotations Micronaut recorded, already filtered
+     * @param metadata The record they came from, which knows the container of each repeatable annotation
+     * @return The annotations to report
+     */
+    static List<AnnotationInfo> unfoldSingleRepetitions(List<AnnotationInfo> found, AnnotationMetadata metadata) {
+        List<AnnotationInfo> reported = new ArrayList<>(found.size());
+        for (AnnotationInfo annotation : found) {
+            AnnotationInfo single = singleRepetitionIn(annotation, metadata);
+            reported.add(single != null ? single : annotation);
+        }
+        return reported;
+    }
+
+    private static @Nullable AnnotationInfo singleRepetitionIn(AnnotationInfo candidate, AnnotationMetadata metadata) {
+        if (!(candidate instanceof ElementAnnotationInfo info) || !candidate.hasValue()
+            || !candidate.value().isArray()) {
+            return null;
+        }
+        List<AnnotationMember> members = candidate.value().asArray();
+        if (members.size() != 1 || !members.get(0).isNestedAnnotation()) {
+            return null;
+        }
+        AnnotationInfo repetition = members.get(0).asNestedAnnotation();
+        // Micronaut answers for the repetitions of a repeatable annotation by the annotation's own name, through
+        // the container it folded them into: one answer under that name means one repetition inside this container
+        if (!metadata.getDeclaredAnnotationNames().contains(info.name())
+            || metadata.getDeclaredAnnotationValuesByName(repetition.name()).size() != 1) {
+            return null;
+        }
+        return repetition;
+    }
+
+    private static boolean isAllowed(String annotation, LanguageModelAnnotationFilter.Place place) {
+        for (LanguageModelAnnotationFilter filter : LanguageModelAnnotationFilter.registered()) {
+            if (!filter.isReported(annotation, place)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static @Nullable ClassElement declaringTypeOf(Element element) {
+        if (element instanceof ClassElement clazz) {
+            return clazz;
+        }
+        if (element instanceof MemberElement member) {
+            return member.getDeclaringType();
+        }
+        if (element instanceof ParameterElement parameter) {
+            return parameter.getMethodElement().getDeclaringType();
+        }
+        return null;
+    }
 }
