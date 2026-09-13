@@ -1,0 +1,22 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+    id 'groovy'
+}
+
+// The language model an extension reads is built on Micronaut's AST alone, so it is the same model in a Groovy
+// compilation: the Groovy compiler picks the processor's visitors, and the extension, up from the compile classpath.
+dependencies {
+    testImplementation platform(libs.micronaut.core)
+    testImplementation mn.micronaut.inject.groovy
+    testImplementation projects.micronautCdiProcessor
+    testImplementation projects.testSuiteExtension
+    testImplementation projects.micronautCdi
+    testImplementation mn.micronaut.core
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+    testImplementation libs.managed.jakarta.cdi.api
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

@@ -626,6 +626,7 @@ return-type annotation (#40), then the primitive field (#38), then the array dim
 `test-suite-kotlin` compiles a Kotlin class through KSP with the extension on the processor path and reads it
 back through the model — the first language-neutral proof — which also surfaced that the visitor generated its
 holder classes in Java syntax whatever the language (now written in the syntax of the language compiled).
+`test-suite-groovy` does the same through the Groovy compiler.
 
 **(c) Staged** (what was done, minus the seam's javac half, which was removed outright): move everything the
 AST already answers (the **AST** rows of #36) off javac now — kinds, abstract
