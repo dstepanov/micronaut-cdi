@@ -58,6 +58,7 @@ public class Connections {
 | `micronaut-cdi-processor` | The annotation processor that reads the specification's annotations while a bean is compiled |
 | `micronaut-cdi-tck` | The scenarios of the specification's technology compatibility kit, compiled and exercised here |
 | `micronaut-cdi-tck-lang-model` | The kit's language model assertions, verified by a build compatible extension as the kit compiles |
+| `test-suite-kotlin` | A Kotlin class compiled through KSP, read by a build compatible extension through the same language model |
 
 | `micronaut-cdi-reflection` | Optional. Describes to a build compatible extension the beans the compiler never saw, which is the one thing here that reads a class back |
 

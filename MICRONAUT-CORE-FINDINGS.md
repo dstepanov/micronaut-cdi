@@ -623,6 +623,9 @@ annotation; `AnnotatedTypes.verifyTypeParameters` passes too. Pending: `Annotate
 return-type annotation (#40), then the primitive field (#38), then the array dimensions (#37, accepted);
 `EnumMembers` at the type annotations of a `boolean` parameter (#38); `RepeatableAnnotations` at the mixed case
 (#39, accepted). A pending section that starts passing fails the kit test, so the list shrinks as core lands.
+`test-suite-kotlin` compiles a Kotlin class through KSP with the extension on the processor path and reads it
+back through the model — the first language-neutral proof — which also surfaced that the visitor generated its
+holder classes in Java syntax whatever the language (now written in the syntax of the language compiled).
 
 **(c) Staged** (what was done, minus the seam's javac half, which was removed outright): move everything the
 AST already answers (the **AST** rows of #36) off javac now — kinds, abstract

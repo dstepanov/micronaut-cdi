@@ -282,31 +282,17 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         contextRecordWritten = true;
-        StringBuilder source = new StringBuilder("package io.micronaut.cdi.generated;\n\n"
-            + "@jakarta.inject.Singleton\n");
+        GeneratedSource source = new GeneratedSource(context.getLanguage())
+            .annotation("jakarta.inject.Singleton", null);
         if (!discovered.contextRecords().isEmpty()) {
-            source.append("@io.micronaut.cdi.annotation.CdiExtensionContextRecord({\n");
-            for (String record : discovered.contextRecords()) {
-                source.append("    \"").append(record).append("\",\n");
-            }
-            source.append("})\n");
+            source.annotation("io.micronaut.cdi.annotation.CdiExtensionContextRecord",
+                source.strings(discovered.contextRecords()));
         }
         if (!discovered.registeredQualifiers().isEmpty()) {
-            source.append("@io.micronaut.cdi.annotation.CdiExtensionQualifiers({\n");
-            for (String qualifier : discovered.registeredQualifiers()) {
-                source.append("    \"").append(qualifier).append("\",\n");
-            }
-            source.append("})\n");
+            source.annotation("io.micronaut.cdi.annotation.CdiExtensionQualifiers",
+                source.strings(discovered.registeredQualifiers()));
         }
-        source.append("final class ExtensionContextRecordHolder {\n}\n");
-        context.visitGeneratedSourceFile("io.micronaut.cdi.generated", "ExtensionContextRecordHolder")
-            .ifPresent(file -> {
-                try {
-                    file.write(writer -> writer.write(source.toString()));
-                } catch (Exception e) {
-                    throw new IllegalStateException("The extension context record could not be written", e);
-                }
-            });
+        write(context, "ExtensionContextRecordHolder", source, "The extension context record");
     }
 
     private void writeScannedImport(VisitorContext context) {
@@ -318,18 +304,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // a class the discovery phase added to the scanned ones may say nothing at all on its own, and a class
         // with nothing on it is never handed to the bean machinery: a generated import names them all, and
         // its processing is what makes each a bean (their scope was put on as they were visited)
-        StringBuilder source = new StringBuilder("package io.micronaut.cdi.generated;\n\n"
-            + "@io.micronaut.context.annotation.ClassImport(classes = {\n");
-        for (String scannedClass : discovered.scannedClasses()) {
-            source.append("    ").append(scannedClass).append(".class,\n");
-        }
-        source.append("})\nfinal class ScannedClassesImport {\n}\n");
-        context.visitGeneratedSourceFile("io.micronaut.cdi.generated", "ScannedClassesImport")
+        GeneratedSource source = new GeneratedSource(context.getLanguage());
+        source.annotation("io.micronaut.context.annotation.ClassImport",
+            "classes = " + source.classes(discovered.scannedClasses()));
+        write(context, "ScannedClassesImport", source, "The scanned classes import");
+    }
+
+    private static void write(VisitorContext context, String className, GeneratedSource source, String what) {
+        context.visitGeneratedSourceFile("io.micronaut.cdi.generated", className)
             .ifPresent(file -> {
                 try {
-                    file.write(writer -> writer.write(source.toString()));
+                    file.write(writer -> writer.write(source.classNamed(className)));
                 } catch (Exception e) {
-                    throw new IllegalStateException("The scanned classes import could not be written", e);
+                    throw new IllegalStateException(what + " could not be written", e);
                 }
             });
     }
@@ -755,6 +742,59 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             // the default of section 2.10: halfway through the application range
             return priority != null ? priority.value()
                 : jakarta.interceptor.Interceptor.Priority.APPLICATION + 500;
+        }
+    }
+
+    /**
+     * An empty, annotated class in the syntax of the language being compiled: the generated file takes the
+     * language's extension, so it has to read in that language.
+     */
+    private static final class GeneratedSource {
+
+        private final VisitorContext.Language language;
+        private final StringBuilder annotations = new StringBuilder();
+
+        GeneratedSource(VisitorContext.Language language) {
+            this.language = language;
+        }
+
+        GeneratedSource annotation(String type, @io.micronaut.core.annotation.Nullable String arguments) {
+            annotations.append('@').append(type);
+            if (arguments != null) {
+                annotations.append('(').append(arguments).append(')');
+            }
+            annotations.append('\n');
+            return this;
+        }
+
+        /** The value member as an array of string literals, named: Kotlin reads an unnamed array as varargs. */
+        String strings(java.util.Collection<String> values) {
+            List<String> literals = new ArrayList<>(values.size());
+            for (String value : values) {
+                literals.add('"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"');
+            }
+            return "value = " + array(literals);
+        }
+
+        /** An array of class literals. */
+        String classes(java.util.Collection<String> names) {
+            List<String> literals = new ArrayList<>(names.size());
+            for (String name : names) {
+                literals.add(language == VisitorContext.Language.KOTLIN ? name + "::class" : name + ".class");
+            }
+            return array(literals);
+        }
+
+        private String array(List<String> literals) {
+            String open = language == VisitorContext.Language.JAVA ? "{" : "[";
+            String close = language == VisitorContext.Language.JAVA ? "}" : "]";
+            return open + String.join(", ", literals) + close;
+        }
+
+        String classNamed(String name) {
+            boolean kotlin = language == VisitorContext.Language.KOTLIN;
+            return "package io.micronaut.cdi.generated" + (kotlin ? "" : ";") + "\n\n" + annotations
+                + (kotlin ? "class " + name + "\n" : "final class " + name + " {\n}\n");
         }
     }
 }

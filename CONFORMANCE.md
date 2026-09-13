@@ -228,7 +228,8 @@ three are pending, run as skipped tests that name what each waits on: `Annotated
 annotations of a primitive type and of one dimension of an array, and on the targets of an annotation interface,
 which Micronaut's model does not record (`MICRONAUT-CORE-FINDINGS.md`, findings 37, 38 and 40); and one case of
 `RepeatableAnnotations`, a repetition written beside a hand-written container, which Micronaut folds into one
-container and which is accepted as a deviation.
+container and which is accepted as a deviation. Because the model is built on the AST alone, `test-suite-kotlin`
+runs a build compatible extension against a Kotlin class as KSP compiles it.
 
 ## What other implementations' tests found
 
