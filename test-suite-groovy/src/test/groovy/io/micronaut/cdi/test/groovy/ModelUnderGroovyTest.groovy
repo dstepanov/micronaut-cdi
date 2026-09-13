@@ -11,6 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 /**
  * The language model reaches a build compatible extension in a Groovy compilation the same way it does in a
  * Java one: from Micronaut's AST, with nothing read from a compiler.
+ *
+ * <p>What the discovery phase records — context records, registered qualifiers, scanned classes — is not
+ * asserted here: the classes the visitor generates for them are never compiled by the Groovy compiler, which has
+ * no processing rounds (MICRONAUT-CORE-FINDINGS.md, project-side follow-ups).</p>
  */
 class ModelUnderGroovyTest {
 

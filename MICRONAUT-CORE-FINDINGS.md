@@ -360,6 +360,13 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   wants a map; `Class.forName` for annotation types → `AnnotationMetadata.getAnnotationType(name)`.
 - Every normal-scoped bean also carries the `CdiApplicationScope` stereotype (`NormalScopeAnnotationMapper`);
   the runtime picks the right scope by registration order alone — needs a regression test.
+- Under Groovy the holder classes `BuildCompatibleExtensionVisitor` generates (`ExtensionContextRecordHolder`,
+  `ScannedClassesImport`) are never compiled: the Groovy compiler has no processing rounds, so a source file
+  written through `visitGeneratedSourceFile` mid-compilation is not part of the compilation. Discovery's context
+  records, registered qualifiers and scanned-class imports are lost there (`test-suite-groovy` compiles and
+  passes only because it asserts none of them). The fix is to stop generating source for these — write the
+  records into a resource or a bean definition directly (`ClassElement.addAssociatedBean`, a `BeanElementBuilder`)
+  — which also removes the per-language syntax the generator now carries.
 - Interceptors bridge: done on its `main` — the advice holds the interceptor registrations and destroys them from
   its own `@PreDestroy`, interceptor classes are found through one index, and private interceptor methods are
   documented as accepted. What is left is core's: a scoped proxy's method interception keeps the interceptor
