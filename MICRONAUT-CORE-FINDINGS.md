@@ -476,7 +476,7 @@ Not pursued: one annotation set per array type, standing for the component's, is
 array, and a per-dimension record would exist only for the kit. `AnnotatedTypes.verifyArrayField` stays pending,
 as it is skipped by other implementations.
 
-### 38. Core gap — a type annotation on a primitive is dropped
+### 38. Core gap — a type annotation on a primitive is dropped — MERGED upstream (#13164, 5.3.x; javac and Groovy)
 `@AnnPrimitiveField int primitiveField` (`AnnotatedTypes.verifyPrimitiveField`) and the two type annotations on
 `boolean disambiguate` / `int disambiguate` (`EnumMembers.verifyConstructors`). `newClassElement` maps a
 `PrimitiveType` to the shared `PrimitiveElement.valueOf(kind)` constant (`AbstractJavaElement.java`, the
@@ -529,7 +529,7 @@ What neither derivation nor filter restores: a remapped annotation's original na
 finding #6; jspecify `@NullMarked` → `io.micronaut.core.annotation.NullMarked`). That is a question of whether
 remappers should keep the original beside the replacement, to be raised on its own.
 
-### 40. Core gap — `AnnotationElement` knows `isInherited()` but not its targets, container or retention
+### 40. Core gap — `AnnotationElement` knows `isInherited()` but not its targets, container or retention — MERGED upstream (#13162, 5.3.x)
 `AnnotationElement` (`core-processor/.../ast/AnnotationElement.java`, `@since 3.1.0`) is the natural home for
 the three other facts the model needs about an annotation *interface*, all of which every builder already
 computes privately and none of which the metadata records in any language (`@Target`, `@Repeatable` and
@@ -547,6 +547,13 @@ default Optional<String> getRepeatableContainer()
 /** @return the interface's retention; RUNTIME when it declares none. @since 5.3.0 */
 default RetentionPolicy getRetentionPolicy()
 ```
+
+As merged, `getRetentionPolicy()` answers `RUNTIME` for an interface that declares no `@Retention` — Micronaut's
+long-standing builder convention (`JavaAnnotationMetadataBuilder.getRetentionPolicy` falls through to
+`RUNTIME`), deliberate because treating such annotations as `CLASS` would drop them from runtime metadata — so
+"declares none" and "declares `RUNTIME`" still read the same; `getRepeatableContainer()` is `Optional` and does
+tell. The model therefore reports a `@Retention(RUNTIME)` on an annotation interface that wrote none; an
+`Optional`-returning `getDeclaredRetentionPolicy()` would close that, if it ever matters.
 
 javac: mirrors on the `TypeElement`, as `JavaAnnotationElement.isInherited()` does; the container is
 `JavaAnnotationMetadataBuilder.getRepeatableContainerNameForType`. KSP: `declaration.annotations`, mapping
@@ -578,7 +585,7 @@ is `NestingKind.isNested()`). Aligning the implementations with the javadoc woul
 with no caller inside core (`git grep getReceiverType` finds only the two files); recommended as a separate,
 optional PR — or fix the javadoc.
 
-### 43. Small core fixes found on the way
+### 43. Small core fixes found on the way — PR #13165 (5.3.x, open)
 (a) `MetadataAnnotationValueVisitor.visitType` (`JavaAnnotationMetadataBuilder.java:650`) records a class member
 for a `DeclaredType` and a `PrimitiveType` only; `String[].class` leaves `resolvedValue` null and the member
 vanishes from the `AnnotationValue`. ~10 lines; additive; the kit has no such member. (b)
@@ -617,6 +624,14 @@ KSP one reading `KSAnnotated`/`KSType` through `KotlinNativeElement.element`, an
 (`JavaNativeElement`, `KotlinNativeElement`, `GroovyNativeElement`), adds optional compile dependencies on
 `symbol-processing-api` and Groovy to `cdi-processor`, and re-implements in three places what #37–#40 add once.
 
+**Status, 13 Sep 2026 (evening).** Core merged #13162 (#40) and #13164 (#38) into 5.3.x, and #13166 (the
+`getDeclaredAnnotationValuesByName` fix) into 5.2.x; #13165 (#43) and #13179 (Groovy generated sources, the
+project-side follow-up below) are open on 5.3.x; #13163 (the source view) is closed. This branch builds on
+`5.3.0-SNAPSHOT` (`-PnoMavenLocal` keeps a stale local publication from shadowing it) and uses the accessors:
+sixteen of eighteen sections pass, `EnumMembers` and the constructor and primitive checks of `AnnotatedTypes`
+included; the two pending sections are the accepted deviations (#37 array dimensions, #39 mixed repeatable).
+The by-name fallback stays until 5.2.x is forward-merged into 5.3.x.
+
 **Done, 13 Sep 2026.** The processor no longer reads the compiler at all: `SourceModel` is the one seam and
 `AstSourceModel` its only implementation; `MirrorTypes`, `MirrorAnnotationInfo`, `MirrorAnnotationMember`,
 `ExtensionSourceModel` and the `javax.lang.model` unwrap in `CdiScopeVisitor` are gone. The specification's view
@@ -648,10 +663,10 @@ PRs instead of one.
 ### 46. Order of core PRs, size, and what each unblocks for non-javac compilations
 | # | Change | Size | Behaviour change? | Kit sections it unblocks on KSP/Groovy |
 |---|---|---|---|---|
-| 1 | #40 `AnnotationElement.getTargets()/getRepeatableContainer()/getRetentionPolicy()` | ~60 core + ~40 × 3 languages + tests | no (additive) | `AnnotatedTypes.verifyConstructor` (constructor return type); `@Target`/`@Repeatable` on an annotation interface, synthesised the way `@Retention` is |
-| 2 | ~~#39 source view~~ — rejected; derived in the processor instead (see #39) | — | — | — |
-| 3 | #38 annotated `PrimitiveElement` for javac and Groovy | ~60 + tests | no for javac/Groovy; **yes** for KSP if its boxing is changed — leave KSP out | `AnnotatedTypes.verifyPrimitiveField`, `EnumMembers.verifyConstructors` |
-| 4 | #43b Groovy `getDeclaredGenericPlaceholders()` | ~20 + tests | Groovy only, corrective | `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes`, `AnnotatedThrowsTypes` on Groovy |
+| 1 | #40 `AnnotationElement.getTargets()/getRepeatableContainer()/getRetentionPolicy()` — **merged, #13162** | ~60 core + ~40 × 3 languages + tests | no (additive) | `AnnotatedTypes.verifyConstructor` — verified passing on the snapshot |
+| 2 | ~~#39 source view~~ — rejected, #13163 closed; derived in the processor instead (see #39) | — | — | — |
+| 3 | #38 annotated `PrimitiveElement` for javac and Groovy — **merged, #13164** | ~60 + tests | no; KSP left out | `AnnotatedTypes.verifyPrimitiveField`, `EnumMembers.verifyConstructors` — verified passing on the snapshot |
+| 4 | #43b Groovy `getDeclaredGenericPlaceholders()` + #43a array class literals — **open, #13165** | ~20 + tests | Groovy only, corrective | `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes`, `AnnotatedThrowsTypes` on Groovy |
 | 5 | #43a array class literals; #42 receiver default (optional) | ~10; ~15 | no; **yes** (contract) | none in the kit; `AnnotatedReceiverTypes` already passes via the processor's own default |
 
 All of it is additive except where marked; collections in the new builder paths are sized with the

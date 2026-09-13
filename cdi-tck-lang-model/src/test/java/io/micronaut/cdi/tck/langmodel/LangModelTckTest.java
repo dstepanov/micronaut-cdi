@@ -39,8 +39,8 @@ import static org.junit.jupiter.api.Assumptions.abort;
  * recorded how each section ended, and this reads the record.
  *
  * <p>A section the model answers from Micronaut's AST must pass. A section that turns on something the AST does
- * not record yet is pending: it is expected to fail until the core change that records it lands, and the day it
- * passes it is reported as a failure here, so that it is taken off the pending list rather than left there.</p>
+ * not record is pending: it is expected to fail until the record changes, and the day it passes it is reported
+ * as a failure here, so that it is taken off the pending list rather than left there.</p>
  */
 class LangModelTckTest {
 
@@ -49,11 +49,8 @@ class LangModelTckTest {
      * MICRONAUT-CORE-FINDINGS.md} that names the change and the assertion the section stops at.
      */
     private static final Map<String, String> PENDING = Map.of(
-        "AnnotatedTypes", "#40 the targets of an annotation interface (the constructor's return type carries the "
-            + "annotations written before its name that may target a type use) and #38 the annotation on a primitive "
-            + "type; then #37 the annotation on one dimension of an array, which Micronaut's model does not keep",
-        "EnumMembers$Verifier", "#38 the annotation on a primitive type: the constructors' boolean and int "
-            + "parameters carry type annotations",
+        "AnnotatedTypes", "the annotation on one dimension of an array (finding #37): Micronaut's model keeps one "
+            + "set of annotations for an array type; accepted",
         "RepeatableAnnotations", "a repeatable annotation written once beside a container the source wrote is "
             + "folded into that container, and the two are not told apart (finding #39, mixed case); accepted"
     );

@@ -223,12 +223,12 @@ read the way the specification's model reads it — a repeatable annotation Micr
 although it was written once is reported as itself, an annotation interface reports the retention it declares —
 and a deployment narrows what an extension sees by registering a `LanguageModelAnnotationFilter`; the kit
 module's filter leaves out what Micronaut's mappers write into its own packages and the non-null marker it adds
-in null-marked code, since the kit asserts on the source alone. Fifteen of the kit's eighteen sections pass;
-three are pending, run as skipped tests that name what each waits on: `AnnotatedTypes` and `EnumMembers` on the
-annotations of a primitive type and of one dimension of an array, and on the targets of an annotation interface,
-which Micronaut's model does not record (`MICRONAUT-CORE-FINDINGS.md`, findings 37, 38 and 40); and one case of
-`RepeatableAnnotations`, a repetition written beside a hand-written container, which Micronaut folds into one
-container and which is accepted as a deviation. Because the model is built on the AST alone, `test-suite-kotlin`
+in null-marked code, since the kit asserts on the source alone. Sixteen of the kit's eighteen sections pass, on Micronaut Core 5.3 (the accessors the model uses — an annotation
+interface's targets, container and retention, and the annotations on a primitive type use — landed there); the
+two that do not are run as skipped tests that name what each waits on, and both are accepted deviations: one
+case of `AnnotatedTypes`, the annotation on one dimension of an array, which Micronaut's model keeps one set of
+for the whole array type, and one case of `RepeatableAnnotations`, a repetition written beside a hand-written
+container, which Micronaut folds into one container (`MICRONAUT-CORE-FINDINGS.md`, findings 37 and 39). Because the model is built on the AST alone, `test-suite-kotlin`
 runs a build compatible extension against a Kotlin class as KSP compiles it, and `test-suite-groovy` against a
 Groovy class.
 

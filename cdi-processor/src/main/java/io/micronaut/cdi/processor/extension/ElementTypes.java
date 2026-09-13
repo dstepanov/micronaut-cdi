@@ -49,8 +49,8 @@ import java.util.function.Predicate;
  * {@link ClassElement#getTypeAnnotationMetadata() type annotations}, a type variable and a wildcard keep theirs
  * in their {@link io.micronaut.inject.ast.GenericElement#getGenericTypeAnnotationMetadata() generic type
  * annotations}, and every type argument, bound, super type and thrown type is a use of its own. That is what is
- * read here, in whichever language the compilation is in. Two things the model cannot reach this way are the
- * annotations of one dimension of an array and of a primitive, which Micronaut does not record yet.</p>
+ * read here, in whichever language the compilation is in. The one thing the model cannot reach this way is the
+ * annotation written on one dimension of an array, which Micronaut's model does not keep.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -91,7 +91,7 @@ public final class ElementTypes {
             return new Array(of(element.fromArray(), declaringType), typeAnnotationsOf(element, declaringType));
         }
         if (element.isPrimitive()) {
-            return new Primitive(element.getName());
+            return new Primitive(element.getName(), typeAnnotationsOf(element, declaringType));
         }
         if (element instanceof WildcardElement wildcard) {
             return wildcardOf(wildcard, declaringType);
@@ -193,7 +193,7 @@ public final class ElementTypes {
             return new Void();
         }
         if (io.micronaut.core.reflect.ClassUtils.getPrimitiveType(name).isPresent()) {
-            return new Primitive(name);
+            return new Primitive(name, List.of());
         }
         ClassElement element = ExtensionAnnotationTypes.declarationOf(name);
         if (element == null) {
@@ -336,15 +336,15 @@ public final class ElementTypes {
     }
 
     /**
-     * A primitive type. Micronaut shares one element for every use of a primitive, so the annotations written
-     * on a use are not recorded.
+     * A primitive type, with the annotations written on the use of it (Micronaut Core 5.3 records them on the
+     * copy of the shared primitive element it hands out for an annotated use).
      */
     private static final class Primitive extends Annotated implements PrimitiveType {
 
         private final String name;
 
-        private Primitive(String name) {
-            super(List.of());
+        private Primitive(String name, List<AnnotationInfo> annotations) {
+            super(annotations);
             this.name = name;
         }
 

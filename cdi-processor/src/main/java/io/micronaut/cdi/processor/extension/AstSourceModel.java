@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
@@ -25,7 +26,6 @@ import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
@@ -33,9 +33,12 @@ import jakarta.enterprise.lang.model.types.TypeVariable;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The language model read from Micronaut's AST alone, in whichever language the compilation is in.
@@ -57,6 +60,7 @@ final class AstSourceModel implements SourceModel {
 
     private static final String OBJECT = "java.lang.Object";
     private static final String RETENTION = "java.lang.annotation.Retention";
+    private static final String REPEATABLE = "java.lang.annotation.Repeatable";
 
     private AstSourceModel() {
     }
@@ -74,39 +78,41 @@ final class AstSourceModel implements SourceModel {
             }
         }
         if (element instanceof AnnotationElement annotation) {
-            addRetention(annotation, found);
+            addMetaAnnotations(annotation, found);
         }
         return ExtensionAnnotations.unfoldSingleRepetitions(found, element);
     }
 
     /**
-     * The {@code Retention} an annotation interface declares, which Micronaut leaves out of its record as one
-     * of the meta-annotations it reads itself. It is known from what Micronaut answers about the interface's
-     * retention: {@code RUNTIME} or {@code SOURCE} is only ever declared, while {@code CLASS} is what an
-     * interface that declares nothing has, and is left out.
+     * The meta-annotations an annotation interface declares, which Micronaut leaves out of its record as the
+     * ones it reads itself, put back from what it answers about the interface: its {@code Retention} — where
+     * {@code CLASS} is what an interface that declares nothing has, and is left out; Micronaut answers
+     * {@code RUNTIME} for an interface that declares nothing, so such an interface reports a {@code Retention}
+     * it did not write — and the container of a repeatable one, which is only ever declared. Its
+     * {@code Target} is not put back, since the targets of an interface that declares none read the same as
+     * declared ones.
      */
-    private static void addRetention(AnnotationElement annotation, List<AnnotationInfo> found) {
-        for (AnnotationInfo present : found) {
-            if (RETENTION.equals(present.name())) {
-                return;
-            }
-        }
-        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
-        if (context == null) {
-            return;
-        }
-        RetentionPolicy retention = context.getAnnotationRetentionPolicy(annotation.getName());
-        if (retention != RetentionPolicy.CLASS && ExtensionAnnotations.isReported(annotation, RETENTION)) {
+    private static void addMetaAnnotations(AnnotationElement annotation, List<AnnotationInfo> found) {
+        Set<String> present = new HashSet<>();
+        found.forEach(each -> present.add(each.name()));
+        RetentionPolicy retention = annotation.getRetentionPolicy();
+        if (!present.contains(RETENTION) && retention != RetentionPolicy.CLASS
+            && ExtensionAnnotations.isReported(annotation, RETENTION)) {
             found.add(new ElementAnnotationInfo(
                 AnnotationValue.builder(RETENTION).member("value", retention.name()).build()));
+        }
+        String container = annotation.getRepeatableContainer().orElse(null);
+        if (container != null && !present.contains(REPEATABLE)
+            && ExtensionAnnotations.isReported(annotation, REPEATABLE)) {
+            found.add(new ElementAnnotationInfo(
+                AnnotationValue.builder(REPEATABLE).member("value", new AnnotationClassValue<>(container)).build()));
         }
     }
 
     @Override
     public List<AnnotationInfo> repeatableOn(Element element, String annotation) {
         // Micronaut resolves the container of a repeatable annotation itself when asked for the annotations of
-        // one name, whether they were written one by one or inside the container; an annotation that is not
-        // repeatable it answers for by name alone
+        // one name, whether they were written one by one or inside the container
         if (!ExtensionAnnotations.isReported(element, annotation)) {
             return List.of();
         }
@@ -115,6 +121,7 @@ final class AstSourceModel implements SourceModel {
             found.add(new ElementAnnotationInfo(value));
         }
         if (found.isEmpty()) {
+            // before core 5.2.2 (#13166) the query by name answered for repeatable annotations only
             AnnotationValue<Annotation> single = element.getDeclaredAnnotation(annotation);
             if (single != null) {
                 found.add(new ElementAnnotationInfo(single));
@@ -211,11 +218,13 @@ final class AstSourceModel implements SourceModel {
 
     @Override
     public @Nullable String containerOf(String annotation) {
-        return null;
+        return ExtensionAnnotationTypes.declarationOf(annotation) instanceof AnnotationElement declaration
+            ? declaration.getRepeatableContainer().orElse(null) : null;
     }
 
     @Override
     public boolean isTypeUse(String annotation) {
-        return false;
+        return ExtensionAnnotationTypes.declarationOf(annotation) instanceof AnnotationElement declaration
+            && declaration.getTargets().contains(ElementType.TYPE_USE);
     }
 }
