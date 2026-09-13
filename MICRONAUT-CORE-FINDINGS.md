@@ -364,9 +364,13 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   `ScannedClassesImport`) are never compiled: the Groovy compiler has no processing rounds, so a source file
   written through `visitGeneratedSourceFile` mid-compilation is not part of the compilation. Discovery's context
   records, registered qualifiers and scanned-class imports are lost there (`test-suite-groovy` compiles and
-  passes only because it asserts none of them). The fix is to stop generating source for these — write the
-  records into a resource or a bean definition directly (`ClassElement.addAssociatedBean`, a `BeanElementBuilder`)
-  — which also removes the per-language syntax the generator now carries.
+  passes only because it asserts none of them). **Fixed in core by micronaut-core#13179 (open, 5.3.x)**, which
+  compiles generated sources in the same Groovy compilation. Verified 13 Sep 2026 against `5.3.0-CDICHECK`
+  (5.3.x + 5.2.x + #13165 + #13179): both holders are compiled into the Groovy suite's output and the
+  extension-registered `@Zesty` is a qualifier; the full CDI `check` passes on that build — TCK 807/807, `cdi-tck`
+  46, `test-suite-java` 125 (1 deliberately disabled), Kotlin 1, Groovy 3, `cdi-el` 3, language-model kit 16 of 18
+  with the two accepted deviations. `ModelUnderGroovyTest.anAnnotationTheDiscoveryPhaseRegisteredIsAQualifier`
+  is pending until #13179 lands and enforces itself from then on.
 - Interceptors bridge: done on its `main` — the advice holds the interceptor registrations and destroys them from
   its own `@PreDestroy`, interceptor classes are found through one index, and private interceptor methods are
   documented as accepted. What is left is core's: a scoped proxy's method interception keeps the interceptor
