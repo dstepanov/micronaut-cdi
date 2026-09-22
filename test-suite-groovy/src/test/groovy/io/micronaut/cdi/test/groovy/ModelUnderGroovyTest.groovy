@@ -10,7 +10,6 @@ import jakarta.enterprise.context.ApplicationScoped
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.assertTrue
-import static org.junit.jupiter.api.Assumptions.abort
 
 /**
  * The language model reaches a build compatible extension in a Groovy compilation the same way it does in a
@@ -33,12 +32,7 @@ class ModelUnderGroovyTest {
     @Test
     void anAnnotationTheDiscoveryPhaseRegisteredIsAQualifier() {
         // what discovery registers reaches the bean context only through a class the visitor generates as source,
-        // which the Groovy compiler has to compile in the same compilation. Until Micronaut Core compiles such
-        // sources (micronaut-core#13179) the class is not there, and this is pending rather than failing; once it
-        // is there, the qualifier has to be registered
-        if (getClass().classLoader.getResource('io/micronaut/cdi/generated/ExtensionContextRecordHolder.class') == null) {
-            abort('pending on micronaut-core#13179: the Groovy compiler does not compile generated sources')
-        }
+        // which the Groovy compiler compiles in the same compilation since Micronaut Core 5.3 (micronaut-core#13179)
         ApplicationContext.run().withCloseable { context ->
             assertTrue(context.getBean(CdiBeanContainer).isQualifier(Zesty), "Zesty is not a qualifier")
         }

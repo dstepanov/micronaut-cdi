@@ -364,13 +364,13 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   `ScannedClassesImport`) are never compiled: the Groovy compiler has no processing rounds, so a source file
   written through `visitGeneratedSourceFile` mid-compilation is not part of the compilation. Discovery's context
   records, registered qualifiers and scanned-class imports are lost there (`test-suite-groovy` compiles and
-  passes only because it asserts none of them). **Fixed in core by micronaut-core#13179 (open, 5.3.x)**, which
+  passes only because it asserts none of them). **Fixed in core by micronaut-core#13179 (merged into 5.3.x, 14 Sep 2026)**, which
   compiles generated sources in the same Groovy compilation. Verified 13 Sep 2026 against `5.3.0-CDICHECK`
   (5.3.x + 5.2.x + #13165 + #13179): both holders are compiled into the Groovy suite's output and the
   extension-registered `@Zesty` is a qualifier; the full CDI `check` passes on that build — TCK 807/807, `cdi-tck`
   46, `test-suite-java` 125 (1 deliberately disabled), Kotlin 1, Groovy 3, `cdi-el` 3, language-model kit 16 of 18
   with the two accepted deviations. `ModelUnderGroovyTest.anAnnotationTheDiscoveryPhaseRegisteredIsAQualifier`
-  is pending until #13179 lands and enforces itself from then on.
+  was pending until #13179 landed; it now asserts outright and passes on the published 5.3 snapshot.
 - Interceptors bridge: done on its `main` — the advice holds the interceptor registrations and destroys them from
   its own `@PreDestroy`, interceptor classes are found through one index, and private interceptor methods are
   documented as accepted. What is left is core's: a scoped proxy's method interception keeps the interceptor
@@ -589,7 +589,7 @@ is `NestingKind.isNested()`). Aligning the implementations with the javadoc woul
 with no caller inside core (`git grep getReceiverType` finds only the two files); recommended as a separate,
 optional PR — or fix the javadoc.
 
-### 43. Small core fixes found on the way — PR #13165 (5.3.x, open)
+### 43. Small core fixes found on the way — MERGED upstream (#13165, 5.3.x)
 (a) `MetadataAnnotationValueVisitor.visitType` (`JavaAnnotationMetadataBuilder.java:650`) records a class member
 for a `DeclaredType` and a `PrimitiveType` only; `String[].class` leaves `resolvedValue` null and the member
 vanishes from the `AnnotationValue`. ~10 lines; additive; the kit has no such member. (b)
@@ -630,11 +630,12 @@ KSP one reading `KSAnnotated`/`KSType` through `KotlinNativeElement.element`, an
 
 **Status, 13 Sep 2026 (evening).** Core merged #13162 (#40) and #13164 (#38) into 5.3.x, and #13166 (the
 `getDeclaredAnnotationValuesByName` fix) into 5.2.x; #13165 (#43) and #13179 (Groovy generated sources, the
-project-side follow-up below) are open on 5.3.x; #13163 (the source view) is closed. This branch builds on
+project-side follow-up below) were open then and merged into 5.3.x on 13 and 14 Sep, and #13166 has since reached
+5.3.x too; #13163 (the source view) is closed. This branch builds on
 `5.3.0-SNAPSHOT` (`-PnoMavenLocal` keeps a stale local publication from shadowing it) and uses the accessors:
 sixteen of eighteen sections pass, `EnumMembers` and the constructor and primitive checks of `AnnotatedTypes`
 included; the two pending sections are the accepted deviations (#37 array dimensions, #39 mixed repeatable).
-The by-name fallback stays until 5.2.x is forward-merged into 5.3.x.
+The by-name fallback in `AstSourceModel.repeatableOn` is redundant on 5.3 now and can go when convenient.
 
 **Done, 13 Sep 2026.** The processor no longer reads the compiler at all: `SourceModel` is the one seam and
 `AstSourceModel` its only implementation; `MirrorTypes`, `MirrorAnnotationInfo`, `MirrorAnnotationMember`,
@@ -670,7 +671,7 @@ PRs instead of one.
 | 1 | #40 `AnnotationElement.getTargets()/getRepeatableContainer()/getRetentionPolicy()` — **merged, #13162** | ~60 core + ~40 × 3 languages + tests | no (additive) | `AnnotatedTypes.verifyConstructor` — verified passing on the snapshot |
 | 2 | ~~#39 source view~~ — rejected, #13163 closed; derived in the processor instead (see #39) | — | — | — |
 | 3 | #38 annotated `PrimitiveElement` for javac and Groovy — **merged, #13164** | ~60 + tests | no; KSP left out | `AnnotatedTypes.verifyPrimitiveField`, `EnumMembers.verifyConstructors` — verified passing on the snapshot |
-| 4 | #43b Groovy `getDeclaredGenericPlaceholders()` + #43a array class literals — **open, #13165** | ~20 + tests | Groovy only, corrective | `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes`, `AnnotatedThrowsTypes` on Groovy |
+| 4 | #43b Groovy `getDeclaredGenericPlaceholders()` + #43a array class literals — **merged, #13165** | ~20 + tests | Groovy only, corrective | `AnnotatedTypes.verifyTypeParameters`, `AnnotatedSuperTypes`, `AnnotatedThrowsTypes` on Groovy |
 | 5 | #43a array class literals; #42 receiver default (optional) | ~10; ~15 | no; **yes** (contract) | none in the kit; `AnnotatedReceiverTypes` already passes via the processor's own default |
 
 All of it is additive except where marked; collections in the new builder paths are sized with the
