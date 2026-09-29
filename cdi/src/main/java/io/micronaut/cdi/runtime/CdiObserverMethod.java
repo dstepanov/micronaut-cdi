@@ -313,11 +313,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     private boolean isDependent() {
-        return !declaring.isSingleton()
-            && !declaring.getAnnotationMetadata().hasStereotype(
-            io.micronaut.cdi.annotation.CdiApplicationScope.class)
-            && !declaring.getAnnotationMetadata().hasStereotype(
-            io.micronaut.cdi.annotation.CdiRequestScope.class);
+        return CdiResolution.isDependent(declaring);
     }
 
     private io.micronaut.context.BeanRegistration<?> registrationOfDeclaring() {

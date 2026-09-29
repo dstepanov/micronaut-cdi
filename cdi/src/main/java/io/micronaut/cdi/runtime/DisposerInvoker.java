@@ -115,11 +115,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         for (int i = 0; i < arguments.length; i++) {
             parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], transientArguments);
         }
-        if (!declaring.isSingleton()
-            && !declaring.getAnnotationMetadata().hasStereotype(
-            io.micronaut.cdi.annotation.CdiApplicationScope.class)
-            && !declaring.getAnnotationMetadata().hasStereotype(
-            io.micronaut.cdi.annotation.CdiRequestScope.class)) {
+        if (CdiResolution.isDependent(declaring)) {
             // a dependent declaring bean exists for the one disposal: created for it, destroyed with its own
             // dependents when the disposer has run
             io.micronaut.context.BeanRegistration<?> registration = registrationOf(declaring);
