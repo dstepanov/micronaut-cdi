@@ -280,13 +280,17 @@ the **member** (`Q`) — against `declaredAnnotations`, which holds the **contai
 `declaredByStereotype=[]`, `hasDeclared(Q)=false`, `hasDeclared(Qs)=true`. Fix: accept `s` when
 `declaredAnnotations` contains its container. Tiny, zero overhead. This is the trap behind retracted #23.
 
-### 27. `AbstractConcurrentCustomScope` cannot answer "the instance held for this definition" — PR #12969 (also fixes `destroyProxyTargetBean` for `@ScopedProxy` beans on such a scope)
+### 27. `AbstractConcurrentCustomScope` cannot answer "the instance held for this definition" — FIXED upstream (#12969; also fixes `destroyProxyTargetBean` for `@ScopedProxy` beans on such a scope)
 `CustomScope.findBeanRegistration(BeanDefinition)` has a default returning empty since 3.5; the abstract scope
 implements only the `(T bean)` overload, `remove(BeanIdentifier)` is `final` and the identifier core stores
 under (`DefaultBeanContext.BeanKey`) is package-private — so an `AlterableContext.destroy(Contextual)` has to
 scan every `CreatedBean` and match proxy target *names* (`context/ApplicationScope.java`, `RequestScope.java`,
 two ~40-line copies). Fix: implement `findBeanRegistration(BeanDefinition)` in the abstract scope and add a
 non-final `remove(BeanDefinition)` that removes under the lock and closes outside it. Additive.
+
+Now used: `CdiContext.destroy` calls `remove(bean.definition())` and both copies are gone. Core looks every entry of
+the scope map up by its definition, so the store a context keeps its handed-in contextuals in answers with a private
+`RuntimeBeanDefinition` rather than throwing.
 
 ### 28. `AbstractConcurrentCustomScope.getOrCreate` holds the scope-wide write lock around `doCreate` — PR #12973 (opt-in `lockPerBean` constructor flag)
 Every scoped bean's constructor and `@PostConstruct` in the JVM runs mutually exclusively per scope, even where

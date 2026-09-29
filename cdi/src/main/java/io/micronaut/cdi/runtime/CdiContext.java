@@ -17,9 +17,10 @@ package io.micronaut.cdi.runtime;
 
 import io.micronaut.cdi.context.ApplicationScope;
 import io.micronaut.cdi.context.RequestScope;
+import io.micronaut.context.RuntimeBeanDefinition;
+import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
-import io.micronaut.context.scope.CustomScope;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
@@ -59,11 +60,11 @@ public final class CdiContext implements AlterableContext {
 
     private final Class<? extends Annotation> scope;
     private final BooleanSupplier active;
-    private final @Nullable CustomScope<?> holder;
+    private final @Nullable AbstractConcurrentCustomScope<?> holder;
 
     private CdiContext(Class<? extends Annotation> scope,
                        BooleanSupplier active,
-                       @Nullable CustomScope<?> holder) {
+                       @Nullable AbstractConcurrentCustomScope<?> holder) {
         this.scope = scope;
         this.active = active;
         this.holder = holder;
@@ -182,14 +183,10 @@ public final class CdiContext implements AlterableContext {
         }
         // not something a program handed in, so it is a bean of the container: the instance Micronaut holds in
         // the scope is destroyed and forgotten, and the next reference through the proxy is a fresh one
-        if (contextual instanceof CdiBean<?> bean) {
-            // matched by the bean's definition: getBeanClass() of a produced bean is the producer's declaring
-            // class, which is not what the scope holds
-            if (holder instanceof ApplicationScope applicationScope) {
-                applicationScope.destroyInstanceOf(bean.definition());
-            } else if (holder instanceof RequestScope requestScope) {
-                requestScope.destroyInstanceOf(bean.definition());
-            }
+        if (contextual instanceof CdiBean<?> bean && holder != null) {
+            // matched by the bean's definition, which may be the one of its client proxy: getBeanClass() of a
+            // produced bean is the producer's declaring class, which is not what the scope holds
+            holder.remove(bean.definition());
         }
     }
 
@@ -203,7 +200,7 @@ public final class CdiContext implements AlterableContext {
             return null;
         }
         try {
-            return ((CustomScope<Annotation>) holder).getOrCreate(new StoreCreation());
+            return ((AbstractConcurrentCustomScope<Annotation>) holder).getOrCreate(new StoreCreation());
         } catch (ContextNotActiveException e) {
             if (forCreation) {
                 throw e;
@@ -238,14 +235,22 @@ public final class CdiContext implements AlterableContext {
      * Creates the store inside the scope, as the one bean of the scope this module itself holds there: the
      * scope destroys every bean it holds when it ends, and destroying the store is what releases everything a
      * program handed in.
+     *
+     * <p>The store is not a bean of the application, but the scope asks what it holds for its definition, and
+     * does so for every entry whenever it looks a bean up by its definition. It answers with a definition of its
+     * own, which no bean of the container equals, and which is never used to create anything.</p>
      */
     private static final class StoreCreation implements BeanCreationContext<Map<Contextual<?>, Held<?>>> {
 
         private static final BeanIdentifier ID = CONTEXTUAL_STORE_ID;
 
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        private static final BeanDefinition<Map<Contextual<?>, Held<?>>> DEFINITION = (BeanDefinition)
+            RuntimeBeanDefinition.of(StoreCreation.class, StoreCreation::new);
+
         @Override
         public BeanDefinition<Map<Contextual<?>, Held<?>>> definition() {
-            throw new UnsupportedOperationException("The store of a context is not a bean with a definition");
+            return DEFINITION;
         }
 
         @Override
@@ -259,8 +264,7 @@ public final class CdiContext implements AlterableContext {
             return new CreatedBean<>() {
                 @Override
                 public BeanDefinition<Map<Contextual<?>, Held<?>>> definition() {
-                    throw new UnsupportedOperationException("The store of a context is not a bean with a "
-                        + "definition");
+                    return DEFINITION;
                 }
 
                 @Override
