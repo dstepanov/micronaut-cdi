@@ -336,7 +336,7 @@ Qualifier)` re-resolves by type. Six sites here match definition class names (`C
 core itself does the same internally. Fix: `ProxyBeanDefinition.findTargetDefinition(BeanDefinitionRegistry)`
 or `BeanDefinitionRegistry.findBeanDefinition(Class<? extends BeanDefinition<?>>)`. Read-only, off the hot path.
 
-### 32. A resolution segment's kind is only knowable through `@Internal` classes — PR #12970
+### 32. A resolution segment's kind is only knowable through `@Internal` classes — FIXED upstream (#12970)
 `FieldSegment` implements `InjectionPoint`/`ArgumentInjectionPoint` but not `FieldInjectionPoint`, and its
 `getOuterInjectionPoint()` throws `UnsupportedOperationException`, so `CdiInjectionPoint.of` must `instanceof`
 `AbstractBeanResolutionContext.FieldSegment`/`ConstructorSegment` (`@Internal`). Fix: implement
@@ -351,7 +351,7 @@ does not fire there. Core's own lifecycle table lists this row as the exception.
 as dependents. Only that fallback path is touched. Relevant to micronaut-jakarta-interceptors, whose weak-map
 per-target bookkeeping #12922 otherwise made redundant.
 
-### 34. `MethodArgumentSegment.getOuterInjectionPoint()` throws for a plain `@Inject` method argument
+### 34. `MethodArgumentSegment.getOuterInjectionPoint()` throws for a plain `@Inject` method argument — FIXED upstream (#13022)
 Found while fixing #32: the segment's `outer` is only set when the previous segment happens to be a
 `MethodSegment`, and every production caller pushes method arguments through the
 `(BeanDefinition, String, Argument, Argument[])` overload with no `MethodInjectionPoint` at hand — so `outer` is
@@ -359,6 +359,11 @@ absent and the accessor throws `IllegalStateException("Outer argument inaccessib
 tell a field (`instanceof FieldInjectionPoint`) and a constructor argument (`outer instanceof
 ConstructorInjectionPoint`) apart, but still cannot call `outer` safely on a method argument. Fix: return `null`
 as `FieldSegment` now does, or carry the method injection point on that overload. Zero overhead.
+
+Now used, with #32: `CdiInjectionPoint.of` tells a field by `FieldInjectionPoint` and a constructor argument by
+an outer `ConstructorInjectionPoint`, and names none of the `@Internal` segment classes. #13022 answers the
+enclosing method for a method argument, which for the argument of a factory method is the definition's
+constructor — a `ConstructorInjectionPoint` that is also a `MethodInjectionPoint`, and read as the method it is.
 
 ### 35. `SingletonScope.getOrCreate` releases its per-identity lock after a *failed* creation
 Observed while implementing #28: `SingletonScope` removes the per-identity lock object in `finally`, so when a

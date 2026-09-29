@@ -173,12 +173,19 @@ public final class CdiInjectionPoint implements InjectionPoint {
      */
     public static CdiInjectionPoint of(Bean<?> bean, io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
         Class<?> declaring = bean.getBeanClass();
-        boolean isField = segment
-            instanceof io.micronaut.context.AbstractBeanResolutionContext.FieldSegment<?, ?>;
-        String member = segment
-            instanceof io.micronaut.context.AbstractBeanResolutionContext.ConstructorSegment
-            ? "<init>" : segment.getName();
+        boolean isField = segment instanceof io.micronaut.inject.FieldInjectionPoint<?, ?>;
+        String member = isConstructorArgument(segment) ? "<init>" : segment.getName();
         return new CdiInjectionPoint(bean, segment.getArgument(), declaring, member, isField);
+    }
+
+    /**
+     * Whether the segment is an argument of the constructor of the bean. The factory method of a produced bean is
+     * the constructor of that bean to Micronaut, and a method all the same, whose name is the member's.
+     */
+    private static boolean isConstructorArgument(io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
+        return segment instanceof io.micronaut.inject.ArgumentInjectionPoint<?, ?> argument
+            && argument.getOuterInjectionPoint() instanceof io.micronaut.inject.ConstructorInjectionPoint<?> outer
+            && !(outer instanceof io.micronaut.inject.MethodInjectionPoint<?, ?>);
     }
 
     @Override
