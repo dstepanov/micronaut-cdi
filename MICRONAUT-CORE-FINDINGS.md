@@ -385,7 +385,7 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   one context per compilation) and seed the TCK adapter's extensions through a `JavaParser` subclass rather than
   `BuildCompatibleExtensionVisitor.overrideExtensions`.
 - `InjectedParameters.readAsInjectionPoints` rests on a premise core does not have (a parameter's metadata does
-  not carry its method's annotations) — the removal loop removes nothing in the ordinary case; delete it.
+  not carry its method's annotations) — the removal loop removes nothing in the ordinary case; delete it. **Done.**
 - `@Executable(processOnStartup = true)` on `CdiObserver` + `ObserverRegistry implements
   ExecutableMethodProcessor<CdiObserver>` replaces the all-definitions walk; `CdiBeanContainer.canonicalBean`
   wants a map; `Class.forName` for annotation types → `AnnotationMetadata.getAnnotationType(name)`.

@@ -18,7 +18,6 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.annotation.CdiDisposer;
 import io.micronaut.cdi.annotation.CdiProducer;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.cdi.processor.InjectedParameters;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
@@ -210,9 +209,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // injected — the definition says so, so that resolution hands the null on instead of failing
             producer.annotate(io.micronaut.core.annotation.AnnotationUtil.NULLABLE);
             allowReflectionIfNeeded(producer);
-            if (producer instanceof MethodElement producerMethod) {
-                InjectedParameters.readAsInjectionPoints(producerMethod);
-            }
             MethodElement disposer = findDisposer(producer, disposers, context);
             if (disposer != null) {
                 matchedDisposers.add(disposer);
@@ -220,7 +216,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // static one included, which is invoked without an instance of the class declaring it
                 disposer.annotate(Executable.class);
                 allowReflectionIfNeeded(disposer);
-                InjectedParameters.readAsInjectionPoints(disposer);
                 boolean staticDisposer = disposer.isStatic();
                 boolean publicDisposer = disposer.isPublic();
                 producer.annotate(CdiDisposer.class, builder -> builder

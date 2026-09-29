@@ -17,7 +17,6 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.annotation.CdiObserver;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.cdi.processor.InjectedParameters;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.ReflectiveAccess;
@@ -125,7 +124,6 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
                 // only that method is notified reflectively
                 method.annotate(ReflectiveAccess.class);
             }
-            InjectedParameters.readAsInjectionPoints(method);
             int position = observed;
             boolean asynchronous = async;
             boolean isStatic = method.isStatic();
