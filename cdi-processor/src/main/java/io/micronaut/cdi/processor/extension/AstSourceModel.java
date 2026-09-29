@@ -47,8 +47,7 @@ import java.util.Set;
  * {@link LanguageModelAnnotationFilter}s allow, read the way the specification's model reads: a repeatable
  * annotation Micronaut folded into its container although it was written once is reported as itself, and an
  * annotation interface reports the {@code Retention} it declares. What the record does not hold is not
- * reported: a primitive and each dimension of an array carry no annotations, and the targets of an annotation
- * interface are not known, so a constructor's return type carries nothing.</p>
+ * reported: an annotation written on one dimension of an array is not kept.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -119,13 +118,6 @@ final class AstSourceModel implements SourceModel {
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationValue<Annotation> value : element.getDeclaredAnnotationValuesByName(annotation)) {
             found.add(new ElementAnnotationInfo(value));
-        }
-        if (found.isEmpty()) {
-            // before core 5.2.2 (#13166) the query by name answered for repeatable annotations only
-            AnnotationValue<Annotation> single = element.getDeclaredAnnotation(annotation);
-            if (single != null) {
-                found.add(new ElementAnnotationInfo(single));
-            }
         }
         return found;
     }
