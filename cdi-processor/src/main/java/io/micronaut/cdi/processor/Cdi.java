@@ -160,9 +160,11 @@ public final class Cdi {
     }
 
     /**
-     * Reads the priority an element was selected with: the priority annotation where it survived, and the
-     * Micronaut order it is read as where the compiler already turned one into the other — a mapped annotation
-     * replaces what it read, and which form is present depends on what ran first.
+     * Reads the priority an element was selected with.
+     *
+     * <p>Micronaut maps the priority annotation to its own order, and keeps the annotation beside what it mapped
+     * it to, so the priority is read as it was written. An order the element declares itself is not a priority of
+     * the specification, and is not read as one.</p>
      *
      * @param metadata The annotation metadata
      * @return The priority, or {@code null} where none was written
@@ -170,13 +172,6 @@ public final class Cdi {
     public static java.lang.@org.jspecify.annotations.Nullable Integer priorityOf(
         io.micronaut.core.annotation.AnnotationMetadata metadata) {
         java.util.OptionalInt declared = metadata.intValue(PRIORITY, "value");
-        if (declared.isPresent()) {
-            return declared.getAsInt();
-        }
-        java.util.OptionalInt mapped = metadata.intValue("io.micronaut.core.annotation.Order", "value");
-        if (mapped.isPresent() && mapped.getAsInt() > 0) {
-            return mapped.getAsInt();
-        }
-        return null;
+        return declared.isPresent() ? declared.getAsInt() : null;
     }
 }

@@ -46,12 +46,17 @@ needs the class context (`@Priority` on the class selecting an `@Alternative` pr
 around it by consulting the declaring `ClassElement` explicitly (`ProducerVisitor.selectIfAlternative`). Either
 behaviour is defensible, but methods and fields disagreeing is a trap.
 
-### 6. `jakarta.annotation.Priority` is remapped to `@Order` with the value as-is — and the original is dropped
+### 6. `jakarta.annotation.Priority` is remapped to `@Order` with the value as-is — and the original is dropped — DOCUMENTED upstream (#13051): the original is kept
 Two consequences: (a) code looking for `@Priority` in metadata finds nothing after mapping, so compile-time reads
 must check both forms (`cdi-processor/.../Cdi.priorityOf`); (b) the sign convention inverts the meaning — CDI
 priority prefers the highest value, Micronaut order the lowest — so a CDI-selected alternative must write
 `@Order(-priority)` *over* the mapped value. A definition-level `getPriority()` (or documented mapping) would
 remove the trap.
+
+#13051 documents the mapping: a mapper adds to what it reads, so `@Priority` stays in the metadata beside the order,
+and the sign is the consumer's to negate where the highest value wins. (a) was never so: `Cdi.priorityOf` now reads
+`@Priority` alone. Its fallback to `@Order` was dead, and wrong where it did answer: it read a plain Micronaut
+`@Order` as a CDI priority.
 
 ### 7. NOT REPRODUCED — `getAnnotationNamesByStereotype` names the immediate carrier, not the declared annotation
 A javac probe on `Class → @S → @RequestScoped → @NormalScope` (in-source and precompiled `@S`, `@Inherited`
