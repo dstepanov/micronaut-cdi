@@ -329,12 +329,16 @@ already collects dependents into the registration.)
 Now used: a synthetic bean's definition is built with `disposer(...)`, and `SyntheticDisposerListener` and the
 definition-to-description map it read are gone.
 
-### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition` — PR #12974
+### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition` — FIXED upstream (#12974)
 Only `getTargetDefinitionType()` (a `Class`) and `getTargetType()`; `getProxyTargetBeanDefinition(Argument,
 Qualifier)` re-resolves by type. Six sites here match definition class names (`CdiBean.targetDefinition`,
 `canonicalDefinitionName`, `CdiBeanContainer`, `CdiInstance.dedupProxies`, both scopes, `RecordedInvoker`);
 core itself does the same internally. Fix: `ProxyBeanDefinition.findTargetDefinition(BeanDefinitionRegistry)`
 or `BeanDefinitionRegistry.findBeanDefinition(Class<? extends BeanDefinition<?>>)`. Read-only, off the hot path.
+
+#12974 adds `findBeanDefinitionByDefinitionClass`, which `findProxyTargetBeanDefinition(BeanDefinition)` now goes
+through. `CdiBean.targetDefinition` uses it, and the two scopes no longer match names since their copies went with
+#27. The other sites remain.
 
 ### 32. A resolution segment's kind is only knowable through `@Internal` classes — FIXED upstream (#12970)
 `FieldSegment` implements `InjectionPoint`/`ArgumentInjectionPoint` but not `FieldInjectionPoint`, and its

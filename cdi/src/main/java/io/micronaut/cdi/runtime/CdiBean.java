@@ -94,16 +94,8 @@ public final class CdiBean<T> implements Bean<T> {
     /**
      * The definition of the class itself, which for a bean in a normal scope is the proxy's target.
      */
-    @SuppressWarnings("unchecked")
     private BeanDefinition<T> targetDefinition() {
-        if (definition instanceof ProxyBeanDefinition<T> proxy) {
-            for (BeanDefinition<?> candidate : beanContext.getBeanDefinitions(proxy.getTargetType())) {
-                if (candidate.getClass().getName().equals(proxy.getTargetDefinitionType().getName())) {
-                    return (BeanDefinition<T>) candidate;
-                }
-            }
-        }
-        return definition;
+        return beanContext.findProxyTargetBeanDefinition(definition).orElse(definition);
     }
 
     /**
