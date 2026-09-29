@@ -142,15 +142,6 @@ because bean-archive membership is a per-deployment question a global compilatio
 bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
 deployment ever admits is the difference visible to code that counts beans.
 
-### An abstract class annotated with a scope still takes part in resolution
-
-Section 3.1.1 requires the class of a managed bean to be concrete, so an abstract class that carries a scope is not
-a bean. The bean manager leaves it out of `getBeans`, as it should, but the definition Micronaut compiles for it is
-still a candidate when an injection point or a programmatic lookup of the abstract type is resolved, so a lookup of
-a type whose one bean is a concrete subclass comes out ambiguous. Micronaut compiles definitions for abstract
-classes for its own reasons, and what is missing is for resolution to read the same rule the bean manager reads.
-`AbstractBeanTest.aLookupOfTheAbstractTypeResolvesToItsConcreteSubclass` is disabled until then.
-
 ### Two findings of a reading of ArC's test suite, reported as the class compiles
 
 Both are reported by the compiler rather than at runtime, so neither can carry a disabled test. A disposer method is
@@ -240,4 +231,6 @@ type variable's bound was compared by its raw class, so a variable bounded by an
 parameterized type, matched too much or too little. From ArC's: a class written with the singleton pseudo-scope
 and nothing else got no default qualifier and resolved at no unqualified injection point; a nested class's default
 name carried its outer class; a producer of a type with a type variable was refused the dependent scope it is
-allowed; and a dependent producer in an application scoped class was refused an `InjectionPoint` parameter.
+allowed; a dependent producer in an application scoped class was refused an `InjectionPoint` parameter; and a
+programmatic lookup of an abstract class annotated with a scope, whose one bean is a concrete subclass, was
+ambiguous, the definition Micronaut compiles for the abstract class being counted as a bean.

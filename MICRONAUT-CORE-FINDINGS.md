@@ -337,7 +337,8 @@ definition-to-description map it read are gone.
 ### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition` — FIXED upstream (#12974)
 Only `getTargetDefinitionType()` (a `Class`) and `getTargetType()`; `getProxyTargetBeanDefinition(Argument,
 Qualifier)` re-resolves by type. Six sites here match definition class names (`CdiBean.targetDefinition`,
-`canonicalDefinitionName`, `CdiBeanContainer`, `CdiInstance.dedupProxies`, both scopes, `RecordedInvoker`);
+`canonicalDefinitionName`, `CdiBeanContainer`, `CdiInstance.dedupProxies` (now `beansAmong`), both scopes,
+`RecordedInvoker`);
 core itself does the same internally. Fix: `ProxyBeanDefinition.findTargetDefinition(BeanDefinitionRegistry)`
 or `BeanDefinitionRegistry.findBeanDefinition(Class<? extends BeanDefinition<?>>)`. Read-only, off the hot path.
 

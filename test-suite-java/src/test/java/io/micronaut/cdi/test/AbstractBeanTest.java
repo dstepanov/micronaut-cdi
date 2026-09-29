@@ -40,8 +40,6 @@ class AbstractBeanTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("The definition compiled for an abstract class still takes part in "
-        + "resolution, so a lookup of the abstract type is ambiguous; see CONFORMANCE.md")
     void aLookupOfTheAbstractTypeResolvesToItsConcreteSubclass() {
         try (ApplicationContext context = ApplicationContext.run()) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);

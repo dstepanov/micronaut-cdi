@@ -392,13 +392,13 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
 
     private Collection<BeanDefinition<T>> definitions() {
         Qualifier<T> qualifier = CdiQualifiers.of(qualifiers);
-        Collection<BeanDefinition<T>> resolved = dedupProxies(beanContext.getBeanDefinitions(type, qualifier));
+        Collection<BeanDefinition<T>> resolved = beansAmong(beanContext.getBeanDefinitions(type, qualifier));
         Argument<T> counterpart = CdiTypes.counterpartOf(type);
         if (counterpart == null) {
             return resolved;
         }
         // a primitive and the class that boxes it are one bean type, and Micronaut keeps them apart
-        Collection<BeanDefinition<T>> boxed = dedupProxies(beanContext.getBeanDefinitions(counterpart, qualifier));
+        Collection<BeanDefinition<T>> boxed = beansAmong(beanContext.getBeanDefinitions(counterpart, qualifier));
         if (boxed.isEmpty()) {
             return resolved;
         }
@@ -408,28 +408,36 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
     }
 
     /**
-     * Drops the definition a proxy stands in front of: the proxy and its target describe the same bean, and
-     * the lookup answers with one entry per bean.
+     * The beans among the definitions a lookup resolved, one entry per bean.
+     *
+     * <p>The definition Micronaut compiles for an abstract class is not a bean: section 3.1.1 requires the class
+     * of a managed bean to be concrete, however it is annotated. And the definition a proxy stands in front of
+     * describes the same bean as the proxy, so it is dropped in favour of the proxy.</p>
      */
-    private Collection<BeanDefinition<T>> dedupProxies(Collection<BeanDefinition<T>> resolved) {
+    private Collection<BeanDefinition<T>> beansAmong(Collection<BeanDefinition<T>> resolved) {
         java.util.Set<String> proxied = new java.util.HashSet<>();
+        boolean abstractClasses = false;
         for (BeanDefinition<T> definition : resolved) {
             if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy) {
                 proxied.add(proxy.getTargetDefinitionType().getName());
             }
+            abstractClasses |= definition.isAbstract();
         }
-        if (proxied.isEmpty()) {
+        if (proxied.isEmpty() && !abstractClasses) {
             return resolved;
         }
-        List<BeanDefinition<T>> deduped = new ArrayList<>(resolved.size());
+        List<BeanDefinition<T>> beans = new ArrayList<>(resolved.size());
         for (BeanDefinition<T> definition : resolved) {
+            if (definition.isAbstract()) {
+                continue;
+            }
             if (!(definition instanceof io.micronaut.inject.ProxyBeanDefinition<?>)
                 && proxied.contains(definition.getClass().getName())) {
                 continue;
             }
-            deduped.add(definition);
+            beans.add(definition);
         }
-        return deduped;
+        return beans;
     }
 
     /**
