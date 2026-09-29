@@ -75,13 +75,17 @@ unwrapping `ClassElement.getNativeType()` reflectively). An `ElementMetadata.isI
 
 RESOLVED upstream: `AnnotationElement.isInherited()` (`@since 5.2.0`) answers it for javac, KSP and Groovy; see #36.
 
-### 9. No unfiltered, predicate-aligned view of the compiled definitions
+### 9. No unfiltered, predicate-aligned view of the compiled definitions — FIXED upstream (#13050)
 CDI's `getBeans` must return *unresolved* candidates — a selected alternative and the bean it outranks together —
 while every Micronaut lookup resolves as it goes (replacement filtering, primary narrowing).
 `getBeanDefinitionReferences()` works as the raw view, but an environment that narrows the context via
 `ApplicationContextBuilder.beansPredicate(...)` cannot read that predicate back from the context, so this project
 carries the same predicate twice (`DeploymentBeanFilter`). Exposing the configured predicate on
 `BeanContext`/`ApplicationContextConfiguration` would remove the duplication.
+
+#13050 adds `BeanContext.getBeansPredicate()` and pins what made the second copy unnecessary:
+`getBeanDefinitionReferences()` already reports only the references the predicate admits. Nothing registered a
+`DeploymentBeanFilter`, the kit's harness included, and it is deleted.
 
 ### 10. RETRACTED — `getBeanRegistration(BeanDefinition)` has existed since 3.5.0
 Claimed that creating an instance *of a specific definition* with dependents tracked (CDI's `Bean.create` +

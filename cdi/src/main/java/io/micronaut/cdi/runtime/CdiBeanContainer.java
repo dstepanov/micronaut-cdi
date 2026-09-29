@@ -242,7 +242,8 @@ public final class CdiBeanContainer implements BeanManager {
     }
 
     private List<CdiBean<?>> loadCandidates() {
-        DeploymentBeanFilter filter = beanContext.findBean(DeploymentBeanFilter.class).orElse(null);
+        // the references are the ones the beans predicate of the context admits, so an environment that
+        // narrowed the context reports exactly the beans it narrowed it to
         Map<String, BeanDefinition<?>> byName = new java.util.LinkedHashMap<>();
         for (io.micronaut.inject.BeanDefinitionReference<Object> reference
             : beanContext.getBeanDefinitionReferences()) {
@@ -280,9 +281,6 @@ public final class CdiBeanContainer implements BeanManager {
         List<CdiBean<?>> loaded = new java.util.ArrayList<>();
         for (BeanDefinition<?> definition : byName.values()) {
             if (proxied.contains(definition.getClass().getName())) {
-                continue;
-            }
-            if (filter != null && !filter.includes().test(definition)) {
                 continue;
             }
             loaded.add(new CdiBean<>(beanContext, definition));
