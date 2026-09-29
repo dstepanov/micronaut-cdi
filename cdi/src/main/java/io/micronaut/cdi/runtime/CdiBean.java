@@ -149,12 +149,12 @@ public final class CdiBean<T> implements Bean<T> {
                         .stringValues("io.micronaut.cdi.annotation.CdiGenericVariables"),
                     definition.getBeanType().getClassLoader());
             }
-            collectTypes(produced, closure);
+            closure.addAll(CdiTypes.beanTypeClosureOf(produced));
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
             // rather than of its erasure
-            collectTypes(CdiParameterizedType.of(beanClass), closure);
+            closure.addAll(CdiTypes.beanTypeClosureOf(CdiParameterizedType.of(beanClass)));
         }
         if (definition.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Typed")) {
             // the types the bean named with Typed keep the parameters the closure gives them: an Emu typed
@@ -177,64 +177,6 @@ public final class CdiBean<T> implements Bean<T> {
         // every bean has Object among its types, whatever it narrowed them to
         types.add(Object.class);
         return types;
-    }
-
-    private static void collectTypes(@Nullable Type type, Set<Type> types) {
-        if (type == null || type == Object.class) {
-            return;
-        }
-        Class<?> raw;
-        if (type instanceof Class<?> aClass) {
-            raw = aClass;
-        } else if (type instanceof java.lang.reflect.ParameterizedType parameterized
-            && parameterized.getRawType() instanceof Class<?> rawType) {
-            raw = rawType;
-        } else {
-            // a type variable or a wildcard names no type of its own
-            return;
-        }
-        types.add(type);
-        if (raw.isArray() || raw.isPrimitive()) {
-            // the bean types of an array are the array and Object: the interfaces every array implements are
-            // not among them, and a primitive has none to collect
-            return;
-        }
-        // what the type says about its parameters carries into its supertypes: ArrayList<String> is a bean of
-        // List<String>, not of List<E>
-        java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution = new java.util.HashMap<>();
-        if (type instanceof java.lang.reflect.ParameterizedType parameterized) {
-            java.lang.reflect.TypeVariable<?>[] variables = raw.getTypeParameters();
-            Type[] arguments = parameterized.getActualTypeArguments();
-            for (int i = 0; i < variables.length && i < arguments.length; i++) {
-                substitution.put(variables[i], arguments[i]);
-            }
-        }
-        for (Type anInterface : raw.getGenericInterfaces()) {
-            collectTypes(substitute(anInterface, substitution), types);
-        }
-        collectTypes(substitute(raw.getGenericSuperclass(), substitution), types);
-    }
-
-    private static @Nullable Type substitute(@Nullable Type type,
-                                             java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution) {
-        if (substitution.isEmpty() || type == null) {
-            return type;
-        }
-        if (type instanceof java.lang.reflect.TypeVariable<?> variable) {
-            return substitution.getOrDefault(variable, variable);
-        }
-        if (type instanceof java.lang.reflect.ParameterizedType parameterized
-            && parameterized.getRawType() instanceof Class<?> rawType) {
-            Type[] arguments = parameterized.getActualTypeArguments();
-            Type[] substituted = new Type[arguments.length];
-            boolean changed = false;
-            for (int i = 0; i < arguments.length; i++) {
-                substituted[i] = substitute(arguments[i], substitution);
-                changed |= substituted[i] != arguments[i];
-            }
-            return changed ? CdiParameterizedType.of(rawType, substituted) : type;
-        }
-        return type;
     }
 
     @Override

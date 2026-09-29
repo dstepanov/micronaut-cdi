@@ -180,19 +180,38 @@ public final class CdiTypes {
      */
     public static java.util.List<Type> closureOf(Type type) {
         java.util.List<Type> closure = new java.util.ArrayList<>();
-        collectClosure(type, closure);
+        collectClosure(type, closure, false);
         return closure;
     }
 
-    private static void collectClosure(@Nullable Type type, java.util.List<Type> closure) {
+    /**
+     * The closure a bean's types are taken from: the {@link #closureOf type closure}, except that an array stops at
+     * itself. The bean types of an array are the array and {@code Object}, and the interfaces every array
+     * implements are not among them, although an event of an array type is one of those interfaces as well.
+     *
+     * @param type The type
+     * @return The closure, the type first
+     */
+    public static java.util.List<Type> beanTypeClosureOf(Type type) {
+        java.util.List<Type> closure = new java.util.ArrayList<>();
+        collectClosure(type, closure, true);
+        return closure;
+    }
+
+    private static void collectClosure(@Nullable Type type, java.util.List<Type> closure, boolean arrayStops) {
         if (type == null || type == Object.class) {
             return;
         }
         Class<?> raw = rawClassOf(type);
         if (raw == null) {
+            // a type variable or a wildcard names no type of its own
             return;
         }
         closure.add(type);
+        if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
+            // a primitive has no supertypes to collect in the first place
+            return;
+        }
         java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution = new java.util.HashMap<>();
         if (type instanceof ParameterizedType parameterized) {
             java.lang.reflect.TypeVariable<?>[] variables = raw.getTypeParameters();
@@ -202,9 +221,9 @@ public final class CdiTypes {
             }
         }
         for (Type anInterface : raw.getGenericInterfaces()) {
-            collectClosure(substitute(anInterface, substitution), closure);
+            collectClosure(substitute(anInterface, substitution), closure, arrayStops);
         }
-        collectClosure(substitute(raw.getGenericSuperclass(), substitution), closure);
+        collectClosure(substitute(raw.getGenericSuperclass(), substitution), closure, arrayStops);
     }
 
     /**
@@ -311,7 +330,7 @@ public final class CdiTypes {
         for (int i = 0; i < typeParameters.length; i++) {
             arguments[i] = typeOf(typeParameters[i]);
         }
-        return new Parameterized(argument.getType(), arguments);
+        return CdiParameterizedType.of(argument.getType(), arguments);
     }
 
     /**
@@ -336,55 +355,5 @@ public final class CdiTypes {
         }
         throw new IllegalArgumentException("A bean cannot be looked up by the type " + type + ": only a class and "
             + "a parameterized type describe a bean");
-    }
-
-    /**
-     * A parameterized type built from an argument, which is what the specification reports a parameterized bean
-     * type or observed event type as.
-     *
-     * @param rawType   The raw type
-     * @param arguments The type arguments
-     */
-    @SuppressWarnings("ArrayRecordComponent")
-    private record Parameterized(Class<?> rawType, Type[] arguments) implements ParameterizedType {
-
-        @Override
-        public Type[] getActualTypeArguments() {
-            return arguments.clone();
-        }
-
-        @Override
-        public Type getRawType() {
-            return rawType;
-        }
-
-        @Override
-        public @org.jspecify.annotations.Nullable Type getOwnerType() {
-            return null;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof ParameterizedType other
-                && rawType.equals(other.getRawType())
-                && java.util.Arrays.equals(arguments, other.getActualTypeArguments());
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Arrays.hashCode(arguments) ^ rawType.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder(rawType.getName()).append('<');
-            for (int i = 0; i < arguments.length; i++) {
-                if (i > 0) {
-                    builder.append(", ");
-                }
-                builder.append(arguments[i].getTypeName());
-            }
-            return builder.append('>').toString();
-        }
     }
 }
