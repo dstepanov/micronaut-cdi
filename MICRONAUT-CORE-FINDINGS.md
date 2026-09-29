@@ -396,7 +396,7 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   processor declares on every intercepted bean with a separate target, has the proxy intercept each target with that
   target's interceptors.
 
-### 24. No public way to read an annotation instance as an `AnnotationValue`
+### 24. No public way to read an annotation instance as an `AnnotationValue` — FIXED upstream (`AnnotationValue.of(Annotation)`, #12977)
 `Qualifiers.byAnnotation(Annotation)` (#12928) reads the members off a live annotation and stores them the way
 compiled metadata does — a class as `AnnotationClassValue`, an enum by name, a nested annotation as an
 `AnnotationValue`, `@NonBinding` members left out — in `AnnotationMetadataQualifier.fromAnnotation` /
@@ -413,6 +413,11 @@ core's conversion.
 A public `AnnotationValue.of(Annotation)` (or an `AnnotationUtil` equivalent) is zero-overhead compile-time-free
 API that core already has the body of; it would remove the duplicates downstream and, more to the point, the
 drift between them.
+
+Now used: `CdiAnnotations.valueOf` is `AnnotationValue.of` less the members `Nonbinding` excludes, a synthetic
+bean's metadata records `AnnotationValue.of(qualifier).getValues()`, and the processor's copy,
+`ExtensionAnnotationValues`, is deleted. That copy had drifted as well: it silently dropped an enum array and
+every primitive array but `int[]` from an annotation an extension added (`ExtensionAnnotationMembersTest`).
 
 ### 16. RETRACTED — inherited executable methods do resolve their type variables
 Recorded as an inherited `@Executable` method keeping the declaring class's unresolved variables. On

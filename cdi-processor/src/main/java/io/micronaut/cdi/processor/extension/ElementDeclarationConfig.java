@@ -74,7 +74,7 @@ public abstract class ElementDeclarationConfig<C extends DeclarationConfig> impl
 
     @Override
     public C addAnnotation(Annotation annotation) {
-        element.annotate(ExtensionAnnotationValues.of(annotation));
+        element.annotate(AnnotationValue.of(annotation));
         return self();
     }
 

@@ -4,3 +4,4 @@ io.micronaut.cdi.test.extension.ReviewScenariosExtension
 io.micronaut.cdi.test.extension.TieredExtension
 io.micronaut.cdi.test.extension.LanguageModelExtension
 io.micronaut.cdi.test.extension.RecordingExtension
+io.micronaut.cdi.test.extension.StampingExtension

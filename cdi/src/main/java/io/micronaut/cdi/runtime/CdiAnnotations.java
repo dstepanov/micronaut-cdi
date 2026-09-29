@@ -53,98 +53,31 @@ public final class CdiAnnotations {
     }
 
     /**
-     * The values an annotation was written with, read off the annotation itself.
+     * The values an annotation was written with that take part in binding, read off the annotation itself.
+     *
+     * <p>Micronaut reads every member in the form the compiled metadata stores it, so that a value read off a live
+     * annotation compares equal to the same value read out of a definition. A member excluded from the comparison
+     * of qualifiers is then left out: it takes no part in it from either side, and whatever it was given here, a
+     * bean qualified the same way but for that member still qualifies. A nested annotation keeps every one of its
+     * members, since what is not binding is a member of the qualifier and not of an annotation it carries.</p>
      *
      * @param annotation The annotation
      * @param <A>        The annotation type
      * @return The annotation value
      */
     public static <A extends Annotation> AnnotationValue<A> valueOf(A annotation) {
+        AnnotationValue<A> read = AnnotationValue.of(annotation);
         Class<? extends Annotation> type = annotation.annotationType();
-        Map<CharSequence, Object> values = new LinkedHashMap<>();
+        Map<CharSequence, Object> values = null;
         for (Method member : type.getDeclaredMethods()) {
-            if (member.getParameterCount() != 0 || member.isSynthetic()) {
-                continue;
-            }
             if (isNonBinding(member)) {
-                // a member excluded from the comparison of qualifiers takes no part in it from either side:
-                // whatever it was given here, a bean qualified the same way but for that member still qualifies
-                continue;
-            }
-            try {
-                values.put(member.getName(), storedForm(member.invoke(annotation)));
-            } catch (ReflectiveOperationException e) {
-                throw new IllegalArgumentException("The member " + member.getName() + " of " + type.getName()
-                    + " could not be read", e);
-            }
-        }
-        return new AnnotationValue<>(type.getName(), values);
-    }
-
-    /**
-     * Every member an annotation was written with, in the form the compiled metadata stores members: what a
-     * bean's metadata records about an annotation put on it at runtime. Nothing is left out here — a member that
-     * does not bind a qualifier is still a member the bean's metadata has to report.
-     *
-     * @param annotation The annotation
-     * @return The members, by name
-     */
-    public static Map<CharSequence, Object> membersOf(Annotation annotation) {
-        Class<? extends Annotation> type = annotation.annotationType();
-        Map<CharSequence, Object> members = new LinkedHashMap<>();
-        for (Method member : type.getDeclaredMethods()) {
-            if (member.getParameterCount() != 0 || member.isSynthetic()) {
-                continue;
-            }
-            try {
-                Object value = storedForm(member.invoke(annotation));
-                if (value != null) {
-                    members.put(member.getName(), value);
+                if (values == null) {
+                    values = new LinkedHashMap<>(read.getValues());
                 }
-            } catch (ReflectiveOperationException e) {
-                throw new IllegalArgumentException("The member " + member.getName() + " of " + type.getName()
-                    + " could not be read", e);
+                values.remove(member.getName());
             }
         }
-        return members;
-    }
-
-    /**
-     * A member value in the form the compiled metadata stores it, so that a value read off a live annotation
-     * compares equal to the same value read out of a definition: an enum is stored by its name, a class by its
-     * class value, and an annotation as the value of its own members — every one of them, since what is not
-     * binding is a member of the qualifier and not of an annotation it carries.
-     */
-    private static @Nullable Object storedForm(@Nullable Object value) {
-        if (value instanceof Enum<?> constant) {
-            return constant.name();
-        }
-        if (value instanceof Class<?> type) {
-            return new io.micronaut.core.annotation.AnnotationClassValue<>(type);
-        }
-        if (value instanceof Annotation nested) {
-            Map<CharSequence, Object> members = new LinkedHashMap<>();
-            for (Method member : nested.annotationType().getDeclaredMethods()) {
-                if (member.getParameterCount() != 0 || member.isSynthetic()) {
-                    continue;
-                }
-                try {
-                    members.put(member.getName(), storedForm(member.invoke(nested)));
-                } catch (ReflectiveOperationException e) {
-                    throw new IllegalArgumentException("The member " + member.getName() + " of "
-                        + nested.annotationType().getName() + " could not be read", e);
-                }
-            }
-            return new AnnotationValue<>(nested.annotationType().getName(), members);
-        }
-        if (value instanceof Object[] array) {
-            Object[] stored = new Object[array.length];
-            for (int i = 0; i < array.length; i++) {
-                stored[i] = storedForm(array[i]);
-            }
-            return stored;
-        }
-        return value;
+        return values == null ? read : new AnnotationValue<>(type.getName(), values);
     }
 
     /**

@@ -278,7 +278,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
         @Override
         public ClassConfig addAnnotation(Annotation annotation) {
-            annotations.add(ExtensionAnnotationValues.of(annotation));
+            annotations.add(AnnotationValue.of(annotation));
             return this;
         }
 
@@ -357,7 +357,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
         @Override
         public jakarta.enterprise.inject.build.compatible.spi.MethodConfig addAnnotation(Annotation annotation) {
-            annotations.add(ExtensionAnnotationValues.of(annotation));
+            annotations.add(AnnotationValue.of(annotation));
             return this;
         }
 

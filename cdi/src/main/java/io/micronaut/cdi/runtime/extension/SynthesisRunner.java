@@ -23,6 +23,7 @@ import io.micronaut.context.annotation.Context;
 import io.micronaut.cdi.annotation.CdiScope;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.Order;
 import io.micronaut.core.order.Ordered;
@@ -414,7 +415,7 @@ public final class SynthesisRunner {
         MutableAnnotationMetadata metadata = new MutableAnnotationMetadata();
         for (Annotation qualifier : qualifiers) {
             metadata.addDeclaredAnnotation(qualifier.annotationType().getName(),
-                io.micronaut.cdi.runtime.CdiAnnotations.membersOf(qualifier));
+                AnnotationValue.of(qualifier).getValues());
             metadata.addDeclaredStereotype(List.of(qualifier.annotationType().getName()),
                 AnnotationUtil.QUALIFIER, Map.of());
         }
