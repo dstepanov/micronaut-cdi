@@ -279,7 +279,7 @@ public final class CdiAssignability {
         }
         if (observed instanceof TypeVariable<?> variable) {
             // an observed type variable observes whatever fits its bounds
-            return assignableToAll(uppermostBoundsOf(variable), event);
+            return assignableToAll(boundsAgainst(variable, event), event);
         }
         if (isArray(observed) || isArray(event)) {
             // arrays are observed by their components, as the language assigns them: covariantly for classes,
@@ -398,7 +398,7 @@ public final class CdiAssignability {
         }
         if (observed instanceof TypeVariable<?> variable) {
             // the event type parameter is assignable to the upper bound of the observed variable
-            return assignableToAll(uppermostBoundsOf(variable), event);
+            return assignableToAll(boundsAgainst(variable, event), event);
         }
         if (observed.equals(event)) {
             return true;
@@ -448,7 +448,7 @@ public final class CdiAssignability {
         }
         if (candidate instanceof TypeVariable<?> variable) {
             // an actual required argument matches a variable whose upper bounds it is assignable to
-            return assignableToAll(uppermostBoundsOf(variable), required);
+            return assignableToAll(boundsAgainst(variable, required), required);
         }
         // two actual arguments: the same raw type, and the parameters of a parameterized one matching by these
         // rules again. An argument is not a type: Object here is Object alone, and matches nothing else
@@ -560,6 +560,21 @@ public final class CdiAssignability {
     }
 
     /**
+     * The uppermost bounds of a variable, to check a type against: a bound that names the variable itself - the
+     * {@code Comparable<T>} of {@code T extends Comparable<T>} - names the type checked, the way the language
+     * checks a bound.
+     */
+    private static java.util.List<Type> boundsAgainst(TypeVariable<?> variable, Type type) {
+        java.util.List<Type> bounds = uppermostBoundsOf(variable);
+        java.util.Map<TypeVariable<?>, Type> itself = java.util.Map.of(variable, type);
+        java.util.List<Type> substituted = new java.util.ArrayList<>(bounds.size());
+        for (Type bound : bounds) {
+            substituted.add(CdiTypes.substitute(bound, itself));
+        }
+        return substituted;
+    }
+
+    /**
      * The given bounds with every variable among them replaced by its own uppermost bounds. Empty when there are
      * none, as a wildcard's lower bounds usually are.
      */
@@ -602,7 +617,7 @@ public final class CdiAssignability {
             return false;
         }
         if (to instanceof TypeVariable<?> variable) {
-            return assignableToAll(uppermostBoundsOf(variable), from);
+            return assignableToAll(boundsAgainst(variable, from), from);
         }
         if (to instanceof WildcardType wildcard) {
             return withinBounds(from, wildcard);

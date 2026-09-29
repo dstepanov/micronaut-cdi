@@ -167,12 +167,10 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             selectIfAlternative(producer, element);
             // what produced the bean is recorded so that the container can report it without working it out
             boolean isField = producer instanceof FieldElement;
-            boolean isRaw = producedType(producer).isRawType();
             producer.annotate(CdiProducer.class, builder -> builder
                 .member("declaringType", new AnnotationClassValue<>(element.getName()))
                 .member("member", producer.getName())
-                .member("field", isField)
-                .member("raw", isRaw));
+                .member("field", isField));
             // a producer is dependent scoped unless it declares a scope of its own, and a Micronaut prototype is
             // the dependent pseudo-scope. The scope is written onto the producer rather than left to default to
             // it, because the annotation metadata of a producer carries what its class declares as well: without
@@ -289,8 +287,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     + "dependent instance or nothing (section 3.3.2)", producer);
                 return;
             }
-            // legal, and the variables are recorded so resolution can read them (section 2.4.2.1)
-            recordProducedVariables(component, producer);
+            // legal: the compiled bean type keeps the variables, which resolution reads (section 2.4.2.1)
         }
     }
 
@@ -316,32 +313,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             }
         }
         return false;
-    }
-
-    /**
-     * Leaves the variables of the produced type where resolution can read them, the way an injection point's
-     * are: the compiled argument erases a variable to its bound, and section 2.4.2.1 matches a variable
-     * differently from the type it erases to.
-     */
-    private static void recordProducedVariables(ClassElement produced, MemberElement producer) {
-        java.util.List<String> recorded = new java.util.ArrayList<>();
-        int position = 0;
-        for (ClassElement argument : produced.getTypeArguments().values()) {
-            if (argument instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder) {
-                java.util.List<String> bounds = new java.util.ArrayList<>();
-                for (ClassElement bound : placeholder.getBounds()) {
-                    bounds.add(bound.getName());
-                }
-                recorded.add(position + "=var:" + (bounds.isEmpty() ? "java.lang.Object"
-                    : String.join(",", bounds)));
-            }
-            position++;
-        }
-        if (!recorded.isEmpty()) {
-            String[] entries = recorded.toArray(new String[0]);
-            producer.annotate("io.micronaut.cdi.annotation.CdiGenericVariables",
-                builder -> builder.member("value", entries));
-        }
     }
 
     /**

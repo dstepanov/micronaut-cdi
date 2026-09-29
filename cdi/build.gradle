@@ -14,8 +14,7 @@ noReflection {
     // java.lang.reflect.Type, and its arguments and bounds are what section 2.4.2 compares
     allowIn 'io.micronaut.cdi.runtime.CdiAssignability', 'GENERIC_SIGNATURES'
     allowIn 'io.micronaut.cdi.runtime.CdiParameterizedType', 'GENERIC_SIGNATURES'
-    // the bounds of a type variable are recorded by name and loaded when a Type is asked for
-    allowIn 'io.micronaut.cdi.runtime.CdiTypes', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
+    allowIn 'io.micronaut.cdi.runtime.CdiTypes', 'GENERIC_SIGNATURES'
     allowIn 'io.micronaut.cdi.runtime.CdiInjectionPointFactory', 'GENERIC_SIGNATURES'
     // the bean types of a bean are reported as Types (section 2.2.1), composed from what the processor recorded
     allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES'

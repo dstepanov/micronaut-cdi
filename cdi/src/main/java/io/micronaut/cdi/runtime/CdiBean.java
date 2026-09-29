@@ -163,21 +163,10 @@ public class CdiBean<T> implements Bean<T> {
             // what the processor recorded of the bean as it compiled it
             closure.addAll(recorded);
         } else if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
-            boolean raw = definition.getAnnotationMetadata()
-                .booleanValue("io.micronaut.cdi.annotation.CdiProducer", "raw").orElse(false);
-            Type produced;
-            if (raw) {
-                produced = definition.getBeanType();
-            } else {
-                produced = CdiTypes.typeOf(definition.asArgument());
-                // a producer of a type containing the class's variables keeps them (section 3.3.2), and the
-                // compiled argument erased them: what was recorded about them at compile time puts them back
-                produced = CdiTypes.applyRecordedVariables(produced,
-                    definition.getAnnotationMetadata()
-                        .stringValues("io.micronaut.cdi.annotation.CdiGenericVariables"),
-                    definition.getBeanType().getClassLoader());
-            }
-            closure.addAll(CdiTypes.beanTypeClosureOf(produced));
+            // a produced bean is a bean of the type the producer declared — with the arguments it was written
+            // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
+            // class's own declaration
+            closure.addAll(CdiTypes.beanTypeClosureOf(CdiTypes.typeOf(definition.getDeclaredBeanType())));
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form

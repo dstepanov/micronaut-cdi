@@ -24,8 +24,9 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 
 /**
- * A type variable rebuilt from what the compiler recorded of one: its bounds, which is all the matching rules
- * of section 2.4.2.1 read of a variable.
+ * A type variable rebuilt from what the compiler recorded of one: its name and bounds, which is all the matching
+ * rules of section 2.4.2.1 read of a variable. A bound may name the variable itself, {@code T extends
+ * Comparable<T>}, so the bounds can be given once the variable exists.
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -34,10 +35,19 @@ import java.lang.reflect.TypeVariable;
 final class CdiTypeVariable implements TypeVariable<GenericDeclaration> {
 
     private final String name;
-    private final Type[] bounds;
+    private Type[] bounds;
 
     CdiTypeVariable(String name, Type[] bounds) {
         this.name = name;
+        this.bounds = bounds;
+    }
+
+    /**
+     * Gives the variable its bounds, once, as it is built: bounds that name the variable need it to exist first.
+     *
+     * @param bounds The bounds
+     */
+    void bounds(Type[] bounds) {
         this.bounds = bounds;
     }
 

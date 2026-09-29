@@ -147,9 +147,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     || parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
                     || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)) {
                     // the disposed parameter is being destroyed and the observed one is the event: neither is
-                    // an injection point — but what the observer observes keeps its written generics, which
-                    // the compiled argument would erase
-                    recordObservedType(parameter.getGenericType(), parameter);
+                    // an injection point
                     continue;
                 }
                 checkParameter(parameter, method, producer ? isNormalScopedProducer(method) : normalScoped,
@@ -192,7 +190,6 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 + "carries", at);
             return;
         }
-        recordVariableArguments(type, at, context);
         checkMetadataInjection(type, at, declaring, allowedMetadataType, context);
         if (!observer && "jakarta.enterprise.inject.spi.EventMetadata".equals(type.getName())) {
             // the metadata of an event exists only while an observer method is being notified: everywhere
@@ -280,87 +277,6 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         java.util.List<? extends ClassElement> uppers = wildcard.getUpperBounds();
         return uppers.isEmpty() || uppers.size() == 1 && "java.lang.Object".equals(uppers.get(0).getName());
-    }
-
-    /**
-     * Records what an observed parameter was written as: a raw observed type observes every parameterization,
-     * which an unbounded wildcard at each position says, and a written wildcard or variable is kept as it was.
-     */
-    private void recordObservedType(ClassElement type, io.micronaut.inject.ast.Element at) {
-        if (type.isRawType()) {
-            java.util.List<String> recorded = new java.util.ArrayList<>();
-            int positions = type.getTypeArguments().size();
-            for (int i = 0; i < positions; i++) {
-                recorded.add(i + "=extends:java.lang.Object");
-            }
-            if (!recorded.isEmpty()) {
-                String[] entries = recorded.toArray(new String[0]);
-                at.annotate("io.micronaut.cdi.annotation.CdiGenericVariables",
-                    builder -> builder.member("value", entries));
-            }
-            return;
-        }
-        recordVariableArguments(type, at, null);
-    }
-
-    /**
-     * Leaves the bounds of any type variable among the type arguments where the runtime can read them: the
-     * compiled argument erases a variable to its first bound, and resolution by the rules of section 2.4.2.1
-     * needs every bound.
-     */
-    private void recordVariableArguments(ClassElement type, io.micronaut.inject.ast.Element at,
-                                         @io.micronaut.core.annotation.Nullable VisitorContext context) {
-        if (type.isRawType()) {
-            // a raw injection point erases to the declaration's own variables, which are not the point
-            // asking for anything: what it asks for is the raw type, which the compiled argument carries
-            return;
-        }
-        java.util.List<String> recorded = new java.util.ArrayList<>();
-        int position = 0;
-        for (ClassElement argument : type.getTypeArguments().values()) {
-            if (argument instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder) {
-                java.util.List<String> bounds = new java.util.ArrayList<>();
-                for (ClassElement bound : placeholder.getBounds()) {
-                    bounds.add(bound.getName());
-                }
-                // an unbounded variable is recorded as well: a variable matches differently from the type it
-                // erases to, whatever its bounds
-                recorded.add(position + "=var:" + (bounds.isEmpty() ? "java.lang.Object"
-                    : String.join(",", bounds)));
-            } else if (argument instanceof io.micronaut.inject.ast.WildcardElement wildcard) {
-                if (!wildcard.getLowerBounds().isEmpty()) {
-                    ClassElement lower = wildcard.getLowerBounds().get(0);
-                    if (lower instanceof io.micronaut.inject.ast.GenericPlaceholderElement lowerVariable) {
-                        // the lower bound is itself a variable: what is recorded is its bounds, which is
-                        // what the matching reads of a variable
-                        java.util.List<String> bounds = new java.util.ArrayList<>();
-                        for (ClassElement bound : lowerVariable.getBounds()) {
-                            bounds.add(bound.getName());
-                        }
-                        recorded.add(position + "=supervar:" + String.join(",", bounds));
-                    } else {
-                        java.util.List<String> lowers = new java.util.ArrayList<>();
-                        for (ClassElement bound : wildcard.getLowerBounds()) {
-                            lowers.add(bound.getName());
-                        }
-                        recorded.add(position + "=super:" + String.join(",", lowers));
-                    }
-                } else {
-                    java.util.List<String> uppers = new java.util.ArrayList<>();
-                    for (ClassElement bound : wildcard.getUpperBounds()) {
-                        uppers.add(bound.getName());
-                    }
-                    recorded.add(position + "=extends:" + (uppers.isEmpty() ? "java.lang.Object"
-                        : String.join(",", uppers)));
-                }
-            }
-            position++;
-        }
-        if (!recorded.isEmpty()) {
-            String[] entries = recorded.toArray(new String[0]);
-            at.annotate("io.micronaut.cdi.annotation.CdiGenericVariables",
-                builder -> builder.member("value", entries));
-        }
     }
 
     private boolean isInjected(io.micronaut.inject.ast.Element element) {

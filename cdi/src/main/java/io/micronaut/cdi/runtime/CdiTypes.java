@@ -17,6 +17,8 @@ package io.micronaut.cdi.runtime;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.core.type.GenericPlaceholder;
+import io.micronaut.core.type.WildcardArgument;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
@@ -111,64 +113,14 @@ public final class CdiTypes {
     }
 
     /**
-     * The required type of the lookup, with any type argument the compiler recorded as a variable rebuilt as
-     * one: the compiled argument erases a variable to its first bound, and the rules match a variable by every
-     * bound it declared.
+     * The required type of the lookup: the type the compiled argument describes, with its type variables and
+     * wildcards, which the rules of section 2.4.2.1 match differently from the types they erase to.
      *
      * @param beanType The compiled argument of the lookup
      * @return The required type
      */
     public static Type requiredTypeOf(Argument<?> beanType) {
-        Type required = CdiTypes.typeOf(beanType);
-        String[] recorded = beanType.getAnnotationMetadata()
-            .stringValues("io.micronaut.cdi.annotation.CdiGenericVariables");
-        return applyRecordedVariables(required, recorded, beanType.getType().getClassLoader());
-    }
-
-    /**
-     * Rebuilds the variables and wildcards a compiled argument erased, from what was recorded about them while
-     * the type was compiled.
-     *
-     * @param required    The type as the compiled argument has it
-     * @param recorded    The recorded entries, position by position
-     * @param classLoader Where the bounds' classes are loaded from
-     * @return The type with its variables and wildcards back
-     */
-    static Type applyRecordedVariables(Type required, String[] recorded, @Nullable ClassLoader classLoader) {
-        if (recorded.length == 0 || !(required instanceof java.lang.reflect.ParameterizedType parameterized)) {
-            return required;
-        }
-        Type[] arguments = parameterized.getActualTypeArguments().clone();
-        for (String entry : recorded) {
-            int split = entry.indexOf('=');
-            int kindSplit = entry.indexOf(':', split);
-            if (kindSplit < 0) {
-                continue;
-            }
-            int position = Integer.parseInt(entry.substring(0, split));
-            if (position >= arguments.length) {
-                continue;
-            }
-            String kind = entry.substring(split + 1, kindSplit);
-            String[] boundNames = entry.substring(kindSplit + 1).split(",");
-            Type[] bounds = new Type[boundNames.length];
-            for (int i = 0; i < boundNames.length; i++) {
-                try {
-                    bounds[i] = Class.forName(boundNames[i], false, classLoader);
-                } catch (ClassNotFoundException e) {
-                    return required;
-                }
-            }
-            arguments[position] = switch (kind) {
-                case "var" -> new CdiTypeVariable("T" + position, bounds);
-                case "extends" -> new CdiWildcardType(bounds, new Type[0]);
-                case "super" -> new CdiWildcardType(new Type[]{Object.class}, bounds);
-                case "supervar" -> new CdiWildcardType(new Type[]{Object.class},
-                    new Type[]{new CdiTypeVariable("L" + position, bounds)});
-                default -> arguments[position];
-            };
-        }
-        return CdiParameterizedType.of((Class<?>) parameterized.getRawType(), arguments);
+        return CdiTypes.typeOf(beanType);
     }
 
     /**
@@ -385,22 +337,73 @@ public final class CdiTypes {
     }
 
     /**
-     * The type an argument describes, as the {@code java.lang.reflect.Type} the specification's interfaces are
-     * written in: the class, or the class parameterized by what its type parameters describe.
+     * The type a compiled argument describes, the way the declaration wrote it: a type variable left unresolved is
+     * the variable with its bounds, a wildcard keeps its bounds, a raw type is the class, and an array of a
+     * parameterized type or of a variable is a generic array. A type resolved in place of a variable is that type.
      *
      * @param argument The argument
      * @return The type
      */
     public static Type typeOf(Argument<?> argument) {
+        return typeOf(argument, java.util.Map.of());
+    }
+
+    /**
+     * The type a compiled argument describes, inside the bounds of the given variables: a variable named again
+     * within its own bounds is that variable.
+     */
+    private static Type typeOf(Argument<?> argument, java.util.Map<String, CdiTypeVariable> bounding) {
+        if (argument instanceof WildcardArgument<?> wildcard) {
+            return new CdiWildcardType(typesOf(wildcard.getUpperBounds(), bounding),
+                typesOf(wildcard.getLowerBounds(), bounding));
+        }
+        Class<?> type = argument.getType();
+        if (argument instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
+            String name = placeholder.getVariableName();
+            CdiTypeVariable variable = bounding.get(name);
+            if (variable == null) {
+                // created before its bounds, which may name it
+                variable = new CdiTypeVariable(name, new Type[0]);
+                java.util.Map<String, CdiTypeVariable> within = new java.util.HashMap<>(bounding);
+                within.put(name, variable);
+                variable.bounds(typesOf(placeholder.getBounds(), within));
+            }
+            // the placeholder of an array of a variable is an array of the variable
+            return arrayOf(variable, type);
+        }
         Argument<?>[] typeParameters = argument.getTypeParameters();
-        if (typeParameters.length == 0) {
-            return argument.getType();
+        if (typeParameters.length == 0 || argument.isRawType()) {
+            return type;
         }
         Type[] arguments = new Type[typeParameters.length];
         for (int i = 0; i < typeParameters.length; i++) {
-            arguments[i] = typeOf(typeParameters[i]);
+            arguments[i] = typeOf(typeParameters[i], bounding);
         }
-        return CdiParameterizedType.of(argument.getType(), arguments);
+        Class<?> component = type;
+        while (component.isArray()) {
+            component = component.getComponentType();
+        }
+        // an array has the type arguments of its component
+        return arrayOf(new Parameterized(component, arguments), type);
+    }
+
+    private static Type[] typesOf(java.util.List<Argument<?>> arguments, java.util.Map<String, CdiTypeVariable> bounding) {
+        Type[] types = new Type[arguments.size()];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = typeOf(arguments.get(i), bounding);
+        }
+        return types;
+    }
+
+    /**
+     * The component wrapped in as many generic array levels as the class has dimensions.
+     */
+    private static Type arrayOf(Type component, Class<?> type) {
+        Type result = component;
+        for (Class<?> level = type; level.isArray(); level = level.getComponentType()) {
+            result = new GenericArray(result);
+        }
+        return result;
     }
 
     /**
@@ -425,5 +428,84 @@ public final class CdiTypes {
         }
         throw new IllegalArgumentException("A bean cannot be looked up by the type " + type + ": only a class and "
             + "a parameterized type describe a bean");
+    }
+
+    /**
+     * An array of a parameterized type or of a type variable, built from an argument.
+     *
+     * @param component The component type
+     */
+    private record GenericArray(Type component) implements java.lang.reflect.GenericArrayType {
+
+        @Override
+        public Type getGenericComponentType() {
+            return component;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof java.lang.reflect.GenericArrayType other
+                && component.equals(other.getGenericComponentType());
+        }
+
+        @Override
+        public int hashCode() {
+            return component.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return component.getTypeName() + "[]";
+        }
+    }
+
+    /**
+     * A parameterized type built from an argument, which is what the specification reports a parameterized bean
+     * type or observed event type as.
+     *
+     * @param rawType   The raw type
+     * @param arguments The type arguments
+     */
+    @SuppressWarnings("ArrayRecordComponent")
+    private record Parameterized(Class<?> rawType, Type[] arguments) implements ParameterizedType {
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return arguments.clone();
+        }
+
+        @Override
+        public Type getRawType() {
+            return rawType;
+        }
+
+        @Override
+        public @org.jspecify.annotations.Nullable Type getOwnerType() {
+            return null;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof ParameterizedType other
+                && rawType.equals(other.getRawType())
+                && java.util.Arrays.equals(arguments, other.getActualTypeArguments());
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Arrays.hashCode(arguments) ^ rawType.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder(rawType.getName()).append('<');
+            for (int i = 0; i < arguments.length; i++) {
+                if (i > 0) {
+                    builder.append(", ");
+                }
+                builder.append(arguments[i].getTypeName());
+            }
+            return builder.append('>').toString();
+        }
     }
 }
