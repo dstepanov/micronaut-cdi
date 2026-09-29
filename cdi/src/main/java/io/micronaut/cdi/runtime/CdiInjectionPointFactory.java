@@ -20,11 +20,9 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.ArgumentCoercible;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.BeanDefinitionReference;
 import io.micronaut.inject.InjectionPoint;
-import io.micronaut.inject.InstantiatableBeanDefinition;
 import io.micronaut.inject.annotation.MutableAnnotationMetadata;
+import io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -38,20 +36,17 @@ import java.util.Set;
  *
  * <p>Both are parameterized by the type at the injection point and qualified by its qualifiers, which means
  * neither can be a bean definition Micronaut generates from a class: there is no one {@code Event<T>} to generate,
- * and the bean has to be built when it is injected rather than before. Micronaut has a way of writing such a bean
- * by hand — a bean definition that is its own reference and reads the injection point as it instantiates — and
- * this is that, with the reading of the injection point done once for both.</p>
+ * and the bean has to be built when it is injected rather than before. Micronaut has a base for such a bean — a
+ * bean definition that is its own reference, of any qualifier, and builds its bean from the injection point — and
+ * this reads the type argument and the qualifiers of that injection point once for both.</p>
  *
  * @param <B> The type of the bean produced
  * @author Denis Stepanov
  * @since 1.0
  */
 @Internal
-public abstract class CdiInjectionPointFactory<B>
-    implements InstantiatableBeanDefinition<B>, BeanDefinitionReference<B>,
-    io.micronaut.inject.DisposableBeanDefinition<B> {
-
-    private static final Argument<Object> TYPE_VARIABLE = Argument.ofTypeVariable(Object.class, "T");
+public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPointBeanDefinition<B>
+    implements io.micronaut.inject.DisposableBeanDefinition<B> {
 
     private final MutableAnnotationMetadata annotationMetadata = new MutableAnnotationMetadata();
 
@@ -99,20 +94,12 @@ public abstract class CdiInjectionPointFactory<B>
     }
 
     /**
-     * The bean is whatever the injection point asked for, however that injection point was qualified, so it is a
-     * candidate for every qualifier rather than for one of them.
-     *
-     * <p>Micronaut has a qualifier that says exactly that, and a candidate declaring it matches whatever is asked
-     * for. The qualifiers of the injection point are then read off the injection point itself, which is where
-     * they belong: a qualified event is fired with the qualifiers it was injected with.</p>
-     */
-    @Override
-    public final io.micronaut.context.Qualifier<B> getDeclaredQualifier() {
-        return io.micronaut.inject.qualifiers.Qualifiers.any();
-    }
-
-    /**
      * Builds the bean for an injection point of the given type argument and qualifiers.
+     *
+     * <p>The bean is a candidate for every qualifier rather than for one of them, being whatever the injection
+     * point asked for however it was qualified. The qualifiers of the injection point are read off the injection
+     * point itself, which is where they belong: a qualified event is fired with the qualifiers it was injected
+     * with.</p>
      *
      * @param resolutionContext The resolution context
      * @param context           The bean context
@@ -128,15 +115,14 @@ public abstract class CdiInjectionPointFactory<B>
 
     @Override
     @SuppressWarnings("NullAway")
-    public final B instantiate(BeanResolutionContext resolutionContext, io.micronaut.context.BeanContext context) {
+    protected final B build(BeanResolutionContext resolutionContext,
+                            io.micronaut.context.BeanContext context,
+                            @Nullable InjectionPoint<?> injectionPoint) {
         Argument<?> type = Argument.OBJECT_ARGUMENT;
         AnnotationMetadata metadata = AnnotationMetadata.EMPTY_METADATA;
-        BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
-        if (segment != null) {
-            InjectionPoint<?> injectionPoint = segment.getInjectionPoint();
+        if (injectionPoint != null) {
             if (injectionPoint instanceof ArgumentCoercible<?> coercible) {
-                Argument<?> argument = coercible.asArgument();
-                type = argument.getFirstTypeVariable().orElse(Argument.OBJECT_ARGUMENT);
+                type = coercible.asArgument().getFirstTypeVariable().orElse(Argument.OBJECT_ARGUMENT);
             }
             metadata = injectionPoint.getAnnotationMetadata();
         }
@@ -149,71 +135,11 @@ public abstract class CdiInjectionPointFactory<B>
     }
 
     @Override
-    public final boolean isContainerType() {
-        return false;
-    }
-
-    @Override
-    public final boolean isConfigurationProperties() {
-        // a bean definition and a reference to one both answer this, and a class that is both has to say which
-        return false;
-    }
-
-    @Override
-    public final boolean isEnabled(io.micronaut.context.BeanContext context,
-                                   @Nullable BeanResolutionContext resolutionContext) {
-        return true;
-    }
-
-    @Override
-    public final boolean isAbstract() {
-        // the bean type is an interface of the specification, which a bean definition would otherwise be read as
-        // abstract for and left out of the candidates
-        return false;
-    }
-
-    @Override
-    public final boolean isSingleton() {
-        // the bean is the one the injection point asked for, so there is one per injection point
-        return false;
-    }
-
-    @Override
-    public final String getBeanDefinitionName() {
-        return getClass().getName();
-    }
-
-    @Override
-    public final BeanDefinition<B> load() {
-        return this;
-    }
-
-    @Override
-    public final boolean isPresent() {
-        return true;
-    }
-
-    @Override
-    public final List<Argument<?>> getTypeArguments(Class<?> type) {
-        return type == getBeanType() ? getTypeArguments() : Collections.emptyList();
-    }
-
-    @Override
     public final List<Argument<?>> getTypeArguments() {
         // the event and the lookup are parameterized by what the injection point asked for; the injection
         // point metadata is not parameterized at all
         return getBeanType().getTypeParameters().length == 0
             ? Collections.emptyList()
-            : Collections.singletonList(TYPE_VARIABLE);
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        return o != null && getClass() == o.getClass();
-    }
-
-    @Override
-    public final int hashCode() {
-        return getClass().hashCode();
+            : super.getTypeArguments();
     }
 }
