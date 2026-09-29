@@ -292,12 +292,15 @@ Now used: `CdiContext.destroy` calls `remove(bean.definition())` and both copies
 the scope map up by its definition, so the store a context keeps its handed-in contextuals in answers with a private
 `RuntimeBeanDefinition` rather than throwing.
 
-### 28. `AbstractConcurrentCustomScope.getOrCreate` holds the scope-wide write lock around `doCreate` — PR #12973 (opt-in `lockPerBean` constructor flag)
+### 28. `AbstractConcurrentCustomScope.getOrCreate` holds the scope-wide write lock around `doCreate` — FIXED upstream (#12973, opt-in `lockPerBean` constructor flag)
 Every scoped bean's constructor and `@PostConstruct` in the JVM runs mutually exclusively per scope, even where
 the scope hands back a per-request map. An application-scoped `@PostConstruct` that waits on another thread
 creating another application-scoped bean deadlocks. The class javadoc admits it is for "a small amount of
 beans". Fix: per-key creation (`computeIfAbsent`-style) with `doCreate` outside any lock, as an opt-in base or
 flag. Medium; existing subclasses unchanged. micronaut-http's `RequestCustomScope` has the same exposure.
+
+Now used: both scopes pass `lockPerBean`, and `CrossThreadCreationTest` is the `@PostConstruct` that waits on
+another thread creating another application scoped bean, which timed out under the scope-wide lock.
 
 ### 29. `DefaultCustomScopeRegistry` caches negative lookups forever — FIXED upstream (#12961)
 `findScope` is `scopes.computeIfAbsent(name, …findBean…)` and stores `Optional.empty()` permanently;

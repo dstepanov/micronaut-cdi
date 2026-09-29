@@ -169,9 +169,10 @@ contract offers the resolver no end-of-evaluation moment to hook; EL is provided
 that needs the destruction can look the bean up and destroy it itself. Ending a request begun with
 `RequestContextController.activate()` from a different thread than began it silently does nothing — the
 controller's bookkeeping is per-thread, as the specification's enter-and-exit shape assumes; the `run`/`supply`
-/`call` forms are safe across threads. And two beans in different normal scopes whose creations reach into each
-other's scope concurrently can, in principle, deadlock on the two contexts' locks — creation runs under the
-scope's lock, which is also what guarantees one instance per context.
+/`call` forms are safe across threads. And a creation that waits for another thread can, in principle, deadlock
+when that thread needs to create the same bean — a bean is created under a lock of its own, one for every context
+of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
+creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
 
 ## The technology compatibility kit
 

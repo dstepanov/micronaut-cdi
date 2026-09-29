@@ -44,7 +44,9 @@ public final class ApplicationScope extends AbstractConcurrentCustomScope<CdiApp
     private final RequestScope requestScope;
 
     public ApplicationScope(RequestScope requestScope) {
-        super(CdiApplicationScope.class);
+        // each bean is created under a lock of its own, so that a creation may wait for another thread creating
+        // another bean of the scope
+        super(CdiApplicationScope.class, true);
         this.requestScope = requestScope;
     }
 

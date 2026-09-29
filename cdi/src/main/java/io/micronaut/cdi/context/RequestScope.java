@@ -82,7 +82,9 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private final java.util.Set<Instances> live = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public RequestScope(io.micronaut.context.BeanContext beanContext) {
-        super(CdiRequestScope.class);
+        // each bean is created under a lock of its own, so that a creation may wait for another thread creating
+        // another bean of the scope
+        super(CdiRequestScope.class, true);
         this.beanContext = beanContext;
     }
 
