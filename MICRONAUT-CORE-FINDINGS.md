@@ -375,8 +375,9 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   its own `@PreDestroy`, interceptor classes are found through one index, and private interceptor methods are
   documented as accepted. What was left was core's: a scoped proxy's method interception kept the interceptor
   instances resolved for the proxy while each target's lifecycle got its own (see `RequestScopedInterceptorStateTest`).
-  **Addressed by micronaut-core#13254**: `@Around(lazyInterceptorsPerTarget = true)`, which the normal scopes of this
-  module declare, has the proxy intercept each target with that target's interceptors.
+  **Addressed by micronaut-core#13254**: `@Around(lazyInterceptorsPerTarget = true)`, which the jakarta-interceptors
+  processor declares on every intercepted bean with a separate target, has the proxy intercept each target with that
+  target's interceptors.
 
 ### 24. No public way to read an annotation instance as an `AnnotationValue`
 `Qualifiers.byAnnotation(Annotation)` (#12928) reads the members off a live annotation and stores them the way

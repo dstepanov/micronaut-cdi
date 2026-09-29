@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.annotation;
 
-import io.micronaut.aop.Around;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.runtime.context.scope.ScopedProxy;
 import jakarta.inject.Scope;
@@ -37,9 +36,7 @@ import java.lang.annotation.Target;
  * <p>It is a normal scope in the sense of the specification, so a reference to a bean in it is a client proxy
  * rather than the instance itself: {@link ScopedProxy} is what makes Micronaut generate one, and each invocation
  * through it resolves the instance of the request that is current then. That is what lets a bean of a wider scope
- * hold on to a request scoped one. The interceptors of the invocation are those of that instance,
- * {@code lazyInterceptorsPerTarget}, so that an interceptor keeps its state per request, as section 2.3 of Jakarta
- * Interceptors associates an interceptor instance with the object it intercepts.</p>
+ * hold on to a request scoped one.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -48,7 +45,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @ScopedProxy
-@Around(proxyTarget = true, lazy = true, lazyInterceptorsPerTarget = true)
 @Scope
 @Internal
 // a scope meta-annotation belongs on an annotation type, which is what this is

@@ -169,13 +169,6 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         annotations.add(AnnotationValue.builder("jakarta.inject.Scope").build());
         if (isNormal) {
             annotations.add(AnnotationValue.builder("io.micronaut.runtime.context.scope.ScopedProxy").build());
-            // the client proxy intercepts each instance behind it with that instance's interceptors, as for the
-            // normal scopes this module declares
-            annotations.add(AnnotationValue.builder("io.micronaut.aop.Around")
-                .member("proxyTarget", true)
-                .member("lazy", true)
-                .member("lazyInterceptorsPerTarget", true)
-                .build());
         }
         annotations.add(AnnotationValue.builder("io.micronaut.cdi.annotation.CdiScope")
             .value(scopeName)

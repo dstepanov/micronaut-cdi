@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.annotation;
 
-import io.micronaut.aop.Around;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.runtime.context.scope.ScopedProxy;
 import jakarta.inject.Scope;
@@ -34,8 +33,7 @@ import java.lang.annotation.Target;
  * application scope a normal one, and a reference to a bean in a normal scope is a client proxy rather than the
  * instance: {@link ScopedProxy} is what makes Micronaut generate one. The proxy is what lets the reference outlive
  * the instance, and it is also what the specification's own restriction on the bean types of a normal scoped bean
- * is about. The proxy resolves the interceptors of each instance it fronts, {@code lazyInterceptorsPerTarget}, since
- * section 2.3 of Jakarta Interceptors associates an interceptor instance with the object it intercepts.</p>
+ * is about.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -44,7 +42,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @ScopedProxy
-@Around(proxyTarget = true, lazy = true, lazyInterceptorsPerTarget = true)
 @Scope
 @Internal
 // a scope meta-annotation belongs on an annotation type, which is what this is
