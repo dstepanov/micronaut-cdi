@@ -373,8 +373,10 @@ objects for the scope's life to avoid exactly this. Unverified by a test; record
   was pending until #13179 landed; it now asserts outright and passes on the published 5.3 snapshot.
 - Interceptors bridge: done on its `main` — the advice holds the interceptor registrations and destroys them from
   its own `@PreDestroy`, interceptor classes are found through one index, and private interceptor methods are
-  documented as accepted. What is left is core's: a scoped proxy's method interception keeps the interceptor
-  instances resolved for the proxy while each target's lifecycle gets its own (see `RequestScopedInterceptorStateTest`).
+  documented as accepted. What was left was core's: a scoped proxy's method interception kept the interceptor
+  instances resolved for the proxy while each target's lifecycle got its own (see `RequestScopedInterceptorStateTest`).
+  **Addressed by micronaut-core#13254**: `@Around(lazyInterceptorsPerTarget = true)`, which the normal scopes of this
+  module declare, has the proxy intercept each target with that target's interceptors.
 
 ### 24. No public way to read an annotation instance as an `AnnotationValue`
 `Qualifiers.byAnnotation(Annotation)` (#12928) reads the members off a live annotation and stores them the way

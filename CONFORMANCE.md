@@ -142,16 +142,6 @@ because bean-archive membership is a per-deployment question a global compilatio
 bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
 deployment ever admits is the difference visible to code that counts beans.
 
-### An interceptor of a normal scoped bean is shared by every instance behind its proxy
-
-Section 2.3 of Jakarta Interceptors, which this specification defers to, associates an interceptor instance with
-the object it intercepts. Micronaut resolves the interceptors of a scoped proxy once, as the proxy is built, and
-its method interception uses them for every instance the proxy fronts, while each instance's lifecycle
-interception gets a set of its own — so a request scoped bean's interceptor counts across requests. That is
-Micronaut's to fix, since the interception is its (the interceptors implementation keeps its instances on the
-advice Micronaut creates per intercepted object, which is the contract Micronaut documents); a dependent or
-singleton bean, which no proxy fronts, is unaffected. `RequestScopedInterceptorStateTest` is disabled until then.
-
 ### An abstract class annotated with a scope still takes part in resolution
 
 Section 3.1.1 requires the class of a managed bean to be concrete, so an abstract class that carries a scope is not
