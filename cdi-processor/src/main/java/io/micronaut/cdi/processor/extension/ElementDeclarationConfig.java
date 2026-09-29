@@ -80,7 +80,6 @@ public abstract class ElementDeclarationConfig<C extends DeclarationConfig> impl
 
     @Override
     public C removeAnnotation(Predicate<AnnotationInfo> predicate) {
-        java.util.List<String> removed = new java.util.ArrayList<>();
         for (String name : declaredAnnotationNames()) {
             AnnotationValue<Annotation> annotation = element.getDeclaredAnnotation(name);
             if (annotation == null) {
@@ -88,31 +87,17 @@ public abstract class ElementDeclarationConfig<C extends DeclarationConfig> impl
             }
             if (annotation != null && predicate.test(new ElementAnnotationInfo(annotation))) {
                 element.removeAnnotation(name);
-                removed.add(name);
             }
         }
-        recordRemoved(removed);
         return self();
     }
 
     @Override
     public C removeAllAnnotations() {
-        java.util.List<String> removed = new java.util.ArrayList<>(declaredAnnotationNames());
-        for (String name : removed) {
+        for (String name : declaredAnnotationNames()) {
             element.removeAnnotation(name);
         }
-        recordRemoved(removed);
         return self();
-    }
-
-    /**
-     * Adds the removed names as a record on the element: a removal from some elements — a parameter — does
-     * not reach every reader, while an addition does, so the readers are told what to treat as gone.
-     */
-    private void recordRemoved(java.util.List<String> removed) {
-        for (String name : removed) {
-            RemovedAnnotations.record(element, name);
-        }
     }
 
     /**

@@ -160,19 +160,6 @@ public final class Cdi {
     }
 
     /**
-     * Whether the element declares the annotation and no build compatible extension took it off: a removal
-     * from some elements does not reach every reader, so what was removed is recorded and consulted here.
-     *
-     * @param element    The element
-     * @param annotation The annotation name
-     * @return Whether the annotation is declared and not removed
-     */
-    public static boolean declares(io.micronaut.inject.ast.Element element, String annotation) {
-        return element.hasDeclaredAnnotation(annotation)
-            && !io.micronaut.cdi.processor.extension.RemovedAnnotations.isRemoved(element, annotation);
-    }
-
-    /**
      * Reads the priority an element was selected with: the priority annotation where it survived, and the
      * Micronaut order it is read as where the compiler already turned one into the other — a mapped annotation
      * replaces what it read, and which form is present depends on what ran first.

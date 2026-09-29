@@ -255,7 +255,7 @@ The one real observation underneath it is a trap worth knowing: for a repeatable
 kind, and `getDeclaredAnnotationNamesByStereotype` reports nothing at all. Code that pairs those queries will
 be wrong about repeatable annotations.
 
-### 25. Mutations of an inherited parameter or field are cached per *owning type* — invisible through a subclass — PR #12971
+### 25. Mutations of an inherited parameter or field are cached per *owning type* — invisible through a subclass — FIXED upstream (#12971)
 `AbstractElementAnnotationMetadataFactory` keys parameter metadata as `lookupOrBuildForParameter(owningType,
 method, parameter)` (`Key3`) and fields as `(owningType, field)`, although the parameter hierarchy is built from
 overridden parameters plus the variable and never includes the owner. Probe: a visitor on `Base` that removed
@@ -271,6 +271,9 @@ either way — so the registry is load-bearing for exactly the cross-owner case 
 else. When #12971 is merged and in a snapshot, `Cdi.declares` collapses to `hasDeclaredAnnotation` and
 `RemovedAnnotations` (with its `reset()` calls in `BuildCompatibleExtensionVisitor`) can be deleted; that test
 is what will prove it.
+
+Done: `Cdi.declares` is `hasDeclaredAnnotation` at its call sites and `RemovedAnnotations` is deleted, with
+`InheritedObserverEnhancementTest` passing without it.
 
 ### 26. Repeatable annotations are invisible to the *declared* queries by name — PR #12963 (narrowed: only `getDeclaredAnnotationNamesByStereotype`; widening the by-name `has*` queries broke Kotlin data-class configuration metadata, which relies on "declared under its own name" meaning explicitly written)
 `DefaultAnnotationMetadata.getDeclaredAnnotationNamesByStereotype` filters the stereotype index — which lists

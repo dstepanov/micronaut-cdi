@@ -114,9 +114,9 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             boolean disposer = false;
             boolean observer = false;
             for (ParameterElement parameter : method.getParameters()) {
-                disposer |= Cdi.declares(parameter, Cdi.DISPOSES);
-                observer |= Cdi.declares(parameter, Cdi.OBSERVES)
-                    || Cdi.declares(parameter, Cdi.OBSERVES_ASYNC);
+                disposer |= parameter.hasDeclaredAnnotation(Cdi.DISPOSES);
+                observer |= parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
+                    || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC);
             }
             if (!injected && !producer && !disposer && !observer) {
                 continue;
@@ -143,9 +143,9 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 }
             }
             for (ParameterElement parameter : method.getParameters()) {
-                if (Cdi.declares(parameter, Cdi.DISPOSES)
-                    || Cdi.declares(parameter, Cdi.OBSERVES)
-                    || Cdi.declares(parameter, Cdi.OBSERVES_ASYNC)) {
+                if (parameter.hasDeclaredAnnotation(Cdi.DISPOSES)
+                    || parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
+                    || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)) {
                     // the disposed parameter is being destroyed and the observed one is the event: neither is
                     // an injection point — but what the observer observes keeps its written generics, which
                     // the compiled argument would erase

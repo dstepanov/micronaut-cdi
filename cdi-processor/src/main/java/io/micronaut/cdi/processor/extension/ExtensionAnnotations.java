@@ -134,8 +134,8 @@ final class ExtensionAnnotations {
     }
 
     /**
-     * Whether an annotation of the given name is reported on a declaration: retained until runtime, allowed by
-     * every registered {@link LanguageModelAnnotationFilter}, and not taken off the declaration by an extension.
+     * Whether an annotation of the given name is reported on a declaration: retained until runtime and allowed by
+     * every registered {@link LanguageModelAnnotationFilter}.
      *
      * @param element    The declaration
      * @param annotation The annotation interface's binary name
@@ -143,8 +143,7 @@ final class ExtensionAnnotations {
      */
     static boolean isReported(Element element, String annotation) {
         return ExtensionAnnotationTypes.isRuntimeRetained(annotation)
-            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false))
-            && !RemovedAnnotations.isRemoved(element, annotation);
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false));
     }
 
     /**

@@ -78,9 +78,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     public BuildCompatibleExtensionVisitor() {
         current = this;
-        // a fresh compilation starts clean: in a build daemon the processor classes — and these statics —
-        // outlive any one compilation, and a removal recorded last build must not linger into this one
-        RemovedAnnotations.reset();
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
         List<BuildCompatibleExtension> overridden = overriddenExtensions;
         if (overridden != null) {
@@ -143,7 +140,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     public static void overrideExtensions(@io.micronaut.core.annotation.Nullable List<BuildCompatibleExtension> extensions) {
         overriddenExtensions = extensions;
-        RemovedAnnotations.reset();
     }
 
     /**
@@ -387,9 +383,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             io.micronaut.inject.ast.ParameterElement observed = null;
             boolean async = false;
             for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
-                if (Cdi.declares(parameter, "jakarta.enterprise.event.Observes")) {
+                if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.Observes")) {
                     observed = parameter;
-                } else if (Cdi.declares(parameter, "jakarta.enterprise.event.ObservesAsync")) {
+                } else if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.ObservesAsync")) {
                     observed = parameter;
                     async = true;
                 }

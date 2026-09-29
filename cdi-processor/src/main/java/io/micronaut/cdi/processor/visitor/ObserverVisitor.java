@@ -76,8 +76,8 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
             boolean async = false;
             ParameterElement[] parameters = method.getParameters();
             for (int i = 0; i < parameters.length; i++) {
-                boolean observes = Cdi.declares(parameters[i], Cdi.OBSERVES);
-                boolean observesAsync = Cdi.declares(parameters[i], Cdi.OBSERVES_ASYNC);
+                boolean observes = parameters[i].hasDeclaredAnnotation(Cdi.OBSERVES);
+                boolean observesAsync = parameters[i].hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC);
                 if (!observes && !observesAsync) {
                     continue;
                 }
