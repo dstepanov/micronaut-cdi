@@ -147,7 +147,7 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
             }
             try {
                 io.micronaut.context.BeanRegistration<T> registration =
-                    beanContext.getBeanRegistration(askedAs(type, definition), only(definition));
+                    beanContext.getBeanRegistration(definition, askedAs(type, definition));
                 transientlyCreated.add(registration);
                 return registration.bean();
             } catch (io.micronaut.context.exceptions.BeanCreationException e) {
@@ -191,16 +191,6 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
             }
         }
         return definition.asArgument();
-    }
-
-    private io.micronaut.context.Qualifier<T> only(BeanDefinition<T> definition) {
-        return new io.micronaut.context.Qualifier<T>() {
-            @Override
-            public <BT extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<BT> reduce(
-                Class<T> beanType, java.util.stream.Stream<BT> candidates) {
-                return candidates.filter(candidate -> candidate.equals(definition));
-            }
-        };
     }
 
     /**
@@ -273,7 +263,7 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
                 // a dependent instance obtained through iteration belongs to the lookup the same way one
                 // obtained through get() does, and is destroyed with it
                 io.micronaut.context.BeanRegistration<T> registration =
-                    beanContext.getBeanRegistration(askedAs(type, definition), only(definition));
+                    beanContext.getBeanRegistration(definition, askedAs(type, definition));
                 transientlyCreated.add(registration);
                 beans.add(registration.bean());
             } else {
@@ -472,7 +462,7 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
                     }
                     io.micronaut.context.BeanRegistration<T> created;
                     try {
-                        created = beanContext.getBeanRegistration(askedAs(selected, definition), onlyThis());
+                        created = beanContext.getBeanRegistration(definition, askedAs(selected, definition));
                     } finally {
                         if (lookupPoint != null) {
                             CurrentInjectionPoint.leave();
@@ -489,16 +479,6 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
                 instance = resolved;
             }
             return resolved;
-        }
-
-        private io.micronaut.context.Qualifier<T> onlyThis() {
-            return new io.micronaut.context.Qualifier<T>() {
-                @Override
-                public <BT extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<BT> reduce(
-                    Class<T> beanType, java.util.stream.Stream<BT> candidates) {
-                    return candidates.filter(candidate -> candidate.equals(definition));
-                }
-            };
         }
 
         @Override
