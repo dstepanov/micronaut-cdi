@@ -310,7 +310,7 @@ scope was resolved first — and such a bean silently becomes dependent. Works t
 Fix: `CustomScopeRegistry.invalidate()` (default method) called from `registerBeanDefinition` when the
 definition's type is a `CustomScope`. Zero cost on resolution.
 
-### 30. `RuntimeBeanDefinition.Builder` has no disposer hook — PR #12964
+### 30. `RuntimeBeanDefinition.Builder` has no disposer hook — FIXED upstream (#12964)
 The builder offers qualifier/replaces/named/scope/singleton/exposedTypes/typeArguments/annotationMetadata;
 `DefaultRuntimeBeanDefinition` is not a `DisposableBeanDefinition`. A synthetic bean's disposal function is
 therefore run from a JVM-wide `BeanPreDestroyEventListener<Object>` plus an identity map
@@ -318,6 +318,9 @@ therefore run from a JVM-wide `BeanPreDestroyEventListener<Object>` plus an iden
 BiConsumer<BeanContext, B>)` making the built definition disposable. Additive, zero overhead. (Project side:
 the creator lookup's transient registrations should go through `resolutionContext.addDependentBean` — core
 already collects dependents into the registration.)
+
+Now used: a synthetic bean's definition is built with `disposer(...)`, and `SyntheticDisposerListener` and the
+definition-to-description map it read are gone.
 
 ### 31. No API from a `ProxyBeanDefinition` to its target `BeanDefinition` — PR #12974
 Only `getTargetDefinitionType()` (a `Class`) and `getTargetType()`; `getProxyTargetBeanDefinition(Argument,

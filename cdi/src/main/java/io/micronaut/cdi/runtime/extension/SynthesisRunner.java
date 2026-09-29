@@ -72,8 +72,6 @@ public final class SynthesisRunner {
     private static volatile @io.micronaut.core.annotation.Nullable List<BuildCompatibleExtension> overriddenExtensions;
 
     private final BeanContext beanContext;
-    private final java.util.Map<BeanDefinition<?>, SyntheticBean<?>> described =
-        new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * The lookup handed to each synthetic instance's creation function, kept until the instance is destroyed:
@@ -319,9 +317,11 @@ public final class SynthesisRunner {
         // the bean types are exactly what was declared (or the API's {Object} default) — the implementation
         // class is not among them unless the extension said so
         builder.exposedTypes(bean.types().toArray(new Class<?>[0]));
+        // the definition disposes of each instance it created as the instance is destroyed, which is the moment
+        // the extension meant (section 2.10.5)
+        builder.disposer((context, instance) -> dispose(bean, instance));
         RuntimeBeanDefinition<T> definition = builder.build();
         beanContext.registerBeanDefinition(definition);
-        described.put(definition, bean);
         return definition;
     }
 
@@ -371,16 +371,6 @@ public final class SynthesisRunner {
     }
 
     /**
-     * What the extension said about the given definition, when the definition is a synthetic bean's.
-     *
-     * @param definition A definition
-     * @return The description, or {@code null}
-     */
-    public @io.micronaut.core.annotation.Nullable SyntheticBean<?> describedBeanOf(BeanDefinition<?> definition) {
-        return described.get(definition);
-    }
-
-    /**
      * Disposes of an instance of a synthetic bean the way the extension said to (section 2.10.5).
      *
      * @param bean     The description
@@ -388,7 +378,7 @@ public final class SynthesisRunner {
      * @param <T>      The bean type
      */
     @SuppressWarnings("unchecked")
-    public <T> void dispose(SyntheticBean<T> bean, Object instance) {
+    private <T> void dispose(SyntheticBean<T> bean, Object instance) {
         try {
             if (bean.disposer() != null) {
                 jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer<T> disposer;
