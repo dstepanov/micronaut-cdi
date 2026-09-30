@@ -113,11 +113,11 @@ nothing.
 
 What the discovery phase says is recorded by name and applied as the named classes come past the compiler.
 `ScannedClasses.add` writes a generated `@ClassImport` source so that a class that says nothing at all about
-itself is still compiled into a bean. `MetaAnnotations.addContext` generates a bean definition for the context
+itself is still compiled into a bean. `MetaAnnotations.addContext` declares a bean of the context
 class, recording the scope it serves, and the runtime obtains the context from that definition. An annotation
 registered as a qualifier, an interceptor binding or a stereotype is one only if it is compiled by the same build.
 
-A synthetic bean is written as a bean definition generated for the creator class the extension named, and the
+A synthetic bean is written as a bean of the creator class the extension named, declared by a generated factory, and the
 rest of what the extension said - the bean types, the qualifiers, the scope, the name, the priority, the
 parameters - is the annotation metadata of that definition. The disposer class and the observer class of a
 synthetic observer get a definition the same way. As the container starts it reads those records, registers a
@@ -135,11 +135,16 @@ An error an extension reports through `Messages`, or a problem it throws, in syn
 synthetic component or in validation fails the compilation: there is no deployment to refuse later, and the
 compilation is where the application is put together.
 
-Two things follow from where this runs. The synthetic components of a compilation are written by the Java
-annotation processor: a Kotlin compilation through KSP and a Groovy compilation run the phases but cannot write
-the definitions, and say so with a warning. The definition of a context is written by the Java and the Groovy
-compilers; KSP cannot add a definition for a class it does not compile, and warns that the scope will have no
-context. And every compilation of an application that has the extension on
+The phases run the same way whichever language the application is compiled in - by javac, by the Groovy
+compiler, or by KSP - through two sources the processor generates in that language. One is a marker: a generated
+source is compiled after the sources the compilation started with, so the marker coming past is the moment every
+class has been registered, and synthesis, the registration of what it described, and validation run then. The
+other is a factory with a method for each class an extension named, which is how a bean of a class compiled
+elsewhere is declared in all three; the record of a component is put on its method as annotation values when the
+factory is compiled. A compilation that cannot compile a generated source fails rather than leaving the phases
+out.
+
+Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
 the order it described the component in, and the container registers a component once however many
 compilations recorded it.

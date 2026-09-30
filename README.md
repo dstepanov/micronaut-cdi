@@ -66,7 +66,8 @@ public class Connections {
 
 A build compatible extension goes on the annotation processor path beside `micronaut-cdi-processor`: every phase
 of it runs while the application compiles, `@Synthesis` and `@Validation` included. A synthetic bean or observer
-is written as a bean definition generated for the creator or observer class the extension named, and a problem an
+is written as a bean of the creator or observer class the extension named, declared by a generated factory, in a
+Java, a Groovy or a Kotlin compilation alike, and a problem an
 extension reports fails the compilation. The running application needs neither the extension nor
 `micronaut-cdi-reflection` for any of it; the classes the extension names - the implementation class of a
 synthetic bean, its creator and disposer, a synthetic observer, a context - have to be on the classpath the
