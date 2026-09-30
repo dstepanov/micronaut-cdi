@@ -321,7 +321,18 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             tracked.close();
             return;
         }
-        for (BeanDefinition<T> definition : definitions()) {
+        Collection<BeanDefinition<T>> definitions = definitions();
+        // the bean the instance is an instance of is the one whose registration holds it. The class of the
+        // instance does not say: two producers of one class are two beans, each with a disposer of its own
+        BeanDefinition<T> holding = beanContext.findBeanRegistration(instance)
+            .map(io.micronaut.context.BeanRegistration::getBeanDefinition)
+            .filter(definitions::contains)
+            .orElse(null);
+        if (holding != null) {
+            destroyResolved(beanContext, holding, instance);
+            return;
+        }
+        for (BeanDefinition<T> definition : definitions) {
             if (definition.getBeanType().isInstance(instance)) {
                 destroyResolved(beanContext, definition, instance);
                 return;
