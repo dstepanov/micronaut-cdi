@@ -129,9 +129,11 @@ stereotype or an interceptor binding. It is a bean, so a program can inject it.
 What belongs to CDI Full says so rather than answering: decorators, passivation, portable extensions, and
 building a bean out of an annotated type. The expression language is the one named exception, provided beyond
 Lite by the optional `micronaut-cdi-el` module over `micronaut-jakarta-el`: with it on the classpath,
-`getELResolver` answers with a resolver in which a name at the base of an expression is the bean of that name,
+`getELResolver` answers with a resolver in which a name at the base of an expression is the bean of that name —
+a name written as a list of identifiers separated by periods included —
 and `wrapExpressionFactory` wraps a factory so that what it creates evaluates with the container's beans in
-reach; without it, both say the module is missing. The manager is implemented because a program
+reach, a dependent bean being created once for an evaluation and destroyed as it completes; without it, both
+say the module is missing. The manager is implemented because a program
 written against the specification reaches for it — the kit's own tests do — not because CDI Full is claimed.
 
 ### A producer compiles wherever it is declared
@@ -155,9 +157,11 @@ intercepted — which a primitive cannot be, and the class is refused.
 ### Known limitations a review has named
 
 Three findings of an internal review are documented rather than coded around. A dependent bean reached from an
-EL expression through `getELResolver` is created but not destroyed when the evaluation completes — the EL
-contract offers the resolver no end-of-evaluation moment to hook; EL is provided beyond Lite, and a program
-that needs the destruction can look the bean up and destroy it itself. Ending a request begun with
+EL expression through the bare resolver of `getELResolver` is created but not destroyed when the evaluation
+completes — the EL contract offers the resolver no end-of-evaluation moment to hook; EL is provided beyond
+Lite, and a program that needs the destruction can look the bean up and destroy it itself. The expressions of a
+factory wrapped with `wrapExpressionFactory` do have that moment, each call of one being an evaluation, and
+there the dependent bean is shared by every appearance of its name and destroyed as the call returns. Ending a request begun with
 `RequestContextController.activate()` from a different thread than began it silently does nothing — the
 controller's bookkeeping is per-thread, as the specification's enter-and-exit shape assumes; the `run`/`supply`
 /`call` forms are safe across threads. And a creation that waits for another thread can, in principle, deadlock
@@ -191,14 +195,19 @@ the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 13 tests, all passing, which makes 820 in all. Each asserts something this implementation answers although
+own: 21 tests, all passing, which makes 828 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
 `@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorBindingsWithAtInterceptorsTest`,
-`InterceptorOrderTest`), and the definition error of injecting the metadata of a decorator — `Decorator<X>` or
+`InterceptorOrderTest`), the definition error of injecting the metadata of a decorator — `Decorator<X>` or
 the `@Decorated` `Bean<X>` — into a bean that is not one (the four tests of
-`implementation/builtin/metadata/broken/injection`). Their scenario packages are compiled by name (`beyondLiteScenarios` in
+`implementation/builtin/metadata/broken/injection`), and the expression language of `micronaut-cdi-el`: names
+resolved to beans (`full.lookup.el.ResolutionByNameTest`), a wrapped factory of someone else's
+(`WrapExpressionFactoryTest`), and the dependent beans of an evaluation
+(`full.context.dependent.DependentContextTest`). One test of the last is left out by name, `testContextIsActiveWhenEvaluatingElExpression`: its method expression
+calls a bean method that is not an executable method, and an expression reaches a bean's methods through the
+executable metadata compiled for them rather than reflectively. Their scenario packages are compiled by name (`beyondLiteScenarios` in
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
 

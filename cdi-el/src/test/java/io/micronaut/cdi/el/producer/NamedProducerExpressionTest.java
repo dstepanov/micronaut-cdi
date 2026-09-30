@@ -40,4 +40,16 @@ class NamedProducerExpressionTest {
             assertEquals("hi", value);
         }
     }
+
+    @Test
+    void theTypeOfAProducedBeanIsWhatItProducesRatherThanTheClassDeclaringIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            ELContext el = new StandardELContext(ExpressionFactory.newInstance());
+
+            Class<?> type = manager.getELResolver().getType(el, null, "salutation");
+
+            assertEquals(String.class, type);
+        }
+    }
 }

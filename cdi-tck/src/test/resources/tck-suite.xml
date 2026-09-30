@@ -137,7 +137,7 @@
     </test>
     <!-- Beyond Lite: classes the kit marks as CDI Full that pass here all the same, because what they assert
          is within what this implementation answers - the bean manager's comparison of qualifiers, its injectable
-         references, and interceptors bound with @Interceptors. They are listed by class and nothing of the
+         references, interceptors bound with @Interceptors, and the expression language. They are listed by class and nothing of the
          cdi-full group is excluded here; CDI Full as a whole is still not claimed, and CONFORMANCE.md counts
          these apart from the Lite tests -->
     <test name="beyond-lite">
@@ -154,6 +154,17 @@
             <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanConstructorInjectionTest"/>
             <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanFieldInjectionTest"/>
             <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanInitializerInjectionTest"/>
+            <!-- the expression language, through the optional micronaut-cdi-el module: names resolved to beans,
+                 and the dependent beans of an evaluation shared within it and destroyed after it -->
+            <class name="org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest">
+                <methods>
+                    <!-- a method expression invokes a bean's method through the executable metadata compiled
+                         for it, and the scenario's getName is not an executable method: see CONFORMANCE.md -->
+                    <exclude name="testContextIsActiveWhenEvaluatingElExpression"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.full.extensions.beanManager.el.WrapExpressionFactoryTest"/>
         </classes>
     </test>
 </suite>

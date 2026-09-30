@@ -23,9 +23,11 @@ import jakarta.el.MethodExpression;
 import jakarta.el.MethodInfo;
 import jakarta.el.ValueExpression;
 import jakarta.el.VariableMapper;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * The factory a wrapped factory becomes: what it creates evaluates with the beans of the container in reach.
@@ -33,7 +35,11 @@ import java.util.Map;
  * <p>Section 12.4 asks {@code wrapExpressionFactory} for a factory whose expressions see the beans, whichever
  * context they are later evaluated against. Creation is delegated untouched; the expressions that come back are
  * wrapped so that every context they are handed — at creation and at each evaluation — resolves the container's
- * names before anything else.</p>
+ * names before anything else. An expression may be created against no context at all, and is: the context that
+ * matters is the one it is evaluated against.</p>
+ *
+ * <p>Each call of a wrapped expression is one evaluation: a dependent bean a name resolves to is created once
+ * for it, however often the expression names the bean, and destroyed when the call returns.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -52,7 +58,8 @@ final class CdiExpressionFactory extends ExpressionFactory {
     }
 
     @Override
-    public ValueExpression createValueExpression(ELContext context, String expression, Class<?> expectedType) {
+    public ValueExpression createValueExpression(@Nullable ELContext context, String expression,
+                                                 Class<?> expectedType) {
         return new BeanAwareValueExpression(
             delegate.createValueExpression(reaching(context), expression, expectedType));
     }
@@ -63,8 +70,8 @@ final class CdiExpressionFactory extends ExpressionFactory {
     }
 
     @Override
-    public MethodExpression createMethodExpression(ELContext context, String expression, Class<?> expectedReturnType,
-                                                   Class<?>[] expectedParamTypes) {
+    public MethodExpression createMethodExpression(@Nullable ELContext context, String expression,
+                                                   Class<?> expectedReturnType, Class<?>[] expectedParamTypes) {
         return new BeanAwareMethodExpression(
             delegate.createMethodExpression(reaching(context), expression, expectedReturnType, expectedParamTypes));
     }
@@ -84,8 +91,29 @@ final class CdiExpressionFactory extends ExpressionFactory {
         return delegate.getInitFunctionMap();
     }
 
-    private ELContext reaching(ELContext context) {
-        return new BeanReachingContext(context, beans, beanContext);
+    /**
+     * The context an expression is created against: nothing is evaluated yet, so no evaluation is opened.
+     */
+    @Nullable
+    private ELContext reaching(@Nullable ELContext context) {
+        return context == null ? null : new BeanReachingContext(context, beans, beanContext, null);
+    }
+
+    /**
+     * Runs one evaluation against the given context, destroying the dependent beans it reached as it completes.
+     * An evaluation made from within another — an expression evaluated by a resolver of the context — belongs
+     * to the outer one, which is the one that completes.
+     */
+    private <R> R evaluate(ELContext context, Function<ELContext, R> call) {
+        if (context.getContext(CdiEvaluation.class) != null) {
+            return call.apply(context);
+        }
+        CdiEvaluation evaluation = new CdiEvaluation();
+        try {
+            return call.apply(new BeanReachingContext(context, beans, beanContext, evaluation));
+        } finally {
+            evaluation.complete();
+        }
     }
 
     /**
@@ -96,11 +124,14 @@ final class CdiExpressionFactory extends ExpressionFactory {
         private final ELContext wrapped;
         private final ELResolver resolver;
         private final io.micronaut.context.BeanContext beanContext;
+        @Nullable
+        private final CdiEvaluation evaluation;
 
         BeanReachingContext(ELContext wrapped, ELResolver beans,
-                            io.micronaut.context.BeanContext beanContext) {
+                            io.micronaut.context.BeanContext beanContext, @Nullable CdiEvaluation evaluation) {
             this.wrapped = wrapped;
             this.beanContext = beanContext;
+            this.evaluation = evaluation;
             // the container's names first, then everything Micronaut's own chain resolves — which is what
             // reaches a bean's executable methods — and finally whatever the caller's context adds
             this.resolver = new jakarta.el.CompositeELResolver();
@@ -127,6 +158,11 @@ final class CdiExpressionFactory extends ExpressionFactory {
         @Override
         @org.jspecify.annotations.Nullable
         public Object getContext(Class<?> key) {
+            if (key == CdiEvaluation.class) {
+                // the evaluation this context was made for, which is where the resolver of the container's
+                // names keeps the dependent beans it creates
+                return evaluation;
+            }
             Object registered = wrapped.getContext(key);
             if (registered != null) {
                 return registered;
@@ -166,22 +202,25 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
         @Override
         public Object getValue(ELContext context) {
-            return wrapped.getValue(reaching(context));
+            return evaluate(context, wrapped::getValue);
         }
 
         @Override
         public void setValue(ELContext context, Object value) {
-            wrapped.setValue(reaching(context), value);
+            evaluate(context, reaching -> {
+                wrapped.setValue(reaching, value);
+                return Boolean.TRUE;
+            });
         }
 
         @Override
         public boolean isReadOnly(ELContext context) {
-            return wrapped.isReadOnly(reaching(context));
+            return evaluate(context, wrapped::isReadOnly);
         }
 
         @Override
         public Class<?> getType(ELContext context) {
-            return wrapped.getType(reaching(context));
+            return evaluate(context, wrapped::getType);
         }
 
         @Override
@@ -220,12 +259,12 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
         @Override
         public MethodInfo getMethodInfo(ELContext context) {
-            return wrapped.getMethodInfo(reaching(context));
+            return evaluate(context, wrapped::getMethodInfo);
         }
 
         @Override
         public Object invoke(ELContext context, Object[] params) {
-            return wrapped.invoke(reaching(context), params);
+            return evaluate(context, reaching -> wrapped.invoke(reaching, params));
         }
 
         @Override

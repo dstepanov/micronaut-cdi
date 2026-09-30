@@ -88,6 +88,9 @@ def beyondLiteScenarios = [
     'org/jboss/cdi/tck/tests/full/interceptors/contract/invocationContext/**',
     'org/jboss/cdi/tck/tests/full/interceptors/definition/interceptorOrder/**',
     'org/jboss/cdi/tck/tests/full/implementation/builtin/metadata/broken/injection/**',
+    'org/jboss/cdi/tck/tests/full/lookup/el/**',
+    'org/jboss/cdi/tck/tests/full/context/dependent/**',
+    'org/jboss/cdi/tck/tests/full/extensions/beanManager/el/**',
 ]
 
 def tckScenarios = tasks.register('tckScenarios', Sync) {
