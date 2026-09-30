@@ -13,7 +13,7 @@ dependencies {
 
     testImplementation platform(libs.micronaut.core)
     testImplementation projects.micronautCdi
-    // the optional module that describes to the registration phase the beans the compiler never saw
+    // the optional module behind the parts of the specification's API that hand out reflection objects
     testImplementation projects.micronautCdiReflection
     testImplementation projects.testSuiteExtension
     testImplementation mn.micronaut.inject

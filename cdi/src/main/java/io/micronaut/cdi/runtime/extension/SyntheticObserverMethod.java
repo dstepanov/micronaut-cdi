@@ -15,8 +15,13 @@
  */
 package io.micronaut.cdi.runtime.extension;
 
+import io.micronaut.cdi.annotation.CdiSyntheticObserver;
+import io.micronaut.cdi.annotation.CdiSyntheticParameter;
+import io.micronaut.cdi.runtime.CdiAnnotations;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
@@ -27,7 +32,9 @@ import jakarta.enterprise.inject.spi.ObserverMethod;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An observer an extension synthesised (section 2.10.5): notified like any other, it creates an instance of the
@@ -42,26 +49,52 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     io.micronaut.cdi.runtime.CdiNotifiable {
 
     private final BeanContext beanContext;
-    private final SyntheticObserverDescription<T> description;
+    private final BeanDefinition<?> definition;
+    private final AnnotationValue<CdiSyntheticObserver> record;
+    private final Type eventType;
+    private final CdiParameters parameters;
+    private volatile @Nullable Set<Annotation> qualifiers;
 
-    SyntheticObserverMethod(BeanContext beanContext, SyntheticObserverDescription<T> description) {
+    SyntheticObserverMethod(BeanContext beanContext, BeanDefinition<?> definition,
+                            AnnotationValue<CdiSyntheticObserver> record) {
         this.beanContext = beanContext;
-        this.description = description;
+        this.definition = definition;
+        this.record = record;
+        this.eventType = RecordedTypes.typeOf(record.getAnnotation(CdiSyntheticObserver.EVENT_TYPE).orElseThrow());
+        this.parameters = new CdiParameters(record.getAnnotations("params", CdiSyntheticParameter.class));
     }
 
     @Override
     public Class<?> getBeanClass() {
-        return description.observer();
+        return definition.getBeanType();
     }
 
     @Override
     public Type getObservedType() {
-        return description.eventType();
+        return eventType;
     }
 
     @Override
     public Set<Annotation> getObservedQualifiers() {
-        return new LinkedHashSet<>(description.qualifiers());
+        Set<Annotation> resolved = qualifiers;
+        if (resolved == null) {
+            // a qualifier is recorded as the values it was written with, and is an annotation instance only
+            // on this side of the specification's interface
+            List<AnnotationValue<Annotation>> recorded = record.getAnnotations(CdiSyntheticObserver.QUALIFIERS);
+            Class<?>[] types = record.classValues("qualifierTypes");
+            Set<Annotation> instances = new LinkedHashSet<>();
+            for (int i = 0; i < recorded.size() && i < types.length; i++) {
+                instances.add(CdiAnnotations.annotationOf(annotationType(types[i]), recorded.get(i)));
+            }
+            resolved = java.util.Collections.unmodifiableSet(instances);
+            qualifiers = resolved;
+        }
+        return resolved;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Annotation> annotationType(Class<?> type) {
+        return (Class<? extends Annotation>) type;
     }
 
     @Override
@@ -71,22 +104,28 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public TransactionPhase getTransactionPhase() {
-        return description.transactionPhase();
+        return switch (record.stringValue("transactionPhase").orElse("IN_PROGRESS")) {
+            case "BEFORE_COMPLETION" -> TransactionPhase.BEFORE_COMPLETION;
+            case "AFTER_COMPLETION" -> TransactionPhase.AFTER_COMPLETION;
+            case "AFTER_FAILURE" -> TransactionPhase.AFTER_FAILURE;
+            case "AFTER_SUCCESS" -> TransactionPhase.AFTER_SUCCESS;
+            default -> TransactionPhase.IN_PROGRESS;
+        };
     }
 
     @Override
     public int getPriority() {
-        return description.priority();
+        return record.intValue("priority").orElse(jakarta.interceptor.Interceptor.Priority.APPLICATION + 500);
     }
 
     @Override
     public boolean isAsync() {
-        return description.async();
+        return record.booleanValue("async").orElse(false);
     }
 
     @Override
     public void notify(T event) {
-        notify(event, new Metadata(new LinkedHashSet<>(description.qualifiers()), description.eventType()));
+        notify(event, new Metadata(getObservedQualifiers(), eventType));
     }
 
     @SuppressWarnings("unchecked")
@@ -104,7 +143,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     public void notify(T event, EventMetadata metadata) {
         SyntheticObserver<T> observer = instantiate();
         try {
-            observer.observe(new Context<>(event, metadata), new CdiParameters(description.parameters()));
+            observer.observe(new Context<>(event, metadata), parameters);
         } catch (RuntimeException | Error e) {
             throw e;
         } catch (Exception e) {
@@ -112,20 +151,12 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         }
     }
 
+    /**
+     * The observer, from the definition the compiler generated for the class the extension named.
+     */
     @SuppressWarnings("unchecked")
     private SyntheticObserver<T> instantiate() {
-        java.util.Optional<? extends SyntheticObserver<T>> bean =
-            (java.util.Optional<? extends SyntheticObserver<T>>) beanContext
-                .findBean(io.micronaut.core.type.Argument.of(description.observer()));
-        if (bean.isPresent()) {
-            return bean.get();
-        }
-        try {
-            return description.observer().getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("The synthetic observer " + description.observer()
-                + " could not be created", e);
-        }
+        return (SyntheticObserver<T>) beanContext.getBean(definition);
     }
 
     private record Metadata(Set<Annotation> qualifiers, Type type) implements EventMetadata {

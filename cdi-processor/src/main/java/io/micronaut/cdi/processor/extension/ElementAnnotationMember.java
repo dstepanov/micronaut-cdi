@@ -58,6 +58,15 @@ public final class ElementAnnotationMember implements AnnotationMember {
         this.member = member;
     }
 
+    /**
+     * The value as Micronaut records it, which is what composing another annotation from it takes.
+     *
+     * @return The recorded value
+     */
+    Object recordedValue() {
+        return value;
+    }
+
     @Override
     public Kind kind() {
         if (value instanceof Boolean) {

@@ -17,6 +17,10 @@ package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
@@ -57,6 +61,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private final Map<String, List<String>> contexts = new java.util.LinkedHashMap<>();
     private final Map<String, Boolean> normalContexts = new java.util.LinkedHashMap<>();
     private final Map<String, List<AnnotationValue<?>>> metaAnnotations = new LinkedHashMap<>();
+    private @org.jspecify.annotations.Nullable VisitorContext context;
 
     /**
      * The annotations the extensions made qualifiers of.
@@ -101,18 +106,33 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
-     * The contexts the extensions registered, one entry per scope in the record form the runtime reads:
-     * {@code scopeAnnotationName|normal|contextClass1;contextClass2}.
+     * The compilation the discovery phase runs in, which is what an annotation the phase names is read from:
+     * the phase runs as the compilation starts, before any class is visited.
      *
-     * @return The entries
+     * @param context The compilation
      */
-    public List<String> contextRecords() {
-        List<String> records = new ArrayList<>();
-        for (Map.Entry<String, List<String>> entry : contexts.entrySet()) {
-            records.add(entry.getKey() + "|" + normalContexts.getOrDefault(entry.getKey(), false) + "|"
-                + String.join(";", entry.getValue()));
-        }
-        return records;
+    void compilation(VisitorContext context) {
+        this.context = context;
+    }
+
+    /**
+     * The contexts the extensions registered: the names of the context classes of each scope, by the name of
+     * the scope annotation.
+     *
+     * @return The context classes of each scope
+     */
+    Map<String, List<String>> contexts() {
+        return contexts;
+    }
+
+    /**
+     * Whether the scope an extension registered a context for is a normal one.
+     *
+     * @param scopeName The name of a scope annotation
+     * @return Whether the extension registered it as normal
+     */
+    boolean isNormalContext(String scopeName) {
+        return normalContexts.getOrDefault(scopeName, false);
     }
 
     @Override
@@ -146,14 +166,18 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     @Override
     public void addContext(Class<? extends Annotation> scopeAnnotation,
                            Class<? extends AlterableContext> contextClass) {
-        boolean isNormal = scopeAnnotation.isAnnotationPresent(jakarta.enterprise.context.NormalScope.class);
+        // whether the scope is normal is what its annotation says, read from the compilation's view of it
+        boolean isNormal = declarationOf(scopeAnnotation.getName())
+            .map(scope -> scope.hasDeclaredAnnotation("jakarta.enterprise.context.NormalScope"))
+            .orElse(false);
         registerContext(scopeAnnotation, isNormal, contextClass);
     }
 
     /**
      * Registers a scope of the extension's own, and the context that holds its instances: the scope annotation
      * is given what makes the classes carrying it beans of a Micronaut custom scope — proxied, for a normal
-     * one — and which context class serves it is recorded for the runtime to read (section 2.10.1).
+     * one — and which context class serves it is recorded, for a bean definition of the context class to be
+     * generated with (section 2.10.1).
      */
     private void registerContext(Class<? extends Annotation> scopeAnnotation, boolean isNormal,
                                  Class<? extends AlterableContext> contextClass) {
@@ -207,6 +231,11 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         return metaAnnotations.isEmpty() && scanned.isEmpty();
     }
 
+    private java.util.Optional<ClassElement> declarationOf(String name) {
+        VisitorContext compilation = context;
+        return compilation == null ? java.util.Optional.empty() : compilation.getClassElement(name);
+    }
+
     private ClassConfig register(Class<? extends Annotation> annotation, String metaAnnotation) {
         if ("jakarta.inject.Qualifier".equals(metaAnnotation)) {
             registeredQualifiers.add(annotation.getName());
@@ -214,8 +243,21 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         List<AnnotationValue<?>> annotations = metaAnnotations
             .computeIfAbsent(annotation.getName(), name -> new ArrayList<>());
         annotations.add(AnnotationValue.builder(metaAnnotation).build());
-        return new Deferred(annotation.getName(), annotations, annotation,
+        return new Deferred(annotation.getName(), annotations, memberNamesOf(annotation.getName()),
             memberAnnotations.computeIfAbsent(annotation.getName(), name -> new java.util.LinkedHashMap<>()));
+    }
+
+    /**
+     * The names of the members an annotation interface declares, as the compilation sees the interface.
+     */
+    private List<String> memberNamesOf(String annotation) {
+        List<String> names = new ArrayList<>();
+        declarationOf(annotation).ifPresent(declaration -> {
+            for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+                names.add(member.getName());
+            }
+        });
+        return names;
     }
 
     /**
@@ -247,11 +289,11 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      *
      * @param className         The name of the annotation the extension registered
      * @param annotations       What is to be put on it once the class comes past
-     * @param annotationClass   The annotation class the extension handed in
+     * @param memberNames       The names of the members the annotation interface declares
      * @param memberAnnotations What is to be put on each named member once the class comes past
      */
     private record Deferred(String className, List<AnnotationValue<?>> annotations,
-                            Class<? extends Annotation> annotationClass,
+                            List<String> memberNames,
                             Map<String, List<AnnotationValue<?>>> memberAnnotations) implements ClassConfig {
 
         @Override
@@ -301,13 +343,13 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
         @Override
         public Collection<jakarta.enterprise.inject.build.compatible.spi.MethodConfig> methods() {
-            // the annotation is registered during discovery, before anything is compiled, so its members are
-            // read from the class itself: what an extension adds to them is recorded and applied when the
-            // annotation type comes past the compiler
+            // the annotation is registered during discovery, before any class is visited, so its members are
+            // the ones the compilation's view of the interface declares: what an extension adds to them is
+            // recorded and applied when the annotation type comes past the compiler
             List<jakarta.enterprise.inject.build.compatible.spi.MethodConfig> configs = new ArrayList<>();
-            for (java.lang.reflect.Method member : annotationClass.getDeclaredMethods()) {
-                configs.add(new DeferredMethod(member.getName(),
-                    memberAnnotations.computeIfAbsent(member.getName(), name -> new ArrayList<>())));
+            for (String member : memberNames) {
+                configs.add(new DeferredMethod(member,
+                    memberAnnotations.computeIfAbsent(member, name -> new ArrayList<>())));
             }
             return configs;
         }

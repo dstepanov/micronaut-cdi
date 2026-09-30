@@ -28,8 +28,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -73,6 +75,47 @@ public final class CdiQualifiers {
                 continue;
             }
             resolved.add(qualifierOf(qualifier));
+        }
+        if (resolved.isEmpty()) {
+            return null;
+        }
+        if (resolved.size() == 1) {
+            return resolved.get(0);
+        }
+        @SuppressWarnings("unchecked")
+        Qualifier<T>[] array = resolved.toArray(new Qualifier[0]);
+        return Qualifiers.byQualifiers(array);
+    }
+
+    /**
+     * The Micronaut qualifier that resolves the beans the given qualifiers do, from the values the qualifiers
+     * were recorded with rather than from annotation instances: what a synthetic bean is qualified by was
+     * recorded while the application compiled, and nothing has to be read back to resolve by it.
+     *
+     * @param qualifiers The qualifiers, each as the values it was written with
+     * @param nonbinding The members that take no part in resolution, each as {@code annotationName#memberName}
+     * @param <T>        The bean type
+     * @return The qualifier, or {@code null} when every bean of the type qualifies
+     */
+    public static <T> @Nullable Qualifier<T> ofValues(List<? extends AnnotationValue<?>> qualifiers,
+                                                      Set<String> nonbinding) {
+        List<Qualifier<T>> resolved = new ArrayList<>(qualifiers.size());
+        for (AnnotationValue<?> qualifier : qualifiers) {
+            String name = qualifier.getAnnotationName();
+            if ("jakarta.enterprise.inject.Any".equals(name)) {
+                continue;
+            }
+            if ("jakarta.inject.Named".equals(name)) {
+                resolved.add(Qualifiers.byName(qualifier.stringValue().orElse("")));
+                continue;
+            }
+            Map<CharSequence, Object> binding = new LinkedHashMap<>(qualifier.getValues());
+            binding.keySet().removeIf(member -> nonbinding.contains(name + "#" + member)
+                || ExtensionQualifiers.isNonbindingMember(name, member.toString()));
+            @SuppressWarnings("unchecked")
+            Qualifier<T> byValues = (Qualifier<T>) Qualifiers.byAnnotation(
+                AnnotationMetadata.EMPTY_METADATA, new AnnotationValue<>(name, binding));
+            resolved.add(byValues);
         }
         if (resolved.isEmpty()) {
             return null;

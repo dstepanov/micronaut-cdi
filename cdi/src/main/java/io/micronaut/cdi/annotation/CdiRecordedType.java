@@ -18,29 +18,43 @@ package io.micronaut.cdi.annotation;
 import io.micronaut.core.annotation.Internal;
 
 import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The contexts the build compatible extensions of one compilation registered, written onto a generated class
- * so the runtime finds them in one place: one entry per scope, in the form
- * {@code scopeAnnotationName|normal|contextClass1;contextClass2}.
+ * A type an extension composed in the language model, recorded so that the container can hand it out as a
+ * {@code java.lang.reflect.Type} without reading anything back: the class, how many array dimensions it has,
+ * and its type arguments.
+ *
+ * <p>The type arguments are held by an undeclared member, {@code arguments}, as nested values of this same
+ * annotation: an annotation interface cannot declare a member of its own type.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target({})
 @Internal
-public @interface CdiExtensionContextRecord {
+public @interface CdiRecordedType {
 
     /**
-     * The entries.
-     *
-     * @return The entries
+     * The name of the undeclared member that holds the type arguments.
      */
-    String[] value();
+    String ARGUMENTS = "arguments";
+
+    /**
+     * The class, or the component class of an array.
+     *
+     * @return The class
+     */
+    Class<?> value();
+
+    /**
+     * The dimensions of an array of {@link #value()}, zero for the class itself.
+     *
+     * @return The dimensions
+     */
+    int dimensions() default 0;
 }

@@ -36,10 +36,34 @@ import jakarta.enterprise.lang.model.AnnotationTarget;
 @Internal
 public final class VisitorMessages implements Messages {
 
+    /**
+     * What opens the report of an error that is about the deployment as a whole (section 2.10.6): a harness
+     * that treats a failed compilation as a failed deployment tells it from a definition error by this.
+     */
+    public static final String DEPLOYMENT_PROBLEM = "A build compatible extension reported a deployment problem: ";
+
     private final VisitorContext context;
+    private final String errorPrefix;
 
     VisitorMessages(VisitorContext context) {
+        this(context, "");
+    }
+
+    private VisitorMessages(VisitorContext context, String errorPrefix) {
         this.context = context;
+        this.errorPrefix = errorPrefix;
+    }
+
+    /**
+     * The messages of the phases that run once the whole compilation has been seen - synthesis, the
+     * registration of what it described, and validation: an error reported there is a problem with the
+     * deployment.
+     *
+     * @param context The compilation
+     * @return The messages
+     */
+    static VisitorMessages ofTheDeployment(VisitorContext context) {
+        return new VisitorMessages(context, DEPLOYMENT_PROBLEM);
     }
 
     @Override
@@ -84,27 +108,27 @@ public final class VisitorMessages implements Messages {
 
     @Override
     public void error(String message) {
-        context.fail(message, null);
+        context.fail(errorPrefix + message, null);
     }
 
     @Override
     public void error(String message, AnnotationTarget relatedTo) {
-        context.fail(message, elementOf(relatedTo));
+        context.fail(errorPrefix + message, elementOf(relatedTo));
     }
 
     @Override
     public void error(String message, BeanInfo relatedTo) {
-        context.fail(message, null);
+        context.fail(errorPrefix + message + " (" + relatedTo + ")", null);
     }
 
     @Override
     public void error(String message, ObserverInfo relatedTo) {
-        context.fail(message, null);
+        context.fail(errorPrefix + message + " (" + relatedTo + ")", null);
     }
 
     @Override
     public void error(Exception exception) {
-        context.fail(exception.toString(), null);
+        context.fail(errorPrefix + exception, null);
     }
 
     /**

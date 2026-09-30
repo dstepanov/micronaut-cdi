@@ -229,22 +229,18 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         }
         Set<String> deployedBeans = classes;
         DeploymentClassLoader loader = new DeploymentClassLoader(generated, getClass().getClassLoader());
-        if (!extensionClassNames.isEmpty()) {
-            // the deployment's own service entry, so that the synthesis of section 2.10.5 — run as the
-            // container starts, through the deployment's loader — sees the same extensions
-            loader.addResource(
-                "META-INF/services/jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension",
-                String.join("\n", extensionClassNames).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        }
+        // every phase of the deployment's extensions ran as it compiled, the synthesis and the validation of
+        // section 2.10 included: the container that starts here reads what they recorded, and runs none
         try {
-            if (!extensions.isEmpty()) {
-                // the same instances that ran the earlier phases run the synthesis and validation of section
-                // 2.10: every extension has one instance across all of its phases
-                io.micronaut.cdi.runtime.extension.SynthesisRunner.overrideExtensions(extensions);
-            }
             ApplicationContext context = ApplicationContext.builder()
                 .classLoader(loader)
                 .beansPredicate(bean -> {
+                    if (io.micronaut.cdi.runtime.extension.ExtensionComponents
+                        .isComponent(bean.getAnnotationMetadata())) {
+                        // what the deployment's extensions synthesised, recorded on the definition of a class
+                        // they named: part of the deployment whether or not the class is a bean of the archive
+                        return true;
+                    }
                     if (bean instanceof io.micronaut.inject.BeanDefinition<?> definition) {
                         java.util.Optional<Class<?>> declaring = definition.getDeclaringType();
                         if (declaring.isPresent()
@@ -282,10 +278,6 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             throw new DeploymentException("The deployment could not be started",
                 new jakarta.enterprise.inject.spi.DeploymentException(
                     "The deployment could not be started", e));
-        } finally {
-            if (!extensions.isEmpty()) {
-                io.micronaut.cdi.runtime.extension.SynthesisRunner.overrideExtensions(null);
-            }
         }
     }
 

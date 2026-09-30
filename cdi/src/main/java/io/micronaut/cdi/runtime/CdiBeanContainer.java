@@ -283,6 +283,11 @@ public final class CdiBeanContainer implements BeanManager {
             if (proxied.contains(definition.getClass().getName())) {
                 continue;
             }
+            if (io.micronaut.cdi.runtime.extension.ExtensionComponents.isComponent(definition.getAnnotationMetadata())) {
+                // the definition of a creator, a disposer, a synthetic observer or a context an extension
+                // named: what the container instantiates the class through, and not a bean of the application
+                continue;
+            }
             loaded.add(new CdiBean<>(beanContext, definition));
         }
         return List.copyOf(loaded);

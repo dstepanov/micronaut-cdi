@@ -94,7 +94,10 @@ final class DeploymentCompiler {
                 || message.contains("must not be final unless it is private or static")
                 // an extension that reported a deployment problem itself: the exception's type survives only
                 // in the diagnostic's text once the compiler has reported it
-                || message.contains("jakarta.enterprise.inject.spi.DeploymentException")) {
+                || message.contains("jakarta.enterprise.inject.spi.DeploymentException")
+                // what an extension reported in its synthesis or validation phase, or threw there: a problem
+                // with the deployment as a whole (section 2.10.6)
+                || message.contains(io.micronaut.cdi.processor.extension.VisitorMessages.DEPLOYMENT_PROBLEM)) {
                 unproxyable = true;
             }
         }

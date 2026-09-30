@@ -40,10 +40,11 @@ import java.util.Set;
  * {@code MetaAnnotations.addContext} (section 2.10.1), and remembers them for the container to answer
  * {@code getContext} and {@code getContexts} from.
  *
- * <p>Which context class serves which scope was recorded on the scope annotation while it was compiled; here
- * the beans carrying the scope are read for that record, one instance of every context class is created, and a
- * Micronaut custom scope is registered for each scope so that resolution of a bean in it goes through the
- * context the extension provided.</p>
+ * <p>The discovery phase runs while the application compiles, and a bean definition is generated there for
+ * every context class an extension registered, recording the scope the context serves. Here those definitions
+ * are read, one instance of every context class is obtained from its definition, and a Micronaut custom scope
+ * is registered for each scope so that resolution of a bean in it goes through the context the extension
+ * provided.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -55,7 +56,6 @@ public final class ExtensionContexts {
 
     private final BeanContext beanContext;
     private final Map<String, List<AlterableContext>> contextsByScope = new LinkedHashMap<>();
-    private final Map<String, Class<? extends Annotation>> scopeAnnotations = new LinkedHashMap<>();
 
     private final List<String> registeredQualifiers = new ArrayList<>();
     private final List<String[]> registeredNonbindingMembers = new ArrayList<>();
@@ -77,9 +77,7 @@ public final class ExtensionContexts {
 
     @PostConstruct
     void standUp() {
-        ClassLoader classLoader = beanContext.getClassLoader() != null
-            ? beanContext.getClassLoader() : ExtensionContexts.class.getClassLoader();
-        Set<String> seenScopes = new LinkedHashSet<>();
+        List<BeanDefinition<?>> contextDefinitions = new ArrayList<>();
         for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
             List<String> qualifierNames = new ArrayList<>(definition.getAnnotationMetadata()
                 .getAnnotationNamesByStereotype(io.micronaut.core.annotation.AnnotationUtil.QUALIFIER));
@@ -108,36 +106,49 @@ public final class ExtensionContexts {
                     }
                 }
             }
-            AnnotationValue<io.micronaut.cdi.annotation.CdiExtensionContextRecord> recorded =
-                definition.getAnnotationMetadata()
-                    .getAnnotation(io.micronaut.cdi.annotation.CdiExtensionContextRecord.class);
-            if (recorded == null) {
-                continue;
-            }
-            for (String entry : recorded.stringValues()) {
-                String[] parts = entry.split("\\|");
-                if (parts.length != 3) {
-                    continue;
-                }
-                String scopeName = parts[0];
-                if (!seenScopes.add(scopeName)) {
-                    continue;
-                }
-                List<AlterableContext> contexts = new ArrayList<>();
-                for (String contextClassName : parts[2].split(";")) {
-                    contexts.add(instantiate(contextClassName, classLoader));
-                }
-                contextsByScope.put(scopeName, contexts);
-                Class<? extends Annotation> scopeAnnotation = annotationClass(scopeName, classLoader);
-                scopeAnnotations.put(scopeName, scopeAnnotation);
-                beanContext.registerBeanDefinition(RuntimeBeanDefinition
-                    .builder(io.micronaut.context.scope.CustomScope.class,
-                        () -> new ExtensionCustomScope(scopeAnnotation, contexts, beanContext))
-                    .singleton(true)
-                    .typeArguments(Argument.of(scopeAnnotation))
-                    .build());
+            if (definition.getAnnotationMetadata()
+                .hasAnnotation(io.micronaut.cdi.annotation.CdiRegisteredContext.class)) {
+                contextDefinitions.add(definition);
             }
         }
+        // one instance of every context class, whichever compilations of the application registered it
+        Set<String> seenContexts = new LinkedHashSet<>();
+        for (BeanDefinition<?> definition : contextDefinitions) {
+            AnnotationValue<io.micronaut.cdi.annotation.CdiRegisteredContext> registered =
+                definition.getAnnotationMetadata()
+                    .getAnnotation(io.micronaut.cdi.annotation.CdiRegisteredContext.class);
+            Class<? extends Annotation> scopeAnnotation = registered == null ? null : scopeOf(registered);
+            if (scopeAnnotation == null) {
+                throw new IllegalStateException("The scope annotation of the context "
+                    + definition.getBeanType().getName() + " is not on the classpath");
+            }
+            String scopeName = scopeAnnotation.getName();
+            if (!seenContexts.add(scopeName + "|" + definition.getBeanType().getName())) {
+                continue;
+            }
+            // the context is the one the definition the compiler generated for its class creates
+            AlterableContext context = (AlterableContext) beanContext.getBean(definition);
+            List<AlterableContext> contexts = contextsByScope.get(scopeName);
+            if (contexts != null) {
+                contexts.add(context);
+                continue;
+            }
+            List<AlterableContext> contextsOfScope = new ArrayList<>();
+            contextsOfScope.add(context);
+            contextsByScope.put(scopeName, contextsOfScope);
+            beanContext.registerBeanDefinition(RuntimeBeanDefinition
+                .builder(io.micronaut.context.scope.CustomScope.class,
+                    () -> new ExtensionCustomScope(scopeAnnotation, contextsOfScope, beanContext))
+                .singleton(true)
+                .typeArguments(Argument.of(scopeAnnotation))
+                .build());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static @org.jspecify.annotations.Nullable Class<? extends Annotation> scopeOf(
+        AnnotationValue<io.micronaut.cdi.annotation.CdiRegisteredContext> registered) {
+        return (Class<? extends Annotation>) registered.classValue("scope").orElse(null);
     }
 
     /**
@@ -148,23 +159,5 @@ public final class ExtensionContexts {
      */
     public List<AlterableContext> contextsFor(Class<? extends Annotation> scopeAnnotation) {
         return contextsByScope.getOrDefault(scopeAnnotation.getName(), List.of());
-    }
-
-    private static AlterableContext instantiate(String contextClassName, ClassLoader classLoader) {
-        try {
-            return (AlterableContext) Class.forName(contextClassName, true, classLoader)
-                .getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("The context " + contextClassName + " could not be created", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Class<? extends Annotation> annotationClass(String name, ClassLoader classLoader) {
-        try {
-            return (Class<? extends Annotation>) Class.forName(name, false, classLoader);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("The scope annotation " + name + " could not be loaded", e);
-        }
     }
 }

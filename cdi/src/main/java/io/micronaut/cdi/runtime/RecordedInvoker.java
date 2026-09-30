@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.cdi.annotation.CdiRecordedInvoker;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
@@ -65,6 +67,44 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
         this.staticMethod = staticMethod;
         this.instanceLookup = instanceLookup;
         this.argumentLookups = argumentLookups;
+    }
+
+    /**
+     * The invoker as the annotation value a synthetic component carries it to runtime in.
+     *
+     * @return The record
+     */
+    public AnnotationValue<CdiRecordedInvoker> toRecord() {
+        return AnnotationValue.builder(CdiRecordedInvoker.class)
+            .member("beanClass", beanClassName)
+            .member("method", methodName)
+            .member("parameterTypes", parameterTypeNames)
+            .member("staticMethod", staticMethod)
+            .member("instanceLookup", instanceLookup)
+            .member("argumentLookups", argumentLookups)
+            .build();
+    }
+
+    /**
+     * The invoker a record describes.
+     *
+     * @param record The record
+     * @return The invoker
+     */
+    public static RecordedInvoker of(AnnotationValue<?> record) {
+        String[] parameterTypes = record.stringValues("parameterTypes");
+        boolean[] lookups = record.booleanValues("argumentLookups");
+        if (lookups.length != parameterTypes.length) {
+            // an array of nothing but false is not written
+            lookups = java.util.Arrays.copyOf(lookups, parameterTypes.length);
+        }
+        return new RecordedInvoker(
+            record.stringValue("beanClass").orElseThrow(),
+            record.stringValue("method").orElseThrow(),
+            parameterTypes,
+            record.booleanValue("staticMethod").orElse(false),
+            record.booleanValue("instanceLookup").orElse(false),
+            lookups);
     }
 
     @Override

@@ -49,7 +49,13 @@ final class VisitorTypes implements Types {
             return ofVoid();
         }
         if (clazz.isArray()) {
-            return ElementTypes.of(ClassElement.of(clazz));
+            int dimensions = 0;
+            Class<?> component = clazz;
+            while (component.isArray()) {
+                dimensions++;
+                component = component.getComponentType();
+            }
+            return ofArray(of(component), dimensions);
         }
         if (clazz.isPrimitive()) {
             return ElementTypes.of(io.micronaut.inject.ast.PrimitiveElement.valueOf(clazz.getName()));
@@ -99,17 +105,31 @@ final class VisitorTypes implements Types {
 
     @Override
     public ParameterizedType parameterized(Class<?> genericType, Class<?>... typeArguments) {
-        throw new UnsupportedOperationException("A parameterized type is not composed here yet");
+        Type[] arguments = new Type[typeArguments.length];
+        for (int i = 0; i < arguments.length; i++) {
+            arguments[i] = of(typeArguments[i]);
+        }
+        return parameterized(genericType, arguments);
     }
 
     @Override
     public ParameterizedType parameterized(Class<?> genericType, Type... typeArguments) {
-        throw new UnsupportedOperationException("A parameterized type is not composed here yet");
+        return parameterized(ofClass(genericType.getName()), typeArguments);
     }
 
     @Override
     public ParameterizedType parameterized(ClassType genericType, Type... typeArguments) {
-        throw new UnsupportedOperationException("A parameterized type is not composed here yet");
+        // composed from the generic class's own element, given the elements of the arguments
+        java.util.List<ClassElement> arguments = new java.util.ArrayList<>(typeArguments.length);
+        for (Type typeArgument : typeArguments) {
+            arguments.add(ElementTypes.elementOf(typeArgument));
+        }
+        ClassElement generic = ElementTypes.elementOf(genericType);
+        if (generic.getTypeArguments().size() != arguments.size()) {
+            throw new IllegalArgumentException("The class " + generic.getName() + " declares "
+                + generic.getTypeArguments().size() + " type parameters, and was given " + arguments.size());
+        }
+        return (ParameterizedType) ElementTypes.of(generic.withTypeArguments(arguments));
     }
 
     @Override
@@ -130,6 +150,8 @@ final class VisitorTypes implements Types {
     private Type element(String name) {
         ClassElement element = context.getClassElement(name).orElseThrow(() ->
             new IllegalArgumentException("The type " + name + " is not on the compilation's classpath"));
-        return ElementTypes.of(element);
+        // a class named by itself is the class type, whatever type parameters it declares: the arguments of a
+        // parameterized type are given to parameterized
+        return ElementTypes.rawClassOf(element, java.util.List.of());
     }
 }

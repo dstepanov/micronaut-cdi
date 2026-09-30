@@ -16,12 +16,8 @@
 package io.micronaut.cdi.tck.arquillian;
 
 import javax.tools.JavaFileObject;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +33,6 @@ import java.util.Map;
 final class DeploymentClassLoader extends ClassLoader {
 
     private final Map<String, JavaFileObject> compiled = new LinkedHashMap<>();
-    private final Map<String, byte[]> resources = new LinkedHashMap<>();
     private final java.util.Set<String> childFirst = new java.util.HashSet<>();
 
     DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, ClassLoader parent) {
@@ -119,43 +114,6 @@ final class DeploymentClassLoader extends ClassLoader {
         } catch (IllegalAccessException | LinkageError e) {
             // left for findClass to serve from this loader instead
         }
-    }
-
-    /**
-     * Adds a resource of the deployment — a service entry of its archive, say — so that whatever reads
-     * resources through this loader sees it.
-     *
-     * @param name  The resource name
-     * @param bytes Its content
-     */
-    void addResource(String name, byte[] bytes) {
-        resources.put(name, bytes);
-    }
-
-    @Override
-    public InputStream getResourceAsStream(String name) {
-        byte[] bytes = resources.get(name);
-        if (bytes != null) {
-            return new ByteArrayInputStream(bytes);
-        }
-        return super.getResourceAsStream(name);
-    }
-
-    @Override
-    public Enumeration<URL> getResources(String name) throws IOException {
-        byte[] bytes = resources.get(name);
-        Enumeration<URL> parent = super.getResources(name);
-        if (bytes == null) {
-            return parent;
-        }
-        // written out so that it has a URL to be read back from: a ServiceLoader reads service entries
-        // through getResources, and a URL needs somewhere to point
-        java.nio.file.Path file = java.nio.file.Files.createTempFile("deployment-resource-", ".txt");
-        java.nio.file.Files.write(file, bytes);
-        file.toFile().deleteOnExit();
-        List<URL> all = new java.util.ArrayList<>(Collections.list(parent));
-        all.add(file.toUri().toURL());
-        return Collections.enumeration(all);
     }
 
     /**

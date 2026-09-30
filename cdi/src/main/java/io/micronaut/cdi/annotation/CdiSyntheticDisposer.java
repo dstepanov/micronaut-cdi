@@ -13,33 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.runtime.extension;
+package io.micronaut.cdi.annotation;
 
-import io.micronaut.cdi.runtime.CdiAnnotations;
 import io.micronaut.core.annotation.Internal;
 
-import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Materializes an annotation from its type alone, for the places the specification lets an extension name a
- * qualifier by its class rather than hand one over.
+ * Marks the bean definition generated for the disposer class of a synthetic bean (section 2.10.5), so that the
+ * container instantiates the disposer through the definition rather than reflectively.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
 @Internal
-public final class CdiAnnotationLiterals {
-
-    private CdiAnnotationLiterals() {
-    }
+public @interface CdiSyntheticDisposer {
 
     /**
-     * The annotation of the given type, with every member left at its default.
+     * The {@link CdiSyntheticBean#id()} of the bean the disposer disposes of.
      *
-     * @param type The annotation type
-     * @return The annotation
+     * @return The identifier
      */
-    public static Annotation of(Class<? extends Annotation> type) {
-        return CdiAnnotations.annotationOf(type, null);
-    }
+    String value();
 }
