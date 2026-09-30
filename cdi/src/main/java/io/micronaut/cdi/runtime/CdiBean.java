@@ -81,19 +81,20 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
+     * The parameters Micronaut adds to the constructor of the subclass it generates for an intercepted bean, after
+     * the ones the author wrote: the resolution context, the bean context, the qualifier, the interceptors and
+     * the interceptor registry.
+     */
+    private static final Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = Set.of(
+        "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
+
+    /**
      * Whether the argument is something the container hands a generated constructor rather than an injection
-     * point the author wrote: its type, or a type inside it, belongs to the container.
+     * point the author wrote. It is told by what it is - one of the parameters Micronaut generates - and not by
+     * the package of its type: an application may well inject a type of its own from a package of that name.
      */
     private static boolean isContainerMachinery(io.micronaut.core.type.Argument<?> argument) {
-        if (argument.getType().getName().startsWith("io.micronaut.")) {
-            return true;
-        }
-        for (io.micronaut.core.type.Argument<?> parameter : argument.getTypeParameters()) {
-            if (isContainerMachinery(parameter)) {
-                return true;
-            }
-        }
-        return false;
+        return GENERATED_CONSTRUCTOR_PARAMETERS.contains(argument.getName());
     }
 
     /**
