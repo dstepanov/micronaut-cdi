@@ -154,7 +154,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     @Override
     public T get() {
         BeanDefinition<T> definition = one();
-        return CdiResolution.isDependent(definition) ? dependent(definition) : beanContext.getBean(definition);
+        return CdiResolution.isDependent(definition) ? dependent(definition) : resolve(beanContext, definition);
     }
 
     /**
@@ -165,15 +165,31 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         // a dependent instance obtained through this lookup belongs to the bean the lookup was injected
         // into, and is destroyed with it — which is when this lookup itself is closed. Section 2.5.2.5
         // gives it the lookup's own injection point as its metadata, which is left out for its creation
-        jakarta.enterprise.inject.spi.InjectionPoint lookedUpAt = lookupPoint();
+        io.micronaut.context.BeanRegistration<T> registration =
+            createDependent(beanContext, type, definition, lookupPoint());
+        transientlyCreated.add(registration);
+        return registration.bean();
+    }
+
+    /**
+     * Creates a dependent instance for a lookup, however the lookup hands it out - {@code get()}, iterating, or
+     * a handle - so that what its creation throws comes out the same from each.
+     *
+     * @param beanContext The bean context
+     * @param selected    The type the lookup selected
+     * @param definition  The bean
+     * @param lookedUpAt  The injection point of the lookup, which the instance is given as its own, or {@code null}
+     * @param <U>         The bean type
+     * @return The registration that created the instance, which knows the dependents to destroy with it
+     */
+    static <U> io.micronaut.context.BeanRegistration<U> createDependent(
+        BeanContext beanContext, Argument<U> selected, BeanDefinition<U> definition,
+        jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookedUpAt) {
         if (lookedUpAt != null) {
             CurrentInjectionPoint.enter(lookedUpAt);
         }
         try {
-            io.micronaut.context.BeanRegistration<T> registration =
-                beanContext.getBeanRegistration(askedAs(type, definition), only(definition));
-            transientlyCreated.add(registration);
-            return registration.bean();
+            return beanContext.getBeanRegistration(askedAs(selected, definition), only(definition));
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
@@ -182,6 +198,18 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             if (lookedUpAt != null) {
                 CurrentInjectionPoint.leave();
             }
+        }
+    }
+
+    /**
+     * Resolves the instance of a bean that has a scope, which may be what creates it: what its creation throws
+     * comes out as what a dependent creation throws does.
+     */
+    static <U> U resolve(BeanContext beanContext, BeanDefinition<U> definition) {
+        try {
+            return beanContext.getBean(definition);
+        } catch (io.micronaut.context.exceptions.BeanCreationException e) {
+            throw CdiBean.translated(e);
         }
     }
 
@@ -208,11 +236,11 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         return definition.asArgument();
     }
 
-    private io.micronaut.context.Qualifier<T> only(BeanDefinition<T> definition) {
-        return new io.micronaut.context.Qualifier<T>() {
+    private static <U> io.micronaut.context.Qualifier<U> only(BeanDefinition<U> definition) {
+        return new io.micronaut.context.Qualifier<U>() {
             @Override
-            public <BT extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<BT> reduce(
-                Class<T> beanType, java.util.stream.Stream<BT> candidates) {
+            public <BT extends io.micronaut.inject.BeanType<U>> java.util.stream.Stream<BT> reduce(
+                Class<U> beanType, java.util.stream.Stream<BT> candidates) {
                 return candidates.filter(candidate -> candidate.equals(definition));
             }
         };
@@ -286,7 +314,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         for (BeanDefinition<T> definition : CdiResolution.narrow(definitions())) {
             // a dependent instance obtained through iteration belongs to the lookup the same way one obtained
             // through get() does: it has the lookup's injection point, and is destroyed with the lookup
-            beans.add(CdiResolution.isDependent(definition) ? dependent(definition) : beanContext.getBean(definition));
+            beans.add(CdiResolution.isDependent(definition) ? dependent(definition) : resolve(beanContext, definition));
         }
         return beans.iterator();
     }
@@ -496,38 +524,19 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             if (resolved == null) {
                 if (CdiResolution.isDependent(definition)) {
                     // held as the registration that created it, which knows the dependents to destroy with it
-                    if (lookupPoint != null) {
-                        CurrentInjectionPoint.enter(lookupPoint);
-                    }
-                    io.micronaut.context.BeanRegistration<T> created;
-                    try {
-                        created = beanContext.getBeanRegistration(askedAs(selected, definition), onlyThis());
-                    } finally {
-                        if (lookupPoint != null) {
-                            CurrentInjectionPoint.leave();
-                        }
-                    }
+                    io.micronaut.context.BeanRegistration<T> created =
+                        createDependent(beanContext, selected, definition, lookupPoint);
                     registration = created;
                     // a dependent obtained through a handle is a dependent of the lookup like any other, and
                     // goes when the lookup goes — unless the handle destroys it first
                     transientlyCreated.add(created);
                     resolved = created.bean();
                 } else {
-                    resolved = beanContext.getBean(definition);
+                    resolved = resolve(beanContext, definition);
                 }
                 instance = resolved;
             }
             return resolved;
-        }
-
-        private io.micronaut.context.Qualifier<T> onlyThis() {
-            return new io.micronaut.context.Qualifier<T>() {
-                @Override
-                public <BT extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<BT> reduce(
-                    Class<T> beanType, java.util.stream.Stream<BT> candidates) {
-                    return candidates.filter(candidate -> candidate.equals(definition));
-                }
-            };
         }
 
         @Override
