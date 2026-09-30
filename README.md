@@ -70,6 +70,12 @@ Nothing in `micronaut-cdi` reads a class back at runtime to work out what a bean
 bean was compiled. The one part of the specification that cannot be answered that way is kept out of it, in
 `micronaut-cdi-reflection`, so that an application only reads classes back if it asks to.
 
+That module also brings `io.micronaut:micronaut-reflection`, which answers the accessors of an interceptor's
+`InvocationContext` that return an object of the Java reflection API: `getMethod()`, `getConstructor()`,
+`getInterceptorBindings()`, `getInterceptorBinding(Class)` and `getInterceptorBindings(Class)`. Without it each of
+them throws an `UnsupportedOperationException` that names the dependency to add, and everything else of an
+interception works as before.
+
 The boundary is checked while the modules compile, by the `NoReflection` check of
 [errorprone-no-reflection](https://github.com/micronaut-projects/errorprone-no-reflection), alongside NullAway. The
 check matches the method a call resolves to and names the kind of reflection it reaches for. The processor and

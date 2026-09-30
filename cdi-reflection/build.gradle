@@ -18,6 +18,10 @@ noReflection {
 // phase does not have it, and one that does asks for it by adding this dependency.
 dependencies {
     api projects.micronautCdi
+    // the reflection module of Micronaut, which answers the accessors of an interceptor's InvocationContext that
+    // return an object of the Java reflection API: the method, the constructor and the binding annotations. An
+    // application asks for reflection by adding this module, and gets the whole of it
+    api mn.micronaut.reflection
 
     testImplementation platform(libs.junit.bom)
     testImplementation libs.junit.jupiter
