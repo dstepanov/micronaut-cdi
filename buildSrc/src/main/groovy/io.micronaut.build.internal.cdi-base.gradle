@@ -12,3 +12,18 @@ repositories {
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
+
+// Jakarta Interceptors is built from source, at the head of its main branch: the repository its modules come from is
+// declared in settings.gradle, and a source dependency is selected by a branch rather than by the version the
+// catalog names, which only says what this project is published against. Given as a checkout instead, with
+// -PjakartaInterceptorsDir, it is an included build that replaces its modules whatever version is asked for, and the
+// dependencies are left as the catalog has them.
+if (!providers.gradleProperty('jakartaInterceptorsDir').isPresent()) {
+    configurations.configureEach {
+        dependencies.withType(ExternalModuleDependency).configureEach { dependency ->
+            if (dependency.group == 'io.micronaut.interceptor') {
+                dependency.version { branch = 'main' }
+            }
+        }
+    }
+}

@@ -41,38 +41,39 @@ include 'test-suite-no-reflection'
 
 // Jakarta Interceptors and Jakarta Expression Language are implemented by sibling projects rather than again here:
 // the interception of a bean and the evaluation of an expression are the business of their own specifications, and
-// Contexts and Dependency Injection defers to them. This builds against the branches of theirs it is developed with,
-// as included builds, so that the coordinates they publish are substituted for their projects whatever version the
-// catalog names. Each branch is cloned beside the build the first time it is needed and left as it is afterwards:
-// `git -C .included-builds/<name>-<branch> pull` brings one up to date. A checkout of your own is used instead when its
-// directory is given, with -PjakartaInterceptorsDir=... or -PjakartaElDir=...
-def includedCheckout = { String property, String name, String url, String branch ->
+// Contexts and Dependency Injection defers to them.
+//
+// Jakarta Interceptors is a source dependency, built at the head of its main branch: its modules are mapped to its
+// repository, which Gradle checks out under .gradle/vcs-1 and includes as a build. A source dependency is selected
+// by a branch rather than by the version the catalog names, and the branch is set on the dependencies by the
+// convention plugin io.micronaut.build.internal.cdi-base. Each build that resolves it fetches the head of the branch.
+//
+// Jakarta Expression Language is the release the catalog names, from Maven Central.
+//
+// A checkout of your own is included instead, in place of either, when its directory is given with
+// -PjakartaInterceptorsDir=... or -PjakartaElDir=...
+def siblingCheckout = { String property ->
     def given = providers.gradleProperty(property).orNull
-    if (given != null) {
-        def dir = file(given)
-        if (!dir.directory) {
-            throw new GradleException("${property} names ${dir}, which is not a directory")
-        }
-        return dir
+    if (given == null) {
+        return false
     }
-    def dir = file("${rootDir}/.included-builds/${name}-${branch.replace('/', '-')}")
+    def dir = file(given)
     if (!dir.directory) {
-        logger.lifecycle("Cloning the ${branch} branch of ${url} into ${dir}")
-        def process = new ProcessBuilder('git', 'clone', '--branch', branch, '--single-branch', url, dir.absolutePath)
-            .inheritIO()
-            .start()
-        if (process.waitFor() != 0) {
-            throw new GradleException("Could not clone the ${branch} branch of ${url} into ${dir}; "
-                + "clone it there yourself, or name a checkout with -P${property}=...")
-        }
+        throw new GradleException("${property} names ${dir}, which is not a directory")
     }
-    return dir
+    includeBuild(dir)
+    return true
 }
 
-includeBuild(includedCheckout('jakartaInterceptorsDir', 'micronaut-jakarta-interceptors',
-    'https://github.com/dstepanov/micronaut-jakarta-interceptors.git', 'main'))
-includeBuild(includedCheckout('jakartaElDir', 'micronaut-jakarta-el',
-    'https://github.com/micronaut-projects/micronaut-jakarta-el.git', '1.1.x'))
+if (!siblingCheckout('jakartaInterceptorsDir')) {
+    sourceControl {
+        gitRepository(uri('https://github.com/dstepanov/micronaut-jakarta-interceptors.git')) {
+            producesModule('io.micronaut.interceptor:micronaut-jakarta-interceptors')
+            producesModule('io.micronaut.interceptor:micronaut-jakarta-interceptors-processor')
+        }
+    }
+}
+siblingCheckout('jakartaElDir')
 
 micronautBuild {
     useStandardizedProjectNames.set(true)

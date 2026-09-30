@@ -195,11 +195,18 @@ out, so that what is not covered is as visible in a test report as what is.
 
 ## Building
 
-The build includes [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors)
-at its `main` branch and [Micronaut Jakarta EL](https://github.com/micronaut-projects/micronaut-jakarta-el) at its
-`1.1.x` branch as composite builds. The first build clones each into `.included-builds/`, and it is left as it is
-afterwards, so `git -C .included-builds/<name>-<branch> pull` brings one up to date. To build against a checkout of your own,
-name its directory:
+The build takes [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors)
+at its `main` branch as a Gradle [source dependency](https://blog.gradle.org/introducing-source-dependencies):
+`settings.gradle` maps its modules to its Git repository, and Gradle checks the repository out under
+`.gradle/vcs-1/` and builds it as part of this build. The branch is what selects the source, not the version the
+catalog names; the catalog version is what this project's POMs and BOM are published with. A build that resolves
+it fetches the head of the branch, so the network is needed; `--offline` builds what is already checked out.
+
+[Micronaut Jakarta EL](https://github.com/micronaut-projects/micronaut-jakarta-el) is the release the catalog
+names, from Maven Central.
+
+To build against a checkout of your own of either, name its directory. It is then an included build, which takes
+the place of the repository or of the release:
 
 ```
 ./gradlew build -PjakartaInterceptorsDir=../micronaut-jakarta-interceptors -PjakartaElDir=../micronaut-jakarta-el
