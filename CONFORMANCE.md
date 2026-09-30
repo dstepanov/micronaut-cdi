@@ -216,6 +216,13 @@ is among the given ones, and the resolved list is ordered lowest priority first.
 still happens where it was compiled; what the manager adds is the description of it the specification asks for,
 including invoking an interceptor directly through `Interceptor.intercept`.
 
+The interceptors that run are the ones the manager reports. Jakarta Interceptors on its own enables every
+interceptor class, with or without a priority; the container provides the enablement of CDI to it
+(`CdiInterceptorEnablement`), so an interceptor bound by an interceptor binding that declares no priority is left
+out of the chains as well as out of `resolveInterceptors`. A priority is `@Priority`, or Micronaut's `@Order` in
+its place; the SE bootstrap's `SeContainerInitializer.enableInterceptors` enables the interceptor classes it names
+without one. An interceptor class a bean names with `@Interceptors` is enabled by being named.
+
 What belongs to CDI Full says so rather than answering: decorators, passivation, portable extensions, and
 building a bean out of an annotated type. The expression language is the one named exception, provided beyond
 Lite by the optional `micronaut-cdi-el` module over `micronaut-jakarta-el`: with it on the classpath,

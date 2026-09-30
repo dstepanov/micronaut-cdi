@@ -16,6 +16,7 @@
 package io.micronaut.cdi.se;
 
 import io.micronaut.cdi.annotation.UnselectedAlternative;
+import io.micronaut.cdi.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -50,7 +51,8 @@ import java.util.StringJoiner;
  * ({@code addExtensions}) and a decorator ({@code enableDecorators}) have no compile-time counterpart here.
  * A build compatible extension is found through the service loader while the application compiles, so handing
  * one to the bootstrap at runtime is refused the same way. {@code enableInterceptors} accepts the interceptor
- * classes the Jakarta Interceptors processor compiled; interception itself was woven at compile time.</p>
+ * classes the Jakarta Interceptors processor compiled and enables the ones that declare no priority, through the
+ * property {@link CdiInterceptorEnablement} reads; interception itself was woven at compile time.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -65,6 +67,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     private final Set<String> recursivePackages = new LinkedHashSet<>();
     private final Set<String> selectedAlternatives = new LinkedHashSet<>();
     private final Set<String> selectedAlternativeStereotypes = new LinkedHashSet<>();
+    private final Set<String> enabledInterceptors = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
 
     private boolean discoveryDisabled;
@@ -132,8 +135,12 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     @Override
     public SeContainerInitializer enableInterceptors(Class<?>... interceptorClasses) {
-        // interception was woven where the intercepted bean was compiled; the interceptor classes are already
-        // beans of the container, so there is nothing left for the bootstrap to switch on
+        // interception was woven where the intercepted bean was compiled, and the interceptor classes are already
+        // beans of the container. What is left for the bootstrap is the enablement: an interceptor bound by an
+        // interceptor binding that declares no priority takes part only where it is named here
+        for (Class<?> interceptorClass : interceptorClasses) {
+            enabledInterceptors.add(interceptorClass.getName());
+        }
         return this;
     }
 
@@ -195,6 +202,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         if (!selectedAlternativeStereotypes.isEmpty()) {
             builder.properties(Map.of(UnselectedAlternative.SELECTED_STEREOTYPES,
                 joined(selectedAlternativeStereotypes)));
+        }
+        if (!enabledInterceptors.isEmpty()) {
+            builder.properties(Map.of(CdiInterceptorEnablement.ENABLED_CLASSES, joined(enabledInterceptors)));
         }
         Set<String> classpath = restrictedClasspath;
         if (discoveryDisabled) {

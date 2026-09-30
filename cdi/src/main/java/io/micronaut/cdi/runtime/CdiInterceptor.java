@@ -49,13 +49,12 @@ import java.util.Set;
 @Internal
 public final class CdiInterceptor<T> implements Interceptor<T> {
 
-    private static final String ORDER = "io.micronaut.core.annotation.Order";
-    private static final String PRIORITY = "jakarta.annotation.Priority";
-
+    private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
     private final CdiBean<T> bean;
 
     CdiInterceptor(BeanContext beanContext, BeanDefinition<T> definition) {
+        this.beanContext = beanContext;
         this.definition = definition;
         this.bean = new CdiBean<>(beanContext, definition);
     }
@@ -67,8 +66,9 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
      * @return Whether the interceptor is enabled
      */
     boolean isEnabled() {
-        AnnotationMetadata metadata = definition.getAnnotationMetadata();
-        return metadata.hasAnnotation(ORDER) || metadata.hasAnnotation(PRIORITY);
+        // answered by what the interceptors implementation asks as it resolves a chain, so that what is reported
+        // here is what runs
+        return beanContext.getBean(CdiInterceptorEnablement.class).isEnabled(definition);
     }
 
     /**
