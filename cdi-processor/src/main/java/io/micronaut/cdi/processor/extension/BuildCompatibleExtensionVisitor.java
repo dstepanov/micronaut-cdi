@@ -73,6 +73,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private final List<Enhancer> enhancers = new ArrayList<>();
     private final List<Registrar> registrars = new ArrayList<>();
     private final DiscoveredClasses discovered = new DiscoveredClasses();
+    private final DeferredMessages discoveryMessages = new DeferredMessages();
     private boolean scannedImportWritten;
     private boolean contextRecordWritten;
 
@@ -178,10 +179,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static void validateDiscovery(Method method) {
         for (Class<?> parameterType : method.getParameterTypes()) {
             if (!parameterType.equals(ScannedClasses.class) && !parameterType.equals(MetaAnnotations.class)
-                && !parameterType.equals(Messages.class)) {
-                throw new jakarta.enterprise.inject.spi.DefinitionException("The @Discovery method " + method
-                    + " declares a parameter of type " + parameterType.getName()
-                    + ", which the phase does not hand to one (section 2.10.1)");
+                && !Phase.DISCOVERY.hands(parameterType)) {
+                throw Phase.DISCOVERY.unsupported(method, parameterType);
             }
         }
     }
@@ -195,11 +194,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 || parameterType.equals(jakarta.enterprise.lang.model.declarations.MethodInfo.class)
                 || parameterType.equals(jakarta.enterprise.lang.model.declarations.FieldInfo.class)) {
                 queried++;
-            } else if (!parameterType.equals(Messages.class)
-                && !parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.Types.class)) {
-                throw new jakarta.enterprise.inject.spi.DefinitionException("The @Enhancement method " + method
-                    + " declares a parameter of type " + parameterType.getName()
-                    + ", which the phase does not hand to one (section 2.10.2)");
+            } else if (!Phase.ENHANCEMENT.hands(parameterType)) {
+                throw Phase.ENHANCEMENT.unsupported(method, parameterType);
             }
         }
         if (queried != 1) {
@@ -215,12 +211,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 || parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo.class)
                 || parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo.class)) {
                 queried++;
-            } else if (!parameterType.equals(Messages.class)
-                && !parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.Types.class)
-                && !parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.InvokerFactory.class)) {
-                throw new jakarta.enterprise.inject.spi.DefinitionException("The @Registration method " + method
-                    + " declares a parameter of type " + parameterType.getName()
-                    + ", which the phase does not hand to one (section 2.10.3)");
+            } else if (!Phase.REGISTRATION.hands(parameterType)) {
+                throw Phase.REGISTRATION.unsupported(method, parameterType);
             }
         }
         if (queried != 1) {
@@ -238,8 +230,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i].equals(ScannedClasses.class) || parameterTypes[i].equals(MetaAnnotations.class)) {
                 arguments[i] = discovered;
-            } else if (parameterTypes[i].equals(Messages.class)) {
-                arguments[i] = null;
+            } else if (Phase.DISCOVERY.hands(parameterTypes[i])) {
+                // no compilation context exists yet: what the method reports is reported once one does
+                arguments[i] = Phase.DISCOVERY.argument(parameterTypes[i], discoveryMessages, null);
             } else {
                 throw new IllegalStateException("The discovery method " + method + " asks for a "
                     + parameterTypes[i].getName() + ", which this module does not hand to one");
@@ -319,6 +312,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public void start(VisitorContext context) {
+        discoveryMessages.reportTo(context);
         // what the discovery phase said about annotations is put on the annotation types before any class is
         // visited: a class's metadata folds its annotations' metadata in as it is built, and a qualifier or
         // binding registered by an extension has to be one by then
@@ -484,13 +478,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             Class<?>[] parameterTypes = method.getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
-                if (parameterTypes[i].equals(Messages.class)) {
-                    arguments[i] = messages;
-                } else if (parameterTypes[i].equals(
-                    jakarta.enterprise.inject.build.compatible.spi.ObserverInfo.class)) {
+                if (parameterTypes[i].equals(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo.class)) {
                     arguments[i] = observer;
-                } else if (parameterTypes[i].equals(jakarta.enterprise.inject.build.compatible.spi.Types.class)) {
-                    arguments[i] = new VisitorTypes(context);
+                } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
+                    arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context);
                 } else {
                     context.fail("The registration method " + method + " asks for a "
                         + parameterTypes[i].getName() + ", which this module does not hand to one", null);
@@ -512,17 +503,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             Class<?>[] parameterTypes = method.getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
-                if (parameterTypes[i].equals(Messages.class)) {
-                    arguments[i] = messages;
-                } else if (parameterTypes[i].equals(BeanInfo.class)
+                if (parameterTypes[i].equals(BeanInfo.class)
                     || parameterTypes[i].equals(
                         jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo.class)) {
                     arguments[i] = bean;
-                } else if (parameterTypes[i].equals(jakarta.enterprise.inject.build.compatible.spi.Types.class)) {
-                    arguments[i] = new VisitorTypes(context);
-                } else if (parameterTypes[i].equals(
-                    jakarta.enterprise.inject.build.compatible.spi.InvokerFactory.class)) {
-                    arguments[i] = new ElementInvokerFactory();
+                } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
+                    arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context);
                 } else {
                     context.fail("The registration method " + method + " asks for a "
                         + parameterTypes[i].getName() + ", which this module does not hand to one", null);
@@ -664,12 +650,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             List<Object[]> invocations = new ArrayList<>();
             if (takes(parameterTypes, MethodConfig.class)
                 || takes(parameterTypes, jakarta.enterprise.lang.model.declarations.MethodInfo.class)) {
-                classConfig.methods().forEach(m -> invocations.add(arguments(parameterTypes, m, messages)));
+                classConfig.methods().forEach(m -> invocations.add(arguments(parameterTypes, m, messages, context)));
             } else if (takes(parameterTypes, FieldConfig.class)
                 || takes(parameterTypes, jakarta.enterprise.lang.model.declarations.FieldInfo.class)) {
-                classConfig.fields().forEach(f -> invocations.add(arguments(parameterTypes, f, messages)));
+                classConfig.fields().forEach(f -> invocations.add(arguments(parameterTypes, f, messages, context)));
             } else {
-                invocations.add(arguments(parameterTypes, classConfig, messages));
+                invocations.add(arguments(parameterTypes, classConfig, messages, context));
             }
             for (Object[] arguments : invocations) {
                 invoke(arguments, context);
@@ -696,10 +682,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return false;
         }
 
-        private static Object[] arguments(Class<?>[] parameterTypes, Object config, Messages messages) {
+        private static Object[] arguments(Class<?>[] parameterTypes, Object config, Messages messages,
+                                          VisitorContext context) {
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
-                arguments[i] = parameterTypes[i].equals(Messages.class) ? messages : readOnlyOrConfig(parameterTypes[i], config);
+                arguments[i] = Phase.ENHANCEMENT.hands(parameterTypes[i])
+                    ? Phase.ENHANCEMENT.argument(parameterTypes[i], messages, context)
+                    : readOnlyOrConfig(parameterTypes[i], config);
             }
             return arguments;
         }
@@ -722,6 +711,62 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 return cc.info();
             }
             return config;
+        }
+    }
+
+    /**
+     * What each phase hands an extension method besides what the method is about (sections 2.10.1 to 2.10.3):
+     * the one list that both the validation of a method and its invocation read.
+     */
+    private enum Phase {
+        DISCOVERY("@Discovery", "2.10.1", Messages.class),
+        ENHANCEMENT("@Enhancement", "2.10.2", Messages.class,
+            jakarta.enterprise.inject.build.compatible.spi.Types.class),
+        REGISTRATION("@Registration", "2.10.3", Messages.class,
+            jakarta.enterprise.inject.build.compatible.spi.Types.class,
+            jakarta.enterprise.inject.build.compatible.spi.InvokerFactory.class);
+
+        private final String annotation;
+        private final String section;
+        private final List<Class<?>> handed;
+
+        Phase(String annotation, String section, Class<?>... handed) {
+            this.annotation = annotation;
+            this.section = section;
+            this.handed = List.of(handed);
+        }
+
+        /**
+         * Whether the phase hands a method a parameter of the type.
+         */
+        boolean hands(Class<?> parameterType) {
+            return handed.contains(parameterType);
+        }
+
+        /**
+         * What a parameter of a type the phase hands is given.
+         */
+        Object argument(Class<?> parameterType, Messages messages,
+                        @io.micronaut.core.annotation.Nullable VisitorContext context) {
+            if (parameterType.equals(Messages.class)) {
+                return messages;
+            }
+            if (context != null && hands(parameterType)) {
+                if (parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.Types.class)) {
+                    return new VisitorTypes(context);
+                }
+                if (parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.InvokerFactory.class)) {
+                    return new ElementInvokerFactory();
+                }
+            }
+            throw new IllegalStateException("The " + annotation + " phase does not hand a "
+                + parameterType.getName());
+        }
+
+        jakarta.enterprise.inject.spi.DefinitionException unsupported(Method method, Class<?> parameterType) {
+            return new jakarta.enterprise.inject.spi.DefinitionException("The " + annotation + " method " + method
+                + " declares a parameter of type " + parameterType.getName()
+                + ", which the phase does not hand to one (section " + section + ")");
         }
     }
 
