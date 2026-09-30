@@ -191,12 +191,14 @@ the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 9 tests, all passing, which makes 816 in all. Each asserts something this implementation answers although
+own: 13 tests, all passing, which makes 820 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
-(`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), and interceptors bound with
+(`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
 `@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorBindingsWithAtInterceptorsTest`,
-`InterceptorOrderTest`). Their scenario packages are compiled by name (`beyondLiteScenarios` in
+`InterceptorOrderTest`), and the definition error of injecting the metadata of a decorator — `Decorator<X>` or
+the `@Decorated` `Bean<X>` — into a bean that is not one (the four tests of
+`implementation/builtin/metadata/broken/injection`). Their scenario packages are compiled by name (`beyondLiteScenarios` in
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
 

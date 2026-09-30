@@ -148,6 +148,12 @@
             <class name="org.jboss.cdi.tck.tests.full.interceptors.tests.contract.method.MethodLevelInterceptorTest"/>
             <class name="org.jboss.cdi.tck.tests.full.interceptors.contract.invocationContext.InterceptorBindingsWithAtInterceptorsTest"/>
             <class name="org.jboss.cdi.tck.tests.full.interceptors.definition.interceptorOrder.InterceptorOrderTest"/>
+            <!-- decorators are not implemented, and asking for the metadata of one is refused as the
+                 definition error the specification makes it -->
+            <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.BuiltinDecoratorInjectionTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanConstructorInjectionTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanFieldInjectionTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanInitializerInjectionTest"/>
         </classes>
     </test>
 </suite>

@@ -216,6 +216,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * The rules of section 9.4, which say who may be told what about themselves: {@code Bean<X>} reaches the
      * bean whose class is X — or a producer or disposer of X — {@code Interceptor} and the intercepted
      * {@code Bean} reach only an interceptor, and the intercepted one says nothing more than {@code Bean<?>}.
+     * {@code Decorator} and the decorated {@code Bean} reach only a decorator, which no class is here.
      */
     private void checkMetadataInjection(ClassElement type, io.micronaut.inject.ast.Element at,
                                         ClassElement declaring,
@@ -223,9 +224,21 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                                         VisitorContext context) {
         String name = type.getName();
         boolean interceptorClass = declaring.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
-        if ("jakarta.enterprise.inject.spi.Bean".equals(name)) {
+        boolean decoratorClass = declaring.hasDeclaredAnnotation("jakarta.decorator.Decorator");
+        if ("jakarta.enterprise.inject.spi.Decorator".equals(name)) {
+            if (!decoratorClass) {
+                context.fail("Decorator metadata reaches only a decorator (section 9.4)", at);
+            }
+        } else if ("jakarta.enterprise.inject.spi.Bean".equals(name)) {
             java.util.Collection<ClassElement> arguments = type.getTypeArguments().values();
             ClassElement argument = arguments.isEmpty() ? null : arguments.iterator().next();
+            if (at.hasDeclaredAnnotation("jakarta.enterprise.inject.Decorated")) {
+                if (!decoratorClass) {
+                    context.fail("The decorated Bean is the metadata of the bean a decorator wraps, "
+                        + "which only a decorator has (section 9.4)", at);
+                }
+                return;
+            }
             if (at.hasDeclaredAnnotation("jakarta.enterprise.inject.Intercepted")) {
                 if (!interceptorClass) {
                     context.fail("The intercepted Bean is the metadata of the bean an interceptor wraps, "

@@ -87,6 +87,7 @@ def beyondLiteScenarios = [
     'org/jboss/cdi/tck/tests/full/interceptors/tests/contract/method/**',
     'org/jboss/cdi/tck/tests/full/interceptors/contract/invocationContext/**',
     'org/jboss/cdi/tck/tests/full/interceptors/definition/interceptorOrder/**',
+    'org/jboss/cdi/tck/tests/full/implementation/builtin/metadata/broken/injection/**',
 ]
 
 def tckScenarios = tasks.register('tckScenarios', Sync) {
@@ -100,6 +101,8 @@ def tckScenarios = tasks.register('tckScenarios', Sync) {
         exclude brokenScenarios
     }
     into layout.buildDirectory.dir('generated/tck')
+    // the patterns are no input of a Sync on their own, and a package added to the list has to be unpacked
+    inputs.property('beyondLiteScenarios', beyondLiteScenarios)
     // a scenario that reaches for the container itself, or for the kit's own audit annotations, cannot be built
     // here: there is no container to reach for, and the audit annotations are not published
     eachFile { details ->
@@ -133,6 +136,7 @@ def deployableTckSources = tasks.register('deployableTckSources', Sync) {
         include beyondLiteScenarios
     }
     into layout.buildDirectory.dir('generated/tck-deployable')
+    inputs.property('beyondLiteScenarios', beyondLiteScenarios)
 }
 
 // The kit's own suite, driven by the kit's own test classes through the Arquillian adapter. It is a task of its
