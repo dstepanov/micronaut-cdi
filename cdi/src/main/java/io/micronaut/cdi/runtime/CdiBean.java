@@ -315,14 +315,23 @@ public class CdiBean<T> implements Bean<T> {
         // proxy's; the injection points the specification describes are the class's own
         BeanDefinition<T> described = targetDefinition();
         io.micronaut.inject.ConstructorInjectionPoint<T> constructor = described.getConstructor();
-        if (constructor.getArguments().length > 0 && !described.getAnnotationMetadata()
-            .hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
+        io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation> producer =
+            described.getAnnotationMetadata().getAnnotation("io.micronaut.cdi.annotation.CdiProducer");
+        if (producer == null) {
             for (io.micronaut.core.type.Argument<?> argument : constructor.getArguments()) {
                 if (isContainerMachinery(argument)) {
                     // what the container itself passes a generated constructor is not an injection point
                     continue;
                 }
                 points.add(new CdiInjectionPoint(this, argument, declaring, "<init>", false));
+            }
+        } else if (!producer.booleanValue("field").orElse(false)) {
+            // section 2.2.2.2: all producer method parameters are injection points. The producer method is what
+            // Micronaut constructs the bean with, and its parameters are the ones of the method the producer
+            // names; a producer field has none
+            String member = producer.stringValue("member").orElse(null);
+            for (io.micronaut.core.type.Argument<?> argument : constructor.getArguments()) {
+                points.add(new CdiInjectionPoint(this, argument, getBeanClass(), member, false));
             }
         }
         for (io.micronaut.inject.FieldInjectionPoint<T, ?> field : described.getInjectedFields()) {

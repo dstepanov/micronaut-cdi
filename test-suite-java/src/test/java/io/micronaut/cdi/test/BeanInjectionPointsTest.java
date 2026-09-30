@@ -4,6 +4,7 @@ import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -25,10 +26,12 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The injection points a bean reports are the ones its author wrote, whatever package their types are in: the
- * parameters of its constructor, leaving out only what the container passes a generated constructor.
+ * parameters of its constructor, leaving out only what the container passes a generated constructor, and, for a
+ * producer method, its parameters (section 2.2.2.2).
  */
 class BeanInjectionPointsTest {
 
@@ -79,6 +82,20 @@ class BeanInjectionPointsTest {
         }
     }
 
+    public record Product(Part part) {
+    }
+
+    @Dependent
+    public static class Factory {
+        @Produces
+        Product produce(Part part) {
+            return new Product(part);
+        }
+
+        void dispose(@Disposes Product product, Assembled witness) {
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> Bean<T> beanOf(BeanManager manager, Class<T> type) {
         return (Bean<T>) manager.resolve(manager.getBeans(type));
@@ -109,6 +126,24 @@ class BeanInjectionPointsTest {
 
             assertEquals(1, points.size());
             assertEquals(Part.class, points.iterator().next().getType());
+        }
+    }
+
+    @Test
+    void theParametersOfAProducerMethodAreInjectionPointsOfItsBean() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Bean<Product> bean = beanOf(context.getBean(BeanManager.class), Product.class);
+
+            Set<InjectionPoint> points = bean.getInjectionPoints();
+
+            // the parameter of the producer, and not the ones of the disposer
+            assertEquals(1, points.size());
+            InjectionPoint point = points.iterator().next();
+            assertEquals(Part.class, point.getType());
+            assertSame(bean, point.getBean());
+            assertTrue(point.getQualifiers().contains(Default.Literal.INSTANCE));
+            assertEquals("produce", point.getMember().getName());
+            assertEquals(Factory.class, point.getMember().getDeclaringClass());
         }
     }
 }
