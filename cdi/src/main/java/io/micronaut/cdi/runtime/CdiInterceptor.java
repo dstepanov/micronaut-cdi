@@ -73,6 +73,16 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     }
 
     /**
+     * The place of the interceptor among the ones the SE bootstrap listed, which come after the ones ordered by a
+     * priority.
+     *
+     * @return The position, or a negative number for an interceptor ordered by its priority
+     */
+    int position() {
+        return beanContext.getBean(CdiInterceptorEnablement.class).position(definition);
+    }
+
+    /**
      * The priority the interceptor declared, which orders a resolved chain lowest first.
      *
      * @return The priority

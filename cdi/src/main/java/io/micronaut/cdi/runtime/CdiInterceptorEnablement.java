@@ -23,7 +23,7 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.interceptor.runtime.BoundInterceptorEnablement;
 import jakarta.inject.Singleton;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Has the interception that runs follow the enablement of the specification: an interceptor bound by an interceptor
@@ -59,7 +59,8 @@ public final class CdiInterceptorEnablement implements BoundInterceptorEnablemen
     private static final String ORDER = "io.micronaut.core.annotation.Order";
     private static final String PRIORITY = "jakarta.annotation.Priority";
 
-    private final Set<String> enabledClasses;
+    // in the order the bootstrap was given them
+    private final List<String> enabledClasses;
 
     /**
      * @param beanContext The bean context, whose properties name what the bootstrap enabled
@@ -68,7 +69,7 @@ public final class CdiInterceptorEnablement implements BoundInterceptorEnablemen
         String names = beanContext instanceof PropertyResolver properties
             ? properties.getProperty(ENABLED_CLASSES, String.class).orElse("")
             : "";
-        this.enabledClasses = names.isEmpty() ? Set.of() : Set.of(names.split(","));
+        this.enabledClasses = names.isEmpty() ? List.of() : List.of(names.split(","));
     }
 
     @Override
@@ -77,5 +78,21 @@ public final class CdiInterceptorEnablement implements BoundInterceptorEnablemen
         return metadata.hasAnnotation(ORDER)
             || metadata.hasAnnotation(PRIORITY)
             || enabledClasses.contains(interceptor.getBeanType().getName());
+    }
+
+    /**
+     * The place of an interceptor among the ones the SE bootstrap enabled, which is the order they were given in.
+     * Section 4.1 has the bootstrap add them to the enabled interceptors of the synthetic bean archive, which
+     * behaves like an explicit bean archive; the interceptors enabled for a bean archive are ordered as they are
+     * listed and called after the ones enabled by a priority (section 3.6.2), and one that declares a priority is
+     * ordered by it whether or not it is listed as well.
+     */
+    @Override
+    public int position(BeanDefinition<?> interceptor) {
+        AnnotationMetadata metadata = interceptor.getAnnotationMetadata();
+        if (metadata.hasAnnotation(ORDER) || metadata.hasAnnotation(PRIORITY)) {
+            return -1;
+        }
+        return enabledClasses.indexOf(interceptor.getBeanType().getName());
     }
 }

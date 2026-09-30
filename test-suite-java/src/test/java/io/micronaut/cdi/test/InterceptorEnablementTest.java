@@ -143,6 +143,70 @@ class InterceptorEnablementTest {
         }
     }
 
+    @InterceptorBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({TYPE, METHOD})
+    @interface Listed {
+    }
+
+    @SuppressWarnings("serial")
+    static final class ListedLiteral extends AnnotationLiteral<Listed> implements Listed {
+    }
+
+    @Listed
+    @jakarta.interceptor.Interceptor
+    public static class AlphaListedInterceptor {
+        @AroundInvoke
+        Object alpha(InvocationContext ctx) throws Exception {
+            return "alpha " + ctx.proceed();
+        }
+    }
+
+    @Listed
+    @jakarta.interceptor.Interceptor
+    public static class ZetaListedInterceptor {
+        @AroundInvoke
+        Object zeta(InvocationContext ctx) throws Exception {
+            return "zeta " + ctx.proceed();
+        }
+    }
+
+    @Listed
+    @jakarta.interceptor.Interceptor
+    @Priority(9000)
+    public static class PrioritizedListedInterceptor {
+        @AroundInvoke
+        Object prioritized(InvocationContext ctx) throws Exception {
+            return "prioritized " + ctx.proceed();
+        }
+    }
+
+    @Dependent
+    @Listed
+    public static class ListedTarget {
+        public String call() {
+            return "target";
+        }
+    }
+
+    /**
+     * The interceptors the SE bootstrap enables run in the order it was given them, after the ones a priority
+     * enables, and the bean manager reports them in that order.
+     */
+    @Test
+    void theBootstrapKeepsTheOrderItEnabledTheInterceptorsIn() {
+        try (SeContainer container = SeContainerInitializer.newInstance()
+            .enableInterceptors(ZetaListedInterceptor.class, AlphaListedInterceptor.class)
+            .initialize()) {
+            List<Interceptor<?>> reported = container.getBeanManager()
+                .resolveInterceptors(InterceptionType.AROUND_INVOKE, new ListedLiteral());
+            assertEquals(List.of(PrioritizedListedInterceptor.class, ZetaListedInterceptor.class,
+                    AlphaListedInterceptor.class),
+                reported.stream().<Class<?>>map(Interceptor::getBeanClass).toList());
+            assertEquals("prioritized zeta alpha target", container.select(ListedTarget.class).get().call());
+        }
+    }
+
     @Test
     void anInterceptorNamedByTheBeanRunsWithoutAPriority() {
         try (ApplicationContext context = ApplicationContext.run()) {

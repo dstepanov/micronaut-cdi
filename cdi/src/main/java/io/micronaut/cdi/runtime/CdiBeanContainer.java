@@ -453,6 +453,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         // so that what is reported here is what is invoked
         resolved.sort(java.util.Comparator.<CdiInterceptor<?>>comparingInt(CdiInterceptor::priority)
             .thenComparing(interceptor -> interceptor.getBeanClass().getName()));
+        // the ones the SE bootstrap listed come after the ones ordered by priority, in the order of the list
+        List<CdiInterceptor<?>> listed = new java.util.ArrayList<>();
+        resolved.removeIf(interceptor -> interceptor.position() >= 0 && listed.add(interceptor));
+        listed.sort(java.util.Comparator.comparingInt(CdiInterceptor::position));
+        resolved.addAll(listed);
         return List.copyOf(resolved);
     }
 
