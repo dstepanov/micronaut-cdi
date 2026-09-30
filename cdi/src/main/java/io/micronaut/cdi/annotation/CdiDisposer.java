@@ -77,4 +77,12 @@ public @interface CdiDisposer {
      * @return Whether it is public
      */
     boolean publicMethod() default false;
+
+    /**
+     * The erased parameter types of the disposer method, which tell it from an overload of the same name: the
+     * binary name of each, followed by {@code []} for each dimension of an array.
+     *
+     * @return The erased parameter type names
+     */
+    String[] parameterTypes() default {};
 }

@@ -69,21 +69,22 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (declaringType.isEmpty() || methodName == null || disposedParameter < 0) {
             return bean;
         }
+        String[] parameterTypes = disposer.stringValues("parameterTypes");
         if (disposer.booleanValue("staticMethod").orElse(false)) {
             // a static disposer is invoked without an instance of the class that declares it: no bean of that
             // class is created for the disposal, which is the whole point of writing one static
-            invokeStatic(declaringType.get(), methodName, disposedParameter, bean);
+            invokeStatic(declaringType.get(), methodName, parameterTypes, disposedParameter, bean);
             return bean;
         }
-        invoke(declaringType.get(), methodName, disposedParameter, bean,
+        invoke(declaringType.get(), methodName, parameterTypes, disposedParameter, bean,
             disposer.booleanValue("publicMethod").orElse(false));
         return bean;
     }
 
-    private void invokeStatic(Class<?> declaringType, String methodName, int disposedParameter, Object bean) {
+    private void invokeStatic(Class<?> declaringType, String methodName, String[] parameterTypes,
+                              int disposedParameter, Object bean) {
         BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
-        ExecutableMethod<?, ?> method = declaring.findPossibleMethods(methodName)
-            .findFirst()
+        ExecutableMethod<?, ?> method = findMethod(declaring, methodName, parameterTypes)
             .orElseThrow(() -> new IllegalStateException("The static disposer method " + methodName + " of "
                 + declaringType.getName() + " has no executable method. It was resolved while the producer it "
                 + "disposes of was compiled, so the two were compiled apart from one another"));
@@ -101,33 +102,32 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
     }
 
-    private void invoke(Class<?> declaringType, String methodName, int disposedParameter, Object bean,
-                        boolean publicMethod) {
+    private void invoke(Class<?> declaringType, String methodName, String[] parameterTypes,
+                        int disposedParameter, Object bean, boolean publicMethod) {
         BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
-        ExecutableMethod<?, ?> method = declaring.findPossibleMethods(methodName)
-            .findFirst()
+        ExecutableMethod<?, ?> method = findMethod(declaring, methodName, parameterTypes)
             .orElseThrow(() -> new IllegalStateException("The disposer method " + methodName + " of "
                 + declaringType.getName() + " has no executable method. It was resolved while the producer it "
                 + "disposes of was compiled, so the two were compiled apart from one another"));
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
         java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
-        for (int i = 0; i < arguments.length; i++) {
-            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], transientArguments);
-        }
-        if (CdiResolution.isDependent(declaring)) {
-            // a dependent declaring bean exists for the one disposal: created for it, destroyed with its own
-            // dependents when the disposer has run
-            io.micronaut.context.BeanRegistration<?> registration = registrationOf(declaring);
-            try {
-                invoke(method, registration.bean(), parameters);
-            } finally {
-                registration.close();
-                close(transientArguments);
-            }
-            return;
-        }
         try {
+            // resolved inside the try, so that the arguments resolved before one that fails are destroyed too
+            for (int i = 0; i < arguments.length; i++) {
+                parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], transientArguments);
+            }
+            if (CdiResolution.isDependent(declaring)) {
+                // a dependent declaring bean exists for the one disposal: created for it, destroyed with its own
+                // dependents when the disposer has run
+                io.micronaut.context.BeanRegistration<?> registration = registrationOf(declaring);
+                try {
+                    invoke(method, registration.bean(), parameters);
+                } finally {
+                    registration.close();
+                }
+                return;
+            }
             Object host = beanContext.getBean(declaring);
             if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !publicMethod) {
                 // a disposer may be protected, which a client proxy does not delegate — but a public one is
@@ -138,6 +138,41 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         } finally {
             close(transientArguments);
         }
+    }
+
+    /**
+     * The executable method of the disposer: the one of its erased parameter types, which tell overloads of one
+     * name apart, or the one of its name for a producer compiled before the types were recorded. The types are
+     * compared by name, so that none has to be loaded by name, which a native image would need metadata for.
+     */
+    private static Optional<? extends ExecutableMethod<?, ?>> findMethod(BeanDefinition<?> declaring,
+                                                                          String methodName,
+                                                                          String[] parameterTypes) {
+        if (parameterTypes.length == 0) {
+            return declaring.findPossibleMethods(methodName).findFirst();
+        }
+        return declaring.findPossibleMethods(methodName)
+            .filter(method -> hasParameterTypes(method, parameterTypes))
+            .findFirst();
+    }
+
+    private static boolean hasParameterTypes(ExecutableMethod<?, ?> method, String[] parameterTypes) {
+        Class<?>[] types = method.getArgumentTypes();
+        if (types.length != parameterTypes.length) {
+            return false;
+        }
+        for (int i = 0; i < types.length; i++) {
+            Class<?> component = types[i];
+            int dimensions = 0;
+            while (component.isArray()) {
+                component = component.getComponentType();
+                dimensions++;
+            }
+            if (!parameterTypes[i].equals(component.getName() + "[]".repeat(dimensions))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private io.micronaut.context.BeanRegistration<?> registrationOf(BeanDefinition<?> declaring) {

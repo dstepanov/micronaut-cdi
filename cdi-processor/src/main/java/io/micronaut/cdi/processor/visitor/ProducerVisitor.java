@@ -223,7 +223,8 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     .member("method", disposer.getName())
                     .member("disposedParameter", disposedParameter(disposer))
                     .member("staticMethod", staticDisposer)
-                    .member("publicMethod", publicDisposer));
+                    .member("publicMethod", publicDisposer)
+                    .member("parameterTypes", erasedParameterTypes(disposer)));
             }
         }
         for (MethodElement disposer : disposers) {
@@ -479,6 +480,24 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             }
         }
         return false;
+    }
+
+    /**
+     * The erased types of the parameters of a disposer, which the runtime finds its executable method by, so that
+     * of two overloads of one name each producer is disposed of by its own.
+     */
+    private static String[] erasedParameterTypes(MethodElement disposer) {
+        ParameterElement[] parameters = disposer.getParameters();
+        String[] types = new String[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            ClassElement type = parameters[i].getType();
+            String name = type.getName();
+            while (name.endsWith("[]")) {
+                name = name.substring(0, name.length() - 2);
+            }
+            types[i] = name + "[]".repeat(type.getArrayDimensions());
+        }
+        return types;
     }
 
     private static int disposedParameter(MethodElement disposer) {
