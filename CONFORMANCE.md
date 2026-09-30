@@ -312,7 +312,19 @@ its scope.
 
 A dependent instance obtained through the `Instance` of `BeanContainer.createInstance()` or of `CDI.current()` is
 released by whoever obtained it, with `Instance.destroy()` (section 2.9.1.13). The SE container is a lookup of its
-own, and destroys the dependent instances obtained through it that are left as it closes.
+own, and destroys the dependent instances obtained through it that are left as it closes: after `Shutdown` and the
+`@BeforeDestroyed` of the application context, which section 2.8.6.2 has observed as the container is about to shut
+down, and before the application context is destroyed.
+
+An instance has one owner. `Context.get` for a bean of the container hands out the instance its scope holds and
+keeps only the creational context it was given, to release with the scope; `AlterableContext.destroy` destroys the
+instance the scope holds, a singleton's included, and the next one is created anew. A context an extension adds
+for a scope is the context of that scope, and section 2.5.2 makes it responsible for destroying the instances it
+creates: what it still holds as the container closes is left to it.
+
+A bean reports as its injection points the parameters of its constructor - all but the ones Micronaut generates
+for an intercepted bean - its injected fields and initializer parameters, and, for a producer method, the
+parameters of the method (section 2.2.2.2).
 
 Micronaut's `@Order` is taken for a priority where an interceptor declares no `@Priority`: it enables and orders
 the interceptor. That is an extension of this implementation, not something either specification defines.
