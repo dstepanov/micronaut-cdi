@@ -255,6 +255,24 @@ public final class CdiContext implements AlterableContext {
                 // matched by the bean's definition, which may be the one of its client proxy: getBeanClass() of
                 // a produced bean is the producer's declaring class, which is not what the scope holds
                 holder.remove(bean.definition());
+            } else if (singletons != null) {
+                destroySingleton(bean);
+            }
+        }
+    }
+
+    /**
+     * Destroys the singleton Micronaut holds for a bean, through Micronaut: its pre-destroy callback or disposer
+     * runs, its dependent objects go with it, and it is no longer registered, so the next one asked for is created
+     * anew. A singleton that was never created has nothing to destroy.
+     */
+    private void destroySingleton(CdiBean<?> bean) {
+        io.micronaut.context.BeanContext beanContext = java.util.Objects.requireNonNull(singletons);
+        for (io.micronaut.context.BeanRegistration<?> registration
+            : beanContext.getActiveBeanRegistrations(bean.definition().getBeanType())) {
+            if (bean.equals(new CdiBean<>(beanContext, registration.getBeanDefinition()))) {
+                beanContext.destroyBean(registration);
+                return;
             }
         }
     }

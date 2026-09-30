@@ -118,4 +118,19 @@ class ContextOwnershipTest {
         }
         assertEquals(2, DESTROYED.get());
     }
+
+    @Test
+    void destroyingASingletonThroughItsContextDestroysIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            OwnedSingle first = context.getBean(OwnedSingle.class);
+            Bean<OwnedSingle> bean = beanOf(manager, OwnedSingle.class);
+
+            ((AlterableContext) manager.getContext(Singleton.class)).destroy(bean);
+
+            assertEquals(1, DESTROYED.get());
+            assertNotSame(first, context.getBean(OwnedSingle.class));
+        }
+        assertEquals(2, DESTROYED.get());
+    }
 }
