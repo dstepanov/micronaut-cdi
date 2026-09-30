@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;
@@ -141,13 +142,8 @@ public final class CdiAnnotations {
      * @return The hash code
      */
     public static int bindingHashCode(Annotation annotation) {
-        int hash = annotation.annotationType().getName().hashCode();
-        for (Map.Entry<CharSequence, Object> member : valueOf(annotation).getValues().entrySet()) {
-            Object value = member.getValue();
-            hash += (127 * member.getKey().toString().hashCode())
-                ^ (value == null ? 0 : Literal.valueHashCode(value));
-        }
-        return hash;
+        return annotation.annotationType().getName().hashCode()
+            + AnnotationUtil.calculateHashCode(valueOf(annotation).getValues());
     }
 
     /**
@@ -242,7 +238,7 @@ public final class CdiAnnotations {
             return members.isEmpty() ? "@" + type.getName() : joiner.toString();
         }
 
-        static int valueHashCode(Object value) {
+        private static int valueHashCode(Object value) {
             if (value.getClass().isArray()) {
                 int hash = 1;
                 int length = Array.getLength(value);
