@@ -67,25 +67,42 @@ public final class RecordedTypeValues {
         return of(type, bindings, new HashSet<>());
     }
 
+    /**
+     * The record of a bean type: a type variable and a wildcard among its arguments are recorded with their
+     * bounds erased to their classes, which is what typesafe resolution compares a bound as.
+     *
+     * @param type     The type
+     * @param bindings What the variables the type names are bound to, by name
+     * @return The record
+     */
+    public static AnnotationValue<CdiRecordedType> ofBeanType(ClassElement type, Map<String, ClassElement> bindings) {
+        return of(type, bindings, new HashSet<>(), true);
+    }
+
     private static AnnotationValue<CdiRecordedType> of(ClassElement type, Map<String, ClassElement> bindings,
                                                        Set<String> variables) {
+        return of(type, bindings, variables, false);
+    }
+
+    private static AnnotationValue<CdiRecordedType> of(ClassElement type, Map<String, ClassElement> bindings,
+                                                       Set<String> variables, boolean erasedBounds) {
         AnnotationValueBuilder<CdiRecordedType> record = AnnotationValue.builder(CdiRecordedType.class);
         if (type instanceof WildcardElement wildcard) {
             record.member("kind", "WILDCARD");
-            member(record, CdiRecordedType.BOUNDS, wildcard.getUpperBounds(), bindings, variables);
-            member(record, CdiRecordedType.LOWER_BOUNDS, wildcard.getLowerBounds(), bindings, variables);
+            member(record, CdiRecordedType.BOUNDS, wildcard.getUpperBounds(), bindings, variables, erasedBounds, true);
+            member(record, CdiRecordedType.LOWER_BOUNDS, wildcard.getLowerBounds(), bindings, variables, erasedBounds, true);
             return record.build();
         }
         if (type instanceof GenericPlaceholderElement placeholder && !type.isArray()) {
             String name = placeholder.getVariableName();
             ClassElement bound = bindings.get(name);
             if (bound != null && !(bound instanceof GenericPlaceholderElement)) {
-                return of(bound, Map.of(), variables);
+                return of(bound, Map.of(), variables, erasedBounds);
             }
             record.member("kind", "VARIABLE").member("name", name);
             if (variables.add(name)) {
                 // a variable bounded by itself, as T extends Comparable<T> is, names itself within its bound
-                member(record, CdiRecordedType.BOUNDS, placeholder.getBounds(), bindings, variables);
+                member(record, CdiRecordedType.BOUNDS, placeholder.getBounds(), bindings, variables, erasedBounds, true);
                 variables.remove(name);
             }
             return record.build();
@@ -104,17 +121,34 @@ public final class RecordedTypeValues {
         }
         record.member("value", new AnnotationClassValue<>(component.getName()));
         if (dimensions == 0 && !component.isRawType() && !component.getTypeArguments().isEmpty()) {
-            member(record, CdiRecordedType.ARGUMENTS, component.getTypeArguments().values(), bindings, variables);
+            member(record, CdiRecordedType.ARGUMENTS, component.getTypeArguments().values(), bindings, variables, erasedBounds, false);
         }
         return record.build();
     }
 
     private static void member(AnnotationValueBuilder<CdiRecordedType> record, String name,
                                Collection<? extends ClassElement> types, Map<String, ClassElement> bindings,
-                               Set<String> variables) {
+                               Set<String> variables, boolean erasedBounds, boolean bounds) {
         List<AnnotationValue<?>> records = new ArrayList<>(types.size());
         for (ClassElement type : types) {
-            records.add(of(type, bindings, variables));
+            if (bounds && erasedBounds && !(type instanceof GenericPlaceholderElement)
+                && !(type instanceof WildcardElement) && !type.isPrimitive()) {
+                // the class of the bound alone
+                AnnotationValueBuilder<CdiRecordedType> erased = AnnotationValue.builder(CdiRecordedType.class);
+                ClassElement component = type;
+                int dimensions = 0;
+                while (component.isArray()) {
+                    dimensions++;
+                    component = component.fromArray();
+                }
+                erased.member("value", new AnnotationClassValue<>(component.getName()));
+                if (dimensions > 0) {
+                    erased.member("dimensions", dimensions);
+                }
+                records.add(erased.build());
+                continue;
+            }
+            records.add(of(type, bindings, variables, erasedBounds));
         }
         if (!records.isEmpty()) {
             record.member(name, records.toArray(new AnnotationValue<?>[0]));

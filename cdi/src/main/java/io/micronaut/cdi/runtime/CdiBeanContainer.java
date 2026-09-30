@@ -122,6 +122,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 }
             }
         }
+        if (!amongTheTypes && beanType instanceof java.lang.reflect.ParameterizedType) {
+            // a bean type with variables among its arguments - a producer of List<T> - is a List<Spider> as well,
+            // by the rules the bean was resolved with
+            amongTheTypes = CdiAssignability.isTypeMatching(bean.getTypes(), beanType);
+        }
         if (!amongTheTypes) {
             throw new IllegalArgumentException("The type " + beanType.getTypeName()
                 + " is not among the bean types of " + bean);
@@ -160,11 +165,21 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     @Override
-    public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return getBeans(CdiTypes.requiredTypeOf(beanType), wellFormed(qualifiersOf(qualifiers)));
+    public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+                                 io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
+        all.add(CdiQualifier.ofValue(qualifier));
+        all.addAll(qualifiersOf(qualifiers));
+        return getBeans((Type) beanType, wellFormed(all));
     }
 
-    private Set<Bean<?>> getBeans(Type beanType, List<CdiQualifier> required) {
+    private Set<Bean<?>> getBeans(Type required, List<CdiQualifier> requiredQualifiers) {
+        // Micronaut's own form of a type is one of the types a lookup may be made by
+        Type beanType = required instanceof Argument<?> argument ? CdiTypes.requiredTypeOf(argument) : required;
+        return beansOf(beanType, requiredQualifiers);
+    }
+
+    private Set<Bean<?>> beansOf(Type beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (CdiBean<?> bean : candidates()) {
             if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {

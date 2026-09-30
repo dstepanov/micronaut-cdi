@@ -128,6 +128,28 @@ public class CdiBean<T> implements Bean<T> {
      * @param beanClass  The class of the bean, with a proxy's target already resolved
      * @return The bean types
      */
+    /**
+     * The type closure the processor recorded for the bean, where it recorded one and every class of it can
+     * be referred to from the definition.
+     */
+    private static java.util.@Nullable List<Type> recordedClosureOf(BeanDefinition<?> definition) {
+        java.util.List<io.micronaut.core.annotation.AnnotationValue<Annotation>> records = definition
+            .getAnnotationMetadata().findAnnotation("io.micronaut.cdi.annotation.CdiBeanTypes")
+            .map(types -> types.getAnnotations("value")).orElse(java.util.List.of());
+        if (records.isEmpty()) {
+            return null;
+        }
+        java.util.List<Type> closure = new java.util.ArrayList<>(records.size());
+        for (io.micronaut.core.annotation.AnnotationValue<Annotation> record : records) {
+            Type type = RecordedTypes.find(record);
+            if (type == null) {
+                return null;
+            }
+            closure.add(type);
+        }
+        return closure;
+    }
+
     static Set<Type> typesOf(BeanDefinition<?> definition, Class<?> beanClass) {
         Set<Type> types = new LinkedHashSet<>();
         // the types a bean narrowed itself to are the ones it named with Typed, which is asked for rather than
@@ -136,9 +158,11 @@ public class CdiBean<T> implements Bean<T> {
         Class<?>[] narrowed = definition.getAnnotationMetadata()
             .classValues("jakarta.enterprise.inject.Typed");
         Set<Type> closure = new LinkedHashSet<>();
-        if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
-            // a produced bean is a bean of the type the producer declared — with the arguments it was written
-            // with, or raw if it was written raw — not of the produced class's own declaration
+        java.util.List<Type> recorded = recordedClosureOf(definition);
+        if (recorded != null) {
+            // what the processor recorded of the bean as it compiled it
+            closure.addAll(recorded);
+        } else if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
             boolean raw = definition.getAnnotationMetadata()
                 .booleanValue("io.micronaut.cdi.annotation.CdiProducer", "raw").orElse(false);
             Type produced;

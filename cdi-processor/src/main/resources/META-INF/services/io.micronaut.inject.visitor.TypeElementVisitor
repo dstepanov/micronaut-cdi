@@ -9,3 +9,4 @@ io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor
 io.micronaut.cdi.processor.visitor.ProxyabilityVisitor
 io.micronaut.cdi.processor.extension.RegistrationVisitor
 io.micronaut.cdi.processor.visitor.BindingTypeVisitor
+io.micronaut.cdi.processor.visitor.BeanTypesVisitor

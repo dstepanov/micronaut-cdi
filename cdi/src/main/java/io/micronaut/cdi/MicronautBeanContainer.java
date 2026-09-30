@@ -41,12 +41,16 @@ public interface MicronautBeanContainer extends BeanContainer {
      * written with. The rules of {@link BeanContainer#getBeans(java.lang.reflect.Type,
      * java.lang.annotation.Annotation...)} apply.
      *
+     * <p>An {@link Argument} is a {@code java.lang.reflect.Type}, so the specification's own
+     * {@code getBeans(Type, Annotation...)} takes one as it is where no qualifier, or a literal, is given.</p>
+     *
      * @param beanType   The required type
-     * @param qualifiers The required qualifiers
+     * @param qualifier  A required qualifier
+     * @param qualifiers Further required qualifiers
      * @return The beans that qualify
      * @throws IllegalArgumentException Where an annotation is not a qualifier, or is given twice
      */
-    Set<Bean<?>> getBeans(Argument<?> beanType, AnnotationValue<?>... qualifiers);
+    Set<Bean<?>> getBeans(Argument<?> beanType, AnnotationValue<?> qualifier, AnnotationValue<?>... qualifiers);
 
     /**
      * The observer methods an event fired with the given qualifiers notifies, each qualifier given as the
