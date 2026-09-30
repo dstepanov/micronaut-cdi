@@ -133,8 +133,9 @@ public final class CdiContext implements AlterableContext {
         }
         Map<Contextual<?>, Held<?>> store = store(true);
         if (store == null) {
-            // the dependent pseudo-scope holds nothing: what is created belongs to whoever asked
-            return contextual.create(creationalContext);
+            // the dependent pseudo-scope holds nothing: what is created belongs to whoever asked. A singleton
+            // is held by Micronaut
+            return instanceOf(contextual, creationalContext);
         }
         synchronized (store) {
             Held<T> held = existing(store, contextual);
@@ -143,7 +144,7 @@ public final class CdiContext implements AlterableContext {
             }
         }
         // created outside the lock — creation may be arbitrarily slow, or reach back into this context
-        T instance = contextual.create(creationalContext);
+        T instance = instanceOf(contextual, creationalContext);
         if (instance == null) {
             return null;
         }
@@ -158,6 +159,20 @@ public final class CdiContext implements AlterableContext {
         // another thread stored first: one instance per contextual per context, so ours is let go
         contextual.destroy(instance, creationalContext);
         return raced.instance();
+    }
+
+    /**
+     * The instance this context holds of a contextual it holds none of yet. A contextual a program handed in is
+     * asked to create it. A bean of the container is held by the scope Micronaut keeps its instances in, which
+     * is this context: the instance is the one that scope creates, once, since creating one through the bean
+     * would be a second instance of the scope.
+     */
+    private <T> T instanceOf(Contextual<T> contextual, CreationalContext<T> creationalContext) {
+        if (contextual instanceof CdiBean<T> bean && (holder != null || singletons != null)
+            && bean.getClass() == CdiBean.class) {
+            return bean.scopedInstance();
+        }
+        return contextual.create(creationalContext);
     }
 
     @Override

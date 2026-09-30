@@ -155,6 +155,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @SuppressWarnings("unchecked")
     private static <T> T create(Bean<T> bean, CreationalContext<?> ctx) {
+        if (bean instanceof CdiBean<T> cdiBean && !cdiBean.isDependent()) {
+            // the contextual reference of a bean that has a scope is the instance of the scope
+            return cdiBean.scopedInstance();
+        }
         return bean.create((CreationalContext<T>) ctx);
     }
 

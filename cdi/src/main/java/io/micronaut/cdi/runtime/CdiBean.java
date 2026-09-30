@@ -344,24 +344,99 @@ public class CdiBean<T> implements Bean<T> {
                 tracking.track(registration);
                 return registration.bean();
             }
-            if (isNormalScoped()) {
-                // creating a bean in a normal scope is creating the contextual instance the scope holds, not
-                // the client proxy in front of it: a producer that misbehaves — returning null, say — is
-                // heard from here, as the specification's create contract expects
-                @SuppressWarnings("unchecked")
-                io.micronaut.core.type.Argument<T> target =
-                    definition instanceof io.micronaut.inject.ProxyBeanDefinition<T> proxy
-                        ? (io.micronaut.core.type.Argument<T>) io.micronaut.core.type.Argument.of(
-                            proxy.getTargetType(), definition.asArgument().getTypeParameters())
-                        : definition.asArgument();
-                return beanContext.getProxyTargetBean(target, definition.getDeclaredQualifier());
+            // section 2.5.1: create() creates a new contextual instance. That a scope has one instance is the
+            // business of its context, which creates it once and hands the same one out - scopedInstance()
+            io.micronaut.context.scope.CreatedBean<T> created = createOutsideOfScope();
+            if (created == null) {
+                return scopedInstance();
             }
-            return beanContext.getBean(definition);
+            if (creationalContext instanceof CdiCreationalContext<T> tracking) {
+                tracking.track(created);
+            }
+            return created.bean();
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // section 6.1.1: what the bean itself threw comes out as it was thrown if it is unchecked, and
             // wrapped in a CreationException if it is checked
             throw translated(e);
         }
+    }
+
+    /**
+     * The instance of the bean its scope holds, created where the scope holds none yet: what a context hands out,
+     * and what a contextual reference resolves to.
+     *
+     * @return The instance of the scope
+     */
+    T scopedInstance() {
+        try {
+            if (isNormalScoped()) {
+                // the contextual instance the scope holds, not the client proxy in front of it: a producer that
+                // misbehaves — returning null, say — is heard from here
+                return beanContext.getProxyTargetBean(targetArgument(), definition.getDeclaredQualifier());
+            }
+            return beanContext.getBean(definition);
+        } catch (io.micronaut.context.exceptions.BeanCreationException e) {
+            throw translated(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private io.micronaut.core.type.Argument<T> targetArgument() {
+        return definition instanceof io.micronaut.inject.ProxyBeanDefinition<T> proxy
+            ? (io.micronaut.core.type.Argument<T>) io.micronaut.core.type.Argument.of(
+                proxy.getTargetType(), definition.asArgument().getTypeParameters())
+            : definition.asArgument();
+    }
+
+    /**
+     * Creates an instance of a bean that has a scope, without the scope holding it.
+     *
+     * <p>A bean of a normal scope is created by its scope, asked for a new instance, with everything a creation
+     * is and the dependents it was created with. A singleton is created by Micronaut from its definition, again
+     * with everything a creation is; what was created along with it is not reported, so that instance is destroyed
+     * without its dependent objects.</p>
+     *
+     * @return What was created, or {@code null} for a bean of a scope that offers no such creation
+     */
+    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CreatedBean<T> createOutsideOfScope() {
+        if (isNormalScoped()) {
+            io.micronaut.context.scope.CustomScope<?> scope = declaredScope();
+            if (scope == null) {
+                return null;
+            }
+            return io.micronaut.cdi.context.FreshInstance.create(scope,
+                () -> beanContext.getProxyTargetBean(targetArgument(), definition.getDeclaredQualifier()));
+        }
+        if (definition.isSingleton() && !isRuntimeDefinition()) {
+            T instance = beanContext.createBean(definition.getBeanType(), onlyThisDefinition());
+            return io.micronaut.context.BeanRegistration.of(beanContext,
+                io.micronaut.inject.BeanIdentifier.of(definition.getName()), definition, instance);
+        }
+        return null;
+    }
+
+    /**
+     * The scope Micronaut holds the instances of this bean in: the one whose annotation the bean declares.
+     */
+    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CustomScope<?> declaredScope() {
+        AnnotationMetadata metadata = targetDefinition().getAnnotationMetadata();
+        for (io.micronaut.context.scope.CustomScope<?> scope
+            : beanContext.getBeansOfType(io.micronaut.context.scope.CustomScope.class)) {
+            if (metadata.hasStereotype(scope.annotationType())) {
+                return scope;
+            }
+        }
+        return null;
+    }
+
+    private io.micronaut.context.Qualifier<T> onlyThisDefinition() {
+        return new io.micronaut.context.Qualifier<T>() {
+            @Override
+            public <B extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<B> reduce(
+                Class<T> beanType, java.util.stream.Stream<B> candidates) {
+                return candidates.filter(candidate -> candidate.equals(definition));
+            }
+        };
     }
 
     /**
@@ -421,7 +496,7 @@ public class CdiBean<T> implements Bean<T> {
             .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false);
     }
 
-    private boolean isDependent() {
+    final boolean isDependent() {
         return !definition.isSingleton() && getScope() == jakarta.enterprise.context.Dependent.class;
     }
 
@@ -438,7 +513,13 @@ public class CdiBean<T> implements Bean<T> {
             // handed over may be the client proxy standing in front of it
             Object held = instance instanceof io.micronaut.aop.InterceptedProxy<?> proxy
                 ? proxy.interceptedTarget() : instance;
-            beanContext.destroyBean(held);
+            if (beanContext.findBeanRegistration(held).isPresent()) {
+                beanContext.destroyBean(held);
+            } else {
+                // held by no scope - created by create() in a creational context of another kind - so it is
+                // destroyed as an instance of this bean: its class may be the class of other beans as well
+                destroyAs(targetDefinition(), held);
+            }
         } catch (RuntimeException e) {
             // section 6.1.1: destroy catches what destruction throws, so that one failing pre-destroy does not
             // stop the rest of a context from being destroyed
@@ -447,6 +528,12 @@ public class CdiBean<T> implements Bean<T> {
             // the context in sees the release
             creationalContext.release();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <B> void destroyAs(BeanDefinition<B> of, Object instance) {
+        beanContext.destroyBean(io.micronaut.context.BeanRegistration.of(beanContext,
+            io.micronaut.inject.BeanIdentifier.of(of.getName()), of, (B) instance));
     }
 
     /**

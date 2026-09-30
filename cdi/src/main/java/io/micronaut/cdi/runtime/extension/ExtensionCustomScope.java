@@ -41,7 +41,7 @@ import java.util.Optional;
  * @since 1.0
  */
 @Internal
-final class ExtensionCustomScope implements CustomScope<Annotation> {
+final class ExtensionCustomScope implements CustomScope<Annotation>, io.micronaut.cdi.context.FreshInstance.Creating {
 
     private final Class<? extends Annotation> scopeAnnotation;
     private final List<AlterableContext> contexts;
@@ -62,6 +62,14 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
 
     @Override
     public <T> T getOrCreate(BeanCreationContext<T> creationContext) {
+        java.util.Map<io.micronaut.inject.BeanIdentifier, CreatedBean<?>> fresh =
+            io.micronaut.cdi.context.FreshInstance.take(this);
+        if (fresh != null) {
+            // Contextual.create() asked for a new instance, which no context of the scope holds
+            CreatedBean<T> created = creationContext.create();
+            fresh.put(creationContext.id(), created);
+            return created.bean();
+        }
         AlterableContext context = activeContext();
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
         @SuppressWarnings("unchecked")
