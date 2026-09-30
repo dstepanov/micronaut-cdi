@@ -128,6 +128,7 @@ by Micronaut's own forms of an annotation and of a type:
 | `Instance<T>` | `io.micronaut.cdi.MicronautInstance<T>` | `select(AnnotationValue, AnnotationValue...)`, `select(Class, AnnotationValue, AnnotationValue...)`, `select(Argument, AnnotationValue...)` |
 | `Event<T>` | `io.micronaut.cdi.MicronautEvent<T>` | the same three selections |
 | `BeanContainer` | `io.micronaut.cdi.MicronautBeanContainer` | `getBeans(Argument, AnnotationValue, AnnotationValue...)` - and `getBeans(Type, Annotation...)` takes an `Argument` as the type - `resolveObserverMethods(event, AnnotationValue, AnnotationValue...)`, and `createInstance()` / `getEvent()` returning the Micronaut types |
+| `InjectionPoint` | `io.micronaut.cdi.MicronautInjectionPoint` | `getQualifierValues()`: the required qualifiers as `AnnotationValue`s with every member, a non-binding one included - for a bean obtained by a lookup, the ones the lookup selected |
 
 ```java
 @Inject MicronautInstance<Dish> dishes;

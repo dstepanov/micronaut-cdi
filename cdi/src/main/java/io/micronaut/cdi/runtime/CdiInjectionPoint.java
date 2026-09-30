@@ -19,7 +19,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.InjectionPoint;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -39,7 +38,7 @@ import java.util.Set;
  * @since 1.0
  */
 @Internal
-public final class CdiInjectionPoint implements InjectionPoint {
+public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInjectionPoint {
 
     private final @Nullable Bean<?> bean;
     private final Argument<?> argument;
@@ -85,6 +84,21 @@ public final class CdiInjectionPoint implements InjectionPoint {
         return declared.isEmpty()
             ? Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE)
             : declared;
+    }
+
+    @Override
+    public java.util.List<io.micronaut.core.annotation.AnnotationValue<?>> getQualifierValues() {
+        java.util.List<io.micronaut.core.annotation.AnnotationValue<?>> all = new java.util.ArrayList<>();
+        for (CdiQualifier declared : CdiQualifier.declared(argument.getAnnotationMetadata())) {
+            all.add(declared.written());
+        }
+        for (CdiQualifier selected : selectedQualifiers) {
+            all.add(selected.written());
+        }
+        if (all.isEmpty()) {
+            all.add(CdiQualifier.DEFAULT.written());
+        }
+        return java.util.Collections.unmodifiableList(all);
     }
 
     @Override
