@@ -20,9 +20,8 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.interceptor.annotation.InterceptionKind;
-import io.micronaut.interceptor.annotation.JakartaInterceptorMethods;
+import io.micronaut.interceptor.runtime.InterceptorMethods;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.InterceptionType;
@@ -33,7 +32,6 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -80,15 +78,9 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
      * @return The priority
      */
     int priority() {
-        AnnotationMetadata metadata = definition.getAnnotationMetadata();
-        // read the way the interceptors implementation orders a chain, so that the order this reports is the order
-        // that runs: the priority of the specification first, then Micronaut's own order, which the priority is
-        // also remapped to and may have been dropped in favour of
-        java.util.OptionalInt priority = metadata.intValue(PRIORITY, "value");
-        if (priority.isPresent()) {
-            return priority.getAsInt();
-        }
-        return metadata.intValue(ORDER, "value").orElse(jakarta.interceptor.Interceptor.Priority.APPLICATION);
+        // read by the interceptors implementation, the way it orders a chain, so that the order this reports is the
+        // order that runs
+        return InterceptorMethods.priorityOf(definition);
     }
 
     @Override
@@ -107,20 +99,22 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
 
     @Override
     public boolean intercepts(InterceptionType type) {
-        return !methodNamesOf(type).isEmpty();
+        return methodsOf(type) != null;
     }
 
     @Override
     @SuppressWarnings("NullAway")
     public Object intercept(InterceptionType type, T instance, InvocationContext ctx) throws Exception {
-        List<String> names = methodNamesOf(type);
-        if (names.isEmpty()) {
+        InterceptorMethods methods = methodsOf(type);
+        if (methods == null) {
             throw new IllegalArgumentException("The interceptor " + getBeanClass().getName()
                 + " does not perform " + type + " interception");
         }
-        // the methods are recorded most general superclass first, which is the order they are invoked in; each
-        // is given a context whose proceed is the next, and the last proceeds into the invocation itself
-        return invokeFrom(0, names, instance, ctx);
+        // the methods are invoked most general superclass first; each is given a context whose proceed is the next,
+        // and the last proceeds into the invocation itself. What the invocation throws, checked or not, is the
+        // interceptor's to see and the caller's to catch: section 2.5 of Jakarta Interceptors has an exception
+        // travel through the chain as it was thrown
+        return methods.invoke(instance, ctx);
     }
 
     @Override
@@ -173,12 +167,13 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         return bean.isAlternative();
     }
 
-    private List<String> methodNamesOf(InterceptionType type) {
-        AnnotationValue<JakartaInterceptorMethods> methods =
-            definition.getAnnotationMetadata().getAnnotation(JakartaInterceptorMethods.class);
-        if (methods == null) {
-            return List.of();
-        }
+    /**
+     * The interceptor methods that interpose on a kind of interception, read by the interceptors implementation the
+     * way it reads them for a chain, so that what is reported and invoked here is what a chain invokes.
+     *
+     * @return The methods, or {@code null} where the interceptor does not interpose on the kind
+     */
+    private @Nullable InterceptorMethods methodsOf(InterceptionType type) {
         InterceptionKind kind = switch (type) {
             case AROUND_INVOKE -> InterceptionKind.AROUND_INVOKE;
             case AROUND_TIMEOUT -> InterceptionKind.AROUND_TIMEOUT;
@@ -188,32 +183,11 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
             // passivation belongs to CDI Full, and no interceptor here performs it
             case PRE_PASSIVATE, POST_ACTIVATE -> null;
         };
-        return kind == null ? List.of() : List.of(methods.stringValues(kind.member()));
-    }
-
-    @SuppressWarnings("unchecked")
-    private @Nullable Object invokeFrom(int index, List<String> names, T instance, InvocationContext ctx)
-        throws Exception {
-        if (index == names.size()) {
-            // what the invocation throws, checked or not, is the interceptor's to see and the caller's to catch:
-            // section 2.5 of Jakarta Interceptors has an exception travel through the chain as it was thrown
-            return ctx.proceed();
+        if (kind == null) {
+            return null;
         }
-        ExecutableMethod<T, ?> method = methodNamed(names.get(index));
-        InvocationContext next = new NextInContext(ctx, () -> invokeFrom(index + 1, names, instance, ctx));
-        return ((ExecutableMethod<T, Object>) method).invoke(instance, next);
-    }
-
-    @SuppressWarnings("unchecked")
-    private ExecutableMethod<T, ?> methodNamed(String name) {
-        for (ExecutableMethod<? super T, ?> method : definition.getExecutableMethods()) {
-            if (method.getName().equals(name) && method.getArguments().length == 1
-                && InvocationContext.class.isAssignableFrom(method.getArguments()[0].getType())) {
-                return (ExecutableMethod<T, ?>) method;
-            }
-        }
-        throw new IllegalStateException("The interceptor method " + name + " of " + getBeanClass().getName()
-            + " was recorded at compilation but is not among the executable methods");
+        InterceptorMethods methods = InterceptorMethods.of(definition, kind);
+        return methods.isEmpty() ? null : methods;
     }
 
     @SuppressWarnings("unchecked")
@@ -229,67 +203,5 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     @Override
     public String toString() {
         return "Interceptor[" + getBeanClass().getName() + "]";
-    }
-
-    /**
-     * The context the next interceptor method of the same chain sees: everything of the invocation, with proceed
-     * leading to that next method.
-     *
-     * @param invocation The context of the invocation itself
-     * @param next       Where proceeding from here leads
-     */
-    private record NextInContext(InvocationContext invocation, ProceedsTo next) implements InvocationContext {
-
-        @Override
-        public java.util.Set<Annotation> getInterceptorBindings() {
-            // the bindings are the caller's: the wrapper only moves the chain along
-            return invocation.getInterceptorBindings();
-        }
-
-        @Override
-        public Object getTarget() {
-            return invocation.getTarget();
-        }
-
-        @Override
-        public Object getTimer() {
-            return invocation.getTimer();
-        }
-
-        @Override
-        public java.lang.reflect.Method getMethod() {
-            return invocation.getMethod();
-        }
-
-        @Override
-        public java.lang.reflect.Constructor<?> getConstructor() {
-            return invocation.getConstructor();
-        }
-
-        @Override
-        public Object[] getParameters() {
-            return invocation.getParameters();
-        }
-
-        @Override
-        public void setParameters(Object[] params) {
-            invocation.setParameters(params);
-        }
-
-        @Override
-        public java.util.Map<String, Object> getContextData() {
-            return invocation.getContextData();
-        }
-
-        @Override
-        public @Nullable Object proceed() throws Exception {
-            return next.proceed();
-        }
-    }
-
-    @FunctionalInterface
-    private interface ProceedsTo {
-        @Nullable
-        Object proceed() throws Exception;
     }
 }
