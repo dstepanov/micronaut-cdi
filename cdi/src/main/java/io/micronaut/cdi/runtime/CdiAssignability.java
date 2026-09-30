@@ -280,7 +280,8 @@ public final class CdiAssignability {
             if (observedComponent instanceof Class<?> observedClass && eventComponent instanceof Class<?> eventClass) {
                 return observedClass.isAssignableFrom(eventClass);
             }
-            return isEventAssignable(observedComponent, eventComponent);
+            // a parameterized component is judged against the entry of its closure of the observed raw type
+            return isEventTypeMatching(observedComponent, eventComponent);
         }
         Class<?> observedRaw = rawTypeOf(observed);
         Class<?> eventRaw = rawTypeOf(event);
@@ -291,11 +292,15 @@ public final class CdiAssignability {
             if (!(event instanceof ParameterizedType eventParameterized)) {
                 return saysNothing(observedParameterized.getActualTypeArguments());
             }
+            if (observedRaw != eventRaw) {
+                // not the comparable pair: the arguments of a subtype say nothing of those of its supertype,
+                // which the event's closure carries as its own entry, of the observed raw type, and that one is
+                // what the observed type is judged against (section 9.3.1)
+                return false;
+            }
             Type[] observedArguments = observedParameterized.getActualTypeArguments();
             Type[] eventArguments = eventParameterized.getActualTypeArguments();
             if (observedArguments.length != eventArguments.length) {
-                // not the comparable pair: the event's closure carries the properly-parameterized supertype
-                // as its own entry, and that one is what the observed type is judged against
                 return false;
             }
             for (int i = 0; i < observedArguments.length; i++) {
