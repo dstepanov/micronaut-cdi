@@ -254,29 +254,6 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     /**
-     * Whether the scope already holds an instance of the given type, which is what a conditional observer of
-     * section 2.8.2 asks.
-     *
-     * @param beanType The type of the bean
-     * @return Whether an instance is held
-     */
-    public boolean holdsInstanceOf(Class<?> beanType) {
-        Map<BeanIdentifier, CreatedBean<?>> beans = getScopeMap(false);
-        if (beans == null) {
-            return false;
-        }
-        for (CreatedBean<?> created : java.util.List.copyOf(beans.values())) {
-            if (io.micronaut.cdi.runtime.CdiContext.CONTEXTUAL_STORE_ID.equals(created.id())) {
-                continue;
-            }
-            if (beanType.isAssignableFrom(created.definition().getBeanType())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Makes the request context inactive on the calling thread without destroying what it holds, so that it
      * can be resumed: what the kit's harness calls setting a context inactive.
      */

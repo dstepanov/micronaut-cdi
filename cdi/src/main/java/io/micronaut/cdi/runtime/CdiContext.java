@@ -61,13 +61,16 @@ public final class CdiContext implements AlterableContext {
     private final Class<? extends Annotation> scope;
     private final BooleanSupplier active;
     private final @Nullable AbstractConcurrentCustomScope<?> holder;
+    private final io.micronaut.context.@Nullable BeanContext singletons;
 
     private CdiContext(Class<? extends Annotation> scope,
                        BooleanSupplier active,
-                       @Nullable AbstractConcurrentCustomScope<?> holder) {
+                       @Nullable AbstractConcurrentCustomScope<?> holder,
+                       io.micronaut.context.@Nullable BeanContext singletons) {
         this.scope = scope;
         this.active = active;
         this.holder = holder;
+        this.singletons = singletons;
     }
 
     /**
@@ -78,7 +81,7 @@ public final class CdiContext implements AlterableContext {
      * @return The context
      */
     public static CdiContext ofApplication(Class<? extends Annotation> scope, ApplicationScope applicationScope) {
-        return new CdiContext(scope, () -> true, applicationScope);
+        return new CdiContext(scope, () -> true, applicationScope, null);
     }
 
     /**
@@ -89,18 +92,31 @@ public final class CdiContext implements AlterableContext {
      * @return The context
      */
     public static CdiContext ofRequest(Class<? extends Annotation> scope, RequestScope requestScope) {
-        return new CdiContext(scope, requestScope::isActive, requestScope);
+        return new CdiContext(scope, requestScope::isActive, requestScope, null);
     }
 
     /**
      * The context of a scope that holds nothing of its own: the dependent pseudo-scope, whose instances belong
-     * to whatever asked for them, and the singleton scope, which Micronaut holds itself.
+     * to whatever asked for them.
      *
      * @param scope The scope annotation
      * @return The context
      */
     public static CdiContext holdingNothing(Class<? extends Annotation> scope) {
-        return new CdiContext(scope, () -> true, null);
+        return new CdiContext(scope, () -> true, null, null);
+    }
+
+    /**
+     * The context of the singleton scope, whose instances Micronaut holds itself: a program's contextual is
+     * held nowhere, and a bean's instance is the singleton Micronaut created for it.
+     *
+     * @param scope       The scope annotation
+     * @param beanContext The context that holds the singletons
+     * @return The context
+     */
+    public static CdiContext ofSingleton(Class<? extends Annotation> scope,
+                                         io.micronaut.context.BeanContext beanContext) {
+        return new CdiContext(scope, () -> true, null, beanContext);
     }
 
     @Override
@@ -148,13 +164,38 @@ public final class CdiContext implements AlterableContext {
     public <T> @Nullable T get(Contextual<T> contextual) {
         requireActive();
         Map<Contextual<?>, Held<?>> store = store(false);
-        if (store == null) {
-            return null;
+        if (store != null) {
+            synchronized (store) {
+                Held<T> held = existing(store, contextual);
+                if (held != null) {
+                    return held.instance();
+                }
+            }
         }
-        synchronized (store) {
-            Held<T> held = existing(store, contextual);
-            return held == null ? null : held.instance();
+        // not something a program handed in, so it may be a bean of the container: the instance the scope
+        // created for it — through its client proxy, most often — is the one the scope holds for its definition
+        if (contextual instanceof CdiBean<T> bean) {
+            return heldInstanceOf(bean);
         }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> @Nullable T heldInstanceOf(CdiBean<T> bean) {
+        if (holder != null) {
+            return holder.findBeanRegistration(bean.definition())
+                .map(io.micronaut.context.BeanRegistration::bean)
+                .orElse(null);
+        }
+        if (singletons != null) {
+            for (io.micronaut.context.BeanRegistration<?> registration
+                : singletons.getActiveBeanRegistrations(bean.definition().getBeanType())) {
+                if (bean.equals(new CdiBean<>(singletons, registration.getBeanDefinition()))) {
+                    return (T) registration.bean();
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

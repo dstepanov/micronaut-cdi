@@ -63,25 +63,6 @@ public final class ApplicationScope extends AbstractConcurrentCustomScope<CdiApp
         return instances;
     }
 
-    /**
-     * Whether the scope already holds an instance of the given type, which is what a conditional observer of
-     * section 2.8.2 asks.
-     *
-     * @param beanType The type of the bean
-     * @return Whether an instance is held
-     */
-    public boolean holdsInstanceOf(Class<?> beanType) {
-        for (io.micronaut.context.scope.CreatedBean<?> created : java.util.List.copyOf(instances.values())) {
-            if (io.micronaut.cdi.runtime.CdiContext.CONTEXTUAL_STORE_ID.equals(created.id())) {
-                continue;
-            }
-            if (beanType.isAssignableFrom(created.definition().getBeanType())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public boolean isRunning() {
         return true;

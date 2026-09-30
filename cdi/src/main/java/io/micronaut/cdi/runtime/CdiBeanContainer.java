@@ -475,7 +475,10 @@ public final class CdiBeanContainer implements BeanManager {
         if (scopeType == jakarta.enterprise.context.ApplicationScoped.class) {
             return List.of(CdiContext.ofApplication(scopeType, applicationScope));
         }
-        if (scopeType == Singleton.class || scopeType == Dependent.class) {
+        if (scopeType == Singleton.class) {
+            return List.of(CdiContext.ofSingleton(scopeType, beanContext));
+        }
+        if (scopeType == Dependent.class) {
             return List.of(CdiContext.holdingNothing(scopeType));
         }
         // a scope a build compatible extension registered a context for (section 2.10.1)

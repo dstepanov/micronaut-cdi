@@ -59,6 +59,10 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private final boolean staticMethod;
     private final int priority;
     private final TransactionPhase during;
+    /**
+     * The bean declaring the method, read when a notification first needs it.
+     */
+    private volatile @Nullable CdiBean<?> declaringBean;
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
@@ -335,37 +339,51 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         }
     }
 
-    @SuppressWarnings("unchecked")
     private boolean exists() {
         // section 2.8.2: a conditional observer is notified only if an instance of its bean already exists in
-        // a context that is active — an inactive context holds nothing reachable, and is not an error
-        String scope = declaring.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.annotation.CdiScope").orElse(null);
-        Class<?> held = getBeanClass();
-        if ("jakarta.enterprise.context.RequestScoped".equals(scope)) {
-            io.micronaut.cdi.context.RequestScope requestScope =
-                beanContext.getBean(io.micronaut.cdi.context.RequestScope.class);
-            return requestScope.isActive() && requestScope.holdsInstanceOf(held);
-        }
-        if ("jakarta.enterprise.context.ApplicationScoped".equals(scope)) {
-            return beanContext.getBean(io.micronaut.cdi.context.ApplicationScope.class)
-                .holdsInstanceOf(held);
-        }
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) declaring;
-        return beanContext.containsBean(definition.asArgument(), definition.getDeclaredQualifier());
+        // a context that is active — an inactive context holds nothing reachable, and is not an error. The
+        // context is asked about the bean itself, so that an instance of a subclass bean, or a bean that could
+        // be created, is not taken for one
+        CdiBean<?> bean = declaringBean();
+        jakarta.enterprise.context.spi.Context context = activeContextOf(bean);
+        return context != null && context.get(bean) != null;
     }
 
     /**
-     * Whether the context the declaring bean lives in is active: an observer of a request-scoped bean is not
-     * notified outside a request.
+     * Whether the context the declaring bean lives in is active: an observer of a bean in a normal scope is not
+     * notified while the context of that scope is not.
      */
     private boolean contextIsActive() {
-        String scope = declaring.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.annotation.CdiScope").orElse(null);
-        if ("jakarta.enterprise.context.RequestScoped".equals(scope)) {
-            return beanContext.getBean(io.micronaut.cdi.context.RequestScope.class).isActive();
+        CdiBean<?> bean = declaringBean();
+        if (!bean.isNormalScoped()) {
+            return true;
         }
-        return true;
+        try {
+            beanContext.getBean(CdiBeanContainer.class).getContext(bean.getScope());
+            return true;
+        } catch (jakarta.enterprise.context.ContextNotActiveException e) {
+            return false;
+        } catch (IllegalArgumentException e) {
+            // a scope no context is registered for: resolving the bean reports that, not this check
+            return true;
+        }
+    }
+
+    private jakarta.enterprise.context.spi.@Nullable Context activeContextOf(CdiBean<?> bean) {
+        try {
+            return beanContext.getBean(CdiBeanContainer.class).getContext(bean.getScope());
+        } catch (jakarta.enterprise.context.ContextNotActiveException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private CdiBean<?> declaringBean() {
+        CdiBean<?> bean = declaringBean;
+        if (bean == null) {
+            bean = beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
+            declaringBean = bean;
+        }
+        return bean;
     }
 
     @SuppressWarnings("unchecked")
