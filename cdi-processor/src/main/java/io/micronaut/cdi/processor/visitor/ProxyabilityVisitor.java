@@ -113,7 +113,7 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
     /**
      * What of section 3.11 the class lacks, or {@code null} when a proxy can extend it.
      */
-    private static @io.micronaut.core.annotation.Nullable String whyUnproxyable(ClassElement element,
+    private static @org.jspecify.annotations.Nullable String whyUnproxyable(ClassElement element,
                                                                                 boolean normalScoped) {
         if (element.isFinal()) {
             return "the class is final and a proxy extends it";

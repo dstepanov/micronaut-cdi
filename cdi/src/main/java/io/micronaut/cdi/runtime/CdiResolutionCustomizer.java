@@ -85,7 +85,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     @Override
     public <T> java.util.Optional<io.micronaut.inject.BeanDefinition<T>> resolveNonUniqueBean(
         Argument<T> beanType,
-        io.micronaut.context.@io.micronaut.core.annotation.Nullable Qualifier<T> qualifier,
+        io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
         java.util.Collection<io.micronaut.inject.BeanDefinition<T>> candidates) {
         if (qualifier != null) {
             return java.util.Optional.empty();

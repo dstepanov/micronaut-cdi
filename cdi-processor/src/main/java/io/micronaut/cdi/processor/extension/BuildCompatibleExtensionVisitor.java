@@ -69,9 +69,9 @@ import java.util.ServiceLoader;
 @Internal
 public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor<Object, Object> {
 
-    private static volatile @io.micronaut.core.annotation.Nullable List<BuildCompatibleExtension> overriddenExtensions;
-    private static volatile @io.micronaut.core.annotation.Nullable BuildCompatibleExtensionVisitor current;
-    private static volatile io.micronaut.inject.visitor.@io.micronaut.core.annotation.Nullable VisitorContext
+    private static volatile @org.jspecify.annotations.Nullable List<BuildCompatibleExtension> overriddenExtensions;
+    private static volatile @org.jspecify.annotations.Nullable BuildCompatibleExtensionVisitor current;
+    private static volatile io.micronaut.inject.visitor.@org.jspecify.annotations.Nullable VisitorContext
         activeContext;
 
     private static final String GENERATED = "io.micronaut.cdi.generated";
@@ -103,7 +103,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean synthesized;
     private boolean triggerWritten;
     private final TypeIndexCollector typeIndex = new TypeIndexCollector();
-    private @io.micronaut.core.annotation.Nullable String suffix;
+    private @org.jspecify.annotations.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
         // what AnnotationBuilder.of composes with: the specification's resolver looks for it through the loader
@@ -179,7 +179,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      *
      * @param extensions The extensions, or {@code null} to load them as usual
      */
-    public static void overrideExtensions(@io.micronaut.core.annotation.Nullable List<BuildCompatibleExtension> extensions) {
+    public static void overrideExtensions(@org.jspecify.annotations.Nullable List<BuildCompatibleExtension> extensions) {
         overriddenExtensions = extensions;
     }
 
@@ -189,7 +189,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      *
      * @return The visitor, or {@code null} outside a compilation
      */
-    static @io.micronaut.core.annotation.Nullable BuildCompatibleExtensionVisitor current() {
+    static @org.jspecify.annotations.Nullable BuildCompatibleExtensionVisitor current() {
         return current;
     }
 
@@ -199,7 +199,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      *
      * @return The context, or {@code null} outside a compilation
      */
-    static io.micronaut.inject.visitor.@io.micronaut.core.annotation.Nullable VisitorContext activeVisitorContext() {
+    static io.micronaut.inject.visitor.@org.jspecify.annotations.Nullable VisitorContext activeVisitorContext() {
         return activeContext;
     }
 
@@ -262,7 +262,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     private static void validateHanded(Phase phase, Method method,
-                                       @io.micronaut.core.annotation.Nullable Class<?> subject) {
+                                       @org.jspecify.annotations.Nullable Class<?> subject) {
         for (Class<?> parameterType : method.getParameterTypes()) {
             if (!parameterType.equals(subject) && !phase.hands(parameterType)) {
                 throw phase.unsupported(method, parameterType);
@@ -1104,7 +1104,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
          * What a parameter of a type the phase hands is given.
          */
         Object argument(Class<?> parameterType, Messages messages,
-                        @io.micronaut.core.annotation.Nullable VisitorContext context) {
+                        @org.jspecify.annotations.Nullable VisitorContext context) {
             if (parameterType.equals(Messages.class)) {
                 return messages;
             }
@@ -1156,7 +1156,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             this.language = language;
         }
 
-        GeneratedSource annotation(String type, @io.micronaut.core.annotation.Nullable String arguments) {
+        GeneratedSource annotation(String type, @org.jspecify.annotations.Nullable String arguments) {
             annotations.append('@').append(type);
             if (arguments != null) {
                 annotations.append('(').append(arguments).append(')');

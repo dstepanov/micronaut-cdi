@@ -101,9 +101,15 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
             lookups);
     }
 
-    @Override
+    // a static method is invoked on no instance, which the signature of an executable method has no way to say
     @SuppressWarnings("NullAway")
-    public Object invoke(@Nullable Object instance, Object @Nullable [] arguments) throws Exception {
+    private static @Nullable Object invoke(ExecutableMethod<Object, Object> method, @Nullable Object target,
+                                           Object[] arguments) {
+        return method.invoke(target, arguments);
+    }
+
+    @Override
+    public @Nullable Object invoke(@Nullable Object instance, Object @Nullable [] arguments) throws Exception {
         CdiBeanContainer container = CdiRunning.current();
         if (container == null) {
             throw new IllegalStateException("No container is running to invoke "
@@ -158,7 +164,7 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
                     invocationArguments[i] = checked(arguments[i], parameterTypes[i], i);
                 }
             }
-            return method.invoke(target, invocationArguments);
+            return invoke(method, target, invocationArguments);
         } finally {
             // what an invocation looked up — the instance included, when it was looked up — lives only as
             // long as the invocation; a dependent among it is destroyed here

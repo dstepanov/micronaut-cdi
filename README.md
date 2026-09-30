@@ -187,6 +187,14 @@ container's own implementations of those interfaces. Inside the container a type
 in the package `io.micronaut.cdi.runtime.type`. The list is in [cdi/build.gradle](cdi/build.gradle).
 Reflection anywhere else fails the build.
 
+Nullness is checked the same way, by [NullAway](https://github.com/uber/NullAway) as an ErrorProne check that
+fails the compilation of the main sources of `micronaut-cdi`, `micronaut-cdi-processor`,
+`micronaut-cdi-reflection` and `micronaut-cdi-el`, configured as Micronaut Core configures it: every package
+under `io.micronaut` is checked, each is `@NullMarked`, and a value that may be null is an
+`org.jspecify.annotations.Nullable`. The test sources are not checked. The API of the specification carries no
+nullness annotations, so what it hands in is taken as it comes, and a method of it that may return null is
+declared `@Nullable` where it is implemented.
+
 ## Conformance
 
 What is implemented, and every place where this module differs from the specification, is recorded in

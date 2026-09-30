@@ -168,7 +168,7 @@ public final class ObserverRegistry {
                                 Argument<?> eventType,
                                 List<CdiQualifier> eventQualifiers,
                                 boolean async,
-                                jakarta.enterprise.inject.spi.@io.micronaut.core.annotation.Nullable
+                                jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
                                     InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
             new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
@@ -190,7 +190,7 @@ public final class ObserverRegistry {
     @SuppressWarnings("unchecked")
     public java.util.List<Throwable> notifyObserversCollecting(
         Object event, Argument<?> eventType, List<CdiQualifier> eventQualifiers,
-        jakarta.enterprise.inject.spi.@io.micronaut.core.annotation.Nullable InjectionPoint firedFrom) {
+        jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
             new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
         java.util.List<Throwable> thrown = new java.util.ArrayList<>(0);

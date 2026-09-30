@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 /**
- * The joint between the container and the Jakarta Expression Language: a name in an expression resolves to the
- * bean of that name.
+ * What a build compatible extension registered while the application compiled, put to work as the container starts.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @NullMarked
-package io.micronaut.cdi.el;
+package io.micronaut.cdi.runtime.extension;
 
 import org.jspecify.annotations.NullMarked;

@@ -124,8 +124,7 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     }
 
     @Override
-    @SuppressWarnings("NullAway")
-    public Object intercept(InterceptionType type, T instance, InvocationContext ctx) throws Exception {
+    public @Nullable Object intercept(InterceptionType type, T instance, InvocationContext ctx) throws Exception {
         InterceptorMethods methods = methodsOf(type);
         if (methods == null) {
             throw new IllegalArgumentException("The interceptor " + getBeanClass().getName()

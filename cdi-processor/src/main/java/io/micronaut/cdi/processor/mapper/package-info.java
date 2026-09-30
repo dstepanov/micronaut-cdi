@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 /**
- * The joint between the container and the Jakarta Expression Language: a name in an expression resolves to the
- * bean of that name.
+ * The annotation mappers that read an annotation of the specification as the Micronaut one of the same meaning.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @NullMarked
-package io.micronaut.cdi.el;
+package io.micronaut.cdi.processor.mapper;
 
 import org.jspecify.annotations.NullMarked;

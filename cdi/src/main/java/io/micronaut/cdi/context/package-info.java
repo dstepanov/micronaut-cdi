@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 /**
- * The joint between the container and the Jakarta Expression Language: a name in an expression resolves to the
- * bean of that name.
+ * The contexts of the scopes of the specification, as Micronaut custom scopes.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @NullMarked
-package io.micronaut.cdi.el;
+package io.micronaut.cdi.context;
 
 import org.jspecify.annotations.NullMarked;

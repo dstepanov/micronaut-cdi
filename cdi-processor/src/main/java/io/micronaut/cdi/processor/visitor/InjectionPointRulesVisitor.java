@@ -158,7 +158,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
 
     private void checkParameter(ParameterElement parameter, MethodElement method, boolean normalScoped,
                                 boolean disposer, boolean observer, boolean genericClass,
-                                ClassElement declaring, @io.micronaut.core.annotation.Nullable String allowedMetadataType,
+                                ClassElement declaring, @org.jspecify.annotations.Nullable String allowedMetadataType,
                                 VisitorContext context) {
         String named = null;
         if (parameter.hasDeclaredAnnotation(AnnotationUtil.NAMED)) {
@@ -178,7 +178,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
 
     private void checkType(ClassElement type, io.micronaut.inject.ast.Element at, boolean normalScoped,
                            boolean disposer, boolean observer, boolean genericClass,
-                           ClassElement declaring, @io.micronaut.core.annotation.Nullable String allowedMetadataType,
+                           ClassElement declaring, @org.jspecify.annotations.Nullable String allowedMetadataType,
                            VisitorContext context) {
         if (type.isGenericPlaceholder() && !genericClass) {
             context.fail("An injection point whose declared type is a type variable is a definition error "
@@ -217,7 +217,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      */
     private void checkMetadataInjection(ClassElement type, io.micronaut.inject.ast.Element at,
                                         ClassElement declaring,
-                                        @io.micronaut.core.annotation.Nullable String allowedMetadataType,
+                                        @org.jspecify.annotations.Nullable String allowedMetadataType,
                                         VisitorContext context) {
         String name = type.getName();
         boolean interceptorClass = declaring.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
@@ -268,7 +268,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
     }
 
-    private static boolean isUnboundedWildcard(@io.micronaut.core.annotation.Nullable ClassElement argument) {
+    private static boolean isUnboundedWildcard(@org.jspecify.annotations.Nullable ClassElement argument) {
         if (!(argument instanceof io.micronaut.inject.ast.WildcardElement wildcard)) {
             return false;
         }

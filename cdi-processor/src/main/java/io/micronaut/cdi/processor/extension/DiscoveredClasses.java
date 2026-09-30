@@ -500,8 +500,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         }
 
         @Override
-        @SuppressWarnings("NullAway")
-        public <T extends Annotation> AnnotationInfo annotation(Class<T> annotationType) {
+        public <T extends Annotation> @org.jspecify.annotations.Nullable AnnotationInfo annotation(Class<T> annotationType) {
             return null;
         }
 

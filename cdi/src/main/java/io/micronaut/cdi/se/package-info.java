@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 /**
- * The joint between the container and the Jakarta Expression Language: a name in an expression resolves to the
- * bean of that name.
+ * The Java SE bootstrap of the specification over a Micronaut application context.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @NullMarked
-package io.micronaut.cdi.el;
+package io.micronaut.cdi.se;
 
 import org.jspecify.annotations.NullMarked;

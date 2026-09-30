@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 /**
- * The joint between the container and the Jakarta Expression Language: a name in an expression resolves to the
- * bean of that name.
+ * The phases of a build compatible extension, run while the application compiles, and the language model an extension reads.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @NullMarked
-package io.micronaut.cdi.el;
+package io.micronaut.cdi.processor.extension;
 
 import org.jspecify.annotations.NullMarked;

@@ -19,4 +19,7 @@
  * @author Denis Stepanov
  * @since 1.0
  */
+@NullMarked
 package io.micronaut.cdi;
+
+import org.jspecify.annotations.NullMarked;

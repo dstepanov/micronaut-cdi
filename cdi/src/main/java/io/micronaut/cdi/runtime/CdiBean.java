@@ -390,7 +390,7 @@ public class CdiBean<T> implements Bean<T> {
      * The first cause that is not the container's own wrapping, which is what the bean's code threw: the
      * causes it carries in turn are its own business.
      */
-    private static @io.micronaut.core.annotation.Nullable Throwable firstForeignCause(Throwable thrown) {
+    private static @org.jspecify.annotations.Nullable Throwable firstForeignCause(Throwable thrown) {
         // guarded against cause cycles of any length, which the platform permits
         java.util.Set<Throwable> walked = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         walked.add(thrown);
@@ -409,7 +409,7 @@ public class CdiBean<T> implements Bean<T> {
      *
      * @return The proxy, or {@code null}
      */
-    public @io.micronaut.core.annotation.Nullable Object proxyReference() {
+    public @org.jspecify.annotations.Nullable Object proxyReference() {
         if (!isNormalScoped()) {
             return null;
         }

@@ -164,6 +164,9 @@ public abstract class CdiInjectionPointFactory<B>
     }
 
     @Override
+    // a built-in bean may have nothing to hand out - the InjectionPoint of a bean that was not injected - and
+    // says so with null, which Micronaut resolves as a bean that is not there; the factory's signature has no
+    // way to say it
     @SuppressWarnings("NullAway")
     public final B instantiate(BeanResolutionContext resolutionContext, io.micronaut.context.BeanContext context) {
         Argument<?> type = Argument.OBJECT_ARGUMENT;
