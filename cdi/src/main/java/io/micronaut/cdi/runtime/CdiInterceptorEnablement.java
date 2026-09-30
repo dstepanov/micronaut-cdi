@@ -27,7 +27,10 @@ import java.util.Set;
 
 /**
  * Has the interception that runs follow the enablement of the specification: an interceptor bound by an interceptor
- * binding takes part only where it is enabled, which section 5.1 ties to it declaring a priority.
+ * binding takes part only where it is enabled. Section 2.7 has CDI Lite enable and order interceptors by
+ * {@code @Priority}, which is how section 5.2.1 of Jakarta Interceptors enables an interceptor bound by an
+ * interceptor binding; section 5.1 of Jakarta Interceptors enables one named with {@code @Interceptors} by that
+ * annotation.
  *
  * <p>The Jakarta Interceptors implementation resolves the chains, and on its own enables every interceptor class.
  * It asks this bean about each one a binding binds, and the bean manager asks it as well, through
@@ -35,10 +38,11 @@ import java.util.Set;
  * invoked. An interceptor class a bean names with {@code @Interceptors} is not asked about: it is enabled by being
  * named.</p>
  *
- * <p>An interceptor is enabled by the priority it declares - {@code @Priority}, or the order Micronaut has a bean
- * declare in its place, which the interceptors implementation orders a chain by as well - or by the SE bootstrap
- * of the specification, whose {@code SeContainerInitializer.enableInterceptors} names the interceptor classes to
- * enable in the container being built.</p>
+ * <p>An interceptor is enabled by the priority it declares, {@code @Priority}, or by the SE bootstrap, whose
+ * {@code SeContainerInitializer.enableInterceptors} section 4.1 has add interceptor classes to the enabled
+ * interceptors of the synthetic bean archive. Micronaut's own {@code @Order} is taken for a priority as well, which
+ * is an extension of this implementation and of neither specification: the interceptors implementation orders a
+ * chain by it where no {@code @Priority} is declared.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

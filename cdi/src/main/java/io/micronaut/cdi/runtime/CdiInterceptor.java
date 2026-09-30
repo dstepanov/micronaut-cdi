@@ -60,8 +60,9 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     }
 
     /**
-     * Whether an interceptor takes part in interception at all, which section 5.1 ties to it declaring a
-     * priority.
+     * Whether an interceptor takes part in interception at all. Section 2.7 of the specification has CDI Lite
+     * enable and order interceptors by {@code @Priority}, which section 5.2.1 of Jakarta Interceptors makes the
+     * way an interceptor bound by an interceptor binding is enabled.
      *
      * @return Whether the interceptor is enabled
      */
