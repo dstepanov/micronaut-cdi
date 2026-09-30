@@ -42,12 +42,15 @@ import java.util.Set;
  * scope is the one the bean was written with, which was recorded by {@link CdiScope} when it was read as a
  * Micronaut one.</p>
  *
+ * <p>A subclass stands for the same bean, equal to it, and changes only how an instance is created: what the
+ * context of a scope an extension provides is handed to create the instance through the scope.</p>
+ *
  * @param <T> The bean type
  * @author Denis Stepanov
  * @since 1.0
  */
 @Internal
-public final class CdiBean<T> implements Bean<T> {
+public class CdiBean<T> implements Bean<T> {
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;

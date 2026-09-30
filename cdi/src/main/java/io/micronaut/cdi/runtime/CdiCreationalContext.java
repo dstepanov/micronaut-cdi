@@ -37,7 +37,7 @@ import org.jspecify.annotations.Nullable;
 public final class CdiCreationalContext<T> implements CreationalContext<T> {
 
     private @Nullable T incompleteInstance;
-    private final java.util.List<io.micronaut.context.BeanRegistration<?>> tracked = new java.util.ArrayList<>(2);
+    private final java.util.List<io.micronaut.context.scope.CreatedBean<?>> tracked = new java.util.ArrayList<>(2);
 
     public CdiCreationalContext() {
     }
@@ -53,7 +53,7 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
      *
      * @param registration The registration of what was created
      */
-    public void track(io.micronaut.context.BeanRegistration<?> registration) {
+    public void track(io.micronaut.context.scope.CreatedBean<?> registration) {
         tracked.add(registration);
     }
 
@@ -69,11 +69,11 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
     @Override
     public void release() {
         incompleteInstance = null;
-        java.util.List<io.micronaut.context.BeanRegistration<?>> toClose = java.util.List.copyOf(tracked);
+        java.util.List<io.micronaut.context.scope.CreatedBean<?>> toClose = java.util.List.copyOf(tracked);
         tracked.clear();
         // one throwing @PreDestroy must not leave the rest undestroyed
         RuntimeException failure = null;
-        for (io.micronaut.context.BeanRegistration<?> registration : toClose) {
+        for (io.micronaut.context.scope.CreatedBean<?> registration : toClose) {
             try {
                 // closing a registration the context created destroys through the context, so the pre-destroy
                 // listeners — the disposer methods of section 3.3.4 — are notified

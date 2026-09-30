@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.runtime.extension;
 
+import io.micronaut.cdi.runtime.CdiBean;
 import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.runtime.CdiCreationalContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
@@ -24,7 +26,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanIdentifier;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.AlterableContext;
-import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 
 import java.lang.annotation.Annotation;
@@ -63,10 +64,11 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
     public <T> T getOrCreate(BeanCreationContext<T> creationContext) {
         AlterableContext context = activeContext();
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        jakarta.enterprise.inject.spi.Bean<T> bean =
-            (jakarta.enterprise.inject.spi.Bean<T>) container.canonicalBean(creationContext.definition());
-        T held = context.get(new CreatingContextual<>(bean, creationContext),
-            (CreationalContext<T>) container.createCreationalContext(bean));
+        @SuppressWarnings("unchecked")
+        CdiBean<T> bean = (CdiBean<T>) container.canonicalBean(creationContext.definition());
+        @SuppressWarnings("unchecked")
+        CreationalContext<T> creationalContext = (CreationalContext<T>) container.createCreationalContext(bean);
+        T held = context.get(new CreatingContextual<>(beanContext, bean, creationContext), creationalContext);
         if (held == null) {
             throw new ContextNotActiveException("The context of " + scopeAnnotation.getName()
                 + " holds no instance and created none");
@@ -90,44 +92,30 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
     }
 
     /**
-     * The contextual handed to the extension's context: it is the bean, for identity — the context keys what
-     * it holds by it — but creating goes to the container's own creation, so that the bean's create does not
-     * come back through this scope.
+     * The contextual handed to the extension's context: the bean itself, equal to it both ways, so that the
+     * context finds what it holds whichever of the two it is asked with — but creating goes to the container's
+     * own creation, so that the bean's create does not come back through this scope. What that creation made,
+     * dependents included, is tracked by the creational context, and destroying the instance through either
+     * the bean or this contextual releases it.
      *
      * @param <T> The bean type
      */
-    private static final class CreatingContextual<T> implements Contextual<T> {
+    private static final class CreatingContextual<T> extends CdiBean<T> {
 
-        private final jakarta.enterprise.inject.spi.Bean<T> bean;
         private final BeanCreationContext<T> creation;
 
-        private CreatingContextual(jakarta.enterprise.inject.spi.Bean<T> bean, BeanCreationContext<T> creation) {
-            this.bean = bean;
+        private CreatingContextual(BeanContext beanContext, CdiBean<T> bean, BeanCreationContext<T> creation) {
+            super(beanContext, bean.definition());
             this.creation = creation;
         }
 
         @Override
         public T create(CreationalContext<T> creationalContext) {
             CreatedBean<T> created = creation.create();
-            return created.bean();
-        }
-
-        @Override
-        public void destroy(T instance, CreationalContext<T> creationalContext) {
-            bean.destroy(instance, creationalContext);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o instanceof CreatingContextual<?> other) {
-                return bean.equals(other.bean);
+            if (creationalContext instanceof CdiCreationalContext<T> tracking) {
+                tracking.track(created);
             }
-            return bean.equals(o);
-        }
-
-        @Override
-        public int hashCode() {
-            return bean.hashCode();
+            return created.bean();
         }
     }
 }
