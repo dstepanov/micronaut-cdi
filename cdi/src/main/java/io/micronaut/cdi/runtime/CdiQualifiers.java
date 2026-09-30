@@ -51,12 +51,6 @@ import java.util.Set;
 @Internal
 public final class CdiQualifiers {
 
-    /**
-     * What each annotation name turned out to be: the qualifier a container holds repetitions of, or nothing.
-     */
-    private static final java.util.Map<String, java.util.Optional<Class<? extends Annotation>>>
-        REPEATED_QUALIFIERS = new java.util.concurrent.ConcurrentHashMap<>();
-
     private CdiQualifiers() {
     }
 
@@ -167,76 +161,7 @@ public final class CdiQualifiers {
                 qualifiers.add(synthesized);
             }
         }
-        collectRepeated(annotationMetadata, qualifiers);
         return qualifiers;
-    }
-
-    /**
-     * Adds the qualifiers written more than once on the element. A repeatable annotation written twice is
-     * recorded as the container annotation holding both, and the container is not itself a qualifier — so
-     * what the author wrote is found by looking inside it (section 2.1.3).
-     */
-    private static void collectRepeated(AnnotationMetadata annotationMetadata, Set<Annotation> qualifiers) {
-        for (String name : annotationMetadata.getAnnotationNames()) {
-            Class<? extends Annotation> repeated = repeatedQualifierOf(name);
-            if (repeated == null) {
-                continue;
-            }
-            AnnotationValue<Annotation> container = annotationMetadata.getAnnotation(name);
-            if (container == null) {
-                continue;
-            }
-            for (AnnotationValue<Annotation> each
-                : container.getAnnotations(AnnotationMetadata.VALUE_MEMBER)) {
-                Annotation synthesized = CdiAnnotations.annotationOf(repeated, each);
-                if (synthesized != null) {
-                    qualifiers.add(synthesized);
-                }
-            }
-        }
-    }
-
-    /**
-     * The qualifier a container annotation holds repetitions of, when that is what the annotation is.
-     */
-    @SuppressWarnings("unchecked")
-    private static @Nullable Class<? extends Annotation> repeatedQualifierOf(String name) {
-        // what an annotation name turns out to be is a property of the classpath, and reading a bean's
-        // qualifiers is on the injection path: the answer — including "not a container" — is remembered
-        return REPEATED_QUALIFIERS.computeIfAbsent(name, CdiQualifiers::readRepeatedQualifierOf)
-            .orElse(null);
-    }
-
-    private static java.util.Optional<Class<? extends Annotation>> readRepeatedQualifierOf(String name) {
-        return java.util.Optional.ofNullable(loadRepeatedQualifierOf(name));
-    }
-
-    private static @Nullable Class<? extends Annotation> loadRepeatedQualifierOf(String name) {
-        Class<? extends Annotation> container;
-        try {
-            container = (Class<? extends Annotation>) Class.forName(
-                name, false, CdiQualifiers.class.getClassLoader());
-        } catch (ClassNotFoundException | LinkageError e) {
-            return null;
-        }
-        java.lang.reflect.Method value;
-        try {
-            value = container.getDeclaredMethod(AnnotationMetadata.VALUE_MEMBER);
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
-        Class<?> component = value.getReturnType().getComponentType();
-        if (component == null || !Annotation.class.isAssignableFrom(component)) {
-            return null;
-        }
-        Class<? extends Annotation> repeatable = (Class<? extends Annotation>) component;
-        java.lang.annotation.Repeatable marker =
-            repeatable.getAnnotation(java.lang.annotation.Repeatable.class);
-        if (marker == null || !marker.value().equals(container)
-            || !ExtensionQualifiers.isQualifier(repeatable)) {
-            return null;
-        }
-        return repeatable;
     }
 
     /**
