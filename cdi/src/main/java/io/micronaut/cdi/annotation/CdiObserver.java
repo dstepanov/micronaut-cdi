@@ -56,6 +56,14 @@ public @interface CdiObserver {
     int observedParameter();
 
     /**
+     * The observed event type as it was written, with the wildcards and type variables the compiled argument
+     * erases: one record, or none where the observer was compiled before the type was recorded.
+     *
+     * @return The observed type
+     */
+    CdiRecordedType[] observedType() default {};
+
+    /**
      * Whether the method observes an event fired asynchronously, which is what
      * {@code jakarta.enterprise.event.ObservesAsync} declares.
      *

@@ -66,6 +66,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
+    private final @Nullable AnnotationValue<Annotation> recordedType;
     private volatile java.util.@Nullable List<CdiQualifier> observedQualifiers;
     private volatile @Nullable Set<Annotation> observedQualifierInstances;
 
@@ -77,6 +78,8 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         this.declaring = declaring;
         this.method = method;
         this.observedParameter = observer.intValue("observedParameter").orElse(0);
+        java.util.List<AnnotationValue<Annotation>> recorded = observer.getAnnotations("observedType");
+        this.recordedType = recorded.isEmpty() ? null : recorded.get(0);
         this.async = observer.booleanValue("async").orElse(false);
         this.ifExists = observer.booleanValue("ifExists").orElse(false);
         this.staticMethod = observer.booleanValue("staticMethod").orElse(false);
@@ -105,75 +108,14 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     public Type getObservedType() {
         Type resolved = observedType;
         if (resolved == null) {
-            // the source of truth is the method itself: the compiled argument erases a wildcard or a variable,
-            // and an inherited observer method keeps its declaring class's variables — the reflective signature
-            // has both, and the bean class resolves the variables
-            Type reflective = reflectiveObservedType();
-            resolved = reflective != null ? reflective : CdiTypes.requiredTypeOf(observed());
+            // the source of truth is what the processor recorded of the parameter: the compiled argument erases
+            // a wildcard or a variable, and the record keeps them, with the variables of a generic superclass
+            // that declares the method resolved for the bean class
+            Type recorded = recordedType == null ? null : RecordedTypes.find(recordedType);
+            resolved = recorded != null ? recorded : CdiTypes.requiredTypeOf(observed());
             observedType = resolved;
         }
         return resolved;
-    }
-
-    private @Nullable Type reflectiveObservedType() {
-        Argument<?>[] arguments = method.getArguments();
-        for (Class<?> declaringClass = getBeanClass(); declaringClass != null && declaringClass != Object.class;
-             declaringClass = declaringClass.getSuperclass()) {
-            for (java.lang.reflect.Method candidate : declaringClass.getDeclaredMethods()) {
-                if (!candidate.getName().equals(method.getName())
-                    || candidate.getParameterCount() != arguments.length) {
-                    continue;
-                }
-                if (!sameErasure(candidate)) {
-                    // an overload of the same name and arity is told apart by its raw parameter types
-                    continue;
-                }
-                Type observed = candidate.getGenericParameterTypes()[observedParameter];
-                java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution =
-                    substitutionFor(getBeanClass(), declaringClass);
-                return CdiTypes.substitute(observed, substitution);
-            }
-        }
-        return null;
-    }
-
-    private boolean sameErasure(java.lang.reflect.Method candidate) {
-        Argument<?>[] arguments = method.getArguments();
-        Class<?>[] parameterTypes = candidate.getParameterTypes();
-        for (int i = 0; i < arguments.length; i++) {
-            Class<?> compiled = arguments[i].getType();
-            Class<?> reflective = parameterTypes[i];
-            // exact erasure, or the compiled erasure of a type variable widened to its bound: mutual
-            // assignability alone would let on(String) answer for a sibling on(CharSequence) overload
-            if (reflective != compiled && !reflective.isAssignableFrom(compiled)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * What the bean class says the variables of the given superclass are: the closure carries the bean's own
-     * arguments into every supertype, and the supertype's variables map onto what arrived there.
-     */
-    private static java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitutionFor(
-        Class<?> beanClass, Class<?> declaringClass) {
-        java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution = new java.util.HashMap<>();
-        if (beanClass == declaringClass) {
-            return substitution;
-        }
-        for (Type supertype : CdiTypes.closureOf(CdiParameterizedType.of(beanClass))) {
-            if (CdiTypes.rawClassOf(supertype) == declaringClass
-                && supertype instanceof java.lang.reflect.ParameterizedType parameterized) {
-                java.lang.reflect.TypeVariable<?>[] variables = declaringClass.getTypeParameters();
-                Type[] arguments = parameterized.getActualTypeArguments();
-                for (int i = 0; i < variables.length && i < arguments.length; i++) {
-                    substitution.put(variables[i], arguments[i]);
-                }
-                break;
-            }
-        }
-        return substitution;
     }
 
     @Override

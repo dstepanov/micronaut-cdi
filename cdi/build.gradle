@@ -18,16 +18,15 @@ noReflection {
     allowIn 'io.micronaut.cdi.runtime.CdiInjectionPointFactory', 'GENERIC_SIGNATURES'
     // the bean types of a bean are the closure of its class hierarchy as Types (section 2.2.1)
     allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES'
-    // the observed type keeps the wildcards and variables the compiled argument erases, and is read once per observer
-    allowIn 'io.micronaut.cdi.runtime.CdiObserverMethod', 'GENERIC_SIGNATURES', 'CLASS_MEMBERS'
     // the event type of a fired event is its runtime class
     allowIn 'io.micronaut.cdi.runtime.CdiEvent', 'GENERIC_SIGNATURES'
     // a bean type handed to the bean manager is a java.lang.reflect.Type
     allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'GENERIC_SIGNATURES'
 
-    // a type an extension composed while the application compiled is handed out as the java.lang.reflect.Type
-    // the specification's interfaces are written in, composed from the classes that were recorded
-    allowIn 'io.micronaut.cdi.runtime.extension.RecordedTypes', 'GENERIC_SIGNATURES'
+    // a type recorded while the application compiled - what an observer observes, a type an extension composed -
+    // is handed out as the java.lang.reflect.Type the specification's interfaces are written in, composed from
+    // the classes that were recorded
+    allowIn 'io.micronaut.cdi.runtime.RecordedTypes', 'GENERIC_SIGNATURES'
 }
 
 dependencies {

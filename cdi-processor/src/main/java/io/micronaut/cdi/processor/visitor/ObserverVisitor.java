@@ -125,12 +125,18 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
                 method.annotate(ReflectiveAccess.class);
             }
             int position = observed;
+            // an observer method a generic superclass declares observes what the bean class makes of the
+            // superclass's variables
+            java.util.Map<String, ClassElement> inherited = element.getAllTypeArguments()
+                .getOrDefault(method.getDeclaringType().getName(), java.util.Map.of());
             boolean asynchronous = async;
             boolean isStatic = method.isStatic();
             String during = observes == null ? "IN_PROGRESS"
                 : observes.stringValue("during").orElse("IN_PROGRESS");
             method.annotate(CdiObserver.class, builder -> builder
                 .member("observedParameter", position)
+                // what the observer observes keeps its written generics, which the compiled argument erases
+                .member("observedType", RecordedTypeValues.of(parameter.getGenericType(), inherited))
                 .member("async", asynchronous)
                 .member("ifExists", ifExists)
                 .member("staticMethod", isStatic)
