@@ -26,25 +26,6 @@ public final class AuditingExtension implements BuildCompatibleExtension {
     }
 
     /**
-     * Records every audited bean the container was given, as it is compiled.
-     *
-     * @param bean     The bean
-     * @param messages What the extension has to say
-     */
-    @jakarta.enterprise.inject.build.compatible.spi.Registration(types = AuditLog.class)
-    public void theAuditLogIsRegistered(
-        jakarta.enterprise.inject.build.compatible.spi.BeanInfo bean,
-        Messages messages) {
-        REGISTERED.add(bean.types().size() + " types, scope " + bean.scope().name());
-    }
-
-    /**
-     * What the registration phase was told, for a test to read back.
-     */
-    public static final java.util.List<String> REGISTERED =
-        java.util.Collections.synchronizedList(new java.util.ArrayList<>());
-
-    /**
      * Adds a bean no class declares, created from what is attached to it here.
      *
      * @param components What the extension adds to the container

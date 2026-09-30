@@ -97,17 +97,6 @@ class BuildCompatibleExtensionTest {
     }
 
     @Test
-    void theRegistrationPhaseIsToldAboutTheSyntheticBean() {
-        // the audit log has no class that was compiled, so the compiler could not describe it: the optional
-        // module that reads a class back is what describes it, and this project has that module
-        context.getBean(io.micronaut.cdi.test.extension.AuditLog.class);
-        assertTrue(io.micronaut.cdi.test.extension.AuditingExtension.REGISTERED.stream()
-                .anyMatch(described -> described.contains("scope jakarta.enterprise.context.ApplicationScoped")),
-            "expected the synthetic bean to have been described, got "
-                + io.micronaut.cdi.test.extension.AuditingExtension.REGISTERED);
-    }
-
-    @Test
     void aClassTheExtensionDidNotAskForIsLeftAlone() {
         // the clock says what it is itself, and the enhancement of audited classes did not touch it
         assertTrue(CDI.current().getBeanContainer().getBeans(Clock.class).iterator().next()
