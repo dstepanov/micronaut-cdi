@@ -6,3 +6,4 @@ io.micronaut.cdi.test.extension.LanguageModelExtension
 io.micronaut.cdi.test.extension.RecordingExtension
 io.micronaut.cdi.test.extension.StampingExtension
 io.micronaut.cdi.test.extension.TendingExtension
+io.micronaut.cdi.test.extension.mapscope.MapScopeExtension

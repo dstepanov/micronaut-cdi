@@ -382,13 +382,33 @@ public final class CdiBean<T> implements Bean<T> {
         return definition.getClass().getName();
     }
 
+    /**
+     * A definition registered at runtime, as a synthetic bean is: every one shares a class, so each is a bean of
+     * its own, compared by identity.
+     */
+    private boolean isRuntimeDefinition() {
+        return definition instanceof io.micronaut.context.RuntimeBeanDefinition<?>;
+    }
+
     @Override
     public boolean equals(Object o) {
-        return o instanceof CdiBean<?> other && canonicalDefinitionName().equals(other.canonicalDefinitionName());
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof CdiBean<?> other)) {
+            return false;
+        }
+        if (isRuntimeDefinition() || other.isRuntimeDefinition()) {
+            return definition == other.definition;
+        }
+        return canonicalDefinitionName().equals(other.canonicalDefinitionName());
     }
 
     @Override
     public int hashCode() {
+        if (isRuntimeDefinition()) {
+            return System.identityHashCode(definition);
+        }
         return canonicalDefinitionName().hashCode();
     }
 
