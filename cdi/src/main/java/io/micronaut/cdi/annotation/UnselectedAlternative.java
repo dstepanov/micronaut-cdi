@@ -19,6 +19,8 @@ import io.micronaut.context.condition.Condition;
 import io.micronaut.context.condition.ConditionContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.BeanDefinition;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 
@@ -57,9 +59,12 @@ public final class UnselectedAlternative implements Condition {
         }
         boolean producer = selectable.booleanValue("producer").orElse(false);
         if (!producer && context.getComponent().getAnnotationMetadata()
-            .hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
+            .hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")
+            && !isDeclaredBy(context.getComponent(), selectable.stringValue().orElse(null))) {
             // the selection is about the class being a bean; what a producer elsewhere makes of the class is a
-            // bean of the producer's, the same way a vetoed class may still be produced
+            // bean of the producer's, the same way a vetoed class may still be produced. A producer the class
+            // itself declares is another matter: section 5.1.2 disables the producer of a bean that is not
+            // enabled, so it goes on to ask whether the class was selected
             return true;
         }
         Set<String> classes = selected(context, SELECTED_CLASSES);
@@ -73,6 +78,11 @@ public final class UnselectedAlternative implements Condition {
             }
         }
         return false;
+    }
+
+    private static boolean isDeclaredBy(Object component, @Nullable String className) {
+        return className != null && component instanceof BeanDefinition<?> definition
+            && definition.getDeclaringType().map(type -> type.getName().equals(className)).orElse(false);
     }
 
     private static Set<String> selected(ConditionContext<?> context, String property) {
