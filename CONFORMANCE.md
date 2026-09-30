@@ -148,6 +148,17 @@ hierarchy of a class no compilation with this processor has seen. Everything els
 events, interception, the contexts, what an extension registered - needs only `micronaut-cdi`, and
 `MicronautInstance`, `MicronautEvent` and `MicronautBeanContainer` give the selections a reflection-free form.
 
+### The application context is destroyed as the context begins to stop
+
+*Sections 2.5.6.2 and 2.8.6.* As a Micronaut context begins to stop, before it destroys any bean, `Shutdown` is
+fired, then `@BeforeDestroyed(ApplicationScoped.class)`; the application context is then destroyed - every
+application scoped bean, and the dependent objects of each - and `@Destroyed(ApplicationScoped.class)` is fired.
+Two things follow from the order. A bean of the singleton pseudo-scope belongs to no context and is destroyed by
+Micronaut afterwards, so after `@Destroyed(ApplicationScoped.class)`. And an application scoped bean that
+observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as it is destroyed, is a new
+instance created for that, and is destroyed when the context has stopped. What an observer of these events
+throws is logged and stops neither the events after it nor the context from stopping.
+
 ### A primitive is boxed by the lookup rather than by the bean
 
 *Section 2.1.2.* A primitive type and the class that boxes it are one bean type. Micronaut resolves a bean by the

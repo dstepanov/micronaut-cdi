@@ -15,10 +15,14 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.cdi.context.ApplicationScope;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.event.ApplicationEventListener;
+import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.order.Ordered;
 import io.micronaut.core.type.Argument;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.Destroyed;
@@ -28,6 +32,9 @@ import jakarta.enterprise.event.Startup;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Fires the events of the container's own lifecycle, which section 2.8.6 has an application observe.
@@ -39,17 +46,29 @@ import java.util.Set;
  * <p>The bean is created eagerly rather than when something asks for it, because the moment it exists is the
  * moment it fires the first of those events.</p>
  *
+ * <p>The way down starts at the event Micronaut publishes as a context begins to stop, which is before it
+ * destroys any bean: {@code Shutdown} is fired, then the {@code BeforeDestroyed} of the application context
+ * (section 2.5.6.2), then the application context is destroyed - its beans and what depends on them - and then
+ * its {@code Destroyed} is fired. The singletons, which are of a pseudo-scope and of no context, are destroyed by
+ * Micronaut after that.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
 @io.micronaut.context.annotation.Context
 @Internal
-public final class ContainerLifecycle {
+public final class ContainerLifecycle implements ApplicationEventListener<ShutdownEvent>, Ordered {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ContainerLifecycle.class);
+
+    private final BeanContext beanContext;
     private final ObserverRegistry observers;
+    private final ApplicationScope applicationScope;
 
-    public ContainerLifecycle(ObserverRegistry observers) {
+    public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope) {
+        this.beanContext = beanContext;
         this.observers = observers;
+        this.applicationScope = applicationScope;
     }
 
     @PostConstruct
@@ -59,36 +78,34 @@ public final class ContainerLifecycle {
         fire(new Startup(), Startup.class, Set.of());
     }
 
-    @PreDestroy
-    void stopping() {
-        // and the mirror on the way down: Shutdown first, then the application context says it is going.
-        // One observer throwing must not silence the events after it — cleanup keyed on Destroyed still runs
-        RuntimeException failure = null;
-        try {
-            fire(new Shutdown(), Shutdown.class, Set.of());
-        } catch (RuntimeException e) {
-            failure = e;
+    @Override
+    public int getOrder() {
+        // after every other listener of the shutdown, which may still reach for an application scoped bean
+        return Ordered.LOWEST_PRECEDENCE;
+    }
+
+    @Override
+    public void onApplicationEvent(ShutdownEvent event) {
+        if (event.getSource() != beanContext) {
+            return;
         }
+        // Shutdown first, then the application context says it is going. One observer throwing must not
+        // silence the events after it - cleanup keyed on Destroyed still runs - nor stop the context from
+        // stopping, so what an observer threw is logged, as what a bean throws as it is destroyed is
+        during("Shutdown", () -> fire(new Shutdown(), Shutdown.class, Set.of()));
+        during("@BeforeDestroyed(ApplicationScoped.class)",
+            () -> fire(new Object(), Object.class, Set.of(BeforeDestroyed.Literal.of(ApplicationScoped.class))));
+        // the actual destruction: every application scoped bean, and the dependent objects of each
+        during("the destruction of the application context", applicationScope::stop);
+        during("@Destroyed(ApplicationScoped.class)",
+            () -> fire(new Object(), Object.class, Set.of(Destroyed.Literal.of(ApplicationScoped.class))));
+    }
+
+    private static void during(String what, Runnable step) {
         try {
-            fire(new Object(), Object.class, Set.of(BeforeDestroyed.Literal.of(ApplicationScoped.class)));
+            step.run();
         } catch (RuntimeException e) {
-            if (failure == null) {
-                failure = e;
-            } else {
-                failure.addSuppressed(e);
-            }
-        }
-        try {
-            fire(new Object(), Object.class, Set.of(Destroyed.Literal.of(ApplicationScoped.class)));
-        } catch (RuntimeException e) {
-            if (failure == null) {
-                failure = e;
-            } else {
-                failure.addSuppressed(e);
-            }
-        }
-        if (failure != null) {
-            throw failure;
+            LOG.error("The container failed during {} as it stopped", what, e);
         }
     }
 
