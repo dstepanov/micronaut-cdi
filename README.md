@@ -182,7 +182,9 @@ allowed any, and no call is suppressed in the source. What `micronaut-cdi` allow
 looks anything up on a class: the accessors of a `java.lang.reflect.Type` that was handed in - the raw type and
 arguments of a `ParameterizedType`, the bounds of a `TypeVariable` and of a `WildcardType`, the component of a
 `GenericArrayType` - since the specification's interfaces are written in that type, and the constructors of the
-container's own implementations of those interfaces. The list is in [cdi/build.gradle](cdi/build.gradle).
+container's own implementations of those interfaces. Inside the container a type is a Micronaut `Argument`: a
+`Type` is read into one where a program hands it in and made from one where the specification reports it, both
+in the package `io.micronaut.cdi.runtime.type`. The list is in [cdi/build.gradle](cdi/build.gradle).
 Reflection anywhere else fails the build.
 
 ## Conformance

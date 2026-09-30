@@ -63,13 +63,13 @@ final class ParameterizedValue implements ParameterizedType {
             return false;
         }
         return rawType.equals(other.getRawType())
-            && Objects.equals(getOwnerType(), other.getOwnerType())
+            && Objects.equals(rawType.getDeclaringClass(), other.getOwnerType())
             && Arrays.equals(arguments, other.getActualTypeArguments());
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(arguments) ^ Objects.hashCode(getOwnerType()) ^ rawType.hashCode();
+        return Arrays.hashCode(arguments) ^ Objects.hashCode(rawType.getDeclaringClass()) ^ rawType.hashCode();
     }
 
     @Override

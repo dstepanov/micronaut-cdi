@@ -3,19 +3,23 @@ plugins {
 }
 
 // Resolving and injecting a bean reads nothing back from a class: what a bean is, what an observer observes and how a
-// class relates to the types above it were recorded while it was compiled. No class or package is allowed reflection,
-// and no call is suppressed in the source. What is allowed is a short list of calls, none of which looks anything up
-// on a class: the interfaces of the specification are written in java.lang.reflect.Type, so a bean type, a required
-// type and an event type arrive as one, and comparing two of them reads the arguments and bounds they carry. Reading
-// a class back - its hierarchy, its members, its annotations - is what the optional micronaut-cdi-reflection module
-// does where an application asks. Anything else, anywhere, fails the build.
+// class relates to the types above it were recorded while it was compiled, and the container holds each type as a
+// Micronaut Argument. No class or package is allowed reflection, and no call is suppressed in the source. What is
+// allowed is a short list of calls, none of which looks anything up on a class. The interfaces of the specification are
+// written in java.lang.reflect.Type, so a type a program hands in is read, once, into an argument, and a type the
+// container reports is made from one; both happen in io.micronaut.cdi.runtime.type and nowhere else. Reading a class
+// back - its hierarchy, its members, its annotations - is what the optional micronaut-cdi-reflection module does where
+// an application asks. Anything else, anywhere, fails the build.
+//
+// The calls are listed rather than the package allowed the GENERIC_SIGNATURES kind: that kind also covers
+// Class.getGenericSuperclass and its like, which would then pass unreported in the very package that must not read
+// a class.
 noReflection {
-    // the accessors of a type that was handed in, which section 2.4.2 compares: the value is already there, and
-    // asking for it resolves nothing
-    allowCalls 'java.lang.reflect.ParameterizedType+#getRawType|getActualTypeArguments|getOwnerType'
-    allowCalls 'java.lang.reflect.TypeVariable+#getBounds|getName'
-    allowCalls 'java.lang.reflect.WildcardType+#getUpperBounds|getLowerBounds'
-    allowCalls 'java.lang.reflect.GenericArrayType+#getGenericComponentType'
+    // the accessors of a type that was handed in: the value is already there, and asking for it resolves nothing
+    allowCalls 'java.lang.reflect.ParameterizedType#getRawType|getActualTypeArguments|getOwnerType'
+    allowCalls 'java.lang.reflect.TypeVariable#getBounds|getName'
+    allowCalls 'java.lang.reflect.WildcardType#getUpperBounds|getLowerBounds'
+    allowCalls 'java.lang.reflect.GenericArrayType#getGenericComponentType'
 
     // the value classes those interfaces are handed out as, which only the boundary class of their package
     // makes, from an argument: making one reads no class

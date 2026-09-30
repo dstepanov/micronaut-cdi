@@ -186,7 +186,8 @@ public final class SpecificationTypes {
      */
     public static Argument<?> arrayOf(Argument<?> component) {
         Class<?> arrayClass = component.getType().arrayType();
-        if (component instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
+        if (component instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()
+            && !(component instanceof WildcardArgument<?>)) {
             return Argument.ofTypeVariable(arrayClass, null, placeholder.getVariableName(), null,
                 placeholder.getTypeParameters(), placeholder.getBounds().toArray(Argument.ZERO_ARGUMENTS));
         }
@@ -300,9 +301,8 @@ public final class SpecificationTypes {
      */
     public static @Nullable Class<?> rawClassOf(Type type) {
         if (type instanceof Argument<?> argument) {
-            return argument instanceof WildcardArgument<?>
-                || argument instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()
-                ? null : argument.getType();
+            boolean unresolved = argument instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved();
+            return argument instanceof WildcardArgument<?> || unresolved ? null : argument.getType();
         }
         if (type instanceof Class<?> aClass) {
             return aClass;
