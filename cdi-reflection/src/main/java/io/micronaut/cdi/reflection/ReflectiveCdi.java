@@ -115,6 +115,32 @@ public final class ReflectiveCdi implements CdiReflection {
     }
 
     @Override
+    public AnnotationValue<?> valuesOf(Annotation annotation) {
+        return AnnotationValue.of(annotation);
+    }
+
+    @Override
+    public Set<String> nonbindingMembersOf(Class<? extends Annotation> annotationType) {
+        Set<String> members = new LinkedHashSet<>();
+        for (Method member : annotationType.getDeclaredMethods()) {
+            for (Annotation annotation : member.getAnnotations()) {
+                String name = annotation.annotationType().getName();
+                if ("jakarta.enterprise.util.Nonbinding".equals(name)
+                    || "io.micronaut.context.annotation.NonBinding".equals(name)) {
+                    members.add(member.getName());
+                }
+            }
+        }
+        return members;
+    }
+
+    @Override
+    public boolean isRetainedAtRuntime(Class<? extends Annotation> annotationType) {
+        java.lang.annotation.Retention retention = annotationType.getAnnotation(java.lang.annotation.Retention.class);
+        return retention != null && retention.value() == java.lang.annotation.RetentionPolicy.RUNTIME;
+    }
+
+    @Override
     public @Nullable Member member(Class<?> declaringClass, String memberName, boolean field, Class<?> injectedType) {
         for (Class<?> type = declaringClass; type != null && type != Object.class; type = type.getSuperclass()) {
             if (field) {

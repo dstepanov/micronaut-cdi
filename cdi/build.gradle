@@ -20,18 +20,10 @@ noReflection {
     allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES'
     // the observed type keeps the wildcards and variables the compiled argument erases, and is read once per observer
     allowIn 'io.micronaut.cdi.runtime.CdiObserverMethod', 'GENERIC_SIGNATURES', 'CLASS_MEMBERS'
-    // the event type of a fired event is its runtime class, and a qualifier handed over is an annotation instance
-    allowIn 'io.micronaut.cdi.runtime.CdiEvent', 'GENERIC_SIGNATURES', 'ANNOTATIONS'
-
-    // the bean manager is asked about annotation classes a program hands it: whether one is a scope, a qualifier,
-    // a stereotype or an interceptor binding, and what a stereotype carries
-    allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.CdiInstance', 'ANNOTATIONS'
-    allowIn 'io.micronaut.cdi.runtime.CdiInterceptor', 'ANNOTATIONS'
-    allowIn 'io.micronaut.cdi.runtime.ExtensionQualifiers', 'ANNOTATIONS'
-    // a qualifier is an annotation instance on the specification's side, materialized from what was compiled
-    allowIn 'io.micronaut.cdi.runtime.CdiQualifiers', 'ANNOTATIONS', 'CLASS_MEMBERS'
-    allowIn 'io.micronaut.cdi.runtime.CdiAnnotations', 'ANNOTATIONS', 'CLASS_MEMBERS'
+    // the event type of a fired event is its runtime class
+    allowIn 'io.micronaut.cdi.runtime.CdiEvent', 'GENERIC_SIGNATURES'
+    // a bean type handed to the bean manager is a java.lang.reflect.Type
+    allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'GENERIC_SIGNATURES'
 
     // a type an extension composed while the application compiled is handed out as the java.lang.reflect.Type
     // the specification's interfaces are written in, composed from the classes that were recorded

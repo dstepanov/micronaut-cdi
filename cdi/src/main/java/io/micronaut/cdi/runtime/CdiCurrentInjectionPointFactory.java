@@ -21,9 +21,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 
-import java.lang.annotation.Annotation;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Builds the {@code InjectionPoint} of section 2.5.2.5: a dependent bean may be told where it was injected.
@@ -54,7 +52,7 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
     protected InjectionPoint build(BeanResolutionContext resolutionContext,
                                    BeanContext context,
                                    Argument<?> type,
-                                   Set<Annotation> qualifiers) {
+                                   java.util.List<CdiQualifier> qualifiers) {
         Iterator<BeanResolutionContext.Segment<?, ?>> segments = resolutionContext.getPath().iterator();
         if (segments.hasNext()) {
             // the first segment is this metadata's own injection into the bean being created; the ones after

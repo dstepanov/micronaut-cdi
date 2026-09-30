@@ -20,7 +20,6 @@ import io.micronaut.cdi.runtime.CdiInstance;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
-import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -41,7 +40,7 @@ import java.util.Iterator;
  * @since 1.0
  */
 @Internal
-final class MicronautSeContainer implements SeContainer {
+final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.MicronautInstance<Object> {
 
     private final ApplicationContext context;
     private final CdiInstance<Object> lookup;
@@ -85,17 +84,37 @@ final class MicronautSeContainer implements SeContainer {
     }
 
     @Override
-    public Instance<Object> select(Annotation... qualifiers) {
+    public io.micronaut.cdi.MicronautInstance<Object> select(Annotation... qualifiers) {
         return active().select(qualifiers);
     }
 
     @Override
-    public <U> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
         return active().select(subtype, qualifiers);
     }
 
     @Override
-    public <U> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+        return active().select(subtype, qualifiers);
+    }
+
+    @Override
+    public io.micronaut.cdi.MicronautInstance<Object> select(
+        io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return active().select(qualifier, qualifiers);
+    }
+
+    @Override
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(
+        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return active().select(subtype, qualifier, qualifiers);
+    }
+
+    @Override
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(
+        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         return active().select(subtype, qualifiers);
     }
 
@@ -134,7 +153,7 @@ final class MicronautSeContainer implements SeContainer {
         return active().iterator();
     }
 
-    private Instance<Object> active() {
+    private io.micronaut.cdi.MicronautInstance<Object> active() {
         if (!running) {
             throw new IllegalStateException("The container is not running");
         }

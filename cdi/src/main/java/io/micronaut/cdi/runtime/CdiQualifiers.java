@@ -19,11 +19,9 @@ import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
-import jakarta.inject.Named;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -64,17 +62,39 @@ public final class CdiQualifiers {
      * @return The qualifier, or {@code null} when every bean of the type qualifies
      */
     public static <T> @Nullable Qualifier<T> of(Annotation... qualifiers) {
-        if (qualifiers.length == 0) {
+        return of(CdiQualifier.ofInstances(qualifiers));
+    }
+
+    /**
+     * The Micronaut qualifier that resolves the beans the given qualifiers do.
+     *
+     * @param qualifiers The qualifiers, which may be empty
+     * @param <T>        The bean type
+     * @return The qualifier, or {@code null} when every bean of the type qualifies
+     */
+    public static <T> @Nullable Qualifier<T> of(java.util.Collection<CdiQualifier> qualifiers) {
+        if (qualifiers.isEmpty()) {
             // a lookup that names no qualifier is looking for the default one
             return Qualifiers.byAnnotation(Default.Literal.INSTANCE);
         }
-        List<Qualifier<T>> resolved = new ArrayList<>(qualifiers.length);
-        for (Annotation qualifier : qualifiers) {
-            if (qualifier instanceof Any) {
+        List<Qualifier<T>> resolved = new ArrayList<>(qualifiers.size());
+        for (CdiQualifier qualifier : qualifiers) {
+            if (qualifier.isAny()) {
                 // every bean has the Any qualifier, so asking for it narrows nothing
                 continue;
             }
-            resolved.add(qualifierOf(qualifier));
+            if (qualifier.isNamed()) {
+                // a name is how Micronaut qualifies a bean of its own accord, and it has a qualifier for it
+                resolved.add(Qualifiers.byName(qualifier.binding().stringValue().orElse("")));
+                continue;
+            }
+            // built from the values the annotation was written with: the member of a qualifier takes part in
+            // the comparison, and section 2.4.2 has a bean qualified @Chunky(true) not resolving an injection
+            // point that asks for @Chunky(false)
+            @SuppressWarnings("unchecked")
+            Qualifier<T> byValues = (Qualifier<T>) Qualifiers.byAnnotation(
+                AnnotationMetadata.EMPTY_METADATA, qualifier.binding());
+            resolved.add(byValues);
         }
         if (resolved.isEmpty()) {
             return null;
@@ -129,26 +149,6 @@ public final class CdiQualifiers {
     }
 
     /**
-     * The Micronaut qualifier that resolves the beans one qualifier of the specification does.
-     *
-     * <p>It is built from the values the annotation was written with rather than from the annotation itself,
-     * because a qualifier built from the annotation is compared by its type alone: the member of a qualifier
-     * takes part in the comparison, and section 2.4.2 has a bean qualified {@code @Chunky(true)} not resolving an
-     * injection point that asks for {@code @Chunky(false)}.</p>
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> Qualifier<T> qualifierOf(Annotation qualifier) {
-        if (qualifier instanceof Named named) {
-            // a name is how Micronaut qualifies a bean of its own accord, and it has a qualifier for it
-            return Qualifiers.byName(named.value());
-        }
-        // the qualifier the annotation names is a qualifier of the bean type rather than of the annotation type,
-        // which is what the signature of the factory describes and what the cast reads it back as
-        return (Qualifier<T>) Qualifiers.byAnnotation(
-            AnnotationMetadata.EMPTY_METADATA, CdiAnnotations.valueOf(qualifier));
-    }
-
-    /**
      * The qualifiers of a bean, as the annotation instances the specification reports them as.
      *
      * <p>Every bean has {@code Any}, which the specification says rather than the bean declaring it, so it is
@@ -178,72 +178,6 @@ public final class CdiQualifiers {
      * @return The qualifiers
      */
     public static Set<Annotation> declared(AnnotationMetadata annotationMetadata) {
-        Set<Annotation> qualifiers = new LinkedHashSet<>();
-        if (annotationMetadata.hasAnnotation("io.micronaut.cdi.annotation.CdiAny")) {
-            // Any was written here; it is carried as the marker so that Micronaut does not narrow by it
-            qualifiers.add(Any.Literal.INSTANCE);
-        }
-        for (AnnotationValue<Annotation> annotation : AnnotationUtil.findQualifierAnnotations(annotationMetadata)) {
-            // the list may carry a gap where the metadata records a qualifier it has no values for
-            if (annotation == null) {
-                continue;
-            }
-            String name = annotation.getAnnotationName();
-            if (isMicronautOwn(name)) {
-                continue;
-            }
-            if ("jakarta.inject.Named".equals(name)
-                && annotationMetadata.hasAnnotation("io.micronaut.cdi.annotation.CdiName")) {
-                // the name came through a stereotype — recorded as CdiName — so the bean has the name, but
-                // Named is not among its qualifiers (section 2.6.1). The jakarta annotation beside it is the
-                // default Micronaut materialized from the stereotype, not something the author wrote
-                continue;
-            }
-            Annotation synthesized = synthesize(annotationMetadata, name, annotation);
-            if (synthesized != null) {
-                qualifiers.add(synthesized);
-            }
-        }
-        return qualifiers;
-    }
-
-    /**
-     * Whether the qualifier is one Micronaut declares on a bean of its own accord rather than one the author
-     * wrote, and so is not a qualifier of the bean as far as the specification is concerned.
-     */
-    private static boolean isMicronautOwn(String name) {
-        return "io.micronaut.context.annotation.Primary".equals(name)
-            || "io.micronaut.context.annotation.Secondary".equals(name)
-            || "io.micronaut.context.annotation.Any".equals(name)
-            || "io.micronaut.context.annotation.Type".equals(name);
-    }
-
-    /**
-     * Materializes an annotation instance from what a bean was annotated with.
-     *
-     * <p>This is one of the two places the module produces an annotation by proxying it, and it is here because
-     * the interfaces of the specification are written in terms of annotation instances: a bean reports its
-     * qualifiers as a set of them. Nothing about resolving or injecting a bean goes through this.</p>
-     */
-    @SuppressWarnings("unchecked")
-    private static @Nullable Annotation synthesize(AnnotationMetadata metadata, String name,
-                                                   AnnotationValue<Annotation> annotation) {
-        // the qualifiers of the specification have literals of their own, and need nothing materialized
-        if ("jakarta.enterprise.inject.Default".equals(name)) {
-            return Default.Literal.INSTANCE;
-        }
-        if ("jakarta.inject.Named".equals(name)) {
-            return jakarta.enterprise.inject.literal.NamedLiteral.of(annotation.stringValue().orElse(""));
-        }
-        // the class of a qualifier a bean was compiled with is the one its compiled metadata refers to
-        Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
-        if (type == null) {
-            return null;
-        }
-        try {
-            return CdiAnnotations.annotationOf((Class<Annotation>) type, annotation);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
+        return CdiQualifier.instances(CdiQualifier.declared(annotationMetadata));
     }
 }

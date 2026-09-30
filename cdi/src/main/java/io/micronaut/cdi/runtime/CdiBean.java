@@ -54,6 +54,7 @@ public class CdiBean<T> implements Bean<T> {
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
+    private volatile java.util.@Nullable List<CdiQualifier> qualifiers;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
@@ -184,7 +185,29 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return CdiQualifiers.of(definition.getAnnotationMetadata());
+        return CdiQualifier.instances(qualifiers());
+    }
+
+    /**
+     * The qualifiers of the bean as resolution compares them: the ones it was compiled with, and {@code Any},
+     * which every bean has.
+     *
+     * @return The qualifiers
+     */
+    final java.util.List<CdiQualifier> qualifiers() {
+        java.util.List<CdiQualifier> resolved = qualifiers;
+        if (resolved == null) {
+            java.util.List<CdiQualifier> all = new java.util.ArrayList<>(3);
+            all.add(CdiQualifier.ANY);
+            for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
+                if (!declared.isAny()) {
+                    all.add(declared);
+                }
+            }
+            resolved = java.util.List.copyOf(all);
+            qualifiers = resolved;
+        }
+        return resolved;
     }
 
     @Override

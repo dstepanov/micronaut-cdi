@@ -66,7 +66,8 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
-    private volatile @Nullable Set<Annotation> observedQualifiers;
+    private volatile java.util.@Nullable List<CdiQualifier> observedQualifiers;
+    private volatile @Nullable Set<Annotation> observedQualifierInstances;
 
     CdiObserverMethod(BeanContext beanContext,
                       BeanDefinition<?> declaring,
@@ -177,11 +178,21 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Set<Annotation> getObservedQualifiers() {
-        Set<Annotation> resolved = observedQualifiers;
+        Set<Annotation> resolved = observedQualifierInstances;
         if (resolved == null) {
-            // kept unmodifiable: the set is now shared by every resolution rather than built for each
-            resolved = java.util.Collections.unmodifiableSet(
-                CdiQualifiers.declared(observed().getAnnotationMetadata()));
+            // kept unmodifiable: the set is shared by everyone who asks
+            resolved = java.util.Collections.unmodifiableSet(CdiQualifier.instances(observedQualifiers()));
+            observedQualifierInstances = resolved;
+        }
+        return resolved;
+    }
+
+    @Override
+    public java.util.List<CdiQualifier> observedQualifiers() {
+        java.util.List<CdiQualifier> resolved = observedQualifiers;
+        if (resolved == null) {
+            // shared by every resolution rather than built for each
+            resolved = java.util.List.copyOf(CdiQualifier.declared(observed().getAnnotationMetadata()));
             observedQualifiers = resolved;
         }
         return resolved;
@@ -229,7 +240,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public void notify(T event) {
-        notify(event, new CdiEventMetadata(getObservedQualifiers(), null, getObservedType()));
+        notify(event, new CdiEventMetadata(observedQualifiers(), null, getObservedType()));
     }
 
     /**

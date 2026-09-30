@@ -31,7 +31,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -85,16 +84,38 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
 
     @Override
     public Set<Annotation> getInterceptorBindings() {
+        return CdiQualifier.instances(bindings());
+    }
+
+    /**
+     * The interceptor bindings of the interceptor as resolution compares them. An annotation the interceptor
+     * carries is a binding where its own type is one, which is what was recorded of the type while the
+     * application compiled, and is asked of the annotation class only for a type nothing was recorded of.
+     *
+     * @return The bindings
+     */
+    java.util.List<CdiQualifier> bindings() {
         AnnotationMetadata metadata = definition.getAnnotationMetadata();
-        Set<Annotation> bindings = new LinkedHashSet<>();
+        java.util.List<CdiQualifier> bindings = new java.util.ArrayList<>(2);
         for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
             AnnotationValue<?> value = metadata.getAnnotation(name);
-            Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
-            if (type != null && type.isAnnotationPresent(jakarta.interceptor.InterceptorBinding.class)) {
-                bindings.add(CdiAnnotations.annotationOf(type, value));
+            if (isBindingType(metadata, name)) {
+                // a binding a binding carries is recorded by name, with no member written
+                bindings.add(CdiQualifier.ofCompiled(metadata, value != null ? value : new AnnotationValue<>(name)));
             }
         }
         return bindings;
+    }
+
+    private static boolean isBindingType(AnnotationMetadata metadata, String name) {
+        BindingTypes.BindingType recorded = BindingTypes.of(name);
+        if (recorded != null) {
+            return recorded.binding();
+        }
+        Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
+        return type != null && CdiReflection.current("Whether " + name + ", an annotation the application was "
+            + "not compiled with as an interceptor binding, is one")
+            .isAnnotated(type, jakarta.interceptor.InterceptorBinding.class);
     }
 
     @Override

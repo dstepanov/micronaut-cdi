@@ -23,7 +23,6 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
-import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.util.TypeLiteral;
@@ -49,23 +48,21 @@ import java.util.List;
  * @since 1.0
  */
 @Internal
-public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
+public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<T>, AutoCloseable {
 
     private final BeanContext beanContext;
     private final Argument<T> type;
-    private final Annotation[] qualifiers;
+    private final List<CdiQualifier> qualifiers;
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
     private final java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated;
 
     public CdiInstance(BeanContext beanContext, Argument<T> type, Annotation... qualifiers) {
-        this(beanContext, null, type, qualifiers);
+        this(beanContext, null, type, CdiQualifier.ofInstances(qualifiers));
     }
 
     CdiInstance(BeanContext beanContext,
                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
-                Argument<T> type, Annotation... qualifiers) {
-        // synchronized: the lookup of an injected Instance lives in whatever scope its owner does, and a
-        // singleton owner uses it from every thread at once
+                Argument<T> type, List<CdiQualifier> qualifiers) {
         this(beanContext, injectedAt,
             java.util.Collections.synchronizedList(new java.util.ArrayList<>(2)), type, qualifiers);
     }
@@ -73,64 +70,84 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
     private CdiInstance(BeanContext beanContext,
                         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
                         java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated,
-                        Argument<T> type, Annotation... qualifiers) {
+                        Argument<T> type, List<CdiQualifier> qualifiers) {
         this.beanContext = beanContext;
         this.injectedAt = injectedAt;
-        // shared down every select: a dependent instance obtained through any narrowing of a lookup belongs
-        // to the lookup itself, and is let go when the lookup is
         this.transientlyCreated = transientlyCreated;
         this.type = type;
         this.qualifiers = qualifiers;
     }
 
     @Override
-    public Instance<T> select(Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, type, and(qualifiers));
+    public io.micronaut.cdi.MicronautInstance<T> select(Annotation... qualifiers) {
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, type,
+            and(CdiQualifier.ofInstances(qualifiers)));
     }
 
     @Override
-    public <U extends T> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, Argument.of(subtype), and(qualifiers));
+    public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, Argument.of(subtype),
+            and(CdiQualifier.ofInstances(qualifiers)));
     }
 
     @Override
-    public <U extends T> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype,
+                                                                      Annotation... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, transientlyCreated,
-            CdiTypes.argumentOf(subtype.getType()), and(qualifiers));
+            CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(qualifiers)));
+    }
+
+    @Override
+    public io.micronaut.cdi.MicronautInstance<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+                                                        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, type, and(valuesOf(qualifier, qualifiers)));
+    }
+
+    @Override
+    public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
+        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, Argument.of(subtype),
+            and(valuesOf(qualifier, qualifiers)));
+    }
+
+    @Override
+    public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
+        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, subtype,
+            and(valuesOf(null, qualifiers)));
+    }
+
+    static List<CdiQualifier> valuesOf(io.micronaut.core.annotation.@Nullable AnnotationValue<?> first,
+                                       io.micronaut.core.annotation.AnnotationValue<?>... more) {
+        List<CdiQualifier> all = new ArrayList<>(more.length + 1);
+        if (first != null) {
+            all.add(CdiQualifier.ofValue(first));
+        }
+        for (io.micronaut.core.annotation.AnnotationValue<?> value : more) {
+            all.add(CdiQualifier.ofValue(value));
+        }
+        return all;
     }
 
     /**
-     * This lookup narrowed to a compiled argument, generics and all: what an invoker's argument lookup is,
-     * the argument being the method parameter as it was compiled.
+     * The lookup narrowed to the given argument, which carries the type arguments an injection point declared,
+     * and to the given qualifiers.
      *
      * @param argument   The argument
-     * @param qualifiers The qualifiers written on it
-     * @param <U>        The argument's type
-     * @return The narrowed lookup, sharing this one's dependent instances
+     * @param qualifiers The qualifiers, which replace the ones of this lookup
+     * @param <U>        The type
+     * @return The lookup
      */
-    <U> CdiInstance<U> selectArgument(Argument<U> argument, Annotation... qualifiers) {
+    <U> CdiInstance<U> selectArgument(Argument<U> argument, List<CdiQualifier> qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, argument, qualifiers);
     }
 
-    private Annotation[] and(Annotation... more) {
-        java.util.Set<Class<?>> seen = new java.util.HashSet<>();
-        for (Annotation qualifier : qualifiers) {
-            seen.add(qualifier.annotationType());
-        }
-        for (Annotation qualifier : more) {
-            Class<? extends Annotation> qualifierType = qualifier.annotationType();
-            if (!ExtensionQualifiers.isQualifier(qualifierType)) {
-                throw new IllegalArgumentException(qualifierType.getName() + " is not a qualifier");
-            }
-            if (!seen.add(qualifierType)
-                && !qualifierType.isAnnotationPresent(java.lang.annotation.Repeatable.class)) {
-                throw new IllegalArgumentException("The qualifier " + qualifierType.getName()
-                    + " is given twice");
-            }
-        }
-        Annotation[] all = new Annotation[qualifiers.length + more.length];
-        System.arraycopy(qualifiers, 0, all, 0, qualifiers.length);
-        System.arraycopy(more, 0, all, qualifiers.length, more.length);
+    private List<CdiQualifier> and(List<CdiQualifier> more) {
+        CdiQualifier.requireWellFormed(qualifiers, more);
+        List<CdiQualifier> all = new ArrayList<>(qualifiers.size() + more.size());
+        all.addAll(qualifiers);
+        all.addAll(more);
         return all;
     }
 

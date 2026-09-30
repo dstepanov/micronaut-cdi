@@ -21,20 +21,13 @@ import io.micronaut.core.annotation.Internal;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
- * Turns an annotation into the values it was written with, and the values back into an annotation.
+ * The places an annotation instance crosses the boundary between the specification's interfaces, which speak
+ * of instances, and Micronaut, which records an annotation as the values it was written with.
  *
- * <p>The specification is written in terms of annotation instances: a bean reports its qualifiers as a set of
- * them, and a program looks a bean up by handing some over. Micronaut records what an annotation was written with
- * as an {@link AnnotationValue} and never materializes the annotation itself. Both directions are needed, and
- * both are here.</p>
- *
- * <p>Reading an annotation a program hands over is done here. Making an annotation instance out of recorded
- * values is not: an instance is a reflection object, and {@link CdiReflection} makes it.</p>
+ * <p>Nothing is read or made here. An instance is made, and the members of one a program hands over are read,
+ * by {@link CdiReflection}; two annotations are compared as the {@link CdiQualifier} each is.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -43,34 +36,6 @@ import java.util.Map;
 public final class CdiAnnotations {
 
     private CdiAnnotations() {
-    }
-
-    /**
-     * The values an annotation was written with that take part in binding, read off the annotation itself.
-     *
-     * <p>Micronaut reads every member in the form the compiled metadata stores it, so that a value read off a live
-     * annotation compares equal to the same value read out of a definition. A member excluded from the comparison
-     * of qualifiers is then left out: it takes no part in it from either side, and whatever it was given here, a
-     * bean qualified the same way but for that member still qualifies. A nested annotation keeps every one of its
-     * members, since what is not binding is a member of the qualifier and not of an annotation it carries.</p>
-     *
-     * @param annotation The annotation
-     * @param <A>        The annotation type
-     * @return The annotation value
-     */
-    public static <A extends Annotation> AnnotationValue<A> valueOf(A annotation) {
-        AnnotationValue<A> read = AnnotationValue.of(annotation);
-        Class<? extends Annotation> type = annotation.annotationType();
-        Map<CharSequence, Object> values = null;
-        for (Method member : type.getDeclaredMethods()) {
-            if (isNonBinding(member)) {
-                if (values == null) {
-                    values = new LinkedHashMap<>(read.getValues());
-                }
-                values.remove(member.getName());
-            }
-        }
-        return values == null ? read : new AnnotationValue<>(type.getName(), values);
     }
 
     /**
@@ -92,11 +57,8 @@ public final class CdiAnnotations {
 
     /**
      * Whether two annotations are the same as far as binding one thing to another goes, which is what the
-     * container is asked when it compares two qualifiers or two interceptor bindings.
-     *
-     * <p>They are the same when they are of the same type and every member that takes part in the comparison is
-     * equal. Which members those are was decided by whoever wrote the annotation, with {@code Nonbinding}, and
-     * reading the values off the annotation leaves those out already.</p>
+     * container is asked when it compares two qualifiers or two interceptor bindings: they are of the same
+     * type, and every member that takes part in the comparison is equal.
      *
      * @param one   The one annotation
      * @param other The other
@@ -106,7 +68,7 @@ public final class CdiAnnotations {
         if (!one.annotationType().equals(other.annotationType())) {
             return false;
         }
-        return valueOf(one).equals(valueOf(other));
+        return CdiQualifier.ofInstance(one).matches(CdiQualifier.ofInstance(other));
     }
 
     /**
@@ -118,23 +80,6 @@ public final class CdiAnnotations {
      */
     public static int bindingHashCode(Annotation annotation) {
         return annotation.annotationType().getName().hashCode()
-            + AnnotationUtil.calculateHashCode(valueOf(annotation).getValues());
-    }
-
-    /**
-     * Whether the member is excluded from the comparison of two annotations, which the specification says with
-     * {@code jakarta.enterprise.util.Nonbinding}.
-     */
-    private static boolean isNonBinding(Method member) {
-        if (ExtensionQualifiers.isNonbindingMember(member.getDeclaringClass().getName(), member.getName())) {
-            // an extension said so during discovery, into the compiled metadata rather than onto the class
-            return true;
-        }
-        for (Annotation annotation : member.getAnnotations()) {
-            if ("jakarta.enterprise.util.Nonbinding".equals(annotation.annotationType().getName())) {
-                return true;
-            }
-        }
-        return false;
+            + AnnotationUtil.calculateHashCode(CdiQualifier.ofInstance(annotation).binding().getValues());
     }
 }

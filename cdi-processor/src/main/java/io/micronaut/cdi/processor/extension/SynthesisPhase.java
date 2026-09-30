@@ -267,6 +267,7 @@ final class SynthesisPhase {
         if (!observer.qualifiers().isEmpty()) {
             record.member(CdiSyntheticObserver.QUALIFIERS, observer.qualifiers().toArray(new AnnotationValue<?>[0]));
             record.member("qualifierTypes", typesOf(observer.qualifiers()));
+            record.member("nonbinding", nonbindingOf(observer.qualifiers()));
         }
         if (observer.async()) {
             record.member("async", true);

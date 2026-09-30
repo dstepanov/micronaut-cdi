@@ -80,17 +80,52 @@ reads classes back if it asks to:
 
 - `InjectionPoint.getMember()`, `getAnnotated()` and, for a field, `isTransient()`;
 - an annotation instance of a type the specification has no literal for: what `Bean.getQualifiers()`,
-  `InjectionPoint.getQualifiers()`, `ObserverMethod.getObservedQualifiers()` and
+  `InjectionPoint.getQualifiers()`, `ObserverMethod.getObservedQualifiers()`, `EventMetadata.getQualifiers()` and
   `Interceptor.getInterceptorBindings()` report for an annotation of the application's own, and an annotation
   parameter of a synthetic component asked for as an annotation;
+- an annotation literal with members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)` or
+  `resolveInterceptors(...)`: its members can only be read reflectively;
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
   annotation the build recorded nothing of;
 - `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`.
 
 Each goes through one interface, `CdiReflection`, which `micronaut-cdi-reflection` implements. Without the module
-the call throws an `UnsupportedOperationException` that names it. Resolution still compares qualifiers as
-annotation instances, so an application that qualifies its beans with annotations of its own needs the module for
-now; the qualifiers of the specification - `@Default`, `@Any`, `@Named` - need nothing.
+the call throws an `UnsupportedOperationException` that names it.
+
+Resolution itself makes no annotation instance and reads none. A qualifier or an interceptor binding is compared
+as the values it was compiled with, less the members marked `@Nonbinding`; injecting a bean, an `Event`, an
+`Instance` or an `InjectionPoint`, firing an event and resolving its observers, and binding an interceptor need
+nothing but `micronaut-cdi`, whatever qualifiers the application declares. What the container has to know of a
+qualifier or binding type - its members, which are non-binding, whether it is repeatable - is recorded by the
+processor under `META-INF/micronaut-cdi/bindings`, for every such type a compilation declares or uses. The
+qualifiers of the specification - `@Default`, `@Any`, `@Named` - and a literal of a qualifier that has no binding
+member are taken as they are, with nothing read.
+
+### Selecting without reflection
+
+The lookups and events this container hands out are Micronaut types that extend the specification's, and select
+by Micronaut's own forms of an annotation and of a type:
+
+| Specification | Micronaut | Adds |
+| --- | --- | --- |
+| `Instance<T>` | `io.micronaut.cdi.MicronautInstance<T>` | `select(AnnotationValue, AnnotationValue...)`, `select(Class, AnnotationValue, AnnotationValue...)`, `select(Argument, AnnotationValue...)` |
+| `Event<T>` | `io.micronaut.cdi.MicronautEvent<T>` | the same three selections |
+| `BeanContainer` | `io.micronaut.cdi.MicronautBeanContainer` | `getBeans(Argument, AnnotationValue...)`, `resolveObserverMethods(event, AnnotationValue, AnnotationValue...)`, and `createInstance()` / `getEvent()` returning the Micronaut types |
+
+```java
+@Inject MicronautInstance<Dish> dishes;
+@Inject MicronautEvent<Order> orders;
+
+Dish sweet = dishes.select(AnnotationValue.builder(Flavour.class).value("sweet").build()).get();
+orders.select(AnnotationValue.builder(Flavour.class).value("sweet").build()).fire(new Order("tart"));
+```
+
+An injection point may be declared with the Micronaut type, and an injected `Instance` or `Event`,
+`CDI.current()`, an `SeContainer` and the `BeanContainer` may be cast to it. A selection by `AnnotationValue` is
+held to the rules of the specification's own - the annotation has to be a qualifier, and one that is not
+repeatable is given once - checked from what was recorded. It selects the same beans and notifies the same
+observers as the literal does where the reflection module is there to read the literal. `select(Argument, ...)`
+is the counterpart of `select(TypeLiteral, ...)`.
 
 That module also brings `io.micronaut:micronaut-reflection`, which answers the accessors of an interceptor's
 `InvocationContext` that return an object of the Java reflection API: `getMethod()`, `getConstructor()`,

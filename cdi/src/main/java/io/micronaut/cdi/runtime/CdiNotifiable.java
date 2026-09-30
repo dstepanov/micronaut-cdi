@@ -34,4 +34,11 @@ public interface CdiNotifiable {
      * @param metadata What the observer may ask about the firing
      */
     void notifyWith(Object event, EventMetadata metadata);
+
+    /**
+     * The qualifiers the observer observes, as resolution compares them.
+     *
+     * @return The observed qualifiers
+     */
+    java.util.List<CdiQualifier> observedQualifiers();
 }

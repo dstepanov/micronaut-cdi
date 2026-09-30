@@ -25,9 +25,7 @@ import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
-import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Bean;
@@ -71,7 +69,7 @@ import java.util.Set;
 @io.micronaut.cdi.annotation.CdiScope("jakarta.enterprise.context.Dependent")
 @jakarta.enterprise.inject.Default
 @Internal
-public final class CdiBeanContainer implements BeanManager {
+public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.MicronautBeanContainer {
 
     /**
      * The annotations the specification declares, which are what they are whatever a build recorded.
@@ -81,8 +79,6 @@ public final class CdiBeanContainer implements BeanManager {
         "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");
     private static final Set<String> PSEUDO_SCOPES = Set.of(
         "jakarta.enterprise.context.Dependent", "jakarta.inject.Singleton");
-    private static final Set<String> QUALIFIERS = Set.of(
-        "jakarta.enterprise.inject.Default", "jakarta.enterprise.inject.Any", "jakarta.inject.Named");
 
     private final BeanContext beanContext;
     private final RequestScope requestScope;
@@ -160,8 +156,15 @@ public final class CdiBeanContainer implements BeanManager {
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        requireWellFormed(qualifiers);
-        Set<Annotation> required = new LinkedHashSet<>(java.util.Arrays.asList(qualifiers));
+        return getBeans(beanType, wellFormed(CdiQualifier.ofInstances(qualifiers)));
+    }
+
+    @Override
+    public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return getBeans(CdiTypes.requiredTypeOf(beanType), wellFormed(qualifiersOf(qualifiers)));
+    }
+
+    private Set<Bean<?>> getBeans(Type beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (CdiBean<?> bean : candidates()) {
             if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {
@@ -170,36 +173,39 @@ public final class CdiBeanContainer implements BeanManager {
                 // itself
                 java.lang.reflect.Type raw = beanType instanceof java.lang.reflect.ParameterizedType parameterized
                     ? parameterized.getRawType() : beanType;
-                if (raw.equals(builtIn.getBeanType())
-                    // the built-in lookup has Provider among its bean types: Instance extends it
-                    || raw.equals(jakarta.inject.Provider.class)
-                        && jakarta.inject.Provider.class.isAssignableFrom(builtIn.getBeanType())) {
+                if (builtIn.isBeanType(raw)) {
                     beans.add(bean);
                 }
                 continue;
             }
-            if (CdiAssignability.isMatchingBean(bean.getTypes(), bean.getQualifiers(), beanType, required)) {
+            if (CdiAssignability.isTypeMatching(bean.getTypes(), requireNoTypeVariable(beanType))
+                && CdiAssignability.areQualifiersMatching(bean.qualifiers(), required)) {
                 beans.add(bean);
             }
         }
         return beans;
     }
 
+    private static Type requireNoTypeVariable(Type required) {
+        CdiAssignability.requireNoTypeVariable(required);
+        return required;
+    }
+
+    private static List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        List<CdiQualifier> all = new ArrayList<>(qualifiers.length);
+        for (io.micronaut.core.annotation.AnnotationValue<?> qualifier : qualifiers) {
+            all.add(CdiQualifier.ofValue(qualifier));
+        }
+        return all;
+    }
+
     /**
      * What the specification requires of the qualifiers a lookup names: each is a qualifier, and no qualifier
      * type is named twice unless it is repeatable.
      */
-    private static void requireWellFormed(Annotation[] qualifiers) {
-        Set<Class<?>> seen = new LinkedHashSet<>();
-        for (Annotation qualifier : qualifiers) {
-            Class<? extends Annotation> type = qualifier.annotationType();
-            if (!ExtensionQualifiers.isQualifier(type)) {
-                throw new IllegalArgumentException(type.getName() + " is not a qualifier");
-            }
-            if (!seen.add(type) && !type.isAnnotationPresent(java.lang.annotation.Repeatable.class)) {
-                throw new IllegalArgumentException("The qualifier " + type.getName() + " is given twice");
-            }
-        }
+    private static List<CdiQualifier> wellFormed(List<CdiQualifier> qualifiers) {
+        CdiQualifier.requireWellFormed(List.of(), qualifiers);
+        return qualifiers;
     }
 
     /**
@@ -361,20 +367,32 @@ public final class CdiBeanContainer implements BeanManager {
         return Integer.MIN_VALUE;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, Annotation... qualifiers) {
-        requireWellFormed(qualifiers);
+        return resolveObserverMethods(event, wellFormed(CdiQualifier.ofInstances(qualifiers)));
+    }
+
+    @Override
+    public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+                                                                     io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
+        all.add(CdiQualifier.ofValue(qualifier));
+        all.addAll(qualifiersOf(qualifiers));
+        return resolveObserverMethods(event, wellFormed(all));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, List<CdiQualifier> qualifiers) {
         if (event.getClass().getTypeParameters().length > 0) {
             throw new IllegalArgumentException("The event object's class " + event.getClass().getName()
                 + " declares type variables, and its runtime class alone does not resolve them");
         }
         Set<ObserverMethod<? super T>> resolved = new LinkedHashSet<>();
-        for (ObserverMethod<?> observer : observers.resolve(event.getClass(), Set.of(qualifiers), false)) {
+        for (ObserverMethod<?> observer : observers.resolve(event.getClass(), qualifiers, false)) {
             resolved.add((ObserverMethod<? super T>) observer);
         }
         // the resolution the specification describes covers observers of both notifications
-        for (ObserverMethod<?> observer : observers.resolve(event.getClass(), Set.of(qualifiers), true)) {
+        for (ObserverMethod<?> observer : observers.resolve(event.getClass(), qualifiers, true)) {
             resolved.add((ObserverMethod<? super T>) observer);
         }
         return resolved;
@@ -422,19 +440,13 @@ public final class CdiBeanContainer implements BeanManager {
      * equivalent among them.
      */
     private static boolean isBoundBy(CdiInterceptor<?> interceptor, Annotation[] interceptorBindings) {
-        Set<Annotation> declared = interceptor.getInterceptorBindings();
+        List<CdiQualifier> declared = interceptor.bindings();
         if (declared.isEmpty()) {
             return false;
         }
-        for (Annotation binding : declared) {
-            boolean matched = false;
-            for (Annotation given : interceptorBindings) {
-                if (CdiAnnotations.areEquivalent(binding, given)) {
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
+        List<CdiQualifier> given = CdiQualifier.ofInstances(interceptorBindings);
+        for (CdiQualifier binding : declared) {
+            if (!binding.isAmong(given)) {
                 return false;
             }
         }
@@ -489,9 +501,9 @@ public final class CdiBeanContainer implements BeanManager {
     public boolean isQualifier(Class<? extends Annotation> annotationType) {
         // the qualifiers of the specification, and the ones the beans of the application were compiled with —
         // an annotation the discovery phase registered as a qualifier among them, though nothing on it says so
-        if (QUALIFIERS.contains(annotationType.getName())
-            || ExtensionQualifiers.isKnownQualifier(annotationType.getName())) {
-            return true;
+        Boolean known = CdiQualifier.isKnownQualifier(annotationType.getName());
+        if (known != null) {
+            return known;
         }
         return reflection("BeanContainer.isQualifier", annotationType)
             .isAnnotated(annotationType, jakarta.inject.Qualifier.class);
@@ -508,6 +520,10 @@ public final class CdiBeanContainer implements BeanManager {
 
     @Override
     public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
+        BindingTypes.BindingType recorded = BindingTypes.of(annotationType.getName());
+        if (recorded != null) {
+            return recorded.binding();
+        }
         return reflection("BeanContainer.isInterceptorBinding", annotationType)
             .isAnnotated(annotationType, jakarta.interceptor.InterceptorBinding.class);
     }
@@ -572,12 +588,12 @@ public final class CdiBeanContainer implements BeanManager {
     }
 
     @Override
-    public Event<Object> getEvent() {
+    public io.micronaut.cdi.MicronautEvent<Object> getEvent() {
         return new CdiEvent<>(observers, Argument.OBJECT_ARGUMENT, Set.of());
     }
 
     @Override
-    public Instance<Object> createInstance() {
+    public io.micronaut.cdi.MicronautInstance<Object> createInstance() {
         return new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
     }
 

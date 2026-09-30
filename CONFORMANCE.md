@@ -38,7 +38,8 @@ is as visible in a test report as what is.
 | 2.1.2 | The bean types of a bean, including a produced array, interface and primitive, and narrowing with `@Typed` | `CdiBean` |
 | 2.1.2 | A primitive and the class that boxes it as one bean type | `CdiTypes`, `CdiInstance`, `CdiBeanContainer` |
 | 2.2.5 | A managed bean has a constructor taking no parameters or one annotated `@Inject` | `BeanDiscoveryVisitor` |
-| 2.4.2 | Resolution by every qualifier named, with `@Nonbinding` members left out of the comparison | `CdiQualifiers`, `CdiAnnotations` |
+| 2.4.2 | Resolution by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with | `CdiQualifier`, `CdiQualifiers`, `BindingTypes`, `BindingTypeVisitor` |
+| 5.6.1, 2.8 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 2.10.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 2.10.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
 | 2.10.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each written as a generated bean definition | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
@@ -94,6 +95,25 @@ method to be private, and a private member cannot be read from the bean definiti
 Such a member is annotated `@ReflectiveAccess`, which is Micronaut's way of saying that it is read reflectively,
 and only that member is: everything else about the bean goes on being resolved the way it was compiled. What the
 author wrote therefore decides where reflection is used, rather than the module deciding it for them.
+
+### A qualifier is compared as the values it was compiled with
+
+*Sections 2.2.3, 2.4.2 and 2.8.3.* The specification's interfaces take and report a qualifier as an annotation
+instance. The container compares one as the values it was written with: two qualifiers are the same when they
+are of one type and their binding members are equal, a member left at its default being equal to the default
+written down. Nothing is materialized to resolve a bean, inject an `Event` or an `Instance`, or notify an
+observer. An instance is made only when a program asks for one - `Bean.getQualifiers()` and its like - and that
+is the reflection module's.
+
+An annotation literal a program hands to `select`, `getBeans` and their like is a reflection object. The
+literals of the specification and a literal of a qualifier with no binding member are taken as they are; any
+other has to be read member by member, which needs `micronaut-cdi-reflection` and says so. The reflection-free
+form of the same selection is an `AnnotationValue`, through `MicronautInstance`, `MicronautEvent` and
+`MicronautBeanContainer`.
+
+What the container has to know of a qualifier or interceptor binding type is recorded by the processor as a
+resource under `META-INF/micronaut-cdi/bindings`, for every such type a compilation declares or uses. A type no
+compilation with this processor has seen has no record, and is asked of its class by the reflection module.
 
 ### A primitive is boxed by the lookup rather than by the bean
 

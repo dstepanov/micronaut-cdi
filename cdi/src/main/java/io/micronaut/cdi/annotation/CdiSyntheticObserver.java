@@ -65,6 +65,14 @@ public @interface CdiSyntheticObserver {
     Class<?>[] qualifierTypes() default {};
 
     /**
+     * The members of the observed qualifiers that take no part in resolution, each as
+     * {@code annotationName#memberName}.
+     *
+     * @return The non-binding members
+     */
+    String[] nonbinding() default {};
+
+    /**
      * The order of the observer among the observers of an event.
      *
      * @return The priority

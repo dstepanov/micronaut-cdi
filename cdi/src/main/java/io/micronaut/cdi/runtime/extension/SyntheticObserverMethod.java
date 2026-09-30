@@ -17,7 +17,7 @@ package io.micronaut.cdi.runtime.extension;
 
 import io.micronaut.cdi.annotation.CdiSyntheticObserver;
 import io.micronaut.cdi.annotation.CdiSyntheticParameter;
-import io.micronaut.cdi.runtime.CdiAnnotations;
+import io.micronaut.cdi.runtime.CdiQualifier;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -31,7 +31,6 @@ import jakarta.enterprise.inject.spi.ObserverMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -53,7 +52,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     private final AnnotationValue<CdiSyntheticObserver> record;
     private final Type eventType;
     private final CdiParameters parameters;
-    private volatile @Nullable Set<Annotation> qualifiers;
+    private volatile @Nullable List<CdiQualifier> qualifiers;
 
     SyntheticObserverMethod(BeanContext beanContext, BeanDefinition<?> definition,
                             AnnotationValue<CdiSyntheticObserver> record) {
@@ -76,17 +75,23 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public Set<Annotation> getObservedQualifiers() {
-        Set<Annotation> resolved = qualifiers;
+        return CdiQualifier.instances(observedQualifiers());
+    }
+
+    @Override
+    public List<CdiQualifier> observedQualifiers() {
+        List<CdiQualifier> resolved = qualifiers;
         if (resolved == null) {
-            // a qualifier is recorded as the values it was written with, and is an annotation instance only
-            // on this side of the specification's interface
+            // a qualifier is recorded as the values it was written with, which is what resolution compares
             List<AnnotationValue<Annotation>> recorded = record.getAnnotations(CdiSyntheticObserver.QUALIFIERS);
             Class<?>[] types = record.classValues("qualifierTypes");
-            Set<Annotation> instances = new LinkedHashSet<>();
-            for (int i = 0; i < recorded.size() && i < types.length; i++) {
-                instances.add(CdiAnnotations.annotationOf(annotationType(types[i]), recorded.get(i)));
+            Set<String> nonbinding = Set.of(record.stringValues("nonbinding"));
+            List<CdiQualifier> all = new java.util.ArrayList<>(recorded.size());
+            for (int i = 0; i < recorded.size(); i++) {
+                all.add(CdiQualifier.ofRecorded(recorded.get(i), nonbinding,
+                    i < types.length ? annotationType(types[i]) : null));
             }
-            resolved = java.util.Collections.unmodifiableSet(instances);
+            resolved = List.copyOf(all);
             qualifiers = resolved;
         }
         return resolved;

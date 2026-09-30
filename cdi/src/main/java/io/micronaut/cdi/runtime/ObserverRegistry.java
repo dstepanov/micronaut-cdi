@@ -122,14 +122,16 @@ public final class ObserverRegistry {
      *                        the other way do not see
      * @return The observer methods, in the order they are notified
      */
-    public List<ObserverMethod<?>> resolve(Type eventType, Set<Annotation> eventQualifiers, boolean async) {
+    public List<ObserverMethod<?>> resolve(Type eventType, java.util.Collection<CdiQualifier> eventQualifiers,
+                                           boolean async) {
         List<ObserverMethod<?>> notified = new ArrayList<>();
         for (ObserverMethod<?> observer : observers()) {
             if (observer.isAsync() != async) {
                 continue;
             }
-            if (CdiAssignability.isMatchingEvent(eventType, eventQualifiers, observer.getObservedType(),
-                observer.getObservedQualifiers())) {
+            if (CdiAssignability.isEventTypeMatching(observer.getObservedType(), eventType)
+                && CdiAssignability.areEventQualifiersMatching(eventQualifiers,
+                    ((CdiNotifiable) observer).observedQualifiers())) {
                 notified.add(observer);
             }
         }
@@ -149,7 +151,7 @@ public final class ObserverRegistry {
                                 Argument<?> declaredType,
                                 Set<Annotation> eventQualifiers,
                                 boolean async) {
-        notifyObservers(event, CdiTypes.typeOf(declaredType), eventQualifiers, async, null);
+        notifyObservers(event, CdiTypes.typeOf(declaredType), CdiQualifier.ofInstances(eventQualifiers), async, null);
     }
 
     /**
@@ -164,7 +166,7 @@ public final class ObserverRegistry {
     @SuppressWarnings("unchecked")
     public void notifyObservers(Object event,
                                 Type declaredType,
-                                Set<Annotation> eventQualifiers,
+                                List<CdiQualifier> eventQualifiers,
                                 boolean async,
                                 jakarta.enterprise.inject.spi.@io.micronaut.core.annotation.Nullable
                                     InjectionPoint firedFrom) {
@@ -188,7 +190,7 @@ public final class ObserverRegistry {
      */
     @SuppressWarnings("unchecked")
     public java.util.List<Throwable> notifyObserversCollecting(
-        Object event, Type declaredType, Set<Annotation> eventQualifiers,
+        Object event, Type declaredType, List<CdiQualifier> eventQualifiers,
         jakarta.enterprise.inject.spi.@io.micronaut.core.annotation.Nullable InjectionPoint firedFrom) {
         Type eventType = CdiTypes.eventTypeOf(event.getClass(), declaredType);
         jakarta.enterprise.inject.spi.EventMetadata metadata =

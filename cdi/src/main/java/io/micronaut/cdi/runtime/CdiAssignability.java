@@ -16,8 +16,6 @@
 package io.micronaut.cdi.runtime;
 
 import io.micronaut.core.annotation.Internal;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Default;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -81,31 +79,39 @@ public final class CdiAssignability {
         // the rule of section 2.1.3, applied to the given sets: every bean has Any, and one that names nothing
         // beyond Any and a name has the default qualifier; an injection point that names no qualifier is
         // looking for the default one
-        Set<Annotation> effective = new java.util.HashSet<>(beanQualifiers);
-        effective.add(Any.Literal.INSTANCE);
+        return areQualifiersMatching(CdiQualifier.ofInstances(beanQualifiers),
+            CdiQualifier.ofInstances(requiredQualifiers));
+    }
+
+    /**
+     * Whether a bean with the given qualifiers has every qualifier a lookup requires (section 2.4.2): a bean
+     * has {@code Any}, and has {@code Default} where it names no qualifier but a name; a lookup that requires
+     * nothing requires {@code Default}.
+     *
+     * @param beanQualifiers     The qualifiers of the bean
+     * @param requiredQualifiers The qualifiers required
+     * @return Whether the bean qualifies
+     */
+    public static boolean areQualifiersMatching(java.util.Collection<CdiQualifier> beanQualifiers,
+                                                java.util.Collection<CdiQualifier> requiredQualifiers) {
         boolean namesOne = false;
-        for (Annotation qualifier : beanQualifiers) {
-            if (!(qualifier instanceof Any) && !(qualifier instanceof jakarta.inject.Named)) {
+        for (CdiQualifier qualifier : beanQualifiers) {
+            if (!qualifier.isAny() && !qualifier.isNamed()) {
                 namesOne = true;
                 break;
             }
         }
-        if (!namesOne) {
-            effective.add(Default.Literal.INSTANCE);
+        if (requiredQualifiers.isEmpty()) {
+            return !namesOne || CdiQualifier.DEFAULT.isAmong(beanQualifiers);
         }
-        Set<Annotation> required = requiredQualifiers.isEmpty() ? Set.of(Default.Literal.INSTANCE) : requiredQualifiers;
-        for (Annotation qualifier : required) {
-            if (qualifier instanceof Any) {
+        for (CdiQualifier qualifier : requiredQualifiers) {
+            if (qualifier.isAny()) {
                 continue;
             }
-            boolean satisfied = false;
-            for (Annotation candidate : effective) {
-                if (CdiAnnotations.areEquivalent(qualifier, candidate)) {
-                    satisfied = true;
-                    break;
-                }
+            if (qualifier.isDefault() && !namesOne) {
+                continue;
             }
-            if (!satisfied) {
+            if (!qualifier.isAmong(beanQualifiers)) {
                 return false;
             }
         }
@@ -136,7 +142,7 @@ public final class CdiAssignability {
 
     private static void requireQualifiers(Set<Annotation> qualifiers) {
         for (Annotation qualifier : qualifiers) {
-            if (!ExtensionQualifiers.isQualifier(qualifier.annotationType())) {
+            if (!CdiQualifier.isQualifierType(qualifier.annotationType())) {
                 throw new IllegalArgumentException(qualifier.annotationType().getName() + " is not a qualifier");
             }
         }
@@ -181,23 +187,29 @@ public final class CdiAssignability {
             return false;
         }
         // the qualifiers an event was fired with always include Any
-        for (Annotation observed : observedEventQualifiers) {
-            if (observed.annotationType() == Any.class) {
+        return areEventQualifiersMatching(CdiQualifier.ofInstances(specifiedQualifiers),
+            CdiQualifier.ofInstances(observedEventQualifiers));
+    }
+
+    /**
+     * Whether an event fired with the given qualifiers has every qualifier an observer observes
+     * (section 2.8.3): an observer of {@code Any} observes whatever the event was fired with, and an event
+     * fired with nothing has {@code Default}.
+     *
+     * @param specifiedQualifiers     The qualifiers the event was fired with
+     * @param observedEventQualifiers The qualifiers the observer observes
+     * @return Whether the observer observes the event, as far as qualifiers go
+     */
+    public static boolean areEventQualifiersMatching(java.util.Collection<CdiQualifier> specifiedQualifiers,
+                                                     java.util.Collection<CdiQualifier> observedEventQualifiers) {
+        for (CdiQualifier observed : observedEventQualifiers) {
+            if (observed.isAny()) {
                 continue;
             }
-            if (specifiedQualifiers.isEmpty() && observed.annotationType() == Default.class) {
+            if (specifiedQualifiers.isEmpty() && observed.isDefault()) {
                 continue;
             }
-            // compared as the specification compares qualifiers, because either side may be an annotation the
-            // container synthesized from compiled metadata rather than a literal with the reflective contract
-            boolean present = false;
-            for (Annotation specified : specifiedQualifiers) {
-                if (CdiAnnotations.areEquivalent(specified, observed)) {
-                    present = true;
-                    break;
-                }
-            }
-            if (!present) {
+            if (!observed.isAmong(specifiedQualifiers)) {
                 return false;
             }
         }
@@ -735,7 +747,7 @@ public final class CdiAssignability {
         return null;
     }
 
-    private static void requireNoTypeVariable(Type type) {
+    static void requireNoTypeVariable(Type type) {
         // a parameterized type may carry type variables among its arguments — section 2.4.2.1 has rules for
         // matching them — but a bare type variable names nothing to resolve
         if (type instanceof TypeVariable<?>) {

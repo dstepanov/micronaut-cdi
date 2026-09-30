@@ -17,7 +17,6 @@ package io.micronaut.cdi.runtime;
 
 import io.micronaut.core.annotation.Internal;
 
-import java.lang.annotation.Annotation;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -78,16 +77,6 @@ public final class ExtensionQualifiers {
     public static void deregisterNonbindingMember(String annotationName, String memberName) {
         NONBINDING_MEMBERS.computeIfPresent(annotationName + "#" + memberName,
             (key, count) -> count > 1 ? count - 1 : null);
-    }
-
-    /**
-     * Whether the given annotation is a qualifier: it says so itself, or an extension said so.
-     *
-     * @param type The annotation type
-     * @return Whether it is a qualifier
-     */
-    public static boolean isQualifier(Class<? extends Annotation> type) {
-        return type.isAnnotationPresent(jakarta.inject.Qualifier.class) || NAMES.containsKey(type.getName());
     }
 
     /**

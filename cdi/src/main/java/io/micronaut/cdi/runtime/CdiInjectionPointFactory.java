@@ -27,10 +27,8 @@ import io.micronaut.inject.InstantiatableBeanDefinition;
 import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import org.jspecify.annotations.Nullable;
 
-import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The base of the two beans of this module that are what the injection point asked for rather than a bean of a
@@ -124,7 +122,36 @@ public abstract class CdiInjectionPointFactory<B>
     protected abstract B build(BeanResolutionContext resolutionContext,
                                io.micronaut.context.BeanContext context,
                                Argument<?> type,
-                               Set<Annotation> qualifiers);
+                               List<CdiQualifier> qualifiers);
+
+    /**
+     * Whether the built-in bean is resolvable by the given raw type: the type the specification gives it, a
+     * type that one extends, or the Micronaut type it is built as.
+     *
+     * @param raw The raw required type
+     * @return Whether it is a type of the bean
+     */
+    final boolean isBeanType(java.lang.reflect.Type raw) {
+        if (raw.equals(getBeanType())) {
+            return true;
+        }
+        for (Class<?> type : specificationTypes()) {
+            if (raw.equals(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The types of the specification the built-in bean is resolvable by, where the type it is built as is a
+     * Micronaut extension of them.
+     *
+     * @return The types
+     */
+    protected List<Class<?>> specificationTypes() {
+        return List.of();
+    }
 
     @Override
     @SuppressWarnings("NullAway")
@@ -140,7 +167,7 @@ public abstract class CdiInjectionPointFactory<B>
             }
             metadata = injectionPoint.getAnnotationMetadata();
         }
-        return build(resolutionContext, context, type, CdiQualifiers.declared(metadata));
+        return build(resolutionContext, context, type, CdiQualifier.declared(metadata));
     }
 
     @Override
@@ -195,7 +222,8 @@ public abstract class CdiInjectionPointFactory<B>
 
     @Override
     public final List<Argument<?>> getTypeArguments(Class<?> type) {
-        return type == getBeanType() ? getTypeArguments() : Collections.emptyList();
+        return type == getBeanType() || specificationTypes().contains(type)
+            ? getTypeArguments() : Collections.emptyList();
     }
 
     @Override

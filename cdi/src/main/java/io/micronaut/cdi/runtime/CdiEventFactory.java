@@ -21,8 +21,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.event.Event;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
 
 /**
  * Builds the {@code Event} an injection point asked for, of the type it named and qualified the way it was.
@@ -37,7 +35,13 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public Class<Event<T>> getBeanType() {
-        return (Class) Event.class;
+        // the Micronaut event, so that an injection point may be declared with either type
+        return (Class) io.micronaut.cdi.MicronautEvent.class;
+    }
+
+    @Override
+    protected java.util.List<Class<?>> specificationTypes() {
+        return java.util.List.of(Event.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -45,11 +49,11 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
     protected Event<T> build(BeanResolutionContext resolutionContext,
                              BeanContext context,
                              Argument<?> type,
-                             Set<Annotation> qualifiers) {
+                             java.util.List<CdiQualifier> qualifiers) {
         // an injection point that named no qualifier has the default one, and the event carries the
         // qualifiers of the point it was injected into (section 10.2.1)
-        Set<Annotation> injected = qualifiers.isEmpty()
-            ? Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE) : qualifiers;
+        java.util.List<CdiQualifier> injected = qualifiers.isEmpty()
+            ? java.util.List.of(CdiQualifier.DEFAULT) : qualifiers;
         jakarta.enterprise.inject.spi.InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {

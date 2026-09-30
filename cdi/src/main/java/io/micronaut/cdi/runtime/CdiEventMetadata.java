@@ -37,22 +37,29 @@ import java.util.Set;
 @Internal
 final class CdiEventMetadata implements EventMetadata {
 
-    private final Set<Annotation> qualifiers;
+    private final java.util.List<CdiQualifier> firedWith;
     private final @Nullable InjectionPoint injectionPoint;
     private final Type type;
+    private volatile @Nullable Set<Annotation> qualifiers;
 
-    CdiEventMetadata(Set<Annotation> firedWith, @Nullable InjectionPoint injectionPoint, Type type) {
-        Set<Annotation> all = new LinkedHashSet<>();
-        all.add(Any.Literal.INSTANCE);
-        all.addAll(firedWith);
-        this.qualifiers = Set.copyOf(all);
+    CdiEventMetadata(java.util.List<CdiQualifier> firedWith, @Nullable InjectionPoint injectionPoint, Type type) {
+        this.firedWith = firedWith;
         this.injectionPoint = injectionPoint;
         this.type = type;
     }
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return qualifiers;
+        // annotation instances, which only an observer that asks for them needs
+        Set<Annotation> resolved = qualifiers;
+        if (resolved == null) {
+            Set<Annotation> all = new LinkedHashSet<>();
+            all.add(Any.Literal.INSTANCE);
+            all.addAll(CdiQualifier.instances(firedWith));
+            resolved = Set.copyOf(all);
+            qualifiers = resolved;
+        }
+        return resolved;
     }
 
     @Override

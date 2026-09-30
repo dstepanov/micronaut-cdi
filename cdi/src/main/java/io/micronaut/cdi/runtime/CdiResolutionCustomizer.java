@@ -97,9 +97,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         java.util.List<io.micronaut.inject.BeanDefinition<T>> defaulted = new java.util.ArrayList<>(2);
         for (io.micronaut.inject.BeanDefinition<T> candidate : candidates) {
             if (candidate.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Default")
-                || CdiQualifiers.declared(candidate.getAnnotationMetadata()).stream()
-                    .allMatch(a -> a instanceof jakarta.enterprise.inject.Default
-                        || a instanceof jakarta.enterprise.inject.Any)) {
+                || CdiQualifier.declared(candidate.getAnnotationMetadata()).stream()
+                    .allMatch(declared -> declared.isDefault() || declared.isAny())) {
                 defaulted.add(candidate);
             }
         }

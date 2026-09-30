@@ -136,7 +136,7 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
                 // resolved the way the specification's lookup resolves — the @Default bean of the class, by
                 // the rules of typesafe resolution — rather than by Micronaut's own null-qualifier rules
                 @SuppressWarnings("unchecked")
-                Object looked = lookup.selectArgument((Argument<Object>) Argument.of(beanClass)).get();
+                Object looked = lookup.selectArgument((Argument<Object>) Argument.of(beanClass), java.util.List.of()).get();
                 target = looked;
             } else {
                 if (instance == null) {
@@ -204,10 +204,8 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
     }
 
     private static void resolvable(CdiInstance<Object> lookup, Argument<?> argument, String what) {
-        java.util.Set<java.lang.annotation.Annotation> qualifiers =
-            CdiQualifiers.declared(argument.getAnnotationMetadata());
         CdiInstance<?> selected = lookup.selectArgument(argument,
-            qualifiers.toArray(new java.lang.annotation.Annotation[0]));
+            CdiQualifier.declared(argument.getAnnotationMetadata()));
         if (selected.isUnsatisfied()) {
             throw new jakarta.enterprise.inject.spi.DeploymentException(
                 "The lookup of " + what + " has no bean to satisfy it");
@@ -222,10 +220,8 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
      * Looks the argument up the way an injection point of the parameter's type and qualifiers would resolve.
      */
     private static Object lookedUp(CdiInstance<Object> lookup, Argument<?> argument) {
-        java.util.Set<java.lang.annotation.Annotation> qualifiers =
-            CdiQualifiers.declared(argument.getAnnotationMetadata());
         return lookup
-            .selectArgument(argument, qualifiers.toArray(new java.lang.annotation.Annotation[0]))
+            .selectArgument(argument, CdiQualifier.declared(argument.getAnnotationMetadata()))
             .get();
     }
 

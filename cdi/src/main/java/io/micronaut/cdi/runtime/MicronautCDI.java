@@ -41,10 +41,10 @@ import java.util.Iterator;
  * @since 1.0
  */
 @Internal
-public final class MicronautCDI extends CDI<Object> {
+public final class MicronautCDI extends CDI<Object> implements io.micronaut.cdi.MicronautInstance<Object> {
 
     private final CdiBeanContainer container;
-    private final Instance<Object> lookup;
+    private final io.micronaut.cdi.MicronautInstance<Object> lookup;
 
     MicronautCDI(CdiBeanContainer container) {
         this.container = container;
@@ -62,17 +62,37 @@ public final class MicronautCDI extends CDI<Object> {
     }
 
     @Override
-    public Instance<Object> select(Annotation... qualifiers) {
+    public io.micronaut.cdi.MicronautInstance<Object> select(Annotation... qualifiers) {
         return lookup.select(qualifiers);
     }
 
     @Override
-    public <U> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
         return lookup.select(subtype, qualifiers);
     }
 
     @Override
-    public <U> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+        return lookup.select(subtype, qualifiers);
+    }
+
+    @Override
+    public io.micronaut.cdi.MicronautInstance<Object> select(
+        io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return lookup.select(qualifier, qualifiers);
+    }
+
+    @Override
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(
+        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return lookup.select(subtype, qualifier, qualifiers);
+    }
+
+    @Override
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(
+        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         return lookup.select(subtype, qualifiers);
     }
 

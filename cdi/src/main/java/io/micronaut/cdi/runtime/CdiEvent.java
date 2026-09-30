@@ -17,13 +17,10 @@ package io.micronaut.cdi.runtime;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
-import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.NotificationOptions;
-import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -42,11 +39,11 @@ import java.util.concurrent.ForkJoinPool;
  * @since 1.0
  */
 @Internal
-public final class CdiEvent<T> implements Event<T> {
+public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     private final ObserverRegistry registry;
     private final java.lang.reflect.Type type;
-    private final Set<Annotation> qualifiers;
+    private final java.util.List<CdiQualifier> qualifiers;
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
 
     public CdiEvent(ObserverRegistry registry, Argument<T> type, Set<Annotation> qualifiers) {
@@ -55,6 +52,11 @@ public final class CdiEvent<T> implements Event<T> {
 
     public CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, Set<Annotation> qualifiers,
                     jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
+        this(registry, type, CdiQualifier.ofInstances(qualifiers), injectedAt);
+    }
+
+    CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, java.util.List<CdiQualifier> qualifiers,
+             jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
         this.registry = registry;
         this.type = type;
         this.qualifiers = qualifiers;
@@ -102,19 +104,40 @@ public final class CdiEvent<T> implements Event<T> {
     }
 
     @Override
-    public Event<T> select(Annotation... qualifiers) {
-        return new CdiEvent<>(registry, type, and(qualifiers), injectedAt);
+    public io.micronaut.cdi.MicronautEvent<T> select(Annotation... qualifiers) {
+        return new CdiEvent<>(registry, type, and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
     }
 
     @Override
-    public <U extends T> Event<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiEvent<>(registry, subtype, and(qualifiers), injectedAt);
+    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(Class<U> subtype, Annotation... qualifiers) {
+        return new CdiEvent<>(registry, subtype, and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
     }
 
     @Override
-    public <U extends T> Event<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
         requireNoTypeVariable(subtype.getType());
-        return new CdiEvent<>(registry, subtype.getType(), and(qualifiers), injectedAt);
+        return new CdiEvent<>(registry, subtype.getType(), and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
+    }
+
+    @Override
+    public io.micronaut.cdi.MicronautEvent<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+                                                     io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return new CdiEvent<>(registry, type, and(CdiInstance.valuesOf(qualifier, qualifiers)), injectedAt);
+    }
+
+    @Override
+    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
+        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
+        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        return new CdiEvent<>(registry, subtype, and(CdiInstance.valuesOf(qualifier, qualifiers)), injectedAt);
+    }
+
+    @Override
+    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
+        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+        java.lang.reflect.Type selected = CdiTypes.requiredTypeOf(subtype);
+        requireNoTypeVariable(selected);
+        return new CdiEvent<>(registry, selected, and(CdiInstance.valuesOf(null, qualifiers)), injectedAt);
     }
 
     private static void requireNoTypeVariable(java.lang.reflect.Type selected) {
@@ -128,29 +151,15 @@ public final class CdiEvent<T> implements Event<T> {
         }
     }
 
-    private Set<Annotation> and(Annotation... more) {
-        Set<Annotation> all = new LinkedHashSet<>(qualifiers);
-        java.util.Set<Class<?>> seen = new java.util.HashSet<>();
-        for (Annotation qualifier : qualifiers) {
-            seen.add(qualifier.annotationType());
-        }
-        for (Annotation qualifier : more) {
-            Class<? extends Annotation> qualifierType = qualifier.annotationType();
-            if (!ExtensionQualifiers.isQualifier(qualifierType)) {
-                throw new IllegalArgumentException(qualifierType.getName() + " is not a qualifier");
-            }
-            java.lang.annotation.Retention retention =
-                qualifierType.getAnnotation(java.lang.annotation.Retention.class);
-            if (retention == null || retention.value() != java.lang.annotation.RetentionPolicy.RUNTIME) {
-                throw new IllegalArgumentException("The qualifier " + qualifierType.getName()
+    private java.util.List<CdiQualifier> and(java.util.List<CdiQualifier> more) {
+        CdiQualifier.requireWellFormed(qualifiers, more);
+        java.util.List<CdiQualifier> all = new java.util.ArrayList<>(qualifiers);
+        for (CdiQualifier qualifier : more) {
+            if (!CdiQualifier.isRetainedAtRuntime(qualifier)) {
+                throw new IllegalArgumentException("The qualifier " + qualifier.name()
                     + " is not retained at runtime, and cannot qualify an event");
             }
-            if (!seen.add(qualifierType)
-                && !qualifierType.isAnnotationPresent(java.lang.annotation.Repeatable.class)) {
-                throw new IllegalArgumentException("The qualifier " + qualifierType.getName()
-                    + " is given twice");
-            }
-            if (!(qualifier instanceof Any)) {
+            if (!qualifier.isAny() && !qualifier.isAmong(all)) {
                 all.add(qualifier);
             }
         }

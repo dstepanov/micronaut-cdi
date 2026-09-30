@@ -21,8 +21,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.Instance;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
 
 /**
  * Builds the {@code Instance} an injection point asked for, of the type it named and qualified the way it was.
@@ -37,7 +35,14 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public Class<Instance<T>> getBeanType() {
-        return (Class) Instance.class;
+        // the Micronaut lookup, so that an injection point may be declared with either type
+        return (Class) io.micronaut.cdi.MicronautInstance.class;
+    }
+
+    @Override
+    protected java.util.List<Class<?>> specificationTypes() {
+        // the built-in lookup has Provider among its bean types: Instance extends it
+        return java.util.List.of(Instance.class, jakarta.inject.Provider.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -45,13 +50,13 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
     protected Instance<T> build(BeanResolutionContext resolutionContext,
                                 BeanContext context,
                                 Argument<?> type,
-                                Set<Annotation> qualifiers) {
+                                java.util.List<CdiQualifier> qualifiers) {
         jakarta.enterprise.inject.spi.InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
             injectedAt = CdiInjectionPoint.of(container.canonicalBean(segment.getDeclaringType()), segment);
         }
-        return new CdiInstance<>(context, injectedAt, (Argument<T>) type, qualifiers.toArray(new Annotation[0]));
+        return new CdiInstance<>(context, injectedAt, (Argument<T>) type, qualifiers);
     }
 }
