@@ -100,6 +100,9 @@ reads classes back if it asks to:
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
   annotation the build recorded nothing of;
 - `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`;
+- a portable extension handed to the SE bootstrap with `SeContainerInitializer.addExtensions`, or found by it
+  through the service loader: a subset of that part of CDI Full, offered beyond Lite and described in
+  [CONFORMANCE.md](CONFORMANCE.md);
 - the generic hierarchy of a class no compilation with this processor has seen, for the bean types of a bean of it
   and for matching an event of it against a parameterized observed type.
 

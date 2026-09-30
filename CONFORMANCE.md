@@ -351,15 +351,21 @@ compatible extension is likewise compiled per deployment, with that archive's ex
 
 Two SE bootstrap tests are left out by name, each resting on what belongs to CDI Full and is refused rather
 than pretended here: `BootstrapSEContainerTest`'s `testAddDecorator` (decorators), and
-`TrimmedBeanArchiveSETest` (`InterceptionFactory`). The four that hand the bootstrap a portable extension -
+`TrimmedBeanArchiveSETest`, whose portable extension would now run but whose archive is a trimmed bean archive
+(section 3.10.4.3) with a producer that takes an `InterceptionFactory`, both of CDI Full. The four that hand the bootstrap a portable extension -
 `testAddExtensionAsExtensionInstance`, `testAddExtensionAsClass`, `CustomClassLoaderSETest` and
 `CustomRequestContextSETest` - run, on the subset of portable extensions offered beyond Lite. The kit's
 deployments share one class path here, so the extensions its SE archives declare as service providers are
 listed in one service file of the module, and a bootstrap admits the ones whose class is in its deployment.
 
-The `tckSuite` task runs the suite of `tck-suite.xml`: the whole of the kit's CDI Lite `tests/**` packages —
-the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit
-(`interceptors/tests/**`): 811 tests, all passing, and part of `check`. A handful of ported assertions and
+The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
+and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The
+kit has 816 test methods outside `tests/full`, and 811 of them run, all passing, as part of `check`. The five
+that do not are the two SE tests above and three methods the kit itself tags `cdi-full` inside Lite packages,
+which the exclusion of that group drops, all three about passivation:
+`event.implicit.ImplicitEventTest#testImplicitEventIsPassivationCapable`,
+`lookup.clientProxy.ClientProxyTest#testSimpleBeanClientProxyIsSerializable` and
+`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable`. A handful of ported assertions and
 `ScenarioSweepTckTest` — which reads every scenario bean through one container at once — remain as local
 regression tests beside the kit's own.
 
@@ -381,7 +387,8 @@ as executable methods; a bean without a name, and an application without the mod
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
 
-The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 1263 assertions about the language model of
+The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 985 `assert` statements, and 186 calls of
+its own assertion helpers, about the language model of
 section 2.10 — the `ClassInfo`, `MethodInfo`, `Type` and `AnnotationInfo` a build compatible extension reads a
 class through — with one entry point, `LangModelVerifier.verify(ClassInfo)`, which asks the model everything
 about the verifier's own class: its members, inherited and declared, its enum constants and annotation members,

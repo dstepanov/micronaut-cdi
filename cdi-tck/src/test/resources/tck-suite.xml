@@ -4,7 +4,10 @@
 <suite name="CDI Lite TCK" verbose="1" configfailurepolicy="continue">
     <!-- core mode: what the kit marks as CDI Full does not run against CDI Lite. Each test of the Lite part
          says so itself rather than the suite saying it for all of them, so that the last test can run the few
-         classes of CDI Full that are claimed beyond Lite -->
+         classes of CDI Full that are claimed beyond Lite. The exclusion drops three methods of the Lite
+         packages that the kit tags cdi-full itself, all about passivation: ImplicitEventTest's
+         testImplicitEventIsPassivationCapable, ClientProxyTest's testSimpleBeanClientProxyIsSerializable and
+         BuiltinInstanceTest's testInstanceIsPassivationCapable -->
     <test name="definition">
         <groups>
             <run>
