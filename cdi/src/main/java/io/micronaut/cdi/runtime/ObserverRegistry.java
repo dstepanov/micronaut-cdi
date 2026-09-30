@@ -205,8 +205,9 @@ public final class ObserverRegistry {
                     // section 2.5.6: the request context is active during the notification of an asynchronous
                     // observer method, one span around each invocation — quietly, the way the footing under a
                     // @PostConstruct callback is, so that no lifecycle event the application did not ask for
-                    // reaches its observers
-                    requestScope.duringCreation(() -> {
+                    // reaches its observers. Section 2.8.5.3: it is a new context, and not the one of whoever
+                    // fired the event, where the executor runs the notification on the firing thread
+                    requestScope.inNewRequest(() -> {
                         ((CdiNotifiable) observer).notifyWith(event, metadata);
                         return null;
                     });

@@ -102,10 +102,25 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         if (isActive()) {
             return creation.get();
         }
+        return inNewRequest(creation);
+    }
+
+    /**
+     * Runs work in a request context of its own, whether or not one is active: section 2.8.5.3 has an asynchronous
+     * observer method called in a new lifecycle context, which is not the one of whoever fired the event, on
+     * whichever thread the notification runs. The request spans the work alone, quietly as the one under a
+     * creation is, and its beans are destroyed as the work ends, while it is still active. A request that was
+     * active before is the active one again afterwards, with everything it held.
+     *
+     * @param work The work
+     * @param <V>  What the work returns
+     * @return What the work returned
+     */
+    public <V> V inNewRequest(Supplier<V> work) {
         Instances instances = newInstances();
         return PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
             try {
-                return creation.get();
+                return work.get();
             } finally {
                 destroy(instances);
             }
