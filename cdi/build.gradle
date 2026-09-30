@@ -16,9 +16,8 @@ noReflection {
     // the bounds of a type variable are recorded by name and loaded when a Type is asked for
     allowIn 'io.micronaut.cdi.runtime.CdiTypes', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
     allowIn 'io.micronaut.cdi.runtime.CdiInjectionPointFactory', 'GENERIC_SIGNATURES'
-    // the bean types of a bean are the closure of its class hierarchy as Types (section 2.2.1), and its scope
-    // annotation is recorded by name
-    allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
+    // the bean types of a bean are the closure of its class hierarchy as Types (section 2.2.1)
+    allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES'
     // the observed type keeps the wildcards and variables the compiled argument erases, and is read once per observer
     allowIn 'io.micronaut.cdi.runtime.CdiObserverMethod', 'GENERIC_SIGNATURES', 'CLASS_MEMBERS'
     // the event type of a fired event is its runtime class, and a qualifier handed over is an annotation instance
@@ -28,13 +27,11 @@ noReflection {
     // a stereotype or an interceptor binding, and what a stereotype carries
     allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
     allowIn 'io.micronaut.cdi.runtime.CdiInstance', 'ANNOTATIONS'
-    allowIn 'io.micronaut.cdi.runtime.CdiInterceptor', 'ANNOTATIONS', 'CLASS_LOADING'
+    allowIn 'io.micronaut.cdi.runtime.CdiInterceptor', 'ANNOTATIONS'
     allowIn 'io.micronaut.cdi.runtime.ExtensionQualifiers', 'ANNOTATIONS'
     // a qualifier is an annotation instance on the specification's side, materialized from what was compiled
-    allowIn 'io.micronaut.cdi.runtime.CdiQualifiers', 'ANNOTATIONS', 'CLASS_LOADING', 'CLASS_MEMBERS'
+    allowIn 'io.micronaut.cdi.runtime.CdiQualifiers', 'ANNOTATIONS', 'CLASS_MEMBERS'
     allowIn 'io.micronaut.cdi.runtime.CdiAnnotations', 'ANNOTATIONS', 'CLASS_MEMBERS'
-    // an invoker built at build time names its bean class, which is loaded when the invoker is first used
-    allowIn 'io.micronaut.cdi.runtime.RecordedInvoker', 'CLASS_LOADING'
 
     // a type an extension composed while the application compiled is handed out as the java.lang.reflect.Type
     // the specification's interfaces are written in, composed from the classes that were recorded

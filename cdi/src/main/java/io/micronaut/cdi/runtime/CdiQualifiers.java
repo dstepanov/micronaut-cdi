@@ -199,7 +199,7 @@ public final class CdiQualifiers {
                 // default Micronaut materialized from the stereotype, not something the author wrote
                 continue;
             }
-            Annotation synthesized = synthesize(name, annotation);
+            Annotation synthesized = synthesize(annotationMetadata, name, annotation);
             if (synthesized != null) {
                 qualifiers.add(synthesized);
             }
@@ -226,7 +226,8 @@ public final class CdiQualifiers {
      * qualifiers as a set of them. Nothing about resolving or injecting a bean goes through this.</p>
      */
     @SuppressWarnings("unchecked")
-    private static @Nullable Annotation synthesize(String name, AnnotationValue<Annotation> annotation) {
+    private static @Nullable Annotation synthesize(AnnotationMetadata metadata, String name,
+                                                   AnnotationValue<Annotation> annotation) {
         // the qualifiers of the specification have literals of their own, and need nothing materialized
         if ("jakarta.enterprise.inject.Default".equals(name)) {
             return Default.Literal.INSTANCE;
@@ -234,11 +235,14 @@ public final class CdiQualifiers {
         if ("jakarta.inject.Named".equals(name)) {
             return jakarta.enterprise.inject.literal.NamedLiteral.of(annotation.stringValue().orElse(""));
         }
+        // the class of a qualifier a bean was compiled with is the one its compiled metadata refers to
+        Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
+        if (type == null) {
+            return null;
+        }
         try {
-            Class<? extends Annotation> type = (Class<? extends Annotation>) Class.forName(
-                name, false, CdiQualifiers.class.getClassLoader());
-            return CdiAnnotations.annotationOf(type, annotation);
-        } catch (ClassNotFoundException | LinkageError | IllegalArgumentException e) {
+            return CdiAnnotations.annotationOf((Class<Annotation>) type, annotation);
+        } catch (IllegalArgumentException e) {
             return null;
         }
     }

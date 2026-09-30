@@ -191,7 +191,7 @@ public class CdiBean<T> implements Bean<T> {
     public Class<? extends Annotation> getScope() {
         AnnotationMetadata metadata = definition.getAnnotationMetadata();
         Class<? extends Annotation> written = metadata.stringValue(CdiScope.class)
-            .map(CdiBean::scopeNamed)
+            .map(name -> annotationNamed(metadata, name))
             .orElse(null);
         if (written != null) {
             return written;
@@ -201,13 +201,21 @@ public class CdiBean<T> implements Bean<T> {
         return definition.isSingleton() ? Singleton.class : Dependent.class;
     }
 
-    @SuppressWarnings("unchecked")
-    private static @Nullable Class<? extends Annotation> scopeNamed(String name) {
-        try {
-            return (Class<? extends Annotation>) Class.forName(name, false, CdiBean.class.getClassLoader());
-        } catch (ClassNotFoundException | LinkageError e) {
-            return null;
-        }
+    /**
+     * The annotation class of the given name: a scope of the specification, which is known by name, or an
+     * annotation the bean was compiled with, whose class the compiled metadata refers to.
+     */
+    private static @Nullable Class<? extends Annotation> annotationNamed(AnnotationMetadata metadata, String name) {
+        return switch (name) {
+            case "jakarta.enterprise.context.Dependent" -> Dependent.class;
+            case "jakarta.enterprise.context.ApplicationScoped" -> jakarta.enterprise.context.ApplicationScoped.class;
+            case "jakarta.enterprise.context.RequestScoped" -> jakarta.enterprise.context.RequestScoped.class;
+            case "jakarta.enterprise.context.SessionScoped" -> jakarta.enterprise.context.SessionScoped.class;
+            case "jakarta.enterprise.context.ConversationScoped" ->
+                jakarta.enterprise.context.ConversationScoped.class;
+            case "jakarta.inject.Singleton" -> Singleton.class;
+            default -> metadata.getAnnotationType(name).orElse(null);
+        };
     }
 
     @Override
@@ -224,7 +232,7 @@ public class CdiBean<T> implements Bean<T> {
         Set<Class<? extends Annotation>> stereotypes = new LinkedHashSet<>();
         for (String name : definition.getAnnotationMetadata()
             .getAnnotationNamesByStereotype("jakarta.enterprise.inject.Stereotype")) {
-            Class<? extends Annotation> stereotype = scopeNamed(name);
+            Class<? extends Annotation> stereotype = annotationNamed(definition.getAnnotationMetadata(), name);
             if (stereotype != null) {
                 stereotypes.add(stereotype);
             }

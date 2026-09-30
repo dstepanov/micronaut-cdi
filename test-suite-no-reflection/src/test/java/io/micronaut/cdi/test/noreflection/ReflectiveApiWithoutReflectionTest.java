@@ -52,6 +52,11 @@ class ReflectiveApiWithoutReflectionTest {
     @interface Plain {
     }
 
+    @Plain
+    @Dependent
+    static class Stereotyped {
+    }
+
     private ApplicationContext context;
     private CdiBeanContainer container;
 
@@ -96,6 +101,14 @@ class ReflectiveApiWithoutReflectionTest {
         assertNamesTheModule(() -> container.isScope(Plain.class));
         assertNamesTheModule(() -> container.isStereotype(Plain.class));
         assertNamesTheModule(() -> container.isInterceptorBinding(Plain.class));
+    }
+
+    @Test
+    void theScopeAndTheStereotypesOfABeanAreTheClassesItWasCompiledWith() {
+        jakarta.enterprise.inject.spi.Bean<?> bean = container.getBeans(Stereotyped.class).iterator().next();
+        assertEquals(Dependent.class, bean.getScope());
+        assertEquals(java.util.Set.of(Plain.class), bean.getStereotypes());
+        assertEquals(ApplicationScoped.class, container.getBeans(Holder.class).iterator().next().getScope());
     }
 
     @Test

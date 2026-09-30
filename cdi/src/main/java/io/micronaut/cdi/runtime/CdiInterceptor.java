@@ -89,7 +89,7 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         Set<Annotation> bindings = new LinkedHashSet<>();
         for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
             AnnotationValue<?> value = metadata.getAnnotation(name);
-            Class<? extends Annotation> type = annotationClassOf(name);
+            Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
             if (type != null && type.isAnnotationPresent(jakarta.interceptor.InterceptorBinding.class)) {
                 bindings.add(CdiAnnotations.annotationOf(type, value));
             }
@@ -188,16 +188,6 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         }
         InterceptorMethods methods = InterceptorMethods.of(definition, kind);
         return methods.isEmpty() ? null : methods;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static @Nullable Class<? extends Annotation> annotationClassOf(String name) {
-        try {
-            return (Class<? extends Annotation>) Class.forName(name, false,
-                Thread.currentThread().getContextClassLoader());
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
     }
 
     @Override

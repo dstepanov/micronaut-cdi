@@ -27,7 +27,6 @@ import jakarta.enterprise.inject.build.compatible.spi.InvokerInfo;
 import jakarta.enterprise.invoke.Invoker;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
 
 /**
  * One invoker an extension built (CDI 4.1, chapter 7): what the {@code InvokerBuilder} of the registration
@@ -46,11 +45,6 @@ import java.util.Map;
  */
 @Internal
 public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Object> {
-
-    private static final Map<String, Class<?>> PRIMITIVES = Map.of(
-        "boolean", boolean.class, "byte", byte.class, "short", short.class, "char", char.class,
-        "int", int.class, "long", long.class, "float", float.class, "double", double.class,
-        "void", void.class);
 
     private final String beanClassName;
     private final String methodName;
@@ -116,14 +110,10 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
                 + beanClassName + "#" + methodName + " in");
         }
         BeanContext beanContext = container.beanContext();
-        ClassLoader loader = beanContext.getClassLoader();
-        Class<?> beanClass = Class.forName(beanClassName, false, loader);
-        Class<?>[] parameterTypes = new Class<?>[parameterTypeNames.length];
-        for (int i = 0; i < parameterTypeNames.length; i++) {
-            parameterTypes[i] = classOf(parameterTypeNames[i], loader);
-        }
-        BeanDefinition<?> definition = definitionOf(beanContext, beanClass);
-        ExecutableMethod<Object, Object> method = executable(definition, parameterTypes);
+        BeanDefinition<?> definition = definitionOf(beanContext);
+        Class<?> beanClass = beanClassOf(definition);
+        ExecutableMethod<Object, Object> method = executable(definition);
+        Class<?>[] parameterTypes = method.getArgumentTypes();
 
         if (arguments == null) {
             if (parameterTypes.length > 0) {
@@ -190,28 +180,26 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
         if (!anyLookup) {
             return;
         }
+        Class<?> beanClass;
+        ExecutableMethod<Object, Object> method;
         try {
-            ClassLoader loader = beanContext.getClassLoader();
-            Class<?> beanClass = Class.forName(beanClassName, false, loader);
-            Class<?>[] parameterTypes = new Class<?>[parameterTypeNames.length];
-            for (int i = 0; i < parameterTypeNames.length; i++) {
-                parameterTypes[i] = classOf(parameterTypeNames[i], loader);
-            }
-            ExecutableMethod<Object, Object> method = executable(definitionOf(beanContext, beanClass), parameterTypes);
-            CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
-            if (instanceLookup && !staticMethod) {
-                resolvable(lookup, Argument.of(beanClass), "the instance of " + beanClassName);
-            }
-            Argument<?>[] methodArguments = method.getArguments();
-            for (int i = 0; i < methodArguments.length; i++) {
-                if (argumentLookups[i]) {
-                    resolvable(lookup, methodArguments[i],
-                        "the argument at " + i + " of " + beanClassName + "#" + methodName);
-                }
-            }
-        } catch (ClassNotFoundException e) {
+            BeanDefinition<?> definition = definitionOf(beanContext);
+            beanClass = beanClassOf(definition);
+            method = executable(definition);
+        } catch (IllegalStateException e) {
             throw new jakarta.enterprise.inject.spi.DeploymentException(
                 "The invoker of " + beanClassName + "#" + methodName + " names a class that is not there", e);
+        }
+        CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
+        if (instanceLookup && !staticMethod) {
+            resolvable(lookup, Argument.of(beanClass), "the instance of " + beanClassName);
+        }
+        Argument<?>[] methodArguments = method.getArguments();
+        for (int i = 0; i < methodArguments.length; i++) {
+            if (argumentLookups[i]) {
+                resolvable(lookup, methodArguments[i],
+                    "the argument at " + i + " of " + beanClassName + "#" + methodName);
+            }
         }
     }
 
@@ -266,18 +254,56 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
         return value;
     }
 
-    private ExecutableMethod<Object, Object> executable(BeanDefinition<?> definition, Class<?>[] parameterTypes) {
-        @SuppressWarnings("unchecked")
-        ExecutableMethod<Object, Object> method = (ExecutableMethod<Object, Object>) definition
-            .findMethod(methodName, parameterTypes)
-            .orElseThrow(() -> new IllegalStateException("The method " + beanClassName + "#" + methodName
-                + " was not compiled as an executable method"));
-        return method;
+    /**
+     * The executable method compiled for the method the invoker names, told from its overloads by the names of
+     * the parameter types, which is what was recorded of them.
+     */
+    @SuppressWarnings("unchecked")
+    private ExecutableMethod<Object, Object> executable(BeanDefinition<?> definition) {
+        for (ExecutableMethod<?, ?> candidate : definition.getExecutableMethods()) {
+            if (!candidate.getMethodName().equals(methodName)) {
+                continue;
+            }
+            Class<?>[] types = candidate.getArgumentTypes();
+            if (types.length != parameterTypeNames.length) {
+                continue;
+            }
+            boolean same = true;
+            for (int i = 0; i < types.length && same; i++) {
+                same = nameOf(types[i]).equals(parameterTypeNames[i]);
+            }
+            if (same) {
+                return (ExecutableMethod<Object, Object>) candidate;
+            }
+        }
+        throw new IllegalStateException("The method " + beanClassName + "#" + methodName
+            + " was not compiled as an executable method");
     }
 
-    private static BeanDefinition<?> definitionOf(BeanContext beanContext, Class<?> beanClass) {
+    /**
+     * The name a parameter type is recorded by: the binary name of the class, followed by a pair of brackets
+     * for each dimension of an array.
+     */
+    private static String nameOf(Class<?> type) {
+        StringBuilder brackets = new StringBuilder();
+        Class<?> component = type;
+        while (component.isArray()) {
+            brackets.append("[]");
+            component = component.getComponentType();
+        }
+        return component.getName() + brackets;
+    }
+
+    /**
+     * The definition of the bean the invoker names, found by the name of its class among the definitions of
+     * the container: the class is named, not loaded.
+     */
+    private BeanDefinition<?> definitionOf(BeanContext beanContext) {
         BeanDefinition<?> found = null;
-        for (BeanDefinition<?> candidate : beanContext.getBeanDefinitions(beanClass)) {
+        for (BeanDefinition<?> candidate : beanContext.getAllBeanDefinitions()) {
+            if (!beanClassOf(candidate).getName().equals(beanClassName)) {
+                continue;
+            }
             if (found == null || found instanceof ProxyBeanDefinition<?>) {
                 // a plain definition is preferred, but a proxy's inherits the class's executable methods and
                 // serves where it is the only one the context reports
@@ -285,27 +311,13 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
             }
         }
         if (found == null) {
-            throw new IllegalStateException("No bean of " + beanClass.getName() + " to invoke");
+            throw new IllegalStateException("No bean of " + beanClassName + " to invoke");
         }
         return found;
     }
 
-    private static Class<?> classOf(String name, ClassLoader loader) throws ClassNotFoundException {
-        int dimensions = 0;
-        while (name.endsWith("[]")) {
-            dimensions++;
-            name = name.substring(0, name.length() - 2);
-        }
-        Class<?> primitive = PRIMITIVES.get(name);
-        Class<?> component = primitive != null ? primitive
-            : io.micronaut.core.reflect.ClassUtils.forName(name, loader).orElse(null);
-        if (component == null) {
-            throw new ClassNotFoundException(name);
-        }
-        for (int i = 0; i < dimensions; i++) {
-            component = component.arrayType();
-        }
-        return component;
+    private static Class<?> beanClassOf(BeanDefinition<?> definition) {
+        return definition instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : definition.getBeanType();
     }
 
     /**
