@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
 import org.jspecify.annotations.Nullable;
 
@@ -39,16 +40,51 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class CdiRunning {
 
     private static final List<CdiBeanContainer> RUNNING = new CopyOnWriteArrayList<>();
+    private static final List<BeanContext> CONTEXTS = new CopyOnWriteArrayList<>();
 
     private CdiRunning() {
     }
 
     static void started(CdiBeanContainer container) {
         RUNNING.add(container);
+        starting(container.beanContext());
     }
 
     static void stopped(CdiBeanContainer container) {
         RUNNING.remove(container);
+        CONTEXTS.remove(container.beanContext());
+    }
+
+    /**
+     * Makes a bean context known while its container is still coming up: the infrastructure of a container
+     * fires the lifecycle events of the application before the container itself is there to be asked.
+     *
+     * @param beanContext The bean context of a container that is starting
+     */
+    static void starting(BeanContext beanContext) {
+        if (!CONTEXTS.contains(beanContext)) {
+            CONTEXTS.add(beanContext);
+        }
+    }
+
+    /**
+     * Forgets a bean context whose container is going down, or never came up.
+     *
+     * @param beanContext The bean context
+     */
+    static void stopped(BeanContext beanContext) {
+        CONTEXTS.remove(beanContext);
+    }
+
+    /**
+     * The bean context of the container that is current, which may still be starting.
+     *
+     * @return The most recently started bean context, or {@code null} when there is none
+     */
+    public static @Nullable BeanContext currentContext() {
+        // one snapshot, as for the containers
+        Object[] contexts = CONTEXTS.toArray();
+        return contexts.length == 0 ? null : (BeanContext) contexts[contexts.length - 1];
     }
 
     /**

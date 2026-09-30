@@ -7,15 +7,17 @@ noReflection {
     allowIn 'io.micronaut.cdi.reflection.*'
 }
 
-// The parts of the specification that can only be answered by reading the application back with reflection.
+// The parts of the specification's API that hand out reflection objects.
 //
-// Micronaut resolves and injects a bean without reflecting, and this module implements the specification the same
-// way: what a bean is was decided while it was compiled. The registration phase of a build compatible extension
-// asks for something else — it describes every bean and every observer of the finished container to an extension,
-// in the terms of the specification's own language model, and there is no compiler around to describe them with.
+// Micronaut resolves and injects a bean without reflecting, and micronaut-cdi implements the specification the same
+// way: what a bean is was decided while it was compiled, and the phases of a build compatible extension run while
+// the application compiles. What is left is the API a program calls that is written in terms of reflection - the
+// Member of an injection point and its Annotated model, an annotation instance, the annotations of an annotation
+// class the build never saw. This module implements the CdiReflection interface those calls go through.
 //
-// That is why it is a module of its own rather than part of the runtime: an application that does not use the
-// phase does not have it, and one that does asks for it by adding this dependency.
+// That is why it is a module of its own rather than part of the runtime: an application that calls none of that
+// API does not have it, and one that does asks for it by adding this dependency. Without it each such call fails
+// with an UnsupportedOperationException that names this module.
 dependencies {
     api projects.micronautCdi
     // the reflection module of Micronaut, which answers the accessors of an interceptor's InvocationContext that

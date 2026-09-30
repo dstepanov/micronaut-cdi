@@ -24,7 +24,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Set;
 
@@ -32,9 +31,9 @@ import java.util.Set;
  * One injection point of a bean, described from what was compiled.
  *
  * <p>The type and the qualifiers come from the argument Micronaut resolved for the point, generics included. The
- * member is the one part the specification asks for that compiled metadata does not carry as an object, so it is
- * looked up reflectively — here, where a program asked to be told about the bean, not anywhere a bean is
- * resolved or injected.</p>
+ * member and its annotated model are the parts the specification asks for that compiled metadata does not carry
+ * as objects: they are reflection objects, handed out through {@link CdiReflection} when a program asks for
+ * them, and not read anywhere a bean is resolved or injected.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -96,66 +95,13 @@ public final class CdiInjectionPoint implements InjectionPoint {
     @Override
     public @Nullable Member getMember() {
         String memberName = this.memberName;
-        if (memberName == null) {
+        Class<?> declaringClass = this.declaringClass;
+        if (memberName == null || declaringClass == null) {
             // an injection point that stands for a programmatic lookup has no member
             return null;
         }
-        for (Class<?> type = declaringClass; type != null && type != Object.class; type = type.getSuperclass()) {
-            if (field) {
-                try {
-                    return type.getDeclaredField(memberName);
-                } catch (NoSuchFieldException e) {
-                    // declared further up
-                }
-            } else if ("<init>".equals(memberName)) {
-                java.lang.reflect.Constructor<?> fallback = null;
-                for (java.lang.reflect.Constructor<?> constructor : type.getDeclaredConstructors()) {
-                    if (constructor.isSynthetic()) {
-                        continue;
-                    }
-                    // the bean constructor is the injected one where one is marked; else the one that takes
-                    // what this point injects
-                    if (constructor.isAnnotationPresent(jakarta.inject.Inject.class)
-                        || takesTheArgument(constructor.getParameterTypes())) {
-                        return constructor;
-                    }
-                    if (fallback == null) {
-                        fallback = constructor;
-                    }
-                }
-                if (fallback != null) {
-                    return fallback;
-                }
-            } else {
-                Method fallback = null;
-                for (Method method : type.getDeclaredMethods()) {
-                    if (!method.getName().equals(memberName)) {
-                        continue;
-                    }
-                    // of same-named overloads, the injected member is the one that takes what this point
-                    // injects
-                    if (takesTheArgument(method.getParameterTypes())) {
-                        return method;
-                    }
-                    if (fallback == null) {
-                        fallback = method;
-                    }
-                }
-                if (fallback != null) {
-                    return fallback;
-                }
-            }
-        }
-        return null;
-    }
-
-    private boolean takesTheArgument(Class<?>[] parameterTypes) {
-        for (Class<?> parameterType : parameterTypes) {
-            if (parameterType.equals(memberArgument.getType())) {
-                return true;
-            }
-        }
-        return false;
+        return CdiReflection.current("InjectionPoint.getMember()")
+            .member(declaringClass, memberName, field, memberArgument.getType());
     }
 
     /**
@@ -200,34 +146,19 @@ public final class CdiInjectionPoint implements InjectionPoint {
 
     @Override
     public Annotated getAnnotated() {
-        Member member = getMember();
-        if (member instanceof java.lang.reflect.Field javaField) {
-            return new ReflectiveAnnotatedField(javaField);
+        String memberName = this.memberName;
+        Class<?> declaringClass = this.declaringClass;
+        if (memberName == null || declaringClass == null) {
+            throw new UnsupportedOperationException("An injection point that stands for a programmatic lookup "
+                + "has no annotated model");
         }
-        if (member instanceof java.lang.reflect.Executable executable) {
-            int position = positionOf(executable);
-            if (position >= 0) {
-                return new ReflectiveAnnotatedParameter(executable, position);
-            }
+        CdiReflection reflection = CdiReflection.current("InjectionPoint.getAnnotated()");
+        Member member = reflection.member(declaringClass, memberName, field, memberArgument.getType());
+        if (member == null) {
+            throw new UnsupportedOperationException("The annotated model of this injection point cannot be read "
+                + "back from the compiled class");
         }
-        throw new UnsupportedOperationException("The annotated model of this injection point cannot be read "
-            + "back from the compiled class");
-    }
-
-    private int positionOf(java.lang.reflect.Executable executable) {
-        Class<?> raw = memberArgument.getType();
-        java.lang.reflect.Parameter[] parameters = executable.getParameters();
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getType().equals(raw) && parameters[i].getName().equals(memberArgument.getName())) {
-                return i;
-            }
-        }
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getType().equals(raw)) {
-                return i;
-            }
-        }
-        return -1;
+        return reflection.annotated(member, memberArgument.getType(), memberArgument.getName());
     }
 
     @Override
@@ -237,7 +168,8 @@ public final class CdiInjectionPoint implements InjectionPoint {
 
     @Override
     public boolean isTransient() {
-        return getMember() instanceof java.lang.reflect.Field javaField
+        // only a field can be transient, and whether one is is read off the field itself
+        return field && getMember() instanceof java.lang.reflect.Field javaField
             && java.lang.reflect.Modifier.isTransient(javaField.getModifiers());
     }
 

@@ -56,6 +56,7 @@ public final class ExtensionContexts {
 
     private final BeanContext beanContext;
     private final Map<String, List<AlterableContext>> contextsByScope = new LinkedHashMap<>();
+    private final Set<String> normalScopes = new LinkedHashSet<>();
 
     private final List<String> registeredQualifiers = new ArrayList<>();
     private final List<String[]> registeredNonbindingMembers = new ArrayList<>();
@@ -136,6 +137,9 @@ public final class ExtensionContexts {
             List<AlterableContext> contextsOfScope = new ArrayList<>();
             contextsOfScope.add(context);
             contextsByScope.put(scopeName, contextsOfScope);
+            if (registered != null && registered.booleanValue("normal").orElse(false)) {
+                normalScopes.add(scopeName);
+            }
             beanContext.registerBeanDefinition(RuntimeBeanDefinition
                 .builder(io.micronaut.context.scope.CustomScope.class,
                     () -> new ExtensionCustomScope(scopeAnnotation, contextsOfScope, beanContext))
@@ -143,6 +147,16 @@ public final class ExtensionContexts {
                 .typeArguments(Argument.of(scopeAnnotation))
                 .build());
         }
+    }
+
+    /**
+     * Whether the extension registered the given scope as a normal one.
+     *
+     * @param scopeAnnotation The scope
+     * @return Whether it is normal
+     */
+    public boolean isNormal(Class<? extends Annotation> scopeAnnotation) {
+        return normalScopes.contains(scopeAnnotation.getName());
     }
 
     @SuppressWarnings("unchecked")

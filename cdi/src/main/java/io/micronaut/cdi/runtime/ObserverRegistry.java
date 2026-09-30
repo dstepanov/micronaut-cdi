@@ -59,6 +59,13 @@ public final class ObserverRegistry {
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
+        // the lifecycle events of the application are fired through this before the container is up
+        CdiRunning.starting(beanContext);
+    }
+
+    @jakarta.annotation.PreDestroy
+    void stopped() {
+        CdiRunning.stopped(beanContext);
     }
 
     /**

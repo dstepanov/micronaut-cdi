@@ -213,6 +213,7 @@ public final class CdiQualifiers {
      */
     private static boolean isMicronautOwn(String name) {
         return "io.micronaut.context.annotation.Primary".equals(name)
+            || "io.micronaut.context.annotation.Secondary".equals(name)
             || "io.micronaut.context.annotation.Any".equals(name)
             || "io.micronaut.context.annotation.Type".equals(name);
     }
@@ -226,6 +227,13 @@ public final class CdiQualifiers {
      */
     @SuppressWarnings("unchecked")
     private static @Nullable Annotation synthesize(String name, AnnotationValue<Annotation> annotation) {
+        // the qualifiers of the specification have literals of their own, and need nothing materialized
+        if ("jakarta.enterprise.inject.Default".equals(name)) {
+            return Default.Literal.INSTANCE;
+        }
+        if ("jakarta.inject.Named".equals(name)) {
+            return jakarta.enterprise.inject.literal.NamedLiteral.of(annotation.stringValue().orElse(""));
+        }
         try {
             Class<? extends Annotation> type = (Class<? extends Annotation>) Class.forName(
                 name, false, CdiQualifiers.class.getClassLoader());

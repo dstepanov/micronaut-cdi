@@ -26,18 +26,13 @@ noReflection {
 
     // the bean manager is asked about annotation classes a program hands it: whether one is a scope, a qualifier,
     // a stereotype or an interceptor binding, and what a stereotype carries
-    allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'ANNOTATIONS', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
+    allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
     allowIn 'io.micronaut.cdi.runtime.CdiInstance', 'ANNOTATIONS'
     allowIn 'io.micronaut.cdi.runtime.CdiInterceptor', 'ANNOTATIONS', 'CLASS_LOADING'
     allowIn 'io.micronaut.cdi.runtime.ExtensionQualifiers', 'ANNOTATIONS'
     // a qualifier is an annotation instance on the specification's side, materialized from what was compiled
     allowIn 'io.micronaut.cdi.runtime.CdiQualifiers', 'ANNOTATIONS', 'CLASS_LOADING', 'CLASS_MEMBERS'
-    allowIn 'io.micronaut.cdi.runtime.CdiAnnotations', 'ANNOTATIONS', 'CLASS_MEMBERS', 'PROXY', 'REFLECTIVE_ACCESS'
-    // InjectionPoint.getMember and getAnnotated hand out the member itself, looked up only when a program asks
-    allowIn 'io.micronaut.cdi.runtime.CdiInjectionPoint', 'ANNOTATIONS', 'CLASS_MEMBERS'
-    allowIn 'io.micronaut.cdi.runtime.ReflectiveAnnotatedField', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.ReflectiveAnnotatedParameter', 'ANNOTATIONS', 'CLASS_MEMBERS', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.ReflectiveAnnotatedType', 'ANNOTATIONS', 'GENERIC_SIGNATURES'
+    allowIn 'io.micronaut.cdi.runtime.CdiAnnotations', 'ANNOTATIONS', 'CLASS_MEMBERS'
     // an invoker built at build time names its bean class, which is loaded when the invoker is first used
     allowIn 'io.micronaut.cdi.runtime.RecordedInvoker', 'CLASS_LOADING'
 

@@ -91,6 +91,17 @@ public final class ExtensionQualifiers {
     }
 
     /**
+     * Whether the annotation of the given name is one the application was compiled with as a qualifier: a bean
+     * carries it as one, or an extension made it one.
+     *
+     * @param name The annotation's name
+     * @return Whether it is known as a qualifier
+     */
+    public static boolean isKnownQualifier(String name) {
+        return NAMES.containsKey(name);
+    }
+
+    /**
      * Remembers an annotation an extension made a qualifier of.
      *
      * @param name The annotation's name

@@ -73,6 +73,17 @@ import java.util.Set;
 @Internal
 public final class CdiBeanContainer implements BeanManager {
 
+    /**
+     * The annotations the specification declares, which are what they are whatever a build recorded.
+     */
+    private static final Set<String> NORMAL_SCOPES = Set.of(
+        "jakarta.enterprise.context.ApplicationScoped", "jakarta.enterprise.context.RequestScoped",
+        "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");
+    private static final Set<String> PSEUDO_SCOPES = Set.of(
+        "jakarta.enterprise.context.Dependent", "jakarta.inject.Singleton");
+    private static final Set<String> QUALIFIERS = Set.of(
+        "jakarta.enterprise.inject.Default", "jakarta.enterprise.inject.Any", "jakarta.inject.Named");
+
     private final BeanContext beanContext;
     private final RequestScope requestScope;
     private final io.micronaut.cdi.context.ApplicationScope applicationScope;
@@ -430,31 +441,75 @@ public final class CdiBeanContainer implements BeanManager {
         return true;
     }
 
+    /**
+     * What answers a question about an annotation class the build recorded nothing of, which only reading the
+     * class can answer.
+     */
+    private CdiReflection reflection(String what, Class<? extends Annotation> annotationType) {
+        return CdiReflection.require(beanContext, what + " of " + annotationType.getName()
+            + ", an annotation the application was not compiled with as one,");
+    }
+
     @Override
     public boolean isScope(Class<? extends Annotation> annotationType) {
-        return annotationType.isAnnotationPresent(jakarta.inject.Scope.class) || isNormalScope(annotationType);
+        String name = annotationType.getName();
+        if (NORMAL_SCOPES.contains(name) || PSEUDO_SCOPES.contains(name) || isRegisteredScope(annotationType)) {
+            return true;
+        }
+        CdiReflection reflection = reflection("BeanContainer.isScope", annotationType);
+        return reflection.isAnnotated(annotationType, jakarta.inject.Scope.class)
+            || reflection.isAnnotated(annotationType, NormalScope.class);
     }
 
     @Override
     public boolean isNormalScope(Class<? extends Annotation> annotationType) {
-        return annotationType.isAnnotationPresent(NormalScope.class);
+        String name = annotationType.getName();
+        if (NORMAL_SCOPES.contains(name)) {
+            return true;
+        }
+        if (PSEUDO_SCOPES.contains(name)) {
+            return false;
+        }
+        java.util.Optional<io.micronaut.cdi.runtime.extension.ExtensionContexts> extensionContexts =
+            beanContext.findBean(io.micronaut.cdi.runtime.extension.ExtensionContexts.class);
+        if (extensionContexts.isPresent() && !extensionContexts.get().contextsFor(annotationType).isEmpty()) {
+            // a scope an extension registered is normal where the extension registered it as one
+            return extensionContexts.get().isNormal(annotationType);
+        }
+        return reflection("BeanContainer.isNormalScope", annotationType).isAnnotated(annotationType, NormalScope.class);
+    }
+
+    private boolean isRegisteredScope(Class<? extends Annotation> annotationType) {
+        return beanContext.findBean(io.micronaut.cdi.runtime.extension.ExtensionContexts.class)
+            .map(contexts -> !contexts.contextsFor(annotationType).isEmpty())
+            .orElse(false);
     }
 
     @Override
     public boolean isQualifier(Class<? extends Annotation> annotationType) {
-        // an annotation the discovery phase registered as a qualifier is one, though nothing on it says so
-        return annotationType.isAnnotationPresent(jakarta.inject.Qualifier.class)
-            || ExtensionQualifiers.isQualifier(annotationType);
+        // the qualifiers of the specification, and the ones the beans of the application were compiled with —
+        // an annotation the discovery phase registered as a qualifier among them, though nothing on it says so
+        if (QUALIFIERS.contains(annotationType.getName())
+            || ExtensionQualifiers.isKnownQualifier(annotationType.getName())) {
+            return true;
+        }
+        return reflection("BeanContainer.isQualifier", annotationType)
+            .isAnnotated(annotationType, jakarta.inject.Qualifier.class);
     }
 
     @Override
     public boolean isStereotype(Class<? extends Annotation> annotationType) {
-        return annotationType.isAnnotationPresent(jakarta.enterprise.inject.Stereotype.class);
+        if ("jakarta.enterprise.inject.Model".equals(annotationType.getName())) {
+            return true;
+        }
+        return reflection("BeanContainer.isStereotype", annotationType)
+            .isAnnotated(annotationType, jakarta.enterprise.inject.Stereotype.class);
     }
 
     @Override
     public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
-        return annotationType.isAnnotationPresent(jakarta.interceptor.InterceptorBinding.class);
+        return reflection("BeanContainer.isInterceptorBinding", annotationType)
+            .isAnnotated(annotationType, jakarta.interceptor.InterceptorBinding.class);
     }
 
     @Override
@@ -554,12 +609,14 @@ public final class CdiBeanContainer implements BeanManager {
 
     @Override
     public Set<Annotation> getInterceptorBindingDefinition(Class<? extends Annotation> bindingType) {
-        return metaAnnotationsOf(bindingType, "jakarta.interceptor.InterceptorBinding");
+        return definitionOf(bindingType, jakarta.interceptor.InterceptorBinding.class,
+            "BeanManager.getInterceptorBindingDefinition");
     }
 
     @Override
     public Set<Annotation> getStereotypeDefinition(Class<? extends Annotation> stereotype) {
-        return metaAnnotationsOf(stereotype, "jakarta.enterprise.inject.Stereotype");
+        return definitionOf(stereotype, jakarta.enterprise.inject.Stereotype.class,
+            "BeanManager.getStereotypeDefinition");
     }
 
     /**
@@ -567,29 +624,16 @@ public final class CdiBeanContainer implements BeanManager {
      * interceptor binding or of a stereotype.
      *
      * <p>It is read off the annotation the author wrote rather than worked out again: a stereotype is a set of
-     * annotations, and the set is the one written on it.</p>
+     * annotations, and the set is the one written on it. The annotations are instances, which reading the
+     * annotation class is what hands out.</p>
      */
-    private static Set<Annotation> metaAnnotationsOf(Class<? extends Annotation> type, String required) {
-        if (!type.isAnnotationPresent(annotationNamed(required))) {
-            throw new IllegalArgumentException(type.getName() + " is not annotated " + required);
+    private Set<Annotation> definitionOf(Class<? extends Annotation> type, Class<? extends Annotation> required,
+                                         String what) {
+        CdiReflection reflection = CdiReflection.require(beanContext, what);
+        if (!reflection.isAnnotated(type, required)) {
+            throw new IllegalArgumentException(type.getName() + " is not annotated " + required.getName());
         }
-        Set<Annotation> annotations = new LinkedHashSet<>();
-        for (Annotation annotation : type.getAnnotations()) {
-            if (!annotation.annotationType().getName().startsWith("java.lang.annotation.")) {
-                annotations.add(annotation);
-            }
-        }
-        return annotations;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Class<? extends Annotation> annotationNamed(String name) {
-        try {
-            return (Class<? extends Annotation>) Class.forName(name, false,
-                CdiBeanContainer.class.getClassLoader());
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(name + " is not on the classpath", e);
-        }
+        return reflection.metaAnnotationsOf(type);
     }
 
     @Override
