@@ -221,10 +221,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         if (bean instanceof BeanDefinition<?> definition) {
             // a bean produced by a member of an application class belongs to the archive its producer is in,
             // whatever type it produces
-            Class<?> declaring = definition.getDeclaringType().orElse(null);
-            if (declaring != null && !isInfrastructure(declaring.getName())
-                && !isSelected(declaring.getName())) {
-                return false;
+            // the client proxy of a bean declares itself; it is in the archive its bean class is in
+            Class<?> declaring = definition instanceof ProxyBeanDefinition<?> proxied
+                ? proxied.getTargetType() : definition.getDeclaringType().orElse(null);
+            if (declaring != null) {
+                boolean selected = isSelected(declaring.getName());
+                if (selected && isProduced(definition, declaring)) {
+                    // the producer's class is in the archive, and so is what it produces: a String, say
+                    return true;
+                }
+                if (!selected && !isInfrastructure(declaring.getName())) {
+                    return false;
+                }
             }
         }
         Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
@@ -234,15 +242,30 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     private static boolean onClasspath(io.micronaut.inject.BeanType<?> bean, Set<String> classpath) {
         if (bean instanceof BeanDefinition<?> definition) {
-            Class<?> declaring = definition.getDeclaringType().orElse(null);
-            if (declaring != null && !isInfrastructure(declaring.getName())
-                && !classpath.contains(outerClassOf(declaring.getName()))) {
-                return false;
+            // the client proxy of a bean declares itself; it is in the archive its bean class is in
+            Class<?> declaring = definition instanceof ProxyBeanDefinition<?> proxied
+                ? proxied.getTargetType() : definition.getDeclaringType().orElse(null);
+            if (declaring != null) {
+                boolean listed = classpath.contains(outerClassOf(declaring.getName()));
+                if (listed && isProduced(definition, declaring)) {
+                    return true;
+                }
+                if (!listed && !isInfrastructure(declaring.getName())) {
+                    return false;
+                }
             }
         }
         Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
         String name = type.getName();
         return isInfrastructure(name) || classpath.contains(outerClassOf(name));
+    }
+
+    /**
+     * Whether the bean is produced by a member of another class - a producer method or field - rather than
+     * being a class itself.
+     */
+    private static boolean isProduced(BeanDefinition<?> definition, Class<?> declaring) {
+        return !(definition instanceof ProxyBeanDefinition<?>) && declaring != definition.getBeanType();
     }
 
     private static boolean isInfrastructure(String className) {
