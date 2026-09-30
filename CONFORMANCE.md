@@ -41,10 +41,11 @@ is as visible in a test report as what is.
 | 2.4.2 | Resolution by every qualifier named, with `@Nonbinding` members left out of the comparison | `CdiQualifiers`, `CdiAnnotations` |
 | 2.10.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 2.10.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
-| 2.10.5 | The `@Synthesis` phase, and the synthetic beans it describes | `SynthesisRunner`, `io.micronaut.cdi.runtime.extension` |
-| 2.10.6 | The `@Validation` phase, whose errors stop the container from starting | `SynthesisRunner` |
-| 2.10.4 | The `@Registration` phase, run over each bean and observer as it is compiled | `ElementBeanInfo`, `ElementObserverInfo`, `BuildCompatibleExtensionVisitor` |
-| 2.10.5 | Synthetic beans and synthetic observers, with the creation and disposal functions and the lookup they are handed | `SynthesisRunner`, `SyntheticObserverMethod` |
+| 2.10.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each written as a generated bean definition | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
+| 2.10.6 | The `@Validation` phase, whose errors fail the compilation | `BuildCompatibleExtensionVisitor` |
+| 2.10.4 | The `@Registration` phase, run over each bean and observer as it is compiled, and over the synthetic beans and observers and the built-in beans once synthesis has run | `ElementBeanInfo`, `ElementObserverInfo`, `SyntheticBeanInfo`, `SyntheticObserverInfo`, `BuildCompatibleExtensionVisitor` |
+| 2.10 | `AnnotationBuilder` and `Types`, composing annotation values and types of the one language model | `ElementAnnotationBuilder`, `ElementBuildServices`, `VisitorTypes` |
+| 2.10.5 | Synthetic beans and synthetic observers at runtime, registered from what was recorded, with the creation and disposal functions, the parameters and the lookup they are handed | `RecordedSynthesis`, `CdiParameters`, `SyntheticObserverMethod` |
 | 2.10.1 | `ScannedClasses.add` and `MetaAnnotations.addContext`, applied while the classes are compiled | `DiscoveredClasses`, `ExtensionContexts` |
 | 5 (SE) | The SE bootstrap: `SeContainerInitializer` through the service loader, `SeContainer` over a Micronaut context, discovery turned off as a narrowed one | `MicronautSeContainerInitializer`, `MicronautSeContainer` |
 | 2.1.7 (SE) | An alternative no priority selected, enabled by `selectAlternatives`/`selectAlternativeStereotypes` as the container is built | `CdiSelectableAlternative`, `UnselectedAlternative` |
@@ -101,23 +102,47 @@ type it was written as and keeps the two apart, so a lookup made through this mo
 they resolve is put together. An injection point of a plain Micronaut bean is not rewritten, so it goes on
 resolving the way it did: a field of `Double` injected into one does not resolve a producer of `double`.
 
-### The phases of an extension run at the moments they are about
+### Every phase of an extension runs while the application compiles
 
-*Section 2.10.* Discovery, enhancement and registration run while the classes are compiled, which is where the
-classes are; synthesis and validation run as the container starts, which is where the beans are. An extension
-therefore goes on the annotation processor path of the project it enhances rather than on its classpath, and is
-still found through the service loader as the specification says.
+*Section 2.10.* Discovery runs as the compilation starts. Enhancement and registration run as each class is
+compiled. Synthesis, the registration of what it described, and validation run once every class of the
+compilation has been registered. An extension therefore goes on the annotation processor path of the project it
+is written for rather than on its classpath, and is still found through the service loader as the specification
+says. The running application does not load it, and an extension that is only on the runtime classpath does
+nothing.
 
 What the discovery phase says is recorded by name and applied as the named classes come past the compiler.
 `ScannedClasses.add` writes a generated `@ClassImport` source so that a class that says nothing at all about
-itself is still compiled into a bean; `MetaAnnotations.addContext` records the scope and its context classes,
-which the runtime reads to instantiate the contexts and serve the scope. An annotation registered as a
-qualifier, an interceptor binding or a stereotype is one only if it is compiled by the same build.
+itself is still compiled into a bean. `MetaAnnotations.addContext` generates a bean definition for the context
+class, recording the scope it serves, and the runtime obtains the context from that definition. An annotation
+registered as a qualifier, an interceptor binding or a stereotype is one only if it is compiled by the same build.
 
-The registration phase describes each bean as it is compiled, and so does not describe a bean the compiler never
-saw. Those are the synthetic ones, and describing them means reading their classes back: that is
-`micronaut-cdi-reflection`, a module an application adds when it wants it. Without it a synthetic bean is simply
-not described; every bean that was compiled still is.
+A synthetic bean is written as a bean definition generated for the creator class the extension named, and the
+rest of what the extension said - the bean types, the qualifiers, the scope, the name, the priority, the
+parameters - is the annotation metadata of that definition. The disposer class and the observer class of a
+synthetic observer get a definition the same way. As the container starts it reads those records, registers a
+bean for each synthetic bean, and obtains a creator, a disposer, an observer or a context from its definition:
+it loads no extension, invokes nothing reflectively and instantiates no class by name. The parameters an
+extension attaches with `withParam` are the types the specification allows, all of which an annotation value
+holds. The classes the extension names have to be on the classpath the application is compiled against, and
+each needs a constructor the generated definition can call.
+
+The language model an extension reads, and the annotations and types it composes with `AnnotationBuilder` and
+`Types`, have one implementation, built on the compiler's view of the classes. A synthetic bean, a synthetic
+observer and the built-in beans are described to the registration phase in that model too.
+
+An error an extension reports through `Messages`, or a problem it throws, in synthesis, in the registration of a
+synthetic component or in validation fails the compilation: there is no deployment to refuse later, and the
+compilation is where the application is put together.
+
+Two things follow from where this runs. The synthetic components of a compilation are written by the Java
+annotation processor: a Kotlin compilation through KSP and a Groovy compilation run the phases but cannot write
+the definitions, and say so with a warning. The definition of a context is written by the Java and the Groovy
+compilers; KSP cannot add a definition for a class it does not compile, and warns that the scope will have no
+context. And every compilation of an application that has the extension on
+its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
+the order it described the component in, and the container registers a component once however many
+compilations recorded it.
 
 ### The bean manager answers what CDI Lite can
 
