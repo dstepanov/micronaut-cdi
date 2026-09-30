@@ -159,6 +159,19 @@ observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as 
 instance created for that, and is destroyed when the context has stopped. What an observer of these events
 throws is logged and stops neither the events after it nor the context from stopping.
 
+### An injection point of a collection type collects the beans of its element type
+
+*Section 2.4.2.* The specification has no collection injection: `List<Foo>` is a bean type like any other, an
+injection point of it is satisfied by a bean that has it among its types - a producer of `List<Foo>`, typically -
+and is unsatisfied where there is none; every bean of `Foo` is what `Instance<Foo>` is for. Micronaut decides
+while a bean compiles that an injection point of `Collection`, `List`, `Set` or another collection type is
+injected with all the beans of the element type, and that is what happens here: `@Inject List<Foo>` is the beans
+of `Foo` - the elements of a produced `List<Foo>` among them - rather than the produced list, and is empty
+rather than unsatisfied where there are none. An array is resolved as the specification has it, and a
+programmatic lookup of the collection type - `Instance<List<Foo>>`, `BeanContainer.getBeans` - resolves the bean
+of that type. The hook Micronaut gives for the array, `BeanResolutionCustomizer.shouldResolveArrayAsBean`, is
+asked for an array only, so the collection cannot be decided the same way here.
+
 ### A primitive is boxed by the lookup rather than by the bean
 
 *Section 2.1.2.* A primitive type and the class that boxes it are one bean type. Micronaut resolves a bean by the
