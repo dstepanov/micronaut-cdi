@@ -152,15 +152,8 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
                 return registration.bean();
             } catch (io.micronaut.context.exceptions.BeanCreationException e) {
                 // what the bean's own code — or an interceptor around its construction — threw comes out as
-                // it was thrown when it is unchecked (section 6.1.1)
-                Throwable cause = CdiBean.deepestForeignCause(e);
-                if (cause instanceof RuntimeException runtime) {
-                    throw runtime;
-                }
-                if (cause instanceof Error error) {
-                    throw error;
-                }
-                throw e;
+                // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
+                throw CdiBean.translated(e);
             } finally {
                 if (lookedUpAt != null) {
                     CurrentInjectionPoint.leave();

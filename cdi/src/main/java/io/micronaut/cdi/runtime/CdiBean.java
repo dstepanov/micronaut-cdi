@@ -294,35 +294,47 @@ public final class CdiBean<T> implements Bean<T> {
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // section 6.1.1: what the bean itself threw comes out as it was thrown if it is unchecked, and
             // wrapped in a CreationException if it is checked
-            Throwable cause = deepestForeignCause(e);
-            if (cause instanceof RuntimeException runtime) {
-                throw runtime;
-            }
-            if (cause instanceof Error error) {
-                throw error;
-            }
-            if (cause != null) {
-                throw new jakarta.enterprise.inject.CreationException(cause.getMessage(), cause);
-            }
-            throw e;
+            throw translated(e);
         }
     }
 
     /**
-     * The deepest cause that is not the container's own wrapping, which is what the bean's code threw.
+     * What a failure to create a bean comes out as (section 6.1.1): the exception the bean's own code threw, as
+     * it was thrown when it is unchecked and wrapped in a {@link jakarta.enterprise.inject.CreationException}
+     * when it is checked, or the container's failure itself when nothing else threw.
+     *
+     * @param failure The failure to create the bean
+     * @return The exception to throw
      */
-    static @io.micronaut.core.annotation.Nullable Throwable deepestForeignCause(Throwable thrown) {
-        Throwable foreign = null;
+    static RuntimeException translated(io.micronaut.context.exceptions.BeanCreationException failure) {
+        Throwable cause = firstForeignCause(failure);
+        if (cause instanceof RuntimeException runtime) {
+            return runtime;
+        }
+        if (cause instanceof Error error) {
+            throw error;
+        }
+        if (cause != null) {
+            return new jakarta.enterprise.inject.CreationException(cause.getMessage(), cause);
+        }
+        return failure;
+    }
+
+    /**
+     * The first cause that is not the container's own wrapping, which is what the bean's code threw: the
+     * causes it carries in turn are its own business.
+     */
+    private static @io.micronaut.core.annotation.Nullable Throwable firstForeignCause(Throwable thrown) {
         // guarded against cause cycles of any length, which the platform permits
         java.util.Set<Throwable> walked = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         walked.add(thrown);
         for (Throwable cause = thrown.getCause(); cause != null && walked.add(cause);
              cause = cause.getCause()) {
             if (!cause.getClass().getName().startsWith("io.micronaut.")) {
-                foreign = cause;
+                return cause;
             }
         }
-        return foreign;
+        return null;
     }
 
     /**
