@@ -45,14 +45,15 @@ import static org.junit.jupiter.api.Assumptions.abort;
 class LangModelTckTest {
 
     /**
-     * The sections waiting on a change in Micronaut core, each with the finding of {@code
-     * MICRONAUT-CORE-FINDINGS.md} that names the change and the assertion the section stops at.
+     * The sections waiting on a change in Micronaut core, each with the open point it waits on, described under
+     * "Open points in Micronaut Core" in {@code CONFORMANCE.md}, and the assertion the section stops at.
      */
     private static final Map<String, String> PENDING = Map.of(
-        "AnnotatedTypes", "the annotation on one dimension of an array (finding #37): Micronaut's model keeps one "
-            + "set of annotations for an array type; accepted",
+        "AnnotatedTypes", "the annotation on one dimension of an array (CONFORMANCE.md, Open points in "
+            + "Micronaut Core): Micronaut's model keeps one set of annotations for an array type; accepted",
         "RepeatableAnnotations", "a repeatable annotation written once beside a container the source wrote is "
-            + "folded into that container, and the two are not told apart (finding #39, mixed case); accepted"
+            + "folded into that container, and the two are not told apart (CONFORMANCE.md, Open points in Micronaut "
+            + "Core; the mixed case); accepted"
     );
 
     @TestFactory
