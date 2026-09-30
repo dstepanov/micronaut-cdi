@@ -2,13 +2,15 @@
 <!-- The part of the kit that runs through the Arquillian adapter. It grows as conformance does: a package is
      added when the implementation is ready to be held to it, and what is not on it is not yet claimed. -->
 <suite name="CDI Lite TCK" verbose="1" configfailurepolicy="continue">
-    <!-- core mode: what the kit marks as CDI Full does not run against CDI Lite -->
-    <groups>
-        <run>
-            <exclude name="cdi-full"/>
-        </run>
-    </groups>
+    <!-- core mode: what the kit marks as CDI Full does not run against CDI Lite. Each test of the Lite part
+         says so itself rather than the suite saying it for all of them, so that the last test can run the few
+         classes of CDI Full that are claimed beyond Lite -->
     <test name="definition">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.definition.qualifier.*"/>
             <package name="org.jboss.cdi.tck.tests.definition.scope.*"/>
@@ -19,6 +21,11 @@
         </packages>
     </test>
     <test name="discovery-and-resolution">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.inheritance.generics"/>
             <package name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier"/>
@@ -38,27 +45,52 @@
         </packages>
     </test>
     <test name="lookup">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.lookup.*"/>
         </packages>
     </test>
     <test name="implementation">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.implementation.*"/>
         </packages>
     </test>
     <test name="interceptors">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.interceptors.*"/>
             <package name="org.jboss.cdi.tck.interceptors.tests.*"/>
         </packages>
     </test>
     <test name="build-compatible-extensions">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.build.compatible.extensions.*"/>
         </packages>
     </test>
     <test name="event">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.event.*"/>
         </packages>
@@ -68,11 +100,21 @@
          context.custom), decorators, and InterceptionFactory (discovery.trimmed) - each recorded in
          CONFORMANCE.md -->
     <test name="invokers">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <packages>
             <package name="org.jboss.cdi.tck.tests.invokers.*"/>
         </packages>
     </test>
     <test name="se">
+        <groups>
+            <run>
+                <exclude name="cdi-full"/>
+            </run>
+        </groups>
         <classes>
             <class name="org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest">
                 <methods>
@@ -91,6 +133,21 @@
             <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveSETest"/>
             <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveWithSystemPropertyTest"/>
             <class name="org.jboss.cdi.tck.tests.se.events.lifecycle.StartupShutdownTest"/>
+        </classes>
+    </test>
+    <!-- Beyond Lite: classes the kit marks as CDI Full that pass here all the same, because what they assert
+         is within what this implementation answers - the bean manager's comparison of qualifiers, its injectable
+         references, and interceptors bound with @Interceptors. They are listed by class and nothing of the
+         cdi-full group is excluded here; CDI Full as a whole is still not claimed, and CONFORMANCE.md counts
+         these apart from the Lite tests -->
+    <test name="beyond-lite">
+        <classes>
+            <class name="org.jboss.cdi.tck.tests.full.extensions.beanManager.equivalence.qualifier.QualifierEquivalenceTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.lookup.injectionpoint.broken.reference.ambiguous.AmbiguousInjectableReferenceTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.lookup.injectionpoint.broken.reference.unresolved.UnsatisfiedInjectableReferenceTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.interceptors.tests.contract.method.MethodLevelInterceptorTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.interceptors.contract.invocationContext.InterceptorBindingsWithAtInterceptorsTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.interceptors.definition.interceptorOrder.InterceptorOrderTest"/>
         </classes>
     </test>
 </suite>

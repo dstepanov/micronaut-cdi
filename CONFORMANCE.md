@@ -190,6 +190,16 @@ the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta
 `ScenarioSweepTckTest` — which reads every scenario bean through one container at once — remain as local
 regression tests beside the kit's own.
 
+Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
+own: 9 tests, all passing, which makes 816 in all. Each asserts something this implementation answers although
+the kit files it under Full — the bean manager's comparison and hash code of qualifiers
+(`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
+(`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), and interceptors bound with
+`@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorBindingsWithAtInterceptorsTest`,
+`InterceptorOrderTest`). Their scenario packages are compiled by name (`beyondLiteScenarios` in
+`cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
+still not claimed.
+
 The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 1263 assertions about the language model of
 section 2.10 — the `ClassInfo`, `MethodInfo`, `Type` and `AnnotationInfo` a build compatible extension reads a
 class through — with one entry point, `LangModelVerifier.verify(ClassInfo)`, which asks the model everything

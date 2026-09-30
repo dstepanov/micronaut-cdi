@@ -78,11 +78,26 @@ def unbuildableScenarios = brokenScenarios + [
     'org/jboss/cdi/tck/tests/full/**',
 ]
 
+// The packages of CDI Full that are compiled all the same: the scenarios of the tests the suite runs beyond Lite,
+// each of them asserting something this implementation answers although the kit files it under Full. The list is
+// by package, and a package is added only with a test of the suite's "beyond-lite" block that passes.
+def beyondLiteScenarios = [
+    'org/jboss/cdi/tck/tests/full/extensions/beanManager/equivalence/qualifier/**',
+    'org/jboss/cdi/tck/tests/full/lookup/injectionpoint/broken/reference/**',
+    'org/jboss/cdi/tck/tests/full/interceptors/tests/contract/method/**',
+    'org/jboss/cdi/tck/tests/full/interceptors/contract/invocationContext/**',
+    'org/jboss/cdi/tck/tests/full/interceptors/definition/interceptorOrder/**',
+]
+
 def tckScenarios = tasks.register('tckScenarios', Sync) {
     description = 'Unpacks the CDI Lite scenarios of the technology compatibility kit.'
     from({ configurations.tckSources.files.collect { zipTree(it) } }) {
         include liteScenarios
         exclude unbuildableScenarios
+    }
+    from({ configurations.tckSources.files.collect { zipTree(it) } }) {
+        include beyondLiteScenarios
+        exclude brokenScenarios
     }
     into layout.buildDirectory.dir('generated/tck')
     // a scenario that reaches for the container itself, or for the kit's own audit annotations, cannot be built
@@ -113,6 +128,9 @@ def deployableTckSources = tasks.register('deployableTckSources', Sync) {
     from({ configurations.tckSources.files.collect { zipTree(it) } }) {
         include liteScenarios
         exclude 'org/jboss/cdi/tck/tests/full/**'
+    }
+    from({ configurations.tckSources.files.collect { zipTree(it) } }) {
+        include beyondLiteScenarios
     }
     into layout.buildDirectory.dir('generated/tck-deployable')
 }
