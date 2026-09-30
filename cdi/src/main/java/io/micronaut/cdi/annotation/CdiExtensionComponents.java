@@ -24,22 +24,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks the bean definition generated for the disposer class of a synthetic bean (section 2.10.5), so that the
- * container instantiates the disposer through the definition rather than reflectively.
+ * Marks a class the processor generated for the build compatible extensions of a compilation: the factory of
+ * the classes the extensions named, and the marker of the end of registration. Neither is a bean of the
+ * application.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Internal
-public @interface CdiSyntheticDisposer {
-
-    /**
-     * The {@link CdiSyntheticBean#id()} of the bean the disposer disposes of.
-     *
-     * @return The identifier
-     */
-    String value();
+public @interface CdiExtensionComponents {
 }

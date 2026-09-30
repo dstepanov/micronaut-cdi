@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
@@ -73,6 +74,21 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static volatile io.micronaut.inject.visitor.@io.micronaut.core.annotation.Nullable VisitorContext
         activeContext;
 
+    private static final String GENERATED = "io.micronaut.cdi.generated";
+    private static final String TRIGGER = "RegistrationEnd";
+    private static final String COMPONENTS = "SyntheticComponents";
+    private static final String CONTEXTS = "RegisteredContexts";
+
+    /**
+     * What is kept from the moment a source is generated until the compiler comes to it: the visitor whose
+     * phases a marker resumes, and the records of a factory's methods. A compiler is free to visit a generated
+     * source with another instance of this visitor, so neither is kept on one.
+     */
+    private static final Map<String, BuildCompatibleExtensionVisitor> TRIGGERS =
+        new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<String, Map<String, AnnotationValue<?>>> FACTORY_RECORDS =
+        new java.util.concurrent.ConcurrentHashMap<>();
+
     private final List<Enhancer> enhancers = new ArrayList<>();
     private final List<Registrar> registrars = new ArrayList<>();
     private final List<ExtensionMethod> discoveries = new ArrayList<>();
@@ -85,6 +101,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean contextBeansWritten;
     private boolean importedClassesPending;
     private boolean synthesized;
+    private @io.micronaut.core.annotation.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
         // what AnnotationBuilder.of composes with: the specification's resolver looks for it through the loader
@@ -307,45 +324,125 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * Generates a bean definition for every context class an extension registered (section 2.10.1), recording
-     * the scope it serves: the container instantiates the context through the definition as it starts. It is
-     * written as the first class is visited, which is when every language's compiler accepts a definition
-     * added beside a class it is compiling.
+     * Declares a bean for every context class an extension registered (section 2.10.1), recording the scope
+     * it serves: the container obtains the context from the bean as it starts.
      */
     private void writeContextBeans(ClassElement element, VisitorContext context) {
         if (contextBeansWritten || discovered.contexts().isEmpty()) {
             return;
         }
         contextBeansWritten = true;
+        List<SynthesisPhase.Component> contexts = new ArrayList<>();
         discovered.contexts().forEach((scopeName, contextClasses) -> {
             for (String contextClass : contextClasses) {
-                ClassElement contextElement;
                 try {
-                    contextElement = SyntheticRecords.classElement(context, contextClass, "context");
+                    contexts.add(new SynthesisPhase.Component(
+                        SyntheticRecords.classElement(context, contextClass, "context"),
+                        AnnotationValue.builder("io.micronaut.cdi.annotation.CdiRegisteredContext")
+                            .member("scope", new io.micronaut.core.annotation.AnnotationClassValue<>(scopeName))
+                            .member("normal", discovered.isNormalContext(scopeName))
+                            .build()));
                 } catch (IllegalArgumentException e) {
                     context.fail(String.valueOf(e.getMessage()), element);
-                    continue;
                 }
-                io.micronaut.inject.ast.beans.BeanElementBuilder definition;
-                try {
-                    definition = context instanceof io.micronaut.inject.visitor.BeanElementVisitorContext definitions
-                        // beside the context class itself where the compiler allows it
-                        ? definitions.addAssociatedBean(contextElement, contextElement)
-                        : element.addAssociatedBean(contextElement);
-                } catch (UnsupportedOperationException e) {
-                    context.warn("The context " + contextClass + " a build compatible extension registered for "
-                        + scopeName + " is instantiated through a bean definition, which this compilation cannot "
-                        + "add for a class it does not compile: the scope will have no context. Compile the class "
-                        + "that carries the extension's scope with the Java annotation processor", element);
-                    continue;
-                }
-                definition.typed(contextElement).annotate(
-                    AnnotationValue.builder("io.micronaut.cdi.annotation.CdiRegisteredContext")
-                        .member("scope", new io.micronaut.core.annotation.AnnotationClassValue<>(scopeName))
-                        .member("normal", discovered.isNormalContext(scopeName))
-                        .build());
             }
         });
+        writeFactory(context, CONTEXTS + suffix, contexts);
+    }
+
+    /**
+     * Writes a factory, in the language being compiled, with a method for each class that creates it, and
+     * remembers what the bean of each method is to record.
+     *
+     * <p>A class an extension names - a creator, a disposer, a synthetic observer, a context - is compiled
+     * elsewhere, and the one way to declare a bean of it that the compilers of all three languages process is
+     * a source they compile themselves. The source says nothing but how the class is instantiated; what the
+     * bean records is put on the method when the generated factory is visited, as annotation values rather
+     * than as text.</p>
+     */
+    private void writeFactory(VisitorContext context, String className, List<SynthesisPhase.Component> components) {
+        if (components.isEmpty()) {
+            return;
+        }
+        boolean kotlin = context.getLanguage() == VisitorContext.Language.KOTLIN;
+        StringBuilder source = new StringBuilder("package ").append(GENERATED).append(kotlin ? "" : ";").append("\n\n")
+            .append("@io.micronaut.context.annotation.Factory\n")
+            .append("@io.micronaut.cdi.annotation.CdiExtensionComponents\n")
+            .append(kotlin ? "class " : "final class ").append(className).append(" {\n");
+        Map<String, AnnotationValue<?>> records = new java.util.LinkedHashMap<>();
+        for (SynthesisPhase.Component component : components) {
+            String method = "component" + records.size();
+            String type = component.type().getCanonicalName();
+            records.put(method, component.record());
+            source.append("\n    @io.micronaut.context.annotation.Bean\n");
+            if (kotlin) {
+                source.append("    fun ").append(method).append("(): ").append(type).append(" = ").append(type)
+                    .append("()\n");
+            } else {
+                source.append("    ").append(type).append(' ').append(method).append("() {\n        return new ")
+                    .append(type).append("();\n    }\n");
+            }
+        }
+        source.append("}\n");
+        FACTORY_RECORDS.put(GENERATED + "." + className, records);
+        writeSource(context, className, source.toString(), "The factory of the classes the extensions named");
+    }
+
+    /**
+     * Puts on the methods of a generated factory what their beans are to record.
+     */
+    private static boolean recordOn(ClassElement element, VisitorContext context) {
+        Map<String, AnnotationValue<?>> records = FACTORY_RECORDS.remove(element.getName());
+        if (records == null) {
+            if (element.getName().startsWith(GENERATED + "." + CONTEXTS)
+                || element.getName().startsWith(GENERATED + "." + COMPONENTS)) {
+                context.fail("The records of the generated factory " + element.getName() + " are gone: the "
+                    + "compilation did not keep what the build compatible extensions described until the "
+                    + "factory was compiled", element);
+                return true;
+            }
+            return false;
+        }
+        for (io.micronaut.inject.ast.MethodElement method
+            : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+            AnnotationValue<?> record = records.get(method.getName());
+            if (record != null) {
+                method.annotate(record);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Writes the class whose compilation marks the moment every class of the application has been registered.
+     *
+     * <p>The phases that follow registration have to run after every class has been visited, and while the
+     * compiler still accepts a source: the end of the compilation is too late in every language but one. A
+     * generated source is compiled after the sources the compilation started with, in all three, so visiting
+     * this one is that moment.</p>
+     */
+    private void writeTrigger(VisitorContext context, String className) {
+        String end = context.getLanguage() == VisitorContext.Language.KOTLIN ? "" : ";";
+        boolean kotlin = context.getLanguage() == VisitorContext.Language.KOTLIN;
+        writeSource(context, className, "package " + GENERATED + end + "\n\n"
+            + "@io.micronaut.cdi.annotation.CdiExtensionComponents\n"
+            + (kotlin ? "class " + className + "\n" : "final class " + className + " {\n}\n"),
+            "The marker of the end of registration");
+    }
+
+    private static void writeSource(VisitorContext context, String className, String source, String what) {
+        java.util.Optional<io.micronaut.inject.writer.GeneratedFile> generated =
+            context.visitGeneratedSourceFile(GENERATED, className);
+        if (generated.isEmpty()) {
+            context.fail(what + " could not be written: the compilation accepts no generated source, and the "
+                + "synthesis and validation phases of the build compatible extensions need one", null);
+            return;
+        }
+        try {
+            generated.get().write(writer -> writer.write(source));
+        } catch (Exception e) {
+            throw new IllegalStateException(what + " could not be written", e);
+        }
     }
 
     private void writeScannedImport(VisitorContext context) {
@@ -354,7 +451,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         scannedImportWritten = true;
-        // the classes the import names are visited in the next round of the compilation
+        // the classes the import names are visited after it, and registered then
         importedClassesPending = true;
         // a class the discovery phase added to the scanned ones may say nothing at all on its own, and a class
         // with nothing on it is never handed to the bean machinery: a generated import names them all, and
@@ -402,8 +499,28 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         activeContext = context;
         // written as the first class is visited, so that the compiler still has rounds ahead of it to process
         // the generated import in
+        String name = element.getName();
+        if (name.startsWith(GENERATED + ".")) {
+            if (name.startsWith(GENERATED + "." + TRIGGER)) {
+                endOfRegistration(name, context);
+                return;
+            }
+            if (recordOn(element, context)) {
+                return;
+            }
+        } else if (suffix == null) {
+            // what this compilation generates is named after the first class it compiles, so that two
+            // compilations of one application do not generate the same class
+            suffix = Integer.toHexString(name.hashCode());
+            if (!synthesizers.isEmpty() || !validators.isEmpty() || !registrars.isEmpty()) {
+                TRIGGERS.put(GENERATED + "." + TRIGGER + suffix, this);
+                writeTrigger(context, TRIGGER + suffix);
+            }
+        }
         writeScannedImport(context);
-        writeContextBeans(element, context);
+        if (suffix != null) {
+            writeContextBeans(element, context);
+        }
         applyWhatWasDiscovered(element);
         if (enhancers.isEmpty() && registrars.isEmpty()) {
             return;
@@ -417,24 +534,49 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * Runs the phases that follow the registration of the compiled beans, once every class of the compilation
-     * has been visited: the synthesis of section 2.10.5, the registration of what it described, and the
-     * validation of section 2.10.6.
-     *
-     * <p>A Java compilation visits the classes a generated import names in a round of its own, and the phases
-     * wait for it: what an extension added to the scanned classes is registered before anything is
-     * synthesised.</p>
+     * The generated marker has come past: every class the compilation started with has been registered. Where
+     * a generated import named more classes, they come past with or after this marker, so a second marker is
+     * written and the phases wait for it.
+     */
+    private static void endOfRegistration(String trigger, VisitorContext context) {
+        BuildCompatibleExtensionVisitor visitor = TRIGGERS.remove(trigger);
+        if (visitor == null) {
+            context.fail("The compilation did not keep the build compatible extensions until the classes of the "
+                + "application had been registered: the synthesis and validation phases cannot run", null);
+            return;
+        }
+        if (visitor.importedClassesPending) {
+            visitor.importedClassesPending = false;
+            String next = TRIGGER + "Again" + visitor.suffix;
+            TRIGGERS.put(GENERATED + "." + next, visitor);
+            visitor.writeTrigger(context, next);
+            return;
+        }
+        visitor.synthesise(context);
+    }
+
+    /**
+     * Fails the compilation where the phases that follow registration never ran: nothing is left out
+     * silently. The Groovy and Kotlin compilers finish once, when nothing more is compiled.
      */
     @Override
     public void finish(VisitorContext context) {
+        // a Java compilation finishes every round, and always compiles a source a round generated
+        if (context.getLanguage() != VisitorContext.Language.JAVA
+            && suffix != null && !synthesized && TRIGGERS.containsValue(this)) {
+            TRIGGERS.values().remove(this);
+            context.fail("The synthesis and validation phases of the build compatible extensions did not run: the "
+                + "compilation never compiled the source generated to mark the end of registration", null);
+        }
+    }
+
+    /**
+     * Runs the phases that follow the registration of the compiled beans, once every class of the compilation
+     * has been visited: the synthesis of section 2.10.5, the registration of what it described, and the
+     * validation of section 2.10.6.
+     */
+    private void synthesise(VisitorContext context) {
         activeContext = context;
-        if (synthesized) {
-            return;
-        }
-        if (importedClassesPending && context.getLanguage() == VisitorContext.Language.JAVA) {
-            importedClassesPending = false;
-            return;
-        }
         synthesized = true;
         if (synthesizers.isEmpty() && validators.isEmpty() && registrars.isEmpty()) {
             return;
@@ -455,31 +597,28 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 return;
             }
         }
-        boolean written;
         try {
-            written = synthesis.write();
+            writeFactory(context, COMPONENTS + suffix, synthesis.components());
         } catch (IllegalArgumentException | IllegalStateException e) {
             context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + e.getMessage(), null);
             return;
         }
-        if (written) {
-            // the beans the compiler saw were described to the registration phase as they were compiled; what
-            // is left is the ones it did not see: the synthetic ones, and the container's own
-            for (RecordingBeanBuilder<?> bean : synthesis.enabledBeans()) {
-                SyntheticBeanInfo info = synthesis.describe(bean);
-                for (Registrar registrar : registrars) {
-                    if (registrar.asksForBeans(false) && registrar.matches(info.beanType())) {
-                        registrar.describe(info, messages, context);
-                    }
+        // the beans the compiler saw were described to the registration phase as they were compiled; what
+        // is left is the ones it did not see: the synthetic ones, and the container's own
+        for (RecordingBeanBuilder<?> bean : synthesis.enabledBeans()) {
+            SyntheticBeanInfo info = synthesis.describe(bean);
+            for (Registrar registrar : registrars) {
+                if (registrar.asksForBeans(false) && registrar.matches(info.beanType())) {
+                    registrar.describe(info, messages, context);
                 }
             }
-            for (RecordingObserverBuilder<?> observer : synthesis.observers()) {
-                SyntheticObserverInfo info = new SyntheticObserverInfo(observer);
-                ClassElement eventType = ElementTypes.elementOf(observer.eventType());
-                for (Registrar registrar : registrars) {
-                    if (registrar.asksForObservers() && registrar.matches(eventType)) {
-                        registrar.describeObserver(info, messages, context);
-                    }
+        }
+        for (RecordingObserverBuilder<?> observer : synthesis.observers()) {
+            SyntheticObserverInfo info = new SyntheticObserverInfo(observer);
+            ClassElement eventType = ElementTypes.elementOf(observer.eventType());
+            for (Registrar registrar : registrars) {
+                if (registrar.asksForObservers() && registrar.matches(eventType)) {
+                    registrar.describeObserver(info, messages, context);
                 }
             }
         }

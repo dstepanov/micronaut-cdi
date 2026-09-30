@@ -25,8 +25,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.beans.BeanElementBuilder;
-import io.micronaut.inject.visitor.BeanElementVisitorContext;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
@@ -46,8 +44,8 @@ import java.util.Map;
  *
  * <p>The phase runs inside the compiler, after every class of the compilation has been described to the
  * registration phase. A synthetic bean or observer is gathered here as the extension describes it, described to
- * the registration phase in turn, and written as a bean definition generated for the creator or observer class
- * the extension named, with everything else the extension said as the definition's annotation metadata. The
+ * the registration phase in turn, and written as a bean definition of the creator or observer class the
+ * extension named, with everything else the extension said as the definition's annotation metadata. The
  * classes the extension named therefore become something the container instantiates through a definition, and
  * the extension itself is needed by nothing that runs later.</p>
  *
@@ -197,44 +195,26 @@ final class SynthesisPhase {
     }
 
     /**
-     * Writes what the extensions described as bean definitions: one for the creator class of each synthetic
-     * bean, carrying the bean's record, one for its disposer class, and one for the observer class of each
-     * synthetic observer.
+     * What the extensions described, as the classes the container is to instantiate and the record each of
+     * their definitions carries: the creator class of each synthetic bean with the bean's record, its disposer
+     * class, and the observer class of each synthetic observer.
      *
-     * @return Whether the compilation can write them
+     * @return The classes, each with the record of its definition
      */
-    boolean write() {
-        List<RecordingBeanBuilder<?>> enabled = enabledBeans();
-        if (enabled.isEmpty() && observers.isEmpty()) {
-            return true;
-        }
-        if (!(context instanceof BeanElementVisitorContext definitions)) {
-            context.warn("The synthetic beans and observers of the build compatible extensions are written by the "
-                + "Java annotation processor: this compilation cannot write them, and the application will not "
-                + "have them", null);
-            return false;
-        }
-        for (RecordingBeanBuilder<?> bean : enabled) {
-            define(definitions, bean.creator()).annotate(recordOf(bean));
+    List<Component> components() {
+        List<Component> components = new ArrayList<>();
+        for (RecordingBeanBuilder<?> bean : enabledBeans()) {
+            components.add(new Component(bean.creator(), recordOf(bean)));
             ClassElement disposer = bean.disposer();
             if (disposer != null) {
-                define(definitions, disposer).annotate(AnnotationValue.builder(CdiSyntheticDisposer.class)
-                    .value(bean.id()).build());
+                components.add(new Component(disposer, AnnotationValue.builder(CdiSyntheticDisposer.class)
+                    .value(bean.id()).build()));
             }
         }
         for (RecordingObserverBuilder<?> observer : observers) {
-            define(definitions, observer.observer()).annotate(recordOf(observer));
+            components.add(new Component(observer.observer(), recordOf(observer)));
         }
-        return true;
-    }
-
-    /**
-     * A bean definition for a class an extension named, generated beside the class so that the container
-     * instantiates it the way it instantiates any bean. It exposes the class alone: the definition is the
-     * container's own, not a bean of the application.
-     */
-    private static BeanElementBuilder define(BeanElementVisitorContext definitions, ClassElement type) {
-        return definitions.addAssociatedBean(type, type).typed(type);
+        return components;
     }
 
     private AnnotationValue<CdiSyntheticBean> recordOf(RecordingBeanBuilder<?> bean) {
@@ -331,5 +311,14 @@ final class SynthesisPhase {
      *                   no scope is in
      */
     record Scope(String name, boolean normal, @Nullable ClassElement annotation) {
+    }
+
+    /**
+     * A class an extension named for the container to instantiate, and what its definition records.
+     *
+     * @param type   The class
+     * @param record The record
+     */
+    record Component(ClassElement type, AnnotationValue<?> record) {
     }
 }

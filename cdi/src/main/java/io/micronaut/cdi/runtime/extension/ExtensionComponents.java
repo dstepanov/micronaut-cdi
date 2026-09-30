@@ -42,7 +42,8 @@ public final class ExtensionComponents {
      * @return Whether it is one of the container's own
      */
     public static boolean isComponent(AnnotationMetadata metadata) {
-        return metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiSyntheticBean")
+        return metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiExtensionComponents")
+            || metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiSyntheticBean")
             || metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiSyntheticDisposer")
             || metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiSyntheticObserver")
             || metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiRegisteredContext");

@@ -125,7 +125,7 @@ public final class RecordedSynthesis {
             if (disposer == null && record.booleanValue("disposer").orElse(false)) {
                 throw new IllegalStateException("The synthetic bean " + record.stringValue("implementation").orElse("")
                     + " was recorded with a disposer, and the definition of the disposer is not among the beans "
-                    + "of the application: the class it was generated beside is not on the classpath");
+                    + "of the application: the factory generated with it is not on the classpath");
             }
             register(record, parameters, bean.getValue(), disposer);
         }
