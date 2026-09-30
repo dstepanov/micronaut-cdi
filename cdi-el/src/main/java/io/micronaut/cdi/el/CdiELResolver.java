@@ -54,7 +54,8 @@ public final class CdiELResolver extends ELResolver {
             return null;
         }
         context.setPropertyResolved(base, property);
-        return unproxied(beans.getReference(bean, bean.getBeanClass(),
+        // Object is a bean type of every bean, while the bean class of a producer is the class declaring it
+        return unproxied(beans.getReference(bean, Object.class,
             beans.createCreationalContext(bean)));
     }
 
