@@ -347,13 +347,14 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     /**
      * Selects a producer that is an alternative, the way section 2.1.7 selects a bean.
      *
-     * <p>A producer is an alternative when it says so itself or when the class that declares it is one, and it
-     * is selected by a priority: its own, or failing that the class's. A selected one is ordered by that
+     * <p>A producer is an alternative when it says so itself, when a stereotype it declares does, or when the
+     * class that declares it is one, and it is selected by a priority: its own, or failing that the class's. A selected one is ordered by that
      * priority so that the highest wins resolution; an alternative producer that is not selected produces
      * nothing at all.</p>
      */
     private static void selectIfAlternative(MemberElement producer, ClassElement element) {
         boolean alternative = producer.hasDeclaredAnnotation(Cdi.ALTERNATIVE)
+            || producer.hasDeclaredStereotype(Cdi.ALTERNATIVE)
             || element.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE);
         if (!alternative) {
             return;
