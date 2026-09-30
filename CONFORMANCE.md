@@ -159,6 +159,19 @@ observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as 
 instance created for that, and is destroyed when the context has stopped. What an observer of these events
 throws is logged and stops neither the events after it nor the context from stopping.
 
+### An injection point of a collection type collects the beans of its element type
+
+*Section 2.4.2.* The specification has no collection injection: `List<Foo>` is a bean type like any other, an
+injection point of it is satisfied by a bean that has it among its types - a producer of `List<Foo>`, typically -
+and is unsatisfied where there is none; every bean of `Foo` is what `Instance<Foo>` is for. Micronaut decides
+while a bean compiles that an injection point of `Collection`, `List`, `Set` or another collection type is
+injected with all the beans of the element type, and that is what happens here: `@Inject List<Foo>` is the beans
+of `Foo` - the elements of a produced `List<Foo>` among them - rather than the produced list, and is empty
+rather than unsatisfied where there are none. An array is resolved as the specification has it, and a
+programmatic lookup of the collection type - `Instance<List<Foo>>`, `BeanContainer.getBeans` - resolves the bean
+of that type. The hook Micronaut gives for the array, `BeanResolutionCustomizer.shouldResolveArrayAsBean`, is
+asked for an array only, so the collection cannot be decided the same way here.
+
 ### A primitive is boxed by the lookup rather than by the bean
 
 *Section 2.1.2.* A primitive type and the class that boxes it are one bean type. Micronaut resolves a bean by the
@@ -213,6 +226,58 @@ its processor path runs it, so a synthetic component is recorded by each; the re
 the order it described the component in, and the container registers a component once however many
 compilations recorded it.
 
+### A portable extension is run over what was compiled
+
+*Sections 3.9, 3.10.2 and 4.1.* A portable extension - a class that implements `Extension` and observes the
+container lifecycle events - belongs to CDI Full; the extensions of CDI Lite are the build compatible ones of
+section 2.10, which run while the application compiles. `SeContainerInitializer.addExtensions`, and the
+service loader of `jakarta.enterprise.inject.spi.Extension` through the class loader the initializer was given,
+are nevertheless answered for the SE bootstrap, by the optional `micronaut-cdi-reflection` module: a subset of
+the lifecycle that a container of beans compiled ahead of time can answer. It is offered beyond Lite; CDI Full
+is not claimed. Without the module a bootstrap that was handed an extension fails with an
+`UnsupportedOperationException` that names it, and the service loader is not consulted. A context started as a
+Micronaut `ApplicationContext` rather than through the SE bootstrap runs no portable extension.
+
+The beans exist before the container starts, so the events describe them rather than discover them. They are
+fired before `@Initialized(ApplicationScoped.class)` and `Startup`, in the order of section 3.10.2:
+`BeforeBeanDiscovery`; `ProcessAnnotatedType` for each bean class of the application; `AfterTypeDiscovery`; for
+each bean `ProcessInjectionTarget` (a managed bean), `ProcessBeanAttributes` and `ProcessBean` - a
+`ProcessManagedBean` for a managed bean; `AfterBeanDiscovery`; and `AfterDeploymentValidation`. The observers of
+an event are notified in the order of the `@Priority` of their event parameter, and an observer may take the
+`BeanManager` beside the event. An extension is a bean: one instance, with the default qualifier.
+
+What an extension can do:
+
+- `BeforeBeanDiscovery.addQualifier(Class)` makes an annotation a qualifier for that container;
+- `ProcessAnnotatedType.configureAnnotatedType().add(qualifier)` adds a qualifier to a bean class. It is seen
+  where this container compares qualifiers - `Instance`, the SE container and `BeanContainer` lookups,
+  `Bean.getQualifiers()` - and takes the default qualifier away as a written one does. It is **not** seen by an
+  injection point: `@Inject @Added Foo` is resolved by Micronaut from the compiled metadata of the definitions,
+  and does not find the bean;
+- `AfterTypeDiscovery.getAlternatives()` lists the classes of the selected alternatives, and cannot change them;
+- `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
+  place of the container's own; `addObserverMethod(ObserverMethod)` adds an observer method; and
+  `getAnnotatedType`/`getAnnotatedTypes` describe a class;
+- `addDefinitionError` on any event that has it, and an exception an observer throws, fail the bootstrap with a
+  `DefinitionException`; `AfterDeploymentValidation.addDeploymentProblem` fails it with a `DeploymentException`.
+
+What would change a bean that was compiled is refused with an `UnsupportedOperationException` that says so,
+rather than ignored: `BeforeBeanDiscovery.addQualifier(AnnotatedType)`, `addScope`, `addStereotype`,
+`addInterceptorBinding`, `addAnnotatedType`, `configureQualifier` and `configureInterceptorBinding`;
+`ProcessAnnotatedType.veto` and `setAnnotatedType`; on the type configurator, `add` of an annotation that is not
+a qualifier, `remove`, `methods`, `fields` and `constructors`; `AfterTypeDiscovery.getInterceptors`,
+`getDecorators` and `addAnnotatedType`; `ProcessInjectionTarget.getInjectionTarget` and `setInjectionTarget`;
+`ProcessBeanAttributes.veto`, `setBeanAttributes`, `configureBeanAttributes` and `ignoreFinalMethods`;
+`ProcessManagedBean.createInvoker`; `AfterBeanDiscovery.addBean` and the configurator form of
+`addObserverMethod`. A build compatible extension does each of those while the application compiles.
+
+Not fired: `ProcessInjectionPoint`, `ProcessProducer`, `ProcessObserverMethod`, `ProcessProducerMethod`,
+`ProcessProducerField`, `ProcessSyntheticBean`, `ProcessSyntheticAnnotatedType` and `BeforeShutdown`; a produced
+bean is described by `ProcessBeanAttributes` and a plain `ProcessBean`, and `getAnnotated()` of a producer
+method is not described. An extension with an observer of any other event - an event of the application among
+them - is refused as the bootstrap starts, rather than left waiting for it. The beans Micronaut and this
+container bring of their own, which are the ones under `io.micronaut` and `jakarta`, are not described.
+
 ### The bean manager answers what CDI Lite can
 
 *Section 2.9.1.* The programmatic access CDI Lite describes is the `BeanContainer`. The `BeanManager` of CDI Full
@@ -240,8 +305,9 @@ association of CDI Full only, and it works here all the same.
 Micronaut's `@Order` is taken for a priority where an interceptor declares no `@Priority`: it enables and orders
 the interceptor. That is an extension of this implementation, not something either specification defines.
 
-What belongs to CDI Full says so rather than answering: decorators, passivation, portable extensions, and
-building a bean out of an annotated type. The expression language is the one named exception, provided beyond
+What belongs to CDI Full says so rather than answering: decorators, passivation, and building a bean out of an
+annotated type. A subset of the portable extensions of CDI Full is offered beyond Lite, described under
+[A portable extension is run over what was compiled](#a-portable-extension-is-run-over-what-was-compiled). The expression language is the one named exception, provided beyond
 Lite by the optional `micronaut-cdi-el` module over `micronaut-jakarta-el`: with it on the classpath,
 `getELResolver` answers with a resolver in which a name at the base of an expression is the bean of that name —
 a name written as a list of identifiers separated by periods included —
@@ -296,20 +362,28 @@ processor, and what the compiler refuses is reported to Arquillian as the `Defin
 `DeploymentException` the test asserts — deployment here *is* compilation. An archive carrying a build
 compatible extension is likewise compiled per deployment, with that archive's extensions alone.
 
-Six SE bootstrap tests are left out by name, each resting on what belongs to CDI Full and is refused rather
-than pretended here: `BootstrapSEContainerTest`'s `testAddExtensionAsExtensionInstance`, `testAddExtensionAsClass`
-(portable extensions) and `testAddDecorator` (decorators); `CustomClassLoaderSETest` and
-`CustomRequestContextSETest` (portable extensions registered through the deployment); and
-`TrimmedBeanArchiveSETest` (`InterceptionFactory`).
+Two SE bootstrap tests are left out by name, each resting on what belongs to CDI Full and is refused rather
+than pretended here: `BootstrapSEContainerTest`'s `testAddDecorator` (decorators), and
+`TrimmedBeanArchiveSETest`, whose portable extension would now run but whose archive is a trimmed bean archive
+(section 3.10.4.3) with a producer that takes an `InterceptionFactory`, both of CDI Full. The four that hand the bootstrap a portable extension -
+`testAddExtensionAsExtensionInstance`, `testAddExtensionAsClass`, `CustomClassLoaderSETest` and
+`CustomRequestContextSETest` - run, on the subset of portable extensions offered beyond Lite. The kit's
+deployments share one class path here, so the extensions its SE archives declare as service providers are
+listed in one service file of the module, and a bootstrap admits the ones whose class is in its deployment.
 
-The `tckSuite` task runs the suite of `tck-suite.xml`: the whole of the kit's CDI Lite `tests/**` packages —
-the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit
-(`interceptors/tests/**`): 807 tests, all passing, and part of `check`. A handful of ported assertions and
+The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
+and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The
+kit has 816 test methods outside `tests/full`, and 811 of them run, all passing, as part of `check`. The five
+that do not are the two SE tests above and three methods the kit itself tags `cdi-full` inside Lite packages,
+which the exclusion of that group drops, all three about passivation:
+`event.implicit.ImplicitEventTest#testImplicitEventIsPassivationCapable`,
+`lookup.clientProxy.ClientProxyTest#testSimpleBeanClientProxyIsSerializable` and
+`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable`. A handful of ported assertions and
 `ScenarioSweepTckTest` — which reads every scenario bean through one container at once — remain as local
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 21 tests, all passing, which makes 828 in all. Each asserts something this implementation answers although
+own: 22 tests, all passing, which makes 833 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
@@ -319,13 +393,15 @@ the `@Decorated` `Bean<X>` — into a bean that is not one (the four tests of
 `implementation/builtin/metadata/broken/injection`), and the expression language of `micronaut-cdi-el`: names
 resolved to beans (`full.lookup.el.ResolutionByNameTest`), a wrapped factory of someone else's
 (`WrapExpressionFactoryTest`), and the dependent beans of an evaluation
-(`full.context.dependent.DependentContextTest`). One test of the last is left out by name, `testContextIsActiveWhenEvaluatingElExpression`: its method expression
-calls a bean method that is not an executable method, and an expression reaches a bean's methods through the
-executable metadata compiled for them rather than reflectively. Their scenario packages are compiled by name (`beyondLiteScenarios` in
+(`full.context.dependent.DependentContextTest`). A method expression invokes a bean's method through the
+executable metadata compiled for it rather than reflectively, so where `micronaut-cdi-el` is on the classpath an
+application is compiled against, the processor compiles the public methods of each bean class that has a name
+as executable methods; a bean without a name, and an application without the module, gets none of it. Their scenario packages are compiled by name (`beyondLiteScenarios` in
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
 
-The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 1263 assertions about the language model of
+The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 985 `assert` statements, and 186 calls of
+its own assertion helpers, about the language model of
 section 2.10 — the `ClassInfo`, `MethodInfo`, `Type` and `AnnotationInfo` a build compatible extension reads a
 class through — with one entry point, `LangModelVerifier.verify(ClassInfo)`, which asks the model everything
 about the verifier's own class: its members, inherited and declared, its enum constants and annotation members,

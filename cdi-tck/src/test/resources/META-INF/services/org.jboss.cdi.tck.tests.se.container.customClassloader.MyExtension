@@ -1,0 +1,2 @@
+# What CustomClassLoaderSETest's class loader answers the extension service with: the one extension of its two
+org.jboss.cdi.tck.tests.se.container.customClassloader.AlphaExtension

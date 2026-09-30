@@ -4,7 +4,10 @@
 <suite name="CDI Lite TCK" verbose="1" configfailurepolicy="continue">
     <!-- core mode: what the kit marks as CDI Full does not run against CDI Lite. Each test of the Lite part
          says so itself rather than the suite saying it for all of them, so that the last test can run the few
-         classes of CDI Full that are claimed beyond Lite -->
+         classes of CDI Full that are claimed beyond Lite. The exclusion drops three methods of the Lite
+         packages that the kit tags cdi-full itself, all about passivation: ImplicitEventTest's
+         testImplicitEventIsPassivationCapable, ClientProxyTest's testSimpleBeanClientProxyIsSerializable and
+         BuiltinInstanceTest's testInstanceIsPassivationCapable -->
     <test name="definition">
         <groups>
             <run>
@@ -118,9 +121,9 @@
         <classes>
             <class name="org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest">
                 <methods>
-                    <!-- portable extensions and decorators belong to CDI Full -->
-                    <exclude name="testAddExtensionAsExtensionInstance"/>
-                    <exclude name="testAddExtensionAsClass"/>
+                    <!-- decorators belong to CDI Full. The two tests that hand the bootstrap a portable extension
+                         run: the subset of that lifecycle a container of compiled beans answers is provided
+                         beyond Lite by micronaut-cdi-reflection, see CONFORMANCE.md -->
                     <exclude name="testAddDecorator"/>
                 </methods>
             </class>
@@ -129,6 +132,10 @@
             <class name="org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest"/>
             <class name="org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest"/>
             <class name="org.jboss.cdi.tck.tests.se.context.request.RequestContextTest"/>
+            <!-- portable extensions found through the service loader of the bootstrap's class loader: one adds a
+                 qualifier to a bean class, the other replaces the request context with its own -->
+            <class name="org.jboss.cdi.tck.tests.se.container.customClassloader.CustomClassLoaderSETest"/>
+            <class name="org.jboss.cdi.tck.tests.se.context.custom.CustomRequestContextSETest"/>
             <class name="org.jboss.cdi.tck.tests.se.customCDIProvider.CustomCDIProviderTest"/>
             <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveSETest"/>
             <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveWithSystemPropertyTest"/>
@@ -157,13 +164,7 @@
             <!-- the expression language, through the optional micronaut-cdi-el module: names resolved to beans,
                  and the dependent beans of an evaluation shared within it and destroyed after it -->
             <class name="org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest">
-                <methods>
-                    <!-- a method expression invokes a bean's method through the executable metadata compiled
-                         for it, and the scenario's getName is not an executable method: see CONFORMANCE.md -->
-                    <exclude name="testContextIsActiveWhenEvaluatingElExpression"/>
-                </methods>
-            </class>
+            <class name="org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest"/>
             <class name="org.jboss.cdi.tck.tests.full.extensions.beanManager.el.WrapExpressionFactoryTest"/>
         </classes>
     </test>

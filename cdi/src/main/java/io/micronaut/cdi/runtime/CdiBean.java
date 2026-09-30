@@ -237,6 +237,11 @@ public class CdiBean<T> implements Bean<T> {
                 }
             }
             resolved = java.util.List.copyOf(all);
+            QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
+            if (overlay != null) {
+                // what a portable extension added to the bean class as the container started
+                resolved = overlay.apply(definition, resolved);
+            }
             qualifiers = resolved;
         }
         return resolved;

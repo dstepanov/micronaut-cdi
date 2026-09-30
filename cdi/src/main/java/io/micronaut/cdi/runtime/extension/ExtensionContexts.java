@@ -150,6 +150,83 @@ public final class ExtensionContexts {
     }
 
     /**
+     * Registers a context a portable extension handed the container as it started, for the scope it serves. A
+     * context for a built-in normal scope takes the place of the container's own: the scope is served by the
+     * annotation the compiler read it into.
+     *
+     * @param context The context
+     * @param normal  Whether the scope is a normal one
+     * @throws IllegalArgumentException For a context of a pseudo-scope the container implements itself
+     */
+    public void register(AlterableContext context, boolean normal) {
+        Class<? extends Annotation> scopeAnnotation = context.getScope();
+        String scopeName = scopeAnnotation.getName();
+        if (scopeName.equals("jakarta.enterprise.context.Dependent") || scopeName.equals("jakarta.inject.Singleton")) {
+            throw new IllegalArgumentException("A context cannot be added for the pseudo-scope " + scopeName);
+        }
+        List<AlterableContext> contexts = contextsByScope.get(scopeName);
+        if (contexts != null) {
+            contexts.add(context);
+            return;
+        }
+        List<AlterableContext> contextsOfScope = new ArrayList<>();
+        contextsOfScope.add(context);
+        contextsByScope.put(scopeName, contextsOfScope);
+        if (normal) {
+            normalScopes.add(scopeName);
+        }
+        Class<? extends Annotation> served = switch (scopeName) {
+            case "jakarta.enterprise.context.ApplicationScoped" -> io.micronaut.cdi.annotation.CdiApplicationScope.class;
+            case "jakarta.enterprise.context.RequestScoped" -> io.micronaut.cdi.annotation.CdiRequestScope.class;
+            default -> scopeAnnotation;
+        };
+        RuntimeBeanDefinition.Builder<io.micronaut.context.scope.CustomScope> builder = RuntimeBeanDefinition
+            .builder(io.micronaut.context.scope.CustomScope.class,
+                () -> new ExtensionCustomScope(served, contextsOfScope, beanContext))
+            .singleton(true)
+            .typeArguments(Argument.of(served));
+        if (served == io.micronaut.cdi.annotation.CdiApplicationScope.class) {
+            builder.replaces(io.micronaut.cdi.context.ApplicationScope.class);
+        } else if (served == io.micronaut.cdi.annotation.CdiRequestScope.class) {
+            builder.replaces(io.micronaut.cdi.context.RequestScope.class);
+        }
+        beanContext.registerBeanDefinition(builder.build());
+    }
+
+    /**
+     * Makes an annotation a qualifier for as long as this container runs, as a portable extension may ask.
+     *
+     * @param annotationName The name of the annotation
+     */
+    public void registerQualifier(String annotationName) {
+        io.micronaut.cdi.runtime.ExtensionQualifiers.register(annotationName);
+        registeredQualifiers.add(annotationName);
+    }
+
+    /**
+     * Registers a portable extension as the bean the specification has it be: one instance, with the default
+     * qualifier, which a program can look up and inject.
+     *
+     * @param extension The extension
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void registerExtension(Object extension) {
+        io.micronaut.inject.annotation.MutableAnnotationMetadata metadata =
+            new io.micronaut.inject.annotation.MutableAnnotationMetadata();
+        metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Default", Map.of());
+        metadata.addDeclaredStereotype(List.of("jakarta.enterprise.inject.Default"),
+            io.micronaut.core.annotation.AnnotationUtil.QUALIFIER, Map.of());
+        // section 3.9 has the bean of an extension application scoped; there is one instance and no proxy
+        metadata.addDeclaredAnnotation(io.micronaut.cdi.annotation.CdiScope.class.getName(),
+            Map.of("value", "jakarta.enterprise.context.ApplicationScoped", "normal", false));
+        beanContext.registerBeanDefinition(RuntimeBeanDefinition
+            .builder((Class) extension.getClass(), () -> extension)
+            .singleton(true)
+            .annotationMetadata(metadata)
+            .build());
+    }
+
+    /**
      * Whether the extension registered the given scope as a normal one.
      *
      * @param scopeAnnotation The scope

@@ -97,6 +97,19 @@ public final class CdiQualifier {
     }
 
     /**
+     * The qualifier with every member it was written or selected with, the ones that do not bind among them:
+     * what a program reads a non-binding member from. A qualifier handed over as an annotation instance whose
+     * members were not read - one the application was compiled with that has no binding member, without the
+     * module that reads an instance - has the members that bind alone, which is none.
+     *
+     * @return The values of the members
+     */
+    public AnnotationValue<?> written() {
+        AnnotationValue<?> all = written;
+        return all != null ? all : binding;
+    }
+
+    /**
      * The members that take part in resolution, with their values.
      *
      * @return The binding values
