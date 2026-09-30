@@ -302,6 +302,18 @@ interceptor classes it names to the enabled ones without a priority. An intercep
 `@Interceptors` is enabled by that annotation (Jakarta Interceptors section 5.1); section 3.6 requires that form of
 association of CDI Full only, and it works here all the same.
 
+`Bean.create()` creates a new contextual instance each time it is called (section 2.5.1); the instance a scope
+holds is what its context hands out and what a contextual reference resolves to. A bean of a normal scope is
+created by its scope, with what it was created with, and destroying it through the creational context destroys its
+dependent objects. An instance `Bean.create()` makes of a `@Singleton` is created by Micronaut's
+`BeanContext.createBean`, which hands back the bean and not the objects created along with it, so it is destroyed
+without its dependent objects: Micronaut Core has no public way to create the registration of a definition outside
+its scope.
+
+A dependent instance obtained through the `Instance` of `BeanContainer.createInstance()` or of `CDI.current()` is
+released by whoever obtained it, with `Instance.destroy()` (section 2.9.1.13). The SE container is a lookup of its
+own, and destroys the dependent instances obtained through it that are left as it closes.
+
 Micronaut's `@Order` is taken for a priority where an interceptor declares no `@Priority`: it enables and orders
 the interceptor. That is an extension of this implementation, not something either specification defines.
 
