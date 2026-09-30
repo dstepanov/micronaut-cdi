@@ -33,8 +33,9 @@ import java.util.Iterator;
  * {@code SeContainer} of the specification's SE bootstrap.
  *
  * <p>It is a lookup of every bean the container holds — that is what {@code SeContainer} extending
- * {@code Instance<Object>} means — and it closes the context when it is closed, after destroying the dependent
- * instances that were obtained through it and not destroyed since. Closing it twice is the caller's
+ * {@code Instance<Object>} means — and it closes the context when it is closed. The dependent instances that were
+ * obtained through it and not destroyed since are destroyed as the context stops, after the events that say it is
+ * stopping and before the application context is destroyed. Closing it twice is the caller's
  * error the specification names, and is reported as {@code IllegalStateException}.</p>
  *
  * @author Denis Stepanov
@@ -50,6 +51,10 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
     MicronautSeContainer(ApplicationContext context) {
         this.context = context;
         this.lookup = new CdiInstance<>(context, Argument.OBJECT_ARGUMENT);
+        // the dependent instances obtained through the container belong to it. They are released as the
+        // container stops, once it has said so: section 2.8.6.2 has Shutdown observed as the container is about
+        // to shut down, so its observers find them in place
+        context.getBean(io.micronaut.cdi.runtime.ContainerLifecycle.class).releaseAsTheContainerStops(lookup::close);
     }
 
     @Override
@@ -59,14 +64,7 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
                 + "container is shut down once");
         }
         running = false;
-        try {
-            // the dependent instances obtained through the container belong to it, and the program has not
-            // destroyed these itself. They go first, while every bean their disposal may use is still there:
-            // the context starts to stop, and to destroy its scopes, only after
-            lookup.close();
-        } finally {
-            context.close();
-        }
+        context.close();
     }
 
     @Override

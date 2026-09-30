@@ -53,6 +53,14 @@ import java.util.Set;
 @Internal
 public class CdiBean<T> implements Bean<T> {
 
+    /**
+     * The parameters Micronaut adds to the constructor of the subclass it generates for an intercepted bean, after
+     * the ones the author wrote: the resolution context, the bean context, the qualifier, the interceptors and
+     * the interceptor registry.
+     */
+    private static final Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = Set.of(
+        "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
+
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
     private volatile java.util.@Nullable List<CdiQualifier> qualifiers;
@@ -79,14 +87,6 @@ public class CdiBean<T> implements Bean<T> {
             .classValue("io.micronaut.cdi.annotation.CdiProducer", "declaringType").orElse(null);
         return declaring != null ? declaring : beanClass();
     }
-
-    /**
-     * The parameters Micronaut adds to the constructor of the subclass it generates for an intercepted bean, after
-     * the ones the author wrote: the resolution context, the bean context, the qualifier, the interceptors and
-     * the interceptor registry.
-     */
-    private static final Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = Set.of(
-        "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
 
     /**
      * Whether the argument is something the container hands a generated constructor rather than an injection

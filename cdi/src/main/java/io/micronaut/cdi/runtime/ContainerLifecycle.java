@@ -48,7 +48,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>The way down starts at the event Micronaut publishes as a context begins to stop, which is before it
  * destroys any bean: {@code Shutdown} is fired, then the {@code BeforeDestroyed} of the application context
- * (section 2.5.6.2), then the application context is destroyed - its beans and what depends on them - and then
+ * (section 2.5.6.2), then what was obtained through the container itself is released and the application context
+ * is destroyed - its beans and what depends on them - and then
  * its {@code Destroyed} is fired. The singletons, which are of a pseudo-scope and of no context, are destroyed by
  * Micronaut after that.</p>
  *
@@ -64,6 +65,8 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final BeanContext beanContext;
     private final ObserverRegistry observers;
     private final ApplicationScope applicationScope;
+    // what was obtained through the container itself and is released as it stops, see releaseAsTheContainerStops
+    private final java.util.List<Runnable> releases = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope) {
         this.beanContext = beanContext;
@@ -91,6 +94,19 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         fire(new Startup(), Startup.class, Set.of());
     }
 
+    /**
+     * Has something released as the container stops: the dependent instances obtained through a lookup the
+     * container itself is, which an SE container is. They are released once the container has said it is
+     * stopping - after {@code Shutdown} and the {@code BeforeDestroyed} of the application context, whose
+     * observers still find everything in place - and before the application context is destroyed, so that what
+     * their disposal uses is still there.
+     *
+     * @param release Releases them
+     */
+    public void releaseAsTheContainerStops(Runnable release) {
+        releases.add(release);
+    }
+
     @Override
     public int getOrder() {
         // after every other listener of the shutdown, which may still reach for an application scoped bean
@@ -108,6 +124,11 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         during("Shutdown", () -> fire(new Shutdown(), Shutdown.class, Set.of()));
         during("@BeforeDestroyed(ApplicationScoped.class)",
             () -> fire(new Object(), Object.class, Set.of(BeforeDestroyed.Literal.of(ApplicationScoped.class))));
+        // what was looked up through the container itself goes first, while the beans it uses are there
+        for (Runnable release : releases) {
+            during("the release of what was obtained through the container", release);
+        }
+        releases.clear();
         // the actual destruction: every application scoped bean, and the dependent objects of each
         during("the destruction of the application context", applicationScope::stop);
         during("@Destroyed(ApplicationScoped.class)",
