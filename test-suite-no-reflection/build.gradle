@@ -1,0 +1,33 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+}
+
+// What works with micronaut-cdi alone, and what says so when it does not.
+//
+// Every other suite here has micronaut-cdi-reflection on its classpath, because its tests call the parts of the
+// specification's API that hand out reflection objects. This one does not have it, nor Micronaut's own reflection
+// module: it holds the container to working without either, and the reflective parts of the API to failing with
+// a message that names the module to add.
+//
+// The main source set is a build compatible extension and the classes it names, compiled first so that the
+// extension is on the annotation processor path of the tests - which is where an extension runs - and the
+// creator, disposer and observer it names are on their classpath.
+dependencies {
+    implementation libs.managed.jakarta.cdi.api
+
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    // the extension goes on the annotation processor path, where a build compatible extension runs
+    testAnnotationProcessor sourceSets.main.output
+    testAnnotationProcessor libs.managed.jakarta.cdi.api
+
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}

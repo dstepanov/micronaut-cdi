@@ -37,6 +37,7 @@ include 'test-suite-extension'
 include 'test-suite-java'
 include 'test-suite-kotlin'
 include 'test-suite-groovy'
+include 'test-suite-no-reflection'
 
 // Jakarta Interceptors and Jakarta Expression Language are implemented by sibling projects rather than again here:
 // the interception of a bean and the evaluation of an expression are the business of their own specifications, and
