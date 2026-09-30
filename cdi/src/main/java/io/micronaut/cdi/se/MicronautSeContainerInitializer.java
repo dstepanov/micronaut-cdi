@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.se;
 
+import io.micronaut.cdi.runtime.extension.PortableExtensions;
 import io.micronaut.cdi.annotation.UnselectedAlternative;
 import io.micronaut.cdi.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
@@ -70,6 +71,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     private final Set<String> enabledInterceptors = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
 
+    private final java.util.List<Extension> extensionInstances = new java.util.ArrayList<>();
+    private final java.util.List<Class<? extends Extension>> extensionClasses = new java.util.ArrayList<>();
+
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
@@ -122,15 +126,17 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     @Override
     public SeContainerInitializer addExtensions(Extension... extensions) {
-        throw new UnsupportedOperationException("A portable extension belongs to CDI Full; the extensions of "
-            + "CDI Lite are build compatible, found through the service loader while the application compiles");
+        // run as the container starts, by the optional module that reads classes; without it the bootstrap
+        // fails, naming the module
+        extensionInstances.addAll(java.util.List.of(extensions));
+        return this;
     }
 
     @SafeVarargs
     @Override
     public final SeContainerInitializer addExtensions(Class<? extends Extension>... extensions) {
-        throw new UnsupportedOperationException("A portable extension belongs to CDI Full; the extensions of "
-            + "CDI Lite are build compatible, found through the service loader while the application compiles");
+        extensionClasses.addAll(java.util.List.of(extensions));
+        return this;
     }
 
     @Override
@@ -213,7 +219,43 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         } else if (classpath != null) {
             builder.beansPredicate(bean -> onClasspath(bean, classpath));
         }
-        return new MicronautSeContainer(builder.build().start());
+        // what the portable extensions of this bootstrap are, for the container to run as it starts
+        builder.singletons(new PortableExtensions.Request(java.util.List.copyOf(extensionInstances),
+            java.util.List.copyOf(extensionClasses), classLoader,
+            name -> classpath == null || classpath.contains(outerClassOf(name))));
+        ApplicationContext context = builder.build();
+        try {
+            return new MicronautSeContainer(context.start());
+        } catch (RuntimeException e) {
+            RuntimeException said = whatAnExtensionSaid(e);
+            if (said != null) {
+                try {
+                    context.close();
+                } catch (RuntimeException closing) {
+                    said.addSuppressed(closing);
+                }
+                throw said;
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * What a portable extension, or the container on its behalf, failed the bootstrap with, which Micronaut
+     * wraps as the failure to create the bean that ran the extensions.
+     */
+    private static @org.jspecify.annotations.Nullable RuntimeException whatAnExtensionSaid(Throwable failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
+                || cause instanceof jakarta.enterprise.inject.spi.DeploymentException
+                || cause instanceof UnsupportedOperationException) {
+                return (RuntimeException) cause;
+            }
+            if (cause.getCause() == cause) {
+                break;
+            }
+        }
+        return null;
     }
 
     private static String joined(Set<String> names) {
@@ -283,6 +325,17 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     }
 
     private boolean isSelected(String className) {
+        // an extension the program handed over is part of the container, and a bean of it
+        for (Extension extension : extensionInstances) {
+            if (extension.getClass().getName().equals(className)) {
+                return true;
+            }
+        }
+        for (Class<? extends Extension> extension : extensionClasses) {
+            if (extension.getName().equals(className)) {
+                return true;
+            }
+        }
         String outer = outerClassOf(className);
         if (beanClasses.contains(outer) || beanClasses.contains(className)) {
             return true;

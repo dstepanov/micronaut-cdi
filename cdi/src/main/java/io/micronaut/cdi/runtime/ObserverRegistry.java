@@ -92,7 +92,8 @@ public final class ObserverRegistry {
      * @param observer The observer
      */
     public synchronized void registerSynthetic(ObserverMethod<?> observer) {
-        synthetic.add(observer);
+        // one a program implemented itself says what it observes through the specification's interface alone
+        synthetic.add(observer instanceof CdiNotifiable ? observer : new ForeignObserverMethod<>(observer));
         observers = null;
     }
 

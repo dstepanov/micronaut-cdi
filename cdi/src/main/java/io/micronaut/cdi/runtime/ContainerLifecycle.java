@@ -73,6 +73,19 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
 
     @PostConstruct
     void started() {
+        // the portable extensions an SE bootstrap asked for run first: what they add - a context, an observer,
+        // a qualifier - is there by the time the application is told the container has started
+        beanContext.findBean(io.micronaut.cdi.runtime.extension.PortableExtensions.Request.class)
+            .ifPresent(request -> {
+                io.micronaut.cdi.runtime.extension.PortableExtensions extensions = beanContext
+                    .findBean(io.micronaut.cdi.runtime.extension.PortableExtensions.class).orElse(null);
+                if (extensions != null) {
+                    extensions.run(beanContext, request);
+                } else if (request.namesExtensions()) {
+                    throw new UnsupportedOperationException(
+                        io.micronaut.cdi.runtime.extension.PortableExtensions.MISSING);
+                }
+            });
         // the order of section 2.9: the application context is initialized first, and Startup follows
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
         fire(new Startup(), Startup.class, Set.of());

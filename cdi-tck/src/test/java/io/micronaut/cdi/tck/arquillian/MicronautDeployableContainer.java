@@ -73,6 +73,11 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         return new ProtocolDescription("Local");
     }
 
+    /**
+     * The classes the SE bootstrap is restricted to, by the deployment that is up.
+     */
+    private static volatile Set<String> restrictedTo;
+
     @Override
     public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
         Set<String> classes = classesOf(archive);
@@ -83,6 +88,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             // the context started for the enricher holds the infrastructure alone, so that no scenario bean of
             // the archive observes this deployment's own startup
             io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(classes);
+            restrictedTo = classes;
             try {
                 ApplicationContext context = ApplicationContext.builder()
                     .beansPredicate(bean -> !bean.getBeanType().getName().startsWith("org.jboss.cdi.tck."))
@@ -319,7 +325,12 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
 
     @Override
     public void undeploy(Archive<?> archive) throws DeploymentException {
-        io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(null);
+        if (classesOf(archive).equals(restrictedTo)) {
+            // the restriction is lifted by the deployment that made it: the next deployment may already be
+            // there, with a restriction of its own, by the time the one before it is taken down
+            io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(null);
+            restrictedTo = null;
+        }
         try {
             CurrentDeployment.context().close();
         } catch (IllegalStateException e) {

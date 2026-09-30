@@ -17,7 +17,6 @@ package io.micronaut.cdi.runtime;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
@@ -401,20 +400,37 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     }
 
     private Collection<BeanDefinition<T>> definitions() {
-        Qualifier<T> qualifier = CdiQualifiers.of(qualifiers);
-        Collection<BeanDefinition<T>> resolved = beansAmong(beanContext.getBeanDefinitions(type, qualifier));
+        Collection<BeanDefinition<T>> resolved = definitionsOf(type);
         Argument<T> counterpart = CdiTypes.counterpartOf(type);
         if (counterpart == null) {
             return resolved;
         }
         // a primitive and the class that boxes it are one bean type, and Micronaut keeps them apart
-        Collection<BeanDefinition<T>> boxed = beansAmong(beanContext.getBeanDefinitions(counterpart, qualifier));
+        Collection<BeanDefinition<T>> boxed = definitionsOf(counterpart);
         if (boxed.isEmpty()) {
             return resolved;
         }
         List<BeanDefinition<T>> both = new ArrayList<>(resolved);
         boxed.stream().filter(definition -> !both.contains(definition)).forEach(both::add);
         return both;
+    }
+
+    private Collection<BeanDefinition<T>> definitionsOf(Argument<T> asked) {
+        QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
+        if (overlay == null || overlay.isEmpty()) {
+            return beansAmong(beanContext.getBeanDefinitions(asked, CdiQualifiers.of(qualifiers)));
+        }
+        // a portable extension qualified a bean beyond what its definition says, which Micronaut's own
+        // comparison of qualifiers does not see: the beans of the type are compared by the qualifiers each
+        // has, as section 2.4.2 compares them
+        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
+        List<BeanDefinition<T>> matching = new ArrayList<>();
+        for (BeanDefinition<T> candidate : beansAmong(beanContext.getBeanDefinitions(asked))) {
+            if (CdiAssignability.areQualifiersMatching(container.canonicalBean(candidate).qualifiers(), qualifiers)) {
+                matching.add(candidate);
+            }
+        }
+        return matching;
     }
 
     /**

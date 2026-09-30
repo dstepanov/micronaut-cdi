@@ -1,0 +1,6 @@
+# The portable extensions of the kit's SE deployments, which declare them as service providers of their archive.
+# The deployments of the kit share one class path here, so the providers are listed for all of them and the
+# bootstrap admits the ones whose class is in the deployment it is started for.
+org.jboss.cdi.tck.tests.se.container.customClassloader.AlphaExtension
+org.jboss.cdi.tck.tests.se.container.customClassloader.BravoExtension
+org.jboss.cdi.tck.tests.se.context.custom.AfterBeanDiscoveryObserver

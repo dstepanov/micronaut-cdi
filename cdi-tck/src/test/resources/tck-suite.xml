@@ -118,9 +118,9 @@
         <classes>
             <class name="org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest">
                 <methods>
-                    <!-- portable extensions and decorators belong to CDI Full -->
-                    <exclude name="testAddExtensionAsExtensionInstance"/>
-                    <exclude name="testAddExtensionAsClass"/>
+                    <!-- decorators belong to CDI Full. The two tests that hand the bootstrap a portable extension
+                         run: the subset of that lifecycle a container of compiled beans answers is provided
+                         beyond Lite by micronaut-cdi-reflection, see CONFORMANCE.md -->
                     <exclude name="testAddDecorator"/>
                 </methods>
             </class>
@@ -129,6 +129,10 @@
             <class name="org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest"/>
             <class name="org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest"/>
             <class name="org.jboss.cdi.tck.tests.se.context.request.RequestContextTest"/>
+            <!-- portable extensions found through the service loader of the bootstrap's class loader: one adds a
+                 qualifier to a bean class, the other replaces the request context with its own -->
+            <class name="org.jboss.cdi.tck.tests.se.container.customClassloader.CustomClassLoaderSETest"/>
+            <class name="org.jboss.cdi.tck.tests.se.context.custom.CustomRequestContextSETest"/>
             <class name="org.jboss.cdi.tck.tests.se.customCDIProvider.CustomCDIProviderTest"/>
             <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveSETest"/>
             <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveWithSystemPropertyTest"/>
