@@ -1,5 +1,6 @@
 package io.micronaut.cdi.test;
 
+import io.micronaut.context.ApplicationContext;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Type;
@@ -26,9 +27,12 @@ class EventTypeResolutionTest {
 
     @Test
     void aSupertypeParameterResolvesTheSubtypeVariable() {
-        Type declared = io.micronaut.cdi.runtime.CdiParameterizedType.of(Foo.class, new Type[]{Integer.class});
-        Type resolved = io.micronaut.cdi.runtime.CdiTypes.eventTypeOf(Bar.class, declared);
-        assertEquals("io.micronaut.cdi.test.EventTypeResolutionTest$Bar<java.lang.Integer>",
-            resolved.getTypeName());
+        // how Bar relates to Foo is resolved by a running container, from what was compiled or by the reflection module
+        try (ApplicationContext ignored = ApplicationContext.run()) {
+            Type declared = io.micronaut.cdi.runtime.CdiParameterizedType.of(Foo.class, new Type[]{Integer.class});
+            Type resolved = io.micronaut.cdi.runtime.CdiTypes.eventTypeOf(Bar.class, declared);
+            assertEquals("io.micronaut.cdi.test.EventTypeResolutionTest$Bar<java.lang.Integer>",
+                resolved.getTypeName());
+        }
     }
 }
