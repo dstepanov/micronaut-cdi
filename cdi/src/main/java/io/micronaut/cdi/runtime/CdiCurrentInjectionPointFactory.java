@@ -48,6 +48,11 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
     }
 
     @Override
+    protected boolean isParameterized() {
+        return false;
+    }
+
+    @Override
     @org.jspecify.annotations.Nullable
     protected InjectionPoint build(BeanResolutionContext resolutionContext,
                                    BeanContext context,

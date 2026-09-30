@@ -2,32 +2,28 @@ plugins {
     id "io.micronaut.build.internal.cdi-module"
 }
 
-// Resolving and injecting a bean reads nothing back from its class: what a bean is was decided while it was compiled.
-// What is allowed below is handling the java.lang.reflect.Type the interfaces of the specification are written
-// in: a bean type, a required type and an event type are Types, and comparing two of them reads their arguments
-// and bounds. No class is read back for it - its hierarchy, its members, its annotations - which is what the
-// optional micronaut-cdi-reflection module does where an application asks. Each class is allowed only the kind it
-// reaches for, so that anything new, anywhere, fails the build until it is either removed or listed here with its
-// reason.
+// Resolving and injecting a bean reads nothing back from a class: what a bean is, what an observer observes and how a
+// class relates to the types above it were recorded while it was compiled. No class or package is allowed reflection,
+// and no call is suppressed in the source. What is allowed is a short list of calls, none of which looks anything up
+// on a class: the interfaces of the specification are written in java.lang.reflect.Type, so a bean type, a required
+// type and an event type arrive as one, and comparing two of them reads the arguments and bounds they carry. Reading
+// a class back - its hierarchy, its members, its annotations - is what the optional micronaut-cdi-reflection module
+// does where an application asks. Anything else, anywhere, fails the build.
 noReflection {
-    // the types of the specification's typesafe resolution: a bean type or a required type is a
-    // java.lang.reflect.Type, and its arguments and bounds are what section 2.4.2 compares
-    allowIn 'io.micronaut.cdi.runtime.CdiAssignability', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.CdiParameterizedType', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.CdiTypes', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.CdiInjectionPointFactory', 'GENERIC_SIGNATURES'
-    // the bean types of a bean are reported as Types (section 2.2.1), composed from what the processor recorded
-    allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES'
-    // the type an event is selected and fired as is a java.lang.reflect.Type
-    allowIn 'io.micronaut.cdi.runtime.CdiEvent', 'GENERIC_SIGNATURES'
-    // a bean type handed to the bean manager is a java.lang.reflect.Type
-    allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'GENERIC_SIGNATURES'
+    // the accessors of a type that was handed in, which section 2.4.2 compares: the value is already there, and
+    // asking for it resolves nothing
+    allowCalls 'java.lang.reflect.ParameterizedType+#getRawType|getActualTypeArguments|getOwnerType'
+    allowCalls 'java.lang.reflect.TypeVariable+#getBounds|getName'
+    allowCalls 'java.lang.reflect.WildcardType+#getUpperBounds|getLowerBounds'
+    allowCalls 'java.lang.reflect.GenericArrayType+#getGenericComponentType'
 
-    // a type recorded while the application compiled - what an observer observes, a type an extension composed -
-    // is handed out as the java.lang.reflect.Type the specification's interfaces are written in, composed from
-    // the classes that were recorded
-    allowIn 'io.micronaut.cdi.runtime.RecordedTypes', 'GENERIC_SIGNATURES'
-    allowIn 'io.micronaut.cdi.runtime.RecordedTypeIndex', 'GENERIC_SIGNATURES'
+    // the container's own value classes for those interfaces, composed from what the processor recorded and handed
+    // out where the specification reports a Type: making one reads no class
+    allowCalls 'io.micronaut.cdi.runtime.CdiParameterizedType#<init>|of'
+    allowCalls 'io.micronaut.cdi.runtime.CdiWildcardType#<init>'
+    allowCalls 'io.micronaut.cdi.runtime.CdiTypeVariable#<init>|bounds'
+    allowCalls 'io.micronaut.cdi.runtime.CdiTypes$Parameterized#<init>'
+    allowCalls 'io.micronaut.cdi.runtime.CdiTypes$GenericArray#<init>'
 }
 
 dependencies {

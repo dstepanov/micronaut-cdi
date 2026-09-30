@@ -153,6 +153,16 @@ public abstract class CdiInjectionPointFactory<B>
         return List.of();
     }
 
+    /**
+     * Whether the built-in bean has a type parameter, which the injection point gives: an event and a lookup
+     * have one.
+     *
+     * @return Whether it is parameterized
+     */
+    protected boolean isParameterized() {
+        return true;
+    }
+
     @Override
     @SuppressWarnings("NullAway")
     public final B instantiate(BeanResolutionContext resolutionContext, io.micronaut.context.BeanContext context) {
@@ -230,9 +240,7 @@ public abstract class CdiInjectionPointFactory<B>
     public final List<Argument<?>> getTypeArguments() {
         // the event and the lookup are parameterized by what the injection point asked for; the injection
         // point metadata is not parameterized at all
-        return getBeanType().getTypeParameters().length == 0
-            ? Collections.emptyList()
-            : Collections.singletonList(TYPE_VARIABLE);
+        return isParameterized() ? Collections.singletonList(TYPE_VARIABLE) : Collections.emptyList();
     }
 
     @Override
