@@ -99,7 +99,7 @@ public final class CdiTypes {
      * @return The raw class
      */
     public static @Nullable Class<?> rawClassOf(Argument<?> type) {
-        return isWildcard(type) || isUnresolved(type) ? null : type.getType();
+        return type.isWildcard() || isUnresolved(type) ? null : type.getType();
     }
 
     /**
@@ -149,34 +149,14 @@ public final class CdiTypes {
     }
 
     /**
-     * Whether the type is a wildcard.
-     *
-     * @param type The type
-     * @return Whether it is one
-     */
-    public static boolean isWildcard(Argument<?> type) {
-        return type instanceof WildcardArgument<?>;
-    }
-
-    /**
-     * Whether the type is a type variable: one left unresolved where the type was written, rather than a type
-     * resolved in place of one.
-     *
-     * @param type The type
-     * @return Whether it is one
-     */
-    public static boolean isVariable(Argument<?> type) {
-        return isUnresolved(type) && !type.getType().isArray();
-    }
-
-    /**
      * Whether the type is an array: of a class, of a parameterized type, or of a type variable.
      *
      * @param type The type
      * @return Whether it is one
      */
     public static boolean isArray(Argument<?> type) {
-        return !isWildcard(type) && type.getType().isArray();
+        // Argument.isArray() is true of a wildcard bounded by an array as well, which is not an array type
+        return !type.isWildcard() && type.getType().isArray();
     }
 
     /**
@@ -186,7 +166,7 @@ public final class CdiTypes {
      * @return Whether it is one
      */
     public static boolean isParameterized(Argument<?> type) {
-        return !isWildcard(type) && !isUnresolved(type) && !type.getType().isArray() && hasArguments(type);
+        return !type.isWildcard() && !isUnresolved(type) && !type.getType().isArray() && type.hasTypeArguments();
     }
 
     /**
@@ -197,7 +177,7 @@ public final class CdiTypes {
      * @return Whether it is one
      */
     public static boolean isClass(Argument<?> type) {
-        return !isWildcard(type) && !isUnresolved(type) && !hasArguments(type);
+        return !type.isWildcard() && !isUnresolved(type) && !type.hasTypeArguments();
     }
 
     /**
@@ -228,43 +208,21 @@ public final class CdiTypes {
      */
     static void addDistinct(List<Argument<?>> types, Argument<?> type) {
         for (Argument<?> each : types) {
-            if (same(each, type)) {
+            if (each.equalsStructure(type)) {
                 return;
             }
         }
         types.add(type);
     }
 
-    private static boolean isUnresolved(Argument<?> type) {
-        // a wildcard is compiled as a placeholder as well, and is not a variable
-        return type instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()
-            && !(type instanceof WildcardArgument<?>);
-    }
-
-    private static boolean hasArguments(Argument<?> type) {
-        return type.getTypeParameters().length > 0 && !type.isRawType();
-    }
-
     /**
-     * The component of an array type: an array has the type arguments of its component, and an array of a
-     * variable is an array of that variable.
-     *
-     * @param array The array
-     * @return The component, or {@code null} for a type that is not an array
+     * Whether the type is a type variable or an array of one. {@code Argument.isUnresolvedTypeVariable()} is
+     * the variable alone: an array of a variable is an array to it, and here it is neither a class nor a
+     * parameterized type.
      */
-    public static @Nullable Argument<?> componentOf(Argument<?> array) {
-        if (!isArray(array)) {
-            return null;
-        }
-        Class<?> component = array.getType().getComponentType();
-        if (array instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
-            return Argument.ofTypeVariable(component, null, placeholder.getVariableName(), null,
-                placeholder.getTypeParameters(), placeholder.getBounds().toArray(Argument.ZERO_ARGUMENTS));
-        }
-        if (!hasArguments(array)) {
-            return Argument.of(component);
-        }
-        return Argument.of(component, (String) null, array.getTypeParameters());
+    private static boolean isUnresolved(Argument<?> type) {
+        return type.isUnresolvedTypeVariable() || type.getType().isArray() && !type.isWildcard()
+            && type instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved();
     }
 
     /**
@@ -277,53 +235,6 @@ public final class CdiTypes {
     public static Argument<?> variable(String name, Argument<?>... bounds) {
         Argument<?>[] all = bounds.length == 0 ? new Argument<?>[] {Argument.OBJECT_ARGUMENT} : bounds;
         return Argument.ofTypeVariable(all[0].getType(), null, name, null, all[0].getTypeParameters(), all);
-    }
-
-    /**
-     * Whether two arguments describe the same type: the same class with the same type arguments, a wildcard
-     * with the same bounds, a variable of the same name and bounds. The names and annotations an argument
-     * carries besides are not looked at.
-     *
-     * @param one   A type
-     * @param other Another
-     * @return Whether they are the same type
-     */
-    public static boolean same(Argument<?> one, Argument<?> other) {
-        if (one == other) {
-            return true;
-        }
-        if (one instanceof WildcardArgument<?> wildcard) {
-            return other instanceof WildcardArgument<?> otherWildcard
-                && same(wildcard.getUpperBounds(), otherWildcard.getUpperBounds())
-                && same(wildcard.getLowerBounds(), otherWildcard.getLowerBounds());
-        }
-        if (isWildcard(other) || !one.getType().equals(other.getType())) {
-            return false;
-        }
-        if (one instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
-            return other instanceof GenericPlaceholder<?> otherPlaceholder && !otherPlaceholder.isResolved()
-                && placeholder.getVariableName().equals(otherPlaceholder.getVariableName())
-                && same(placeholder.getBounds(), otherPlaceholder.getBounds());
-        }
-        if (isUnresolved(other)) {
-            return false;
-        }
-        if (!hasArguments(one) || !hasArguments(other)) {
-            return !hasArguments(one) && !hasArguments(other);
-        }
-        return same(List.of(one.getTypeParameters()), List.of(other.getTypeParameters()));
-    }
-
-    private static boolean same(List<Argument<?>> one, List<Argument<?>> other) {
-        if (one.size() != other.size()) {
-            return false;
-        }
-        for (int i = 0; i < one.size(); i++) {
-            if (!same(one.get(i), other.get(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -340,7 +251,7 @@ public final class CdiTypes {
         if (arguments.isEmpty()) {
             return type;
         }
-        if (isVariable(type)) {
+        if (type.isUnresolvedTypeVariable()) {
             Argument<?> argument = arguments.get(((GenericPlaceholder<?>) type).getVariableName());
             return argument != null ? argument : type;
         }
@@ -546,7 +457,7 @@ public final class CdiTypes {
             if (resolved instanceof WildcardArgument<?> wildcard) {
                 resolved = wildcard.getUpperBounds().get(0);
             }
-            if (resolved == null || isVariable(resolved)) {
+            if (resolved == null || resolved.isUnresolvedTypeVariable()) {
                 throw new IllegalArgumentException("The type variable " + variables.get(i) + " of "
                     + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
                     + SpecificationTypes.typeOf(declaredType).getTypeName()
@@ -558,7 +469,7 @@ public final class CdiTypes {
     }
 
     private static void unify(Argument<?> own, Argument<?> declared, Map<String, Argument<?>> resolution) {
-        if (isVariable(own)) {
+        if (own.isUnresolvedTypeVariable()) {
             resolution.put(((GenericPlaceholder<?>) own).getVariableName(), declared);
             return;
         }

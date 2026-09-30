@@ -107,7 +107,7 @@ public final class SpecificationTypes {
                 bounds.length == 0 ? new Argument<?>[] {first} : bounds);
         }
         if (type instanceof GenericArrayType array) {
-            return arrayOf(argumentOf(array.getGenericComponentType(), converting));
+            return argumentOf(array.getGenericComponentType(), converting).arrayType();
         }
         throw new IllegalArgumentException("The type " + type + " is not a class, a parameterized type, a wildcard, "
             + "a type variable or an array of one");
@@ -178,26 +178,6 @@ public final class SpecificationTypes {
     }
 
     /**
-     * The argument of an array of what the given argument describes: an array has the type arguments of its
-     * component, and an array of a variable is the variable's placeholder over the array of its erasure.
-     *
-     * @param component The component
-     * @return The array
-     */
-    public static Argument<?> arrayOf(Argument<?> component) {
-        Class<?> arrayClass = component.getType().arrayType();
-        if (component instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()
-            && !(component instanceof WildcardArgument<?>)) {
-            return Argument.ofTypeVariable(arrayClass, null, placeholder.getVariableName(), null,
-                placeholder.getTypeParameters(), placeholder.getBounds().toArray(Argument.ZERO_ARGUMENTS));
-        }
-        if (component.isRawType() || component.getTypeParameters().length == 0) {
-            return Argument.of(arrayClass);
-        }
-        return Argument.of(arrayClass, (String) null, component.getTypeParameters());
-    }
-
-    /**
      * The type an argument describes, the way the declaration wrote it: a type variable left unresolved is the
      * variable with its bounds, a wildcard keeps its bounds, a raw type is the class, and an array of a
      * parameterized type or of a variable is a generic array. A type resolved in place of a variable is that type.
@@ -233,6 +213,8 @@ public final class SpecificationTypes {
                 typesOf(wildcard.getLowerBounds(), bounding));
         }
         Class<?> type = argument.getType();
+        // a variable, or an array of one: the placeholder is asked rather than isUnresolvedTypeVariable(), which
+        // is the variable alone
         if (argument instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
             String name = placeholder.getVariableName();
             TypeVariableValue variable = bounding.get(name);

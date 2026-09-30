@@ -159,7 +159,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     }
 
     private static void requireNoTypeVariable(Argument<?> selected) {
-        if (CdiTypes.isVariable(selected)) {
+        if (selected.isUnresolvedTypeVariable()) {
             throw new IllegalArgumentException("An event cannot be selected as a type variable");
         }
         if (CdiTypes.isParameterized(selected)) {

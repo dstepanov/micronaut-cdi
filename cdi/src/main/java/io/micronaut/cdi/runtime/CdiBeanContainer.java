@@ -112,7 +112,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         List<Argument<?>> types = bean instanceof CdiBean<?> own ? own.types()
             : SpecificationTypes.argumentsOf(bean.getTypes());
         for (Argument<?> type : types) {
-            if (CdiTypes.same(type, required)) {
+            if (type.equalsStructure(required)) {
                 amongTheTypes = true;
                 break;
             }
