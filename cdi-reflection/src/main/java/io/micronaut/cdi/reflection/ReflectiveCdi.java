@@ -149,9 +149,33 @@ public final class ReflectiveCdi implements CdiReflection {
             }
         }
         for (Type anInterface : raw.getGenericInterfaces()) {
-            collectClosure(CdiTypes.substitute(anInterface, substitution), closure, arrayStops);
+            collectClosure(substitute(anInterface, substitution), closure, arrayStops);
         }
-        collectClosure(CdiTypes.substitute(raw.getGenericSuperclass(), substitution), closure, arrayStops);
+        collectClosure(substitute(raw.getGenericSuperclass(), substitution), closure, arrayStops);
+    }
+
+    /**
+     * The type with the given variables substituted, so that what a subtype says about its parameters carries
+     * into the supertypes it collects.
+     */
+    private static @Nullable Type substitute(@Nullable Type type, Map<TypeVariable<?>, Type> substitution) {
+        if (substitution.isEmpty() || type == null) {
+            return type;
+        }
+        if (type instanceof TypeVariable<?> variable) {
+            return substitution.getOrDefault(variable, variable);
+        }
+        if (type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> rawType) {
+            Type[] arguments = parameterized.getActualTypeArguments();
+            Type[] substituted = new Type[arguments.length];
+            boolean changed = false;
+            for (int i = 0; i < arguments.length; i++) {
+                substituted[i] = substitute(arguments[i], substitution);
+                changed |= substituted[i] != arguments[i];
+            }
+            return changed ? CdiParameterizedType.of(rawType, substituted) : type;
+        }
+        return type;
     }
 
     @Override

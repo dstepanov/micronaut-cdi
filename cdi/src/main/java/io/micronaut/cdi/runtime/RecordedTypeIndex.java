@@ -19,15 +19,12 @@ import io.micronaut.cdi.annotation.CdiTypeIndex;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +33,7 @@ import java.util.Map;
 /**
  * The generic hierarchies of the classes the application was compiled with, as the processor recorded them:
  * what an event of a class is matched by, read from compiled metadata rather than from the class's generic
- * signature.
+ * signature, and held as the arguments the container works with.
  *
  * <p>A class the application was not compiled with has no record. The module that reads classes answers for
  * it where it is there, and otherwise a class is matched as its raw class and the raw classes above it.</p>
@@ -94,46 +91,6 @@ public final class RecordedTypeIndex {
     }
 
     /**
-     * The type with each type variable named among the given arguments replaced by the argument.
-     */
-    static Type substitute(Type type, Map<String, Type> arguments) {
-        if (arguments.isEmpty()) {
-            return type;
-        }
-        if (type instanceof TypeVariable<?> variable) {
-            Type argument = arguments.get(variable.getName());
-            return argument != null ? argument : type;
-        }
-        if (type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
-            Type[] actual = parameterized.getActualTypeArguments();
-            Type[] substituted = new Type[actual.length];
-            boolean changed = false;
-            for (int i = 0; i < actual.length; i++) {
-                substituted[i] = substitute(actual[i], arguments);
-                changed |= substituted[i] != actual[i];
-            }
-            return changed ? CdiParameterizedType.of(raw, substituted) : type;
-        }
-        if (type instanceof WildcardType wildcard) {
-            Type[] upper = wildcard.getUpperBounds();
-            Type[] lower = wildcard.getLowerBounds();
-            Type[] substitutedUpper = new Type[upper.length];
-            Type[] substitutedLower = new Type[lower.length];
-            boolean changed = false;
-            for (int i = 0; i < upper.length; i++) {
-                substitutedUpper[i] = substitute(upper[i], arguments);
-                changed |= substitutedUpper[i] != upper[i];
-            }
-            for (int i = 0; i < lower.length; i++) {
-                substitutedLower[i] = substitute(lower[i], arguments);
-                changed |= substitutedLower[i] != lower[i];
-            }
-            return changed ? new CdiWildcardType(substitutedUpper, substitutedLower) : type;
-        }
-        return type;
-    }
-
-    /**
      * What was recorded of one class.
      *
      * @param variables  The names of the type variables the class declares
@@ -148,16 +105,16 @@ public final class RecordedTypeIndex {
          * @param type The class, or a parameterization of it
          * @return The closure, or {@code null} where the record refers to a class that is not there
          */
-        @Nullable List<Type> closureOf(Type type) {
-            Map<String, Type> arguments = argumentsOf(type);
-            List<Type> closure = new ArrayList<>(supertypes.size() + 1);
+        @Nullable List<Argument<?>> closureOf(Argument<?> type) {
+            Map<String, Argument<?>> arguments = argumentsOf(type);
+            List<Argument<?>> closure = new ArrayList<>(supertypes.size() + 1);
             closure.add(type);
             for (AnnotationValue<Annotation> supertype : supertypes) {
-                Type resolved = RecordedTypes.find(supertype);
+                Argument<?> resolved = RecordedTypes.find(supertype);
                 if (resolved == null) {
                     return null;
                 }
-                closure.add(substitute(resolved, arguments));
+                closure.add(CdiTypes.substitute(resolved, arguments, true));
             }
             return closure;
         }
@@ -168,21 +125,21 @@ public final class RecordedTypeIndex {
          * @param type The class
          * @return The class, or its parameterization over its variables
          */
-        Type declaredTypeOf(Class<?> type) {
+        Argument<?> declaredTypeOf(Class<?> type) {
             if (variables.isEmpty()) {
-                return type;
+                return Argument.of(type);
             }
-            Type[] own = new Type[variables.size()];
+            Argument<?>[] own = new Argument<?>[variables.size()];
             for (int i = 0; i < own.length; i++) {
-                own[i] = new CdiTypeVariable(variables.get(i), new Type[] {Object.class});
+                own[i] = CdiTypes.variable(variables.get(i));
             }
-            return CdiParameterizedType.of(type, own);
+            return Argument.of(type, (String) null, own);
         }
 
-        private Map<String, Type> argumentsOf(Type type) {
-            Map<String, Type> arguments = new HashMap<>();
-            if (type instanceof ParameterizedType parameterized) {
-                Type[] actual = parameterized.getActualTypeArguments();
+        private Map<String, Argument<?>> argumentsOf(Argument<?> type) {
+            Map<String, Argument<?>> arguments = new HashMap<>();
+            if (CdiTypes.isParameterized(type)) {
+                Argument<?>[] actual = type.getTypeParameters();
                 for (int i = 0; i < actual.length && i < variables.size(); i++) {
                     arguments.put(variables.get(i), actual[i]);
                 }

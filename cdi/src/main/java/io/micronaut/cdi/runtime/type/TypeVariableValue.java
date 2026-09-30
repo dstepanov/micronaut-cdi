@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.runtime;
+package io.micronaut.cdi.runtime.type;
 
-import io.micronaut.core.annotation.Internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
@@ -31,13 +30,12 @@ import java.lang.reflect.TypeVariable;
  * @author Denis Stepanov
  * @since 1.0
  */
-@Internal
-final class CdiTypeVariable implements TypeVariable<GenericDeclaration> {
+final class TypeVariableValue implements TypeVariable<GenericDeclaration> {
 
     private final String name;
     private Type[] bounds;
 
-    CdiTypeVariable(String name, Type[] bounds) {
+    TypeVariableValue(String name, Type[] bounds) {
         this.name = name;
         this.bounds = bounds;
     }

@@ -66,6 +66,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
+    private volatile @Nullable Argument<?> observedArgument;
     private final @Nullable AnnotationValue<Annotation> recordedType;
     private volatile java.util.@Nullable List<CdiQualifier> observedQualifiers;
     private volatile @Nullable Set<Annotation> observedQualifierInstances;
@@ -108,12 +109,22 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     public Type getObservedType() {
         Type resolved = observedType;
         if (resolved == null) {
+            resolved = CdiTypes.typeOf(observedArgument());
+            observedType = resolved;
+        }
+        return resolved;
+    }
+
+    @Override
+    public Argument<?> observedArgument() {
+        Argument<?> resolved = observedArgument;
+        if (resolved == null) {
             // the source of truth is what the processor recorded of the parameter: the compiled argument erases
             // a wildcard or a variable, and the record keeps them, with the variables of a generic superclass
             // that declares the method resolved for the bean class
-            Type recorded = recordedType == null ? null : RecordedTypes.find(recordedType);
-            resolved = recorded != null ? recorded : CdiTypes.requiredTypeOf(observed());
-            observedType = resolved;
+            Argument<?> recorded = recordedType == null ? null : RecordedTypes.find(recordedType);
+            resolved = recorded != null ? recorded : observed();
+            observedArgument = resolved;
         }
         return resolved;
     }
@@ -182,7 +193,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public void notify(T event) {
-        notify(event, new CdiEventMetadata(observedQualifiers(), null, getObservedType()));
+        notify(event, new CdiEventMetadata(observedQualifiers(), null, observedArgument()));
     }
 
     /**

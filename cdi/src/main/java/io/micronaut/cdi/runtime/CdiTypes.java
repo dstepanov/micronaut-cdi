@@ -20,18 +20,23 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.WildcardArgument;
 
-import java.lang.reflect.ParameterizedType;
-import java.util.Map;
+import io.micronaut.cdi.runtime.type.SpecificationTypes;
 import org.jspecify.annotations.Nullable;
+
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Reads a type of the reflection API as the Micronaut argument that describes it.
+ * The types of the specification as the container holds them: each an {@link Argument}, which carries the type
+ * arguments, the wildcards and the type variables a type was written with.
  *
- * <p>The specification asks for a bean by a {@link Type}, since that is what a program has to hand when it looks
- * one up itself. Micronaut resolves a bean by an {@link Argument}, which is the same thing described the way it
- * was compiled. A parameterized type is carried across with its arguments, so that a lookup of a parameterized
- * type resolves only the beans of that parameterization, which is what section 2.4.2 asks for.</p>
+ * <p>What a type is - a class, a parameterized type, a wildcard, a type variable, an array of one of them - is
+ * asked here, and so is what is above it: the type closure of a class is what the processor recorded of it. A
+ * {@link Type} of the specification's API is turned into an argument, and made from one, by
+ * {@link SpecificationTypes} and nowhere else.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -77,25 +82,24 @@ public final class CdiTypes {
     }
 
     /**
-     * The raw class of a type, or {@code null} for one that has none of its own.
+     * The raw class of a type that was handed in, or {@code null} for one that has none of its own.
      *
      * @param type The type
      * @return The raw class
      */
     public static @Nullable Class<?> rawClassOf(Type type) {
-        if (type instanceof Class<?> aClass) {
-            return aClass;
-        }
-        if (type instanceof java.lang.reflect.ParameterizedType parameterized
-            && parameterized.getRawType() instanceof Class<?> raw) {
-            return raw;
-        }
-        if (type instanceof java.lang.reflect.GenericArrayType array) {
-            // the raw class of an array of a parameterized type is the array of the raw component
-            Class<?> component = rawClassOf(array.getGenericComponentType());
-            return component == null ? null : component.arrayType();
-        }
-        return null;
+        return SpecificationTypes.rawClassOf(type);
+    }
+
+    /**
+     * The raw class of a type, or {@code null} for one that has none of its own: a wildcard, a type variable,
+     * or an array of a variable.
+     *
+     * @param type The type
+     * @return The raw class
+     */
+    public static @Nullable Class<?> rawClassOf(Argument<?> type) {
+        return isWildcard(type) || isUnresolved(type) ? null : type.getType();
     }
 
     /**
@@ -113,14 +117,262 @@ public final class CdiTypes {
     }
 
     /**
-     * The required type of the lookup: the type the compiled argument describes, with its type variables and
-     * wildcards, which the rules of section 2.4.2.1 match differently from the types they erase to.
+     * The required type of the lookup, as the specification's API reports a type.
      *
      * @param beanType The compiled argument of the lookup
      * @return The required type
      */
     public static Type requiredTypeOf(Argument<?> beanType) {
-        return CdiTypes.typeOf(beanType);
+        return SpecificationTypes.typeOf(beanType);
+    }
+
+    /**
+     * The type a compiled argument describes, as the specification's API reports a type.
+     *
+     * @param argument The argument
+     * @return The type
+     */
+    public static Type typeOf(Argument<?> argument) {
+        return SpecificationTypes.typeOf(argument);
+    }
+
+    /**
+     * The argument a bean is looked up by for the given type.
+     *
+     * @param type The type
+     * @param <T>  The type
+     * @return The argument
+     * @throws IllegalArgumentException For a type that is neither a class nor a parameterized type of classes
+     */
+    public static <T> Argument<T> argumentOf(Type type) {
+        return SpecificationTypes.lookupArgumentOf(type);
+    }
+
+    /**
+     * Whether the type is a wildcard.
+     *
+     * @param type The type
+     * @return Whether it is one
+     */
+    public static boolean isWildcard(Argument<?> type) {
+        return type instanceof WildcardArgument<?>;
+    }
+
+    /**
+     * Whether the type is a type variable: one left unresolved where the type was written, rather than a type
+     * resolved in place of one.
+     *
+     * @param type The type
+     * @return Whether it is one
+     */
+    public static boolean isVariable(Argument<?> type) {
+        return isUnresolved(type) && !type.getType().isArray();
+    }
+
+    /**
+     * Whether the type is an array: of a class, of a parameterized type, or of a type variable.
+     *
+     * @param type The type
+     * @return Whether it is one
+     */
+    public static boolean isArray(Argument<?> type) {
+        return !isWildcard(type) && type.getType().isArray();
+    }
+
+    /**
+     * Whether the type is a parameterized type: a class written with type arguments.
+     *
+     * @param type The type
+     * @return Whether it is one
+     */
+    public static boolean isParameterized(Argument<?> type) {
+        return !isWildcard(type) && !isUnresolved(type) && !type.getType().isArray() && hasArguments(type);
+    }
+
+    /**
+     * Whether the type is a class and nothing more: a class without type arguments, a raw type, a primitive,
+     * or an array of one of them.
+     *
+     * @param type The type
+     * @return Whether it is one
+     */
+    public static boolean isClass(Argument<?> type) {
+        return !isWildcard(type) && !isUnresolved(type) && !hasArguments(type);
+    }
+
+    /**
+     * Whether the type is {@code Object}.
+     *
+     * @param type The type
+     * @return Whether it is
+     */
+    public static boolean isObject(Argument<?> type) {
+        return type.getType() == Object.class && isClass(type);
+    }
+
+    /**
+     * The class of a class or of a parameterized type, or {@code null} for a type that is neither.
+     *
+     * @param type The type
+     * @return The class
+     */
+    public static @Nullable Class<?> classOf(Argument<?> type) {
+        return isClass(type) || isParameterized(type) ? type.getType() : null;
+    }
+
+    /**
+     * Adds a type to the given types unless it is among them already.
+     *
+     * @param types The types
+     * @param type  The type to add
+     */
+    static void addDistinct(List<Argument<?>> types, Argument<?> type) {
+        for (Argument<?> each : types) {
+            if (same(each, type)) {
+                return;
+            }
+        }
+        types.add(type);
+    }
+
+    private static boolean isUnresolved(Argument<?> type) {
+        // a wildcard is compiled as a placeholder as well, and is not a variable
+        return type instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()
+            && !(type instanceof WildcardArgument<?>);
+    }
+
+    private static boolean hasArguments(Argument<?> type) {
+        return type.getTypeParameters().length > 0 && !type.isRawType();
+    }
+
+    /**
+     * The component of an array type: an array has the type arguments of its component, and an array of a
+     * variable is an array of that variable.
+     *
+     * @param array The array
+     * @return The component, or {@code null} for a type that is not an array
+     */
+    public static @Nullable Argument<?> componentOf(Argument<?> array) {
+        if (!isArray(array)) {
+            return null;
+        }
+        Class<?> component = array.getType().getComponentType();
+        if (array instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
+            return Argument.ofTypeVariable(component, null, placeholder.getVariableName(), null,
+                placeholder.getTypeParameters(), placeholder.getBounds().toArray(Argument.ZERO_ARGUMENTS));
+        }
+        if (!hasArguments(array)) {
+            return Argument.of(component);
+        }
+        return Argument.of(component, (String) null, array.getTypeParameters());
+    }
+
+    /**
+     * A type variable of the given name and bounds.
+     *
+     * @param name   The name
+     * @param bounds The bounds, none for a variable bounded by {@code Object}
+     * @return The variable
+     */
+    public static Argument<?> variable(String name, Argument<?>... bounds) {
+        Argument<?>[] all = bounds.length == 0 ? new Argument<?>[] {Argument.OBJECT_ARGUMENT} : bounds;
+        return Argument.ofTypeVariable(all[0].getType(), null, name, null, all[0].getTypeParameters(), all);
+    }
+
+    /**
+     * Whether two arguments describe the same type: the same class with the same type arguments, a wildcard
+     * with the same bounds, a variable of the same name and bounds. The names and annotations an argument
+     * carries besides are not looked at.
+     *
+     * @param one   A type
+     * @param other Another
+     * @return Whether they are the same type
+     */
+    public static boolean same(Argument<?> one, Argument<?> other) {
+        if (one == other) {
+            return true;
+        }
+        if (one instanceof WildcardArgument<?> wildcard) {
+            return other instanceof WildcardArgument<?> otherWildcard
+                && same(wildcard.getUpperBounds(), otherWildcard.getUpperBounds())
+                && same(wildcard.getLowerBounds(), otherWildcard.getLowerBounds());
+        }
+        if (isWildcard(other) || !one.getType().equals(other.getType())) {
+            return false;
+        }
+        if (one instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
+            return other instanceof GenericPlaceholder<?> otherPlaceholder && !otherPlaceholder.isResolved()
+                && placeholder.getVariableName().equals(otherPlaceholder.getVariableName())
+                && same(placeholder.getBounds(), otherPlaceholder.getBounds());
+        }
+        if (isUnresolved(other)) {
+            return false;
+        }
+        if (!hasArguments(one) || !hasArguments(other)) {
+            return !hasArguments(one) && !hasArguments(other);
+        }
+        return same(List.of(one.getTypeParameters()), List.of(other.getTypeParameters()));
+    }
+
+    private static boolean same(List<Argument<?>> one, List<Argument<?>> other) {
+        if (one.size() != other.size()) {
+            return false;
+        }
+        for (int i = 0; i < one.size(); i++) {
+            if (!same(one.get(i), other.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The type with each type variable named among the given arguments replaced by the argument, so that what
+     * a subtype says about its parameters carries into the supertypes it collects.
+     *
+     * @param type          The type
+     * @param arguments     The variable assignments, by the name of the variable
+     * @param intoWildcards Whether the bounds of a wildcard are substituted as well
+     * @return The substituted type
+     */
+    public static Argument<?> substitute(Argument<?> type, Map<String, Argument<?>> arguments,
+                                         boolean intoWildcards) {
+        if (arguments.isEmpty()) {
+            return type;
+        }
+        if (isVariable(type)) {
+            Argument<?> argument = arguments.get(((GenericPlaceholder<?>) type).getVariableName());
+            return argument != null ? argument : type;
+        }
+        if (isParameterized(type)) {
+            Argument<?>[] substituted = substitute(List.of(type.getTypeParameters()), arguments, intoWildcards);
+            return substituted == null ? type : Argument.of(type.getType(), (String) null, substituted);
+        }
+        if (intoWildcards && type instanceof WildcardArgument<?> wildcard) {
+            Argument<?>[] upper = substitute(wildcard.getUpperBounds(), arguments, true);
+            Argument<?>[] lower = substitute(wildcard.getLowerBounds(), arguments, true);
+            if (upper == null && lower == null) {
+                return type;
+            }
+            Argument<?>[] uppers = upper != null ? upper : wildcard.getUpperBounds().toArray(Argument.ZERO_ARGUMENTS);
+            Argument<?>[] lowers = lower != null ? lower : wildcard.getLowerBounds().toArray(Argument.ZERO_ARGUMENTS);
+            return Argument.ofWildcard(uppers[0].getType(), null, null, uppers[0].getTypeParameters(), uppers, lowers);
+        }
+        return type;
+    }
+
+    /**
+     * The given types substituted, or {@code null} where the substitution changes none of them.
+     */
+    private static Argument<?> @Nullable [] substitute(List<Argument<?>> types, Map<String, Argument<?>> arguments,
+                                                       boolean intoWildcards) {
+        Argument<?>[] substituted = new Argument<?>[types.size()];
+        boolean changed = false;
+        for (int i = 0; i < substituted.length; i++) {
+            substituted[i] = substitute(types.get(i), arguments, intoWildcards);
+            changed |= substituted[i] != types.get(i);
+        }
+        return changed ? substituted : null;
     }
 
     /**
@@ -133,7 +385,7 @@ public final class CdiTypes {
      * @param type The type
      * @return The closure, the type first
      */
-    public static java.util.List<Type> closureOf(Type type) {
+    public static List<Argument<?>> closureOf(Argument<?> type) {
         return closureOf(type, false);
     }
 
@@ -144,7 +396,7 @@ public final class CdiTypes {
      * @param type The type
      * @return The closure, the type first
      */
-    public static java.util.List<Type> beanTypeClosureOf(Type type) {
+    public static List<Argument<?>> beanTypeClosureOf(Argument<?> type) {
         return closureOf(type, true);
     }
 
@@ -155,37 +407,40 @@ public final class CdiTypes {
      * @param beanClass The bean class
      * @return The closure, the class first
      */
-    static java.util.List<Type> beanTypeClosureOf(Class<?> beanClass) {
+    static List<Argument<?>> beanTypeClosureOf(Class<?> beanClass) {
         RecordedTypeIndex.Entry recorded = recordOf(beanClass);
         if (recorded != null) {
             return closureOf(recorded.declaredTypeOf(beanClass), true);
         }
         CdiReflection reflection = reflection();
-        return closureOf(reflection != null ? reflection.declaredTypeOf(beanClass) : beanClass, true);
+        return closureOf(reflection != null
+            ? SpecificationTypes.argumentOf(reflection.declaredTypeOf(beanClass)) : Argument.of(beanClass), true);
     }
 
-    private static java.util.List<Type> closureOf(Type type, boolean arrayStops) {
+    private static List<Argument<?>> closureOf(Argument<?> type, boolean arrayStops) {
         Class<?> raw = rawClassOf(type);
-        if (raw == null || type == Object.class) {
-            return new java.util.ArrayList<>();
+        if (raw == null || isObject(type)) {
+            return new ArrayList<>();
         }
         if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
-            return new java.util.ArrayList<>(java.util.List.of(type));
+            return new ArrayList<>(List.of(type));
         }
         RecordedTypeIndex.Entry recorded = recordOf(raw);
         if (recorded != null) {
-            java.util.List<Type> closure = recorded.closureOf(type);
+            List<Argument<?>> closure = recorded.closureOf(type);
             if (closure != null) {
                 return closure;
             }
         }
         CdiReflection reflection = reflection();
         if (reflection != null) {
-            return reflection.typeClosureOf(type, arrayStops);
+            // the module that reads classes speaks the types of the reflection API
+            return SpecificationTypes.argumentsOf(
+                reflection.typeClosureOf(SpecificationTypes.typeOf(type), arrayStops));
         }
         // nothing is known of what is above the type without reading it: the type itself is all there is,
         // and what is above a class is asked of the class by whoever compares against it
-        return new java.util.ArrayList<>(java.util.List.of(type));
+        return new ArrayList<>(List.of(type));
     }
 
     /**
@@ -227,33 +482,18 @@ public final class CdiTypes {
     }
 
     /**
-     * The type with the given variables substituted, so that what a subtype says about its parameters carries
-     * into the supertypes it collects.
+     * The type of an event of the given runtime class that was fired as the given type, where both are the
+     * types of the specification's API.
      *
-     * @param type         The type
-     * @param substitution The variable assignments
-     * @return The substituted type
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
+     * @return The event type
+     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
+     *                                  unresolved
+     * @see #eventTypeOf(Class, Argument)
      */
-    public static @Nullable Type substitute(@Nullable Type type,
-                                            java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution) {
-        if (substitution.isEmpty() || type == null) {
-            return type;
-        }
-        if (type instanceof java.lang.reflect.TypeVariable<?> variable) {
-            return substitution.getOrDefault(variable, variable);
-        }
-        if (type instanceof ParameterizedType parameterized
-            && parameterized.getRawType() instanceof Class<?> rawType) {
-            Type[] arguments = parameterized.getActualTypeArguments();
-            Type[] substituted = new Type[arguments.length];
-            boolean changed = false;
-            for (int i = 0; i < arguments.length; i++) {
-                substituted[i] = substitute(arguments[i], substitution);
-                changed |= substituted[i] != arguments[i];
-            }
-            return changed ? CdiParameterizedType.of(rawType, substituted) : type;
-        }
-        return type;
+    public static Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
+        return SpecificationTypes.typeOf(eventTypeOf(runtimeClass, SpecificationTypes.argumentOf(declaredType)));
     }
 
     /**
@@ -273,239 +513,61 @@ public final class CdiTypes {
      * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
      *                                  unresolved
      */
-    public static Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
+    public static Argument<?> eventTypeOf(Class<?> runtimeClass, Argument<?> declaredType) {
         RecordedTypeIndex.Entry recorded = recordOf(runtimeClass);
         if (recorded == null) {
             CdiReflection reflection = reflection();
             if (reflection != null) {
-                return reflection.eventTypeOf(runtimeClass, declaredType);
+                return SpecificationTypes.argumentOf(
+                    reflection.eventTypeOf(runtimeClass, SpecificationTypes.typeOf(declaredType)));
             }
-            return rawClassOf(declaredType) == runtimeClass ? declaredType : runtimeClass;
+            return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
         }
-        java.util.List<String> variables = recorded.variables();
+        List<String> variables = recorded.variables();
         if (variables.isEmpty()) {
-            return runtimeClass;
+            return Argument.of(runtimeClass);
         }
-        java.util.Map<String, Type> resolution = new java.util.HashMap<>();
+        Map<String, Argument<?>> resolution = new HashMap<>();
         Class<?> declaredRaw = rawClassOf(declaredType);
-        if (declaredType instanceof ParameterizedType declaredParameterized && declaredRaw != null) {
-            java.util.List<Type> closure = recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
+        if (isParameterized(declaredType) && declaredRaw != null) {
+            List<Argument<?>> closure = recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
             if (closure != null) {
-                for (Type supertype : closure) {
-                    if (rawClassOf(supertype) == declaredRaw && supertype instanceof ParameterizedType own) {
-                        Type[] ownArguments = own.getActualTypeArguments();
-                        Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
-                        for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
-                            unify(ownArguments[i], declaredArguments[i], resolution);
-                        }
+                for (Argument<?> supertype : closure) {
+                    if (rawClassOf(supertype) == declaredRaw && isParameterized(supertype)) {
+                        unify(supertype, declaredType, resolution);
                         break;
                     }
                 }
             }
         }
-        Type[] arguments = new Type[variables.size()];
+        Argument<?>[] arguments = new Argument<?>[variables.size()];
         for (int i = 0; i < arguments.length; i++) {
-            Type resolved = resolution.get(variables.get(i));
-            if (resolved instanceof java.lang.reflect.WildcardType wildcard) {
-                Type[] uppers = wildcard.getUpperBounds();
-                resolved = uppers.length > 0 ? uppers[0] : Object.class;
+            Argument<?> resolved = resolution.get(variables.get(i));
+            if (resolved instanceof WildcardArgument<?> wildcard) {
+                resolved = wildcard.getUpperBounds().get(0);
             }
-            if (resolved == null || resolved instanceof java.lang.reflect.TypeVariable<?>) {
+            if (resolved == null || isVariable(resolved)) {
                 throw new IllegalArgumentException("The type variable " + variables.get(i) + " of "
                     + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
-                    + declaredType.getTypeName() + ". MicronautEvent.select(Argument) states the type of an event "
-                    + "in full");
+                    + SpecificationTypes.typeOf(declaredType).getTypeName()
+                    + ". MicronautEvent.select(Argument) states the type of an event in full");
             }
             arguments[i] = resolved;
         }
-        return CdiParameterizedType.of(runtimeClass, arguments);
+        return Argument.of(runtimeClass, (String) null, arguments);
     }
 
-    private static void unify(Type own, Type declared, java.util.Map<String, Type> resolution) {
-        if (own instanceof java.lang.reflect.TypeVariable<?> variable) {
-            resolution.put(variable.getName(), declared);
+    private static void unify(Argument<?> own, Argument<?> declared, Map<String, Argument<?>> resolution) {
+        if (isVariable(own)) {
+            resolution.put(((GenericPlaceholder<?>) own).getVariableName(), declared);
             return;
         }
-        if (own instanceof ParameterizedType ownParameterized
-            && declared instanceof ParameterizedType declaredParameterized) {
-            Type[] ownArguments = ownParameterized.getActualTypeArguments();
-            Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
+        if (isParameterized(own) && isParameterized(declared)) {
+            Argument<?>[] ownArguments = own.getTypeParameters();
+            Argument<?>[] declaredArguments = declared.getTypeParameters();
             for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
                 unify(ownArguments[i], declaredArguments[i], resolution);
             }
-        }
-    }
-
-    /**
-     * The type a compiled argument describes, the way the declaration wrote it: a type variable left unresolved is
-     * the variable with its bounds, a wildcard keeps its bounds, a raw type is the class, and an array of a
-     * parameterized type or of a variable is a generic array. A type resolved in place of a variable is that type.
-     *
-     * @param argument The argument
-     * @return The type
-     */
-    public static Type typeOf(Argument<?> argument) {
-        return typeOf(argument, java.util.Map.of());
-    }
-
-    /**
-     * The type a compiled argument describes, inside the bounds of the given variables: a variable named again
-     * within its own bounds is that variable.
-     */
-    private static Type typeOf(Argument<?> argument, java.util.Map<String, CdiTypeVariable> bounding) {
-        if (argument instanceof WildcardArgument<?> wildcard) {
-            return new CdiWildcardType(typesOf(wildcard.getUpperBounds(), bounding),
-                typesOf(wildcard.getLowerBounds(), bounding));
-        }
-        Class<?> type = argument.getType();
-        if (argument instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
-            String name = placeholder.getVariableName();
-            CdiTypeVariable variable = bounding.get(name);
-            if (variable == null) {
-                // created before its bounds, which may name it
-                variable = new CdiTypeVariable(name, new Type[0]);
-                java.util.Map<String, CdiTypeVariable> within = new java.util.HashMap<>(bounding);
-                within.put(name, variable);
-                variable.bounds(typesOf(placeholder.getBounds(), within));
-            }
-            // the placeholder of an array of a variable is an array of the variable
-            return arrayOf(variable, type);
-        }
-        Argument<?>[] typeParameters = argument.getTypeParameters();
-        if (typeParameters.length == 0 || argument.isRawType()) {
-            return type;
-        }
-        Type[] arguments = new Type[typeParameters.length];
-        for (int i = 0; i < typeParameters.length; i++) {
-            arguments[i] = typeOf(typeParameters[i], bounding);
-        }
-        Class<?> component = type;
-        while (component.isArray()) {
-            component = component.getComponentType();
-        }
-        // an array has the type arguments of its component
-        return arrayOf(new Parameterized(component, arguments), type);
-    }
-
-    private static Type[] typesOf(java.util.List<Argument<?>> arguments, java.util.Map<String, CdiTypeVariable> bounding) {
-        Type[] types = new Type[arguments.size()];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = typeOf(arguments.get(i), bounding);
-        }
-        return types;
-    }
-
-    /**
-     * The component wrapped in as many generic array levels as the class has dimensions.
-     */
-    private static Type arrayOf(Type component, Class<?> type) {
-        Type result = component;
-        for (Class<?> level = type; level.isArray(); level = level.getComponentType()) {
-            result = new GenericArray(result);
-        }
-        return result;
-    }
-
-    /**
-     * The argument that describes the given type.
-     *
-     * @param type The type
-     * @param <T>  The type
-     * @return The argument
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> Argument<T> argumentOf(Type type) {
-        if (type instanceof Class<?> aClass) {
-            return (Argument<T>) Argument.of(aClass);
-        }
-        if (type instanceof ParameterizedType parameterized) {
-            Type[] arguments = parameterized.getActualTypeArguments();
-            Argument<?>[] resolved = new Argument<?>[arguments.length];
-            for (int i = 0; i < arguments.length; i++) {
-                resolved[i] = argumentOf(arguments[i]);
-            }
-            return (Argument<T>) Argument.of((Class<?>) parameterized.getRawType(), resolved);
-        }
-        throw new IllegalArgumentException("A bean cannot be looked up by the type " + type + ": only a class and "
-            + "a parameterized type describe a bean");
-    }
-
-    /**
-     * An array of a parameterized type or of a type variable, built from an argument.
-     *
-     * @param component The component type
-     */
-    private record GenericArray(Type component) implements java.lang.reflect.GenericArrayType {
-
-        @Override
-        public Type getGenericComponentType() {
-            return component;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof java.lang.reflect.GenericArrayType other
-                && component.equals(other.getGenericComponentType());
-        }
-
-        @Override
-        public int hashCode() {
-            return component.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return component.getTypeName() + "[]";
-        }
-    }
-
-    /**
-     * A parameterized type built from an argument, which is what the specification reports a parameterized bean
-     * type or observed event type as.
-     *
-     * @param rawType   The raw type
-     * @param arguments The type arguments
-     */
-    @SuppressWarnings("ArrayRecordComponent")
-    private record Parameterized(Class<?> rawType, Type[] arguments) implements ParameterizedType {
-
-        @Override
-        public Type[] getActualTypeArguments() {
-            return arguments.clone();
-        }
-
-        @Override
-        public Type getRawType() {
-            return rawType;
-        }
-
-        @Override
-        public @org.jspecify.annotations.Nullable Type getOwnerType() {
-            return null;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof ParameterizedType other
-                && rawType.equals(other.getRawType())
-                && java.util.Arrays.equals(arguments, other.getActualTypeArguments());
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Arrays.hashCode(arguments) ^ rawType.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder(rawType.getName()).append('<');
-            for (int i = 0; i < arguments.length; i++) {
-                if (i > 0) {
-                    builder.append(", ");
-                }
-                builder.append(arguments[i].getTypeName());
-            }
-            return builder.append('>').toString();
         }
     }
 }

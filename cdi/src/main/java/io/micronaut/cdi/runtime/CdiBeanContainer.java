@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.cdi.runtime.type.SpecificationTypes;
 import io.micronaut.cdi.context.RequestScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
@@ -107,25 +108,28 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     @Override
     public Object getReference(Bean<?> bean, Type beanType, CreationalContext<?> ctx) {
         boolean amongTheTypes = false;
-        for (Type type : bean.getTypes()) {
-            if (type.equals(beanType)) {
+        Argument<?> required = SpecificationTypes.argumentOf(beanType);
+        List<Argument<?>> types = bean instanceof CdiBean<?> own ? own.types()
+            : SpecificationTypes.argumentsOf(bean.getTypes());
+        for (Argument<?> type : types) {
+            if (CdiTypes.same(type, required)) {
                 amongTheTypes = true;
                 break;
             }
             // a raw request — a plain class, a primitive — is satisfied by the bean type it erases to, but a
             // parameterized request matches only exactly: a List<String> bean is not a List<Integer>
-            if (beanType instanceof Class<?> givenRaw) {
+            if (CdiTypes.isClass(required)) {
                 Class<?> beanRaw = CdiTypes.rawClassOf(type);
-                if (beanRaw != null && CdiTypes.boxedOf(beanRaw) == CdiTypes.boxedOf(givenRaw)) {
+                if (beanRaw != null && CdiTypes.boxedOf(beanRaw) == CdiTypes.boxedOf(required.getType())) {
                     amongTheTypes = true;
                     break;
                 }
             }
         }
-        if (!amongTheTypes && beanType instanceof java.lang.reflect.ParameterizedType) {
+        if (!amongTheTypes && CdiTypes.isParameterized(required)) {
             // a bean type with variables among its arguments - a producer of List<T> - is a List<Spider> as well,
             // by the rules the bean was resolved with
-            amongTheTypes = CdiAssignability.isTypeMatching(bean.getTypes(), beanType);
+            amongTheTypes = CdiAssignability.isTypeMatching(types, required);
         }
         if (!amongTheTypes) {
             throw new IllegalArgumentException("The type " + beanType.getTypeName()
@@ -175,25 +179,23 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     private Set<Bean<?>> getBeans(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
-        Type beanType = required instanceof Argument<?> argument ? CdiTypes.requiredTypeOf(argument) : required;
-        return beansOf(beanType, requiredQualifiers);
+        return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
     }
 
-    private Set<Bean<?>> beansOf(Type beanType, List<CdiQualifier> required) {
+    private Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (CdiBean<?> bean : candidates()) {
             if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {
                 // the built-in event and lookup exist for whatever legal type an injection point asks them
                 // for, so the one bean of each answers every parameterization of its type — and the raw type
                 // itself
-                java.lang.reflect.Type raw = beanType instanceof java.lang.reflect.ParameterizedType parameterized
-                    ? parameterized.getRawType() : beanType;
-                if (builtIn.isBeanType(raw)) {
+                Class<?> raw = CdiTypes.classOf(beanType);
+                if (raw != null && builtIn.isBeanType(raw)) {
                     beans.add(bean);
                 }
                 continue;
             }
-            if (CdiAssignability.isTypeMatching(bean.getTypes(), requireNoTypeVariable(beanType))
+            if (CdiAssignability.isTypeMatching(bean.types(), requireNoTypeVariable(beanType))
                 && CdiAssignability.areQualifiersMatching(bean.qualifiers(), required)) {
                 beans.add(bean);
             }
@@ -201,7 +203,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return beans;
     }
 
-    private static Type requireNoTypeVariable(Type required) {
+    private static Argument<?> requireNoTypeVariable(Argument<?> required) {
         CdiAssignability.requireNoTypeVariable(required);
         return required;
     }
@@ -403,11 +405,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 + " declares type variables, and its runtime class alone does not resolve them");
         }
         Set<ObserverMethod<? super T>> resolved = new LinkedHashSet<>();
-        for (ObserverMethod<?> observer : observers.resolve(event.getClass(), qualifiers, false)) {
+        for (ObserverMethod<?> observer : observers.resolve(Argument.of(event.getClass()), qualifiers, false)) {
             resolved.add((ObserverMethod<? super T>) observer);
         }
         // the resolution the specification describes covers observers of both notifications
-        for (ObserverMethod<?> observer : observers.resolve(event.getClass(), qualifiers, true)) {
+        for (ObserverMethod<?> observer : observers.resolve(Argument.of(event.getClass()), qualifiers, true)) {
             resolved.add((ObserverMethod<? super T>) observer);
         }
         return resolved;

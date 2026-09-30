@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.core.type.Argument;
 import io.micronaut.cdi.annotation.CdiScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
@@ -118,6 +119,15 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Type> getTypes() {
+        return new LinkedHashSet<>(io.micronaut.cdi.runtime.type.SpecificationTypes.typesOf(types()));
+    }
+
+    /**
+     * The bean types of the bean as resolution compares them.
+     *
+     * @return The bean types
+     */
+    public java.util.List<Argument<?>> types() {
         return typesOf(definition, beanClass());
     }
 
@@ -132,16 +142,16 @@ public class CdiBean<T> implements Bean<T> {
      * The type closure the processor recorded for the bean, where it recorded one and every class of it can
      * be referred to from the definition.
      */
-    private static java.util.@Nullable List<Type> recordedClosureOf(BeanDefinition<?> definition) {
+    private static java.util.@Nullable List<Argument<?>> recordedClosureOf(BeanDefinition<?> definition) {
         java.util.List<io.micronaut.core.annotation.AnnotationValue<Annotation>> records = definition
             .getAnnotationMetadata().findAnnotation("io.micronaut.cdi.annotation.CdiBeanTypes")
             .map(types -> types.getAnnotations("value")).orElse(java.util.List.of());
         if (records.isEmpty()) {
             return null;
         }
-        java.util.List<Type> closure = new java.util.ArrayList<>(records.size());
+        java.util.List<Argument<?>> closure = new java.util.ArrayList<>(records.size());
         for (io.micronaut.core.annotation.AnnotationValue<Annotation> record : records) {
-            Type type = RecordedTypes.find(record);
+            Argument<?> type = RecordedTypes.find(record);
             if (type == null) {
                 return null;
             }
@@ -150,15 +160,15 @@ public class CdiBean<T> implements Bean<T> {
         return closure;
     }
 
-    static Set<Type> typesOf(BeanDefinition<?> definition, Class<?> beanClass) {
-        Set<Type> types = new LinkedHashSet<>();
+    static java.util.List<Argument<?>> typesOf(BeanDefinition<?> definition, Class<?> beanClass) {
+        java.util.List<Argument<?>> types = new java.util.ArrayList<>();
         // the types a bean narrowed itself to are the ones it named with Typed, which is asked for rather than
         // Micronaut's own set of exposed types: those are what Micronaut resolves the bean by, and it exposes an
         // array by its component type as well, which is not a bean type of the array
         Class<?>[] narrowed = definition.getAnnotationMetadata()
             .classValues("jakarta.enterprise.inject.Typed");
-        Set<Type> closure = new LinkedHashSet<>();
-        java.util.List<Type> recorded = recordedClosureOf(definition);
+        java.util.List<Argument<?>> closure = new java.util.ArrayList<>();
+        java.util.List<Argument<?>> recorded = recordedClosureOf(definition);
         if (recorded != null) {
             // what the processor recorded of the bean as it compiled it
             closure.addAll(recorded);
@@ -166,7 +176,7 @@ public class CdiBean<T> implements Bean<T> {
             // a produced bean is a bean of the type the producer declared — with the arguments it was written
             // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
             // class's own declaration
-            closure.addAll(CdiTypes.beanTypeClosureOf(CdiTypes.typeOf(definition.getDeclaredBeanType())));
+            closure.addAll(CdiTypes.beanTypeClosureOf(definition.getDeclaredBeanType()));
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
@@ -176,30 +186,32 @@ public class CdiBean<T> implements Bean<T> {
             } else {
                 // a bean compiled without this processor, of which nothing was recorded: it is resolvable by
                 // its class and by the raw types Micronaut exposes it as
-                closure.add(beanClass);
-                closure.addAll(definition.getExposedTypes());
+                closure.add(Argument.of(beanClass));
+                for (Class<?> exposed : definition.getExposedTypes()) {
+                    closure.add(Argument.of(exposed));
+                }
             }
         }
         if (definition.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Typed")) {
             // the types the bean named with Typed keep the parameters the closure gives them: an Emu typed
             // FlightlessBird is a bean of FlightlessBird<Australian>, which is what it extends
             Set<Class<?>> kept = new LinkedHashSet<>(java.util.Arrays.asList(narrowed));
-            for (Type candidate : closure) {
-                Class<?> raw = candidate instanceof Class<?> aClass ? aClass
-                    : candidate instanceof java.lang.reflect.ParameterizedType parameterized
-                        && parameterized.getRawType() instanceof Class<?> rawType ? rawType : null;
+            for (Argument<?> candidate : closure) {
+                Class<?> raw = CdiTypes.classOf(candidate);
                 if (raw != null && kept.contains(raw)) {
-                    types.add(candidate);
+                    CdiTypes.addDistinct(types, candidate);
                 }
             }
         } else {
-            types.addAll(closure);
+            for (Argument<?> candidate : closure) {
+                CdiTypes.addDistinct(types, candidate);
+            }
         }
         // a parameterized type containing a wildcard is not a legal bean type (section 2.2.1): a supertype
         // written that way is simply not among the types the bean can be resolved by
         types.removeIf(type -> !CdiAssignability.isLegalBeanType(type));
         // every bean has Object among its types, whatever it narrowed them to
-        types.add(Object.class);
+        CdiTypes.addDistinct(types, Argument.OBJECT_ARGUMENT);
         return types;
     }
 

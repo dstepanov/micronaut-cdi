@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.runtime;
+package io.micronaut.cdi.runtime.type;
 
-import io.micronaut.core.annotation.Internal;
 
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -28,13 +27,12 @@ import java.util.StringJoiner;
  * @author Denis Stepanov
  * @since 1.0
  */
-@Internal
-final class CdiWildcardType implements WildcardType {
+final class WildcardValue implements WildcardType {
 
     private final Type[] upperBounds;
     private final Type[] lowerBounds;
 
-    CdiWildcardType(Type[] upperBounds, Type[] lowerBounds) {
+    WildcardValue(Type[] upperBounds, Type[] lowerBounds) {
         this.upperBounds = upperBounds;
         this.lowerBounds = lowerBounds;
     }

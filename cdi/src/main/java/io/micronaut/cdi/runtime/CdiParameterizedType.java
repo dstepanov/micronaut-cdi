@@ -15,38 +15,22 @@
  */
 package io.micronaut.cdi.runtime;
 
+import io.micronaut.cdi.runtime.type.SpecificationTypes;
 import io.micronaut.core.annotation.Internal;
-import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
- * A parameterized type made rather than found: the bean type of a generic class.
- *
- * <p>The rest of a bean's type hierarchy comes back from reflection already parameterized — a generic superclass
- * or interface is a {@link ParameterizedType} as the language reports it. The one type reflection has no
- * parameterized form for is the class itself: a generic bean class is, as a bean type, the class with its own
- * type variables, which is what this makes.</p>
- *
- * <p>It equals what reflection makes, both ways, because it compares the same three parts the language's own
- * implementation compares: the raw type, the owner, and the arguments.</p>
+ * Makes a parameterized type of the reflection API, for the module that reads classes and for a program that
+ * has the parts of one to hand.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Internal
-public final class CdiParameterizedType implements ParameterizedType {
+public final class CdiParameterizedType {
 
-    private final Class<?> rawType;
-    private final Type[] arguments;
-
-    private CdiParameterizedType(Class<?> rawType, Type[] arguments) {
-        this.rawType = rawType;
-        this.arguments = arguments;
+    private CdiParameterizedType() {
     }
 
     /**
@@ -57,48 +41,6 @@ public final class CdiParameterizedType implements ParameterizedType {
      * @return The parameterized type
      */
     public static Type of(Class<?> type, Type[] arguments) {
-        if (arguments.length == 0) {
-            return type;
-        }
-        return new CdiParameterizedType(type, arguments);
-    }
-
-    @Override
-    public Type[] getActualTypeArguments() {
-        return arguments.clone();
-    }
-
-    @Override
-    public Type getRawType() {
-        return rawType;
-    }
-
-    @Override
-    public @Nullable Type getOwnerType() {
-        return rawType.getDeclaringClass();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof ParameterizedType other)) {
-            return false;
-        }
-        return rawType.equals(other.getRawType())
-            && Objects.equals(getOwnerType(), other.getOwnerType())
-            && Arrays.equals(arguments, other.getActualTypeArguments());
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(arguments) ^ Objects.hashCode(getOwnerType()) ^ rawType.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        StringJoiner joiner = new StringJoiner(", ", rawType.getName() + "<", ">");
-        for (Type argument : arguments) {
-            joiner.add(argument.getTypeName());
-        }
-        return joiner.toString();
+        return SpecificationTypes.parameterized(type, arguments);
     }
 }

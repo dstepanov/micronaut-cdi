@@ -22,7 +22,6 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.QualifiedBeanType;
 
-import java.lang.reflect.Type;
 
 /**
  * Micronaut's resolution, widened to the type rules of section 2.4.2.1 where the two disagree.
@@ -62,7 +61,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     // and working them out walks the class's supertypes. Definitions are compared by identity here — two runtime
     // definitions of one class are equal to each other, and are not the same bean — and the map lives as long
     // as the context this customizer was built for
-    private final java.util.concurrent.ConcurrentHashMap<DefinitionKey, java.util.Set<Type>> beanTypes =
+    private final java.util.concurrent.ConcurrentHashMap<DefinitionKey, java.util.List<Argument<?>>> beanTypes =
         new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
@@ -165,12 +164,12 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
             // the required argument does not satisfy
             try {
-                java.util.Set<Type> types = beanTypes.computeIfAbsent(new DefinitionKey(definition), key -> {
+                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionKey(definition), key -> {
                     Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
                         ? proxy.getTargetType() : definition.getBeanType();
                     return CdiBean.typesOf(definition, beanClass);
                 });
-                return CdiAssignability.isTypeMatching(types, CdiTypes.requiredTypeOf(beanType));
+                return CdiAssignability.isTypeMatching(types, beanType);
             } catch (RuntimeException | LinkageError e) {
                 return candidate.isCandidateBean(beanType);
             }

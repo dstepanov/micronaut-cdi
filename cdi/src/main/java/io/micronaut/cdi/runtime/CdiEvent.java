@@ -42,7 +42,7 @@ import java.util.concurrent.ForkJoinPool;
 public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     private final ObserverRegistry registry;
-    private final java.lang.reflect.Type type;
+    private final Argument<?> type;
     private final java.util.List<CdiQualifier> qualifiers;
     /**
      * Whether the type is the type of the events fired, stated in full by whoever selected it as an
@@ -52,20 +52,21 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
 
     public CdiEvent(ObserverRegistry registry, Argument<T> type, Set<Annotation> qualifiers) {
-        this(registry, CdiTypes.requiredTypeOf(type), qualifiers, null);
+        this(registry, type, CdiQualifier.ofInstances(qualifiers), null);
     }
 
     public CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, Set<Annotation> qualifiers,
                     jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
-        this(registry, type, CdiQualifier.ofInstances(qualifiers), injectedAt);
+        this(registry, io.micronaut.cdi.runtime.type.SpecificationTypes.argumentOf(type),
+            CdiQualifier.ofInstances(qualifiers), injectedAt);
     }
 
-    CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, java.util.List<CdiQualifier> qualifiers,
+    CdiEvent(ObserverRegistry registry, Argument<?> type, java.util.List<CdiQualifier> qualifiers,
              jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
         this(registry, type, qualifiers, injectedAt, false);
     }
 
-    private CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, java.util.List<CdiQualifier> qualifiers,
+    private CdiEvent(ObserverRegistry registry, Argument<?> type, java.util.List<CdiQualifier> qualifiers,
                      jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
                      boolean exact) {
         this.exact = exact;
@@ -88,7 +89,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
      * The type of the event: the type stated in full where it was, and otherwise the class of the event object
      * with its type variables resolved from the type the event is fired as (section 2.8.1).
      */
-    private java.lang.reflect.Type eventTypeOf(Object event) {
+    private Argument<?> eventTypeOf(Object event) {
         return exact ? type : CdiTypes.eventTypeOf(event.getClass(), type);
     }
 
@@ -99,7 +100,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public <U extends T> CompletionStage<U> fireAsync(U event, NotificationOptions options) {
-        java.lang.reflect.Type eventType = eventTypeOf(event);
+        Argument<?> eventType = eventTypeOf(event);
         Executor executor = options.getExecutor();
         return CompletableFuture.supplyAsync(() -> {
             // every asynchronous observer is notified, and what any of them threw arrives together, as the
@@ -125,13 +126,14 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiEvent<>(registry, subtype, and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
+        return new CdiEvent<>(registry, Argument.of(subtype), and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        requireNoTypeVariable(subtype.getType());
-        return new CdiEvent<>(registry, subtype.getType(), and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
+        Argument<?> selected = io.micronaut.cdi.runtime.type.SpecificationTypes.argumentOf(subtype.getType());
+        requireNoTypeVariable(selected);
+        return new CdiEvent<>(registry, selected, and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
     }
 
     @Override
@@ -144,23 +146,23 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiEvent<>(registry, subtype, and(CdiInstance.valuesOf(qualifier, qualifiers)), injectedAt);
+        return new CdiEvent<>(registry, Argument.of(subtype), and(CdiInstance.valuesOf(qualifier, qualifiers)),
+            injectedAt);
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        java.lang.reflect.Type selected = CdiTypes.requiredTypeOf(subtype);
-        requireNoTypeVariable(selected);
-        return new CdiEvent<>(registry, selected, and(CdiInstance.valuesOf(null, qualifiers)), injectedAt, true);
+        requireNoTypeVariable(subtype);
+        return new CdiEvent<>(registry, subtype, and(CdiInstance.valuesOf(null, qualifiers)), injectedAt, true);
     }
 
-    private static void requireNoTypeVariable(java.lang.reflect.Type selected) {
-        if (selected instanceof java.lang.reflect.TypeVariable<?>) {
+    private static void requireNoTypeVariable(Argument<?> selected) {
+        if (CdiTypes.isVariable(selected)) {
             throw new IllegalArgumentException("An event cannot be selected as a type variable");
         }
-        if (selected instanceof java.lang.reflect.ParameterizedType parameterized) {
-            for (java.lang.reflect.Type argument : parameterized.getActualTypeArguments()) {
+        if (CdiTypes.isParameterized(selected)) {
+            for (Argument<?> argument : selected.getTypeParameters()) {
                 requireNoTypeVariable(argument);
             }
         }

@@ -41,4 +41,11 @@ public interface CdiNotifiable {
      * @return The observed qualifiers
      */
     java.util.List<CdiQualifier> observedQualifiers();
+
+    /**
+     * The type the observer observes, as resolution compares it.
+     *
+     * @return The observed type
+     */
+    io.micronaut.core.type.Argument<?> observedArgument();
 }

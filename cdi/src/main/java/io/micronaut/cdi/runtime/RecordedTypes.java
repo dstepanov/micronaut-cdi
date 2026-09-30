@@ -18,17 +18,16 @@ package io.micronaut.cdi.runtime;
 import io.micronaut.cdi.annotation.CdiRecordedType;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * Hands out a type that was recorded while the application compiled as the {@code java.lang.reflect.Type} the
- * specification's runtime interfaces are written in: the class is the one the compiled record refers to, and a
- * parameterized type, a wildcard and a type variable are composed from their recorded arguments and bounds.
- * Nothing is read back from a class.
+ * Reads a type that was recorded while the application compiled as the {@link Argument} the container works
+ * with: the class is the one the compiled record refers to, and a parameterized type, a wildcard and a type
+ * variable are composed from their recorded arguments and bounds. Nothing is read back from a class.
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -46,8 +45,8 @@ public final class RecordedTypes {
      * @return The type
      * @throws IllegalStateException Where a class the record refers to is not on the classpath
      */
-    public static Type typeOf(AnnotationValue<?> record) {
-        Type type = find(record);
+    public static Argument<?> typeOf(AnnotationValue<?> record) {
+        Argument<?> type = find(record);
         if (type == null) {
             throw new IllegalStateException("The recorded type " + record.stringValue().orElse("")
                 + " is not on the classpath");
@@ -62,25 +61,27 @@ public final class RecordedTypes {
      * @return The type, or {@code null} where the record refers to a class that cannot be referred to from
      * where it was compiled, or is not on the classpath
      */
-    public static @Nullable Type find(AnnotationValue<?> record) {
+    public static @Nullable Argument<?> find(AnnotationValue<?> record) {
         return switch (record.stringValue("kind").orElse("CLASS")) {
             case "WILDCARD" -> {
-                Type[] upper = all(record.getAnnotations(CdiRecordedType.BOUNDS));
-                Type[] lower = all(record.getAnnotations(CdiRecordedType.LOWER_BOUNDS));
-                yield upper == null || lower == null ? null
-                    : new CdiWildcardType(upper.length == 0 ? new Type[] {Object.class} : upper, lower);
+                Argument<?>[] upper = all(record.getAnnotations(CdiRecordedType.BOUNDS));
+                Argument<?>[] lower = all(record.getAnnotations(CdiRecordedType.LOWER_BOUNDS));
+                if (upper == null || lower == null) {
+                    yield null;
+                }
+                Argument<?> first = upper.length == 0 ? Argument.OBJECT_ARGUMENT : upper[0];
+                yield Argument.ofWildcard(first.getType(), null, null, first.getTypeParameters(), upper, lower);
             }
             case "VARIABLE" -> {
-                Type[] bounds = all(record.getAnnotations(CdiRecordedType.BOUNDS));
-                yield bounds == null ? null : new CdiTypeVariable(record.stringValue("name").orElse("T"),
-                    bounds.length == 0 ? new Type[] {Object.class} : bounds);
+                Argument<?>[] bounds = all(record.getAnnotations(CdiRecordedType.BOUNDS));
+                yield bounds == null ? null : CdiTypes.variable(record.stringValue("name").orElse("T"), bounds);
             }
             case "PRIMITIVE" -> arrayOf(primitive(record.stringValue("name").orElse("")), record);
             default -> classOf(record);
         };
     }
 
-    private static @Nullable Type classOf(AnnotationValue<?> record) {
+    private static @Nullable Argument<?> classOf(AnnotationValue<?> record) {
         Class<?> raw = record.classValue("value").orElse(null);
         if (raw == null) {
             return null;
@@ -89,14 +90,14 @@ public final class RecordedTypes {
         if (arguments.isEmpty()) {
             return arrayOf(raw, record);
         }
-        Type[] typeArguments = all(arguments);
-        return typeArguments == null ? null : CdiParameterizedType.of(raw, typeArguments);
+        Argument<?>[] typeArguments = all(arguments);
+        return typeArguments == null ? null : Argument.of(raw, (String) null, typeArguments);
     }
 
-    private static Type @Nullable [] all(List<AnnotationValue<Annotation>> records) {
-        Type[] types = new Type[records.size()];
+    private static Argument<?> @Nullable [] all(List<AnnotationValue<Annotation>> records) {
+        Argument<?>[] types = new Argument<?>[records.size()];
         for (int i = 0; i < types.length; i++) {
-            Type type = find(records.get(i));
+            Argument<?> type = find(records.get(i));
             if (type == null) {
                 return null;
             }
@@ -105,7 +106,7 @@ public final class RecordedTypes {
         return types;
     }
 
-    private static @Nullable Type arrayOf(@Nullable Class<?> component, AnnotationValue<?> record) {
+    private static @Nullable Argument<?> arrayOf(@Nullable Class<?> component, AnnotationValue<?> record) {
         if (component == null) {
             return null;
         }
@@ -113,7 +114,7 @@ public final class RecordedTypes {
         for (int i = record.intValue("dimensions").orElse(0); i > 0; i--) {
             type = type.arrayType();
         }
-        return type;
+        return Argument.of(type);
     }
 
     private static @Nullable Class<?> primitive(String name) {

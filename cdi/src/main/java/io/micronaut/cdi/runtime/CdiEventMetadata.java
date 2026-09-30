@@ -39,13 +39,15 @@ final class CdiEventMetadata implements EventMetadata {
 
     private final java.util.List<CdiQualifier> firedWith;
     private final @Nullable InjectionPoint injectionPoint;
-    private final Type type;
+    private final io.micronaut.core.type.Argument<?> eventType;
+    private volatile @Nullable Type type;
     private volatile @Nullable Set<Annotation> qualifiers;
 
-    CdiEventMetadata(java.util.List<CdiQualifier> firedWith, @Nullable InjectionPoint injectionPoint, Type type) {
+    CdiEventMetadata(java.util.List<CdiQualifier> firedWith, @Nullable InjectionPoint injectionPoint,
+                     io.micronaut.core.type.Argument<?> eventType) {
         this.firedWith = firedWith;
         this.injectionPoint = injectionPoint;
-        this.type = type;
+        this.eventType = eventType;
     }
 
     @Override
@@ -69,11 +71,16 @@ final class CdiEventMetadata implements EventMetadata {
 
     @Override
     public Type getType() {
-        return type;
+        Type resolved = type;
+        if (resolved == null) {
+            resolved = CdiTypes.typeOf(eventType);
+            type = resolved;
+        }
+        return resolved;
     }
 
     @Override
     public String toString() {
-        return "EventMetadata[" + type.getTypeName() + "]";
+        return "EventMetadata[" + getType().getTypeName() + "]";
     }
 }

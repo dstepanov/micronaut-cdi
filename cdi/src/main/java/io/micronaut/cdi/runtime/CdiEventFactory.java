@@ -62,6 +62,6 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
         }
         // an Argument is itself a Type, so the conversion is spelled out rather than left to overloading
         return new CdiEvent<>(context.getBean(ObserverRegistry.class),
-            CdiTypes.requiredTypeOf(type), injected, injectedAt);
+            type, injected, injectedAt);
     }
 }

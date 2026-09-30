@@ -17,13 +17,9 @@ noReflection {
     allowCalls 'java.lang.reflect.WildcardType+#getUpperBounds|getLowerBounds'
     allowCalls 'java.lang.reflect.GenericArrayType+#getGenericComponentType'
 
-    // the container's own value classes for those interfaces, composed from what the processor recorded and handed
-    // out where the specification reports a Type: making one reads no class
-    allowCalls 'io.micronaut.cdi.runtime.CdiParameterizedType#<init>|of'
-    allowCalls 'io.micronaut.cdi.runtime.CdiWildcardType#<init>'
-    allowCalls 'io.micronaut.cdi.runtime.CdiTypeVariable#<init>|bounds'
-    allowCalls 'io.micronaut.cdi.runtime.CdiTypes$Parameterized#<init>'
-    allowCalls 'io.micronaut.cdi.runtime.CdiTypes$GenericArray#<init>'
+    // the value classes those interfaces are handed out as, which only the boundary class of their package
+    // makes, from an argument: making one reads no class
+    allowCalls 'io.micronaut.cdi.runtime.type.*#<init>|bounds'
 }
 
 dependencies {
