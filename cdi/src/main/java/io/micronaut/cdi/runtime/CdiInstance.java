@@ -154,30 +154,35 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     @Override
     public T get() {
         BeanDefinition<T> definition = one();
-        if (CdiResolution.isDependent(definition)) {
-            // a dependent instance obtained through this lookup belongs to the bean the lookup was injected
-            // into, and is destroyed with it — which is when this lookup itself is closed. Section 2.5.2.5
-            // gives it the lookup's own injection point as its metadata, which is left out for its creation
-            jakarta.enterprise.inject.spi.InjectionPoint lookedUpAt = lookupPoint();
+        return CdiResolution.isDependent(definition) ? dependent(definition) : beanContext.getBean(definition);
+    }
+
+    /**
+     * Creates a dependent instance of the bean for this lookup, whichever way it was asked for: by
+     * {@code get()} or by iterating.
+     */
+    private T dependent(BeanDefinition<T> definition) {
+        // a dependent instance obtained through this lookup belongs to the bean the lookup was injected
+        // into, and is destroyed with it — which is when this lookup itself is closed. Section 2.5.2.5
+        // gives it the lookup's own injection point as its metadata, which is left out for its creation
+        jakarta.enterprise.inject.spi.InjectionPoint lookedUpAt = lookupPoint();
+        if (lookedUpAt != null) {
+            CurrentInjectionPoint.enter(lookedUpAt);
+        }
+        try {
+            io.micronaut.context.BeanRegistration<T> registration =
+                beanContext.getBeanRegistration(askedAs(type, definition), only(definition));
+            transientlyCreated.add(registration);
+            return registration.bean();
+        } catch (io.micronaut.context.exceptions.BeanCreationException e) {
+            // what the bean's own code — or an interceptor around its construction — threw comes out as
+            // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
+            throw CdiBean.translated(e);
+        } finally {
             if (lookedUpAt != null) {
-                CurrentInjectionPoint.enter(lookedUpAt);
-            }
-            try {
-                io.micronaut.context.BeanRegistration<T> registration =
-                    beanContext.getBeanRegistration(askedAs(type, definition), only(definition));
-                transientlyCreated.add(registration);
-                return registration.bean();
-            } catch (io.micronaut.context.exceptions.BeanCreationException e) {
-                // what the bean's own code — or an interceptor around its construction — threw comes out as
-                // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
-                throw CdiBean.translated(e);
-            } finally {
-                if (lookedUpAt != null) {
-                    CurrentInjectionPoint.leave();
-                }
+                CurrentInjectionPoint.leave();
             }
         }
-        return beanContext.getBean(definition);
     }
 
     /**
@@ -279,16 +284,9 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     public Iterator<T> iterator() {
         List<T> beans = new ArrayList<>();
         for (BeanDefinition<T> definition : CdiResolution.narrow(definitions())) {
-            if (CdiResolution.isDependent(definition)) {
-                // a dependent instance obtained through iteration belongs to the lookup the same way one
-                // obtained through get() does, and is destroyed with it
-                io.micronaut.context.BeanRegistration<T> registration =
-                    beanContext.getBeanRegistration(askedAs(type, definition), only(definition));
-                transientlyCreated.add(registration);
-                beans.add(registration.bean());
-            } else {
-                beans.add(beanContext.getBean(definition));
-            }
+            // a dependent instance obtained through iteration belongs to the lookup the same way one obtained
+            // through get() does: it has the lookup's injection point, and is destroyed with the lookup
+            beans.add(CdiResolution.isDependent(definition) ? dependent(definition) : beanContext.getBean(definition));
         }
         return beans.iterator();
     }
