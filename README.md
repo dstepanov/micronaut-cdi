@@ -7,7 +7,12 @@ An implementation of the
 A bean of the specification is read as the Micronaut bean it corresponds to while it is compiled: the scope it
 declares becomes the Micronaut scope of the same meaning, a producer becomes a factory method, a disposer is
 resolved to the method that will be invoked, and Micronaut generates the bean definition. There is no deployment
-step and no scanning at startup, and nothing about a bean is resolved by reflection.
+step and no scanning of classes at startup, and by default nothing about a bean or an event is resolved by
+reflection: a bean's types and qualifiers, what an observer observes, and how the class of an event relates to
+the types above it are read from what the processor recorded. The one member the container invokes reflectively
+is a private producer or observer, which the specification allows and Micronaut marks `@ReflectiveAccess`. The
+parts of the specification's API that hand out reflection objects are an optional module, described under
+[Reflection](#reflection).
 
 The interception of a bean is deferred to
 [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors), which implements
@@ -61,8 +66,9 @@ public class Connections {
 | `test-suite-kotlin` | A Kotlin class compiled through KSP, read by a build compatible extension through the same language model |
 | `test-suite-groovy` | The same, for a Groovy class compiled by the Groovy compiler |
 | `test-suite-no-reflection` | What works with `micronaut-cdi` alone, and what names the module to add when it does not |
-
 | `micronaut-cdi-reflection` | Optional. Answers the parts of the specification's API that hand out reflection objects, which is the one thing here that reads a class back |
+
+## Build compatible extensions
 
 A build compatible extension goes on the annotation processor path beside `micronaut-cdi-processor`: every phase
 of it runs while the application compiles, `@Synthesis` and `@Validation` included. A synthetic bean or observer
@@ -72,6 +78,12 @@ extension reports fails the compilation. The running application needs neither t
 `micronaut-cdi-reflection` for any of it; the classes the extension names - the implementation class of a
 synthetic bean, its creator and disposer, a synthetic observer, a context - have to be on the classpath the
 application is compiled against. An extension that is only on the runtime classpath does nothing.
+
+## Reflection
+
+With `micronaut-cdi` alone an application has injection and typesafe resolution with any qualifiers, producers and
+disposers, the contexts of the scopes, interception, events and observers with parameterized types, `Instance` and
+`Event` lookups, the `BeanContainer`, and everything a build compatible extension registered.
 
 Nothing in `micronaut-cdi` reads a class back at runtime to work out what a bean is: that was decided while the
 bean was compiled. What cannot be answered that way is the API a program calls that is written in terms of
@@ -165,11 +177,13 @@ interception works as before.
 The boundary is checked while the modules compile, by the `NoReflection` check of
 [errorprone-no-reflection](https://github.com/micronaut-projects/errorprone-no-reflection), alongside NullAway. The
 check matches the method a call resolves to and names the kind of reflection it reaches for. The processor and
-`micronaut-cdi-reflection` are allowed all of it. In `micronaut-cdi`, each class is allowed only the kinds the
-specification's own interfaces put there, such as the `java.lang.reflect.Type` of a bean type, the annotation instance
-of a qualifier. The phases of a build compatible extension need none, since they run while the application compiles.
-The list, with the reason for each entry, is in [cdi/build.gradle](cdi/build.gradle). Reflection anywhere else fails
-the build.
+`micronaut-cdi-reflection` are allowed all of it. In `micronaut-cdi` and `micronaut-cdi-el` no class or package is
+allowed any, and no call is suppressed in the source. What `micronaut-cdi` allows is a list of calls, none of which
+looks anything up on a class: the accessors of a `java.lang.reflect.Type` that was handed in - the raw type and
+arguments of a `ParameterizedType`, the bounds of a `TypeVariable` and of a `WildcardType`, the component of a
+`GenericArrayType` - since the specification's interfaces are written in that type, and the constructors of the
+container's own implementations of those interfaces. The list is in [cdi/build.gradle](cdi/build.gradle).
+Reflection anywhere else fails the build.
 
 ## Conformance
 

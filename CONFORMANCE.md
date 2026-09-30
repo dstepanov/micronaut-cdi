@@ -132,6 +132,21 @@ that names its class and of its raw class otherwise: it is observed by an observ
 it was fired as, and not by an observer of another parameterized supertype. `MicronautEvent.select(Argument)`
 states the event type in full and needs no record and no module.
 
+### The API written in terms of reflection is an optional module
+
+`micronaut-cdi` reads no class back, and the build holds it to that: the
+`NoReflection` check allows it nothing but the accessors of a `java.lang.reflect.Type` it was handed. The
+methods of the specification that return a reflection object, or that can only be answered from one, are
+answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
+module: `InjectionPoint.getMember()`, `getAnnotated()` and `isTransient()`; the qualifiers and interceptor
+bindings of a bean, an injection point, an observer or an event reported as annotation instances, for an
+annotation that is not one of the specification's; an annotation literal with binding members handed to a
+lookup; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an annotation the
+build recorded nothing of; `getStereotypeDefinition` and `getInterceptorBindingDefinition`; and the generic
+hierarchy of a class no compilation with this processor has seen. Everything else - resolution, injection,
+events, interception, the contexts, what an extension registered - needs only `micronaut-cdi`, and
+`MicronautInstance`, `MicronautEvent` and `MicronautBeanContainer` give the selections a reflection-free form.
+
 ### A primitive is boxed by the lookup rather than by the bean
 
 *Section 2.1.2.* A primitive type and the class that boxes it are one bean type. Micronaut resolves a bean by the
