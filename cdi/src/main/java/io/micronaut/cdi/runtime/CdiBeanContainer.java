@@ -571,19 +571,15 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Collection<Context> getContexts(Class<? extends Annotation> scopeType) {
-        if (scopeType == jakarta.enterprise.context.RequestScoped.class) {
-            return List.of(CdiContext.ofRequest(scopeType, requestScope));
-        }
-        if (scopeType == jakarta.enterprise.context.ApplicationScoped.class) {
-            return List.of(CdiContext.ofApplication(scopeType, applicationScope));
-        }
         if (scopeType == Singleton.class) {
             return List.of(CdiContext.ofSingleton(scopeType, beanContext));
         }
         if (scopeType == Dependent.class) {
             return List.of(CdiContext.holdingNothing(scopeType));
         }
-        // a scope a build compatible extension registered a context for (section 2.10.1)
+        // a scope an extension registered a context for (section 2.10.1). A context a portable extension added
+        // for the request or the application scope takes the place of the container's own: the beans of the
+        // scope are held by it, so it is the context of the scope
         java.util.Optional<io.micronaut.cdi.runtime.extension.ExtensionContexts> extensionContexts =
             beanContext.findBean(io.micronaut.cdi.runtime.extension.ExtensionContexts.class);
         if (extensionContexts.isPresent()) {
@@ -592,6 +588,12 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             if (!registered.isEmpty()) {
                 return registered;
             }
+        }
+        if (scopeType == jakarta.enterprise.context.RequestScoped.class) {
+            return List.of(CdiContext.ofRequest(scopeType, requestScope));
+        }
+        if (scopeType == jakarta.enterprise.context.ApplicationScoped.class) {
+            return List.of(CdiContext.ofApplication(scopeType, applicationScope));
         }
         return List.of();
     }
