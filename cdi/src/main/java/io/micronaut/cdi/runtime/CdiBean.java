@@ -353,7 +353,7 @@ public class CdiBean<T> implements Bean<T> {
         return beanContext.getBean(definition);
     }
 
-    boolean isNormalScoped() {
+    final boolean isNormalScoped() {
         return definition.getAnnotationMetadata()
             .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false);
     }
