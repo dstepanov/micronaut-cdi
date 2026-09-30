@@ -48,14 +48,17 @@ public final class CdiInjectionPoint implements InjectionPoint {
     private final @Nullable Class<?> declaringClass;
     private final @Nullable String memberName;
     private final boolean field;
+    private final Annotation[] selectedQualifiers;
 
     CdiInjectionPoint(@Nullable Bean<?> bean, Argument<?> argument, @Nullable Class<?> declaringClass,
                       @Nullable String memberName, boolean field) {
-        this(bean, argument, argument, declaringClass, memberName, field);
+        this(bean, argument, argument, declaringClass, memberName, field, new Annotation[0]);
     }
 
     private CdiInjectionPoint(@Nullable Bean<?> bean, Argument<?> argument, Argument<?> memberArgument,
-                              @Nullable Class<?> declaringClass, @Nullable String memberName, boolean field) {
+                              @Nullable Class<?> declaringClass, @Nullable String memberName, boolean field,
+                              Annotation[] selectedQualifiers) {
+        this.selectedQualifiers = selectedQualifiers;
         this.bean = bean;
         this.argument = argument;
         this.memberArgument = memberArgument;
@@ -74,6 +77,12 @@ public final class CdiInjectionPoint implements InjectionPoint {
         // the qualifiers of an injection point are the ones written on it, and a point that writes none has
         // the default qualifier — with nothing else added
         Set<Annotation> declared = CdiQualifiers.declared(argument.getAnnotationMetadata());
+        if (selectedQualifiers.length > 0) {
+            // an Instance narrowed with select has the qualifiers it was selected with as well (section 5.6.1)
+            Set<Annotation> all = new java.util.LinkedHashSet<>(declared);
+            java.util.Collections.addAll(all, selectedQualifiers);
+            return java.util.Collections.unmodifiableSet(all);
+        }
         return declared.isEmpty()
             ? Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE)
             : declared;
@@ -153,14 +162,15 @@ public final class CdiInjectionPoint implements InjectionPoint {
      * This injection point seen with the type a lookup selected: a bean obtained through {@code Instance} has
      * the lookup's injection point as its metadata, with the type it was selected as.
      *
-     * @param selected The selected type
+     * @param selected   The selected type
+     * @param qualifiers The qualifiers the lookup was selected with
      * @return The injection point, typed as selected
      */
-    CdiInjectionPoint viewedAs(Argument<?> selected) {
+    CdiInjectionPoint viewedAs(Argument<?> selected, Annotation... qualifiers) {
         Argument<?> viewed = Argument.of(selected.getType(), argument.getAnnotationMetadata(),
             selected.getTypeParameters());
         // the member is still the one that was written, whatever the lookup was selected as
-        return new CdiInjectionPoint(bean, viewed, memberArgument, declaringClass, memberName, field);
+        return new CdiInjectionPoint(bean, viewed, memberArgument, declaringClass, memberName, field, qualifiers);
     }
 
     /**

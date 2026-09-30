@@ -380,7 +380,9 @@ public final class CdiInstance<T> implements Instance<T>, AutoCloseable {
      */
     private jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookupPoint() {
         if (injectedAt != null) {
-            return injectedAt instanceof CdiInjectionPoint described ? described.viewedAs(type) : injectedAt;
+            return injectedAt instanceof CdiInjectionPoint described
+                ? described.viewedAs(type, qualifiers)
+                : injectedAt;
         }
         if (jakarta.enterprise.inject.spi.InjectionPoint.class.isAssignableFrom(type.getType())) {
             // a programmatic lookup OF the injection point metadata asks about the point already current —
