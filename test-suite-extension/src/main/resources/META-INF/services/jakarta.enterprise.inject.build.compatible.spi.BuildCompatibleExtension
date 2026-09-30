@@ -7,3 +7,4 @@ io.micronaut.cdi.test.extension.RecordingExtension
 io.micronaut.cdi.test.extension.StampingExtension
 io.micronaut.cdi.test.extension.TendingExtension
 io.micronaut.cdi.test.extension.mapscope.MapScopeExtension
+io.micronaut.cdi.test.extension.signpost.SignpostExtension
