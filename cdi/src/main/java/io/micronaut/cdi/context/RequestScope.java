@@ -103,15 +103,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             return creation.get();
         }
         Instances instances = newInstances();
-        try {
-            return PropagatedContext.getOrEmpty().plus(instances).propagate(creation::get);
-        } finally {
+        return PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
             try {
-                destroyScope(instances.beans());
+                return creation.get();
             } finally {
-                ended(instances);
+                destroy(instances);
             }
-        }
+        });
     }
 
     /**
@@ -182,16 +180,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 try {
                     work.run();
                 } finally {
-                    // fired while the request is still being handled, which is what "before" means
-                    beforeDestroyedEvent();
+                    endWhileActive(instances);
                 }
             });
         } finally {
-            try {
-                destroyScope(instances.beans());
-            } finally {
-                ended(instances);
-            }
             destroyedEvent();
         }
     }
@@ -215,15 +207,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 try {
                     return work.get();
                 } finally {
-                    beforeDestroyedEvent();
+                    endWhileActive(instances);
                 }
             });
         } finally {
-            try {
-                destroyScope(instances.beans());
-            } finally {
-                ended(instances);
-            }
             destroyedEvent();
         }
     }
@@ -248,15 +235,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 try {
                     return work.call();
                 } finally {
-                    beforeDestroyedEvent();
+                    endWhileActive(instances);
                 }
             });
         } finally {
-            try {
-                destroyScope(instances.beans());
-            } finally {
-                ended(instances);
-            }
             destroyedEvent();
         }
     }
@@ -325,10 +307,9 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             // activation is unwound and the failure comes out
             activations.get().poll();
             try {
-                scope.close();
+                destroy(instances);
             } finally {
-                destroyScope(instances.beans());
-                ended(instances);
+                scope.close();
             }
             throw e;
         }
@@ -356,17 +337,11 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             activations.remove();
         }
         try {
-            // fired while the request is still being handled, which is what "before" means
-            beforeDestroyedEvent();
+            endWhileActive(activation.instances());
         } finally {
             try {
                 activation.scope().close();
             } finally {
-                try {
-                    destroyScope(activation.instances().beans());
-                } finally {
-                    ended(activation.instances());
-                }
                 destroyedEvent();
             }
         }
@@ -393,11 +368,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
         // are the container's to destroy as it goes down
         for (Instances instances : java.util.List.copyOf(live)) {
-            try {
-                destroyScope(instances.beans());
-            } finally {
-                ended(instances);
-            }
+            // each as the request it is: whichever thread it was left on, its beans reach one another as they go
+            PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroy(instances));
         }
     }
 
@@ -414,6 +386,31 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = new Instances(this, new ConcurrentHashMap<>(8));
         live.add(instances);
         return instances;
+    }
+
+    /**
+     * Ends a request from inside it: the event that says it is about to be destroyed, and then the destruction of
+     * its beans, both while the request context is still active. A bean that uses another bean of the request as
+     * it is destroyed reaches it, where ending the context first would have it find no request.
+     */
+    private void endWhileActive(Instances instances) {
+        try {
+            // fired while the request is still being handled, which is what "before" means
+            beforeDestroyedEvent();
+        } finally {
+            destroy(instances);
+        }
+    }
+
+    /**
+     * Destroys the beans of a request, which the caller keeps active while they are destroyed.
+     */
+    private void destroy(Instances instances) {
+        try {
+            destroyScope(instances.beans());
+        } finally {
+            ended(instances);
+        }
     }
 
     private void ended(Instances instances) {
