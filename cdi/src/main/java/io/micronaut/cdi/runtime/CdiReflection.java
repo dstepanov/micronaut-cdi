@@ -85,6 +85,38 @@ public interface CdiReflection {
     boolean isRetainedAtRuntime(Class<? extends Annotation> annotationType);
 
     /**
+     * The type closure of a type, read from the generic signatures of its class and of the classes above it:
+     * the type, and every class and interface above it with the type arguments the hierarchy gives each,
+     * {@code Object} left out.
+     *
+     * @param type       The type
+     * @param arrayStops Whether an array and a primitive have no closure beyond themselves, as a bean type has
+     * @return The closure, the type first
+     */
+    java.util.List<java.lang.reflect.Type> typeClosureOf(java.lang.reflect.Type type, boolean arrayStops);
+
+    /**
+     * A class as the type a bean of it has: itself where it declares no type variable, and its
+     * parameterization over its own variables where it does.
+     *
+     * @param type The class
+     * @return The type
+     */
+    java.lang.reflect.Type declaredTypeOf(Class<?> type);
+
+    /**
+     * The type of an event of the given runtime class that was fired as the given type (section 2.8.1): the
+     * class with its type variables resolved from the type it was fired as.
+     *
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
+     * @return The event type
+     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
+     *                                  unresolved
+     */
+    java.lang.reflect.Type eventTypeOf(Class<?> runtimeClass, java.lang.reflect.Type declaredType);
+
+    /**
      * The member an injection point injects into.
      *
      * @param declaringClass The class that declares the injection point

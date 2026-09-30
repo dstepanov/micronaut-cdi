@@ -3,11 +3,12 @@ plugins {
 }
 
 // Resolving and injecting a bean reads nothing back from its class: what a bean is was decided while it was compiled.
-// The reflection allowed below is what the interfaces of the specification are written in - a bean type is a
-// java.lang.reflect.Type, a qualifier an annotation instance, an injection point a Member. The phases of a build
-// compatible extension need none: they run while the application compiles, and what they described is read here
-// from what was compiled. Each class is allowed only the kinds of reflection it reaches for, so that anything
-// new, anywhere, fails the build until it is either removed or listed here with its reason.
+// What is allowed below is handling the java.lang.reflect.Type the interfaces of the specification are written
+// in: a bean type, a required type and an event type are Types, and comparing two of them reads their arguments
+// and bounds. No class is read back for it - its hierarchy, its members, its annotations - which is what the
+// optional micronaut-cdi-reflection module does where an application asks. Each class is allowed only the kind it
+// reaches for, so that anything new, anywhere, fails the build until it is either removed or listed here with its
+// reason.
 noReflection {
     // the types of the specification's typesafe resolution: a bean type or a required type is a
     // java.lang.reflect.Type, and its arguments and bounds are what section 2.4.2 compares
@@ -16,9 +17,9 @@ noReflection {
     // the bounds of a type variable are recorded by name and loaded when a Type is asked for
     allowIn 'io.micronaut.cdi.runtime.CdiTypes', 'GENERIC_SIGNATURES', 'CLASS_LOADING'
     allowIn 'io.micronaut.cdi.runtime.CdiInjectionPointFactory', 'GENERIC_SIGNATURES'
-    // the bean types of a bean are the closure of its class hierarchy as Types (section 2.2.1)
+    // the bean types of a bean are reported as Types (section 2.2.1), composed from what the processor recorded
     allowIn 'io.micronaut.cdi.runtime.CdiBean', 'GENERIC_SIGNATURES'
-    // the event type of a fired event is its runtime class
+    // the type an event is selected and fired as is a java.lang.reflect.Type
     allowIn 'io.micronaut.cdi.runtime.CdiEvent', 'GENERIC_SIGNATURES'
     // a bean type handed to the bean manager is a java.lang.reflect.Type
     allowIn 'io.micronaut.cdi.runtime.CdiBeanContainer', 'GENERIC_SIGNATURES'
@@ -27,6 +28,7 @@ noReflection {
     // is handed out as the java.lang.reflect.Type the specification's interfaces are written in, composed from
     // the classes that were recorded
     allowIn 'io.micronaut.cdi.runtime.RecordedTypes', 'GENERIC_SIGNATURES'
+    allowIn 'io.micronaut.cdi.runtime.RecordedTypeIndex', 'GENERIC_SIGNATURES'
 }
 
 dependencies {

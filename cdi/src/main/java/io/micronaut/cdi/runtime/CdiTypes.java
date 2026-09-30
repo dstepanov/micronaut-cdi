@@ -172,58 +172,106 @@ public final class CdiTypes {
     }
 
     /**
-     * The type closure of a type: itself and every class and interface it is assignable to, with what the type
-     * says about its parameters carried into its supertypes.
+     * The type closure of a type: the type, and every class and interface above it with the type arguments the
+     * hierarchy gives each, {@code Object} left out.
+     *
+     * <p>It is read from what the processor recorded of the class. For a class the application was not compiled
+     * with, the module that reads classes answers where it is there; otherwise the closure is the type alone.</p>
      *
      * @param type The type
      * @return The closure, the type first
      */
     public static java.util.List<Type> closureOf(Type type) {
-        java.util.List<Type> closure = new java.util.ArrayList<>();
-        collectClosure(type, closure, false);
-        return closure;
+        return closureOf(type, false);
     }
 
     /**
-     * The closure a bean's types are taken from: the {@link #closureOf type closure}, except that an array stops at
-     * itself. The bean types of an array are the array and {@code Object}, and the interfaces every array
-     * implements are not among them, although an event of an array type is one of those interfaces as well.
+     * The closure a bean's types are taken from: the {@link #closureOf type closure}, except that an array
+     * and a primitive have no closure beyond themselves (section 2.2.1).
      *
      * @param type The type
      * @return The closure, the type first
      */
     public static java.util.List<Type> beanTypeClosureOf(Type type) {
-        java.util.List<Type> closure = new java.util.ArrayList<>();
-        collectClosure(type, closure, true);
-        return closure;
+        return closureOf(type, true);
     }
 
-    private static void collectClosure(@Nullable Type type, java.util.List<Type> closure, boolean arrayStops) {
-        if (type == null || type == Object.class) {
-            return;
+    /**
+     * The closure the types of a bean of the given class are taken from, starting at the class over its own
+     * type variables.
+     *
+     * @param beanClass The bean class
+     * @return The closure, the class first
+     */
+    static java.util.List<Type> beanTypeClosureOf(Class<?> beanClass) {
+        RecordedTypeIndex.Entry recorded = recordOf(beanClass);
+        if (recorded != null) {
+            return closureOf(recorded.declaredTypeOf(beanClass), true);
         }
+        CdiReflection reflection = reflection();
+        return closureOf(reflection != null ? reflection.declaredTypeOf(beanClass) : beanClass, true);
+    }
+
+    private static java.util.List<Type> closureOf(Type type, boolean arrayStops) {
         Class<?> raw = rawClassOf(type);
-        if (raw == null) {
-            // a type variable or a wildcard names no type of its own
-            return;
+        if (raw == null || type == Object.class) {
+            return new java.util.ArrayList<>();
         }
-        closure.add(type);
         if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
-            // a primitive has no supertypes to collect in the first place
-            return;
+            return new java.util.ArrayList<>(java.util.List.of(type));
         }
-        java.util.Map<java.lang.reflect.TypeVariable<?>, Type> substitution = new java.util.HashMap<>();
-        if (type instanceof ParameterizedType parameterized) {
-            java.lang.reflect.TypeVariable<?>[] variables = raw.getTypeParameters();
-            Type[] arguments = parameterized.getActualTypeArguments();
-            for (int i = 0; i < variables.length && i < arguments.length; i++) {
-                substitution.put(variables[i], arguments[i]);
+        RecordedTypeIndex.Entry recorded = recordOf(raw);
+        if (recorded != null) {
+            java.util.List<Type> closure = recorded.closureOf(type);
+            if (closure != null) {
+                return closure;
             }
         }
-        for (Type anInterface : raw.getGenericInterfaces()) {
-            collectClosure(substitute(anInterface, substitution), closure, arrayStops);
+        CdiReflection reflection = reflection();
+        if (reflection != null) {
+            return reflection.typeClosureOf(type, arrayStops);
         }
-        collectClosure(substitute(raw.getGenericSuperclass(), substitution), closure, arrayStops);
+        // nothing is known of what is above the type without reading it: the type itself is all there is,
+        // and what is above a class is asked of the class by whoever compares against it
+        return new java.util.ArrayList<>(java.util.List.of(type));
+    }
+
+    /**
+     * Whether the types above the given class can be said: the processor recorded them, or the module that
+     * reads classes is there to read them.
+     *
+     * @param type The class
+     * @return Whether its closure is known
+     */
+    static boolean knowsClosureOf(Class<?> type) {
+        return recordOf(type) != null || reflection() != null;
+    }
+
+    private static RecordedTypeIndex.@Nullable Entry recordOf(Class<?> type) {
+        RecordedTypeIndex index = RecordedTypeIndex.current();
+        return index == null ? null : index.of(type.getName());
+    }
+
+    private static @Nullable CdiReflection reflection() {
+        io.micronaut.context.BeanContext context = CdiRunning.currentContext();
+        return context == null ? null : context.findBean(CdiReflection.class).orElse(null);
+    }
+
+    /**
+     * Whether an object of the given class is an event whose type its class alone does not say: the class
+     * declares type variables. Known from the record of a class the application was compiled with, and from
+     * the class itself where the module that reads classes is there.
+     *
+     * @param type The class
+     * @return Whether it declares type variables, as far as can be known
+     */
+    static boolean declaresTypeVariables(Class<?> type) {
+        RecordedTypeIndex.Entry recorded = recordOf(type);
+        if (recorded != null) {
+            return !recorded.variables().isEmpty();
+        }
+        CdiReflection reflection = reflection();
+        return reflection != null && reflection.declaredTypeOf(type) != type;
     }
 
     /**
@@ -257,58 +305,73 @@ public final class CdiTypes {
     }
 
     /**
-     * The type an event is fired as, per section 2.8.1: the runtime class of the event object, its type
-     * variables resolved by lining the type the event was declared or selected as up against the class's own
-     * hierarchy.
+     * The type of an event of the given runtime class that was fired as the given type (section 2.8.1): the
+     * class, with the type variables it declares resolved from the type the event was fired as.
      *
-     * @param runtimeClass The runtime class of the event object
-     * @param declaredType The type the event was declared or selected as
+     * <p>What the class declares is read from the record the processor made of it, and a variable the type it
+     * was fired as leaves unresolved is refused there. A class the application was not compiled with is asked
+     * of the module that reads classes where it is there; otherwise the event is of the type it was fired as
+     * where that names its class, and of its raw class - which the types above it are matched by as raw
+     * classes - where it names a supertype. An event of a generic class is fired as its full type, with
+     * nothing read, through {@code MicronautEvent.select(Argument)}.</p>
+     *
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
      * @return The event type
-     * @throws IllegalArgumentException When a type variable of the class stays unresolved
+     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
+     *                                  unresolved
      */
     public static Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
-        java.lang.reflect.TypeVariable<?>[] variables = runtimeClass.getTypeParameters();
-        if (variables.length == 0) {
+        RecordedTypeIndex.Entry recorded = recordOf(runtimeClass);
+        if (recorded == null) {
+            CdiReflection reflection = reflection();
+            if (reflection != null) {
+                return reflection.eventTypeOf(runtimeClass, declaredType);
+            }
+            return rawClassOf(declaredType) == runtimeClass ? declaredType : runtimeClass;
+        }
+        java.util.List<String> variables = recorded.variables();
+        if (variables.isEmpty()) {
             return runtimeClass;
         }
-        java.util.Map<java.lang.reflect.TypeVariable<?>, Type> resolution = new java.util.HashMap<>();
+        java.util.Map<String, Type> resolution = new java.util.HashMap<>();
         Class<?> declaredRaw = rawClassOf(declaredType);
         if (declaredType instanceof ParameterizedType declaredParameterized && declaredRaw != null) {
-            // find the class's own view of the declared supertype, whose arguments are expressions in the
-            // class's variables, and line the declared arguments up against them
-            for (Type supertype : closureOf(CdiParameterizedType.of(runtimeClass))) {
-                if (rawClassOf(supertype) == declaredRaw && supertype instanceof ParameterizedType own) {
-                    Type[] ownArguments = own.getActualTypeArguments();
-                    Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
-                    for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
-                        unify(ownArguments[i], declaredArguments[i], resolution);
+            java.util.List<Type> closure = recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
+            if (closure != null) {
+                for (Type supertype : closure) {
+                    if (rawClassOf(supertype) == declaredRaw && supertype instanceof ParameterizedType own) {
+                        Type[] ownArguments = own.getActualTypeArguments();
+                        Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
+                        for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
+                            unify(ownArguments[i], declaredArguments[i], resolution);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
-        Type[] arguments = new Type[variables.length];
-        for (int i = 0; i < variables.length; i++) {
-            Type resolved = resolution.get(variables[i]);
+        Type[] arguments = new Type[variables.size()];
+        for (int i = 0; i < arguments.length; i++) {
+            Type resolved = resolution.get(variables.get(i));
             if (resolved instanceof java.lang.reflect.WildcardType wildcard) {
-                // a wildcard resolves the variable to its bound
                 Type[] uppers = wildcard.getUpperBounds();
                 resolved = uppers.length > 0 ? uppers[0] : Object.class;
             }
             if (resolved == null || resolved instanceof java.lang.reflect.TypeVariable<?>) {
-                throw new IllegalArgumentException("The type variable " + variables[i].getName() + " of "
+                throw new IllegalArgumentException("The type variable " + variables.get(i) + " of "
                     + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
-                    + declaredType.getTypeName());
+                    + declaredType.getTypeName() + ". MicronautEvent.select(Argument) states the type of an event "
+                    + "in full");
             }
             arguments[i] = resolved;
         }
         return CdiParameterizedType.of(runtimeClass, arguments);
     }
 
-    private static void unify(Type own, Type declared,
-                              java.util.Map<java.lang.reflect.TypeVariable<?>, Type> resolution) {
+    private static void unify(Type own, Type declared, java.util.Map<String, Type> resolution) {
         if (own instanceof java.lang.reflect.TypeVariable<?> variable) {
-            resolution.put(variable, declared);
+            resolution.put(variable.getName(), declared);
             return;
         }
         if (own instanceof ParameterizedType ownParameterized
@@ -321,6 +384,13 @@ public final class CdiTypes {
         }
     }
 
+    /**
+     * The type an argument describes, as the {@code java.lang.reflect.Type} the specification's interfaces are
+     * written in: the class, or the class parameterized by what its type parameters describe.
+     *
+     * @param argument The argument
+     * @return The type
+     */
     public static Type typeOf(Argument<?> argument) {
         Argument<?>[] typeParameters = argument.getTypeParameters();
         if (typeParameters.length == 0) {

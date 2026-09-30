@@ -44,6 +44,11 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     private final ObserverRegistry registry;
     private final java.lang.reflect.Type type;
     private final java.util.List<CdiQualifier> qualifiers;
+    /**
+     * Whether the type is the type of the events fired, stated in full by whoever selected it as an
+     * {@code Argument}: nothing is then derived from the class of the event object.
+     */
+    private final boolean exact;
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
 
     public CdiEvent(ObserverRegistry registry, Argument<T> type, Set<Annotation> qualifiers) {
@@ -57,6 +62,13 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, java.util.List<CdiQualifier> qualifiers,
              jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
+        this(registry, type, qualifiers, injectedAt, false);
+    }
+
+    private CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, java.util.List<CdiQualifier> qualifiers,
+                     jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
+                     boolean exact) {
+        this.exact = exact;
         this.registry = registry;
         this.type = type;
         this.qualifiers = qualifiers;
@@ -65,16 +77,19 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public void fire(T event) {
-        requireResolvableType(event);
-        registry.notifyObservers(event, type, qualifiers, false, injectedAt);
+        registry.notifyObservers(event, eventTypeOf(event), qualifiers, false, injectedAt);
     }
 
     /**
      * Section 2.8.1: an event object whose runtime class declares type variables the event's own type does not
      * resolve has no event types, and firing it is an error. Resolving is what checks it.
      */
-    private void requireResolvableType(T event) {
-        CdiTypes.eventTypeOf(event.getClass(), type);
+    /**
+     * The type of the event: the type stated in full where it was, and otherwise the class of the event object
+     * with its type variables resolved from the type the event is fired as (section 2.8.1).
+     */
+    private java.lang.reflect.Type eventTypeOf(Object event) {
+        return exact ? type : CdiTypes.eventTypeOf(event.getClass(), type);
     }
 
     @Override
@@ -84,13 +99,13 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public <U extends T> CompletionStage<U> fireAsync(U event, NotificationOptions options) {
-        requireResolvableType(event);
+        java.lang.reflect.Type eventType = eventTypeOf(event);
         Executor executor = options.getExecutor();
         return CompletableFuture.supplyAsync(() -> {
             // every asynchronous observer is notified, and what any of them threw arrives together, as the
             // suppressed exceptions of one completion failure (section 2.8.5)
             java.util.List<Throwable> thrown = registry.notifyObserversCollecting(
-                event, type, qualifiers, injectedAt);
+                event, eventType, qualifiers, injectedAt);
             if (!thrown.isEmpty()) {
                 java.util.concurrent.CompletionException failure =
                     new java.util.concurrent.CompletionException(thrown.get(0));
@@ -137,7 +152,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         java.lang.reflect.Type selected = CdiTypes.requiredTypeOf(subtype);
         requireNoTypeVariable(selected);
-        return new CdiEvent<>(registry, selected, and(CdiInstance.valuesOf(null, qualifiers)), injectedAt);
+        return new CdiEvent<>(registry, selected, and(CdiInstance.valuesOf(null, qualifiers)), injectedAt, true);
     }
 
     private static void requireNoTypeVariable(java.lang.reflect.Type selected) {

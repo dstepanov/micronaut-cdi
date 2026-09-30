@@ -151,26 +151,26 @@ public final class ObserverRegistry {
                                 Argument<?> declaredType,
                                 Set<Annotation> eventQualifiers,
                                 boolean async) {
-        notifyObservers(event, CdiTypes.typeOf(declaredType), CdiQualifier.ofInstances(eventQualifiers), async, null);
+        notifyObservers(event, CdiTypes.eventTypeOf(event.getClass(), CdiTypes.typeOf(declaredType)),
+            CdiQualifier.ofInstances(eventQualifiers), async, null);
     }
 
     /**
      * Notifies the observer methods an event notifies, in order, telling each where the event came from.
      *
      * @param event           The event
-     * @param declaredType    The type the event was declared as
+     * @param eventType       The type of the event
      * @param eventQualifiers The qualifiers the event was fired with
      * @param async           Whether the event was fired asynchronously
      * @param firedFrom       The injection point the event was fired through, when it was fired through one
      */
     @SuppressWarnings("unchecked")
     public void notifyObservers(Object event,
-                                Type declaredType,
+                                Type eventType,
                                 List<CdiQualifier> eventQualifiers,
                                 boolean async,
                                 jakarta.enterprise.inject.spi.@io.micronaut.core.annotation.Nullable
                                     InjectionPoint firedFrom) {
-        Type eventType = CdiTypes.eventTypeOf(event.getClass(), declaredType);
         jakarta.enterprise.inject.spi.EventMetadata metadata =
             new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
         for (ObserverMethod<?> observer : resolve(eventType, eventQualifiers, async)) {
@@ -183,16 +183,15 @@ public final class ObserverRegistry {
      * threw is collected and returned together.
      *
      * @param event           The event
-     * @param declaredType    The type the event was declared as
+     * @param eventType       The type of the event
      * @param eventQualifiers The qualifiers the event was fired with
      * @param firedFrom       The injection point the event was fired through, when it was fired through one
      * @return What the observers threw, in notification order
      */
     @SuppressWarnings("unchecked")
     public java.util.List<Throwable> notifyObserversCollecting(
-        Object event, Type declaredType, List<CdiQualifier> eventQualifiers,
+        Object event, Type eventType, List<CdiQualifier> eventQualifiers,
         jakarta.enterprise.inject.spi.@io.micronaut.core.annotation.Nullable InjectionPoint firedFrom) {
-        Type eventType = CdiTypes.eventTypeOf(event.getClass(), declaredType);
         jakarta.enterprise.inject.spi.EventMetadata metadata =
             new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
         java.util.List<Throwable> thrown = new java.util.ArrayList<>(0);

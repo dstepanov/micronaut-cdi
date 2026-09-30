@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.reflection;
 
+import io.micronaut.cdi.runtime.CdiParameterizedType;
 import io.micronaut.cdi.runtime.CdiReflection;
+import io.micronaut.cdi.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;
@@ -32,7 +34,10 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -112,6 +117,101 @@ public final class ReflectiveCdi implements CdiReflection {
             }
         }
         return null;
+    }
+
+    @Override
+    public java.util.List<Type> typeClosureOf(Type type, boolean arrayStops) {
+        java.util.List<Type> closure = new java.util.ArrayList<>();
+        collectClosure(type, closure, arrayStops);
+        return closure;
+    }
+
+    private static void collectClosure(@Nullable Type type, java.util.List<Type> closure, boolean arrayStops) {
+        if (type == null || type == Object.class) {
+            return;
+        }
+        Class<?> raw = CdiTypes.rawClassOf(type);
+        if (raw == null) {
+            // a type variable or a wildcard names no type of its own
+            return;
+        }
+        closure.add(type);
+        if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
+            // a primitive has no supertypes to collect in the first place
+            return;
+        }
+        Map<TypeVariable<?>, Type> substitution = new java.util.HashMap<>();
+        if (type instanceof ParameterizedType parameterized) {
+            TypeVariable<?>[] variables = raw.getTypeParameters();
+            Type[] arguments = parameterized.getActualTypeArguments();
+            for (int i = 0; i < variables.length && i < arguments.length; i++) {
+                substitution.put(variables[i], arguments[i]);
+            }
+        }
+        for (Type anInterface : raw.getGenericInterfaces()) {
+            collectClosure(CdiTypes.substitute(anInterface, substitution), closure, arrayStops);
+        }
+        collectClosure(CdiTypes.substitute(raw.getGenericSuperclass(), substitution), closure, arrayStops);
+    }
+
+    @Override
+    public Type declaredTypeOf(Class<?> type) {
+        TypeVariable<?>[] variables = type.getTypeParameters();
+        return variables.length == 0 ? type : CdiParameterizedType.of(type, variables);
+    }
+
+    @Override
+    public Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
+        TypeVariable<?>[] variables = runtimeClass.getTypeParameters();
+        if (variables.length == 0) {
+            return runtimeClass;
+        }
+        // the variables the class declares are resolved against the type the event was fired as: the class's
+        // own view of that type is unified with it
+        Map<TypeVariable<?>, Type> resolution = new java.util.HashMap<>();
+        Class<?> declaredRaw = CdiTypes.rawClassOf(declaredType);
+        if (declaredType instanceof ParameterizedType declaredParameterized && declaredRaw != null) {
+            for (Type supertype : typeClosureOf(declaredTypeOf(runtimeClass), false)) {
+                if (CdiTypes.rawClassOf(supertype) == declaredRaw && supertype instanceof ParameterizedType own) {
+                    Type[] ownArguments = own.getActualTypeArguments();
+                    Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
+                    for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
+                        unify(ownArguments[i], declaredArguments[i], resolution);
+                    }
+                    break;
+                }
+            }
+        }
+        Type[] arguments = new Type[variables.length];
+        for (int i = 0; i < variables.length; i++) {
+            Type resolved = resolution.get(variables[i]);
+            if (resolved instanceof java.lang.reflect.WildcardType wildcard) {
+                Type[] uppers = wildcard.getUpperBounds();
+                resolved = uppers.length > 0 ? uppers[0] : Object.class;
+            }
+            if (resolved == null || resolved instanceof TypeVariable<?>) {
+                throw new IllegalArgumentException("The type variable " + variables[i].getName() + " of "
+                    + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
+                    + declaredType.getTypeName());
+            }
+            arguments[i] = resolved;
+        }
+        return CdiParameterizedType.of(runtimeClass, arguments);
+    }
+
+    private static void unify(Type own, Type declared, Map<TypeVariable<?>, Type> resolution) {
+        if (own instanceof TypeVariable<?> variable) {
+            resolution.put(variable, declared);
+            return;
+        }
+        if (own instanceof ParameterizedType ownParameterized
+            && declared instanceof ParameterizedType declaredParameterized) {
+            Type[] ownArguments = ownParameterized.getActualTypeArguments();
+            Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
+            for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
+                unify(ownArguments[i], declaredArguments[i], resolution);
+            }
+        }
     }
 
     @Override

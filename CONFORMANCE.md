@@ -115,6 +115,23 @@ What the container has to know of a qualifier or interceptor binding type is rec
 resource under `META-INF/micronaut-cdi/bindings`, for every such type a compilation declares or uses. A type no
 compilation with this processor has seen has no record, and is asked of its class by the reflection module.
 
+### Bean types, observed types and event types are what the compiler recorded
+
+*Sections 2.2.1, 2.4.2.1 and 2.8.1.* The type closure of a bean, the type an observer observes and the closure
+an event is matched by are properties of generic signatures, which the container does not read. The processor
+records each: the closure of a bean on the bean or on its producer; the observed type on the observer; and the
+closure and the type variables of every class a compilation compiles, on a class it generates in the package of
+the classes. The type of an event is the class of the event object with its type variables resolved from the
+type the event was fired as, worked out from that record, and an object whose class leaves a variable
+unresolved is refused from it.
+
+A class no compilation with this processor has seen has no record. With `micronaut-cdi-reflection` its generic
+signature is read, as the specification assumes. Without it a bean of such a class has its class and the raw
+types Micronaut exposes it as for bean types, and an event of such a class is of the type it was fired as where
+that names its class and of its raw class otherwise: it is observed by an observer of a raw type or of the type
+it was fired as, and not by an observer of another parameterized supertype. `MicronautEvent.select(Argument)`
+states the event type in full and needs no record and no module.
+
 ### A primitive is boxed by the lookup rather than by the bean
 
 *Section 2.1.2.* A primitive type and the class that boxes it are one bean type. Micronaut resolves a bean by the

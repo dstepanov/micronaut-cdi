@@ -96,7 +96,9 @@ public final class RecordedTypeValues {
         if (type instanceof GenericPlaceholderElement placeholder && !type.isArray()) {
             String name = placeholder.getVariableName();
             ClassElement bound = bindings.get(name);
-            if (bound != null && !(bound instanceof GenericPlaceholderElement)) {
+            if (bound != null && !(bound instanceof GenericPlaceholderElement other
+                && other.getVariableName().equals(name))) {
+                // what the inheriting class gives the variable: a type, or a variable of its own
                 return of(bound, Map.of(), variables, erasedBounds);
             }
             record.member("kind", "VARIABLE").member("name", name);

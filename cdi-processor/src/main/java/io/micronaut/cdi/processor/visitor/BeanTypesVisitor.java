@@ -81,7 +81,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     private static void record(ClassElement type, Element on) {
         List<AnnotationValue<CdiRecordedType>> closure = new ArrayList<>();
         try {
-            collect(type, java.util.Map.of(), closure);
+            collect(type, java.util.Map.of(), closure, true);
         } catch (RuntimeException e) {
             // a hierarchy the compiler cannot resolve is a broken compilation of its own, and is left to the
             // compiler to report
@@ -92,17 +92,31 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     }
 
     /**
+     * The records of the type closure of a type, the type first.
+     *
+     * @param type         The type
+     * @param erasedBounds Whether the bounds of a variable and of a wildcard are recorded as classes alone
+     * @return The records
+     */
+    public static List<AnnotationValue<CdiRecordedType>> closureOf(ClassElement type, boolean erasedBounds) {
+        List<AnnotationValue<CdiRecordedType>> closure = new ArrayList<>();
+        collect(type, java.util.Map.of(), closure, erasedBounds);
+        return closure;
+    }
+
+    /**
      * Collects the type closure of a type: the type, the interfaces it implements and the class it extends, and
      * theirs in turn, each with the variables it names bound to what the type below it gives them. An array
      * and a primitive have no closure beyond themselves, and {@code Object}, which every closure ends in, is
      * left for the reader to add once.
      */
     private static void collect(ClassElement type, java.util.Map<String, ClassElement> bindings,
-                                List<AnnotationValue<CdiRecordedType>> closure) {
+                                List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds) {
         if ("java.lang.Object".equals(type.getName()) && !type.isArray()) {
             return;
         }
-        closure.add(RecordedTypeValues.ofBeanType(type, bindings));
+        closure.add(erasedBounds ? RecordedTypeValues.ofBeanType(type, bindings)
+            : RecordedTypeValues.of(type, bindings));
         if (type.isArray() || type.isPrimitive()) {
             return;
         }
@@ -115,8 +129,8 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
             own.put(name, bound != null ? bound : argument);
         });
         for (ClassElement anInterface : type.getInterfaces()) {
-            collect(anInterface, own, closure);
+            collect(anInterface, own, closure, erasedBounds);
         }
-        type.getSuperType().ifPresent(superType -> collect(superType, own, closure));
+        type.getSuperType().ifPresent(superType -> collect(superType, own, closure, erasedBounds));
     }
 }

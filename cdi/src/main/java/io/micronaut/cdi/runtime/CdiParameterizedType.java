@@ -50,20 +50,6 @@ public final class CdiParameterizedType implements ParameterizedType {
     }
 
     /**
-     * The given class as the bean type it is: itself when it declares no type parameters, and the parameterized
-     * form over its own type variables when it does.
-     *
-     * @param type The class
-     * @return The bean type
-     */
-    public static Type of(Class<?> type) {
-        if (type.getTypeParameters().length == 0) {
-            return type;
-        }
-        return new CdiParameterizedType(type, type.getTypeParameters());
-    }
-
-    /**
      * The parameterized form of the given class over the given arguments.
      *
      * @param type      The raw class

@@ -398,7 +398,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @SuppressWarnings("unchecked")
     private <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, List<CdiQualifier> qualifiers) {
-        if (event.getClass().getTypeParameters().length > 0) {
+        if (CdiTypes.declaresTypeVariables(event.getClass())) {
             throw new IllegalArgumentException("The event object's class " + event.getClass().getName()
                 + " declares type variables, and its runtime class alone does not resolve them");
         }

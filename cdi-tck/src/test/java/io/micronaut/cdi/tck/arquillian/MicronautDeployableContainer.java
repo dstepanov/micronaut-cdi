@@ -118,6 +118,11 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         try {
             ApplicationContext context = ApplicationContext.builder()
                 .beansPredicate(bean -> {
+                    if (bean.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiTypeIndex")) {
+                        // what the processor recorded of the classes of a package: data of the compilation,
+                        // and no bean of any archive
+                        return true;
+                    }
                     // a bean produced by a member of the kit's classes belongs to the deployment its producer
                     // is in, whatever type it produces: a produced String[] carries no package of its own
                     if (bean instanceof io.micronaut.inject.BeanDefinition<?> definition) {

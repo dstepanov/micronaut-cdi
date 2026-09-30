@@ -87,7 +87,9 @@ reads classes back if it asks to:
   `resolveInterceptors(...)`: its members can only be read reflectively;
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
   annotation the build recorded nothing of;
-- `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`.
+- `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`;
+- the generic hierarchy of a class no compilation with this processor has seen, for the bean types of a bean of it
+  and for matching an event of it against a parameterized observed type.
 
 Each goes through one interface, `CdiReflection`, which `micronaut-cdi-reflection` implements. Without the module
 the call throws an `UnsupportedOperationException` that names it.
@@ -126,6 +128,33 @@ held to the rules of the specification's own - the annotation has to be a qualif
 repeatable is given once - checked from what was recorded. It selects the same beans and notifies the same
 observers as the literal does where the reflection module is there to read the literal. `select(Argument, ...)`
 is the counterpart of `select(TypeLiteral, ...)`.
+
+### Types without reflection
+
+The bean types of a bean, what an observer observes and the generic hierarchy of every class a compilation
+compiles are recorded by the processor, so a parameterized injection point or lookup, and an event, are matched
+by their type arguments with nothing read from a class:
+
+- a bean's type closure is recorded on the bean, and on the producer that produces it;
+- an observed type is recorded on the observer, with its wildcards and type variables;
+- the closure of each compiled class that has a parameterized type above it, or declares type variables, is
+  recorded on a class generated in its package. An event of `OrderCreated implements DomainEvent<Order>` is
+  observed by an observer of `DomainEvent<Order>` and not by one of `DomainEvent<Invoice>`, however it was
+  fired, and firing an object of a generic class through an event that leaves its type variables unresolved is
+  the `IllegalArgumentException` of the specification.
+
+An event fired through `MicronautEvent.select(Argument)` is an event of exactly the type given, which is how an
+object of a generic class is fired with its type stated in full:
+
+```java
+events.select(Argument.of(Box.class, String.class)).fire(new Box<>("text"));
+```
+
+What is left to `micronaut-cdi-reflection` is a class no compilation with this processor has seen: a bean
+compiled without it is resolvable by its class and the raw types Micronaut exposes it as, and an event of such a
+class is matched as the type it was fired as where that names its class, and as its raw class otherwise - so an
+observer of a parameterized supertype of it is only notified where the module is there to read the class, or
+where the event is fired through `select(Argument)`.
 
 That module also brings `io.micronaut:micronaut-reflection`, which answers the accessors of an interceptor's
 `InvocationContext` that return an object of the Java reflection API: `getMethod()`, `getConstructor()`,

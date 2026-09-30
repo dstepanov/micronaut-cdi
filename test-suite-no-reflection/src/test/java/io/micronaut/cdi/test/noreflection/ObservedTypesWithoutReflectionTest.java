@@ -73,6 +73,40 @@ class ObservedTypesWithoutReflectionTest {
         }
     }
 
+    interface DomainEvent<S> {
+    }
+
+    record Order(int number) {
+    }
+
+    record Invoice(int number) {
+    }
+
+    static class OrderCreated implements DomainEvent<Order> {
+    }
+
+    @ApplicationScoped
+    static class Ledger {
+
+        final List<String> heard = new ArrayList<>();
+
+        void orders(@Observes DomainEvent<Order> event) {
+            heard.add("order");
+        }
+
+        void invoices(@Observes DomainEvent<Invoice> event) {
+            heard.add("invoice");
+        }
+
+        void anything(@Observes DomainEvent<?> event) {
+            heard.add("any");
+        }
+
+        List<String> heard() {
+            return List.copyOf(heard);
+        }
+    }
+
     @ApplicationScoped
     static class Sender {
 
@@ -131,6 +165,27 @@ class ObservedTypesWithoutReflectionTest {
         context.getBean(Sender.class).send();
         assertEquals(List.of("hello"), context.getBean(TextListener.class).heard());
         assertEquals(List.of(7), context.getBean(NumberListener.class).heard());
+    }
+
+    @Test
+    void anEventIsMatchedByTheParameterizedSupertypeOfItsClass() {
+        // fired as nothing more than an object: what its class implements is what the processor recorded
+        ((MicronautBeanContainer) CDI.current().getBeanContainer()).getEvent().fire(new OrderCreated());
+        assertEquals(Set.of("order", "any"), Set.copyOf(context.getBean(Ledger.class).heard()));
+        assertEquals(2, context.getBean(Ledger.class).heard().size());
+    }
+
+    @Test
+    void anEventOfAGenericClassFiredWithoutItsTypeArgumentsIsRefused() {
+        MicronautEvent<Object> events = ((MicronautBeanContainer) CDI.current().getBeanContainer()).getEvent();
+        IllegalArgumentException refused =
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> events.fire(new Box<>("unresolved")));
+        org.junit.jupiter.api.Assertions.assertTrue(refused.getMessage().contains("type variable T"),
+            refused.getMessage());
+        // stated in full, the same object is an event
+        events.select(Argument.of(Box.class, String.class)).fire(new Box<>("resolved"));
+        assertEquals(List.of("resolved"), context.getBean(TextListener.class).heard());
     }
 
     @Test

@@ -182,7 +182,14 @@ public class CdiBean<T> implements Bean<T> {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
             // rather than of its erasure
-            closure.addAll(CdiTypes.beanTypeClosureOf(CdiParameterizedType.of(beanClass)));
+            if (CdiTypes.knowsClosureOf(beanClass)) {
+                closure.addAll(CdiTypes.beanTypeClosureOf(beanClass));
+            } else {
+                // a bean compiled without this processor, of which nothing was recorded: it is resolvable by
+                // its class and by the raw types Micronaut exposes it as
+                closure.add(beanClass);
+                closure.addAll(definition.getExposedTypes());
+            }
         }
         if (definition.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Typed")) {
             // the types the bean named with Typed keep the parameters the closure gives them: an Emu typed

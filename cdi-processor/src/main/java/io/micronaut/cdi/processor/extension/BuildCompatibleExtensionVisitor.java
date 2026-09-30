@@ -101,6 +101,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean contextBeansWritten;
     private boolean importedClassesPending;
     private boolean synthesized;
+    private boolean triggerWritten;
+    private final TypeIndexCollector typeIndex = new TypeIndexCollector();
     private @io.micronaut.core.annotation.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
@@ -508,11 +510,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             if (recordOn(element, context)) {
                 return;
             }
-        } else if (suffix == null) {
-            // what this compilation generates is named after the first class it compiles, so that two
-            // compilations of one application do not generate the same class
-            suffix = Integer.toHexString(name.hashCode());
-            if (!synthesizers.isEmpty() || !validators.isEmpty() || !registrars.isEmpty()) {
+        } else if (TypeIndexCollector.recordOn(element)) {
+            return;
+        } else {
+            if (suffix == null) {
+                // what this compilation generates is named after the first class it compiles, so that two
+                // compilations of one application do not generate the same class
+                suffix = Integer.toHexString(name.hashCode());
+            }
+            typeIndex.collect(element);
+            if (!triggerWritten && (!typeIndex.isEmpty()
+                || !synthesizers.isEmpty() || !validators.isEmpty() || !registrars.isEmpty())) {
+                // something waits for every class to have come past
+                triggerWritten = true;
                 TRIGGERS.put(GENERATED + "." + TRIGGER + suffix, this);
                 writeTrigger(context, TRIGGER + suffix);
             }
@@ -552,6 +562,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             visitor.writeTrigger(context, next);
             return;
         }
+        if (visitor.suffix != null) {
+            visitor.typeIndex.write(context, visitor.suffix);
+        }
         visitor.synthesise(context);
     }
 
@@ -563,10 +576,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     public void finish(VisitorContext context) {
         // a Java compilation finishes every round, and always compiles a source a round generated
         if (context.getLanguage() != VisitorContext.Language.JAVA
-            && suffix != null && !synthesized && TRIGGERS.containsValue(this)) {
+            && triggerWritten && !synthesized && TRIGGERS.containsValue(this)) {
             TRIGGERS.values().remove(this);
-            context.fail("The synthesis and validation phases of the build compatible extensions did not run: the "
-                + "compilation never compiled the source generated to mark the end of registration", null);
+            context.fail("The generic hierarchies of the compiled classes were not recorded, and the synthesis and "
+                + "validation phases of the build compatible extensions did not run: the compilation never "
+                + "compiled the source generated to mark the end of registration", null);
         }
     }
 
