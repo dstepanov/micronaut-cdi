@@ -121,7 +121,8 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public io.micronaut.cdi.MicronautEvent<T> select(Annotation... qualifiers) {
-        return new CdiEvent<>(registry, type, and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
+        // the type stays what it was selected as: a selection of qualifiers says nothing of the type
+        return new CdiEvent<>(registry, type, and(CdiQualifier.ofInstances(qualifiers)), injectedAt, exact);
     }
 
     @Override
@@ -139,7 +140,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     @Override
     public io.micronaut.cdi.MicronautEvent<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                      io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiEvent<>(registry, type, and(CdiInstance.valuesOf(qualifier, qualifiers)), injectedAt);
+        return new CdiEvent<>(registry, type, and(CdiInstance.valuesOf(qualifier, qualifiers)), injectedAt, exact);
     }
 
     @Override
