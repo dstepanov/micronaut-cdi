@@ -205,9 +205,9 @@ name its directory:
 ./gradlew build -PjakartaInterceptorsDir=../micronaut-jakarta-interceptors -PjakartaElDir=../micronaut-jakarta-el
 ```
 
-Micronaut itself comes from Maven Central. The local Maven repository is consulted first, so a Micronaut built from a
-checkout beside this one and published with `publishToMavenLocal` is what this builds against. That is how a fix
-being worked on in Micronaut itself is built against here before it is released.
+Micronaut itself comes from Maven Central and, while this builds on a snapshot of Micronaut Core, from the
+snapshot repository. The local Maven repository is not consulted: a stale local publication of a snapshot would
+shadow the published one.
 
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.
