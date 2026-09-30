@@ -190,7 +190,7 @@ Reflection anywhere else fails the build.
 ## Conformance
 
 What is implemented, and every place where this module differs from the specification, is recorded in
-[CONFORMANCE.md](CONFORMANCE.md). A difference is recorded there and marked by a disabled test rather than left
+[CONFORMANCE.md](CONFORMANCE.md). A difference is recorded there, and a test of the kit it rules out is named there rather than left
 out, so that what is not covered is as visible in a test report as what is.
 
 ## Building

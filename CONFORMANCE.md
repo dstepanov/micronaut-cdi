@@ -5,8 +5,10 @@ What this module implements of
 section by section of Part I, chapter 2 — CDI Lite. Only CDI Lite is in scope; CDI Full (chapter 3) is not
 implemented and is not claimed.
 
-Every difference is recorded here and marked by a disabled test that names this file, so that what is not covered
-is as visible in a test report as what is.
+Every difference is recorded here. No test is disabled for one: a test of the kit that a difference rules out is
+left out by name, in `cdi-tck/build.gradle` and `tck-suite.xml`, and is named below, and the two sections of the
+language model kit that are not passed run as skipped tests that say what each waits on, so that those are as
+visible in a test report as what passes.
 
 ## Implemented
 
@@ -27,6 +29,7 @@ is as visible in a test report as what is.
 | 2.9.1 | `CDI.current()`, found through the service loader | `MicronautCDIProvider`, `MicronautCDI` |
 | 2.5.2 | The `Context` of each scope, and whether it is active | `CdiContext` |
 | 2.4.2 | The rules of resolution applied to types and qualifiers on their own | `CdiAssignability` |
+| 2.9.1.10 | Interceptor resolution through the bean container | `CdiBeanContainer` |
 | 2.8.2 | Firing an event, synchronously and asynchronously, and narrowing one with `select` | `CdiEvent` |
 | 2.8.3 | Observer resolution by the event's type and qualifiers | `ObserverRegistry`, `CdiAssignability` |
 | 2.8.4 | Observer methods, including static ones, `Reception.IF_EXISTS` and `@Priority` | `ObserverVisitor`, `CdiObserverMethod` |
@@ -58,12 +61,6 @@ is as visible in a test report as what is.
 
 The transaction phases an observer may name (2.8.4) have no transactions to observe here and are notified as
 if `IN_PROGRESS`.
-
-`BeanContainer.resolveInterceptors` resolves the interceptor classes the Jakarta Interceptors processor compiled:
-an interceptor is enabled by the priority it declares, bound when every binding it declares is among the given
-ones, and the resolved list is ordered lowest priority first. The interception of a bean still happens where it
-was compiled; what the manager adds is the description of it the specification asks for, including invoking an
-interceptor directly through `Interceptor.intercept`.
 
 ## Differences
 
@@ -121,7 +118,9 @@ compilation with this processor has seen has no record, and is asked of its clas
 an event is matched by are properties of generic signatures, which the container does not read. The processor
 records each: the closure of a bean on the bean or on its producer; the observed type on the observer; and the
 closure and the type variables of every class a compilation compiles, on a class it generates in the package of
-the classes. The type of an event is the class of the event object with its type variables resolved from the
+the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+read into one where a program hands it to the specification's API and made from one where that API reports it,
+in `io.micronaut.cdi.runtime.type`. The type of an event is the class of the event object with its type variables resolved from the
 type the event was fired as, worked out from that record, and an object whose class leaves a variable
 unresolved is refused from it.
 
@@ -134,8 +133,10 @@ states the event type in full and needs no record and no module.
 
 ### The API written in terms of reflection is an optional module
 
-`micronaut-cdi` reads no class back, and the build holds it to that: the
-`NoReflection` check allows it nothing but the accessors of a `java.lang.reflect.Type` it was handed. The
+*Sections 2.4.5.7, 2.4.5.8, 2.4.6, 2.8.4.3, 2.9.1.5 and 2.9.1.9 to 2.9.1.11, and of CDI Full 3.9.1 and 3.9.3.10.*
+`micronaut-cdi` reads no class back, and the build holds it to that: the `NoReflection` check allows it nothing
+but the accessors of a `java.lang.reflect.Type` it was handed and the making of the value classes of
+`io.micronaut.cdi.runtime.type`, which such a type is reported as. The
 methods of the specification that return a reflection object, or that can only be answered from one, are
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
 module: `InjectionPoint.getMember()`, `getAnnotated()` and `isTransient()`; the qualifiers and interceptor
@@ -206,7 +207,14 @@ compilations recorded it.
 *Section 2.9.1.* The programmatic access CDI Lite describes is the `BeanContainer`. The `BeanManager` of CDI Full
 extends it, and is implemented here as far as Lite reaches: looking a bean up, resolving an injectable reference,
 comparing two qualifiers or two interceptor bindings by the members that bind, and reading the definition of a
-stereotype or an interceptor binding. It is a bean, so a program can inject it.
+stereotype or an interceptor binding, which is answered by `micronaut-cdi-reflection`. It is a bean, so a program
+can inject it.
+
+`BeanContainer.resolveInterceptors` (section 2.9.1.10) resolves the interceptor classes the Jakarta Interceptors
+processor compiled: an interceptor is enabled by the priority it declares, bound when every binding it declares
+is among the given ones, and the resolved list is ordered lowest priority first. The interception of a bean
+still happens where it was compiled; what the manager adds is the description of it the specification asks for,
+including invoking an interceptor directly through `Interceptor.intercept`.
 
 What belongs to CDI Full says so rather than answering: decorators, passivation, portable extensions, and
 building a bean out of an annotated type. The expression language is the one named exception, provided beyond
@@ -228,7 +236,7 @@ deployment ever admits is the difference visible to code that counts beans.
 
 ### Two findings of a reading of ArC's test suite, reported as the class compiles
 
-Both are reported by the compiler rather than at runtime, so neither can carry a disabled test. A disposer method is
+Both are reported by the compiler rather than at runtime, so neither has a test that runs. A disposer method is
 bound to a producer by the rules of typesafe resolution (section 3.3.7), and the qualifiers are compared here for
 equality and one occurrence at a time: a producer and a disposer qualified with the same repeatable qualifier
 written twice do not match, and every such disposer matches every such producer, so the class is refused with
@@ -313,9 +321,39 @@ interface's targets, container and retention, and the annotations on a primitive
 two that do not are run as skipped tests that name what each waits on, and both are accepted deviations: one
 case of `AnnotatedTypes`, the annotation on one dimension of an array, which Micronaut's model keeps one set of
 for the whole array type, and one case of `RepeatableAnnotations`, a repetition written beside a hand-written
-container, which Micronaut folds into one container (`MICRONAUT-CORE-FINDINGS.md`, findings 37 and 39). Because the model is built on the AST alone, `test-suite-kotlin`
+container, which Micronaut folds into one container (both under
+[Open points in Micronaut Core](#open-points-in-micronaut-core)). Because the model is built on the AST alone, `test-suite-kotlin`
 runs a build compatible extension against a Kotlin class as KSP compiles it, and `test-suite-groovy` against a
 Groovy class.
+
+## Open points in Micronaut Core
+
+What this module works around in Micronaut Core, or accepts from it, as of Micronaut Core 5.3. None is filed
+upstream as a defect; each is a difference of design or a gap with a workaround here.
+
+- **One set of annotations for an array type.** A type annotation written on one dimension of an array
+  (`String[] @A [] f`) is not kept per dimension: the element model has one set for the array type, standing for
+  the component's. The `AnnotatedTypes` section of the language model kit stops at that assertion and runs as a
+  skipped test; accepted, as other implementations skip it.
+- **Annotations as the source wrote them are derived, not recorded.** A repeatable annotation is folded into its
+  container, and what Micronaut's mappers add is not told apart from what the source wrote. The language model
+  unfolds a container of one repetition and filters Micronaut's own annotations
+  (`LanguageModelAnnotationFilter`); a repetition written beside a hand-written container is reported as one
+  container of all of them, which is where the `RepeatableAnnotations` section stops and runs as a skipped test.
+  A remapped annotation's original name is not recovered either.
+- **An unannotated use of a type variable reports its declaration's annotations.** For `class C<@X T> { T f; }`
+  the type of `f` carries `@X`, where the specification's model has a use report only its own. The kit accepts
+  either on the one bound it checks; nothing here is skipped for it.
+- **`MethodElement.getReceiverType()` is empty unless the source wrote the receiver.** Its documentation says an
+  instance method has one derived from the declaring type; the Java implementation answers only a written `this`
+  parameter, and the Kotlin and Groovy ones never do. `ElementMethodInfo.receiverType()` supplies the declaring
+  type itself.
+- **A field's annotation metadata does not include its declaring class's, a method's does.** The priority that
+  selects an alternative producer field is therefore read from the declaring class explicitly
+  (`ProducerVisitor.selectIfAlternative`).
+- **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
+  as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
+  language model answers less in a Kotlin compilation in those places.
 
 ## What other implementations' tests found
 
