@@ -314,8 +314,8 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * scope, and otherwise the scope found through its own meta-annotations — a stereotype carries its scope at
      * one remove, and a stereotype declared on a stereotype at two.
      *
-     * <p>An annotation compiled in the same round is read as an element; one that is already compiled — the
-     * scopes of the specification among them — is read off the compiler's classpath.</p>
+     * <p>An annotation is read as the element the compilation has of it, whether it is compiled in the same
+     * round or is already compiled; the scopes of the specification are known by name.</p>
      */
     private static @Nullable String resolveToScope(String candidate, VisitorContext context) {
         if (Cdi.APPLICATION_SCOPED.equals(candidate) || Cdi.REQUEST_SCOPED.equals(candidate)
@@ -338,23 +338,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             }
             return null;
         }
-        try {
-            Class<?> type = Class.forName(candidate, false, CdiScopeVisitor.class.getClassLoader());
-            if (type.isAnnotationPresent(jakarta.enterprise.context.NormalScope.class)) {
-                return candidate;
-            }
-            for (java.lang.annotation.Annotation meta : type.getAnnotations()) {
-                String name = meta.annotationType().getName();
-                if (!name.startsWith("java.lang.annotation.") && !name.equals(candidate)) {
-                    String resolved = resolveToScope(name, context);
-                    if (resolved != null) {
-                        return resolved;
-                    }
-                }
-            }
-        } catch (ClassNotFoundException | LinkageError e) {
-            // not on the compiler's classpath either; it names no scope this build can see
-        }
+        // an annotation the compilation cannot see names no scope this build can read
         return null;
     }
 
@@ -392,19 +376,13 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * Whether the scope annotation is marked {@code Inherited}, which is what lets a subclass inherit it.
      *
      * <p>An annotation the compilation can see answers for itself; one it cannot — which should not happen for
-     * a scope a bean declares — is read off the compiler's classpath, which is where an annotation processor's
-     * own dependencies live.</p>
+     * a scope a bean declares — is not inherited.</p>
      */
     private static boolean isInherited(String scope, VisitorContext context) {
         if (context.getClassElement(scope).orElse(null) instanceof AnnotationElement annotation) {
             return annotation.isInherited();
         }
-        try {
-            return Class.forName(scope, false, CdiScopeVisitor.class.getClassLoader())
-                .isAnnotationPresent(java.lang.annotation.Inherited.class);
-        } catch (ClassNotFoundException | LinkageError e) {
-            return false;
-        }
+        return false;
     }
 
     /**
