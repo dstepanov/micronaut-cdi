@@ -20,6 +20,7 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.ElementModifier;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
@@ -43,6 +44,7 @@ import io.micronaut.inject.visitor.VisitorContext;
 public final class BeanNameVisitor implements TypeElementVisitor<Object, Object> {
 
     private static final String NAMED = "jakarta.inject.Named";
+    private static final String EXPRESSION_LANGUAGE = "io.micronaut.cdi.el.CdiExpressionLanguage";
 
     @Override
     public VisitorKind getVisitorKind() {
@@ -67,6 +69,14 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
         if (element.getAnnotationMetadata().hasStereotype(CdiScope.class)
             || element.getAnnotationMetadata().hasStereotype("jakarta.inject.Singleton")) {
             nameIfAskedFor(element, defaultClassName(unqualified(element.getSimpleName())));
+            if (element.getAnnotationMetadata().hasStereotype(NAMED) && reachableFromAnExpression(context)) {
+                // a bean with a name is what an expression reaches, and an expression invokes a method through
+                // the executable metadata compiled for it rather than reflectively: the public methods of the
+                // bean, and no others, are compiled as executable ones
+                element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyInstance().onlyConcrete()
+                        .modifiers(modifiers -> modifiers.contains(ElementModifier.PUBLIC)))
+                    .forEach(method -> method.annotate("io.micronaut.context.annotation.Executable"));
+            }
         }
         element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
             .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
@@ -74,6 +84,14 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
         element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
             .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
             .forEach(field -> nameIfAskedFor(field, field.getName()));
+    }
+
+    /**
+     * Whether the application is compiled with the expression language of this container, the optional
+     * {@code micronaut-cdi-el} module: only then is there anything to invoke a bean by its name.
+     */
+    private static boolean reachableFromAnExpression(VisitorContext context) {
+        return context.getClassElement(EXPRESSION_LANGUAGE).isPresent();
     }
 
     /**

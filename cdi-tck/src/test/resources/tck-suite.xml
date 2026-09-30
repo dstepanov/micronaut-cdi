@@ -157,13 +157,7 @@
             <!-- the expression language, through the optional micronaut-cdi-el module: names resolved to beans,
                  and the dependent beans of an evaluation shared within it and destroyed after it -->
             <class name="org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest">
-                <methods>
-                    <!-- a method expression invokes a bean's method through the executable metadata compiled
-                         for it, and the scenario's getName is not an executable method: see CONFORMANCE.md -->
-                    <exclude name="testContextIsActiveWhenEvaluatingElExpression"/>
-                </methods>
-            </class>
+            <class name="org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest"/>
             <class name="org.jboss.cdi.tck.tests.full.extensions.beanManager.el.WrapExpressionFactoryTest"/>
         </classes>
     </test>

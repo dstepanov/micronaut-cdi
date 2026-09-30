@@ -45,6 +45,49 @@ class ExpressionLanguageTest {
         }
     }
 
+    // dependent, so that no client proxy stands in front of it and makes its methods executable for its own sake
+    @Named("clerk")
+    @jakarta.enterprise.context.Dependent
+    public static class Clerk {
+
+        public String stamp(String what) {
+            return "stamped " + what;
+        }
+
+        public String getName() {
+            return "clerk";
+        }
+
+        String whisper() {
+            return "unheard";
+        }
+    }
+
+    @Test
+    void aMethodExpressionInvokesAPublicMethodOfANamedBeanThatSaysNothingOfIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
+            ELContext el = new StandardELContext(factory);
+            assertEquals("stamped this", factory
+                .createMethodExpression(el, "${clerk.stamp('this')}", String.class, new Class<?>[0])
+                .invoke(el, new Object[0]));
+            assertEquals("clerk", factory
+                .createMethodExpression(el, "#{clerk.getName}", String.class, new Class<?>[0])
+                .invoke(el, new Object[0]));
+        }
+    }
+
+    @Test
+    void onlyThePublicMethodsOfANamedBeanAreCompiledForAnExpression() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            java.util.Set<String> executable = new java.util.TreeSet<>();
+            context.getBeanDefinition(Clerk.class).getExecutableMethods()
+                .forEach(method -> executable.add(method.getMethodName()));
+            assertEquals(java.util.Set.of("getName", "stamp"), executable);
+        }
+    }
+
     @Test
     void aNameInAnExpressionResolvesTheBeanOfThatName() {
         try (ApplicationContext context = ApplicationContext.run()) {

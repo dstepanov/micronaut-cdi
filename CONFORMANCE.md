@@ -309,7 +309,7 @@ the SE bootstrap and the CDI 4.1 invokers included — together with the Jakarta
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 21 tests, all passing, which makes 828 in all. Each asserts something this implementation answers although
+own: 22 tests, all passing, which makes 829 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
@@ -319,9 +319,10 @@ the `@Decorated` `Bean<X>` — into a bean that is not one (the four tests of
 `implementation/builtin/metadata/broken/injection`), and the expression language of `micronaut-cdi-el`: names
 resolved to beans (`full.lookup.el.ResolutionByNameTest`), a wrapped factory of someone else's
 (`WrapExpressionFactoryTest`), and the dependent beans of an evaluation
-(`full.context.dependent.DependentContextTest`). One test of the last is left out by name, `testContextIsActiveWhenEvaluatingElExpression`: its method expression
-calls a bean method that is not an executable method, and an expression reaches a bean's methods through the
-executable metadata compiled for them rather than reflectively. Their scenario packages are compiled by name (`beyondLiteScenarios` in
+(`full.context.dependent.DependentContextTest`). A method expression invokes a bean's method through the
+executable metadata compiled for it rather than reflectively, so where `micronaut-cdi-el` is on the classpath an
+application is compiled against, the processor compiles the public methods of each bean class that has a name
+as executable methods; a bean without a name, and an application without the module, gets none of it. Their scenario packages are compiled by name (`beyondLiteScenarios` in
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
 
