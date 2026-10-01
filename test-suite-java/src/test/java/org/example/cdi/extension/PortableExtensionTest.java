@@ -106,8 +106,15 @@ class PortableExtensionTest {
         }
     }
 
+    /**
+     * Satisfied only where the extension that tags a widget has run, so it is a bean only of the deployment
+     * that asks for it: any other deployment with it in would be refused as it validated.
+     */
     @ApplicationScoped
+    @io.micronaut.context.annotation.Requires(property = WantsATaggedWidget.DEPLOYED)
     static class WantsATaggedWidget {
+        static final String DEPLOYED = "portable-extension-test.wants-a-tagged-widget";
+
         @Inject
         @Tagged
         Widget widget;
@@ -287,7 +294,7 @@ class PortableExtensionTest {
         // the limit of the overlay: an injection point is resolved by Micronaut from the compiled metadata of
         // the definitions, which a qualifier added as the container starts is not part of
         try (SeContainer container = bootstrap(Widget.class, WantsATaggedWidget.class).addExtensions(new Tagging())
-            .initialize()) {
+            .addProperty(WantsATaggedWidget.DEPLOYED, true).initialize()) {
             assertThrows(RuntimeException.class, () -> container.select(WantsATaggedWidget.class).get().widget());
         }
     }
