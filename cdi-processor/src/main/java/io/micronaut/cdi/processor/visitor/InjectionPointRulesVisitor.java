@@ -69,6 +69,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             // recording the unresolved form here would shadow that resolution
             return;
         }
+        leaveUninjected(element);
         boolean normalScoped = isNormalScoped(element);
         // a type variable of a generic class is resolved by whoever extends it, where the class is no bean of
         // its own; a bean has nothing to resolve its variable, and an injection point of it is the definition
@@ -289,6 +290,35 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         java.util.List<? extends ClassElement> uppers = wildcard.getUpperBounds();
         return uppers.isEmpty() || uppers.size() == 1 && "java.lang.Object".equals(uppers.get(0).getName());
+    }
+
+    /**
+     * Takes the qualifiers off the fields of a bean that are no injection point: CDI 4.1 section 3.6 has a field
+     * injected where it is annotated {@code Inject}, and nowhere else, and a qualifier on any other field - one
+     * written there, or one an extension added - qualifies nothing. Micronaut injects a field that declares a
+     * qualifier, so one left in place would make the field an injection point. A producer field keeps its
+     * qualifiers, which are those of the bean it produces.
+     */
+    private static void leaveUninjected(ClassElement element) {
+        if (!element.hasAnnotation("io.micronaut.cdi.annotation.CdiScope")) {
+            return;
+        }
+        for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
+            if (field.isStatic() || field.isFinal() || isInjectedField(field)
+                || field.hasDeclaredAnnotation(Cdi.PRODUCES)
+                || field.hasStereotype("io.micronaut.context.annotation.Value")
+                || field.hasStereotype("io.micronaut.context.annotation.Property")) {
+                continue;
+            }
+            for (String qualifier : field.getAnnotationMetadata().getDeclaredMetadata()
+                .getAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER)) {
+                field.removeAnnotation(qualifier);
+            }
+        }
+    }
+
+    private static boolean isInjectedField(FieldElement field) {
+        return field.hasDeclaredAnnotation(AnnotationUtil.INJECT) || field.hasDeclaredAnnotation("jakarta.inject.Inject");
     }
 
     /**

@@ -101,6 +101,13 @@ The container does not yet report an unsatisfied or ambiguous dependency, nor tw
 starts: an application learns of an unsatisfied or ambiguous dependency when the bean that has it is created.
 The kit's adapter asks those questions of each deployment it starts.
 
+### A field is injected only where it is annotated Inject
+
+*CDI 4.1 section 3.6.* Micronaut injects a field that declares a qualifier even without `@Inject`. A qualifier on
+a field of a bean that is neither injected nor a producer field qualifies nothing in the specification, whether
+it was written there or a build compatible extension added it, so it is taken off as the bean compiles and the
+field is left as it was initialized.
+
 ### A private producer or observer is read reflectively
 
 *Sections 2.2.2, 2.2.3 and 2.8.4.* The specification allows a producer method, a producer field and an observer
