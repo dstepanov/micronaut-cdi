@@ -15,9 +15,9 @@
  */
 package io.micronaut.cdi.processor.extension;
 
-import io.micronaut.cdi.annotation.CdiRecordedType;
-import io.micronaut.cdi.annotation.CdiTypeEntry;
-import io.micronaut.cdi.annotation.CdiTypeIndex;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
+import io.micronaut.cdi.internal.metadata.CdiTypeEntry;
+import io.micronaut.cdi.internal.metadata.CdiTypeIndex;
 import io.micronaut.cdi.processor.visitor.BeanTypesVisitor;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -135,7 +135,7 @@ final class TypeIndexCollector {
                 String className = PREFIX + suffix + (part == 0 ? "" : "_" + part);
                 String source = "package " + packageName + (kotlin ? "" : ";") + "\n\n"
                     + "@jakarta.inject.Singleton\n"
-                    + "@io.micronaut.cdi.annotation.CdiExtensionComponents\n"
+                    + "@io.micronaut.cdi.internal.metadata.CdiExtensionComponents\n"
                     + (kotlin ? "class " + className + "\n" : "final class " + className + " {\n}\n");
                 RECORDS.put(packageName + "." + className, AnnotationValue.builder(CdiTypeIndex.class)
                     .member("value", chunk.toArray(new AnnotationValue<?>[0])).build());

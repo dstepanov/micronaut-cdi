@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.context;
 
-import io.micronaut.cdi.annotation.CdiRequestScope;
+import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;

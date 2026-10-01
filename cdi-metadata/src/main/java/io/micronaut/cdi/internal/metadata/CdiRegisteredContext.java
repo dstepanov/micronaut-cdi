@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.internal.metadata;
 
 import io.micronaut.core.annotation.Internal;
 
@@ -24,23 +24,30 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The generic hierarchies of the classes of one package of a compilation, written by the processor on a class
- * it generates in that package, so that the runtime reads them from compiled metadata rather than from the
- * classes.
+ * Marks the bean definition generated for a context class a build compatible extension registered with
+ * {@code MetaAnnotations.addContext} (section 2.10.1), and records the scope the context serves: the container
+ * reads the scope off the definition and instantiates the context through it.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Internal
-public @interface CdiTypeIndex {
+public @interface CdiRegisteredContext {
 
     /**
-     * The classes.
+     * The scope annotation the context holds the instances of.
      *
-     * @return One entry for each class
+     * @return The scope annotation
      */
-    CdiTypeEntry[] value();
+    Class<?> scope();
+
+    /**
+     * Whether the scope is a normal one.
+     *
+     * @return Whether it is normal
+     */
+    boolean normal() default false;
 }

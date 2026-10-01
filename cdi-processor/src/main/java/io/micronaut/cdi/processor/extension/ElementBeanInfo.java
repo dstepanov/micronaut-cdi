@@ -20,7 +20,7 @@ import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementFieldInfo;
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -223,7 +223,7 @@ public final class ElementBeanInfo implements InterceptorInfo {
     public @Nullable String name() {
         return declaration().getAnnotationMetadata().stringValue("jakarta.inject.Named")
             // a stereotype-supplied default name is recorded as CdiName, with no Named materialized
-            .or(() -> declaration().getAnnotationMetadata().stringValue("io.micronaut.cdi.annotation.CdiName"))
+            .or(() -> declaration().getAnnotationMetadata().stringValue("io.micronaut.cdi.internal.metadata.CdiName"))
             .orElse(null);
     }
 

@@ -15,9 +15,9 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.annotation.CdiApplicationScope;
-import io.micronaut.cdi.annotation.CdiRequestScope;
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiRequestScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.Internal;
@@ -82,9 +82,9 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                         member.removeAnnotation(name);
                     }
                 }
-                member.removeAnnotation("io.micronaut.cdi.annotation.CdiScope");
-                member.removeAnnotation("io.micronaut.cdi.annotation.CdiApplicationScope");
-                member.removeAnnotation("io.micronaut.cdi.annotation.CdiRequestScope");
+                member.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiScope");
+                member.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiApplicationScope");
+                member.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiRequestScope");
                 member.removeAnnotation("io.micronaut.runtime.context.scope.ScopedProxy");
             }
         }

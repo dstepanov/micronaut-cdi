@@ -104,10 +104,10 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
         }
         element.removeAnnotation("jakarta.enterprise.context.RequestScoped");
         element.removeAnnotation("jakarta.enterprise.context.ApplicationScoped");
-        element.removeAnnotation("io.micronaut.cdi.annotation.CdiRequestScope");
-        element.removeAnnotation("io.micronaut.cdi.annotation.CdiApplicationScope");
+        element.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiRequestScope");
+        element.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiApplicationScope");
         element.annotate("io.micronaut.context.annotation.Prototype");
-        element.annotate("io.micronaut.cdi.annotation.CdiUnproxyable", builder -> builder.value(reason));
+        element.annotate("io.micronaut.cdi.internal.metadata.CdiUnproxyable", builder -> builder.value(reason));
     }
 
     /**
@@ -154,11 +154,11 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             return true;
         }
         return element.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal")
+            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal")
             .orElse(false);
     }
 
     private static boolean isBeanOfTheSpecification(ClassElement element) {
-        return element.hasStereotype("io.micronaut.cdi.annotation.CdiScope");
+        return element.hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope");
     }
 }

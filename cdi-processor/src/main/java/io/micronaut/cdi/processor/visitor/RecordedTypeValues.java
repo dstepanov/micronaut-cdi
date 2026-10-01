@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.annotation.CdiRecordedType;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;

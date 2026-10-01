@@ -16,9 +16,8 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
-import io.micronaut.cdi.annotation.CdiRecordedType;
-import io.micronaut.cdi.annotation.CdiSyntheticParameter;
-import io.micronaut.cdi.runtime.RecordedInvoker;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -315,7 +314,7 @@ final class SyntheticRecords {
     static AnnotationValue<CdiSyntheticParameter> invokers(String key, boolean array, InvokerInfo... values) {
         AnnotationValue<?>[] records = new AnnotationValue<?>[values.length];
         for (int i = 0; i < records.length; i++) {
-            if (!(values[i] instanceof RecordedInvoker invoker)) {
+            if (!(values[i] instanceof ElementInvokerInfo invoker)) {
                 throw new IllegalArgumentException("The invoker " + values[i] + " was not built by the "
                     + "registration phase of this compilation");
             }

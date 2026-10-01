@@ -42,6 +42,6 @@ public final class AnyAnnotationTransformer implements NamedAnnotationTransforme
     @Override
     public List<AnnotationValue<?>> transform(AnnotationValue<Annotation> annotation,
                                               VisitorContext visitorContext) {
-        return List.of(AnnotationValue.builder("io.micronaut.cdi.annotation.CdiAny").build());
+        return List.of(AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiAny").build());
     }
 }

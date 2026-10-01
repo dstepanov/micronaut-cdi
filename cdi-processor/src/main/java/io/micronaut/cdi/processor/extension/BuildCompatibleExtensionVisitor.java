@@ -23,7 +23,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
@@ -321,7 +321,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         contextRecordWritten = true;
         GeneratedSource source = new GeneratedSource(context.getLanguage())
             .annotation("jakarta.inject.Singleton", null)
-            .annotation("io.micronaut.cdi.annotation.CdiExtensionQualifiers",
+            .annotation("io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers",
                 new GeneratedSource(context.getLanguage()).strings(discovered.registeredQualifiers()));
         write(context, "ExtensionContextRecordHolder", source, "The extension qualifier record");
     }
@@ -341,7 +341,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 try {
                     contexts.add(new SynthesisPhase.Component(
                         SyntheticRecords.classElement(context, contextClass, "context"),
-                        AnnotationValue.builder("io.micronaut.cdi.annotation.CdiRegisteredContext")
+                        AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiRegisteredContext")
                             .member("scope", new io.micronaut.core.annotation.AnnotationClassValue<>(scopeName))
                             .member("normal", discovered.isNormalContext(scopeName))
                             .build()));
@@ -370,7 +370,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         boolean kotlin = context.getLanguage() == VisitorContext.Language.KOTLIN;
         StringBuilder source = new StringBuilder("package ").append(GENERATED).append(kotlin ? "" : ";").append("\n\n")
             .append("@io.micronaut.context.annotation.Factory\n")
-            .append("@io.micronaut.cdi.annotation.CdiExtensionComponents\n")
+            .append("@io.micronaut.cdi.internal.metadata.CdiExtensionComponents\n")
             .append(kotlin ? "class " : "final class ").append(className).append(" {\n");
         Map<String, AnnotationValue<?>> records = new java.util.LinkedHashMap<>();
         for (SynthesisPhase.Component component : components) {
@@ -428,7 +428,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         String end = context.getLanguage() == VisitorContext.Language.KOTLIN ? "" : ";";
         boolean kotlin = context.getLanguage() == VisitorContext.Language.KOTLIN;
         writeSource(context, className, "package " + GENERATED + end + "\n\n"
-            + "@io.micronaut.cdi.annotation.CdiExtensionComponents\n"
+            + "@io.micronaut.cdi.internal.metadata.CdiExtensionComponents\n"
             + (kotlin ? "class " + className + "\n" : "final class " + className + " {\n}\n"),
             "The marker of the end of registration");
     }
@@ -757,7 +757,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         if (discovered.isScanned(element.getName())
             && !element.getAnnotationMetadata().hasStereotype("jakarta.inject.Scope")
-            && !element.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.annotation.CdiScope")) {
+            && !element.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope")) {
             // added to the scanned classes during discovery: a bean as though it declared the dependent
             // scope. Only the prototype pseudo-scope is written — a scope a stereotype gives the class must
             // win, and a bean with nothing else reports the dependent scope anyway

@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.reflection;
 
-import io.micronaut.cdi.annotation.CdiProducer;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.runtime.CdiAssignability;
 import io.micronaut.cdi.runtime.CdiBean;
 import io.micronaut.cdi.runtime.CdiBeanContainer;

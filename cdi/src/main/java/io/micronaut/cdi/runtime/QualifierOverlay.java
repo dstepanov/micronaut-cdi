@@ -75,7 +75,7 @@ public final class QualifierOverlay {
      * @return The qualifiers
      */
     List<CdiQualifier> apply(BeanDefinition<?> definition, List<CdiQualifier> declared) {
-        if (added.isEmpty() || definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
+        if (added.isEmpty() || definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")) {
             // what a producer of the class produces is a bean of its own, which the class's annotations do
             // not qualify
             return declared;

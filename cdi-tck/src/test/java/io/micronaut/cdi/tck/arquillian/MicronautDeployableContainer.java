@@ -124,7 +124,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         try {
             ApplicationContext context = ApplicationContext.builder()
                 .beansPredicate(bean -> {
-                    if (bean.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiTypeIndex")) {
+                    if (bean.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiTypeIndex")) {
                         // what the processor recorded of the classes of a package: data of the compilation,
                         // and no bean of any archive
                         return true;

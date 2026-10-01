@@ -69,11 +69,11 @@ final class ScenarioContexts {
     static String ownerOf(BeanType<?> bean) {
         if (bean instanceof BeanDefinition<?> definition) {
             String producer = definition.getAnnotationMetadata()
-                .stringValue("io.micronaut.cdi.annotation.CdiProducer", "declaringType").orElse(null);
+                .stringValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
             if (producer != null) {
                 return producer;
             }
-            if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiTypeIndex")) {
+            if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiTypeIndex")) {
                 // what the processor recorded of the classes of a package: data of the compilation
                 return "";
             }

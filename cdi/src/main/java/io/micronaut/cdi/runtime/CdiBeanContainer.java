@@ -67,7 +67,7 @@ import java.util.Set;
  * @since 1.0
  */
 @io.micronaut.context.annotation.Context
-@io.micronaut.cdi.annotation.CdiScope("jakarta.enterprise.context.Dependent")
+@io.micronaut.cdi.internal.metadata.CdiScope("jakarta.enterprise.context.Dependent")
 @jakarta.enterprise.inject.Default
 @Internal
 public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.MicronautBeanContainer {
@@ -138,7 +138,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         if (bean instanceof CdiBean<?> cdiBean) {
             String unproxyable = cdiBean.definition().getAnnotationMetadata()
-                .stringValue("io.micronaut.cdi.annotation.CdiUnproxyable").orElse(null);
+                .stringValue("io.micronaut.cdi.internal.metadata.CdiUnproxyable").orElse(null);
             if (unproxyable != null) {
                 // section 3.11: a contextual reference to a bean in a normal scope is its client proxy, and
                 // this bean cannot have one

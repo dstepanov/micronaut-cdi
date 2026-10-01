@@ -50,7 +50,7 @@ class ModelAnnotationsTest {
         assertTrue(seen.contains(Recorded.class.getName()), seen.toString());
         assertTrue(seen.contains(ApplicationScoped.class.getName()), seen.toString());
         // ApplicationScoped is mapped to Micronaut's own scope annotation, which is reported too
-        assertTrue(seen.contains("io.micronaut.cdi.annotation.CdiScope"), seen.toString());
+        assertTrue(seen.contains("io.micronaut.cdi.internal.metadata.CdiScope"), seen.toString());
         // NullMarked is remapped to a marker of Micronaut's own; the name the source wrote is gone from the record
         assertTrue(seen.contains("io.micronaut.core.annotation.NullMarked"), seen.toString());
     }

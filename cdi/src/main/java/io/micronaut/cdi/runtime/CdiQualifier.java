@@ -417,7 +417,7 @@ public final class CdiQualifier {
      */
     public static List<CdiQualifier> declared(AnnotationMetadata metadata) {
         List<CdiQualifier> qualifiers = new ArrayList<>(2);
-        if (metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiAny")) {
+        if (metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiAny")) {
             // Any was written here; it is carried as the marker so that Micronaut does not narrow by it
             qualifiers.add(ANY);
         }
@@ -430,7 +430,7 @@ public final class CdiQualifier {
             if (isMicronautOwn(name)) {
                 continue;
             }
-            if (NAMED_NAME.equals(name) && metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiName")) {
+            if (NAMED_NAME.equals(name) && metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiName")) {
                 // the name came through a stereotype — recorded as CdiName — so the bean has the name, but
                 // Named is not among its qualifiers (section 2.6.1). The jakarta annotation beside it is the
                 // default Micronaut materialized from the stereotype, not something the author wrote

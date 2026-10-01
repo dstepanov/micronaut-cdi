@@ -108,7 +108,7 @@ public final class BindingTypeVisitor implements TypeElementVisitor<Object, Obje
 
     private static boolean isMicronautOwn(String name) {
         return name.startsWith("io.micronaut.context.annotation.") || name.startsWith("io.micronaut.core.annotation.")
-            || name.startsWith("io.micronaut.cdi.annotation.") || name.startsWith("io.micronaut.aop.");
+            || name.startsWith("io.micronaut.cdi.internal.metadata.") || name.startsWith("io.micronaut.aop.");
     }
 
     private void record(ClassElement type, ClassElement origin, VisitorContext context) {

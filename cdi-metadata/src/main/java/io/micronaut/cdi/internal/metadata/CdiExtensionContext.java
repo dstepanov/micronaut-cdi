@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.internal.metadata;
 
 import io.micronaut.core.annotation.Internal;
 
@@ -24,23 +24,37 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The bean name a stereotype gave a bean, kept apart from {@code jakarta.inject.Named} on purpose: a name that
- * came through a stereotype names the bean — sections 2.1.6 and 2.6.1 — without putting the {@code Named}
- * qualifier among the bean's qualifiers, which writing the jakarta annotation would have.
+ * Records, on a scope annotation a build compatible extension registered, which context classes hold the
+ * scope's instances (section 2.10.1): the runtime reads it off the beans of the scope and stands the contexts
+ * up as it starts.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Target(ElementType.ANNOTATION_TYPE)
 @Internal
-public @interface CdiName {
+public @interface CdiExtensionContext {
 
     /**
-     * The name.
+     * The names of the context classes.
+     *
+     * @return The names
+     */
+    String[] value();
+
+    /**
+     * The name of the scope annotation itself.
      *
      * @return The name
      */
-    String value();
+    String scopeAnnotation() default "";
+
+    /**
+     * Whether the scope is a normal one.
+     *
+     * @return Whether it is normal
+     */
+    boolean normal() default false;
 }

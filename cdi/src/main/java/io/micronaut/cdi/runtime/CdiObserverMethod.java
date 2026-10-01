@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
-import io.micronaut.cdi.annotation.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationValue;

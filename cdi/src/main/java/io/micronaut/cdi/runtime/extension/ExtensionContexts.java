@@ -90,9 +90,9 @@ public final class ExtensionContexts {
                 io.micronaut.cdi.runtime.ExtensionQualifiers.register(qualifierName);
                 registeredQualifiers.add(qualifierName);
             }
-            AnnotationValue<io.micronaut.cdi.annotation.CdiExtensionQualifiers> qualifiers =
+            AnnotationValue<io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers> qualifiers =
                 definition.getAnnotationMetadata()
-                    .getAnnotation(io.micronaut.cdi.annotation.CdiExtensionQualifiers.class);
+                    .getAnnotation(io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.class);
             if (qualifiers != null) {
                 for (String entry : qualifiers.stringValues()) {
                     String[] parts = entry.split("\\|", -1);
@@ -108,16 +108,16 @@ public final class ExtensionContexts {
                 }
             }
             if (definition.getAnnotationMetadata()
-                .hasAnnotation(io.micronaut.cdi.annotation.CdiRegisteredContext.class)) {
+                .hasAnnotation(io.micronaut.cdi.internal.metadata.CdiRegisteredContext.class)) {
                 contextDefinitions.add(definition);
             }
         }
         // one instance of every context class, whichever compilations of the application registered it
         Set<String> seenContexts = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : contextDefinitions) {
-            AnnotationValue<io.micronaut.cdi.annotation.CdiRegisteredContext> registered =
+            AnnotationValue<io.micronaut.cdi.internal.metadata.CdiRegisteredContext> registered =
                 definition.getAnnotationMetadata()
-                    .getAnnotation(io.micronaut.cdi.annotation.CdiRegisteredContext.class);
+                    .getAnnotation(io.micronaut.cdi.internal.metadata.CdiRegisteredContext.class);
             Class<? extends Annotation> scopeAnnotation = registered == null ? null : scopeOf(registered);
             if (scopeAnnotation == null) {
                 throw new IllegalStateException("The scope annotation of the context "
@@ -176,8 +176,8 @@ public final class ExtensionContexts {
             normalScopes.add(scopeName);
         }
         Class<? extends Annotation> served = switch (scopeName) {
-            case "jakarta.enterprise.context.ApplicationScoped" -> io.micronaut.cdi.annotation.CdiApplicationScope.class;
-            case "jakarta.enterprise.context.RequestScoped" -> io.micronaut.cdi.annotation.CdiRequestScope.class;
+            case "jakarta.enterprise.context.ApplicationScoped" -> io.micronaut.cdi.internal.metadata.CdiApplicationScope.class;
+            case "jakarta.enterprise.context.RequestScoped" -> io.micronaut.cdi.internal.metadata.CdiRequestScope.class;
             default -> scopeAnnotation;
         };
         RuntimeBeanDefinition.Builder<io.micronaut.context.scope.CustomScope> builder = RuntimeBeanDefinition
@@ -185,9 +185,9 @@ public final class ExtensionContexts {
                 () -> new ExtensionCustomScope(served, contextsOfScope, beanContext))
             .singleton(true)
             .typeArguments(Argument.of(served));
-        if (served == io.micronaut.cdi.annotation.CdiApplicationScope.class) {
+        if (served == io.micronaut.cdi.internal.metadata.CdiApplicationScope.class) {
             builder.replaces(io.micronaut.cdi.context.ApplicationScope.class);
-        } else if (served == io.micronaut.cdi.annotation.CdiRequestScope.class) {
+        } else if (served == io.micronaut.cdi.internal.metadata.CdiRequestScope.class) {
             builder.replaces(io.micronaut.cdi.context.RequestScope.class);
         }
         beanContext.registerBeanDefinition(builder.build());
@@ -217,7 +217,7 @@ public final class ExtensionContexts {
         metadata.addDeclaredStereotype(List.of("jakarta.enterprise.inject.Default"),
             io.micronaut.core.annotation.AnnotationUtil.QUALIFIER, Map.of());
         // section 3.9 has the bean of an extension application scoped; there is one instance and no proxy
-        metadata.addDeclaredAnnotation(io.micronaut.cdi.annotation.CdiScope.class.getName(),
+        metadata.addDeclaredAnnotation(io.micronaut.cdi.internal.metadata.CdiScope.class.getName(),
             Map.of("value", "jakarta.enterprise.context.ApplicationScoped", "normal", false));
         beanContext.registerBeanDefinition(RuntimeBeanDefinition
             .builder((Class) extension.getClass(), () -> extension)
@@ -238,7 +238,7 @@ public final class ExtensionContexts {
 
     @SuppressWarnings("unchecked")
     private static @org.jspecify.annotations.Nullable Class<? extends Annotation> scopeOf(
-        AnnotationValue<io.micronaut.cdi.annotation.CdiRegisteredContext> registered) {
+        AnnotationValue<io.micronaut.cdi.internal.metadata.CdiRegisteredContext> registered) {
         return (Class<? extends Annotation>) registered.classValue("scope").orElse(null);
     }
 

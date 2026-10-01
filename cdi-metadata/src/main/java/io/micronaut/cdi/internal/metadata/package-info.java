@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 /**
- * The annotations the processor records what it compiled with, which the container reads at runtime.
+ * The annotations the processor records what it compiled with, which the container reads at runtime. They are
+ * internal metadata, written by the processor and read by the container, and not for an application to write or
+ * read.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @NullMarked
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.internal.metadata;
 
 import org.jspecify.annotations.NullMarked;

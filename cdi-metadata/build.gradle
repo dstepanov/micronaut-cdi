@@ -1,0 +1,13 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-module"
+}
+
+// The annotations the processor records what it compiled on the bean definitions with, and the container reads
+// at runtime: internal metadata, shared by the two and by nothing else. One is an executable method, which
+// micronaut-inject declares. Two are a Micronaut scope with a scoped proxy, and ScopedProxy is declared by
+// micronaut-context: it is needed to compile them, and is on the classpath wherever they are read - the runtime
+// has it, and a compilation reads it from the application's classpath - so it is not carried to the processor.
+dependencies {
+    api mn.micronaut.inject
+    compileOnly mn.micronaut.context
+}

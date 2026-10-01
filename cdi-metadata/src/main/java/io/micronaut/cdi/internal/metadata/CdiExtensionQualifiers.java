@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.internal.metadata;
 
 import io.micronaut.core.annotation.Internal;
 
@@ -24,22 +24,22 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks the bean definition generated for the disposer class of a synthetic bean (section 2.10.5), so that the
- * container instantiates the disposer through the definition rather than reflectively.
+ * The annotations the build compatible extensions of one compilation made qualifiers of, written onto a
+ * generated class so the runtime checks — which read the annotation classes reflectively — know them too.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Internal
-public @interface CdiSyntheticDisposer {
+public @interface CdiExtensionQualifiers {
 
     /**
-     * The {@link CdiSyntheticBean#id()} of the bean the disposer disposes of.
+     * The annotation names.
      *
-     * @return The identifier
+     * @return The names
      */
-    String value();
+    String[] value();
 }

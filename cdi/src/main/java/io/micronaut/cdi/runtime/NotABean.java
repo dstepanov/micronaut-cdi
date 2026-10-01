@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.runtime;
 
 import io.micronaut.context.condition.Condition;
 import io.micronaut.context.condition.ConditionContext;
@@ -42,6 +42,6 @@ public final class NotABean implements Condition {
         // a bean produced from the class carries the class's annotations, this condition among them, but the
         // veto is on the class being a bean — what a producer makes of it is a bean of the producer's
         return context.getComponent().getAnnotationMetadata()
-            .hasAnnotation("io.micronaut.cdi.annotation.CdiProducer");
+            .hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer");
     }
 }

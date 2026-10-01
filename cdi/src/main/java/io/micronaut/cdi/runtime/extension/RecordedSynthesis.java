@@ -15,11 +15,11 @@
  */
 package io.micronaut.cdi.runtime.extension;
 
-import io.micronaut.cdi.annotation.CdiScope;
-import io.micronaut.cdi.annotation.CdiSyntheticBean;
-import io.micronaut.cdi.annotation.CdiSyntheticDisposer;
-import io.micronaut.cdi.annotation.CdiSyntheticObserver;
-import io.micronaut.cdi.annotation.CdiSyntheticParameter;
+import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.runtime.CdiBeanContainer;
 import io.micronaut.cdi.runtime.CdiInjectionPoint;
 import io.micronaut.cdi.runtime.CdiInstance;
@@ -213,9 +213,9 @@ public final class RecordedSynthesis {
     private static Class<? extends Annotation> contextScopeOf(Class<? extends Annotation> scope) {
         return switch (scope.getName()) {
             case "jakarta.enterprise.context.ApplicationScoped" ->
-                io.micronaut.cdi.annotation.CdiApplicationScope.class;
+                io.micronaut.cdi.internal.metadata.CdiApplicationScope.class;
             case "jakarta.enterprise.context.RequestScoped" ->
-                io.micronaut.cdi.annotation.CdiRequestScope.class;
+                io.micronaut.cdi.internal.metadata.CdiRequestScope.class;
             default -> scope;
         };
     }

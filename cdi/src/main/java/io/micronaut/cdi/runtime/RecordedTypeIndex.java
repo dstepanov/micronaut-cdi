@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
-import io.micronaut.cdi.annotation.CdiTypeIndex;
+import io.micronaut.cdi.internal.metadata.CdiTypeIndex;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;

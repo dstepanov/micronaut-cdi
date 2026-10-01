@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.runtime;
 
-import io.micronaut.cdi.annotation.CdiRecordedInvoker;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -23,14 +22,13 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.ProxyBeanDefinition;
-import jakarta.enterprise.inject.build.compatible.spi.InvokerInfo;
 import jakarta.enterprise.invoke.Invoker;
 import org.jspecify.annotations.Nullable;
 
 
 /**
- * One invoker an extension built (CDI 4.1, chapter 7): what the {@code InvokerBuilder} of the registration
- * phase records, and what invokes the method at runtime.
+ * One invoker an extension built (CDI 4.1, chapter 7), read from the record the registration phase wrote, and
+ * what invokes the method at runtime.
  *
  * <p>The registration phase runs while the bean is compiled, and building the invoker marks the method
  * executable, so that the compiled bean definition carries it — the invocation itself reads the compiled
@@ -44,7 +42,7 @@ import org.jspecify.annotations.Nullable;
  * @since 1.0
  */
 @Internal
-public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Object> {
+public final class RecordedInvoker implements Invoker<Object, Object> {
 
     private final String beanClassName;
     private final String methodName;
@@ -61,22 +59,6 @@ public final class RecordedInvoker implements InvokerInfo, Invoker<Object, Objec
         this.staticMethod = staticMethod;
         this.instanceLookup = instanceLookup;
         this.argumentLookups = argumentLookups;
-    }
-
-    /**
-     * The invoker as the annotation value a synthetic component carries it to runtime in.
-     *
-     * @return The record
-     */
-    public AnnotationValue<CdiRecordedInvoker> toRecord() {
-        return AnnotationValue.builder(CdiRecordedInvoker.class)
-            .member("beanClass", beanClassName)
-            .member("method", methodName)
-            .member("parameterTypes", parameterTypeNames)
-            .member("staticMethod", staticMethod)
-            .member("instanceLookup", instanceLookup)
-            .member("argumentLookups", argumentLookups)
-            .build();
     }
 
     /**

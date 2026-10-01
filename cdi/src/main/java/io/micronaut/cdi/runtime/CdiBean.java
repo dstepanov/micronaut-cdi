@@ -16,7 +16,7 @@
 package io.micronaut.cdi.runtime;
 
 import io.micronaut.core.type.Argument;
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
@@ -84,7 +84,7 @@ public class CdiBean<T> implements Bean<T> {
         // the bean class of a produced bean is the class that declares its producer (the specification's
         // Bean.getBeanClass), not the class of what it produces
         Class<?> declaring = definition.getAnnotationMetadata()
-            .classValue("io.micronaut.cdi.annotation.CdiProducer", "declaringType").orElse(null);
+            .classValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
         return declaring != null ? declaring : beanClass();
     }
 
@@ -145,7 +145,7 @@ public class CdiBean<T> implements Bean<T> {
      */
     private static java.util.@Nullable List<Argument<?>> recordedClosureOf(BeanDefinition<?> definition) {
         java.util.List<io.micronaut.core.annotation.AnnotationValue<Annotation>> records = definition
-            .getAnnotationMetadata().findAnnotation("io.micronaut.cdi.annotation.CdiBeanTypes")
+            .getAnnotationMetadata().findAnnotation("io.micronaut.cdi.internal.metadata.CdiBeanTypes")
             .map(types -> types.getAnnotations("value")).orElse(java.util.List.of());
         if (records.isEmpty()) {
             return null;
@@ -173,7 +173,7 @@ public class CdiBean<T> implements Bean<T> {
         if (recorded != null) {
             // what the processor recorded of the bean as it compiled it
             closure.addAll(recorded);
-        } else if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")) {
+        } else if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")) {
             // a produced bean is a bean of the type the producer declared — with the arguments it was written
             // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
             // class's own declaration
@@ -283,7 +283,7 @@ public class CdiBean<T> implements Bean<T> {
     public @Nullable String getName() {
         // the stereotype-given name first: where one was recorded, the jakarta annotation beside it is only
         // the default Micronaut materialized, spelled by Micronaut's rules rather than the specification's
-        return definition.getAnnotationMetadata().stringValue("io.micronaut.cdi.annotation.CdiName")
+        return definition.getAnnotationMetadata().stringValue("io.micronaut.cdi.internal.metadata.CdiName")
             .or(() -> definition.getAnnotationMetadata().stringValue("jakarta.inject.Named"))
             .orElse(null);
     }
@@ -316,7 +316,7 @@ public class CdiBean<T> implements Bean<T> {
         BeanDefinition<T> described = targetDefinition();
         io.micronaut.inject.ConstructorInjectionPoint<T> constructor = described.getConstructor();
         io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation> producer =
-            described.getAnnotationMetadata().getAnnotation("io.micronaut.cdi.annotation.CdiProducer");
+            described.getAnnotationMetadata().getAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer");
         if (producer == null) {
             for (io.micronaut.core.type.Argument<?> argument : constructor.getArguments()) {
                 if (isContainerMachinery(argument)) {
@@ -508,7 +508,7 @@ public class CdiBean<T> implements Bean<T> {
 
     final boolean isNormalScoped() {
         return definition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false);
+            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false);
     }
 
     final boolean isDependent() {

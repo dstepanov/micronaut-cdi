@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.context.condition.Condition;
 import io.micronaut.context.condition.ConditionContext;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -59,7 +60,7 @@ public final class UnselectedAlternative implements Condition {
         }
         boolean producer = selectable.booleanValue("producer").orElse(false);
         if (!producer && context.getComponent().getAnnotationMetadata()
-            .hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")
+            .hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")
             && !isDeclaredBy(context.getComponent(), selectable.stringValue().orElse(null))) {
             // the selection is about the class being a bean; what a producer elsewhere makes of the class is a
             // bean of the producer's, the same way a vetoed class may still be produced. A producer the class

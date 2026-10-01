@@ -117,8 +117,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             return java.util.Optional.of(primitiveDefault);
         }
         io.micronaut.core.annotation.AnnotationMetadata metadata = beanDefinition.getAnnotationMetadata();
-        if (metadata.hasAnnotation("io.micronaut.cdi.annotation.CdiProducer")
-            && (metadata.booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false)
+        if (metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")
+            && (metadata.booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)
                 || beanDefinition.isSingleton())) {
             // section 3.2.2: an instance in any scope but dependent is shared, and a null cannot be
             throw new jakarta.enterprise.inject.IllegalProductException(
@@ -136,7 +136,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         // normal-scoped beans deadlocks — and section 4.3 has the proxy break exactly that circle
         if (beanDefinition instanceof ProxyBeanDefinition<?>
             && beanDefinition.getAnnotationMetadata()
-                .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false)) {
+                .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
             return false;
         }
         return true;
@@ -149,7 +149,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         // dependency chain: carrying the path the proxy was injected on would read a legal circular chain of
         // normal-scoped beans — the one section 4.3 has the proxy break — as a circular dependency
         if (proxyBeanDefinition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false)) {
+            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
             return false;
         }
         return true;
@@ -181,8 +181,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      * Whether the definition was compiled as a bean of the specification, which is what its scope marker says.
      */
     private static boolean isBeanOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiScope")
-            || definition.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.annotation.CdiScope");
+        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")
+            || definition.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope");
     }
 
     /**

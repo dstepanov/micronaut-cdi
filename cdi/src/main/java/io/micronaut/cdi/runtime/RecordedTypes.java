@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
-import io.micronaut.cdi.annotation.CdiRecordedType;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;

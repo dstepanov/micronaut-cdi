@@ -32,7 +32,7 @@ public final class SpecificationAnnotationFilter implements LanguageModelAnnotat
 
     private static final String[] MICRONAUT_PACKAGES = {
         "io.micronaut.core.annotation.", "io.micronaut.context.annotation.", "io.micronaut.inject.annotation.",
-        "io.micronaut.aop.", "io.micronaut.runtime.", "io.micronaut.cdi.annotation.", "io.micronaut.cdi.processor.",
+        "io.micronaut.aop.", "io.micronaut.runtime.", "io.micronaut.cdi.internal.metadata.", "io.micronaut.cdi.processor.",
     };
 
     // jspecify's marker as written, and as Micronaut remaps it

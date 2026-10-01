@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.internal.metadata;
 
 import io.micronaut.core.annotation.Internal;
 
@@ -24,22 +24,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The annotations the build compatible extensions of one compilation made qualifiers of, written onto a
- * generated class so the runtime checks — which read the annotation classes reflectively — know them too.
+ * The type closure of a bean (section 2.2.1), recorded while the bean is compiled: the bean class or the type a
+ * producer produces, and every class and interface above it, each with the type arguments the hierarchy gives
+ * it. The container reads the bean types from it rather than from the generic signatures of the classes.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Internal
-public @interface CdiExtensionQualifiers {
+public @interface CdiBeanTypes {
 
     /**
-     * The annotation names.
+     * The types, the bean's own first.
      *
-     * @return The names
+     * @return The type closure
      */
-    String[] value();
+    CdiRecordedType[] value();
 }

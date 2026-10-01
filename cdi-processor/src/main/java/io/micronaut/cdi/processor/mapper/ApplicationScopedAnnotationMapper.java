@@ -15,8 +15,8 @@
  */
 package io.micronaut.cdi.processor.mapper;
 
-import io.micronaut.cdi.annotation.CdiApplicationScope;
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;

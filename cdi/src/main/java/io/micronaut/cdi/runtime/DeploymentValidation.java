@@ -118,7 +118,7 @@ final class DeploymentValidation {
      */
     private void validateDisposer(BeanDefinition<?> definition, List<CdiBean<?>> beans) {
         AnnotationValue<?> disposer = definition.getAnnotationMetadata()
-            .getAnnotation("io.micronaut.cdi.annotation.CdiDisposer");
+            .getAnnotation("io.micronaut.cdi.internal.metadata.CdiDisposer");
         if (disposer == null) {
             return;
         }
@@ -154,7 +154,7 @@ final class DeploymentValidation {
     private void validateObservers(BeanDefinition<?> definition) {
         for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
             AnnotationValue<?> observer = method.getAnnotationMetadata()
-                .getAnnotation("io.micronaut.cdi.annotation.CdiObserver");
+                .getAnnotation("io.micronaut.cdi.internal.metadata.CdiObserver");
             if (observer == null) {
                 continue;
             }
@@ -173,7 +173,7 @@ final class DeploymentValidation {
      * given one by default, rather than a bean of Micronaut's own that only shares the context.
      */
     private static boolean isOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.annotation.CdiScope")
+        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")
             && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
     }
 
@@ -279,7 +279,7 @@ final class DeploymentValidation {
         }
         if (resolved instanceof CdiBean<?> bean) {
             String unproxyable = bean.definition().getAnnotationMetadata()
-                .stringValue("io.micronaut.cdi.annotation.CdiUnproxyable").orElse(null);
+                .stringValue("io.micronaut.cdi.internal.metadata.CdiUnproxyable").orElse(null);
             if (unproxyable != null) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "

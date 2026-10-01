@@ -195,7 +195,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         if (isNormal) {
             annotations.add(AnnotationValue.builder("io.micronaut.runtime.context.scope.ScopedProxy").build());
         }
-        annotations.add(AnnotationValue.builder("io.micronaut.cdi.annotation.CdiScope")
+        annotations.add(AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiScope")
             .value(scopeName)
             .member("normal", isNormal)
             .build());
@@ -215,7 +215,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
             return annotations;
         }
         List<AnnotationValue<?>> all = new ArrayList<>(annotations);
-        all.add(AnnotationValue.builder("io.micronaut.cdi.annotation.CdiExtensionContext")
+        all.add(AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiExtensionContext")
             .values(contextsOfScope.toArray(new String[0]))
             .member("scopeAnnotation", className)
             .member("normal", normalContexts.getOrDefault(className, false))

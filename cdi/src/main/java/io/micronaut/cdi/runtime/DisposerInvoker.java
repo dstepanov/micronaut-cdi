@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.runtime;
 
-import io.micronaut.cdi.annotation.CdiDisposer;
+import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.event.BeanPreDestroyEvent;

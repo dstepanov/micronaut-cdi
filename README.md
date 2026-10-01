@@ -61,6 +61,7 @@ public class Connections {
 | --- | --- |
 | `micronaut-cdi` | The runtime: the contexts of the scopes, and the parts of the container a bean can reach |
 | `micronaut-cdi-processor` | The annotation processor that reads the specification's annotations while a bean is compiled |
+| `micronaut-cdi-metadata` | Internal: the annotations the processor records on the bean definitions and the container reads (`io.micronaut.cdi.internal.metadata`) |
 | `micronaut-cdi-lang-model-ast` | The specification's language model (`jakarta.enterprise.lang.model`) read from Micronaut's compile-time AST, with no dependency on the container |
 | `micronaut-cdi-tck` | The scenarios of the specification's technology compatibility kit, compiled and exercised here |
 | `micronaut-cdi-tck-lang-model` | The kit's language model assertions, verified against `micronaut-cdi-lang-model-ast` by a Micronaut visitor as the kit compiles |

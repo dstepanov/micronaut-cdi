@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.annotation;
+package io.micronaut.cdi.internal.metadata;
 
 import io.micronaut.core.annotation.Internal;
 
@@ -24,23 +24,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The type closure of a bean (section 2.2.1), recorded while the bean is compiled: the bean class or the type a
- * producer produces, and every class and interface above it, each with the type arguments the hierarchy gives
- * it. The container reads the bean types from it rather than from the generic signatures of the classes.
+ * Where {@code jakarta.enterprise.inject.Any} was written, after it has been read.
+ *
+ * <p>Every bean has the {@code Any} qualifier, so at an injection point it asks for every bean of the type
+ * rather than narrowing to any of them. Micronaut narrows by every qualifier an injection point declares, so
+ * leaving {@code Any} in place — it is a qualifier annotation — would narrow to the beans that declared it,
+ * which is not what it means. It is read into this marker instead, which is not a qualifier, and the parts of
+ * the container that need to know it was written — the lookup and the event it qualifies — look for the
+ * marker.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
 @Internal
-public @interface CdiBeanTypes {
-
-    /**
-     * The types, the bean's own first.
-     *
-     * @return The type closure
-     */
-    CdiRecordedType[] value();
+public @interface CdiAny {
 }

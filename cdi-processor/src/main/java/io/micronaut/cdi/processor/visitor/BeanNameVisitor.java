@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -110,7 +110,7 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
         }
         // the name came through a stereotype: the bean has the name, but not the Named qualifier — writing
         // the jakarta annotation would put Named among the bean's qualifiers, which section 2.6 does not
-        element.annotate("io.micronaut.cdi.annotation.CdiName", builder -> builder.value(defaultName));
+        element.annotate("io.micronaut.cdi.internal.metadata.CdiName", builder -> builder.value(defaultName));
     }
 
     /**

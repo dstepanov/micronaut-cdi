@@ -94,14 +94,14 @@ public final class CdiResolution {
         // the scope the bean was described with, where one was recorded — a synthetic bean's metadata names
         // it without carrying the compiled stereotypes
         String declared = definition.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.annotation.CdiScope").orElse(null);
+            .stringValue("io.micronaut.cdi.internal.metadata.CdiScope").orElse(null);
         if (declared != null) {
             return "jakarta.enterprise.context.Dependent".equals(declared);
         }
         return !definition.getAnnotationMetadata()
-            .hasStereotype("io.micronaut.cdi.annotation.CdiApplicationScope")
+            .hasStereotype("io.micronaut.cdi.internal.metadata.CdiApplicationScope")
             && !definition.getAnnotationMetadata()
-            .hasStereotype("io.micronaut.cdi.annotation.CdiRequestScope");
+            .hasStereotype("io.micronaut.cdi.internal.metadata.CdiRequestScope");
     }
 
     public static int priorityOf(BeanDefinition<?> definition) {

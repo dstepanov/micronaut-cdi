@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.runtime.extension;
 
-import io.micronaut.cdi.annotation.CdiSyntheticParameter;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.runtime.CdiAnnotations;
 import io.micronaut.cdi.runtime.RecordedInvoker;
 import io.micronaut.core.annotation.AnnotationValue;

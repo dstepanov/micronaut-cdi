@@ -15,9 +15,8 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.core.annotation.AnnotationClassValue;
-import io.micronaut.cdi.annotation.NotABean;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
@@ -152,9 +151,9 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
                 .toList();
             element.annotate(Requires.class, builder -> builder
                 .member("condition", new AnnotationClassValue<>(
-                    "io.micronaut.cdi.annotation.UnselectedAlternative")));
+                    "io.micronaut.cdi.runtime.UnselectedAlternative")));
             String className = element.getName();
-            element.annotate("io.micronaut.cdi.annotation.CdiSelectableAlternative", builder -> {
+            element.annotate("io.micronaut.cdi.internal.metadata.CdiSelectableAlternative", builder -> {
                 builder.value(className);
                 if (!stereotypes.isEmpty()) {
                     builder.member("stereotypes", stereotypes.toArray(new String[0]));
@@ -240,6 +239,6 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
      */
     private static void notABean(ClassElement element) {
         element.annotate(Requires.class, builder -> builder
-            .member("condition", new AnnotationClassValue<>(NotABean.class.getName())));
+            .member("condition", new AnnotationClassValue<>("io.micronaut.cdi.runtime.NotABean")));
     }
 }

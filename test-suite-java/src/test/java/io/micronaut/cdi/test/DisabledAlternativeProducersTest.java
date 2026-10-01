@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.annotation.UnselectedAlternative;
+import io.micronaut.cdi.runtime.UnselectedAlternative;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Alternative;

@@ -387,7 +387,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
     private static boolean isNormalScoped(BeanDefinition<?> definition) {
         return definition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal")
+            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal")
             .orElse(false);
     }
 

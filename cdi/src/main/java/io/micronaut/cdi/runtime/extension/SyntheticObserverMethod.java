@@ -15,8 +15,8 @@
  */
 package io.micronaut.cdi.runtime.extension;
 
-import io.micronaut.cdi.annotation.CdiSyntheticObserver;
-import io.micronaut.cdi.annotation.CdiSyntheticParameter;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.runtime.CdiQualifier;
 import io.micronaut.cdi.runtime.RecordedTypes;
 import io.micronaut.context.BeanContext;

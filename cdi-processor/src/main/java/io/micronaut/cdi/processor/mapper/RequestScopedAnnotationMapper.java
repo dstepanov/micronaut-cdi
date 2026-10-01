@@ -15,8 +15,8 @@
  */
 package io.micronaut.cdi.processor.mapper;
 
-import io.micronaut.cdi.annotation.CdiRequestScope;
-import io.micronaut.cdi.annotation.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiRequestScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  * Reads the request scope as the Micronaut scope of the same meaning, whose context is
- * {@link io.micronaut.cdi.context.RequestScope}.
+ * {@code io.micronaut.cdi.context.RequestScope}.
  *
  * @author Denis Stepanov
  * @since 1.0

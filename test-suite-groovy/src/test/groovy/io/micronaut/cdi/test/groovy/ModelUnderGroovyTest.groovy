@@ -25,7 +25,7 @@ class ModelUnderGroovyTest {
             assertTrue(seen.contains(Recorded.name), seen.toString())
             assertTrue(seen.contains(ApplicationScoped.name), seen.toString())
             // the mapped scope annotation is reported too: nothing narrows the model here
-            assertTrue(seen.contains("io.micronaut.cdi.annotation.CdiScope"), seen.toString())
+            assertTrue(seen.contains("io.micronaut.cdi.internal.metadata.CdiScope"), seen.toString())
         }
     }
 

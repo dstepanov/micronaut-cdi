@@ -300,7 +300,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * qualifiers, which are those of the bean it produces.
      */
     private static void leaveUninjected(ClassElement element) {
-        if (!element.hasAnnotation("io.micronaut.cdi.annotation.CdiScope")) {
+        if (!element.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")) {
             return;
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
@@ -349,7 +349,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         // read from what the member itself declares: the annotation metadata of a member carries what its class
         // declares as well, and the class's scope is the one this must not be answered with
         return producer.getAnnotationMetadata().getDeclaredMetadata()
-            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal").orElse(false);
+            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false);
     }
 
     private static boolean isNormalScoped(ClassElement element) {
@@ -357,7 +357,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return true;
         }
         return element.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.annotation.CdiScope", "normal")
+            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal")
             .orElse(false);
     }
 }
