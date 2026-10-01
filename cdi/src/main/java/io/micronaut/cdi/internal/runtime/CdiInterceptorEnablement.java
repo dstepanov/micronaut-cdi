@@ -20,7 +20,7 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.value.PropertyResolver;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.interceptor.runtime.BoundInterceptorEnablement;
+import io.micronaut.interceptor.spi.BoundInterceptorEnablement;
 import jakarta.inject.Singleton;
 
 import java.util.List;
