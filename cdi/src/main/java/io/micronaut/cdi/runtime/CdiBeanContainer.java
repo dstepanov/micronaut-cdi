@@ -85,6 +85,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private final RequestScope requestScope;
     private final io.micronaut.cdi.context.ApplicationScope applicationScope;
     private volatile @Nullable List<CdiBean<?>> beans;
+    private boolean validated;
     private final ObserverRegistry observers;
 
     @jakarta.inject.Inject
@@ -186,7 +187,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
     }
 
-    private Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
+    Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (CdiBean<?> bean : candidates()) {
             if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {
@@ -264,6 +265,32 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         synchronized (this) {
             beans = null;
         }
+    }
+
+    /**
+     * Validates the deployment, once, the way {@link DeploymentValidation} has it. It is run as the container
+     * starts, after the portable extensions have added what they add and before they are told the deployment
+     * validated.
+     *
+     * @throws jakarta.enterprise.inject.spi.DeploymentException Where the deployment is invalid
+     */
+    public void validateDeployment() {
+        synchronized (this) {
+            if (validated) {
+                return;
+            }
+            validated = true;
+        }
+        new DeploymentValidation(this).validate();
+    }
+
+    /**
+     * The beans the container knows.
+     *
+     * @return The beans
+     */
+    List<CdiBean<?>> beans() {
+        return candidates();
     }
 
     private List<CdiBean<?>> candidates() {

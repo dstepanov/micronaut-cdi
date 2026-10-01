@@ -136,6 +136,8 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
         // a context or an observer an extension added is part of what the container answers with from here
         container.refreshCandidates();
+        // the container validates the deployment before the extensions are told it did (section 11.5.4)
+        container.validateDeployment();
         fire(observers, new PortableEvents.AfterValidation(problems), Argument.of(AfterDeploymentValidation.class),
             problems);
         if (!problems.isEmpty()) {

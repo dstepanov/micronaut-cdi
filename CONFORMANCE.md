@@ -77,13 +77,29 @@ the specification has no bean to resolve, and Micronaut resolves one. Writing th
 instead would make a bean of this specification unable to be injected with a bean that is not one, which is the
 worse of the two.
 
-### An unproxyable normal scoped bean is rejected as it is compiled
+### An unproxyable normal scoped bean is detected as it is compiled
 
 *Section 2.2.10.* A bean in a normal scope has to be proxyable, and the specification has the container detect a
-bean that is not: a final class, a class with a final method, a primitive, an array. This module detects them, and
-reports them through the compiler rather than as a deployment is assembled — which is the same detection at an
-earlier moment. The kit's deployments that exist to be rejected are excluded from the scenarios compiled here for
-that reason, listed by name in `cdi-tck/build.gradle`.
+bean that is not: a final class, a class with a final method, a primitive, an array. This module detects them as
+the class compiles. An intercepted bean that cannot be proxied is refused by the compiler. A bean in a normal
+scope deploys, as the specification has it, and what is wrong with it is recorded: an injection point that
+resolves to it is a `DeploymentException` the container reports as it starts, whichever way it was started
+(CDI 4.1 section 5.4), and a contextual reference asked for at runtime is an `UnproxyableResolutionException`.
+The kit's deployments that exist to be rejected are excluded from the scenarios compiled here for that reason,
+listed by name in `cdi-tck/build.gradle`.
+
+### What takes the whole deployment is validated as the container starts
+
+*CDI 4.1 sections 5.4 and 13.2.* What can be judged while one class compiles is reported by the compiler. Which
+bean an injection point resolves to takes the whole deployment - the bean may be compiled in another module, or
+be registered as the container starts - so the container walks the injection points of its beans as it starts,
+from what they were compiled with, through the SE bootstrap and an `ApplicationContext` alike. Only the beans of
+the specification are validated; a bean of Micronaut's own that shares the context is resolved by Micronaut's
+rules.
+
+The container does not yet report an unsatisfied or ambiguous dependency, nor two beans of one name, as it
+starts: an application learns of an unsatisfied or ambiguous dependency when the bean that has it is created.
+The kit's adapter asks those questions of each deployment it starts.
 
 ### A private producer or observer is read reflectively
 
@@ -383,7 +399,9 @@ The kit's own unmodified test classes run here, through a purpose-built Arquilli
 (`io.micronaut.cdi.tck.arquillian`). Each test's deployment archive becomes one `ApplicationContext` narrowed to
 the archive's classes; a deployment the kit expects to be rejected is compiled per-deployment with the module's
 processor, and what the compiler refuses is reported to Arquillian as the `DefinitionException` or
-`DeploymentException` the test asserts — deployment here *is* compilation. An archive carrying a build
+`DeploymentException` the test asserts — deployment here *is* compilation. What the container validates as it
+starts is reported the same way; the adapter adds its own walk of each deployment's dependencies and bean
+names, which the container does not yet make (see above). An archive carrying a build
 compatible extension is likewise compiled per deployment, with that archive's extensions alone.
 
 Two SE bootstrap tests are left out by name, each resting on what belongs to CDI Full and is refused rather

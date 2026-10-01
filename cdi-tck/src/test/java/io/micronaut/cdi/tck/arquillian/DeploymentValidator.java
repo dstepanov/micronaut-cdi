@@ -29,7 +29,8 @@ import java.util.Set;
 
 /**
  * The validation a deployment gets before its tests run: every injection point of its beans resolves, to
- * exactly one bean.
+ * exactly one bean. An injection point that resolves to a bean that cannot be proxied is reported by the
+ * container itself, as it starts.
  *
  * <p>The specification has the container detect an unsatisfied or ambiguous dependency as it deploys, and
  * report it as a deployment problem. Micronaut resolves lazily — a dependent bean is created when it is asked
@@ -212,17 +213,6 @@ final class DeploymentValidator {
                     + definition.getBeanType().getName() + " has no bean to satisfy it. Asked with "
                     + qualifiers + "; the beans of the type are "
                     + container.getBeans(requiredType, new jakarta.enterprise.inject.Any.Literal()));
-            }
-            if (resolved instanceof io.micronaut.cdi.runtime.CdiBean<?> cdiBean) {
-                String unproxyable = cdiBean.definition().getAnnotationMetadata()
-                    .stringValue("io.micronaut.cdi.annotation.CdiUnproxyable").orElse(null);
-                if (unproxyable != null) {
-                    // section 3.11: an injection point that resolves to an unproxyable bean in a normal scope
-                    // is a deployment problem
-                    throw new DeploymentException("The injection point " + argument + " of "
-                        + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
-                        + unproxyable);
-                }
             }
         } catch (jakarta.enterprise.inject.AmbiguousResolutionException e) {
             throw new DeploymentException("The injection point " + argument + " of "

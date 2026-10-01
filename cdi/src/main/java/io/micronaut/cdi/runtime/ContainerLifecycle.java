@@ -89,6 +89,9 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
                         io.micronaut.cdi.runtime.extension.PortableExtensions.MISSING);
                 }
             });
+        // the deployment is validated before the application is told it has started (chapter 13); an
+        // extension's bootstrap has already validated it, before AfterDeploymentValidation
+        beanContext.getBean(CdiBeanContainer.class).validateDeployment();
         // the order of section 2.9: the application context is initialized first, and Startup follows
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
         fire(new Startup(), Startup.class, Set.of());
