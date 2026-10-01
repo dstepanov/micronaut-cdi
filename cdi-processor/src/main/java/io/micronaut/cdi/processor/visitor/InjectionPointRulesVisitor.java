@@ -104,6 +104,12 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     context.fail("A field may not be annotated both Inject and Produces (section 3.4.1)",
                         field);
                 }
+                if (field.isFinal()) {
+                    // CDI 4.1 section 3.6: an injected field is a non-static, non-final field, and Jakarta Dependency
+                    // Injection has injectable fields not final; Micronaut would leave the field as it was
+                    // initialized rather than inject it
+                    context.fail("An injected field may not be final (CDI 4.1 section 3.6)", field);
+                }
                 checkType(field.getGenericField(), field, normalScoped, false, false, genericClass,
                     element, null, context);
             }
