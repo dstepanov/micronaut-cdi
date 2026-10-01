@@ -32,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * A raw bean type and the types above it: the supertypes of a raw type are erased, as the language has them, so
  * a producer of the raw {@code Bin} has the bean types {@code Bin}, {@code Tray} and {@code Object}, and is no
- * bean of {@code Tray<String>} (sections 3.3.1 and 2.4.2.4).
+ * bean of {@code Tray<String>} (sections 3.3.1 and 2.4.2.4). A raw bean type matches a parameterized required
+ * type whose arguments are {@code Object} or unbounded variables, and a wildcard is neither.
  */
 class RawBeanTypeTest {
 
@@ -46,6 +47,17 @@ class RawBeanTypeTest {
             Set<Bean<?>> beans = container.getBeans(Tray.class);
             assertEquals(1, beans.size(), "but it is a raw Tray");
             assertEquals(Set.<Type>of(Bin.class, Tray.class, Object.class), beans.iterator().next().getTypes());
+        }
+    }
+
+    @Test
+    void aRawBeanTypeDoesNotMatchAWildcard() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            assertTrue(container.getBeans(new TypeLiteral<Bin<?>>() { }.getType()).isEmpty(),
+                "a raw Bin is no Bin<?>: only Object and an unbounded variable are matched by a raw type");
+            assertEquals(1, container.getBeans(new TypeLiteral<Bin<Object>>() { }.getType()).size(),
+                "but it is a Bin<Object>");
         }
     }
 

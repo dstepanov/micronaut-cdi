@@ -60,6 +60,8 @@ class RawAndArrayBeanTypesWithoutReflectionTest {
             MicronautBeanContainer container = (MicronautBeanContainer) CDI.current().getBeanContainer();
             assertEquals(1, container.getBeans(Argument.of(Tray.class)).size());
             assertTrue(container.getBeans(Argument.of(Tray.class, String.class)).isEmpty());
+            assertTrue(container.getBeans(Argument.of(Bin.class, Argument.ofWildcard(Object.class, null, null, null, null, null))).isEmpty(),
+                "nor does a raw bean type match a wildcard");
         }
     }
 }

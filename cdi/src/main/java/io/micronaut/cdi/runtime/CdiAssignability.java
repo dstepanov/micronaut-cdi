@@ -363,11 +363,12 @@ public final class CdiAssignability {
         if (!requiredParameterized) {
             // a parameterized bean type matches the raw required type when its own parameters say nothing:
             // unbounded variables, or Object
-            return saysNothing(candidate.getTypeParameters());
+            return saysNothingOfABean(candidate.getTypeParameters());
         }
         if (!candidateParameterized) {
-            // and a raw bean type matches a parameterized required type on the same terms
-            return saysNothing(required.getTypeParameters());
+            // and a raw bean type matches a parameterized required type on the same terms, which do not
+            // include a wildcard (section 2.4.2.4): a raw Box is no Box<?>
+            return saysNothingOfABean(required.getTypeParameters());
         }
         return allMatch(required.getTypeParameters(), candidate.getTypeParameters(), false);
     }
@@ -463,7 +464,7 @@ public final class CdiAssignability {
             return allMatch(required.getTypeParameters(), candidate.getTypeParameters(), false);
         }
         // one of them raw: the other's parameters must say nothing
-        return saysNothing((requiredParameterized ? required : candidate).getTypeParameters());
+        return saysNothingOfABean((requiredParameterized ? required : candidate).getTypeParameters());
     }
 
     /**
@@ -672,6 +673,20 @@ public final class CdiAssignability {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Whether the arguments of a parameterized type say nothing by the rules of section 2.4.2.4, which match a
+     * raw type with a parameterized one: every one an unbounded variable or {@code Object}. Unlike the
+     * language's assignability, an unbounded wildcard is not among them.
+     */
+    private static boolean saysNothingOfABean(Argument<?>[] arguments) {
+        for (Argument<?> argument : arguments) {
+            if (argument.isWildcard()) {
+                return false;
+            }
+        }
+        return saysNothing(arguments);
     }
 
     private static boolean onlyObject(List<Argument<?>> bounds) {
