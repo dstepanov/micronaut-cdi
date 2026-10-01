@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.ElementFieldInfo;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.FieldElement;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;

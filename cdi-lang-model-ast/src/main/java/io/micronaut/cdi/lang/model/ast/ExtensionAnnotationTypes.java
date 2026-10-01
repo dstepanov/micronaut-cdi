@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -52,7 +52,7 @@ final class ExtensionAnnotationTypes {
      * @return Whether it is retained until runtime
      */
     static boolean isRuntimeRetained(String name) {
-        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
+        VisitorContext context = AstLanguageModel.activeContext();
         // the compiler's own answer, which is RUNTIME for a name it cannot resolve
         return context == null || context.getAnnotationRetentionPolicy(name) == RetentionPolicy.RUNTIME;
     }
@@ -64,7 +64,7 @@ final class ExtensionAnnotationTypes {
      * @return The class, or {@code null} when the compilation cannot see it
      */
     static @Nullable ClassElement declarationOf(String name) {
-        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
+        VisitorContext context = AstLanguageModel.activeContext();
         return context == null ? null : context.getClassElement(name).orElse(null);
     }
 }

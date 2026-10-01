@@ -10,6 +10,7 @@ noReflection {
 
 dependencies {
     api mn.micronaut.core.processor
+    api projects.micronautCdiLangModelAst
     api projects.micronautCdi
     api libs.managed.micronaut.jakarta.interceptors.processor
 

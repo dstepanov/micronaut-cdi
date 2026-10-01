@@ -13,30 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
-
-import io.micronaut.core.annotation.Internal;
-import io.micronaut.inject.ast.PackageElement;
-import jakarta.enterprise.lang.model.declarations.PackageInfo;
-
 /**
- * A package, read from the Micronaut element that describes it.
+ * The language model of CDI ({@code jakarta.enterprise.lang.model}) implemented over Micronaut's compile-time AST
+ * ({@code io.micronaut.inject.ast}). {@link io.micronaut.cdi.lang.model.ast.AstLanguageModel} is the entry point.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
-@Internal
-public final class ElementPackageInfo extends ElementDeclarationInfo implements PackageInfo {
+@NullMarked
+package io.micronaut.cdi.lang.model.ast;
 
-    private final PackageElement element;
-
-    ElementPackageInfo(PackageElement element) {
-        super(element);
-        this.element = element;
-    }
-
-    @Override
-    public String name() {
-        return element.getName();
-    }
-}
+import org.jspecify.annotations.NullMarked;

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.annotation.CdiRecordedType;
 import io.micronaut.cdi.annotation.CdiSyntheticParameter;
 import io.micronaut.cdi.runtime.RecordedInvoker;

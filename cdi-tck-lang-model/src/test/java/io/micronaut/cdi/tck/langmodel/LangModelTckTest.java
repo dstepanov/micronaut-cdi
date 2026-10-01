@@ -81,9 +81,9 @@ class LangModelTckTest {
     @Test
     void theVerifierRanAsTheKitCompiled() throws IOException {
         List<String> lines = Files.readAllLines(report(), StandardCharsets.UTF_8);
-        assertEquals(LangModelExtension.VERIFIED + LangModelVerifier.class.getName(), lines.get(0));
+        assertEquals(LangModelVisitor.VERIFIED + LangModelVerifier.class.getName(), lines.get(0));
         // every section of the verifier's entry point, and the checks around them
-        assertEquals(LangModelExtension.SECTIONS.length + 1, outcomes().size());
+        assertEquals(LangModelVisitor.SECTIONS.length + 1, outcomes().size());
     }
 
     @Test
@@ -94,7 +94,7 @@ class LangModelTckTest {
     }
 
     private static Path report() {
-        Path report = Path.of(System.getProperty(LangModelExtension.REPORT_PROPERTY));
+        Path report = Path.of(System.getProperty(LangModelVisitor.REPORT_PROPERTY));
         assertTrue(Files.exists(report), "the extension did not record that it ran: " + report);
         return report;
     }
@@ -102,8 +102,8 @@ class LangModelTckTest {
     private static Map<String, String> outcomes() throws IOException {
         Map<String, String> outcomes = new LinkedHashMap<>();
         for (String line : Files.readAllLines(report(), StandardCharsets.UTF_8)) {
-            if (line.startsWith(LangModelExtension.SECTION)) {
-                String[] parts = line.substring(LangModelExtension.SECTION.length()).split(" ");
+            if (line.startsWith(LangModelVisitor.SECTION)) {
+                String[] parts = line.substring(LangModelVisitor.SECTION.length()).split(" ");
                 outcomes.put(parts[0], parts[1]);
             }
         }

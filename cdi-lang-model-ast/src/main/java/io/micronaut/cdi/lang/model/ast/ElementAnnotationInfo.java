@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -43,7 +43,7 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
     private final AnnotationValue<?> annotation;
     private @Nullable Map<CharSequence, Object> resolvedMembers;
 
-    ElementAnnotationInfo(AnnotationValue<?> annotation) {
+    public ElementAnnotationInfo(AnnotationValue<?> annotation) {
         this.annotation = annotation;
     }
 
@@ -103,7 +103,7 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
             if (recorded != null) {
                 recorded.forEach(values::putIfAbsent);
             }
-            VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
+            VisitorContext context = AstLanguageModel.activeContext();
             if (context != null) {
                 context.getAnnotationDefaultValues(annotation.getAnnotationName()).forEach(values::putIfAbsent);
             }

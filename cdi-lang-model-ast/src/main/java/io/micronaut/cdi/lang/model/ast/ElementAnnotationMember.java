@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -63,7 +63,7 @@ public final class ElementAnnotationMember implements AnnotationMember {
      *
      * @return The recorded value
      */
-    Object recordedValue() {
+    public Object recordedValue() {
         return value;
     }
 

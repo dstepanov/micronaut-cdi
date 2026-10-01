@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;

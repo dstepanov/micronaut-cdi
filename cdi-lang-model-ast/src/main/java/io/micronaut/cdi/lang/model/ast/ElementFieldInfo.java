@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.FieldElement;
@@ -33,7 +33,7 @@ public final class ElementFieldInfo extends ElementDeclarationInfo implements Fi
     private final FieldElement element;
     private final ClassInfo declaringClass;
 
-    ElementFieldInfo(FieldElement element, ClassInfo declaringClass) {
+    public ElementFieldInfo(FieldElement element, ClassInfo declaringClass) {
         super(element);
         this.element = element;
         this.declaringClass = declaringClass;

@@ -61,8 +61,9 @@ public class Connections {
 | --- | --- |
 | `micronaut-cdi` | The runtime: the contexts of the scopes, and the parts of the container a bean can reach |
 | `micronaut-cdi-processor` | The annotation processor that reads the specification's annotations while a bean is compiled |
+| `micronaut-cdi-lang-model-ast` | The specification's language model (`jakarta.enterprise.lang.model`) read from Micronaut's compile-time AST, with no dependency on the container |
 | `micronaut-cdi-tck` | The scenarios of the specification's technology compatibility kit, compiled and exercised here |
-| `micronaut-cdi-tck-lang-model` | The kit's language model assertions, verified by a build compatible extension as the kit compiles |
+| `micronaut-cdi-tck-lang-model` | The kit's language model assertions, verified against `micronaut-cdi-lang-model-ast` by a Micronaut visitor as the kit compiles |
 | `test-suite-kotlin` | A Kotlin class compiled through KSP, read by a build compatible extension through the same language model |
 | `test-suite-groovy` | The same, for a Groovy class compiled by the Groovy compiler |
 | `test-suite-no-reflection` | What works with `micronaut-cdi` alone, and what names the module to add when it does not |
@@ -78,6 +79,15 @@ extension reports fails the compilation. The running application needs neither t
 `micronaut-cdi-reflection` for any of it; the classes the extension names - the implementation class of a
 synthetic bean, its creator and disposer, a synthetic observer, a context - have to be on the classpath the
 application is compiled against. An extension that is only on the runtime classpath does nothing.
+
+## The language model
+
+`micronaut-cdi-lang-model-ast` implements the language model of the specification over Micronaut's AST, and
+depends on the model's API and Micronaut's `core-processor` alone. A Micronaut visitor reads a class through it
+with `AstLanguageModel.classInfo(classElement, visitorContext)`, which answers the `ClassInfo` a build compatible
+extension reads; members, annotations and types are read from the same AST as they are asked for. A
+`LanguageModelAnnotationFilter` registered as a service narrows which annotations the model reports.
+`micronaut-cdi-processor` hands build compatible extensions this model.
 
 ## Reflection
 
@@ -180,7 +190,8 @@ interception works as before.
 
 The boundary is checked while the modules compile, by the `NoReflection` check of
 [errorprone-no-reflection](https://github.com/micronaut-projects/errorprone-no-reflection), alongside NullAway. The
-check matches the method a call resolves to and names the kind of reflection it reaches for. The processor and
+check matches the method a call resolves to and names the kind of reflection it reaches for. The processor, the
+language model it runs inside javac, and
 `micronaut-cdi-reflection` are allowed all of it. In `micronaut-cdi` and `micronaut-cdi-el` no class or package is
 allowed any, and no call is suppressed in the source. What `micronaut-cdi` allows is a list of calls, none of which
 looks anything up on a class: the accessors of a `java.lang.reflect.Type` that was handed in - the raw type and
@@ -192,7 +203,7 @@ in the package `io.micronaut.cdi.runtime.type`. The list is in [cdi/build.gradle
 Reflection anywhere else fails the build.
 
 Nullness is checked the same way, by [NullAway](https://github.com/uber/NullAway) as an ErrorProne check that
-fails the compilation of the main sources of `micronaut-cdi`, `micronaut-cdi-processor`,
+fails the compilation of the main sources of `micronaut-cdi`, `micronaut-cdi-processor`, `micronaut-cdi-lang-model-ast`,
 `micronaut-cdi-reflection` and `micronaut-cdi-el`, configured as Micronaut Core configures it: every package
 under `io.micronaut` is checked, each is `@NullMarked`, and a value that may be null is an
 `org.jspecify.annotations.Nullable`. The test sources are not checked. The API of the specification carries no

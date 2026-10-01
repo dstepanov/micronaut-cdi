@@ -27,6 +27,7 @@ micronaut-core = { module = 'io.micronaut:micronaut-core-bom', version.ref = 'mi
 
 # managed dependencies
 managed-jakarta-cdi-api = { module = 'jakarta.enterprise:jakarta.enterprise.cdi-api', version.ref = 'managed-jakarta-cdi' }
+managed-jakarta-lang-model = { module = 'jakarta.enterprise:jakarta.enterprise.lang-model', version.ref = 'managed-jakarta-cdi' }
 managed-jakarta-inject-api = { module = 'jakarta.inject:jakarta.inject-api', version.ref = 'managed-jakarta-inject' }
 managed-jakarta-interceptor-api = { module = 'jakarta.interceptor:jakarta.interceptor-api', version.ref = 'managed-jakarta-interceptor' }
 managed-jakarta-annotation-api = { module = 'jakarta.annotation:jakarta.annotation-api', version.ref = 'managed-jakarta-annotation' }

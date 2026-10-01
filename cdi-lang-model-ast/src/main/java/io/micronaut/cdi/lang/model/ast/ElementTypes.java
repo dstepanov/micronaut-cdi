@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -134,7 +134,7 @@ public final class ElementTypes {
      * @param annotations The annotations of the use
      * @return The type
      */
-    static ClassType rawClassOf(ClassElement element, List<AnnotationInfo> annotations) {
+    public static ClassType rawClassOf(ClassElement element, List<AnnotationInfo> annotations) {
         return new Class(element, annotations);
     }
 
@@ -176,7 +176,7 @@ public final class ElementTypes {
      *
      * @return The type
      */
-    static ClassType objectType() {
+    public static ClassType objectType() {
         ClassElement object = ExtensionAnnotationTypes.declarationOf(OBJECT);
         return new Class(object != null ? object : ClassElement.of(Object.class), List.of());
     }

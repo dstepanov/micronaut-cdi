@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.MethodElement;
@@ -40,7 +40,7 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     private final MethodElement element;
     private final ClassInfo declaringClass;
 
-    ElementMethodInfo(MethodElement element, ClassInfo declaringClass) {
+    public ElementMethodInfo(MethodElement element, ClassInfo declaringClass) {
         super(element);
         this.element = element;
         this.declaringClass = declaringClass;

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -478,6 +479,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     @Override
     public void start(VisitorContext context) {
         activeContext = context;
+        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts
         current = this;
@@ -499,6 +501,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         activeContext = context;
+        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // written as the first class is visited, so that the compiler still has rounds ahead of it to process
         // the generated import in
         String name = element.getName();
@@ -591,6 +594,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private void synthesise(VisitorContext context) {
         activeContext = context;
+        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         synthesized = true;
         if (synthesizers.isEmpty() && validators.isEmpty() && registrars.isEmpty()) {
             return;
@@ -694,6 +698,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
         activeContext = context;
+        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         if (registrars.isEmpty()) {
             return;
         }

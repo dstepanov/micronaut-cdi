@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ParameterElement;
@@ -33,7 +33,7 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
     private final ParameterElement element;
     private final MethodInfo declaringMethod;
 
-    ElementParameterInfo(ParameterElement element, MethodInfo declaringMethod) {
+    public ElementParameterInfo(ParameterElement element, MethodInfo declaringMethod) {
         super(element);
         this.element = element;
         this.declaringMethod = declaringMethod;

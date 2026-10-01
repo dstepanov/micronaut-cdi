@@ -1,0 +1,18 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-module"
+}
+
+// The language model of CDI (jakarta.enterprise.lang.model) implemented over Micronaut's compile-time AST. It is
+// read by build compatible extensions while an application compiles, and depends on nothing of the container: the
+// model's API and the AST it reads, and no more.
+noReflection {
+    // like the processor, the model runs inside javac while an application compiles, and none of it reaches the
+    // runtime: an annotation member's array and enum values, and the registered annotation filters, are read
+    // the way an annotation processor reads them
+    allowIn 'io.micronaut.cdi.lang.model.ast.*'
+}
+
+dependencies {
+    api libs.managed.jakarta.lang.model
+    api mn.micronaut.core.processor
+}

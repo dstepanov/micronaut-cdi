@@ -15,6 +15,11 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
+import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
+import io.micronaut.cdi.lang.model.ast.ElementFieldInfo;
+import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
+import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.annotation.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;

@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.tck.langmodel;
 
-import io.micronaut.cdi.processor.extension.LanguageModelAnnotationFilter;
+import io.micronaut.cdi.lang.model.ast.LanguageModelAnnotationFilter;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
 

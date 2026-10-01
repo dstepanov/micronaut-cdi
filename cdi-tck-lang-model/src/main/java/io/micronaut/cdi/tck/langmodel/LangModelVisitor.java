@@ -15,10 +15,10 @@
  */
 package io.micronaut.cdi.tck.langmodel;
 
-import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
-import jakarta.enterprise.inject.build.compatible.spi.Discovery;
-import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
-import jakarta.enterprise.inject.build.compatible.spi.ScannedClasses;
+import io.micronaut.cdi.lang.model.ast.AstLanguageModel;
+import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.TypeElementVisitor;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import org.jboss.cdi.lang.model.tck.LangModelVerifier;
 
@@ -31,15 +31,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * The build compatible extension that runs the kit's language model verifier against this module's model as the
- * kit's classes compile, and records what it found, section by section, for the test to read.
+ * The visitor that runs the kit's language model verifier against the language model read from Micronaut's AST
+ * as the kit's classes compile, and records what it found, section by section, for the test to read. It reads
+ * the model through {@link AstLanguageModel} directly, with no container and no build compatible extension
+ * between them.
  *
  * <p>The verifier is run one section at a time: the compiler reports no more than the message of what an
- * extension threw, an assertion has none, and a section the model cannot satisfy yet must not hide the ones it
+ * visitor threw, an assertion has none, and a section the model cannot satisfy yet must not hide the ones it
  * can. Nothing is thrown, so the compilation goes on whatever was found; the test holds each section to what is
  * expected of it.</p>
  */
-public class LangModelExtension implements BuildCompatibleExtension {
+public class LangModelVisitor implements TypeElementVisitor<Object, Object> {
 
     /**
      * The system property naming the file the extension records into.
@@ -77,13 +79,19 @@ public class LangModelExtension implements BuildCompatibleExtension {
         {"DefaultConstructors", "defaultConstructors"}, {"Equality", "equality"},
     };
 
-    @Discovery
-    public void addVerifier(ScannedClasses classes) {
-        classes.add(LangModelVerifier.class.getName());
+    @Override
+    public VisitorKind getVisitorKind() {
+        return VisitorKind.ISOLATING;
     }
 
-    @Enhancement(types = LangModelVerifier.class)
-    public void verify(ClassInfo clazz) {
+    @Override
+    public void visitClass(ClassElement element, VisitorContext context) {
+        if (element.getName().equals(LangModelVerifier.class.getName())) {
+            verify(AstLanguageModel.classInfo(element, context));
+        }
+    }
+
+    private static void verify(ClassInfo clazz) {
         StringBuilder report = new StringBuilder(VERIFIED).append(clazz.name()).append('\n');
         Map<String, Throwable> failures = new LinkedHashMap<>();
         for (String[] section : SECTIONS) {
@@ -146,10 +154,10 @@ public class LangModelExtension implements BuildCompatibleExtension {
         java.io.StringWriter trace = new java.io.StringWriter();
         e.printStackTrace(new java.io.PrintWriter(trace));
         // every exception of the chain with the frames of the verifier and of this module's language model: the
-        // rest is the compiler invoking the extension
+        // rest is the compiler invoking the visitor
         return java.util.Arrays.stream(trace.toString().split("\n"))
             .filter(line -> !line.startsWith("\tat ") || line.contains("org.jboss.cdi")
-                || line.contains("io.micronaut.cdi.processor"))
+                || line.contains("io.micronaut.cdi.lang.model"))
             .collect(java.util.stream.Collectors.joining("\n"));
     }
 
