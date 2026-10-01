@@ -35,7 +35,8 @@ class ProducerMethodDefinitionTckTest {
 
     @BeforeAll
     static void startContainer() {
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.implementation.producer.method.definition");
         container = CDI.current().getBeanContainer();
     }
 

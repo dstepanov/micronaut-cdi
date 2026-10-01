@@ -8,7 +8,8 @@ class GenericsProbeTest {
 
     @Test
     void probe() {
-        try (ApplicationContext context = ApplicationContext.run()) {
+        try (ApplicationContext context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.inheritance.generics")) {
             System.out.println("DBG defs=" + context.getBeanDefinitions(Foo.class).size());
             try {
                 context.getBean(io.micronaut.cdi.context.RequestScope.class).activate();

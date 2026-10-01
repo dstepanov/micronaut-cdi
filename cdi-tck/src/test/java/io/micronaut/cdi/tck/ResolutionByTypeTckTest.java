@@ -42,7 +42,8 @@ class ResolutionByTypeTckTest {
 
     @BeforeAll
     static void startContainer() {
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.lookup.typesafe.resolution");
         container = CDI.current().getBeanContainer();
     }
 

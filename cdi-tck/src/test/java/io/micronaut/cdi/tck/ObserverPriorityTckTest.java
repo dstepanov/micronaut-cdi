@@ -29,7 +29,8 @@ class ObserverPriorityTckTest {
 
     @BeforeAll
     static void startContainer() {
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.event.observer.priority");
     }
 
     @AfterAll

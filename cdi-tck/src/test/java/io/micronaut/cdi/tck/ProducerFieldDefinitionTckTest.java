@@ -42,7 +42,8 @@ class ProducerFieldDefinitionTckTest {
 
     @BeforeAll
     static void startContainer() {
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.implementation.producer.field.definition");
         container = CDI.current().getBeanContainer();
     }
 

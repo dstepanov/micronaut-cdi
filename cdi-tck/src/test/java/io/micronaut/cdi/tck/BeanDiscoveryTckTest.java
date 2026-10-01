@@ -40,7 +40,10 @@ class BeanDiscoveryTckTest {
 
     @BeforeAll
     static void startContainer() {
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.alternative.resolution.qualifier",
+            "org.jboss.cdi.tck.tests.vetoed",
+            "org.jboss.cdi.tck.tests.vetoed.aquarium");
         container = CDI.current().getBeanContainer();
     }
 

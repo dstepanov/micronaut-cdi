@@ -33,7 +33,8 @@ class DisposalMethodDefinitionTckTest {
     @BeforeEach
     void start() {
         SpiderProducer.reset();
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.implementation.disposal.method.definition");
     }
 
     @AfterEach

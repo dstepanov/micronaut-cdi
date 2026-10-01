@@ -48,7 +48,8 @@ class QualifierDefinitionTckTest {
 
     @BeforeAll
     static void startContainer() {
-        context = ApplicationContext.run();
+        context = ScenarioContexts.run(
+            "org.jboss.cdi.tck.tests.definition.qualifier");
         container = CDI.current().getBeanContainer();
     }
 
