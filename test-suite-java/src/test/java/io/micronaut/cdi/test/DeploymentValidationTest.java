@@ -10,8 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The container validates a deployment as it starts, whether it was started through the SE bootstrap or as an
- * application context: an injection point that resolves to a bean in a normal scope that cannot be proxied is a
- * deployment problem (CDI 4.1 sections 3.10 and 5.4), whether or not anything ever asks for the bean that has it.
+ * application context, whether or not anything ever asks for the bean that has the problem: an unsatisfied or
+ * ambiguous dependency, at a field or a parameter of an observer or a disposer method alike (CDI 4.1 section
+ * 5.2.2), an injection point that resolves to a bean in a normal scope that cannot be proxied (sections 3.10 and
+ * 5.4), and two beans of one name or a name that is the path prefix of another (section 5.3.1). A collection is
+ * collected by Micronaut, and is satisfied by no beans at all.
  * Each deployment is compiled in memory, since a class compiled with this suite would be in the deployment of
  * every test.
  */
@@ -37,6 +40,111 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void anUnsatisfiedInjectionPointIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                Runnable missing;
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
+    void anAmbiguousInjectionPointIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                Runnable ambiguous;
+
+                @jakarta.enterprise.context.Dependent
+                public static class A implements Runnable {
+                    public void run() {
+                    }
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class B implements Runnable {
+                    public void run() {
+                    }
+                }
+            }
+            """, "is ambiguous");
+    }
+
+    @Test
+    void anUnsatisfiedObserverParameterIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                void hear(@jakarta.enterprise.event.Observes Consumer event, Runnable missing) {
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
+    void anUnsatisfiedDisposerParameterIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.enterprise.inject.Produces
+                @jakarta.inject.Named("invalid.produced")
+                StringBuilder value() {
+                    return new StringBuilder();
+                }
+
+                void dispose(@jakarta.enterprise.inject.Disposes @jakarta.inject.Named("invalid.produced")
+                             StringBuilder value, Runnable missing) {
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
+    void twoBeansOfOneNameAreADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            @jakarta.inject.Named("invalid.same")
+            public class Consumer {
+
+                @jakarta.enterprise.context.Dependent
+                @jakarta.inject.Named("invalid.same")
+                public static class Other {
+                }
+            }
+            """, "resolves to more than one bean");
+    }
+
+    @Test
+    void aNameThatIsThePathPrefixOfAnotherIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            @jakarta.inject.Named("invalid.same")
+            public class Consumer {
+
+                @jakarta.enterprise.context.Dependent
+                @jakarta.inject.Named("invalid.same.child")
+                public static class Other {
+                }
+            }
+            """, "is a path prefix of the name invalid.same.child");
+    }
+
+    @Test
     void anUnproxyableNormalScopedBeanNothingIsInjectedWithDeploys() {
         try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
             package valid;
@@ -44,6 +152,24 @@ class DeploymentValidationTest {
             @jakarta.enterprise.context.ApplicationScoped
             public class Consumer {
                 public final void x() {
+                }
+            }
+            """)) {
+            assertTrue(context.isRunning());
+        }
+    }
+
+    @Test
+    void anEmptyCollectionIsNoUnsatisfiedDependency() {
+        try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
+            package valid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                java.util.List<Element> none;
+
+                public interface Element {
                 }
             }
             """)) {

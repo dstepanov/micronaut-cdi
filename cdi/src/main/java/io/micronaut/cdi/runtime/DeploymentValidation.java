@@ -37,15 +37,19 @@ import java.util.Set;
  *
  * <p>Which bean an injection point resolves to cannot be known while one class compiles: the bean may be
  * compiled in another module, or be registered as the container starts. So the injection points of the beans of
- * the specification are walked here, from what the beans were compiled with, without creating anything, and an
- * injection point that resolves to a bean in a normal scope that cannot be proxied is a deployment problem
- * (CDI 4.1 sections 3.10 and 5.4). The bean is not rejected on its own: one nothing is injected with is
+ * the specification are walked here, from what the beans were compiled with, without creating anything. An
+ * injection point that resolves to no bean, or to more than one that cannot be told apart, is a deployment
+ * problem (CDI 4.1 section 5.2.2), and so is one that resolves to a bean in a normal scope that cannot be proxied
+ * (sections 3.10 and 5.4). So are two beans of one name, and a name that is the path prefix of another
+ * (section 5.3.1). The bean is not rejected on its own: one nothing is injected with is
  * refused only when a contextual reference to it is asked for. Every problem found is reported, the first as
  * the failure and the rest beside it.</p>
  *
  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
- * {@code Event}, {@code Optional}, the injection point itself - are left to their own lateness.</p>
+ * {@code Event}, {@code Optional}, the injection point itself - are left to their own lateness, and so are the
+ * injection points Micronaut resolves by its own rules: a collection, which is the beans of its element type and
+ * is empty rather than unsatisfied where there are none, and one marked nullable.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -83,22 +87,23 @@ final class DeploymentValidation {
                 continue;
             }
             for (Argument<?> argument : definition.getConstructor().getArguments()) {
-                validate(definition, argument);
+                validate(definition, argument, true);
             }
             for (FieldInjectionPoint<?, ?> field : definition.getInjectedFields()) {
-                validate(definition, field.asArgument());
+                validate(definition, field.asArgument(), true);
             }
             for (MethodInjectionPoint<?, ?> method : definition.getInjectedMethods()) {
                 if (method.isPostConstructMethod() || method.isPreDestroyMethod()) {
                     continue;
                 }
                 for (Argument<?> argument : method.getArguments()) {
-                    validate(definition, argument);
+                    validate(definition, argument, true);
                 }
             }
             validateDisposer(definition, beans);
             validateObservers(definition);
         }
+        validateNames(beans);
         if (!problems.isEmpty()) {
             DeploymentException failure = problems.get(0);
             for (int i = 1; i < problems.size(); i++) {
@@ -135,7 +140,7 @@ final class DeploymentValidation {
                 Argument<?>[] arguments = executable.getArguments();
                 for (int i = 0; i < arguments.length; i++) {
                     if (i != disposed) {
-                        validate(definition, arguments[i]);
+                        validate(definition, arguments[i], false);
                     }
                 }
                 return;
@@ -157,7 +162,7 @@ final class DeploymentValidation {
             Argument<?>[] arguments = method.getArguments();
             for (int i = 0; i < arguments.length; i++) {
                 if (i != observed) {
-                    validate(definition, arguments[i]);
+                    validate(definition, arguments[i], false);
                 }
             }
         }
@@ -189,27 +194,87 @@ final class DeploymentValidation {
     }
 
     /**
+     * Whether Micronaut injects the beans of the element type at the injection point rather than a bean of its
+     * type: a collection, a stream or a map. An array is resolved as a bean of the array type.
+     */
+    private static boolean isCollectedByMicronaut(Argument<?> argument) {
+        Class<?> type = argument.getType();
+        return Iterable.class.isAssignableFrom(type)
+            || java.util.stream.Stream.class.isAssignableFrom(type)
+            || java.util.Map.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Section 5.3.1: a name that resolves to more than one bean once the alternatives have had their say, or a
+     * name of the form {@code x.y} where {@code x} is the name of another bean, is a deployment problem.
+     */
+    private void validateNames(List<CdiBean<?>> beans) {
+        java.util.Map<String, List<BeanDefinition<?>>> names = new java.util.LinkedHashMap<>();
+        for (CdiBean<?> bean : beans) {
+            String name = bean.getName();
+            if (name != null && !name.isEmpty() && isOfTheSpecification(bean.definition())) {
+                names.computeIfAbsent(name, key -> new ArrayList<>()).add(bean.definition());
+            }
+        }
+        for (java.util.Map.Entry<String, List<BeanDefinition<?>>> entry : names.entrySet()) {
+            List<BeanDefinition<?>> narrowed = CdiResolution.narrow(entry.getValue());
+            if (narrowed.size() > 1) {
+                problems.add(new DeploymentException("The name " + entry.getKey()
+                    + " resolves to more than one bean: " + narrowed + " (CDI 4.1 section 5.3.1)"));
+            }
+        }
+        for (String name : names.keySet()) {
+            for (String other : names.keySet()) {
+                if (other.startsWith(name + ".")) {
+                    problems.add(new DeploymentException("The name " + name + " is a path prefix of the name "
+                        + other + " (CDI 4.1 section 5.3.1)"));
+                }
+            }
+        }
+    }
+
+    /**
      * Resolves the injection point the way the container resolves it, and reports the bean it resolves to
      * where that bean is in a normal scope and cannot be proxied.
      */
-    private void validate(BeanDefinition<?> definition, Argument<?> argument) {
+    private void validate(BeanDefinition<?> definition, Argument<?> argument, boolean injectedByMicronaut) {
         if (LAZY_KINDS.contains(argument.getType().getName())
             || isContainerMachinery(argument)
             || argument.getName().startsWith("$")) {
             return;
         }
+        if (argument.isNullable() || injectedByMicronaut && isCollectedByMicronaut(argument)) {
+            // an injection point Micronaut resolves by its own rules: an optional one, and a collection that
+            // Micronaut injects - into a field, a constructor or an initializer - which is the beans of its
+            // element type and is empty rather than unsatisfied where there are none. The parameter of an
+            // observer or a disposer method is resolved by the container as a bean of its type
+            return;
+        }
+        List<CdiQualifier> qualifiers = CdiQualifier.declared(argument.getAnnotationMetadata());
+        Set<Bean<?>> beans;
+        try {
+            beans = container.beansOf(SpecificationTypes.argumentOf(CdiTypes.requiredTypeOf(argument)), qualifiers);
+        } catch (IllegalArgumentException e) {
+            // a type with a variable the declaring class gives a value the definition does not carry: resolved
+            // as the bean is created
+            return;
+        }
+        // an interceptor is a bean of its class, but is never injected
+        beans.removeIf(bean -> bean instanceof CdiBean<?> cdiBean && cdiBean.definition()
+            .getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor"));
         Bean<?> resolved;
         try {
-            Set<Bean<?>> beans = container.beansOf(
-                SpecificationTypes.argumentOf(CdiTypes.requiredTypeOf(argument)),
-                CdiQualifier.declared(argument.getAnnotationMetadata()));
-            // an interceptor is a bean of its class, but is never injected
-            beans.removeIf(bean -> bean instanceof CdiBean<?> cdiBean && cdiBean.definition()
-                .getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor"));
             resolved = container.resolve(beans);
-        } catch (AmbiguousResolutionException | IllegalArgumentException e) {
-            // an injection point that resolves to no one bean, or whose type has a variable the declaring class
-            // gives a value the definition does not carry, is left to resolve as the bean is created
+        } catch (AmbiguousResolutionException e) {
+            problems.add(new DeploymentException("The injection point " + argument + " of "
+                + definition.getBeanType().getName() + " is ambiguous (CDI 4.1 section 5.2.2): "
+                + e.getMessage(), e));
+            return;
+        }
+        if (resolved == null) {
+            problems.add(new DeploymentException("The injection point " + argument + " of "
+                + definition.getBeanType().getName() + " has no bean to satisfy it, qualified " + qualifiers
+                + " (CDI 4.1 section 5.2.2)"));
             return;
         }
         if (resolved instanceof CdiBean<?> bean) {

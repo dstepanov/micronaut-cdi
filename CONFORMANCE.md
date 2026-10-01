@@ -90,16 +90,26 @@ listed by name in `cdi-tck/build.gradle`.
 
 ### What takes the whole deployment is validated as the container starts
 
-*CDI 4.1 sections 5.4 and 13.2.* What can be judged while one class compiles is reported by the compiler. Which
-bean an injection point resolves to takes the whole deployment - the bean may be compiled in another module, or
-be registered as the container starts - so the container walks the injection points of its beans as it starts,
-from what they were compiled with, through the SE bootstrap and an `ApplicationContext` alike. Only the beans of
-the specification are validated; a bean of Micronaut's own that shares the context is resolved by Micronaut's
-rules.
+*CDI 4.1 sections 5.2.2, 5.3.1, 5.4 and 13.2.* What can be judged while one class compiles is reported by the
+compiler. Which bean an injection point resolves to, and which beans share a name, takes the whole deployment -
+a bean may be compiled in another module, or be registered as the container starts - so the container validates
+its beans as it starts, from what they were compiled with, through the SE bootstrap and an `ApplicationContext`
+alike, and with portable extensions before `AfterDeploymentValidation`. An injection point of a bean's fields,
+constructor, initializer methods, and observer and disposer methods that resolves to no bean, to more than one
+that cannot be told apart, or to a bean in a normal scope that cannot be proxied; two beans of one name; and a
+name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
-The container does not yet report an unsatisfied or ambiguous dependency, nor two beans of one name, as it
-starts: an application learns of an unsatisfied or ambiguous dependency when the bean that has it is created.
-The kit's adapter asks those questions of each deployment it starts.
+Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
+by Micronaut's rules. So is an injection point Micronaut resolves its own way: a field, constructor or
+initializer parameter of a collection, a stream or a map, which is the beans of its element type and is empty
+rather than unsatisfied where there are none (see below), and one marked nullable. The parameter of an observer or
+a disposer method is resolved by the container as a bean of its type, a collection included, and is validated as
+one. An injection point of `Instance`, `Provider`, `Event`, `Optional` or `InjectionPoint`
+resolves late by design and is not validated.
+
+A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
+classpath narrows each container to its own: the SE bootstrap's synthetic archive, a beans predicate, or a
+`@Requires` the deployment meets.
 
 ### A field is injected only where it is annotated Inject
 
@@ -194,6 +204,9 @@ rather than unsatisfied where there are none. An array is resolved as the specif
 programmatic lookup of the collection type - `Instance<List<Foo>>`, `BeanContainer.getBeans` - resolves the bean
 of that type. The hook Micronaut gives for the array, `BeanResolutionCustomizer.shouldResolveArrayAsBean`, is
 asked for an array only, so the collection cannot be decided the same way here.
+
+Such an injection point is also not an unsatisfied dependency when there are no beans of the element type: the
+container does not report it as it validates the deployment.
 
 ### A primitive is boxed by the lookup rather than by the bean
 
@@ -407,8 +420,9 @@ The kit's own unmodified test classes run here, through a purpose-built Arquilli
 the archive's classes; a deployment the kit expects to be rejected is compiled per-deployment with the module's
 processor, and what the compiler refuses is reported to Arquillian as the `DefinitionException` or
 `DeploymentException` the test asserts — deployment here *is* compilation. What the container validates as it
-starts is reported the same way; the adapter adds its own walk of each deployment's dependencies and bean
-names, which the container does not yet make (see above). An archive carrying a build
+starts is reported the same way, from the cause chain of the failure to start; the adapter has no validation of
+its own. An SE test the kit runs without Arquillian bootstraps over the class path its own `Deployment` declares,
+as it would in the JVM the kit launches for it. An archive carrying a build
 compatible extension is likewise compiled per deployment, with that archive's extensions alone.
 
 Two SE bootstrap tests are left out by name, each resting on what belongs to CDI Full and is refused rather

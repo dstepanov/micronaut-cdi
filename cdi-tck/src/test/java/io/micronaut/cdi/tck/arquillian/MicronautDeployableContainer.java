@@ -150,15 +150,17 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 })
                 .build()
                 .start();
-            try {
-                DeploymentValidator.validate(context, classes);
-            } catch (jakarta.enterprise.inject.spi.DeploymentException e) {
-                context.close();
-                throw new DeploymentException("The deployment was rejected as it validated", e);
-            }
             CurrentDeployment.started(context);
             return new ProtocolMetaData();
         } catch (RuntimeException e) {
+            // the container validates the deployment as it starts: the problem the specification names is in
+            // the cause chain of the failure to start
+            for (Throwable cause = e; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
+                if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
+                    || cause instanceof jakarta.enterprise.inject.spi.DeploymentException) {
+                    throw new DeploymentException("The deployment was rejected as it started", cause);
+                }
+            }
             throw new DeploymentException("The deployment could not be started", e);
         }
     }
@@ -271,12 +273,6 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 .beanDefinitionsProvider(classLoader -> referencesOf(loader, classLoader))
                 .build()
                 .start();
-            try {
-                DeploymentValidator.validate(context, deployedBeans);
-            } catch (jakarta.enterprise.inject.spi.DeploymentException e) {
-                context.close();
-                throw new DeploymentException("The deployment was rejected as it validated", e);
-            }
             CurrentDeployment.started(context);
             return new ProtocolMetaData();
         } catch (RuntimeException e) {
