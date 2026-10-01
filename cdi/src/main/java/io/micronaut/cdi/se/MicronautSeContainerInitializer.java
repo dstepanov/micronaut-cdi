@@ -271,11 +271,11 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      */
     private boolean belongsToSyntheticArchive(io.micronaut.inject.BeanType<?> bean) {
         String producer = producerOf(bean);
-        if (producer != null && isSelected(producer)) {
-            // a bean produced by a member of an application class belongs to the archive its producer is in,
-            // whatever type it produces - and so does the client proxy of one in a normal scope, which declares
-            // itself and is of the produced type
-            return true;
+        if (producer != null) {
+            // a bean produced by a member of a class belongs to the archive its producer is in, whatever type it
+            // produces - and so does the client proxy of one in a normal scope, which declares itself and is of
+            // the produced type. What the container's own classes produce is in every archive, as they are
+            return isSelected(producer) || isInfrastructure(producer);
         }
         if (bean instanceof BeanDefinition<?> definition) {
             // a bean produced by a member of an application class belongs to the archive its producer is in,
