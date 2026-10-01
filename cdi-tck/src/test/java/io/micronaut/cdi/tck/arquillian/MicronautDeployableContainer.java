@@ -401,7 +401,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         }
     }
 
-    private static Set<String> classesOf(Archive<?> archive) {
+    static Set<String> classesOf(Archive<?> archive) {
         Set<String> classes = new HashSet<>();
         collectClasses(archive, classes);
         return classes;

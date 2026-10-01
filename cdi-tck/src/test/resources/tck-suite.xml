@@ -2,6 +2,10 @@
 <!-- The part of the kit that runs through the Arquillian adapter. It grows as conformance does: a package is
      added when the implementation is ready to be held to it, and what is not on it is not yet claimed. -->
 <suite name="CDI Lite TCK" verbose="1" configfailurepolicy="continue">
+    <!-- an SE test that runs without Arquillian bootstraps over the class path its own archive declares -->
+    <listeners>
+        <listener class-name="io.micronaut.cdi.tck.arquillian.SeClassPathListener"/>
+    </listeners>
     <!-- core mode: what the kit marks as CDI Full does not run against CDI Lite. Each test of the Lite part
          says so itself rather than the suite saying it for all of them, so that the last test can run the few
          classes of CDI Full that are claimed beyond Lite. The exclusion drops three methods of the Lite
