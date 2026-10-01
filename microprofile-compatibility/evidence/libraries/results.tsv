@@ -1,0 +1,32 @@
+config-programmatic	OK:42	OK:42	42	MATCH
+config-cdi-native	OK:42	DEPLOY_REJECT:UnsupportedOperationException:The observer method protected void io.smallrye.config.inject.ConfigExtension.processConfigInjectionPoints(jakarta.enterprise.inject.spi.ProcessInjectionPoint) of the extension observes jakarta.enterprise.inject.spi.ProcessInjectionPoint, which is not one of the container lifecycle events a compile-time container fires to a portable extension	42	DIFF
+config-cdi-import-int	OK:42	OK:42	42	MATCH
+config-cdi-import-string	OK:hello	OK:hello	hello	MATCH
+config-cdi-import-optional	OK:42	RUNTIME_ERROR:ClassCastException:class java.util.Optional cannot be cast to class java.lang.Integer (java.util.Optional and java.lang.Integer are in module java.base of loader 'bootstrap')	42	DIFF
+config-cdi-import-provider	OK:42	RUNTIME_ERROR:NullPointerException:Cannot invoke "jakarta.enterprise.inject.spi.InjectionPoint.getQualifiers()" because "injectionPoint" is null	42	DIFF
+config-cdi-import-instance	OK:42	OK:42	42	MATCH
+config-cdi-import-optionalint	OK:42	OK:42	42	MATCH
+config-cdi-import-list	OK:[1, 2, 3]	RUNTIME_ERROR:ClassCastException:class java.util.ArrayList cannot be cast to class java.lang.Integer (java.util.ArrayList and java.lang.Integer are in module java.base of loader 'bootstrap')	[1, 2, 3]	DIFF
+config-cdi-import-set	OK:[1, 2, 3]	RUNTIME_ERROR:ClassCastException:class java.util.HashSet cannot be cast to class java.lang.Integer (java.util.HashSet and java.lang.Integer are in module java.base of loader 'bootstrap')	[1, 2, 3]	DIFF
+config-cdi-import-default	OK:7	OK:7	7	MATCH
+config-cdi-import-config	OK:42	OK:42	42	MATCH
+config-cdi-import-injection-method	OK:42	OK:42	42	MATCH
+config-cdi-native-array	OK:[1, 2, 3]	DEPLOY_REJECT:UnsupportedOperationException:The observer method protected void io.smallrye.config.inject.ConfigExtension.processConfigInjectionPoints(jakarta.enterprise.inject.spi.ProcessInjectionPoint) of the extension observes jakarta.enterprise.inject.spi.ProcessInjectionPoint, which is not one of the container lifecycle events a compile-time container fires to a portable extension	[1, 2, 3]	DIFF
+fault-tolerance-cdi-native	OK:attempts=3	DEPLOY_REJECT:UnsupportedOperationException:Building a bean out of an annotated type belongs to CDI Full, which this module does not implement. See Conformance	attempts=3	DIFF
+health-cdi-import	OK:false:true:true	OK:false:true:true	false:true:true	MATCH
+health-cdi-import-all-up	OK:false:false:false	OK:false:false:false	false:false:false	MATCH
+health-cdi-import-payload	OK:DOWN:2	OK:DOWN:2	DOWN:2	MATCH
+health-cdi-import-async	OK:true:true:true	OK:true:true:true	true:true:true	MATCH
+openapi-factory	OK:compat	OK:compat	compat	MATCH
+openapi-jaxrs-scan	OK:hello	OK:hello	hello	MATCH
+rest-client-programmatic	OK:pong	OK:pong	pong	MATCH
+rest-client-cdi-native	OK:pong	DEPLOY_REJECT:UnsupportedOperationException:The observer method public void org.jboss.resteasy.microprofile.client.RestClientExtension.observeSessionBeans(jakarta.enterprise.inject.spi.ProcessSessionBean) of the extension observes jakarta.enterprise.inject.spi.ProcessSessionBean, which is not one of the container lifecycle events a compile-time container fires to a portable extension	pong	DIFF
+rest-client-explicit-producer	OK:pong	OK:pong	pong	MATCH
+telemetry-cdi-native	OK:span=true	DEPLOY_REJECT:UnsupportedOperationException:The observer method void io.helidon.microprofile.telemetry.TelemetryCdiExtension.finish(java.lang.Object,io.helidon.tracing.Tracer) of the extension observes java.lang.Object, which is not one of the container lifecycle events a compile-time container fires to a portable extension	span=true	DIFF
+jwt-programmatic	OK:alice:true	OK:alice:true	alice:true	MATCH
+jwt-request-producer	OK:alice	RUNTIME_ERROR:NoSuchBeanException:No bean of type [org.eclipse.microprofile.jwt.JsonWebToken] exists. 	alice	DIFF
+jwt-request-producer-with-type	OK:alice	OK:alice	alice	MATCH
+jwt-claim-import-string	OK:alice	OK:alice	alice	MATCH
+jwt-claim-import-groups	OK:[users]	OK:[[users], users]	[users]	DIFF
+jwt-claim-import-optional	OK:alice	OK:alice	alice	MATCH
+jwt-claim-import-claimvalue	OK:alice	OK:alice	alice	MATCH

@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-01",
+  "scope": "Functional CDI Lite compatibility",
+  "cdi_revision": "eaecbac4ec0c741d0a2c87dda681145c86b85002",
+  "interceptors_revision": "29c80fe1cb0c5300ac7985e5bc316bde00e9b741",
+  "weld": "6.0.4.Final",
+  "seed": "0xcd140",
+  "command": "./gradlew :micronaut-compatibility-fuzz:test -PcompatibilityFuzz -PjakartaInterceptorsDir=build/fuzz-interceptors -PfuzzWeldVersion=6.0.4.Final -PfuzzSeed=840000",
+  "java": "openjdk version \"25.0.2\" 2026-01-20\nOpenJDK Runtime Environment (build 25.0.2+10-69)\nOpenJDK 64-Bit Server VM (build 25.0.2+10-69, mixed mode, sharing)",
+  "comparisons": 2293,
+  "differing_rows": 50,
+  "families": {
+    "types": {
+      "comparisons": 1606,
+      "differences": 25
+    },
+    "bean-types": {
+      "comparisons": 22,
+      "differences": 3
+    },
+    "qualifiers": {
+      "comparisons": 323,
+      "differences": 0
+    },
+    "events": {
+      "comparisons": 8,
+      "differences": 0
+    },
+    "parameters": {
+      "comparisons": 196,
+      "differences": 0
+    },
+    "parameter-array": {
+      "comparisons": 3,
+      "differences": 2
+    },
+    "handles": {
+      "comparisons": 64,
+      "differences": 0
+    },
+    "injection-default": {
+      "comparisons": 1,
+      "differences": 1
+    },
+    "injection-list": {
+      "comparisons": 1,
+      "differences": 1
+    },
+    "source": {
+      "comparisons": 69,
+      "differences": 18
+    }
+  },
+  "suites": {
+    "CDI Java": {
+      "tests": 300,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "CDI configured TCK": {
+      "tests": 833,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Interceptors Java": {
+      "tests": 241,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Differential drivers": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "evidence_hashes": {
+    "results.tsv": "774ca266e13e405dfa853da35baa914f618d24efac3e83dc53a3a333d2301681",
+    "source-results.tsv": "ee643aac5d6d85d12024ed1186f68645df9558c70dd26b36d27c752b3c7d9b2b",
+    "artifacts.tsv": "a418b3e907444ffdccb3fa3420c609db05e4bdde878b8958cf6365fd32e47ae8"
+  }
+}

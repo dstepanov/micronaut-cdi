@@ -1,0 +1,1 @@
+[Note: /Users/denisstepanov/dev/micronaut-cdi/compatibility-fuzz/build/campaigns/6.0.4.Final/source-mutations/generic-array-lookup/Mutation46.java uses unchecked or unsafe operations., Note: Recompile with -Xlint:unchecked for details.]

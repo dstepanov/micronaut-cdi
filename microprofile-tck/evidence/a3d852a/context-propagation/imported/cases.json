@@ -1,0 +1,652 @@
+[
+  {
+    "class": "org.eclipse.microprofile.context.tck.ContextManagerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.26",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/imported/0001-ContextManagerTest.war",
+    "trace_ref": "711a8e94e034310bc4c473c315e3951c133ba806b847c8b163c8864c2e83e489"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ContextManagerTest",
+    "name": "builderForContextManagerIsProvided",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/imported/0001-ContextManagerTest.war",
+    "trace_ref": "711a8e94e034310bc4c473c315e3951c133ba806b847c8b163c8864c2e83e489"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "beanInjected",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "defaultContextPropagationForManagedExecutorViaMPConfig",
+    "seconds": "0.016",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "4890ac8a760f15ec4894371766513f82015ae53cb63ef5b09ddaefda3938700b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "defaultContextPropagationForThreadContextViaMPConfig",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "defaultMaxAsyncAndMaxQueuedForManagedExecutorViaMPConfig",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "c44bd7f0074b4e2a1b982c4d53afdcfc06a142560d56b523c39bb22ed1963a88"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "explicitlySpecifiedPropagatedTakesPrecedenceOverDefaults",
+    "seconds": "0.008",
+    "status": "test_failure",
+    "message": "io.micronaut.context.exceptions.BeanInstantiationException: Error instantiating bean of type  [org.eclipse.microprofile.context.tck.MPConfigBean]\n\nMessage: No bean of type org.jboss.weld.manager.api.WeldManager qualifies\nPath Taken:\nnew @j.e.i.Default @i.m.c.i.m.CdiApplicationScope o.e.m.c.t.MPConfigBean()",
+    "trace_ref": "1564a6460d9cea862dd5a3ba39ef282f19eaf129e4a097670b5bfb0fe85b5ecf"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "explicitlySpecifyAllAttributesOfThreadContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "io.micronaut.context.exceptions.BeanInstantiationException: Error instantiating bean of type  [org.eclipse.microprofile.context.tck.MPConfigBean]\n\nMessage: No bean of type org.jboss.weld.manager.api.WeldManager qualifies\nPath Taken:\nnew @j.e.i.Default @i.m.c.i.m.CdiApplicationScope o.e.m.c.t.MPConfigBean()",
+    "trace_ref": "61c46ea074dc7970f319fd2c56c463779c0158910dcfb304a3f3b7644520a604"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "explicitlySpecifyMaxQueued5",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "61b2641791e4677578e25f24b361f45a91992bf8d78d1cbb0f9b6c945258c635"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "builderForManagedExecutorIsProvided",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "clearUnspecifiedContexts",
+    "seconds": "0.009",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "18731f4118882deec7d98361f6c965b8cd2d7235247b29c5fc57a67168712415"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "completedFutureDependentStagesRunWithContext",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "9eb3f5283559a0066446bc4437ea9a25fe78f801a2e52cdb8b20a33a2a1e9f64"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "completedStageDependentStagesRunWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "8be34413691dc8219e785daf9380be1e89daa9de6acd46ce50e71f6e8f297e53"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextControlsForManagedExecutorBuilder",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "69a2183322e8435353922c6926db7079675d53e10c70581749f6ca6327600f9d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualCallableOverridesContextOfManagedExecutor",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "8c5abe2ab17aa688cd21cdf0e6f94763ff1f1eaa5da9ced2359da32363bde39c"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualConsumerAndBiFunctionOverrideContextOfManagedExecutor",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "2a7ee272f1c749f5fa5a3ded0de649718da787a597b7d27513ca62f6c0a3f253"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualFunctionOverridesContextOfManagedExecutor",
+    "seconds": "0.0",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "5e4a59c104e631974f7336b7f7c21885bf8b4fb84c8d0e5463a101bccc6d1efa"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualRunnableOverridesContextOfManagedExecutor",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "d3dcd6fd4f0d51ca013d39c0a10af5da881ee69f9d76d5a2f3e0e186e3ad94d4"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualSuppplierAndBiConsumerOverrideContextOfManagedExecutor",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "fe6626c8d819e12bd1440a8d9f68808183ce795daa5d18b0cfb967ddb91e5943"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "copyCompletableFuture",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "1e2ec68c4022bbb95dd77aea9209ab8864a9c588732bd320572c4bed206e0412"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "copyCompletionStage",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "9dc917fe00f42e23f3a51ba7cbaf96e03d8724d9c71ab573a6630b65fb2df44e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "executedTaskRunsWithClearedContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "java.util.concurrent.CompletionException: jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "e423d966d116c2687a3c4b03681080231fedd4ba5d92e28ff6a636175fef0496"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "executedTaskRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "e4132138da3ae397a06fd55d2304d9794128f9c7678e701f6abad5faa69df644"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "failedFutureDependentStagesRunWithContext",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "6d5f54ee7bce75f763bc369c4c0e9ae786455c36ef7f3947b01e4493cca5c75f"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "failedStageDependentStagesRunWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "c2acf5991174c13635a09c4ee7fbdefd807f774d7297e87a18f267243c2cfb52"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxAsync2",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "bafb322ed4ff1c2593f2473cd96a6420aa146fe6fe6037a051144eac5c40a9f8"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxAsyncInvalidValues",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "9e365118bea6b20c0e1511b5e82066f4811bd18500a6b094390aa5350ef8cd08"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxQueued3",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "61bd62d8ee6fd976672544e7e6374cee0669680bd91dc0349c2cfe8f025757f2"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxQueuedInvalidValues",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "4b8a08a5994957b410a544adf65363468ba3a60b7811649bdaab5ab26f4bd932"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "newIncompleteFutureDependentStagesRunWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "b920ac57d3d8a3d927b41e48d0286d66baef020460a480838fed6dbc6f6c7410"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "propagateApplicationContext",
+    "seconds": "0.0",
+    "status": "test_failure",
+    "message": "java.lang.IllegalStateException: Missing propagated provider type: Application",
+    "trace_ref": "a9faa3bdb7c5e8d8125185747000dfb60953014231bbfcfc72a4da7045cba511"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "propagateTransactionContextJTA",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "reuseManagedExecutorBuilder",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "0da6045a58d0f7bffb6c2ae71b7bcb54abbe39e82cc754c81feeed4b27348c48"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "runAsyncStageAndDependentStagesRunWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "6b30bbf14a277bbb825fd9e5e6fff185c73aa6e240849d9c3bf349bff64b59be"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "shutdownNowPreventsAdditionalSubmitsAndCancelsTasks",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "7cd9889c616d47fb574671151925f97264db8ce8837b24a7c150d72737faed95"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "shutdownPreventsAdditionalSubmits",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "03514f0a89c5f9fc2730a92586eca82cbc39ec325211dcf838af8f7d569d0fdb"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "submittedTasksRunWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "b96290d7b272d9469061ed2cbc6140bc7371479b63466bf1d6ae8fd9c365923d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "supplyAsyncStageAndDependentStagesRunWithContext",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "9dab96edc05365c518cf57917615ce66809e1696d7c5d6f25fb30a3ae5c7f143"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "threadContextHasSamePropagationSettings",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "e4254534fd7b9b46cc47a8b465cb731c4bb216047912efffcf310431d1a9fba2"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "timedInvokeAllRunsTasksWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "f616621b04887e8711012fa900cff1fc36fa62177df3f825a6aca9298112da21"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "timedInvokeAnyRunsTaskWithContext",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "fa36488f8b5c41898cfe80dd02e8a53bdfd40ec656b5f01220729ecb80ec6d57"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "untimedInvokeAllRunsTasksWithContext",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "a95907a2815cac2f4bac0d9006f78c59c086a7700832542c6021b5b2141632a7"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "untimedInvokeAnyRunsTasksWithContext",
+    "seconds": "0.0",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "cdebce274372729aa4a98a16ea48ecdc213231872b3e165f1bf271ebc5de1ce4"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "withDefaultExecutorServiceIsUsedDirectlyAndViaGetThreadContext",
+    "seconds": "0.015",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "5b19b2f00a87d0d47584bae474303732f833ba49449a2db15fb8f3bb7af0d3ea"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.TckTest",
+    "name": "providerSet",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "builderForThreadContextIsProvided",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "clearTransactionContextJTA",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "clearUnspecifiedContexts",
+    "seconds": "0.005",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "e071b5069ed3647ea484a02c411641184c1ece25d09d6e9e7c2fb0e6b2fae475"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextControlsForThreadContextBuilder",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "2a2815e526bf2dde4c7af02233e5b52ed513524be531a5f2bb64f8b4d85f027d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualBiConsumerRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "bfd2ff7a78f6d5f541f794c262e37a07774188e844b95886afb1fd10eb426914"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualBiFunctionRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "eb2ddd2d814b52f29575e34138784e98ef6319ef79ca8786f15235107bea6cc1"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualCallableRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "951d40db93a81d81be2e62c5c8836fc633505846babb0b421dcc4b0cdd6bbf63"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualConsumerRunsWithContext",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "a24b07963b9d631ac81b1b05a01ddce611126d9fcf9e66051463fc123c645135"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualFunctionRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "e029f771dd052ef29d5f306cfb04232d88ab8bf4ac05cfd0c17f033c78fdff58"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualRunnableRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "9bd2dfc806bd914df3a7c30681f8c9249ee40e62dbe95e045186b4801c68a937"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualSupplierRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "a9ea090635eb20f4aabac8a24893990edb877f66bbb9fa50b3d40699fbad004b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "currentContextExecutorRunsWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "dbae640e0904801c0d331730249e471e1d93fc6c03992f975a7420de8459effa"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "reuseThreadContextBuilder",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "fd2de45f23a398cc0d6bfc80f3449d2b0e113110cd2dc6c4f6f3fb1f6bcd2ad0"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "thirdPartyContextProvidersAreIncludedInThreadContext",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "unchangedContextListDefaultsToEmpty",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "fcdf6aba46e97452debe2b4ea6ae456e56a05407ef8f7b8687bec61d4771343d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureDependentCompletableFuturesRunWithContext",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "70614ac9e57170a96d39f9193b598cce101616ec6f2dc7a54d6c4df99149041f"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureDependentCompletionStagesRunWithContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "c42d95308c087e9a461d937e5a9531a39f66f662eda7d02c3a666c4a933624f3"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureDependentStageForcedCompletion",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureMultipleThreadContexts",
+    "seconds": "0.0",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "06301f5ae14783dcb82f9e0879254c78386236bd2fecf3958923f5b8ccec642d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureSwitchThreadContext",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "d522bbeb6955987ac45c3180c54cb6f3cf2338d59694ec628c3475761afc7194"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withDefaultExecutorServiceContextCanInvokeAsyncActions",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "5adea8874aff3d91fd884f445f438b89d8b7ef28ce7d7ae0c3bfbfd86c707392"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withoutDefaultExecutorServiceContextCannotInvokeAsyncActions",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "applicationDefinesProducerOfThreadContext",
+    "seconds": "0.017",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "5c70df4e6e4354e5c95e7ce80ca8a07a1d2c0dd4e556fb19c38be784ccd9098b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "applicationDefinesProducerUsingInjectedThreadContext",
+    "seconds": "0.005",
+    "status": "test_failure",
+    "message": "io.micronaut.context.exceptions.BeanInstantiationException: Error instantiating bean of type  [java.util.concurrent.Executor]\n\nMessage: No bean of type org.jboss.weld.manager.api.WeldManager qualifies\nPath Taken:\n@o.e.m.c.t.c.C$Priority3Executor @i.m.c.i.m.CdiApplicationScope j.u.c.Executor o.e.m.c.t.c.CdiBeanProducer.createPriority3Executor#createPriority3Executor(@CDIBean$PriorityContext ThreadContext ctx)",
+    "trace_ref": "7d5d17953886ff5265dbafd6a38e9ae02536358a57263f5265390f78841c4da8"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "testBasicExecutorUsable",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "c242e2972a30d5fcbc48a4c3ec0e28b8953bba4214175d8fe581981e61505c52"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "testVerifyInjection",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxClearsConversationScopedBeans",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.IllegalArgumentException: There is no context for the scope jakarta.enterprise.context.ConversationScoped",
+    "trace_ref": "e74573ed4b84664fd5516e6d455cdbe7476b9f106a55f4a820554b96ba31c534"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxClearsRequestScopedBean",
+    "seconds": "0.015",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "15c59539bc5dae6bc6bf68aa6f94c8467372d80345a2d9ee0a8cdd5d321c6445"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxClearsSessionScopedBeans",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "java.lang.IllegalArgumentException: There is no context for the scope jakarta.enterprise.context.SessionScoped",
+    "trace_ref": "36bb8e93e29937a316b5109441edd338e06ebc703b93721e8bb19a1e32796aab"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxPropagatesConversationScopedBean",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "java.lang.IllegalArgumentException: There is no context for the scope jakarta.enterprise.context.ConversationScoped",
+    "trace_ref": "742a039a3b6c379af1277853091a8e69c0d234d37030a9e0f7da47fc0d6e2977"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxPropagatesRequestScopedBean",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "cad77c3f4ce740cd6f937cf4b116d150adaaf33f715d4397101194e0c9a9e15b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxPropagatesSessionScopedBean",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "java.lang.IllegalArgumentException: There is no context for the scope jakarta.enterprise.context.SessionScoped",
+    "trace_ref": "39f7bff5cd93f1f4b70b119699d5c7f3966b2dd204e12b3ee75e36120e28120e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDITCCtxClear",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "d5f9c8a747c48a0483c2741c0a40acb6cff2470cacb108978fdb1a5307b92209"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDITCCtxPropagate",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "11b4b48204580fed01f062904277492e14ee3e7e361bab7370b3b7dbc511304d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testAsyncTransaction",
+    "seconds": "0.02",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type org.jboss.weld.manager.api.WeldManager qualifies",
+    "trace_ref": "8ad0d54e7ca4f488a02ae6fe1a5de1d7e4febae4865f24065c1a48f7f36543ae"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testRunWithTxnOfExecutingThread",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type jakarta.transaction.UserTransaction qualifies",
+    "trace_ref": "81c725c93ba59d46a9dcff8dd7b189e02955ed2d47a14e0d5e1b931aade24b22"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testTransaction",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type jakarta.transaction.UserTransaction qualifies",
+    "trace_ref": "038d827ef4723ba74e34f2c063442ddec5127ca9ec832d6ce67a32ea0e5150bd"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testTransactionPropagation",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type jakarta.transaction.UserTransaction qualifies",
+    "trace_ref": "fe467406efe5098f0b02ccf93fa8b916fa18e9cacd2532d2d36818c36433edcb"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testTransactionWithUT",
+    "seconds": "0.001",
+    "status": "test_failure",
+    "message": "jakarta.enterprise.inject.UnsatisfiedResolutionException: No bean of type jakarta.transaction.UserTransaction qualifies",
+    "trace_ref": "579c5fbed6d1a634a1147a0bf83f1958ef8cdf70334fcfe240b1ba360dcaf436"
+  }
+]

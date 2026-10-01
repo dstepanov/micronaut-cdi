@@ -1,0 +1,3 @@
+org.jboss.weld.exceptions.DeploymentException: WELD-001408: Unsatisfied dependencies for type Runnable with qualifiers @Default
+  at injection point [BackedAnnotatedParameter] Parameter 2 of [BackedAnnotatedMethod] org.example.cdi.fuzz.generated.Mutation2$A.hear(@Observes String, Runnable)
+  at org.example.cdi.fuzz.generated.Mutation2$A.hear(A.java:0)

@@ -1,0 +1,42 @@
+[
+  {
+    "class": "org.eclipse.microprofile.telemetry.logs.tck.application.JulTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.02",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-logs deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-logs/build/deployments/native/0001-9356640f-b86d-4aa5-9384-c0ba3206e8fa.war",
+    "trace_ref": "62dac2e7ff934840749e6707f13a61a35607b3ec68059035f8df885e5dee3e4c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.logs.tck.application.JulTest",
+    "name": "julInfoTest",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-logs deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-logs/build/deployments/native/0001-9356640f-b86d-4aa5-9384-c0ba3206e8fa.war",
+    "trace_ref": "62dac2e7ff934840749e6707f13a61a35607b3ec68059035f8df885e5dee3e4c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.logs.tck.application.JulTest",
+    "name": "julWarnTest",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-logs deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-logs/build/deployments/native/0001-9356640f-b86d-4aa5-9384-c0ba3206e8fa.war",
+    "trace_ref": "62dac2e7ff934840749e6707f13a61a35607b3ec68059035f8df885e5dee3e4c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.logs.tck.config.ServerInstanceTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.131",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-logs deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-logs/build/deployments/native/0001-595467cb-9c48-4666-ad30-0a6d9e924d1f.war",
+    "trace_ref": "a20ae54f6c4df84e6f2f3b604aadb91d62f672fa3d1bf08d46dd5719d025ad0f"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.logs.tck.config.ServerInstanceTest",
+    "name": "runtimeInstance",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-logs deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-logs/build/deployments/native/0001-595467cb-9c48-4666-ad30-0a6d9e924d1f.war",
+    "trace_ref": "a20ae54f6c4df84e6f2f3b604aadb91d62f672fa3d1bf08d46dd5719d025ad0f"
+  }
+]

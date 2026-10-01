@@ -1,0 +1,20 @@
+{
+  "optional": [
+    "45: invokevirtual #246                // Method findBeanForFieldObject:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/core/type/Argument;Lio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+  ],
+  "list": [
+    "45: invokevirtual #246                // Method getBeansOfTypeForFieldObject:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/core/type/Argument;Lio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+  ],
+  "set": [
+    "45: invokevirtual #246                // Method getBeansOfTypeForFieldObject:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/core/type/Argument;Lio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+  ],
+  "optional-via-instance": [
+    "30: invokevirtual #244                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+  ],
+  "list-via-instance": [
+    "30: invokevirtual #246                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+  ],
+  "set-via-instance": [
+    "30: invokevirtual #246                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+  ]
+}

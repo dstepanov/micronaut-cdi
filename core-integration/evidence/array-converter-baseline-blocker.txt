@@ -1,0 +1,206 @@
+org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile config deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/config/build/deployments/imported/0001-arrayConverterTest.war
+	at io.micronaut.cdi.mptck.MicronautDeployableContainer.deploy(MicronautDeployableContainer.java:129)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController$3.call(ContainerDeployController.java:151)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController$3.call(ContainerDeployController.java:118)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController.executeOperation(ContainerDeployController.java:239)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController.deploy(ContainerDeployController.java:118)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:90)
+	at org.jboss.arquillian.container.impl.client.ContainerDeploymentContextHandler.createDeploymentContext(ContainerDeploymentContextHandler.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)
+	at org.jboss.arquillian.container.impl.client.ContainerDeploymentContextHandler.createContainerContext(ContainerDeploymentContextHandler.java:54)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)
+	at org.jboss.arquillian.container.impl.client.container.DeploymentExceptionHandler.verifyExpectedExceptionDuringDeploy(DeploymentExceptionHandler.java:47)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:134)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:106)
+	at org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:62)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController$1.perform(ContainerDeployController.java:92)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController$1.perform(ContainerDeployController.java:77)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController.forEachDeployment(ContainerDeployController.java:232)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController.forEachManagedDeployment(ContainerDeployController.java:212)
+	at org.jboss.arquillian.container.impl.client.container.ContainerDeployController.deployManaged(ContainerDeployController.java:77)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:90)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:134)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:106)
+	at org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:62)
+	at org.jboss.arquillian.container.test.impl.client.ContainerEventController.execute(ContainerEventController.java:96)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:90)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createClassContext(TestContextHandler.java:83)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createSuiteContext(TestContextHandler.java:69)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:134)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:106)
+	at org.jboss.arquillian.test.impl.EventTestRunnerAdaptor.beforeClass(EventTestRunnerAdaptor.java:89)
+	at org.jboss.arquillian.testng.Arquillian.arquillianBeforeClass(Arquillian.java:99)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.testng.internal.invokers.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:141)
+	at org.testng.internal.invokers.MethodInvocationHelper.invokeMethodConsideringTimeout(MethodInvocationHelper.java:71)
+	at org.testng.internal.invokers.ConfigInvoker.invokeConfigurationMethod(ConfigInvoker.java:400)
+	at org.testng.internal.invokers.ConfigInvoker.invokeConfigurations(ConfigInvoker.java:333)
+	at org.testng.internal.invokers.TestMethodWorker.invokeBeforeClassMethods(TestMethodWorker.java:188)
+	at org.testng.internal.invokers.TestMethodWorker.run(TestMethodWorker.java:128)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.testng.TestRunner.privateRun(TestRunner.java:739)
+	at org.testng.TestRunner.run(TestRunner.java:614)
+	at org.testng.SuiteRunner.runTest(SuiteRunner.java:421)
+	at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:413)
+	at org.testng.SuiteRunner.privateRun(SuiteRunner.java:373)
+	at org.testng.SuiteRunner.run(SuiteRunner.java:312)
+	at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+	at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:95)
+	at org.testng.TestNG.runSuitesSequentially(TestNG.java:1274)
+	at org.testng.TestNG.runSuitesLocally(TestNG.java:1208)
+	at org.testng.TestNG.runSuites(TestNG.java:1112)
+	at org.testng.TestNG.run(TestNG.java:1079)
+	at org.gradle.api.internal.tasks.testing.testng.TestNGTestRunner.runTests(TestNGTestRunner.java:131)
+	at org.gradle.api.internal.tasks.testing.testng.TestNGTestDefinitionProcessor.stop(TestNGTestDefinitionProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: The injection point Boolean[] myBooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+	at io.micronaut.cdi.internal.runtime.DeploymentValidation.validate(DeploymentValidation.java:276)
+	at io.micronaut.cdi.internal.runtime.DeploymentValidation.validate(DeploymentValidation.java:93)
+	at io.micronaut.cdi.internal.runtime.CdiBeanContainer.validateDeployment(CdiBeanContainer.java:286)
+	at io.micronaut.cdi.internal.runtime.ContainerLifecycle.started(ContainerLifecycle.java:94)
+	at io.micronaut.cdi.internal.runtime.$ContainerLifecycle$Definition.initialize(Unknown Source)
+	at io.micronaut.cdi.internal.runtime.$ContainerLifecycle$Definition.instantiate(Unknown Source)
+	at io.micronaut.context.DefaultBeanContext.resolveByBeanFactory(DefaultBeanContext.java:2573)
+	at io.micronaut.context.DefaultBeanContext.createRegistration(DefaultBeanContext.java:3628)
+	at io.micronaut.context.SingletonScope.getOrCreate(SingletonScope.java:79)
+	at io.micronaut.context.DefaultBeanContext.intializeEagerBean(DefaultBeanContext.java:3467)
+	at io.micronaut.context.DefaultBeanContext.initializeEagerBean(DefaultBeanContext.java:3050)
+	at io.micronaut.context.DefaultBeanContext.initializeEagerBean(DefaultBeanContext.java:3023)
+	at io.micronaut.context.DefaultBeanContext.initializeEagerBeans(DefaultBeanContext.java:2374)
+	at io.micronaut.context.DefaultBeanContext.initializeContext(DefaultBeanContext.java:2299)
+	at io.micronaut.context.DefaultBeanContext.configureAndStartContext(DefaultBeanContext.java:3915)
+	at io.micronaut.context.DefaultBeanContext.start(DefaultBeanContext.java:404)
+	at io.micronaut.context.DefaultApplicationContext.start(DefaultApplicationContext.java:293)
+	at io.micronaut.cdi.se.MicronautSeContainerInitializer.initialize(MicronautSeContainerInitializer.java:228)
+	at io.micronaut.cdi.mptck.MicronautDeployableContainer.deploy(MicronautDeployableContainer.java:106)
+	... 101 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point boolean[] mybooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Boolean[] mySingleBooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point boolean[] mySinglebooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point String[] myStringArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point String[] mySingleStringArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Integer[] myIntegerArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point int[] myintArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Integer[] mySingleIntegerArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point int[] mySingleintArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Long[] myLongArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point long[] mylongArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Long[] mySingleLongArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point long[] mySinglelong of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Float[] myFloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point float[] myfloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Float[] mySingleFloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point float[] mySinglefloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Double[] myDoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point double[] mydoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Double[] mySingleDoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point double[] mySingledoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Duration[] myDurationArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Duration[] mySingleDurationArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalTime[] myLocaltimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalTime[] mySingleLocaltimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDate[] myLocalDateArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDate[] mySingleLocalDateArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDateTime[] myLocalDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDateTime[] mySingleLocalDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetDateTime[] myOffsetDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetDateTime[] mySingleOffsetDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetTime[] myOffsetTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetTime[] mySingleOffsetTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Instant[] myInstantArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Instant[] mySingleInstantArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URL[] myUrlArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URL[] mySingleUrlArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URI[] myUriArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URI[] mySingleUriArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Pizza[] myPizzaArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more
+	Suppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Pizza[] mySinglePizzaArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)
+		... 120 more

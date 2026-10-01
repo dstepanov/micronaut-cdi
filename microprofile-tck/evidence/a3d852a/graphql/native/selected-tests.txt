@@ -1,0 +1,2 @@
+org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest
+org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest

@@ -1,0 +1,1617 @@
+[
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "getBeansWithAnyResolvesEveryBeanOfTheType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "theBeanManagerAnswersAsMuchAsCdiLiteCan()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "twoQualifiersAreTheSameWhenTheirBindingMembersAre()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "programmaticLookupTellsWhenItResolvesToNothingOrToMoreThanOne()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "getBeansWithNoQualifierResolvesTheDefaultBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "programmaticLookupNarrowsByTypeAndQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "theContainerAppliesTheRulesOfResolutionToTypesAndQualifiersOnTheirOwn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "theStaticEntryPointResolvesToTheRunningContainer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "aBeanReportsWhatItWasWrittenWith()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "aDependentBeanReportsTheDependentPseudoScope()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "theRequestScopeHasAContextThatIsNotActiveOutsideARequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "aReferenceObtainedThroughTheContainerIsTheContextualInstance()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "getBeansWithAQualifierResolvesTheQualifiedBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "theContainerAnswersWhatAnAnnotationIs()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanContainerTest",
+    "name": "theBeanManagerIsInjectable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AbstractBeanTest",
+    "name": "aLookupOfTheAbstractTypeResolvesToItsConcreteSubclass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AbstractBeanTest",
+    "name": "anAbstractClassIsNotAmongTheBeansOfItsType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticEnumQualifierTest",
+    "name": "aSyntheticBeanIsSelectedByTheEnumMemberOfItsQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticEnumQualifierTest",
+    "name": "aNameGivenBesideAQualifierIsKeptBesideIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StaticObserverOverloadTest",
+    "name": "sameNameStaticObserverOverloadsEachReceiveTheirOwnEvent()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerStereotypeTest",
+    "name": "stereotypeOnProducerField()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerStereotypeTest",
+    "name": "stereotypeOnProducerMethod()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AlternativePriorityTest",
+    "name": "anAlternativeProducerWithAPriorityWinsInjection()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AlternativePriorityTest",
+    "name": "getBeansReturnsBothAndResolvePicksTheAlternative()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AlternativePriorityTest",
+    "name": "debugDefinitions()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestScopedInterceptorStateTest",
+    "name": "anInterceptorOfARequestScopedBeanStartsAgainEachRequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceBulkDestroyTest",
+    "name": "destroyingEachInstanceDestroysItAndItsDependents()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InjectionPointMetadataTest",
+    "name": "aConstructorParameterInjectionPointIsDescribedAsAParameter()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InjectionPointMetadataTest",
+    "name": "aFieldInjectionPointNamesItsFieldAndTheBeanThatDeclaresIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InjectionPointMetadataTest",
+    "name": "theQualifiersOfTheInjectionPointAreTheOnesThePointDeclared()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ContextOwnershipTest",
+    "name": "askingTheApplicationContextForAnInstanceItHoldsDoesNotDestroyItTwice()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ContextOwnershipTest",
+    "name": "askingTheRequestContextForAnInstanceItHoldsDoesNotDestroyItTwice()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ContextOwnershipTest",
+    "name": "destroyingABeanThroughTheApplicationContextDestroysItOnce()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ContextOwnershipTest",
+    "name": "destroyingASingletonThroughItsContextDestroysIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanCreateTest",
+    "name": "creatingABeanOfANormalScopeCreatesANewInstanceEachTime()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanCreateTest",
+    "name": "creatingASingletonCreatesANewInstanceEachTime()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanCreateTest",
+    "name": "theContextCreatesTheInstanceOfItsScopeOnce()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ShutdownOrderTest",
+    "name": "theApplicationContextIsDestroyedBetweenItsTwoEvents()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DisabledAlternativeProducersTest",
+    "name": "theProducersOfAnUnselectedAlternativeClassProduceNothing()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DisabledAlternativeProducersTest",
+    "name": "selectingTheClassEnablesItsProducersAndNoOthers()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.disposer.DisposerDispatchTest",
+    "name": "anArgumentResolvedBeforeAnotherFailedIsDestroyed()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.disposer.DisposerDispatchTest",
+    "name": "aDisposerWithoutOverloadsRuns()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.disposer.DisposerDispatchTest",
+    "name": "eachOverloadDisposesOfWhatItsProducerProduced()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceHandleSemanticsTest",
+    "name": "aDependentInstanceObtainedByIterationIsDestroyedWithTheLookup()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceHandleSemanticsTest",
+    "name": "getReferenceRejectsATypeTheBeanDoesNotHave()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceHandleSemanticsTest",
+    "name": "destroyingAnUnresolvedHandleIsANoOpThatLeavesItUsable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceHandleSemanticsTest",
+    "name": "eachIterationOfHandlesIsAFreshSetOfHandles()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceCreationFailureTest",
+    "name": "aBeanOfAScopeFailsTheSameThroughEveryWayOfObtainingIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceCreationFailureTest",
+    "name": "aDependentBeanFailsTheSameThroughEveryWayOfObtainingIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ObserverOrderingTest",
+    "name": "anObserverMethodOfASuperclassObservesForTheBeanThatInheritsIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ObserverOrderingTest",
+    "name": "observersAreNotifiedInAscendingOrderOfPriority()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ObserverOrderingTest",
+    "name": "anObserverOfObjectWithNoQualifierOfItsOwnObservesAQualifiedEvent()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "aContextAnExtensionAddsForABuiltInScopeTakesThePlaceOfTheContainersOwn()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anEventIsOnlyToBeUsedWhileItsObserversAreNotified()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anExtensionObservingAnEventOfTheApplicationIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anObserverMethodAnExtensionAddsIsNotified()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "theObserversOfAnEventAreNotifiedInTheOrderOfTheirPriority()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anExtensionOfTheServiceLoaderTakesPart()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "theEventsOfTheLifecycleAreFiredInOrderOverWhatWasCompiled()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "aQualifierAddedToABeanClassIsNotSeenByAnInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[1] BeforeBeanDiscovery.addScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[2] BeforeBeanDiscovery.addStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[3] BeforeBeanDiscovery.addInterceptorBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[4] BeforeBeanDiscovery.addAnnotatedType",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[5] BeforeBeanDiscovery.configureQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[6] BeforeBeanDiscovery.configureInterceptorBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[7] ProcessAnnotatedType.veto",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[8] ProcessAnnotatedType.setAnnotatedType",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[9] AnnotatedTypeConfigurator.add",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[10] AnnotatedTypeConfigurator.remove",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[11] AnnotatedTypeConfigurator.methods",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[12] AnnotatedTypeConfigurator.fields",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[13] AnnotatedTypeConfigurator.constructors",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[14] AfterTypeDiscovery.getInterceptors",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[15] AfterTypeDiscovery.getDecorators",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[16] AfterTypeDiscovery.addAnnotatedType",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[17] ProcessInjectionTarget.getInjectionTarget",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[18] ProcessInjectionTarget.setInjectionTarget",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[19] ProcessBeanAttributes.veto",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[20] ProcessBeanAttributes.setBeanAttributes",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[21] ProcessBeanAttributes.configureBeanAttributes",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[22] ProcessBeanAttributes.ignoreFinalMethods",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[23] ProcessManagedBean.createInvoker",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[24] AfterBeanDiscovery.addBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "[25] AfterBeanDiscovery.addObserverMethod()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "aDeploymentProblemAnExtensionRegistersFailsTheBootstrap()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "aQualifierAddedToABeanClassQualifiesTheBeanForALookup()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "aDefinitionErrorAnExtensionRegistersFailsTheBootstrap()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anAnnotationAnExtensionMakesAQualifierIsOne()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anExtensionHandedOverIsTheBeanOfItsClass()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableExtensionTest",
+    "name": "anExtensionNamedByItsClassIsCreatedAndIsTheBeanOfItsClass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DependentDestructionTest",
+    "name": "aDependentNotDestroyedThroughItsHandleGoesWithTheLookup()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DependentDestructionTest",
+    "name": "aDependentDestroyedThroughItsHandleIsNotDestroyedAgainWithTheLookup()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DependentDestructionTest",
+    "name": "everyInjectionPointGetsADependentInstanceOfItsOwn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.NestedAnnotationQualifierTest",
+    "name": "aQualifierWithAnAnnotationMemberSelectsByThatMember()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StaticDisposerTest",
+    "name": "aStaticDisposerRunsWithItsOtherParametersResolved()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeInheritanceTest",
+    "name": "anInheritedStereotypeCarriesItsScopeDown()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeInheritanceTest",
+    "name": "aScopeCarriedByADeclaredStereotypeIsTheScope()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeInheritanceTest",
+    "name": "anInheritableScopeIsInherited()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeInheritanceTest",
+    "name": "aStereotypeNotMarkedInheritedDoesNotCarryItsScopeDown()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeInheritanceTest",
+    "name": "aScopeNotMarkedInheritedIsNotInherited()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeInheritanceTest",
+    "name": "aBareStereotypeLeavesTheBeanDependent()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.NullNormalScopedProductTest",
+    "name": "aNullProductOfANormalScopeIsAnIllegalProduct()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.NullNormalScopedProductTest",
+    "name": "aNullProductOfANormalScopeIsAnIllegalProductInAnSeContainer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.NullNormalScopedProductTest",
+    "name": "aNormalScopedProductOfAClassOutsideTheArchiveIsInTheArchiveOfItsProducer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerParameterInjectionPointTest",
+    "name": "aProducerParameterInjectionPointNamesTheProducerMethod()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.CrossThreadCreationTest",
+    "name": "aCreationMayWaitForAnotherThreadCreatingAnotherBeanOfTheScope()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorLifecycleNestingTest",
+    "name": "anInterceptorClassWrapsTheTargetClassOwnCallbacks()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorLifecycleNestingTest",
+    "name": "aTargetClassOwnAroundInvokeIsInnermostAndItsSuperclassRunsFirst()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.se.SeSelectedClassMembersTest",
+    "name": "aSelectedPackageBringsWhatTheMembersOfItsClassesDeclare()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.se.SeSelectedClassMembersTest",
+    "name": "aSelectedClassBringsWhatItsMembersDeclare()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LifecycleEventTest",
+    "name": "theContainerFiresTheEventsOfItsOwnLifecycle()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AlterableDestroyTest",
+    "name": "destroyingTheContextualInstanceGivesAFreshOneThroughTheProxy()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AsyncObserverContextTest",
+    "name": "anObserverNotifiedOnAnotherThreadHasARequestOfItsOwn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AsyncObserverContextTest",
+    "name": "anObserverNotifiedByTheDefaultExecutorHasARequestThatEndsWithTheNotification()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AsyncObserverContextTest",
+    "name": "anObserverNotifiedOnTheFiringThreadHasARequestOfItsOwn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AlternativeInstanceTest",
+    "name": "aSelectedAlternativeIsTheOneTheLookupIterates()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTypeResolutionTest",
+    "name": "aDeclaredParameterResolvesTheVariable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTypeResolutionTest",
+    "name": "aSupertypeParameterResolvesTheSubtypeVariable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "theModelReportsOnlyTheAnnotationsRetainedAtRuntime()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "theModelListsInheritedMembersAndNoBridgeMethod()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "twoReadingsOfOneThingAreEqual()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "theModelCarriesTheAnnotationsOfAUseOfAType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "theModelDeclaresTheTypeParametersAndTheConstructorsOfAClass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "theModelKnowsTheKindOfAClass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LanguageModelTest",
+    "name": "theModelFillsInTheDefaultOfAnAnnotationMember()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentScopedContainerTest",
+    "name": "anotherDeploymentHoldsTheOtherBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentScopedContainerTest",
+    "name": "aContainerHoldsOnlyTheBeansOfItsDeployment()",
+    "status": "passed"
+  },
+  {
+    "class": "org.example.cdi.extension.PortableContextCreationTest",
+    "name": "theContainerCreatesResolvesAndDestroysThroughAContextAnExtensionAdded()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerScopeTest",
+    "name": "aDependentProducerOfAnApplicationScopedClassIsToldItsInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerScopeTest",
+    "name": "aProducerOfATypeContainingAVariableMayWriteTheDependentScopeDown()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopedDisposalTest",
+    "name": "aBeanProducedForAnApplicationScopedBeanIsDisposedOfWhenTheContainerStops()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SeContainerShutdownOrderTest",
+    "name": "whatWasLookedUpThroughTheContainerIsDestroyedAfterItSaysItIsStopping()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestDestructionTest",
+    "name": "aRequestLeftOpenIsDestroyedWithTheContainerWhileItIsActive()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestDestructionTest",
+    "name": "aRequestActivatedForAMethodDestroysItsBeansWhileItIsActive()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestDestructionTest",
+    "name": "aRequestRunAsWorkDestroysItsBeansWhileItIsActive()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestDestructionTest",
+    "name": "oneBeanFailingToBeDestroyedLeavesTheOthersToBeDestroyed()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestDestructionTest",
+    "name": "aRequestTheControllerEndsDestroysItsBeansWhileItIsActive()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorEnablementTest",
+    "name": "anInterceptorWithoutAPriorityIsNotReportedAndDoesNotRun()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorEnablementTest",
+    "name": "theBootstrapKeepsTheOrderItEnabledTheInterceptorsIn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorEnablementTest",
+    "name": "anInterceptorNamedByTheBeanRunsWithoutAPriority()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorEnablementTest",
+    "name": "theBootstrapEnablesAnInterceptorWithoutAPriority()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorEnablementTest",
+    "name": "theInterceptorsThatRunAreTheOnesTheBeanManagerReports()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.bce.ExtensionParametersTest",
+    "name": "anObserverRegistrationMethodIsHandedAnInvokerFactory()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.bce.ExtensionParametersTest",
+    "name": "anEnhancementMethodIsHandedTypes()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.bce.ExtensionParametersTest",
+    "name": "aDiscoveryMethodIsHandedMessages()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceIterationTest",
+    "name": "aDependentBeanObtainedByIteratingIsDestroyedAsOneObtainedByGetIs()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceIterationTest",
+    "name": "everyWayOfObtainingADependentBeanGivesItTheLookupsInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AlternativeProducerLibraryTest",
+    "name": "anAlternativeProducerFieldOfAPrioritisedClassIsSelected()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventSelectionTypeTest",
+    "name": "selectingAQualifierKeepsTheTypeTheEventWasSelectedAs()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.NonPublicDisposerTest",
+    "name": "aDisposerThatIsNotPublicDisposesOfWhatItsProducerProduced()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "theSelectedQualifierIsReportedWithItsNonbindingMember()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "theInstanceHandedToTheLookupIsTheOneReported()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "theQualifiersOfEverySelectOfAChainAreReported()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "everyWayOfObtainingTheBeanReportsTheSame()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "aLookupThatSelectsNoQualifierRequiresTheDefaultOne()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "aQualifierSelectedAsAnAnnotationValueIsReadWithoutAnInstance()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.LookupQualifierMembersTest",
+    "name": "theContainersOfTheSpecificationReportTheSame()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AbstractBeanInjectionTest",
+    "name": "anInjectionPointOfTheAbstractTypeResolvesToItsConcreteSubclass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ContainerTypeInjectionTest",
+    "name": "declaredContainerBeansAreInjectedAndDisposedWithTheirOwner()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.FieldEnhancementTest",
+    "name": "aQualifierAnExtensionPutsOnAFieldQualifiesTheInjection()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.FieldEnhancementTest",
+    "name": "anObserverWhoseParameterAnnotationsWereRemovedHearsNothing()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorResolutionTest",
+    "name": "resolvingWithADuplicateBindingIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorResolutionTest",
+    "name": "anInterceptorLetsACheckedExceptionOfTheInvocationThrough()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorResolutionTest",
+    "name": "resolvingWithoutABindingIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorResolutionTest",
+    "name": "resolvingWithANonBindingAnnotationIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorResolutionTest",
+    "name": "interceptorsOfOnePriorityAreOrderedByTheirNames()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorResolutionTest",
+    "name": "anInterceptorResolvesByItsBindingAndOrdersByPriority()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ModelAnnotationsTest",
+    "name": "theNonNullMicronautWritesOnATypeInANullMarkedClassIsReported()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ModelAnnotationsTest",
+    "name": "whatMicronautAddsToAClassIsReportedWithWhatTheSourceWrote()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeCompositionTest",
+    "name": "aStereotypeThatComesBackOnItselfIsStillOneSetOfStereotypes()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeCompositionTest",
+    "name": "aScopeTheBeanDeclaresItselfWinsOverTheOneItsStereotypeCarries()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeCompositionTest",
+    "name": "everythingAStereotypeChainDeclaresReachesTheBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.GenericArrayBeanTypeTest",
+    "name": "aProducedArrayOfAParameterizedTypeKeepsItsArguments()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.MicronautCoreIssuesTest",
+    "name": "aFactoryThatIsPrimaryAndAlsoQualifiedCanProduceABean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.instance.SelectedQualifiersInjectionPointTest",
+    "name": "theSelectedQualifierIsAmongTheQualifiersOfTheInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StaticObserverTest",
+    "name": "aStaticObserverIsNotifiedWithoutAContext()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InheritedObserverEnhancementTest",
+    "name": "anInheritedObserverSilencedThroughItsDeclaringClassHearsNothing()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.synthetic.SyntheticBeanIdentityTest",
+    "name": "twoSyntheticBeansOfTheSameTypeAndQualifiersAreAmbiguous()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.synthetic.SyntheticBeanIdentityTest",
+    "name": "everySyntheticBeanOfTheTypeIsReported()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "differentParameterizationsDoNotMatch()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "anArrayIsMatchedByItsComponentAndObservedCovariantly()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "anEventTypeMayNotContainATypeVariable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aVariableBoundedByAVariableIsBoundedAllTheWayUp()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "everyBoundOfAVariableCounts()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "variablesAreComparedByTheirUppermostBounds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aLowerBoundThatIsAVariableIsTheVariable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aTypeMatchesItself()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "anObjectArgumentIsObjectAlone()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aWildcardBoundedByAVariableIsBoundedAllTheWayUp()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aBeanTypeWithAnUnboundedVariableMatchesAnActualRequiredType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aRawRequiredTypeIsMatchedByABeanTypeWhoseParametersSayNothing()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aWildcardIsMatchedByWhatFitsItsBoundsAndNeverTheOtherWayRound()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.AssignabilityRulesTest",
+    "name": "aParameterizedBoundIsComparedAsTheLanguageAssignsIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.GenericAssignabilityTest",
+    "name": "wildcardsWithinTheVariableBoundsMatch()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.GenericAssignabilityTest",
+    "name": "typeVariablePairsAgainstDao()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.GenericAssignabilityTest",
+    "name": "wildcardWithLowerBoundBeyondTheVariableBoundDoesNotMatch()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.GenericAssignabilityTest",
+    "name": "typeVariablesWithinTheVariableBoundsMatch()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScanAndChangeTest",
+    "name": "aRemovedQualifierIsGone()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScanAndChangeTest",
+    "name": "aScannedClassIsABean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeTest",
+    "name": "injectionResolvesBothScopes()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeTest",
+    "name": "applicationScopedIsOneInstance()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeTest",
+    "name": "dependentIsANewInstanceEveryTime()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ScopeTest",
+    "name": "requestScopedNeedsAnActiveRequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ObserverMetadataIsStableTest",
+    "name": "whatAnObserverObservesIsTheSameEveryTimeItIsAsked()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ExtensionScopedDeclaringBeanTest",
+    "name": "aDisposerIsInvokedOnTheInstanceTheContextHolds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ExtensionScopedDeclaringBeanTest",
+    "name": "anObserverIsNotifiedOnTheInstanceTheContextHolds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InjectionDefinitionErrorTest",
+    "name": "aFinalInjectedFieldIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InjectionDefinitionErrorTest",
+    "name": "aProducerMethodThatIsAnInitializerIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InjectionDefinitionErrorTest",
+    "name": "anInjectionPointOfATypeVariableOfAGenericBeanIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.QualifiedFieldTest",
+    "name": "aQualifiedFieldWithoutInjectIsNotInjected()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.TypedNestedTest",
+    "name": "aBeanMayNarrowItsTypesToANestedInterface()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.TypedNestedTest",
+    "name": "aBeanThatNarrowsItsTypesToNothingKeepsOnlyObject()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SeContainerCloseTest",
+    "name": "closingTheContainerDestroysTheDependentsLookedUpThroughIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SeContainerCloseTest",
+    "name": "aDependentTheProgramDestroyedIsNotDestroyedAgain()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeTest",
+    "name": "aStereotypeCarriesTheScopeItDeclares()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeTest",
+    "name": "aBeanReportsTheStereotypesItCarries()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeTest",
+    "name": "aStereotypeCanDeclareThatItsBeansAreAlternatives()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeTest",
+    "name": "aStereotypeCarriesTheRequestScopeItDeclares()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeAlternativeProducerTest",
+    "name": "selectingTheStereotypeEnablesTheProducerMethodAndField()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.StereotypeAlternativeProducerTest",
+    "name": "aProducerWhoseStereotypeIsAnUnselectedAlternativeProducesNothing()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.customscope.ExtensionScopeBridgeTest",
+    "name": "theContextFindsTheInstanceByTheBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.customscope.ExtensionScopeBridgeTest",
+    "name": "instanceDestroyDestroysTheInstanceTheContextHolds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.customscope.ExtensionScopeBridgeTest",
+    "name": "endingTheContextDestroysTheDependentsOfWhatItHeld()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanDiscoveryTest",
+    "name": "anAlternativeThatDeclaresNoPriorityIsNotEnabled()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanDiscoveryTest",
+    "name": "anAlternativeWithAPriorityReplacesTheBeanItIsAnAlternativeTo()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanDiscoveryTest",
+    "name": "aVetoedClassIsNotABean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceDestroyTest",
+    "name": "destroyingAnInstanceMemberRunsItsPreDestroy()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceDestroyTest",
+    "name": "closingAHandleDestroysItsDependent()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceDestroyTest",
+    "name": "aHandleOfADependentClientDestroysOnClose()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.VetoedBeanTest",
+    "name": "nothingOfAVetoedPackageIsABean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.VetoedBeanTest",
+    "name": "aVetoedClassIsNotABean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProviderInjectionPointTest",
+    "name": "deferredProvidersKeepEachRequestingInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProviderInjectionPointTest",
+    "name": "aFailingDeferredCreationDoesNotLeaveItsInjectionPointBehind()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "aDisposerRunsWhenTheRequestEnds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "theLambdaFormHoldsWhenPropagationIsByScopedValues()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "theControllerBeginsAndEndsARequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "deactivatingWithoutARequestIsAnError()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "activatingAnActiveContextReportsThatItDidNot()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "theControllerCanBeInjected()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "aRequestReachesTheThreadItsWorkIsHandedTo()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "theAdviceOnTheClassMakesEveryMethodOneRequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "theAdviceMakesTheMethodOneRequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RequestContextTest",
+    "name": "aRequestScopedBeanNeedsARequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.TransientReferenceProducerTest",
+    "name": "transientProducerParameterIsDestroyed()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "missingOptionalAndCollectionProducersAreDeploymentProblems()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "anUnsatisfiedDisposerParameterIsADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "anUnsatisfiedObserverParameterIsADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "anInjectionPointThatResolvesToAnUnproxyableNormalScopedBeanIsADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "ambiguousOptionalAndCollectionProducersAreDeploymentProblems()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "anUnproxyableNormalScopedBeanNothingIsInjectedWithDeploys()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "anAmbiguousInjectionPointIsADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "aNameThatIsThePathPrefixOfAnotherIsADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "twoBeansOfOneNameAreADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DeploymentValidationTest",
+    "name": "anUnsatisfiedInjectionPointIsADeploymentProblem()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerVarietyTest",
+    "name": "aStaticProducerProducesWithoutAnInstanceOfItsClass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerVarietyTest",
+    "name": "aDependentProducerMayProduceNothing()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerVarietyTest",
+    "name": "aDisposerQualifiedAnyDisposesOfEveryProducerOfTheType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerVarietyTest",
+    "name": "aPrimitiveProducerProducesTheClassThatBoxesItToo()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ExtensionAnnotationMembersTest",
+    "name": "theArrayMembersOfAnAddedAnnotationAreKept()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextStoreDefinitionTest",
+    "name": "destroyingAScopedProxyPassesTheStore()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextStoreDefinitionTest",
+    "name": "aLookupByDefinitionPassesTheStore()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.event.EventRawTypeMatchingTest",
+    "name": "anObserverOfAnotherParameterizationOfTheSupertypeIsNotNotified()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DecoratorMetadataInjectionTest",
+    "name": "decoratorMetadataInjectedIntoABeanIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DecoratorMetadataInjectionTest",
+    "name": "theDecoratedBeanInjectedIntoAConstructorIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DecoratorMetadataInjectionTest",
+    "name": "theDecoratedBeanInjectedIntoAFieldIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DecoratorMetadataInjectionTest",
+    "name": "theDecoratedBeanInjectedIntoAnInitializerIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.creation.CreationExceptionTranslationTest",
+    "name": "anUncheckedExceptionWithACheckedCauseIsNotWrapped()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.creation.CreationExceptionTranslationTest",
+    "name": "theExceptionTheConstructorThrewIsRethrownNotItsCause()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BuildCompatibleExtensionTest",
+    "name": "anEnhancementMakesAMarkedFieldAnInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BuildCompatibleExtensionTest",
+    "name": "aSyntheticBeanIsResolvedThroughTheContainerToo()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BuildCompatibleExtensionTest",
+    "name": "theScopeTheEnhancementAddedIsTheScopeTheBeanIsIn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BuildCompatibleExtensionTest",
+    "name": "aSynthesisAddsABeanNoClassDeclares()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BuildCompatibleExtensionTest",
+    "name": "anEnhancementMakesAnAuditedClassABean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BuildCompatibleExtensionTest",
+    "name": "aClassTheExtensionDidNotAskForIsLeftAlone()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "anApplicationScopedSyntheticBeanIsReplacedWhenItsContextDestroysIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "aSyntheticBeanIsResolvableByExactlyTheTypesItDeclared()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "aRequestScopedSyntheticBeanLivesAndDiesWithTheRequest()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "anAlternativeIsEnabledByItsPriorityAndOutranksTheOrdinaryBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "anAnnotationTheDiscoveryPhaseRegisteredIsAQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "aProducedNormalScopedInstanceIsDestroyedThroughItsContext()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SyntheticScopesAndAlternativesTest",
+    "name": "aQualifierMemberTellsSyntheticBeansApartAndIsReportedAsWritten()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerTest",
+    "name": "theDisposerIsInvokedForTheProducerItMatches()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerTest",
+    "name": "producerMethodsAndFieldsBecomeBeans()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ProducerTest",
+    "name": "anUnqualifiedInjectionPointResolvesToTheDefaultProducer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceDestroyProducedTest",
+    "name": "anInstanceIsDisposedOfByTheDisposerOfItsOwnProducer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RawBeanTypeTest",
+    "name": "theSupertypesOfARawBeanTypeAreErased()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.RawBeanTypeTest",
+    "name": "aRawBeanTypeDoesNotMatchAWildcard()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.qualifier.SelectByAnnotationValueTest",
+    "name": "theValueAndTheLiteralNotifyTheSameObservers()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.qualifier.SelectByAnnotationValueTest",
+    "name": "theValueAndTheLiteralSelectTheSameBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceTest",
+    "name": "aLookupOfAnyResolvesEveryBeanOfTheType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceTest",
+    "name": "aQualifiedLookupResolvesTheQualifiedBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceTest",
+    "name": "selectNarrowsALookupByQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceTest",
+    "name": "anUnqualifiedLookupResolvesTheDefaultBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceTest",
+    "name": "aHandleDestroysTheBeanItResolved()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InstanceTest",
+    "name": "aLookupThatResolvesNothingSaysSo()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.repeatable.RepeatableQualifierTest",
+    "name": "aRepeatableQualifierNarrowsTheObserversItWasWrittenOn()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.TransientReferenceTest",
+    "name": "aTransientReferenceIsDestroyedWhenCreationCompletes()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.TransientReferenceTest",
+    "name": "nativeInjectScopeDestroysOnCreation()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanInjectionPointsTest",
+    "name": "theParametersOfAConstructorAreInjectionPointsWhateverTheirPackage()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanInjectionPointsTest",
+    "name": "theParametersOfAProducerMethodAreInjectionPointsOfItsBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.BeanInjectionPointsTest",
+    "name": "whatTheContainerPassesAnInterceptedBeanIsNotAnInjectionPoint()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.ParameterizedEventLocalTest",
+    "name": "aParameterizedEventNotifiesItsWholeClosure()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTest",
+    "name": "aQualifiedEventNotifiesTheQualifiedObserverAndTheUnqualifiedOne()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTest",
+    "name": "anEventNotifiesTheObserversOfItsTypeAndQualifiers()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTest",
+    "name": "selectNarrowsTheQualifiersOfAnEvent()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTest",
+    "name": "anEventFiredAsynchronouslyNotifiesOnlyTheAsynchronousObservers()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.EventTest",
+    "name": "observersAreNotifiedInPriorityOrder()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.qualifier.RepeatedQualifiersReportedTest",
+    "name": "aBeanReportsBothOccurrences()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.qualifier.RepeatedQualifiersReportedTest",
+    "name": "anInjectionPointReportsBothOccurrences()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextualInstanceLookupTest",
+    "name": "theApplicationContextReportsTheInstanceItHolds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextualInstanceLookupTest",
+    "name": "theSingletonContextReportsTheInstanceItHolds()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextualInstanceLookupTest",
+    "name": "aCustomScopedBeanThatWasNeverCreatedDoesNotExist()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextualInstanceLookupTest",
+    "name": "anInstanceOfASubclassBeanIsNotAnInstanceOfTheSuperclassBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.context.ContextualInstanceLookupTest",
+    "name": "aConditionalObserverOfAnInactiveCustomContextIsNotNotified()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorInvocationTest",
+    "name": "whatAPrivateInterceptorMethodThrowsArrivesUnchanged()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorInvocationTest",
+    "name": "aTimeoutIsInterposedOnByTheInterceptorsThatDeclareAnAroundTimeoutMethod()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.InterceptorInvocationTest",
+    "name": "privateInterceptorMethodsOfOneNameInAClassAndItsSuperclassAreBothInvoked()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SingletonPseudoScopeBeanTest",
+    "name": "aLookupThatNamesNoQualifierResolvesASingletonBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SingletonPseudoScopeBeanTest",
+    "name": "anInjectionPointThatNamesNoQualifierResolvesASingletonBean()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.SingletonPseudoScopeBeanTest",
+    "name": "aSingletonBeanCarriesTheDefaultQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DefaultBeanNameTest",
+    "name": "aProducerKeepsTheNameOfItsMember()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.DefaultBeanNameTest",
+    "name": "aNestedBeanClassIsNamedAfterItselfAndNotItsOuterClass()",
+    "status": "passed"
+  }
+]

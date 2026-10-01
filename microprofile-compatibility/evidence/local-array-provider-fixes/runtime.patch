@@ -1,0 +1,101 @@
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java
+index 536269e..0f672d9 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java
+@@ -331,17 +331,15 @@ public final class CdiAssignability {
+             return true;
+         }
+         if (CdiTypes.isArray(required) || CdiTypes.isArray(candidate)) {
+-            // two array types match when their element types do, by these rules again; a class component is the
+-            // same type or not, with no boxing, since an int[] is not an Integer[]
++            // section 2.4.2.1 requires identical element types, not the parameterized assignability rules:
++            // List<String>[] is neither an Object[] nor a List<?>[] bean type. Event arrays have their own
++            // covariant matching above.
+             Argument<?> requiredComponent = required.componentType();
+             Argument<?> candidateComponent = candidate.componentType();
+             if (requiredComponent == null || candidateComponent == null) {
+                 return CdiTypes.isObject(required);
+             }
+-            if (CdiTypes.isClass(requiredComponent) && CdiTypes.isClass(candidateComponent)) {
+-                return requiredComponent.getType().equals(candidateComponent.getType());
+-            }
+-            return isAssignable(requiredComponent, candidateComponent);
++            return requiredComponent.equalsStructure(candidateComponent);
+         }
+         Class<?> requiredRaw = rawTypeOf(required);
+         Class<?> candidateRaw = rawTypeOf(candidate);
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java
+index cd69799..7cfe4d3 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java
+@@ -220,6 +220,21 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
+      * bean's, say.
+      */
+     static <U> Argument<U> askedAs(Argument<U> selected, BeanDefinition<U> definition) {
++        if (CdiTypes.isArray(selected)) {
++            // The producer's compiled definition may expose only the raw array argument. The lookup already
++            // matched its recorded CDI types, so preserve the component's parameters for candidate resolution.
++            return selected;
++        }
++        if (CdiTypes.isArray(definition.asArgument())) {
++            // A qualified Object lookup can select an array producer too. Resolve it by its recorded array
++            // type rather than the erased array argument of the generated definition.
++            for (Argument<?> type : CdiBean.typesOf(definition, definition.getBeanType())) {
++                if (CdiTypes.isArray(type)) {
++                    @SuppressWarnings("unchecked") Argument<U> array = (Argument<U>) type;
++                    return array;
++                }
++            }
++        }
+         if (definition.isCandidateBean(selected)) {
+             if (selected.getTypeParameters().length > 0) {
+                 // a parameterized selection carries what a parameterized built-in reads: what an Event<X> is of
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java
+index d47ee86..c4dfa02 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java
+@@ -24,12 +24,13 @@ import io.micronaut.inject.QualifiedBeanType;
+ 
+ 
+ /**
+- * Micronaut's resolution, widened to the type rules of section 2.4.2.1 where the two disagree.
++ * Micronaut's resolution, adjusted to the type rules of section 2.4.2.1 where the two disagree.
+  *
+  * <p>Micronaut's own candidate test answers most lookups; what it does not know are the specification's rules
+  * for a bean whose type carries type variables — a generic dependent bean is a candidate for whatever fits its
+  * bounds, and a raw producer for a required type that says nothing. When Micronaut says no to a lookup with
+- * type arguments, the specification's own matching gets the last word.</p>
++ * type arguments, the specification's own matching gets the last word. Arrays also use that matching,
++ * including raw array lookups, since their element types must be identical.</p>
+  *
+  * @author Denis Stepanov
+  * @since 1.0
+@@ -87,6 +88,18 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
+         Argument<T> beanType,
+         io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
+         java.util.Collection<io.micronaut.inject.BeanDefinition<T>> candidates) {
++        if (beanType.getType() == jakarta.inject.Provider.class && candidates.size() == 2
++            && candidates.stream().anyMatch(candidate ->
++                candidate instanceof io.micronaut.inject.provider.JakartaProviderBeanDefinition)) {
++            // Instance extends Provider. Its built-in factory captures the injection point and owns the
++            // dependent instances it creates; Micronaut's ordinary Provider does not retain that metadata.
++            // Resolve only this overlap between the two built-ins, leaving user-defined providers alone.
++            for (BeanDefinition<T> candidate : candidates) {
++                if (candidate instanceof CdiInstanceFactory<?>) {
++                    return java.util.Optional.of(candidate);
++                }
++            }
++        }
+         if (qualifier != null) {
+             return java.util.Optional.empty();
+         }
+@@ -157,7 +170,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
+ 
+     @Override
+     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
+-        if (beanType.getTypeParameters().length > 0 && candidate instanceof BeanDefinition<?> definition
++        if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
++            && candidate instanceof BeanDefinition<?> definition
+             && isBeanOfTheSpecification(definition)) {
+             // a parameterized lookup of a bean of the specification is answered by the rules of section
+             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable

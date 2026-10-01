@@ -1,0 +1,728 @@
+[
+  {
+    "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+    "name": "canInjectDefaultPropertyPath",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+    "name": "canInjectDynamicValuesViaCdiProvider",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+    "name": "canInjectSimpleValuesWhenDefined",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+    "name": "injectedValuesAreEqualToProgrammaticValues",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "arquillianBeforeClass",
+    "status": "failed",
+    "trace": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile config deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/config/build/deployments/imported/0001-arrayConverterTest.war\n\tat io.micronaut.cdi.mptck.MicronautDeployableContainer.deploy(MicronautDeployableContainer.java:129)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController$3.call(ContainerDeployController.java:151)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController$3.call(ContainerDeployController.java:118)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController.executeOperation(ContainerDeployController.java:239)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController.deploy(ContainerDeployController.java:118)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:90)\n\tat org.jboss.arquillian.container.impl.client.ContainerDeploymentContextHandler.createDeploymentContext(ContainerDeploymentContextHandler.java:71)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)\n\tat org.jboss.arquillian.container.impl.client.ContainerDeploymentContextHandler.createContainerContext(ContainerDeploymentContextHandler.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)\n\tat org.jboss.arquillian.container.impl.client.container.DeploymentExceptionHandler.verifyExpectedExceptionDuringDeploy(DeploymentExceptionHandler.java:47)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)\n\tat org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:134)\n\tat org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:106)\n\tat org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:62)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController$1.perform(ContainerDeployController.java:92)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController$1.perform(ContainerDeployController.java:77)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController.forEachDeployment(ContainerDeployController.java:232)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController.forEachManagedDeployment(ContainerDeployController.java:212)\n\tat org.jboss.arquillian.container.impl.client.container.ContainerDeployController.deployManaged(ContainerDeployController.java:77)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:90)\n\tat org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:134)\n\tat org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:106)\n\tat org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:62)\n\tat org.jboss.arquillian.container.test.impl.client.ContainerEventController.execute(ContainerEventController.java:96)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:90)\n\tat org.jboss.arquillian.test.impl.TestContextHandler.createClassContext(TestContextHandler.java:83)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)\n\tat org.jboss.arquillian.test.impl.TestContextHandler.createSuiteContext(TestContextHandler.java:69)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:86)\n\tat org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:95)\n\tat org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:134)\n\tat org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:106)\n\tat org.jboss.arquillian.test.impl.EventTestRunnerAdaptor.beforeClass(EventTestRunnerAdaptor.java:89)\n\tat org.jboss.arquillian.testng.Arquillian.arquillianBeforeClass(Arquillian.java:99)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.testng.internal.invokers.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:141)\n\tat org.testng.internal.invokers.MethodInvocationHelper.invokeMethodConsideringTimeout(MethodInvocationHelper.java:71)\n\tat org.testng.internal.invokers.ConfigInvoker.invokeConfigurationMethod(ConfigInvoker.java:400)\n\tat org.testng.internal.invokers.ConfigInvoker.invokeConfigurations(ConfigInvoker.java:333)\n\tat org.testng.internal.invokers.TestMethodWorker.invokeBeforeClassMethods(TestMethodWorker.java:188)\n\tat org.testng.internal.invokers.TestMethodWorker.run(TestMethodWorker.java:128)\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1604)\n\tat org.testng.TestRunner.privateRun(TestRunner.java:739)\n\tat org.testng.TestRunner.run(TestRunner.java:614)\n\tat org.testng.SuiteRunner.runTest(SuiteRunner.java:421)\n\tat org.testng.SuiteRunner.runSequentially(SuiteRunner.java:413)\n\tat org.testng.SuiteRunner.privateRun(SuiteRunner.java:373)\n\tat org.testng.SuiteRunner.run(SuiteRunner.java:312)\n\tat org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)\n\tat org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:95)\n\tat org.testng.TestNG.runSuitesSequentially(TestNG.java:1274)\n\tat org.testng.TestNG.runSuitesLocally(TestNG.java:1208)\n\tat org.testng.TestNG.runSuites(TestNG.java:1112)\n\tat org.testng.TestNG.run(TestNG.java:1079)\n\tat org.gradle.api.internal.tasks.testing.testng.TestNGTestRunner.runTests(TestNGTestRunner.java:131)\n\tat org.gradle.api.internal.tasks.testing.testng.TestNGTestDefinitionProcessor.stop(TestNGTestDefinitionProcessor.java:110)\n\tat org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:565)\n\tat org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)\n\tat org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)\n\tat org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)\n\tat jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195)\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)\n\tat org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)\n\tat org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)\n\tat org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)\n\tat worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)\n\tat worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)\nCaused by: jakarta.enterprise.inject.spi.DeploymentException: The injection point Boolean[] myBooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\tat io.micronaut.cdi.internal.runtime.DeploymentValidation.validate(DeploymentValidation.java:276)\n\tat io.micronaut.cdi.internal.runtime.DeploymentValidation.validate(DeploymentValidation.java:92)\n\tat io.micronaut.cdi.internal.runtime.CdiBeanContainer.validateDeployment(CdiBeanContainer.java:286)\n\tat io.micronaut.cdi.internal.runtime.ContainerLifecycle.started(ContainerLifecycle.java:94)\n\tat io.micronaut.cdi.internal.runtime.$ContainerLifecycle$Definition.initialize(Unknown Source)\n\tat io.micronaut.cdi.internal.runtime.$ContainerLifecycle$Definition.instantiate(Unknown Source)\n\tat io.micronaut.context.DefaultBeanContext.resolveByBeanFactory(DefaultBeanContext.java:2573)\n\tat io.micronaut.context.DefaultBeanContext.createRegistration(DefaultBeanContext.java:3628)\n\tat io.micronaut.context.SingletonScope.getOrCreate(SingletonScope.java:79)\n\tat io.micronaut.context.DefaultBeanContext.intializeEagerBean(DefaultBeanContext.java:3467)\n\tat io.micronaut.context.DefaultBeanContext.initializeEagerBean(DefaultBeanContext.java:3050)\n\tat io.micronaut.context.DefaultBeanContext.initializeEagerBean(DefaultBeanContext.java:3023)\n\tat io.micronaut.context.DefaultBeanContext.initializeEagerBeans(DefaultBeanContext.java:2374)\n\tat io.micronaut.context.DefaultBeanContext.initializeContext(DefaultBeanContext.java:2299)\n\tat io.micronaut.context.DefaultBeanContext.configureAndStartContext(DefaultBeanContext.java:3915)\n\tat io.micronaut.context.DefaultBeanContext.start(DefaultBeanContext.java:404)\n\tat io.micronaut.context.DefaultApplicationContext.start(DefaultApplicationContext.java:293)\n\tat io.micronaut.cdi.se.MicronautSeContainerInitializer.initialize(MicronautSeContainerInitializer.java:228)\n\tat io.micronaut.cdi.mptck.MicronautDeployableContainer.deploy(MicronautDeployableContainer.java:106)\n\t... 101 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point boolean[] mybooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Boolean[] mySingleBooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point boolean[] mySinglebooleanArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point String[] myStringArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point String[] mySingleStringArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Integer[] myIntegerArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point int[] myintArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Integer[] mySingleIntegerArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point int[] mySingleintArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Long[] myLongArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point long[] mylongArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Long[] mySingleLongArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point long[] mySinglelong of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Float[] myFloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point float[] myfloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Float[] mySingleFloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point float[] mySinglefloatArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Double[] myDoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point double[] mydoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Double[] mySingleDoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point double[] mySingledoubleArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Duration[] myDurationArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Duration[] mySingleDurationArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalTime[] myLocaltimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalTime[] mySingleLocaltimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDate[] myLocalDateArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDate[] mySingleLocalDateArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDateTime[] myLocalDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point LocalDateTime[] mySingleLocalDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetDateTime[] myOffsetDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetDateTime[] mySingleOffsetDateTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetTime[] myOffsetTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point OffsetTime[] mySingleOffsetTimeArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Instant[] myInstantArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Instant[] mySingleInstantArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URL[] myUrlArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URL[] mySingleUrlArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URI[] myUriArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point URI[] mySingleUriArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Pizza[] myPizzaArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n\tSuppressed: jakarta.enterprise.inject.spi.DeploymentException: The injection point Pizza[] mySinglePizzaArray of org.eclipse.microprofile.config.tck.ArrayConverterBean has no bean to satisfy it, qualified [@org.eclipse.microprofile.config.inject.ConfigProperty{}] (CDI 4.1 section 5.2.2)\n\t\t... 120 more\n"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testBooleanArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testBooleanArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testBooleanListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testCustomTypeArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testCustomTypeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testCustomTypeListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testCustomTypeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testCustomTypeSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDoubleArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDoubleArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDoubleListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDoubleListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDoubleSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDurationArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDurationArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDurationListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDurationListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testDurationSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testFloatArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testFloatArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testFloatListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testFloatListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testFloatSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetBooleanArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetCustomTypeArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetDoubleArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetDurationArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetFloatArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetInstantArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetIntArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetIntegerArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetLocalDateArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetLocalDateTimeArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetLocalTimeArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetLongArrayCoverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetOffsetDateTimeArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetOffsetTimeArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetStringArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetUriArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetUrlArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetbooleanArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetdoubleArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetfloatArrayConverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testGetlongArrayCoverter",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testInstantArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testInstantArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testInstantListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testInstantListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testInstantSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testIntArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testIntListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testIntSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testIntegerArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testIntegerListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateTimeArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateTimeListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalDateTimeSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalTimeArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalTimeListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLocalTimeSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLongArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLongArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLongListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLongListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testLongSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetDateTimeArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetDateTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetDateTimeListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetDateTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetDateTimeSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetTimeArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetTimeListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOffsetTimeSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalBooleanArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalBooleanListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalCustomTypeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalCustomTypeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalDoubleArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalDoubleListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalDurationArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalDurationListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalFloatArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalFloatListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalInstantArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalInstantListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalIntegerArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalIntegerListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLocalDateArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLocalDateListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLocalDateTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLocalDateTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLocalTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLocalTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLongArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalLongListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalOffsetDateTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalOffsetDateTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalOffsetTimeArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalOffsetTimeListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalStringArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalStringListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalUriArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalUriListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalUrlArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testOptionalUrlListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testStringArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testStringArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testStringListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testStringListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testStringSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testURLListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testURLSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUriArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUriArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUriListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUriListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUriSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUrlArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUrlArrayLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testUrlListLookupProgrammatically",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testbooleanArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testbooleanListInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testbooleanSetInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testdoubleArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testfloatArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testintArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "name": "testlongArrayInjection",
+    "status": "skipped"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest",
+    "name": "testOptionalInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest",
+    "name": "testOptionalInjectionWithNoDefaultValueOrElseIsReturned",
+    "status": "passed"
+  }
+]

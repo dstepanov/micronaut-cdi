@@ -1,0 +1,6 @@
+[/Users/denisstepanov/dev/micronaut-cdi/compatibility-fuzz/build/campaigns/6.0.4.Final/source-mutations/producer-void/Mutation14.java:13: error: Unexpected error: The return expression returns VOID but method: instantiate doesn't return VOID (JavaClass[type=class java.lang.Object, nullable=false])!
+@Dependent public static class A { @Produces void value(){} }
+                                                  ^, error: cannot access org.example.cdi.fuzz.generated.$Mutation14$A$Value0$Definition
+  bad class file: /Users/denisstepanov/dev/micronaut-cdi/compatibility-fuzz/build/campaigns/6.0.4.Final/source-mutations/producer-void/micronaut/org/example/cdi/fuzz/generated/$Mutation14$A$Value0$Definition.class
+    class file truncated at offset 0
+    Please remove or make sure it appears in the correct subdirectory of the classpath.]

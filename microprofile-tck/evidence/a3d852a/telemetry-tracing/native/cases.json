@@ -1,0 +1,658 @@
+[
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsClientAsyncTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.762",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-2926eeab-5748-4707-a837-94427d3ee4fd.war",
+    "trace_ref": "7c91579dbc3b867878f5684d2a74a42544caded0d89da281eda8c1a94af19808"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsClientAsyncTest",
+    "name": "testIntegrationWithJaxRsClient",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-2926eeab-5748-4707-a837-94427d3ee4fd.war",
+    "trace_ref": "7c91579dbc3b867878f5684d2a74a42544caded0d89da281eda8c1a94af19808"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsClientAsyncTest",
+    "name": "testIntegrationWithJaxRsClientAsync",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-2926eeab-5748-4707-a837-94427d3ee4fd.war",
+    "trace_ref": "7c91579dbc3b867878f5684d2a74a42544caded0d89da281eda8c1a94af19808"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsClientAsyncTest",
+    "name": "testIntegrationWithJaxRsClientError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-2926eeab-5748-4707-a837-94427d3ee4fd.war",
+    "trace_ref": "7c91579dbc3b867878f5684d2a74a42544caded0d89da281eda8c1a94af19808"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.643",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8b73ed06-9c3a-4657-af71-9e59ddf6a692.war",
+    "trace_ref": "46f8620a0c59c7f171b04ea495223c6c13ca88c7c4676de5e25e1574de30ce09"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest",
+    "name": "testJaxRsServerAsyncCompletionStage",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8b73ed06-9c3a-4657-af71-9e59ddf6a692.war",
+    "trace_ref": "46f8620a0c59c7f171b04ea495223c6c13ca88c7c4676de5e25e1574de30ce09"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest",
+    "name": "testJaxRsServerAsyncCompletionStageError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8b73ed06-9c3a-4657-af71-9e59ddf6a692.war",
+    "trace_ref": "46f8620a0c59c7f171b04ea495223c6c13ca88c7c4676de5e25e1574de30ce09"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest",
+    "name": "testJaxRsServerAsyncSuspend",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8b73ed06-9c3a-4657-af71-9e59ddf6a692.war",
+    "trace_ref": "46f8620a0c59c7f171b04ea495223c6c13ca88c7c4676de5e25e1574de30ce09"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest",
+    "name": "testJaxRsServerAsyncSuspendError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8b73ed06-9c3a-4657-af71-9e59ddf6a692.war",
+    "trace_ref": "46f8620a0c59c7f171b04ea495223c6c13ca88c7c4676de5e25e1574de30ce09"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.MpRestClientAsyncTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.687",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-3ee9955f-b1eb-4ba9-b5ad-a1624f1a4103.war",
+    "trace_ref": "d3bc7705d3daa10444d3ad3dbcd525324c7a16defc1129b244f18eb56bc30863"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.MpRestClientAsyncTest",
+    "name": "testIntegrationWithMpRestClient",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-3ee9955f-b1eb-4ba9-b5ad-a1624f1a4103.war",
+    "trace_ref": "d3bc7705d3daa10444d3ad3dbcd525324c7a16defc1129b244f18eb56bc30863"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.MpRestClientAsyncTest",
+    "name": "testIntegrationWithMpRestClientAsync",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-3ee9955f-b1eb-4ba9-b5ad-a1624f1a4103.war",
+    "trace_ref": "d3bc7705d3daa10444d3ad3dbcd525324c7a16defc1129b244f18eb56bc30863"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.MpRestClientAsyncTest",
+    "name": "testIntegrationWithMpRestClientAsyncError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-3ee9955f-b1eb-4ba9-b5ad-a1624f1a4103.war",
+    "trace_ref": "d3bc7705d3daa10444d3ad3dbcd525324c7a16defc1129b244f18eb56bc30863"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.BaggageBeanTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.464",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-f55b9b2d-ea07-44d0-a081-3a846af90984.war",
+    "trace_ref": "98e217415a3f71c62e9c870b5edd2759ee339dcdfc143fcfed862879ee2952e5"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.BaggageBeanTest",
+    "name": "baggageBeanChange",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-f55b9b2d-ea07-44d0-a081-3a846af90984.war",
+    "trace_ref": "98e217415a3f71c62e9c870b5edd2759ee339dcdfc143fcfed862879ee2952e5"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.OpenTelemetryBeanTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.226",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-7fc92b5d-f300-474b-bbdf-63aa50336949.war",
+    "trace_ref": "f964c994323cb6231a90347a95053a3078cd2d4172490e40234564ade34f4650"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.OpenTelemetryBeanTest",
+    "name": "testOpenTelemetryBean",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-7fc92b5d-f300-474b-bbdf-63aa50336949.war",
+    "trace_ref": "f964c994323cb6231a90347a95053a3078cd2d4172490e40234564ade34f4650"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.OpenTelemetryBeanTest",
+    "name": "testSpanAndTracer",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-7fc92b5d-f300-474b-bbdf-63aa50336949.war",
+    "trace_ref": "f964c994323cb6231a90347a95053a3078cd2d4172490e40234564ade34f4650"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.SpanBeanTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.364",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-1a19b355-ad40-432e-a978-97915a8396a0.war",
+    "trace_ref": "32121dcda0d34b6df742bf9400b1f437d4e7e0ff7c6ad831cc89f2b34efe0127"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.SpanBeanTest",
+    "name": "spanBeanChange",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-1a19b355-ad40-432e-a978-97915a8396a0.war",
+    "trace_ref": "32121dcda0d34b6df742bf9400b1f437d4e7e0ff7c6ad831cc89f2b34efe0127"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.TracerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.27",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-1c54956d-5f46-4289-b91b-227c42698cf0.war",
+    "trace_ref": "ad79fdee83e6d7688f56b0ee45888535dd6ca66d81e07e029089b2d2562ebdb1"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.TracerTest",
+    "name": "tracer",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-1c54956d-5f46-4289-b91b-227c42698cf0.war",
+    "trace_ref": "ad79fdee83e6d7688f56b0ee45888535dd6ca66d81e07e029089b2d2562ebdb1"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.B3MultiPropagationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.707",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-07937478-34e5-411e-9f55-2baa2a93aa5f.war",
+    "trace_ref": "43ced7ac7a740ae4ca1bbfb571d4146f0ea559585c0b941fbfd8e97823b7d4b0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.B3MultiPropagationTest",
+    "name": "b3MultiPropagation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-07937478-34e5-411e-9f55-2baa2a93aa5f.war",
+    "trace_ref": "43ced7ac7a740ae4ca1bbfb571d4146f0ea559585c0b941fbfd8e97823b7d4b0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.B3PropagationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.544",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4ea7c538-eae2-4a5c-be2f-1f13314a8a4f.war",
+    "trace_ref": "3cc603c14b3a0d48fc569614445e3bb547370f7c243c85f13bddc5cce4f9fab7"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.B3PropagationTest",
+    "name": "b3Propagation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4ea7c538-eae2-4a5c-be2f-1f13314a8a4f.war",
+    "trace_ref": "3cc603c14b3a0d48fc569614445e3bb547370f7c243c85f13bddc5cce4f9fab7"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.BaggageTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.382",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-0b38662c-dd8d-419a-9df2-0547c674bf59.war",
+    "trace_ref": "95ad5d89ead72069070a2ffbff9357cb652700d923a80909a5b15acf3a711c3f"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.BaggageTest",
+    "name": "baggage",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-0b38662c-dd8d-419a-9df2-0547c674bf59.war",
+    "trace_ref": "95ad5d89ead72069070a2ffbff9357cb652700d923a80909a5b15acf3a711c3f"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.JaegerPropagationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.452",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-ec85794d-7610-43c0-8fde-b978c94e3f59.war",
+    "trace_ref": "92cbad7a1e578b92c9f88c488994b23ff89f9364ee5ced40736df7808b115575"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.JaegerPropagationTest",
+    "name": "jaegerPropagation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-ec85794d-7610-43c0-8fde-b978c94e3f59.war",
+    "trace_ref": "92cbad7a1e578b92c9f88c488994b23ff89f9364ee5ced40736df7808b115575"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.PropagatorSpiTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.741",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-b906629d-27d3-4f65-9be9-f2837934ee0a.war",
+    "trace_ref": "9759d1debe61871988709c882b76044e733fb498ede8b92ad53a09887522f27e"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.PropagatorSpiTest",
+    "name": "testSPIPropagator",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-b906629d-27d3-4f65-9be9-f2837934ee0a.war",
+    "trace_ref": "9759d1debe61871988709c882b76044e733fb498ede8b92ad53a09887522f27e"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.558",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "spanChild",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "spanCurrent",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "spanError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "spanName",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "spanNameQuery",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+    "name": "spanNew",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-12838ce8-8e64-40d0-b752-93acd5948e21.war",
+    "trace_ref": "e6361e521e3c8dad2659fe91d89dbf7189505c0f0960bdf3fed4506e0679ad5a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.604",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "spanChild",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "spanCurrent",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "spanError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "spanName",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "spanNameQuery",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+    "name": "spanNew",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-30f6f29c-3ab9-41a8-b5cb-14cef2ad4ae3.war",
+    "trace_ref": "c496f58215b19300e0dbbd722c4257f5d440ec32a35e7f6bcc10195264a5bb3b"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.473",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanChild",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanChildWithParameter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanClientError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanCurrent",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanError",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanNameQuery",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+    "name": "spanNew",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-4bca3eaf-8d46-454b-ac24-f1f419e28a41.war",
+    "trace_ref": "bb8c1b6c6807950edc1d11a58aa8826784a0cc664e1cbc832d9536f3a4781fb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDefaultTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.363",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-68d82f75-df64-45f1-889e-102a971a6188.war",
+    "trace_ref": "7694f829f1f75a99ff442398c154556b4b69029eb46bdf18dc46111438d3f74a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDefaultTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-68d82f75-df64-45f1-889e-102a971a6188.war",
+    "trace_ref": "7694f829f1f75a99ff442398c154556b4b69029eb46bdf18dc46111438d3f74a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDefaultTest",
+    "name": "spanName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-68d82f75-df64-45f1-889e-102a971a6188.war",
+    "trace_ref": "7694f829f1f75a99ff442398c154556b4b69029eb46bdf18dc46111438d3f74a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDefaultTest",
+    "name": "spanNameWithoutQueryString",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-68d82f75-df64-45f1-889e-102a971a6188.war",
+    "trace_ref": "7694f829f1f75a99ff442398c154556b4b69029eb46bdf18dc46111438d3f74a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDisabledTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.456",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-977e7b22-981d-4a1e-9b97-815fb84d577b.war",
+    "trace_ref": "35040d92f30ddd4d4a7af800d63ede6ab3a758a542edd068c672b8f150959b53"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDisabledTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-977e7b22-981d-4a1e-9b97-815fb84d577b.war",
+    "trace_ref": "35040d92f30ddd4d4a7af800d63ede6ab3a758a542edd068c672b8f150959b53"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDisabledTest",
+    "name": "spanName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-977e7b22-981d-4a1e-9b97-815fb84d577b.war",
+    "trace_ref": "35040d92f30ddd4d4a7af800d63ede6ab3a758a542edd068c672b8f150959b53"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDisabledTest",
+    "name": "spanNameWithoutQueryString",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-977e7b22-981d-4a1e-9b97-815fb84d577b.war",
+    "trace_ref": "35040d92f30ddd4d4a7af800d63ede6ab3a758a542edd068c672b8f150959b53"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.541",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-102c8806-6588-4cb8-bb47-6b66265fcf4d.war",
+    "trace_ref": "0d8ef3ae49aa37463f518bea768f51ef7e7dff2a01b66470f0979db9dc5cb873"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-102c8806-6588-4cb8-bb47-6b66265fcf4d.war",
+    "trace_ref": "0d8ef3ae49aa37463f518bea768f51ef7e7dff2a01b66470f0979db9dc5cb873"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanTest",
+    "name": "spanName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-102c8806-6588-4cb8-bb47-6b66265fcf4d.war",
+    "trace_ref": "0d8ef3ae49aa37463f518bea768f51ef7e7dff2a01b66470f0979db9dc5cb873"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanTest",
+    "name": "spanNameWithoutQueryString",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-102c8806-6588-4cb8-bb47-6b66265fcf4d.war",
+    "trace_ref": "0d8ef3ae49aa37463f518bea768f51ef7e7dff2a01b66470f0979db9dc5cb873"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.W3BaggagePropagationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.696",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-867b5359-4d41-48a6-9732-9acff8a80893.war",
+    "trace_ref": "47fe324eff1721daa7ae84ecd725ab0ae85f8ba020074d99851c8e91aac9f5d4"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.W3BaggagePropagationTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-867b5359-4d41-48a6-9732-9acff8a80893.war",
+    "trace_ref": "47fe324eff1721daa7ae84ecd725ab0ae85f8ba020074d99851c8e91aac9f5d4"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.W3PropagationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.487",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-79c78a6f-2abb-44cd-989a-1e9af200b16f.war",
+    "trace_ref": "ed00227e9e4deacb2e2694fb1d35223255049c4abe0bc043cbeeaf8a89adb258"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.W3PropagationTest",
+    "name": "span",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-79c78a6f-2abb-44cd-989a-1e9af200b16f.war",
+    "trace_ref": "ed00227e9e4deacb2e2694fb1d35223255049c4abe0bc043cbeeaf8a89adb258"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.CustomizerSpiTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.581",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-ac9368a7-dd3d-420f-8403-a28440455e65.war",
+    "trace_ref": "004add2c3948b90e2ddae3923908887e9de663359cd107ec42255ae6cede5567"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.CustomizerSpiTest",
+    "name": "testCustomizer",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-ac9368a7-dd3d-420f-8403-a28440455e65.war",
+    "trace_ref": "004add2c3948b90e2ddae3923908887e9de663359cd107ec42255ae6cede5567"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.ExporterSpiTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.421",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-2d023a3f-aa18-4a5a-80d9-e93d989bf6c8.war",
+    "trace_ref": "d98ae853f8e10585608690355b41f5d46dc741eaf37ab2d7dde0b1f16977f51d"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.ExporterSpiTest",
+    "name": "testExporter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-2d023a3f-aa18-4a5a-80d9-e93d989bf6c8.war",
+    "trace_ref": "d98ae853f8e10585608690355b41f5d46dc741eaf37ab2d7dde0b1f16977f51d"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.ResourceSpiTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.693",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8144b7ad-d269-466e-ab21-19886e9d0564.war",
+    "trace_ref": "9c058f907e25910639bf8e495c304e60a58ee26d03df215f6f8e991d4a641eb9"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.ResourceSpiTest",
+    "name": "testResource",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-8144b7ad-d269-466e-ab21-19886e9d0564.war",
+    "trace_ref": "9c058f907e25910639bf8e495c304e60a58ee26d03df215f6f8e991d4a641eb9"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.SamplerSpiTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.412",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-bdd942f1-4882-47aa-81ef-22632679e20a.war",
+    "trace_ref": "b746b9a72ff21b18746e0438e594ff1a2a2eb3eb96ebd316a44db4660920d06e"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.SamplerSpiTest",
+    "name": "testSampler",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-tracing deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-tracing/build/deployments/native/0001-bdd942f1-4882-47aa-81ef-22632679e20a.war",
+    "trace_ref": "b746b9a72ff21b18746e0438e594ff1a2a2eb3eb96ebd316a44db4660920d06e"
+  }
+]

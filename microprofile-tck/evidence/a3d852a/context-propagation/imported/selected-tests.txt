@@ -1,0 +1,8 @@
+org.eclipse.microprofile.context.tck.ContextManagerTest
+org.eclipse.microprofile.context.tck.MPConfigTest
+org.eclipse.microprofile.context.tck.ManagedExecutorTest
+org.eclipse.microprofile.context.tck.TckTest
+org.eclipse.microprofile.context.tck.ThreadContextTest
+org.eclipse.microprofile.context.tck.cdi.BasicCDITest
+org.eclipse.microprofile.context.tck.cdi.CDIContextTest
+org.eclipse.microprofile.context.tck.cdi.JTACDITest

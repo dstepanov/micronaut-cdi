@@ -1,0 +1,2342 @@
+{
+  "test-suite-java": {
+    "totals": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": [
+      {
+        "name": "io.micronaut.microprofile.config.test.ConfigPropertiesTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:15.879Z",
+        "cases": [
+          {
+            "class": "io.micronaut.microprofile.config.test.ConfigPropertiesTest",
+            "name": "thePrefixOfTheInjectionPointWins()",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "io.micronaut.microprofile.config.test.DeploymentValidationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:16.021Z",
+        "cases": [
+          {
+            "class": "io.micronaut.microprofile.config.test.DeploymentValidationTest",
+            "name": "aMissingRequiredPropertyFailsTheDeployment()",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "io.micronaut.microprofile.config.test.InjectionTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:16.031Z",
+        "cases": [
+          {
+            "class": "io.micronaut.microprofile.config.test.InjectionTest",
+            "name": "configIsInjected()",
+            "status": "passed"
+          },
+          {
+            "class": "io.micronaut.microprofile.config.test.InjectionTest",
+            "name": "everySupportedShapeIsInjected()",
+            "status": "passed"
+          },
+          {
+            "class": "io.micronaut.microprofile.config.test.InjectionTest",
+            "name": "aProviderSeesTheValueAsItIsWhenAsked()",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "test-suite-no-reflection": {
+    "totals": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": [
+      {
+        "name": "io.micronaut.microprofile.config.test.NoReflectionTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:17.414Z",
+        "cases": [
+          {
+            "class": "io.micronaut.microprofile.config.test.NoReflectionTest",
+            "name": "programmaticLookupOfBuiltInTypes()",
+            "status": "passed"
+          },
+          {
+            "class": "io.micronaut.microprofile.config.test.NoReflectionTest",
+            "name": "whatReadsAClassBackNamesTheModuleToAdd()",
+            "status": "passed"
+          },
+          {
+            "class": "io.micronaut.microprofile.config.test.NoReflectionTest",
+            "name": "configPropertiesWithoutPrivateFieldsNeedNoReflection()",
+            "status": "passed"
+          },
+          {
+            "class": "io.micronaut.microprofile.config.test.NoReflectionTest",
+            "name": "injectionOfEverySupportedTypeNeedsNoReflection()",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "io.micronaut.microprofile.config.test.MissingPropertyTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:17.294Z",
+        "cases": [
+          {
+            "class": "io.micronaut.microprofile.config.test.MissingPropertyTest",
+            "name": "aMissingPropertyFailsTheDeployment()",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "microprofile-config-tck": {
+    "totals": {
+      "tests": 376,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": [
+      {
+        "name": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.730Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+            "name": "testDefaultValueNotUsed",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+            "name": "testGetOptionalValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+            "name": "testGetValue",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.590Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "arrayEscapes",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "composedExpressions",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "defaultExpression",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "defaultExpressionComposed",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "defaultExpressionComposedEmpty",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "defaultExpressionEmpty",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "escape",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "escapeBraces",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "expressionMissing",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "infiniteExpansion",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "multipleExpansions",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "multipleExpressions",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "noExpression",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "noExpressionButConfigValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "noExpressionButOptional",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "noExpressionComposed",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "noExpressionComposedButConfigValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "noExpressionComposedButOptional",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "simpleExpression",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+            "name": "withoutExpansion",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.551Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterCharSequenceParseConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterCharSequenceParseJavaTimeConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterEnumValueOfConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterSquenceOfBeforeValueOfConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterSquenceParseBeforeConstructorConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterSquenceValueOfBeforeParseConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterStringCtConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterStringOfConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testGetImplicitConverterStringValueOfConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterCharSequenceParse",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterCharSequenceParseJavaTime",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterCharSequenceParseJavaTimeInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterEnumValueOf",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterSquenceOfBeforeValueOf",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterSquenceParseBeforeConstructor",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterSquenceValueOfBeforeParse",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterStringCt",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterStringOf",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+            "name": "testImplicitConverterStringValueOf",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.294Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testDynamicValueInPropertyConfigSource",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testEnvironmentConfigSource",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testGetConfigSources",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testGetPropertyNames",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testInjectedConfigSerializable",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testJavaConfigPropertyFilesConfigSource",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testNonExistingConfigKey",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testNonExistingConfigKeyGet",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+            "name": "testPropertyConfigSource",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.ConfigPropertyFileProfileTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.787Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.ConfigPropertyFileProfileTest",
+            "name": "testConfigProfileWithDev",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.CustomConfigSourceTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.491Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConfigSourceTest",
+            "name": "testConfigSourceProvider",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.693Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest",
+            "name": "testOrdinalForEnv",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest",
+            "name": "testOrdinalForSystemProps",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.WarPropertiesLocationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.618Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.WarPropertiesLocationTest",
+            "name": "testReadPropertyInWar",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.broken.MissingValueOnObserverMethodInjectionTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.671Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnObserverMethodInjectionTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.239Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testConfigPropertiesDefaultOnBean",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testConfigPropertiesNoPrefixOnBean",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testConfigPropertiesNoPrefixOnBeanThenSupplyPrefix",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testConfigPropertiesPlainInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testConfigPropertiesWithPrefix",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testConfigPropertiesWithoutPrefix",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+            "name": "testNoConfigPropertiesAnnotationInjection",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.CDIPropertyNameMatchingTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.175Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPropertyNameMatchingTest",
+            "name": "testPropertyFromEnvironmentVariables",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueBrokenInjectionTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.716Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueBrokenInjectionTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.077Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+            "name": "testAutoDiscoveredConfigureSources",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+            "name": "testAutoDiscoveredConverterManuallyAdded",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+            "name": "testAutoDiscoveredConverterNotAddedAutomatically",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+        "tests": 28,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.763Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testBackslashCommaStringGetOptionalValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testBackslashCommaStringGetOptionalValueAsArrayOrList",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testBackslashCommaStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testBackslashCommaStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testCommaBarStringGetOptionalValues",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testCommaBarStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testCommaBarStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testCommaStringGetOptionalValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testCommaStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testCommaStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testDoubleCommaStringGetOptionalValues",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testDoubleCommaStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testDoubleCommaStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testEmptyStringGetOptionalValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testEmptyStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testEmptyStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testFooBarStringGetOptionalValues",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testFooBarStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testFooBarStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testFooCommaStringGetOptionalValues",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testFooCommaStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testFooCommaStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testMissingStringGetOptionalValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testMissingStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testMissingStringGetValueArray",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testSpaceStringGetOptionalValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testSpaceStringGetValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+            "name": "testSpaceStringGetValueArray",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.105Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+            "name": "canInjectDefaultPropertyPath",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+            "name": "canInjectDynamicValuesViaCdiProvider",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+            "name": "canInjectSimpleValuesWhenDefined",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+            "name": "injectedValuesAreEqualToProgrammaticValues",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.broken.MissingConverterOnInstanceInjectionTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.648Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.broken.MissingConverterOnInstanceInjectionTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.InvalidConfigProfileTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.817Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.InvalidConfigProfileTest",
+            "name": "testConfigProfileWithDev",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.converters.NullConvertersTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.704Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.converters.NullConvertersTest",
+            "name": "nulls",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.OverrideConfigProfileTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.830Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.OverrideConfigProfileTest",
+            "name": "testConfigProfileWithDevAndOverride",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+        "tests": 138,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:20.158Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testBooleanArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testBooleanArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testBooleanListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testCustomTypeArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testCustomTypeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testCustomTypeListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testCustomTypeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testCustomTypeSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDoubleArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDoubleArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDoubleListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDoubleListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDoubleSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDurationArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDurationArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDurationListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDurationListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testDurationSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testFloatArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testFloatArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testFloatListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testFloatListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testFloatSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetBooleanArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetCustomTypeArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetDoubleArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetDurationArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetFloatArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetInstantArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetIntArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetIntegerArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetLocalDateArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetLocalDateTimeArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetLocalTimeArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetLongArrayCoverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetOffsetDateTimeArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetOffsetTimeArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetStringArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetUriArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetUrlArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetbooleanArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetdoubleArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetfloatArrayConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testGetlongArrayCoverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testInstantArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testInstantArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testInstantListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testInstantListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testInstantSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testIntArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testIntListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testIntSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testIntegerArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testIntegerListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateTimeArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateTimeListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalDateTimeSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalTimeArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalTimeListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLocalTimeSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLongArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLongArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLongListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLongListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testLongSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetDateTimeArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetDateTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetDateTimeListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetDateTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetDateTimeSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetTimeArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetTimeListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOffsetTimeSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalBooleanArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalBooleanListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalCustomTypeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalCustomTypeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalDoubleArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalDoubleListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalDurationArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalDurationListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalFloatArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalFloatListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalInstantArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalInstantListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalIntegerArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalIntegerListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLocalDateArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLocalDateListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLocalDateTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLocalDateTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLocalTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLocalTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLongArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalLongListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalOffsetDateTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalOffsetDateTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalOffsetTimeArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalOffsetTimeListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalStringArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalStringListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalUriArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalUriListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalUrlArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testOptionalUrlListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testStringArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testStringArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testStringListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testStringListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testStringSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testURLListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testURLSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUriArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUriArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUriListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUriListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUriSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUrlArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUrlArrayLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testUrlListLookupProgrammatically",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testbooleanArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testbooleanListInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testbooleanSetInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testdoubleArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testfloatArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testintArrayInjection",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+            "name": "testlongArrayInjection",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.TestConfigProfileTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.856Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.TestConfigProfileTest",
+            "name": "testConfigProfileWithDev",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.152Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+            "name": "badExpansion",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+            "name": "expression",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+            "name": "expressionNoDefault",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.DevConfigProfileTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.802Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.DevConfigProfileTest",
+            "name": "testConfigProfileWithDev",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.330Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+            "name": "configValue",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+            "name": "configValueEmpty",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+            "name": "configValueInjection",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.broken.ConfigPropertiesMissingPropertyInjectionTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.634Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.broken.ConfigPropertiesMissingPropertyInjectionTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.515Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testBoolean",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testBooleanPrimitive",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testCharPrimitive",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testCharacter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testDouble",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testDoublePrimitive",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetBooleanConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetBooleanPrimitiveConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetCharPrimitiveConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetCharacterConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetDoubleConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetDoublePrimitiveConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetIntPrimitiveConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetIntegerConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetLongConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testGetLongPrimitiveConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testIntPrimitive",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testInteger",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testLong",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+            "name": "testLongPrimitive",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.TestCustomConfigProfile",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.871Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.TestCustomConfigProfile",
+            "name": "testConfigProfileWithDev",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.750Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.198Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+            "name": "testClassConverterWithLookup",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+            "name": "testConverterForClassLoadedInBean",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+            "name": "testGetClassConverter",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.broken.MissingValueOnInstanceInjectionTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.660Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnInstanceInjectionTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.ConverterTest",
+        "tests": 96,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.353Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testBoolean",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testByte",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testByte_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testChar",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testChar_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testConverterSerialization",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testCustomConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDonaldConversionWithLambdaConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDonaldConversionWithMultipleLambdaConverters",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDonaldNotConvertedByDefault",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDouble",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDouble_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDuckConversionWithMultipleConverters",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDuration",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testDuration_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testFloat",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testFloat_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetBooleanConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetByteConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetByteConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetCharConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetCharConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetConverterSerialization",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetCustomConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDonaldConverterWithLambdaConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDonaldConverterWithMultipleLambdaConverters",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDoubleConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDoubleConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDuckConverterWithMultipleConverters",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDurationConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetDurationCoverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetFloatConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetFloatConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetInstantConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetInstantConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetIntConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetIntegerConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetIntegerConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLocalDateConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLocalDateConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLocalDateTimeConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLocalDateTimeConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLocalTimeConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLocalTimeConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLongConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetLongConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetOffsetDateTimeConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetOffsetDateTimeConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetOffsetTimeConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetOffsetTimeConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetShortConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetShortConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetURIConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetURIConverterBroken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetURLConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetURLConverterBroken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetZoneOffsetConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetZoneOffsetConverter_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetbyteConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetcharConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetdoubleConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetfloatConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetlongConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testGetshortConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testInstant",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testInstant_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testInt",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testInteger",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testInteger_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLocalDate",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLocalDateTime",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLocalDateTime_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLocalDate_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLocalTime",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLocalTime_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLong",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testLong_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testNoDonaldConverterByDefault",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testOffsetDateTime",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testOffsetDateTime_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testOffsetTime",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testOffsetTime_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testShort",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testShort_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testURIConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testURIConverterBroken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testURLConverter",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testURLConverterBroken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testZoneOffset",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testZoneOffset_Broken",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testbyte",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testchar",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testdouble",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testfloat",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testlong",
+            "status": "passed"
+          },
+          {
+            "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+            "name": "testshort",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.profile.ProdProfileTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.844Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.profile.ProdProfileTest",
+            "name": "testConfigProfileWithDev",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "org.eclipse.microprofile.config.tck.broken.WrongConverterOnInstanceInjectionTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": "2026-10-01T07:33:21.682Z",
+        "cases": [
+          {
+            "class": "org.eclipse.microprofile.config.tck.broken.WrongConverterOnInstanceInjectionTest",
+            "name": "test",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  }
+}

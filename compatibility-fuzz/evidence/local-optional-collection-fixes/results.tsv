@@ -1,0 +1,2224 @@
+types	P0 -> java.lang.String	OK:0	OK:0	MATCH
+types	P0 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P0 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P0 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P0 -> int	OK:0	OK:0	MATCH
+types	P0 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P0 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P0 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P0 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:1	OK:1	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:1	OK:1	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P0 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P0 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P0 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P0 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P0	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P0]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P0]]	MATCH
+types	P1 -> java.lang.String	OK:0	OK:0	MATCH
+types	P1 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P1 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P1 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P1 -> int	OK:0	OK:0	MATCH
+types	P1 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P1 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P1 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P1 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P1 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P1 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P1 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P1 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P1	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P1]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P1]]	MATCH
+types	P2 -> java.lang.String	OK:0	OK:0	MATCH
+types	P2 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P2 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P2 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P2 -> int	OK:0	OK:0	MATCH
+types	P2 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P2 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P2 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P2 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P2 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P2 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P2 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:1	OK:1	MATCH
+types	P2 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:1	OK:1	MATCH
+bean-types	P2	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P2]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P2]]	MATCH
+types	P3 -> java.lang.String	OK:0	OK:0	MATCH
+types	P3 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P3 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P3 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P3 -> int	OK:0	OK:0	MATCH
+types	P3 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P3 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P3 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P3 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P3 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P3 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P3 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:1	OK:1	MATCH
+types	P3 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:1	OK:1	MATCH
+bean-types	P3	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P3]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P3]]	MATCH
+types	P4 -> java.lang.String	OK:0	OK:0	MATCH
+types	P4 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P4 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P4 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P4 -> int	OK:0	OK:0	MATCH
+types	P4 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P4 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P4 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P4 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<java.lang.String>	OK:1	OK:1	MATCH
+types	P4 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<?>	OK:1	OK:1	MATCH
+types	P4 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P4 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P4 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<java.lang.String>	OK:1	OK:1	MATCH
+types	P4 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<?>	OK:1	OK:1	MATCH
+types	P4 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P4 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P4 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P4 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P4 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P4	[[java.lang.Iterable<java.lang.String>, java.lang.Object, java.util.Collection<java.lang.String>, java.util.List<java.lang.String>, java.util.SequencedCollection<java.lang.String>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P4]]	[[java.lang.Iterable<java.lang.String>, java.lang.Object, java.util.Collection<java.lang.String>, java.util.List<java.lang.String>, java.util.SequencedCollection<java.lang.String>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P4]]	MATCH
+types	P5 -> java.lang.String	OK:0	OK:0	MATCH
+types	P5 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P5 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P5 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P5 -> int	OK:0	OK:0	MATCH
+types	P5 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P5 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P5 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P5 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.lang.Integer>	OK:1	OK:1	MATCH
+types	P5 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<?>	OK:1	OK:1	MATCH
+types	P5 -> java.util.List<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P5 -> java.util.List<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P5 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P5 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<java.lang.Integer>	OK:1	OK:1	MATCH
+types	P5 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<?>	OK:1	OK:1	MATCH
+types	P5 -> java.util.Collection<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P5 -> java.util.Collection<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P5 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P5 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P5 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P5 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P5	[[java.lang.Iterable<java.lang.Integer>, java.lang.Object, java.util.Collection<java.lang.Integer>, java.util.List<java.lang.Integer>, java.util.SequencedCollection<java.lang.Integer>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P5]]	[[java.lang.Iterable<java.lang.Integer>, java.lang.Object, java.util.Collection<java.lang.Integer>, java.util.List<java.lang.Integer>, java.util.SequencedCollection<java.lang.Integer>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P5]]	MATCH
+types	P6 -> java.lang.String	OK:0	OK:0	MATCH
+types	P6 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P6 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P6 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P6 -> int	OK:0	OK:0	MATCH
+types	P6 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P6 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P6 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P6 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.lang.Number>	OK:1	OK:1	MATCH
+types	P6 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<?>	OK:1	OK:1	MATCH
+types	P6 -> java.util.List<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P6 -> java.util.List<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P6 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P6 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<java.lang.Number>	OK:1	OK:1	MATCH
+types	P6 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<?>	OK:1	OK:1	MATCH
+types	P6 -> java.util.Collection<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	P6 -> java.util.Collection<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P6 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P6 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P6 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P6 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P6	[[java.lang.Iterable<java.lang.Number>, java.lang.Object, java.util.Collection<java.lang.Number>, java.util.List<java.lang.Number>, java.util.SequencedCollection<java.lang.Number>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P6]]	[[java.lang.Iterable<java.lang.Number>, java.lang.Object, java.util.Collection<java.lang.Number>, java.util.List<java.lang.Number>, java.util.SequencedCollection<java.lang.Number>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P6]]	MATCH
+types	P7 -> java.lang.String	OK:0	OK:0	MATCH
+types	P7 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P7 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P7 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P7 -> int	OK:0	OK:0	MATCH
+types	P7 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P7 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P7 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P7 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List	OK:1	OK:1	MATCH
+types	P7 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.lang.Object>	OK:1	OK:1	MATCH
+types	P7 -> java.util.List<?>	OK:1	OK:1	MATCH
+types	P7 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P7 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P7 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection	OK:1	OK:1	MATCH
+types	P7 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<java.lang.Object>	OK:1	OK:1	MATCH
+types	P7 -> java.util.Collection<?>	OK:1	OK:1	MATCH
+types	P7 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	P7 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P7 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P7 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P7 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P7	[[java.lang.Iterable<java.lang.Object>, java.lang.Object, java.util.Collection<java.lang.Object>, java.util.List<java.lang.Object>, java.util.SequencedCollection<java.lang.Object>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P7]]	[[java.lang.Iterable<java.lang.Object>, java.lang.Object, java.util.Collection<java.lang.Object>, java.util.List<java.lang.Object>, java.util.SequencedCollection<java.lang.Object>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P7]]	MATCH
+types	P8 -> java.lang.String	OK:0	OK:0	MATCH
+types	P8 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P8 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P8 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P8 -> int	OK:0	OK:0	MATCH
+types	P8 -> java.io.Serializable	OK:1	OK:1	MATCH
+types	P8 -> java.lang.Cloneable	OK:1	OK:1	MATCH
+types	P8 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P8 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<java.lang.String>	OK:1	OK:1	MATCH
+types	P8 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<?>	OK:1	OK:1	MATCH
+types	P8 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P8 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P8 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<java.lang.String>	OK:1	OK:1	MATCH
+types	P8 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<?>	OK:1	OK:1	MATCH
+types	P8 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P8 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P8 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<java.lang.String>	OK:1	OK:1	MATCH
+types	P8 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<?>	OK:1	OK:1	MATCH
+types	P8 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	P8 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P8 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P8 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P8	[[java.io.Serializable, java.lang.Cloneable, java.lang.Iterable<java.lang.String>, java.lang.Object, java.util.AbstractCollection<java.lang.String>, java.util.AbstractList<java.lang.String>, java.util.ArrayList<java.lang.String>, java.util.Collection<java.lang.String>, java.util.List<java.lang.String>, java.util.RandomAccess, java.util.SequencedCollection<java.lang.String>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P8]]	[[java.io.Serializable, java.lang.Cloneable, java.lang.Iterable<java.lang.String>, java.lang.Object, java.util.AbstractCollection<java.lang.String>, java.util.AbstractList<java.lang.String>, java.util.ArrayList<java.lang.String>, java.util.Collection<java.lang.String>, java.util.List<java.lang.String>, java.util.RandomAccess, java.util.SequencedCollection<java.lang.String>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P8]]	MATCH
+types	P9 -> java.lang.String	OK:0	OK:0	MATCH
+types	P9 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P9 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P9 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P9 -> int	OK:0	OK:0	MATCH
+types	P9 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P9 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P9 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P9 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:1	OK:1	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:1	OK:1	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:1	OK:1	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:1	OK:1	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P9 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P9 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P9 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P9 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P9	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>, org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P9]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>, org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P9]]	MATCH
+types	P10 -> java.lang.String	OK:0	OK:0	MATCH
+types	P10 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P10 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P10 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P10 -> int	OK:0	OK:0	MATCH
+types	P10 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P10 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P10 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P10 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:1	OK:1	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:1	OK:1	MATCH
+types	P10 -> java.util.List	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P10 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P10 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P10 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P10 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P10	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P10]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>, org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P10]]	MATCH
+types	P11 -> java.lang.String	OK:0	OK:0	MATCH
+types	P11 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P11 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P11 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P11 -> int	OK:0	OK:0	MATCH
+types	P11 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P11 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P11 -> java.lang.String[]	OK:1	OK:1	MATCH
+types	P11 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P11 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P11 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P11 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P11 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P11	[[java.lang.Object, java.lang.String[]], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P11]]	[[java.lang.Object, java.lang.String[]], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P11]]	MATCH
+types	P12 -> java.lang.String	OK:0	OK:0	MATCH
+types	P12 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P12 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P12 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P12 -> int	OK:0	OK:0	MATCH
+types	P12 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P12 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P12 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P12 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.lang.String>[]	OK:1	OK:1	MATCH
+types	P12 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P12 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P12 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P12 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P12 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P12	[[java.lang.Object, java.util.List<java.lang.String>[]], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P12]]	[[java.lang.Object, java.util.List<java.lang.String>[]], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P12]]	MATCH
+types	P13 -> java.lang.String	OK:0	OK:0	MATCH
+types	P13 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P13 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P13 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P13 -> int	OK:0	OK:0	MATCH
+types	P13 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P13 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P13 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P13 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:1	OK:1	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:1	OK:1	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View	OK:1	OK:1	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:1	OK:1	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P13 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P13 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P13 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P13 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P13	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box, org.example.cdi.fuzz.TypeCorpus$View], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P13]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box, org.example.cdi.fuzz.TypeCorpus$View], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P13]]	MATCH
+types	P14 -> java.lang.String	OK:0	OK:0	MATCH
+types	P14 -> java.lang.Integer	OK:0	OK:0	MATCH
+types	P14 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P14 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P14 -> int	OK:0	OK:0	MATCH
+types	P14 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P14 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P14 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P14 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List	OK:1	OK:1	MATCH
+types	P14 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.lang.Object>	OK:1	OK:1	MATCH
+types	P14 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P14 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection	OK:1	OK:1	MATCH
+types	P14 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<java.lang.Object>	OK:1	OK:1	MATCH
+types	P14 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P14 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P14 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P14 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P14	[[java.lang.Iterable, java.lang.Object, java.util.Collection, java.util.List, java.util.SequencedCollection], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P14]]	[[java.lang.Iterable, java.lang.Object, java.util.Collection, java.util.List, java.util.SequencedCollection], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P14]]	MATCH
+types	P15 -> java.lang.String	OK:0	OK:0	MATCH
+types	P15 -> java.lang.Integer	OK:1	OK:1	MATCH
+types	P15 -> java.lang.Number	OK:0	OK:0	MATCH
+types	P15 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P15 -> int	OK:1	OK:1	MATCH
+types	P15 -> java.io.Serializable	OK:0	OK:0	MATCH
+types	P15 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P15 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P15 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P15 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P15 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P15 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P15 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P15	[[int, java.lang.Object], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P15]]	[[int, java.lang.Object], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P15]]	MATCH
+types	P16 -> java.lang.String	OK:0	OK:0	MATCH
+types	P16 -> java.lang.Integer	OK:1	OK:1	MATCH
+types	P16 -> java.lang.Number	OK:1	OK:1	MATCH
+types	P16 -> java.lang.Object	OK:2	OK:2	MATCH
+types	P16 -> int	OK:1	OK:1	MATCH
+types	P16 -> java.io.Serializable	OK:1	OK:1	MATCH
+types	P16 -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	P16 -> java.lang.String[]	OK:0	OK:0	MATCH
+types	P16 -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<?>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P16 -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P16 -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	P16 -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	P16 -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	P16	[[java.io.Serializable, java.lang.Comparable<java.lang.Integer>, java.lang.Integer, java.lang.Number, java.lang.Object, java.lang.constant.Constable, java.lang.constant.ConstantDesc], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P16]]	[[java.io.Serializable, java.lang.Comparable<java.lang.Integer>, java.lang.Integer, java.lang.Number, java.lang.Object, java.lang.constant.Constable, java.lang.constant.ConstantDesc], [java.lang.Object, org.example.cdi.fuzz.TypeCorpus$P16]]	MATCH
+types	Unbounded -> java.lang.String	OK:0	OK:0	MATCH
+types	Unbounded -> java.lang.Integer	OK:0	OK:0	MATCH
+types	Unbounded -> java.lang.Number	OK:0	OK:0	MATCH
+types	Unbounded -> java.lang.Object	OK:1	OK:1	MATCH
+types	Unbounded -> int	OK:0	OK:0	MATCH
+types	Unbounded -> java.io.Serializable	OK:0	OK:0	MATCH
+types	Unbounded -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	Unbounded -> java.lang.String[]	OK:0	OK:0	MATCH
+types	Unbounded -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:1	OK:1	MATCH
+types	Unbounded -> java.util.List	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<?>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Unbounded -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:1	OK:1	MATCH
+types	Unbounded -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:1	OK:1	MATCH
+bean-types	Unbounded	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$Unbounded<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$Unbounded<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	MATCH
+types	Bounded -> java.lang.String	OK:0	OK:0	MATCH
+types	Bounded -> java.lang.Integer	OK:0	OK:0	MATCH
+types	Bounded -> java.lang.Number	OK:0	OK:0	MATCH
+types	Bounded -> java.lang.Object	OK:1	OK:1	MATCH
+types	Bounded -> int	OK:0	OK:0	MATCH
+types	Bounded -> java.io.Serializable	OK:0	OK:0	MATCH
+types	Bounded -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	Bounded -> java.lang.String[]	OK:0	OK:0	MATCH
+types	Bounded -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<?>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Bounded -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:1	OK:1	MATCH
+types	Bounded -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:1	OK:1	MATCH
+bean-types	Bounded	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Bounded<T>, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Bounded<T>, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	MATCH
+types	Recursive -> java.lang.String	OK:0	OK:0	MATCH
+types	Recursive -> java.lang.Integer	OK:0	OK:0	MATCH
+types	Recursive -> java.lang.Number	OK:0	OK:0	MATCH
+types	Recursive -> java.lang.Object	OK:1	OK:1	MATCH
+types	Recursive -> int	OK:0	OK:0	MATCH
+types	Recursive -> java.io.Serializable	OK:0	OK:0	MATCH
+types	Recursive -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	Recursive -> java.lang.String[]	OK:0	OK:0	MATCH
+types	Recursive -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<?>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Recursive -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	Recursive -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	Recursive	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$Recursive<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$Recursive<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	MATCH
+types	Multi -> java.lang.String	OK:0	OK:0	MATCH
+types	Multi -> java.lang.Integer	OK:0	OK:0	MATCH
+types	Multi -> java.lang.Number	OK:0	OK:0	MATCH
+types	Multi -> java.lang.Object	OK:1	OK:1	MATCH
+types	Multi -> int	OK:0	OK:0	MATCH
+types	Multi -> java.io.Serializable	OK:0	OK:0	MATCH
+types	Multi -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	Multi -> java.lang.String[]	OK:0	OK:0	MATCH
+types	Multi -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:1	OK:1	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<?>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Multi -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Multi -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Multi -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	Multi -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	Multi	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$Multi<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<T>, org.example.cdi.fuzz.TypeCorpus$Multi<T>, org.example.cdi.fuzz.TypeCorpus$View<T>]]	MATCH
+types	Nested -> java.lang.String	OK:0	OK:0	MATCH
+types	Nested -> java.lang.Integer	OK:0	OK:0	MATCH
+types	Nested -> java.lang.Number	OK:0	OK:0	MATCH
+types	Nested -> java.lang.Object	OK:1	OK:1	MATCH
+types	Nested -> int	OK:0	OK:0	MATCH
+types	Nested -> java.io.Serializable	OK:0	OK:0	MATCH
+types	Nested -> java.lang.Cloneable	OK:0	OK:0	MATCH
+types	Nested -> java.lang.String[]	OK:0	OK:0	MATCH
+types	Nested -> java.lang.Object[]	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.lang.String>[]	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<?>[]	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.Object>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<?>	OK:1	OK:1	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<java.lang.String>>	OK:1	OK:1	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<?>>	OK:1	OK:1	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.Object>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<?>	OK:1	OK:1	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<java.lang.String>>	OK:1	OK:1	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.util.List<?>>	OK:1	OK:1	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.lang.String>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.lang.Object>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<?>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Nested -> java.util.List<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.lang.String>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.lang.Object>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<?>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Nested -> java.util.Collection<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.lang.String>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.lang.Object>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<?>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<? extends java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<? super java.lang.Integer>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<? extends java.lang.CharSequence>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.util.List<java.lang.String>>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.util.List<?>>	OK:0	OK:0	MATCH
+types	Nested -> java.util.ArrayList<java.lang.String[]>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$Box<? super java.lang.Number>	OK:0	OK:0	MATCH
+types	Nested -> org.example.cdi.fuzz.TypeCorpus$View<? super java.lang.Number>	OK:0	OK:0	MATCH
+bean-types	Nested	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<T>>, org.example.cdi.fuzz.TypeCorpus$Nested<T>, org.example.cdi.fuzz.TypeCorpus$View<java.util.List<T>>]]	[[java.lang.Object, org.example.cdi.fuzz.TypeCorpus$Box<java.util.List<T>>, org.example.cdi.fuzz.TypeCorpus$Nested<T>, org.example.cdi.fuzz.TypeCorpus$View<java.util.List<T>>]]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/0	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/1	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/2	OK:[a]	OK:[a]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/3	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/4	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/5	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/6	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/7	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/8	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/9	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/10	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/11	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/12	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/13	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/14	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/15	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/16	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/17	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/18	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/19	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/20	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/21	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/22	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/23	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/24	OK:[a]	OK:[a]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/25	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/26	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/27	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/28	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/29	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/30	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/31	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/32	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/33	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/34	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/35	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/36	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/37	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/38	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/39	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/40	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/41	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/42	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/43	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/44	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/45	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/46	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/47	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/48	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/49	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/50	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/51	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/52	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/53	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/54	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/55	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/56	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/57	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/58	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/59	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/60	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/61	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/62	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/63	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/64	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/65	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/66	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/67	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/68	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/69	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/70	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/71	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/72	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/73	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/74	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/75	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/76	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/77	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/78	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/79	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/80	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/81	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/82	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/83	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/84	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/85	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/86	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/87	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/88	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/89	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/90	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/91	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/92	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/93	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/94	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/95	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/96	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/97	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/98	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/99	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/100	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/101	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/102	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/103	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/104	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/105	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/106	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/107	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/108	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/109	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/110	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/111	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/112	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/113	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/114	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/115	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/116	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/117	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/118	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/119	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/120	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/121	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/122	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/123	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/124	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/125	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/126	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/127	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/128	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/129	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/130	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/131	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/132	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/133	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/134	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/135	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/136	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/137	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/138	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/139	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/140	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/141	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/142	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/143	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/144	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/145	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/146	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/147	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/148	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/149	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/150	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/151	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/152	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/153	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/154	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/155	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/156	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/157	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/158	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/159	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/160	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/161	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/162	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/163	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/164	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/165	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/166	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/167	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/168	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/169	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/170	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/171	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/172	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/173	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/174	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/175	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/176	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/177	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/178	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/179	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/180	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/181	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/182	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/183	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/184	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/185	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/186	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/187	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/188	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/189	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/190	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/191	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/192	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/193	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/194	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/195	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/196	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/197	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/198	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/199	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/200	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/201	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/202	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/203	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/204	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/205	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/206	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/207	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/208	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/209	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/210	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/211	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/212	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/213	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/214	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/215	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/216	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/217	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/218	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/219	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/220	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/221	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/222	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/223	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/224	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/225	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/226	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/227	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/228	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/229	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/230	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/231	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/232	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/233	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/234	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/235	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/236	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/237	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/238	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/239	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/240	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/241	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/242	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/243	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/244	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/245	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/246	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/247	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/248	OK:[a]	OK:[a]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/249	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/250	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/251	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/252	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/253	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/254	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/255	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/256	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/257	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/258	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/259	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/260	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/261	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/262	OK:[a]	OK:[a]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/263	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/264	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/265	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/266	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/267	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/268	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/269	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/270	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/271	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/272	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/273	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/274	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/275	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/276	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/277	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/278	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/279	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/280	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/281	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/282	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/283	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/284	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/285	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/286	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/287	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/288	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/289	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/290	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/291	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/292	OK:[a]	OK:[a]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/293	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/294	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/295	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/296	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/297	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/298	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/299	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/300	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/301	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/302	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/303	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/304	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/305	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/306	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/307	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/308	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/309	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/310	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/311	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/312	OK:[a]	OK:[a]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/313	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/314	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/315	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/316	OK:[]	OK:[]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/317	OK:0	OK:0	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/318	OK:[b]	OK:[b]	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/319	OK:1	OK:1	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/320	OK:plain	OK:plain	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/321	OK:true	OK:true	MATCH
+qualifiers	[class org.example.cdi.fuzz.DifferentialFuzzTest$Qualified]/322	ERROR:IllegalArgumentException	ERROR:IllegalArgumentException	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/0	OK:[box-string, box-any, view-string, object]	OK:[box-string, box-any, view-string, object]	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/1	OK:[box-int, box-any, view-number, object]	OK:[box-int, box-any, view-number, object]	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/2	OK:[box-any, object, box-list]	OK:[box-any, object, box-list]	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/3	OK:[box-string, box-any, view-string, object]	OK:[box-string, box-any, view-string, object]	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/4	OK:[object, list-string, list-any]	OK:[object, list-string, list-any]	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/5	OK:[object, list-any]	OK:[object, list-any]	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/6	ERROR:IllegalArgumentException	ERROR:IllegalArgumentException	MATCH
+events	[class org.example.cdi.fuzz.DifferentialFuzzTest$Observers]/7	OK:[box-any, object]	OK:[box-any, object]	MATCH
+parameters	pBoolean <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pBoolean <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pByte <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pChar <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pDouble <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pFloat <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInt <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pInts <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pList <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pLong <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pNumber <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pObject <- java.lang.Byte(2)	OK:ACCEPT:2	OK:ACCEPT:2	MATCH
+parameters	pObject <- java.lang.Short(2)	OK:ACCEPT:2	OK:ACCEPT:2	MATCH
+parameters	pObject <- java.lang.Character(z)	OK:ACCEPT:z	OK:ACCEPT:z	MATCH
+parameters	pObject <- java.lang.Integer(2)	OK:ACCEPT:2	OK:ACCEPT:2	MATCH
+parameters	pObject <- java.lang.Long(2)	OK:ACCEPT:2	OK:ACCEPT:2	MATCH
+parameters	pObject <- java.lang.Float(2.0)	OK:ACCEPT:2.0	OK:ACCEPT:2.0	MATCH
+parameters	pObject <- java.lang.Double(2.0)	OK:ACCEPT:2.0	OK:ACCEPT:2.0	MATCH
+parameters	pObject <- java.lang.Boolean(true)	OK:ACCEPT:true	OK:ACCEPT:true	MATCH
+parameters	pObject <- java.lang.String(changed)	OK:ACCEPT:changed	OK:ACCEPT:changed	MATCH
+parameters	pObject <- null(null)	OK:ACCEPT:null	OK:ACCEPT:null	MATCH
+parameters	pObject <- java.lang.Object(Object)	OK:ACCEPT:Object	OK:ACCEPT:Object	MATCH
+parameters	pObject <- int[]([2])	OK:ACCEPT:[2]	OK:ACCEPT:[2]	MATCH
+parameters	pObject <- java.lang.String[]([changed])	OK:ACCEPT:[changed]	OK:ACCEPT:[changed]	MATCH
+parameters	pObject <- java.util.ImmutableCollections$List12([changed])	OK:ACCEPT:[changed]	OK:ACCEPT:[changed]	MATCH
+parameters	pShort <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pShort <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pString <- java.lang.Byte(2)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Short(2)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Character(z)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Integer(2)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Long(2)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Float(2.0)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Double(2.0)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.Boolean(true)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.String(changed)	OK:ACCEPT:changed	OK:ACCEPT:changed	MATCH
+parameters	pString <- null(null)	OK:ACCEPT:null	OK:ACCEPT:null	MATCH
+parameters	pString <- java.lang.Object(Object)	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- int[]([2])	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.lang.String[]([changed])	OK:REJECT	OK:REJECT	MATCH
+parameters	pString <- java.util.ImmutableCollections$List12([changed])	OK:REJECT	OK:REJECT	MATCH
+parameters	pStrings <- java.lang.Byte(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Short(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Character(z)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Integer(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Long(2)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Float(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Double(2.0)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Boolean(true)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.String(changed)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- null(null)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.Object(Object)	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- int[]([2])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.lang.String[]([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameters	pStrings <- java.util.ImmutableCollections$List12([changed])	ERROR:ClassCastException	ERROR:ClassCastException	MATCH
+parameter-array	196	OK:mutated-read	OK:original	DIFF
+parameter-array	197	OK:after	OK:before	DIFF
+parameter-array	198	OK:none	OK:none	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/0	1=OK:destroy;0=OK:get;3=OK:Dependent;1=OK:destroy;2=OK:close;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;0=OK:get;3=OK:Dependent;1=OK:destroy;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/1	0=OK:get;3=OK:Dependent;2=OK:close;0=ERROR:IllegalStateException;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	0=OK:get;3=OK:Dependent;2=OK:close;0=ERROR:IllegalStateException;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/2	1=OK:destroy;1=OK:destroy;0=OK:get;0=OK:get;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;1=OK:destroy;0=OK:get;0=OK:get;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/3	0=OK:get;1=OK:destroy;2=OK:close;3=OK:Dependent;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	0=OK:get;1=OK:destroy;2=OK:close;3=OK:Dependent;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/4	2=OK:close;2=OK:close;3=OK:Dependent;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	2=OK:close;2=OK:close;3=OK:Dependent;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/5	0=OK:get;0=OK:get;3=OK:Dependent;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	0=OK:get;0=OK:get;3=OK:Dependent;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/6	1=OK:destroy;1=OK:destroy;2=OK:close;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;1=OK:destroy;2=OK:close;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/7	3=OK:Dependent;0=OK:get;0=OK:get;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;0=OK:get;0=OK:get;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/8	2=OK:close;3=OK:Dependent;1=OK:destroy;3=OK:Dependent;2=OK:close;[]	2=OK:close;3=OK:Dependent;1=OK:destroy;3=OK:Dependent;2=OK:close;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/9	0=OK:get;2=OK:close;2=OK:close;1=OK:destroy;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	0=OK:get;2=OK:close;2=OK:close;1=OK:destroy;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/10	2=OK:close;2=OK:close;0=OK:get;2=OK:close;2=OK:close;[parent-create, parent-destroy, child-destroy]	2=OK:close;2=OK:close;0=OK:get;2=OK:close;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/11	2=OK:close;2=OK:close;0=OK:get;1=OK:destroy;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	2=OK:close;2=OK:close;0=OK:get;1=OK:destroy;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/12	3=OK:Dependent;3=OK:Dependent;1=OK:destroy;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;3=OK:Dependent;1=OK:destroy;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/13	2=OK:close;1=OK:destroy;1=OK:destroy;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	2=OK:close;1=OK:destroy;1=OK:destroy;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/14	0=OK:get;3=OK:Dependent;0=OK:get;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	0=OK:get;3=OK:Dependent;0=OK:get;3=OK:Dependent;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/15	1=OK:destroy;0=OK:get;2=OK:close;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;0=OK:get;2=OK:close;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/16	1=OK:destroy;3=OK:Dependent;1=OK:destroy;2=OK:close;3=OK:Dependent;[]	1=OK:destroy;3=OK:Dependent;1=OK:destroy;2=OK:close;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/17	3=OK:Dependent;0=OK:get;0=OK:get;1=OK:destroy;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;0=OK:get;0=OK:get;1=OK:destroy;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/18	1=OK:destroy;1=OK:destroy;0=OK:get;3=OK:Dependent;2=OK:close;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;1=OK:destroy;0=OK:get;3=OK:Dependent;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/19	3=OK:Dependent;3=OK:Dependent;0=OK:get;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;3=OK:Dependent;0=OK:get;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/20	2=OK:close;1=OK:destroy;3=OK:Dependent;2=OK:close;0=OK:get;[parent-create, parent-destroy, child-destroy]	2=OK:close;1=OK:destroy;3=OK:Dependent;2=OK:close;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/21	1=OK:destroy;0=OK:get;1=OK:destroy;1=OK:destroy;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;0=OK:get;1=OK:destroy;1=OK:destroy;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/22	3=OK:Dependent;1=OK:destroy;3=OK:Dependent;1=OK:destroy;1=OK:destroy;[]	3=OK:Dependent;1=OK:destroy;3=OK:Dependent;1=OK:destroy;1=OK:destroy;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/23	0=OK:get;1=OK:destroy;3=OK:Dependent;3=OK:Dependent;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	0=OK:get;1=OK:destroy;3=OK:Dependent;3=OK:Dependent;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/24	1=OK:destroy;3=OK:Dependent;2=OK:close;1=OK:destroy;0=OK:get;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;3=OK:Dependent;2=OK:close;1=OK:destroy;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/25	0=OK:get;2=OK:close;3=OK:Dependent;2=OK:close;2=OK:close;[parent-create, parent-destroy, child-destroy]	0=OK:get;2=OK:close;3=OK:Dependent;2=OK:close;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/26	3=OK:Dependent;3=OK:Dependent;3=OK:Dependent;1=OK:destroy;3=OK:Dependent;[]	3=OK:Dependent;3=OK:Dependent;3=OK:Dependent;1=OK:destroy;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/27	0=OK:get;2=OK:close;1=OK:destroy;3=OK:Dependent;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	0=OK:get;2=OK:close;1=OK:destroy;3=OK:Dependent;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/28	0=OK:get;2=OK:close;3=OK:Dependent;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	0=OK:get;2=OK:close;3=OK:Dependent;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/29	2=OK:close;3=OK:Dependent;0=OK:get;2=OK:close;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	2=OK:close;3=OK:Dependent;0=OK:get;2=OK:close;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/30	1=OK:destroy;3=OK:Dependent;3=OK:Dependent;1=OK:destroy;2=OK:close;[]	1=OK:destroy;3=OK:Dependent;3=OK:Dependent;1=OK:destroy;2=OK:close;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/31	2=OK:close;0=OK:get;3=OK:Dependent;0=OK:get;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	2=OK:close;0=OK:get;3=OK:Dependent;0=OK:get;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/32	3=OK:Dependent;1=OK:destroy;1=OK:destroy;1=OK:destroy;2=OK:close;[]	3=OK:Dependent;1=OK:destroy;1=OK:destroy;1=OK:destroy;2=OK:close;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/33	1=OK:destroy;2=OK:close;3=OK:Dependent;3=OK:Dependent;1=OK:destroy;[]	1=OK:destroy;2=OK:close;3=OK:Dependent;3=OK:Dependent;1=OK:destroy;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/34	0=OK:get;1=OK:destroy;2=OK:close;1=OK:destroy;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	0=OK:get;1=OK:destroy;2=OK:close;1=OK:destroy;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/35	0=OK:get;3=OK:Dependent;2=OK:close;1=OK:destroy;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	0=OK:get;3=OK:Dependent;2=OK:close;1=OK:destroy;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/36	1=OK:destroy;1=OK:destroy;0=OK:get;1=OK:destroy;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;1=OK:destroy;0=OK:get;1=OK:destroy;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/37	3=OK:Dependent;3=OK:Dependent;2=OK:close;3=OK:Dependent;3=OK:Dependent;[]	3=OK:Dependent;3=OK:Dependent;2=OK:close;3=OK:Dependent;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/38	0=OK:get;1=OK:destroy;0=ERROR:IllegalStateException;0=ERROR:IllegalStateException;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	0=OK:get;1=OK:destroy;0=ERROR:IllegalStateException;0=ERROR:IllegalStateException;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/39	1=OK:destroy;2=OK:close;3=OK:Dependent;2=OK:close;3=OK:Dependent;[]	1=OK:destroy;2=OK:close;3=OK:Dependent;2=OK:close;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/40	2=OK:close;0=OK:get;0=OK:get;2=OK:close;2=OK:close;[parent-create, parent-destroy, child-destroy]	2=OK:close;0=OK:get;0=OK:get;2=OK:close;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/41	2=OK:close;2=OK:close;2=OK:close;1=OK:destroy;3=OK:Dependent;[]	2=OK:close;2=OK:close;2=OK:close;1=OK:destroy;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/42	2=OK:close;1=OK:destroy;3=OK:Dependent;2=OK:close;2=OK:close;[]	2=OK:close;1=OK:destroy;3=OK:Dependent;2=OK:close;2=OK:close;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/43	1=OK:destroy;1=OK:destroy;3=OK:Dependent;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;1=OK:destroy;3=OK:Dependent;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/44	3=OK:Dependent;0=OK:get;1=OK:destroy;2=OK:close;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;0=OK:get;1=OK:destroy;2=OK:close;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/45	0=OK:get;2=OK:close;1=OK:destroy;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	0=OK:get;2=OK:close;1=OK:destroy;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/46	1=OK:destroy;3=OK:Dependent;3=OK:Dependent;0=OK:get;2=OK:close;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;3=OK:Dependent;3=OK:Dependent;0=OK:get;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/47	1=OK:destroy;1=OK:destroy;3=OK:Dependent;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;1=OK:destroy;3=OK:Dependent;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/48	3=OK:Dependent;3=OK:Dependent;0=OK:get;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;3=OK:Dependent;0=OK:get;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/49	0=OK:get;3=OK:Dependent;2=OK:close;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	0=OK:get;3=OK:Dependent;2=OK:close;3=OK:Dependent;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/50	2=OK:close;1=OK:destroy;0=OK:get;1=OK:destroy;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	2=OK:close;1=OK:destroy;0=OK:get;1=OK:destroy;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/51	2=OK:close;3=OK:Dependent;3=OK:Dependent;0=OK:get;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	2=OK:close;3=OK:Dependent;3=OK:Dependent;0=OK:get;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/52	0=OK:get;1=OK:destroy;3=OK:Dependent;2=OK:close;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	0=OK:get;1=OK:destroy;3=OK:Dependent;2=OK:close;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/53	2=OK:close;2=OK:close;2=OK:close;3=OK:Dependent;3=OK:Dependent;[]	2=OK:close;2=OK:close;2=OK:close;3=OK:Dependent;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/54	1=OK:destroy;3=OK:Dependent;3=OK:Dependent;0=OK:get;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	1=OK:destroy;3=OK:Dependent;3=OK:Dependent;0=OK:get;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/55	3=OK:Dependent;2=OK:close;2=OK:close;3=OK:Dependent;1=OK:destroy;[]	3=OK:Dependent;2=OK:close;2=OK:close;3=OK:Dependent;1=OK:destroy;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/56	0=OK:get;1=OK:destroy;0=ERROR:IllegalStateException;2=OK:close;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	0=OK:get;1=OK:destroy;0=ERROR:IllegalStateException;2=OK:close;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/57	3=OK:Dependent;1=OK:destroy;2=OK:close;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;1=OK:destroy;2=OK:close;0=OK:get;0=OK:get;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/58	1=OK:destroy;1=OK:destroy;1=OK:destroy;2=OK:close;3=OK:Dependent;[]	1=OK:destroy;1=OK:destroy;1=OK:destroy;2=OK:close;3=OK:Dependent;[]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/59	2=OK:close;1=OK:destroy;0=OK:get;0=OK:get;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	2=OK:close;1=OK:destroy;0=OK:get;0=OK:get;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/60	0=OK:get;0=OK:get;2=OK:close;2=OK:close;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	0=OK:get;0=OK:get;2=OK:close;2=OK:close;0=ERROR:IllegalStateException;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/61	3=OK:Dependent;3=OK:Dependent;1=OK:destroy;0=OK:get;2=OK:close;[parent-create, parent-destroy, child-destroy]	3=OK:Dependent;3=OK:Dependent;1=OK:destroy;0=OK:get;2=OK:close;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/62	0=OK:get;0=OK:get;0=OK:get;3=OK:Dependent;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	0=OK:get;0=OK:get;0=OK:get;3=OK:Dependent;1=OK:destroy;[parent-create, parent-destroy, child-destroy]	MATCH
+handles	[class org.example.cdi.fuzz.DifferentialFuzzTest$Parent, class org.example.cdi.fuzz.DifferentialFuzzTest$Child]/63	2=OK:close;0=OK:get;1=OK:destroy;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	2=OK:close;0=OK:get;1=OK:destroy;2=OK:close;3=OK:Dependent;[parent-create, parent-destroy, child-destroy]	MATCH
+injection-default	[class org.example.cdi.fuzz.DifferentialFuzzTest$OnlyQualified, class org.example.cdi.fuzz.DifferentialFuzzTest$UnqualifiedConsumer]/0	ERROR:DeploymentException:WELD-001408: Unsatisfied dependencies for type OnlyQualified with qualifiers @Default   at injection point [BackedAnnotatedField] @Inject org.example.cdi.fuzz.DifferentialFuzzTest$UnqualifiedConsumer.x   at org.example.cdi.fuzz.DifferentialFuzzTest$UnqualifiedConsumer.x(UnqualifiedConsumer.java:0) WELD-001475: The following beans match by type, but none have matching qualifiers:   - Managed Bean [class org.example.cdi.fuzz.DifferentialFuzzTest$OnlyQualified] with qualifiers [@Mark @Any] 	ERROR:DeploymentException:The injection point OnlyQualified x of org.example.cdi.fuzz.DifferentialFuzzTest$UnqualifiedConsumer has no bean to satisfy it, qualified [] (CDI 4.1 section 5.2.2)	DIFF
+injection-list	[class org.example.cdi.fuzz.DifferentialFuzzTest$Lists, class org.example.cdi.fuzz.DifferentialFuzzTest$ListConsumer]/0	OK:[produced]	OK:[produced]	MATCH

@@ -1,0 +1,514 @@
+[
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.ThrowExceptionOverflowStrategyTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-aed47efd-55b5-436b-85cb-93d2b18dca34.jar",
+    "trace_ref": "93afb748f8d758db0937073667752cc544ac23d93f59b4489a5703aa15a213b5"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.EmitterOfMessageAcknowledgementTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-72da9f1c-6a7b-4b51-90fe-8fa1655e2eed.jar",
+    "trace_ref": "f9640cca4a6f1905a58a659b3761f3e8375ff06d17f807a11c8fe2478097f9ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.BufferOverflowStrategyOverflowTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-c6683d4f-4061-411a-ad81-f3391be3c080.jar",
+    "trace_ref": "a384b51be5fcebcd18a292284a67c550742ec1b8b47f1ed36d748757039ec049"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.ThrowExceptionOverflowStrategyOverflowTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-1648b93f-6b43-46d6-a5e4-1e6b51cb8e04.jar",
+    "trace_ref": "077d8f2bda7b9140b03d0da01ef69f8c3cef3b4c4e413ac642aa53790918c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.EmitterOfPayloadAcknowledgementTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-dc35b3a1-e5da-4c48-9f57-87015a6517da.jar",
+    "trace_ref": "d9cd690c698841d61161184e9398075e0fc2217cf8c3e06a222761412a160076"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherBuilderPayloadTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-bc1e67eb-7b85-44da-bc24-a26034b53af2.jar",
+    "trace_ref": "933fc5b39e2601717a6fa436a5a668ef5849bb2fa2055a015d4a42275cb3f7ec"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousMessageProcessorAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-07fc1395-99f8-4931-91ba-63d5a5480f84.jar",
+    "trace_ref": "3462be1411510b4c83ec86c8d749b4f531c07d3e9e6e36ea9f6e6e309dfb1e8c"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherBuilderMessageTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-d513ff53-ab25-4f7d-a738-4d723f812d61.jar",
+    "trace_ref": "64f76febba253ca4325f1b29d495ea39659c5c0786773719de7de69e2c07a29e"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousPayloadProcessorAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-6e525033-d646-4f74-b797-fc7782528923.jar",
+    "trace_ref": "8ec2f5cd11f41d954f7eb820046c2507a23c38366ddbfd83a7ea812a0c95e63c"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.LatestOverflowStrategyOverflowTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-d33d5490-24f8-40de-8106-7f08bac3b84a.jar",
+    "trace_ref": "dc9c1ba5e0026e7e23491a0d7ccd4d12fa206b5cc3cd5a9598ab19850c8d5edd"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionMessageBeanWithPayloadsWithAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-c70f7c8f-892a-4de5-82d9-2f2b1f362ddb.jar",
+    "trace_ref": "7731f2ebaab565f9f2f738facacf8bdf9daf59e7f6608a3ce33b8c622ba1f70d"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DefaultOverflowStrategyOverflowWithoutBufferSizeTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-fc9fdd2e-006d-4262-b411-274dca637dc9.jar",
+    "trace_ref": "bf4938726f2c8f493fbab4fd299c76723855f332b10c3d4963a698c82e65e0d4"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionEmittingDataAfterTerminationTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-2efa6c4d-cba0-4a17-8b1d-9bbb1d435f85.jar",
+    "trace_ref": "42a0712b33789d36cb651aa46a6a066f868ad631217502adaa779f5b0752ed16"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionDifferentFlavourSameChannelTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-bbb63ab6-cd42-447c-8629-589f260c7668.jar",
+    "trace_ref": "d68d5ff7a4fc1047110959743cb9e6b10f4ae32dd815eeb390a09cd9c4b47c33"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionAfterTerminatingWithErrorTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-9ebd9d41-bbdc-4f0e-b588-d48dffb6b459.jar",
+    "trace_ref": "a99e16e6df1e79323e30b926063e7a74434ffe0e572f18b629b967d7f6ae61c3"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DefaultOverflowStrategyOverflowTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-46d2f8e6-2980-4d54-8361-c0f1eb99d0e3.jar",
+    "trace_ref": "f112b1e3e3c4251835a03bad8e951566d8bf459835817f195f86806233e5e0bc"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousMessageSubscriberAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-0de2dd08-291f-40da-bff2-fe3409105b89.jar",
+    "trace_ref": "ed3b8e07fdc86611038fd699f5e4db63309485ff6f4fae9f19e129977cc30fff"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousPayloadSubscriberAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-1fb391bf-e0da-43ab-82eb-999ad6aec67b.jar",
+    "trace_ref": "06a93e133397eb928afa3a5114f601200cfdca37e80de6e2412c9bb7d1fde690"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.ProcessorChainTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-6dbfc179-b885-4861-983f-1981fa5bb6f0.jar",
+    "trace_ref": "f40b2f618593e105dd40d0bfca4c3ad35e6362871873e46c479745608e9284df"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.SimpleIncomingTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-3abd3f4d-66d0-46a0-9372-21ede31203eb.jar",
+    "trace_ref": "42f466abdda0eacc150c6cc878eb6d041b6f6dc8ffdaa8f21b2c34a1a241e25b"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.MessageProcessorAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-848129eb-abae-4866-ba8e-10c963a2389d.jar",
+    "trace_ref": "6b214ce52f14411928a052a023edf3061e8c44eed0c8e50f9072fd3e54b9c51c"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.PayloadProcessorAckTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-e4cd6730-5994-4487-b1ce-508f502bb975.jar",
+    "trace_ref": "2316a2f0a573186a704c783a33242f9fd7e748698d2c842c48dfe91dcf7b41ea"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.PayloadSubscriberAckTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-11314ec9-63fc-465a-983e-f47647fd5012.jar",
+    "trace_ref": "6c9e1760aab8a298d51384635114ea43e78e11f8fb5e5bd8e80d51020119d816"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherPayloadTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-0ae35130-0d3e-49cd-b245-b64a372a7e70.jar",
+    "trace_ref": "a8e3bd91c7265747d70dec7654d17c4a28b759727a185b553808b949aa8e1c0f"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-ee550c54-ab4e-4d57-9f6f-ef4debfc3699.jar",
+    "trace_ref": "ce31621858d112386da34d85bf2e90228f0a42d25e95662fb7ac1f6992d84815"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionConnectedToProcessorTest",
+    "name": "classMethod",
+    "seconds": "0.0",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-fdf23469-8ac6-48c8-b287-e23a105274b3.jar",
+    "trace_ref": "2d7c0d152da61564d3d144887061951b9650d2f30e45c27d90e4114b3d2acd11"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionEmittingMessageTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-a5b1c32f-c5a2-4fb7-b55b-9235d34f262e.jar",
+    "trace_ref": "7c0253c00aec7a6ee3d31d9f15856be516ba36800506b2782709b3ea12f6b00b"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionEmittingNullTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-6b7b9401-9a69-4a1f-802c-bd3e963f7f8e.jar",
+    "trace_ref": "05dc66d9ae2b2003df1815bb5c025e4bfb346ff42b24174140abb1599a38810b"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionMissingChannelTest",
+    "name": "testMissingEmitter",
+    "seconds": "1.17",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-45877177-5b2f-485d-805a-1d6022884cf9.jar",
+    "trace_ref": "8daf68703f78f94866c7dfd9e34d7ee4c51662a59ef108260807a77486f2a6c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionPayloadsTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-ca0362db-c424-4825-a0d8-9bbe4bdb1919.jar",
+    "trace_ref": "4e9663c514c0cd5b0b997429b6e45c4bb52247cc70245d60a5a812e57242e796"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionPayloadsWithAckTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-7de0b3d0-dcf8-494d-9a1d-f7137207ec3e.jar",
+    "trace_ref": "bce91e7bfbe2edc91e64ead18beb5f22090d392b676538a9714b4b111e804c26"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.BufferOverflowStrategyTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-6779ba4e-3d23-4b72-9234-fbdf12ee55e8.jar",
+    "trace_ref": "f8f421f0230467112ad8b3e5f3da39ec9c0c42c1f4f274f0bc973ff9677eed7c"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DefaultOverflowStrategyTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-6e698813-8e2c-4354-9174-218f3a0bd828.jar",
+    "trace_ref": "705c848a0703691316f856bfaeed9a8169ffaa8872e3a0ca9250216f5abb503e"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DropOverflowStrategyOverflowTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-ef716b8c-4d13-46e9-bfe6-064284041569.jar",
+    "trace_ref": "8c7b2724ae9ca387813565fe053669e6887919bcc2ee971c485c6134fb5ea3e9"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DropOverflowStrategyTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-fe2b7b97-82c6-47f9-a629-0ae9acf2aaca.jar",
+    "trace_ref": "16e06d73c7f7fa2af17961b984070fa7777495f8bb4e74476485acdf66c37c6b"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.FailOverflowStrategyOverflowTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-9239c427-a28d-4cf7-a750-cd8f84e3839d.jar",
+    "trace_ref": "b725fcbadb9ca929427ba29578dab65ead3b90f5b311d331fdf3c20d1ec329e8"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.LatestOverflowStrategyTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-429041e0-8392-431c-b641-c06566fc7885.jar",
+    "trace_ref": "487b3bcb35d057af2767d1032f0971d0aa500c219fb2dc4a474406c71d3f94d8"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.connector.ConnectorTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-65ae1883-805d-4d68-b5e7-a93bcd4193be.jar",
+    "trace_ref": "2c7e033247579adbee6cbe7e9bc87a6053a6cb64b8faaf1094afd2db0712fce6"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.connector.MissingConnectorTest",
+    "name": "testWhenTheConnectorAreNotConfigured",
+    "seconds": "1.517",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-089aaa43-c846-40eb-b4dd-86fd5dffa42f.jar",
+    "trace_ref": "0bcd5ec00ccb0a57604668c9eaddf833e60e7249ecc8bf60be4dd3ff250c6c35"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.connector.MissingConnectorTest",
+    "name": "testWhenTheStreamNameDoesNotMatch",
+    "seconds": "0.493",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0002-a8104e80-0f62-422d-8cec-9cf8fbfd4ec4.jar",
+    "trace_ref": "1462c1ede73935d768ca7bc7f22a3d0bdc083a20f079337a1a63f8cfcdfd1240"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatProcessorsWithTooManyDownstreamsAreDetected",
+    "seconds": "1.46",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-f72e3508-621c-42be-807b-4fb4d35d651c.jar",
+    "trace_ref": "5e3df208aa67a274b55e0ca8b2a5ab841d824ab3610f86d0873f9cb1f4b41f9d"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatChannelWithoutUpstreamAreDetected",
+    "seconds": "0.358",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0002-9ee84520-5f28-4b26-aac3-e953f9347a1c.jar",
+    "trace_ref": "7205ce2c59b3858c40357c803de6f148f115e007c85516bf25e48ec0f1ec9eb0"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatEmitterWithMultipleDownstreamsAreDetected",
+    "seconds": "0.362",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0003-7ad4f6c5-83e3-4068-bdf0-5007d2f39cbc.jar",
+    "trace_ref": "8ee97685e730a10bcb8c581c6c32a270b99b6fee4e5f21eed7133dc1d6016af0"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatProcessorsWithTooManyUpstreamsAreDetected",
+    "seconds": "0.318",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0004-6ab09369-94e5-4352-903c-7edc65d48e46.jar",
+    "trace_ref": "a0f5f9eba5d604c753bea4b96f013e601d04983e7fc326fb488573f414f54326"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatOutgoingConnectorWithoutUpstreamAreDetected",
+    "seconds": "0.372",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0005-83907986-a93d-45fa-8a9e-1088c45e32ad.jar",
+    "trace_ref": "b47e34e8ef643efdcd97b7512d3c77ee373989724b583f227854fd575ab901d0"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatEmptyIncomingAreRejected",
+    "seconds": "0.404",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0006-eb756a00-2e0f-4d23-abb7-c3673d0a149c.jar",
+    "trace_ref": "7a0465776a24e0a94804235f566219c549b135be259e2724da75d384aff10899"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatProcessorsWithoutUpstreamAreDetected",
+    "seconds": "0.26",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0007-b9cc3c91-ab36-479d-b785-07d0ef7dd755.jar",
+    "trace_ref": "74500ca85dc1722d6831e5d07cd5e377e42b97176add7fb3ad1e6f2f281e7abf"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatOutgoingConnectorWithMultipleUpstreamsAreDetected",
+    "seconds": "0.269",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0008-5a88674f-bf6c-4589-82f1-ae561ed7590b.jar",
+    "trace_ref": "3e2cca58ee4f9afa4387dbc374db5fd708c03271c754f2be8f7eabb2f9b53bd2"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatChannelWithMultipleUpstreamsAreDetected",
+    "seconds": "0.19",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0009-7cf43c06-43b7-4dd3-a475-650da6c60c64.jar",
+    "trace_ref": "fc6537b7f57fe76e99537e5a2fd16e21444ac7df7f14a073403941e12f629961"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatIncomingConnectorWithMultipleDownstreamAreDetected",
+    "seconds": "0.244",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0010-e7bbbd7e-fbad-4328-8ac2-bf11b41dc388.jar",
+    "trace_ref": "4610355833da6a10593c09af03d4345cdde4f78b312f3ed43388ceb9ce028547"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatEmptyOutgoingAreRejected",
+    "seconds": "0.207",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0011-2261508f-ca34-44e1-8971-99a2faa7b9bc.jar",
+    "trace_ref": "156aea1516960bdc550ec100c825fd4dacb0e3da14a294bf45f736355d901975"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatInvalidOutgoingSignaturesAreRejected",
+    "seconds": "0.295",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0012-be4f2cf9-52fc-43a9-9f11-8be55a941e3c.jar",
+    "trace_ref": "351a33a21bf82e4058cf5bbe4076d2d9a688fdfab5758f3117d24b040eb874b6"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatProcessorsWithoutDownstreamAreDetected",
+    "seconds": "0.222",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0013-9744b616-6393-4cc3-a68a-ecbdde51a4c1.jar",
+    "trace_ref": "954f7ff4e1fdf29760eeaa28cb8fd07d7aa199c5763f5f6f5ca762618901f7ba"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatIncomingConnectorWithoutDownstreamAreDetected",
+    "seconds": "0.254",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0014-e00acdd9-c63d-45a3-b2d3-d10bf2347c37.jar",
+    "trace_ref": "0b954196debc5d1e65fc13dfe97cb3d279b36e2831285ab271650b2f273401f9"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatEmitterWithoutDownstreamAreDetected",
+    "seconds": "0.202",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0015-e948c61e-6616-49a6-9c9b-fcd5e380a38d.jar",
+    "trace_ref": "200f58d9312bc1f4ef59b42545a6ef5c04b59b8340d4e6cd5d3063e5ee5b4c04"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+    "name": "checkThatIncompleteChainsAreDetected",
+    "seconds": "0.284",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0016-8415432b-e9c9-4332-b956-5a62dc9d7904.jar",
+    "trace_ref": "e73620ff357e5e65ea778223808a41510f606c97a583e99a3f52fc00a8133163"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.metrics.MetricsTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-19b11181-08dd-4591-a9fd-583fbafa4f78.jar",
+    "trace_ref": "e0d91ec1437d8b6ab439b01b8f2f506e16f03f83f4e6616e853ef6e1c96b1179"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.scope.ApplicationScopeTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-9a23e92b-d5a2-4295-9c67-338c54be7080.jar",
+    "trace_ref": "e4eea027fa2709e4c96cfb39b5201cfcc7d9ad44e056d6b868f3533363653fcf"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.scope.DependantScopeTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-8e48044f-7d65-4ea1-bdf6-f47c5fe393e8.jar",
+    "trace_ref": "5594652ff8b657fdd172ceb859f9d7b8509d1d9ac0dba2714053827b0305827c"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.invalid.InvalidSubscriberSignatureTest",
+    "name": "checkThatIncomingShouldNotReturnNonVoidCompletionStage",
+    "seconds": "1.428",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-5b26b808-f03e-48e5-b423-e398ded4ad83.jar",
+    "trace_ref": "0d05745b89c48f97270e2e2f643634ccf2a2e2a93a3d872ce63b41108a82355d"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.invalid.InvalidSubscriberSignatureTest",
+    "name": "checkThatIncomingShouldNotReturnObject",
+    "seconds": "0.402",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0002-164c4e90-4f3c-48d7-82bc-5d7e794db8d8.jar",
+    "trace_ref": "714b847aded6145b86610141805cb8254dd395aaa2c0b368bca543c5f52493f1"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.processors.ProcessorShapeTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-a26ba46c-7bf8-4b68-86bc-1af864ba6aa4.jar",
+    "trace_ref": "bd83a6e2288f9f848e1a8ad072d55ccf7677d4c35b2c52e1e311cc762b6e8de8"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.publishers.PublisherShapeTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-8c73c3cb-bbc8-4dc3-980f-82873303c7a5.jar",
+    "trace_ref": "7de45a84430f131c19835241fcc0b83a61db16d0c400c3478eab98cbf5e52e19"
+  },
+  {
+    "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.subscribers.SubscriberShapeTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile reactive-messaging deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/reactive-messaging/build/deployments/native/0001-b87ed0c7-dc30-4015-b628-0592b994df49.jar",
+    "trace_ref": "56613b55d3cf54936053c0d6d13bc98f644ba0dbb2287703f037ac0903daee27"
+  }
+]

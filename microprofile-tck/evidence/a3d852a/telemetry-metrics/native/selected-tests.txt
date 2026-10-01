@@ -1,0 +1,16 @@
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncDoubleCounterTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncLongCounterTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleCounterTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleGaugeTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleHistogramTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleUpDownCounterTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongCounterTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongGaugeTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongHistogramTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongUpDownCounterTest
+org.eclipse.microprofile.telemetry.metrics.tck.application.http.HttpHistogramTest
+org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmClassesTest
+org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmCpuTest
+org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmGarbageCollectionTest
+org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest
+org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmThreadTest

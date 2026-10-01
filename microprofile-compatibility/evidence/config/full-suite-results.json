@@ -1,0 +1,9 @@
+{
+  "totals": {
+    "tests": 379,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 2
+  },
+  "note": "Gradle counts the failed Arquillian setup callback as an additional test. Both specification methods in CdiOptionalInjectionTest were skipped after that setup failed."
+}

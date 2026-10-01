@@ -1,0 +1,2196 @@
+[
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.156",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderClass",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderClassWithPriorities",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderInstance",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderInstanceWithPriorities",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterInstance",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterInstanceWithPriority",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterProvidersWithPriority",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "testPropertiesRegistered",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AdditionalRegistrationTest.war",
+    "trace_ref": "e0dde57531d815d7b66d697bdf34f268ade047ef15acc8a7ae125cade7f6223b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.308",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-BeanParamTest.war",
+    "trace_ref": "beebbbf78007b3c31d03ede0813a01cb8726a8cd60c4002968865b676c3122f0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+    "name": "sendsParamsSpecifiedInBeanParam",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-BeanParamTest.war",
+    "trace_ref": "beebbbf78007b3c31d03ede0813a01cb8726a8cd60c4002968865b676c3122f0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.941",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CallMultipleMappersTest.war",
+    "trace_ref": "248d9e1ee2442638c9eaf7d7f27d2fa81a512f32045814d2f9cc69c242c119d3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+    "name": "testCallsTwoProvidersWithTwoRegisteredProvider",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CallMultipleMappersTest.war",
+    "trace_ref": "248d9e1ee2442638c9eaf7d7f27d2fa81a512f32045814d2f9cc69c242c119d3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.879",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientBuilderHeaderTest.war",
+    "trace_ref": "5da3de51a3d1356e2d1a6974c38d076405b8c6e407112f621642ce023d262254"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientBuilderHeaderTest.war",
+    "trace_ref": "5da3de51a3d1356e2d1a6974c38d076405b8c6e407112f621642ce023d262254"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientBuilderHeaderTest.war",
+    "trace_ref": "5da3de51a3d1356e2d1a6974c38d076405b8c6e407112f621642ce023d262254"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderMethodNullValue",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientBuilderHeaderTest.war",
+    "trace_ref": "5da3de51a3d1356e2d1a6974c38d076405b8c6e407112f621642ce023d262254"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnMethodOverridesClientHeaderParamOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExceptionInRequiredComputeMethodThrowsClientErrorException",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnMethodOverridesClientHeaderParamOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderNotSentWhenExceptionThrownAndRequiredIsFalse",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesComputedClientHeaderParamOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesComputedClientHeaderParamOnMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesExplicitClientHeaderParamOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesExplicitClientHeaderParamOnMethod",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testMultivaluedHeaderInterfaceExplicit",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testMultivaluedHeaderSentWhenInvokingComputeMethodFromSeparateClass",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8765 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused",
+    "trace_ref": "c24a82fbfcfa11485eaa4052303327c649d6ee2190f2f128b40a78ac4f51648f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.877",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientHeadersFactoryTest.war",
+    "trace_ref": "b932a4625826691085ce2b9a31db4632be52c20f17ff29f588b53963c1319ed1"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+    "name": "testClientHeadersFactoryInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientHeadersFactoryTest.war",
+    "trace_ref": "b932a4625826691085ce2b9a31db4632be52c20f17ff29f588b53963c1319ed1"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.875",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientReuseTest.war",
+    "trace_ref": "e79035a15078118a08e7da656231997ad52efadc5038b9d7c65c645121ab4cb5"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+    "name": "shouldReuseClientAfterFailure",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientReuseTest.war",
+    "trace_ref": "e79035a15078118a08e7da656231997ad52efadc5038b9d7c65c645121ab4cb5"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.872",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CloseTest.war",
+    "trace_ref": "f4a8e1977a1c9592c33fb9fd24a30299dba4c43541790e2b9176e3d53d93af5d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterAutoCloseableClose",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CloseTest.war",
+    "trace_ref": "f4a8e1977a1c9592c33fb9fd24a30299dba4c43541790e2b9176e3d53d93af5d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseOnInterfaceThatExtendsAutoCloseable",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CloseTest.war",
+    "trace_ref": "f4a8e1977a1c9592c33fb9fd24a30299dba4c43541790e2b9176e3d53d93af5d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseOnInterfaceThatExtendsCloseable",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CloseTest.war",
+    "trace_ref": "f4a8e1977a1c9592c33fb9fd24a30299dba4c43541790e2b9176e3d53d93af5d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseableClose",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CloseTest.war",
+    "trace_ref": "f4a8e1977a1c9592c33fb9fd24a30299dba4c43541790e2b9176e3d53d93af5d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.12",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CustomHttpMethodTest.war",
+    "trace_ref": "443cb1ba2fd4b49c752f99c779a9803beaef3cda78cc3ff126287b06d297a618"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+    "name": "invokesUserDefinedHttpMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CustomHttpMethodTest.war",
+    "trace_ref": "443cb1ba2fd4b49c752f99c779a9803beaef3cda78cc3ff126287b06d297a618"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.854",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperConfigTest.war",
+    "trace_ref": "938117364b000443ae6034de7cc9cc2bf602c7ecbf4420efb5966d12f63383e0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+    "name": "testNoExceptionThrownWhenDisabledDuringBuild",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperConfigTest.war",
+    "trace_ref": "938117364b000443ae6034de7cc9cc2bf602c7ecbf4420efb5966d12f63383e0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.906",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperTest.war",
+    "trace_ref": "389ded16a79db40aa61914ddd5373ea9fecd69f003566d583ecb85b3e669232a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testExceptionThrownWhenPropertySetToFalse",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperTest.war",
+    "trace_ref": "389ded16a79db40aa61914ddd5373ea9fecd69f003566d583ecb85b3e669232a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testLowerPriorityMapperTakesPrecedenceFromDefault",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperTest.war",
+    "trace_ref": "389ded16a79db40aa61914ddd5373ea9fecd69f003566d583ecb85b3e669232a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testNoExceptionThrownWhenDisabledDuringBuild",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperTest.war",
+    "trace_ref": "389ded16a79db40aa61914ddd5373ea9fecd69f003566d583ecb85b3e669232a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testPropagationOfResponseDetailsFromDefaultMapper",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultExceptionMapperTest.war",
+    "trace_ref": "389ded16a79db40aa61914ddd5373ea9fecd69f003566d583ecb85b3e669232a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.859",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultMIMETypeTest.war",
+    "trace_ref": "69cc913d7fe6f29e0bb3d8bd0cce407534d40ad12d6c24189983c58a4fb2a1a3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "testDefaultMIMETypeIsApplicationJson_Accept",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultMIMETypeTest.war",
+    "trace_ref": "69cc913d7fe6f29e0bb3d8bd0cce407534d40ad12d6c24189983c58a4fb2a1a3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "testDefaultMIMETypeIsApplicationJson_ContentType",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-DefaultMIMETypeTest.war",
+    "trace_ref": "69cc913d7fe6f29e0bb3d8bd0cce407534d40ad12d6c24189983c58a4fb2a1a3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.935",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-EntityPart.war",
+    "trace_ref": "bd023e729f72c303558fb66dd62775a111b06944ccd80c5f320d119d0e6a8f99"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "uploadFile",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-EntityPart.war",
+    "trace_ref": "bd023e729f72c303558fb66dd62775a111b06944ccd80c5f320d119d0e6a8f99"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "uploadMultipleFiles",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-EntityPart.war",
+    "trace_ref": "bd023e729f72c303558fb66dd62775a111b06944ccd80c5f320d119d0e6a8f99"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.012",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ExceptionMapperTest.war",
+    "trace_ref": "b8da74d694a61354d184f7fb30ffe0aa59f518a74e2f2d25dc6f6aea7710de2f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "testWithOneRegisteredProvider",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ExceptionMapperTest.war",
+    "trace_ref": "b8da74d694a61354d184f7fb30ffe0aa59f518a74e2f2d25dc6f6aea7710de2f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "testWithTwoRegisteredProviders",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ExceptionMapperTest.war",
+    "trace_ref": "b8da74d694a61354d184f7fb30ffe0aa59f518a74e2f2d25dc6f6aea7710de2f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.896",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FeatureRegistrationTest.war",
+    "trace_ref": "380b9a460335c98b684f98f75ab1036eb83e270e860324006800aa43ca346ef5"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "testFeatureRegistrationViaBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FeatureRegistrationTest.war",
+    "trace_ref": "380b9a460335c98b684f98f75ab1036eb83e270e860324006800aa43ca346ef5"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "testFeatureRegistrationViaCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FeatureRegistrationTest.war",
+    "trace_ref": "380b9a460335c98b684f98f75ab1036eb83e270e860324006800aa43ca346ef5"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.141",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FilterPriorityTest.war",
+    "trace_ref": "917b767a1b2e3efb76124e04b46c89e86edfcd90343fa46497b277e4db3e9377"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+    "name": "testPriorities",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FilterPriorityTest.war",
+    "trace_ref": "917b767a1b2e3efb76124e04b46c89e86edfcd90343fa46497b277e4db3e9377"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.917",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test301Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test301Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test302Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test302Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test303Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test303Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test307Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test307Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-FollowRedirectsTest.war",
+    "trace_ref": "07be4d9a786dd66611ffd5978737c705707cc22ce80f099336cdc847cd0deecc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.251",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "de4db81153e6f8039415494732e9c01bbf1d62ca7f30bc3239c2f5f41634ffc2"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeMethodOnBaseInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "de4db81153e6f8039415494732e9c01bbf1d62ca7f30bc3239c2f5f41634ffc2"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeMethodOnChildInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "de4db81153e6f8039415494732e9c01bbf1d62ca7f30bc3239c2f5f41634ffc2"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeOverriddenMethodOnChildInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "de4db81153e6f8039415494732e9c01bbf1d62ca7f30bc3239c2f5f41634ffc2"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.99",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenClientHeaderParamComputeValueSpecifiesMethodWithInvalidSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenClientHeaderParamComputeValueSpecifiesMissingMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMismatchedPathParameter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMissingPathParamAnnotation_templateDeclaredAtMethodLevel",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMissingPathParamAnnotation_templateDeclaredAtTypeLevel",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMultipleHTTPMethodAnnotations",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithPathParamAnnotationButNoURITemplate",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleClientHeaderParamsSpecifySameHeaderOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleClientHeaderParamsSpecifySameHeaderOnMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleHeaderValuesSpecifiedIncludeComputeMethodOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleHeaderValuesSpecifiedIncludeComputeMethodOnMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvalidInterfaceTest.war",
+    "trace_ref": "113236f212bd3c02ab881215c932b017e477812a4bb235acb9cad58f3e01353a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.887",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeSimpleGetOperationTest.war",
+    "trace_ref": "6b50c77bca88486d8960ab7bad31cf365afd1e10657c01379884c38dd446fed6"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+    "name": "testGetExecutionWithBuiltClient",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeSimpleGetOperationTest.war",
+    "trace_ref": "6b50c77bca88486d8960ab7bad31cf365afd1e10657c01379884c38dd446fed6"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.226",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithBuiltProvidersTest.war",
+    "trace_ref": "4cf0579a7a6be17ba13fff221c34d7c93bdb8ef69f5d1ea2c50f24336d5e3cfd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "testInvokesPostOperationWithRegisteredProviders",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithBuiltProvidersTest.war",
+    "trace_ref": "4cf0579a7a6be17ba13fff221c34d7c93bdb8ef69f5d1ea2c50f24336d5e3cfd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "testInvokesPutOperationWithRegisteredProviders",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithBuiltProvidersTest.war",
+    "trace_ref": "4cf0579a7a6be17ba13fff221c34d7c93bdb8ef69f5d1ea2c50f24336d5e3cfd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.929",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonPProviderTest.war",
+    "trace_ref": "239e9fe419e5e21a738fd8dd228bd3fd5ca305a732772db5c135752e33e940c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testGetExecutesForBothClients",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonPProviderTest.war",
+    "trace_ref": "239e9fe419e5e21a738fd8dd228bd3fd5ca305a732772db5c135752e33e940c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testGetSingleExecutesForBothClients",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonPProviderTest.war",
+    "trace_ref": "239e9fe419e5e21a738fd8dd228bd3fd5ca305a732772db5c135752e33e940c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testPostExecutes",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonPProviderTest.war",
+    "trace_ref": "239e9fe419e5e21a738fd8dd228bd3fd5ca305a732772db5c135752e33e940c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testPutExecutes",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonPProviderTest.war",
+    "trace_ref": "239e9fe419e5e21a738fd8dd228bd3fd5ca305a732772db5c135752e33e940c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.213",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "d0e4db212267c776556f1194937bb8012a448fe34d670d530aba1161b1b92c9c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperationWithAnnotatedProviders",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "d0e4db212267c776556f1194937bb8012a448fe34d670d530aba1161b1b92c9c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperationWithAnnotatedProviders",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "d0e4db212267c776556f1194937bb8012a448fe34d670d530aba1161b1b92c9c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.891",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokedMethodTest.war",
+    "trace_ref": "cb2db6341c34972331e00dcd7bc1e123e81bb4796e33e611c29fa8be7f3b65eb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+    "name": "testRequestFilterReturnsMethodInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokedMethodTest.war",
+    "trace_ref": "cb2db6341c34972331e00dcd7bc1e123e81bb4796e33e611c29fa8be7f3b65eb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.27",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-MultiRegisteredTest.war",
+    "trace_ref": "14e835dd636d79d0b70c696c59ca3812df26877409dfdee564794a630bc560a3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "testOverrideInterfaceAndProviderAnnotationOnBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-MultiRegisteredTest.war",
+    "trace_ref": "14e835dd636d79d0b70c696c59ca3812df26877409dfdee564794a630bc560a3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "testOverrideProviderAnnotationOnBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-MultiRegisteredTest.war",
+    "trace_ref": "14e835dd636d79d0b70c696c59ca3812df26877409dfdee564794a630bc560a3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.915",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProducesConsumesTest.war",
+    "trace_ref": "0ba1c13f37cc3e433dfd3e0b211023105c916aa8ac21fcf317464c52115b3ab4"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "testProducesConsumesAnnotationOnInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProducesConsumesTest.war",
+    "trace_ref": "0ba1c13f37cc3e433dfd3e0b211023105c916aa8ac21fcf317464c52115b3ab4"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "testProducesConsumesAnnotationOnMethod",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProducesConsumesTest.war",
+    "trace_ref": "0ba1c13f37cc3e433dfd3e0b211023105c916aa8ac21fcf317464c52115b3ab4"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.901",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProvidesRestClientBuilderTest.war",
+    "trace_ref": "f2387f4846024be1e560523a7d9025e48d1fed23e64f2c4328f1d460cdec8f01"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testCanCallStaticLoader",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProvidesRestClientBuilderTest.war",
+    "trace_ref": "f2387f4846024be1e560523a7d9025e48d1fed23e64f2c4328f1d460cdec8f01"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testIllegalStateExceptionThrownWhenNoBaseUriOrUrlSpecified",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProvidesRestClientBuilderTest.war",
+    "trace_ref": "f2387f4846024be1e560523a7d9025e48d1fed23e64f2c4328f1d460cdec8f01"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testLastBaseUriOrBaseUrlCallWins",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProvidesRestClientBuilderTest.war",
+    "trace_ref": "f2387f4846024be1e560523a7d9025e48d1fed23e64f2c4328f1d460cdec8f01"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.997",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProxyServerTest.war",
+    "trace_ref": "597b9be5abeff19708c87477815cfe5921b7caa61cb5f4890796a5058116693a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProxyServerTest.war",
+    "trace_ref": "597b9be5abeff19708c87477815cfe5921b7caa61cb5f4890796a5058116693a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber1",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProxyServerTest.war",
+    "trace_ref": "597b9be5abeff19708c87477815cfe5921b7caa61cb5f4890796a5058116693a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProxyServerTest.war",
+    "trace_ref": "597b9be5abeff19708c87477815cfe5921b7caa61cb5f4890796a5058116693a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testNullHostName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProxyServerTest.war",
+    "trace_ref": "597b9be5abeff19708c87477815cfe5921b7caa61cb5f4890796a5058116693a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testProxy",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ProxyServerTest.war",
+    "trace_ref": "597b9be5abeff19708c87477815cfe5921b7caa61cb5f4890796a5058116693a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.908",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "e3027d55bf83e05a25f7ec1da3b99b607f1372cf05684295f1df1b31e103e363"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "arrayPairs",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "e3027d55bf83e05a25f7ec1da3b99b607f1372cf05684295f1df1b31e103e363"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "commaSeparated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "e3027d55bf83e05a25f7ec1da3b99b607f1372cf05684295f1df1b31e103e363"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "defaultStyleIsMultiPair",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "e3027d55bf83e05a25f7ec1da3b99b607f1372cf05684295f1df1b31e103e363"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "explicitMultiPair",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InheritanceTest.war",
+    "trace_ref": "e3027d55bf83e05a25f7ec1da3b99b607f1372cf05684295f1df1b31e103e363"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.023",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-RestClientBuilderListenerTest.war",
+    "trace_ref": "18cfde9bb5e91ecddbeaa43db66257f3ec5787252309b37537c9aa06afe608be"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+    "name": "testRegistrarInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-RestClientBuilderListenerTest.war",
+    "trace_ref": "18cfde9bb5e91ecddbeaa43db66257f3ec5787252309b37537c9aa06afe608be"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.941",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-RestClientListenerTest.war",
+    "trace_ref": "15db1448e7f24fa0a3a02b52dc2190ce540e76785104f75483e702438307126e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+    "name": "testRestClientListenerInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-RestClientListenerTest.war",
+    "trace_ref": "15db1448e7f24fa0a3a02b52dc2190ce540e76785104f75483e702438307126e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.252",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SubResourceTest.war",
+    "trace_ref": "303f438fdaac093ba87baf46804f56b886ff1f28b457491bb9a2558fa3bfb21c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "canInvokeMethodOnSubResourceInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SubResourceTest.war",
+    "trace_ref": "303f438fdaac093ba87baf46804f56b886ff1f28b457491bb9a2558fa3bfb21c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "exceptionMappedOnSubResourceInterface",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SubResourceTest.war",
+    "trace_ref": "303f438fdaac093ba87baf46804f56b886ff1f28b457491bb9a2558fa3bfb21c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.013",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AsyncMethodTest.war",
+    "trace_ref": "3397c2e30234fe3ea797bb0b9fa4fadbc74eaa20473d59e9d574a618b769d995"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testAsyncInvocationInterceptorProvider",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AsyncMethodTest.war",
+    "trace_ref": "3397c2e30234fe3ea797bb0b9fa4fadbc74eaa20473d59e9d574a618b769d995"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testExecutorService",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AsyncMethodTest.war",
+    "trace_ref": "3397c2e30234fe3ea797bb0b9fa4fadbc74eaa20473d59e9d574a618b769d995"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testInterfaceMethodWithCompletionStageObjectReturnIsInvokedAsynchronously",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AsyncMethodTest.war",
+    "trace_ref": "3397c2e30234fe3ea797bb0b9fa4fadbc74eaa20473d59e9d574a618b769d995"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testNullExecutorServiceThrowsIllegalArgumentException",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-AsyncMethodTest.war",
+    "trace_ref": "3397c2e30234fe3ea797bb0b9fa4fadbc74eaa20473d59e9d574a618b769d995"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.984",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeAsyncSimpleGetOperationTest.war",
+    "trace_ref": "f35de9a4c9b69642bdcec6b08e1ac135f40da1f3b300654ffe0b89f1dc833cbb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "testHasDependentScopedByDefault",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeAsyncSimpleGetOperationTest.war",
+    "trace_ref": "f35de9a4c9b69642bdcec6b08e1ac135f40da1f3b300654ffe0b89f1dc833cbb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "testInvokesGetOperationWithCDIBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeAsyncSimpleGetOperationTest.war",
+    "trace_ref": "f35de9a4c9b69642bdcec6b08e1ac135f40da1f3b300654ffe0b89f1dc833cbb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.159",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIClientHeadersFactoryTest.war",
+    "trace_ref": "fde2c2b4b54c34e8e7715f8099edeff8fb2492c534a68b969a6e132d3f51ba54"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+    "name": "testClientHeadersFactoryInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIClientHeadersFactoryTest.war",
+    "trace_ref": "fde2c2b4b54c34e8e7715f8099edeff8fb2492c534a68b969a6e132d3f51ba54"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.037",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test301Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test301Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test302Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test302Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test303Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test303Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test307Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test307Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIFollowRedirectsTest.war",
+    "trace_ref": "cdd744f47aeab75cdc4342a679b4eadc097ff015913b16077d69c5af7911dadd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.964",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInterceptorTest.war",
+    "trace_ref": "0770331c08f71c77d9d0a6bf96b6008a4b46aab3837efc249bab953346f5416a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "testInterceptorInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInterceptorTest.war",
+    "trace_ref": "0770331c08f71c77d9d0a6bf96b6008a4b46aab3837efc249bab953346f5416a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "testInterceptorNotInvokedWhenNoAnnotationApplied",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInterceptorTest.war",
+    "trace_ref": "0770331c08f71c77d9d0a6bf96b6008a4b46aab3837efc249bab953346f5416a"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.944",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeSimpleGetOperationTest.war",
+    "trace_ref": "5fcd4e287333d4629603853d55ddc78d388a522fa63d921dfd7a889f6193cd63"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "testHasDependentScopedByDefault",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeSimpleGetOperationTest.war",
+    "trace_ref": "5fcd4e287333d4629603853d55ddc78d388a522fa63d921dfd7a889f6193cd63"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "testInvokesGetOperationWithCDIBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeSimpleGetOperationTest.war",
+    "trace_ref": "5fcd4e287333d4629603853d55ddc78d388a522fa63d921dfd7a889f6193cd63"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.238",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaMPConfigWithConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaMPConfigWithConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIInvokeWithRegisteredProvidersTest.war",
+    "trace_ref": "3d87978123a565cfb6f48c6fe0edd1ffb5a91ff5ab1d8f23c8a0c20ef43206ac"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.998",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIManagedProviderTest.war",
+    "trace_ref": "bcbee5dbde729f6188a6522388f1085b6ec888a790908bad48004440e1caad56"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedInMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIManagedProviderTest.war",
+    "trace_ref": "bcbee5dbde729f6188a6522388f1085b6ec888a790908bad48004440e1caad56"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedViaAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIManagedProviderTest.war",
+    "trace_ref": "bcbee5dbde729f6188a6522388f1085b6ec888a790908bad48004440e1caad56"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedViaRestClientBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIManagedProviderTest.war",
+    "trace_ref": "bcbee5dbde729f6188a6522388f1085b6ec888a790908bad48004440e1caad56"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testInstanceProviderSpecifiedViaRestClientBuilderDoesNotUseCDIManagedProvider",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIManagedProviderTest.war",
+    "trace_ref": "bcbee5dbde729f6188a6522388f1085b6ec888a790908bad48004440e1caad56"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.153",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIProxyServerTest.war",
+    "trace_ref": "d6f40c5683b0151baf7cbcca78cea8dbde356e630b33678604c3223565a0b4ce"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+    "name": "testProxy",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIProxyServerTest.war",
+    "trace_ref": "d6f40c5683b0151baf7cbcca78cea8dbde356e630b33678604c3223565a0b4ce"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.993",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIQueryParamStyleTest.war",
+    "trace_ref": "3cff1324d58eaf46b14719db3c2e5eafcfedbcc5c93f4f05f2f9ec954e61f121"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "arrayPairs",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIQueryParamStyleTest.war",
+    "trace_ref": "3cff1324d58eaf46b14719db3c2e5eafcfedbcc5c93f4f05f2f9ec954e61f121"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "commaSeparated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIQueryParamStyleTest.war",
+    "trace_ref": "3cff1324d58eaf46b14719db3c2e5eafcfedbcc5c93f4f05f2f9ec954e61f121"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "defaultStyleIsMultiPair",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIQueryParamStyleTest.war",
+    "trace_ref": "3cff1324d58eaf46b14719db3c2e5eafcfedbcc5c93f4f05f2f9ec954e61f121"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "explicitMultiPair",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIQueryParamStyleTest.war",
+    "trace_ref": "3cff1324d58eaf46b14719db3c2e5eafcfedbcc5c93f4f05f2f9ec954e61f121"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.114",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIURIvsURLConfigTest.war",
+    "trace_ref": "e77e20801319671108817bf258074e3638f06723731acc26dd4f494ad561177f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testBaseUriInRegisterRestClientAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIURIvsURLConfigTest.war",
+    "trace_ref": "e77e20801319671108817bf258074e3638f06723731acc26dd4f494ad561177f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testMPConfigURIOverridesBaseUriInRegisterRestClientAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIURIvsURLConfigTest.war",
+    "trace_ref": "e77e20801319671108817bf258074e3638f06723731acc26dd4f494ad561177f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testURItakesPrecedenceOverURL",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-CDIURIvsURLConfigTest.war",
+    "trace_ref": "e77e20801319671108817bf258074e3638f06723731acc26dd4f494ad561177f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.038",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientClosedTest.war",
+    "trace_ref": "64f1011c5926943bde2bf293522f953592ddae6ad51bd7a636ee0df204d73a64"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "autoCloseableClosed",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientClosedTest.war",
+    "trace_ref": "64f1011c5926943bde2bf293522f953592ddae6ad51bd7a636ee0df204d73a64"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "closeableClosed",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientClosedTest.war",
+    "trace_ref": "64f1011c5926943bde2bf293522f953592ddae6ad51bd7a636ee0df204d73a64"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "stringClosed",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ClientClosedTest.war",
+    "trace_ref": "64f1011c5926943bde2bf293522f953592ddae6ad51bd7a636ee0df204d73a64"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.053",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ConfigKeyForMultipleInterfacesTest.war",
+    "trace_ref": "4db46161d09b8f0fad17c86144b4d392af096d73a8aa39714602ea1796258785"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+    "name": "testConfigKeyUsedForUri",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ConfigKeyForMultipleInterfacesTest.war",
+    "trace_ref": "4db46161d09b8f0fad17c86144b4d392af096d73a8aa39714602ea1796258785"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.226",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ConfigKeyTest.war",
+    "trace_ref": "89fffb647f2db77b1f75dd4c9f402fd037dbf7e348a51508b2b91a91c874966c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "testConfigKeyUsedForUri",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ConfigKeyTest.war",
+    "trace_ref": "89fffb647f2db77b1f75dd4c9f402fd037dbf7e348a51508b2b91a91c874966c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "testFullyQualifiedClassnamePropTakesPrecedenceOverConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-ConfigKeyTest.war",
+    "trace_ref": "89fffb647f2db77b1f75dd4c9f402fd037dbf7e348a51508b2b91a91c874966c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.101",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasAppScopeTest.war",
+    "trace_ref": "56c3766eff9461b866a6d9270489bbf80e26ca62f809998795adbe65194eaf40"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScoped",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasAppScopeTest.war",
+    "trace_ref": "56c3766eff9461b866a6d9270489bbf80e26ca62f809998795adbe65194eaf40"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScopedFromConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasAppScopeTest.war",
+    "trace_ref": "56c3766eff9461b866a6d9270489bbf80e26ca62f809998795adbe65194eaf40"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScopedWhenAnnotated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasAppScopeTest.war",
+    "trace_ref": "56c3766eff9461b866a6d9270489bbf80e26ca62f809998795adbe65194eaf40"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.055",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasConversationScopeTest.war",
+    "trace_ref": "bc7bbb366befff880d35d106e48da55e3a1c370c5ffe3a5a5c390b02293ef4be"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScoped",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasConversationScopeTest.war",
+    "trace_ref": "bc7bbb366befff880d35d106e48da55e3a1c370c5ffe3a5a5c390b02293ef4be"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScopedFromConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasConversationScopeTest.war",
+    "trace_ref": "bc7bbb366befff880d35d106e48da55e3a1c370c5ffe3a5a5c390b02293ef4be"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScopedWhenAnnotated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasConversationScopeTest.war",
+    "trace_ref": "bc7bbb366befff880d35d106e48da55e3a1c370c5ffe3a5a5c390b02293ef4be"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.048",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasRequestScopeTest.war",
+    "trace_ref": "5d1da355908aad4f5d0824d639c34581049f38ee0d93160894de02da543b15af"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScoped",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasRequestScopeTest.war",
+    "trace_ref": "5d1da355908aad4f5d0824d639c34581049f38ee0d93160894de02da543b15af"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScopedFromConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasRequestScopeTest.war",
+    "trace_ref": "5d1da355908aad4f5d0824d639c34581049f38ee0d93160894de02da543b15af"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScopedWhenAnnotated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasRequestScopeTest.war",
+    "trace_ref": "5d1da355908aad4f5d0824d639c34581049f38ee0d93160894de02da543b15af"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "0.996",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSessionScopeTest.war",
+    "trace_ref": "a1aed2676a012db48e6ba16c33f73ceaebd03f858689306026a7b329945f771d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSessionScopedFromConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSessionScopeTest.war",
+    "trace_ref": "a1aed2676a012db48e6ba16c33f73ceaebd03f858689306026a7b329945f771d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSessionScopedWhenAnnotated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSessionScopeTest.war",
+    "trace_ref": "a1aed2676a012db48e6ba16c33f73ceaebd03f858689306026a7b329945f771d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSingletonScoped",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSessionScopeTest.war",
+    "trace_ref": "a1aed2676a012db48e6ba16c33f73ceaebd03f858689306026a7b329945f771d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.131",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSingletonScopeTest.war",
+    "trace_ref": "444fc60e8b6279384c76d0bfe07c3625ecc475740e4ff7b6e4e2a01ba269b2d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScoped",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSingletonScopeTest.war",
+    "trace_ref": "444fc60e8b6279384c76d0bfe07c3625ecc475740e4ff7b6e4e2a01ba269b2d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScopedFromConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSingletonScopeTest.war",
+    "trace_ref": "444fc60e8b6279384c76d0bfe07c3625ecc475740e4ff7b6e4e2a01ba269b2d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScopedWhenAnnotated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-HasSingletonScopeTest.war",
+    "trace_ref": "444fc60e8b6279384c76d0bfe07c3625ecc475740e4ff7b6e4e2a01ba269b2d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.056",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonBProviderTest.war",
+    "trace_ref": "84d51b293547ad7ceb3d0aca2a280bdeb181bee61ebaf55b453fc4bfbc707dca"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "testCanSeePrivatePropertiesViaContextResolver",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonBProviderTest.war",
+    "trace_ref": "84d51b293547ad7ceb3d0aca2a280bdeb181bee61ebaf55b453fc4bfbc707dca"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "testGetExecutesForBothClients",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-InvokeWithJsonBProviderTest.war",
+    "trace_ref": "84d51b293547ad7ceb3d0aca2a280bdeb181bee61ebaf55b453fc4bfbc707dca"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testCommentOnlySse",
+    "seconds": "0.309",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_InboundSseEvent",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_JsonObject",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_String",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testNamedEventSse",
+    "seconds": "1.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testServerClosesConnection",
+    "seconds": "1.524",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec104_mustSignalOnErrorWhenFails",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipping because no error state Publisher provided, and the test requires it. Please implement PublisherVerification#createFailedPublisher to run this test.",
+    "trace_ref": "e6dfb290fa6082e5e91a8a89c597e549b77c6d4629668b4065bf8ba520d7424e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec105_emptyStreamMustTerminateBySignallingOnComplete",
+    "seconds": "5.261",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_maySupportMultiSubscribe",
+    "seconds": "5.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfront",
+    "seconds": "0.01",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Expected element but got end-of-stream",
+    "trace_ref": "3699f31c5cf26be0b8994fb5d7a03e4d83abe405af67df0e654e2f4dcafcd906"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfrontAndCompleteAsExpected",
+    "seconds": "0.006",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Async error during test execution: Attempted read on closed stream.",
+    "trace_ref": "41a95d14453ab226f3f58661176c58fb2cd070268adb5bc82d2f96feeb588661"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingOneByOne",
+    "seconds": "0.006",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Expected element but got end-of-stream",
+    "trace_ref": "2de3c3ea408c42f2bd86e71be6c0fcc340eaaf7bf0bd8e4ad3e4ccc4eb04dabc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_registeredSubscribersMustReceiveOnNextOrOnCompleteSignals",
+    "seconds": "5.011",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Async error during test execution: Attempted read on closed stream.",
+    "trace_ref": "a37d4f8a02344e2794dd66058dd567c760f6bbefc2d65d22fbe312dc1f5d280f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec309_requestNegativeNumberMaySignalIllegalArgumentExceptionWithSpecificMessage",
+    "seconds": "5.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_createPublisher1MustProduceAStreamOfExactly1Element",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_createPublisher3MustProduceAStreamOfExactly3Elements",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec101_subscriptionRequestMustResultInTheCorrectNumberOfProducedElements",
+    "seconds": "15.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec102_maySignalLessThanRequestedAndTerminateSubscription",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec105_mustSignalOnCompleteWhenFiniteStreamTerminates",
+    "seconds": "5.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec107_mustNotEmitFurtherSignalsOnceOnCompleteHasBeenSignalled",
+    "seconds": "5.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_mayRejectCallsToSubscribeIfPublisherIsUnableOrUnwillingToServeThemRejectionMustTriggerOnErrorAfterOnSubscribe",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipping because no error state Publisher provided, and the test requires it. Please implement PublisherVerification#createFailedPublisher to run this test.",
+    "trace_ref": "b05aec0cce2ba0d7570715d3fb9f13791f41f2fb7ce6d8535df4408544d79ffe"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_mustIssueOnSubscribeForNonNullSubscriber",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_subscribeThrowNPEOnNullSubscriber",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec302_mustAllowSynchronousRequestCallsFromOnNextAndOnSubscribe",
+    "seconds": "5.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec303_mustNotAllowUnboundedRecursion",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec306_afterSubscriptionIsCancelledRequestMustBeNops",
+    "seconds": "5.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec307_afterSubscriptionIsCancelledAdditionalCancelationsMustBeNops",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec309_requestNegativeNumberMustSignalIllegalArgumentException",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec309_requestZeroMustSignalIllegalArgumentException",
+    "seconds": "5.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec312_cancelMustMakeThePublisherToEventuallyStopSignaling",
+    "seconds": "10.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec313_cancelMustMakeThePublisherEventuallyDropAllReferencesToTheSubscriber",
+    "seconds": "0.317",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustNotSignalOnErrorWhenPendingAboveLongMaxValue",
+    "seconds": "5.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustSupportACumulativePendingElementCountUpToLongMaxValue",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustSupportAPendingElementCountUpToLongMaxValue",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_validate_boundedDepthOfOnNextAndRequestRecursion",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_validate_maxElementsFromPublisher",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "stochastic_spec103_mustSignalOnMethodsSequentially",
+    "seconds": "0.413",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec106_mustConsiderSubscriptionCancelledAfterOnErrorOrOnCompleteHasBeenCalled",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "d773d1d18965237b932e368b3dd596df7709fdd6d57f61d43b454e847e7909dd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec107_mustNotEmitFurtherSignalsOnceOnErrorHasBeenSignalled",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "505c04f4183801faf17540f5121c844c918a1b09dfb736c677f4938dff91ed93"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec108_possiblyCanceledSubscriptionShouldNotReceiveOnErrorOrOnCompleteSignals",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "739e279a9eddc01e3ce1c6d2648124ad3a953d0ce3f6876554da61867f752513"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec109_subscribeShouldNotThrowNonFatalThrowable",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "b742c498ec0b71c279e9f1b8672f1a043dbba965b4fde69284c2d1fc918561cb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec110_rejectASubscriptionRequestIfTheSameSubscriberSubscribesTwice",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "0ac167a6d4162d2f78181c1f49b869f6c92ae714324b73c32cef71765f3af8bc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec304_requestShouldNotPerformHeavyComputations",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "79c487affd826772a1f5e24a846feb2f48c9f841e61a03edf7c3b7494756dbad"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec305_cancelMustNotSynchronouslyPerformHeavyComputation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "87b45a4501c11d4c6a27b750327cc3a9bb41065527ab1bba15d897a4620b8e6b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.709",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslContextTest.war",
+    "trace_ref": "b892d499c367b4a44a42ed50b703ff90cca80bbee88e45da9906bbe7b9a2ec17"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "shouldFailedMutualSslWithoutSslContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslContextTest.war",
+    "trace_ref": "b892d499c367b4a44a42ed50b703ff90cca80bbee88e45da9906bbe7b9a2ec17"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "shouldSucceedMutualSslWithValidSslContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslContextTest.war",
+    "trace_ref": "b892d499c367b4a44a42ed50b703ff90cca80bbee88e45da9906bbe7b9a2ec17"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.449",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithRejectingHostnameVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithRejectingHostnameVerifierCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithoutHostnameAndNoVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldPassSslSessionAndHostnameToHostnameVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldPassSslSessionAndHostnameToHostnameVerifierCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldSucceedWithAcceptingHostnameVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldSucceedWithAcceptingHostnameVerifierCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslHostnameVerifierTest.war",
+    "trace_ref": "d91b487345ac0fd60ed6ad7a02ef6afa6b3eb30382226321258b0f9fe9e8ad43"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.496",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithInvalidClientSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithInvalidClientSignatureCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithNoClientSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithNoClientSignatureCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignatureCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignatureFromClasspathCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslMutualTest.war",
+    "trace_ref": "bc7ec517fd381814fbefda3c3341bf6f094d48232c7ffd6b915a8c41581bd82e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.496",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithNonMatchingKeystore",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithNonMatchingKeystoreCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithSelfSignedKeystore",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithSelfSignedKeystoreCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystore",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystoreCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystoreFromResourceCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile rest-client deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/rest-client/build/deployments/native/0001-SslTrustStoreTest.war",
+    "trace_ref": "53cae887a908685c5d9853456fc07f8e95d5168c79f7c9dd0b13d59d67aa4830"
+  }
+]

@@ -1,0 +1,730 @@
+[
+  {
+    "class": "org.eclipse.microprofile.context.tck.ContextManagerTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.158",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ContextManagerTest.war",
+    "trace_ref": "4976875c1bb4317d472676d4692ad6b95bffc25b3bd35eeb6e64723120f6220d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ContextManagerTest",
+    "name": "builderForContextManagerIsProvided",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ContextManagerTest.war",
+    "trace_ref": "4976875c1bb4317d472676d4692ad6b95bffc25b3bd35eeb6e64723120f6220d"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.484",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-MPConfigTest.war",
+    "trace_ref": "367c5ca64e0aef3c306df39de53180dd7e6e7e4ba7f6668ab30425d2e6472a4b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "beanInjected",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-MPConfigTest.war",
+    "trace_ref": "367c5ca64e0aef3c306df39de53180dd7e6e7e4ba7f6668ab30425d2e6472a4b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "defaultContextPropagationForManagedExecutorViaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-MPConfigTest.war",
+    "trace_ref": "367c5ca64e0aef3c306df39de53180dd7e6e7e4ba7f6668ab30425d2e6472a4b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "defaultContextPropagationForThreadContextViaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-MPConfigTest.war",
+    "trace_ref": "367c5ca64e0aef3c306df39de53180dd7e6e7e4ba7f6668ab30425d2e6472a4b"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "defaultMaxAsyncAndMaxQueuedForManagedExecutorViaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.Throwable: Method org.eclipse.microprofile.context.tck.MPConfigTest.defaultMaxAsyncAndMaxQueuedForManagedExecutorViaMPConfig() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836 depends on not successfully finished methods \n[org.eclipse.microprofile.context.tck.MPConfigTest.beanInjected() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836]",
+    "trace_ref": "9a87b14f650325b38e10fdae317243ffc77b268537f1003944c7eeee5d782391"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "explicitlySpecifiedPropagatedTakesPrecedenceOverDefaults",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.Throwable: Method org.eclipse.microprofile.context.tck.MPConfigTest.explicitlySpecifiedPropagatedTakesPrecedenceOverDefaults() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836 depends on not successfully finished methods \n[org.eclipse.microprofile.context.tck.MPConfigTest.beanInjected() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836]",
+    "trace_ref": "e85c5a3efbd0239edcd85bedfa861e689192289f44f463481d2da5f105cb35e8"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "explicitlySpecifyAllAttributesOfThreadContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.Throwable: Method org.eclipse.microprofile.context.tck.MPConfigTest.explicitlySpecifyAllAttributesOfThreadContext() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836 depends on not successfully finished methods \n[org.eclipse.microprofile.context.tck.MPConfigTest.beanInjected() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836]",
+    "trace_ref": "29f34eb47fc97a030de34e7f04da8e2e26022a8c1b47bcf9ff78e7877f4f08bf"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+    "name": "explicitlySpecifyMaxQueued5",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.Throwable: Method org.eclipse.microprofile.context.tck.MPConfigTest.explicitlySpecifyMaxQueued5() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836 depends on not successfully finished methods \n[org.eclipse.microprofile.context.tck.MPConfigTest.beanInjected() on instance org.eclipse.microprofile.context.tck.MPConfigTest@4e5ed836]",
+    "trace_ref": "f83c32d40ed692b56cb3b9177e1d83c994ca05eda4994c34daacbdcd78d5771a"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.873",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "builderForManagedExecutorIsProvided",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "clearUnspecifiedContexts",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "completedFutureDependentStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "completedStageDependentStagesRunWithContext",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextControlsForManagedExecutorBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualCallableOverridesContextOfManagedExecutor",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualConsumerAndBiFunctionOverrideContextOfManagedExecutor",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualFunctionOverridesContextOfManagedExecutor",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualRunnableOverridesContextOfManagedExecutor",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "contextOfContextualSuppplierAndBiConsumerOverrideContextOfManagedExecutor",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "copyCompletableFuture",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "copyCompletionStage",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "executedTaskRunsWithClearedContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "executedTaskRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "failedFutureDependentStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "failedStageDependentStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxAsync2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxAsyncInvalidValues",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxQueued3",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "maxQueuedInvalidValues",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "newIncompleteFutureDependentStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "propagateApplicationContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "propagateTransactionContextJTA",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "reuseManagedExecutorBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "runAsyncStageAndDependentStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "shutdownNowPreventsAdditionalSubmitsAndCancelsTasks",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "shutdownPreventsAdditionalSubmits",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "submittedTasksRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "supplyAsyncStageAndDependentStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "threadContextHasSamePropagationSettings",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "timedInvokeAllRunsTasksWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "timedInvokeAnyRunsTaskWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "untimedInvokeAllRunsTasksWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "untimedInvokeAnyRunsTasksWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+    "name": "withDefaultExecutorServiceIsUsedDirectlyAndViaGetThreadContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ManagedExecutorTest.war",
+    "trace_ref": "a4110eb9c761f65ed3eac7d9a663aa15f8c28dc68080d49918ce705a51a8c347"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.TckTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.26",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-TckTest.war",
+    "trace_ref": "18e711935074af56aaa58dde1ccdc913948aeea95c6436be6978cc8b51628a88"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.TckTest",
+    "name": "providerSet",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-TckTest.war",
+    "trace_ref": "18e711935074af56aaa58dde1ccdc913948aeea95c6436be6978cc8b51628a88"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.681",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "builderForThreadContextIsProvided",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "clearTransactionContextJTA",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "clearUnspecifiedContexts",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextControlsForThreadContextBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualBiConsumerRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualBiFunctionRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualCallableRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualConsumerRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualFunctionRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualRunnableRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "contextualSupplierRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "currentContextExecutorRunsWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "reuseThreadContextBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "thirdPartyContextProvidersAreIncludedInThreadContext",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "unchangedContextListDefaultsToEmpty",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureDependentCompletableFuturesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureDependentCompletionStagesRunWithContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureDependentStageForcedCompletion",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureMultipleThreadContexts",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withContextCaptureSwitchThreadContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withDefaultExecutorServiceContextCanInvokeAsyncActions",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+    "name": "withoutDefaultExecutorServiceContextCannotInvokeAsyncActions",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-ThreadContextTest.war",
+    "trace_ref": "01cbe3742d02b4a675aeb44a2aa5658d536a0138cdd121b7523fe0e64ff91523"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.711",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-BasicCDITest.war",
+    "trace_ref": "981cd94e7c2caa7b7ac0f4a470f5f8984e1b782569167ab1118b3fd5459ec97e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "applicationDefinesProducerOfThreadContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-BasicCDITest.war",
+    "trace_ref": "981cd94e7c2caa7b7ac0f4a470f5f8984e1b782569167ab1118b3fd5459ec97e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "applicationDefinesProducerUsingInjectedThreadContext",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-BasicCDITest.war",
+    "trace_ref": "981cd94e7c2caa7b7ac0f4a470f5f8984e1b782569167ab1118b3fd5459ec97e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "testBasicExecutorUsable",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-BasicCDITest.war",
+    "trace_ref": "981cd94e7c2caa7b7ac0f4a470f5f8984e1b782569167ab1118b3fd5459ec97e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+    "name": "testVerifyInjection",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-BasicCDITest.war",
+    "trace_ref": "981cd94e7c2caa7b7ac0f4a470f5f8984e1b782569167ab1118b3fd5459ec97e"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.853",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxClearsConversationScopedBeans",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxClearsRequestScopedBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxClearsSessionScopedBeans",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxPropagatesConversationScopedBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxPropagatesRequestScopedBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDIMECtxPropagatesSessionScopedBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDITCCtxClear",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+    "name": "testCDITCCtxPropagate",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-CDIContextTest.war",
+    "trace_ref": "9b38a421c1063498313f132654049f6347e56d468cb15369a2d4d1c0fff16e77"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.503",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-JTACDITest.war",
+    "trace_ref": "99ba4a1c8b66ab1669449dd48672a4ae73f70fe3b02bc2fd548667e8ac8867c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testAsyncTransaction",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-JTACDITest.war",
+    "trace_ref": "99ba4a1c8b66ab1669449dd48672a4ae73f70fe3b02bc2fd548667e8ac8867c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testRunWithTxnOfExecutingThread",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-JTACDITest.war",
+    "trace_ref": "99ba4a1c8b66ab1669449dd48672a4ae73f70fe3b02bc2fd548667e8ac8867c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testTransaction",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-JTACDITest.war",
+    "trace_ref": "99ba4a1c8b66ab1669449dd48672a4ae73f70fe3b02bc2fd548667e8ac8867c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testTransactionPropagation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-JTACDITest.war",
+    "trace_ref": "99ba4a1c8b66ab1669449dd48672a4ae73f70fe3b02bc2fd548667e8ac8867c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+    "name": "testTransactionWithUT",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile context-propagation deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/context-propagation/build/deployments/native/0001-JTACDITest.war",
+    "trace_ref": "99ba4a1c8b66ab1669449dd48672a4ae73f70fe3b02bc2fd548667e8ac8867c0"
+  }
+]

@@ -1,0 +1,1690 @@
+[
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderClass",
+    "seconds": "0.071",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderClassWithPriorities",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderInstance",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderInstanceWithPriorities",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterInstance",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterInstanceWithPriority",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterProvidersWithPriority",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "testPropertiesRegistered",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+    "name": "sendsParamsSpecifiedInBeanParam",
+    "seconds": "0.142",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+    "name": "testCallsTwoProvidersWithTwoRegisteredProvider",
+    "seconds": "0.229",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderInterface",
+    "seconds": "0.147",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderMethod",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderMethodNullValue",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnInterface",
+    "seconds": "0.248",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnMethod",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnMethodOverridesClientHeaderParamOnInterface",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExceptionInRequiredComputeMethodThrowsClientErrorException",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnInterface",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnMethod",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnMethodOverridesClientHeaderParamOnInterface",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderNotSentWhenExceptionThrownAndRequiredIsFalse",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesComputedClientHeaderParamOnInterface",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesComputedClientHeaderParamOnMethod",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesExplicitClientHeaderParamOnInterface",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesExplicitClientHeaderParamOnMethod",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testMultivaluedHeaderInterfaceExplicit",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testMultivaluedHeaderSentWhenInvokingComputeMethodFromSeparateClass",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+    "name": "testClientHeadersFactoryInvoked",
+    "seconds": "0.143",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+    "name": "shouldReuseClientAfterFailure",
+    "seconds": "0.253",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterAutoCloseableClose",
+    "seconds": "0.14",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseOnInterfaceThatExtendsAutoCloseable",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseOnInterfaceThatExtendsCloseable",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseableClose",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+    "name": "invokesUserDefinedHttpMethod",
+    "seconds": "0.129",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+    "name": "testNoExceptionThrownWhenDisabledDuringBuild",
+    "seconds": "0.213",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testExceptionThrownWhenPropertySetToFalse",
+    "seconds": "0.233",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testLowerPriorityMapperTakesPrecedenceFromDefault",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testNoExceptionThrownWhenDisabledDuringBuild",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testPropagationOfResponseDetailsFromDefaultMapper",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "testDefaultMIMETypeIsApplicationJson_Accept",
+    "seconds": "0.141",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "testDefaultMIMETypeIsApplicationJson_ContentType",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "uploadFile",
+    "seconds": "0.141",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "uploadMultipleFiles",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "testWithOneRegisteredProvider",
+    "seconds": "0.237",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "testWithTwoRegisteredProviders",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.FeatureProviderClient org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest.featureProviderClient",
+    "trace_ref": "b353d33434f62b93b49f92cd4d29c438e439ddc103f6610c009817ac54b07ff3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "testFeatureRegistrationViaBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.FeatureProviderClient org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest.featureProviderClient",
+    "trace_ref": "b353d33434f62b93b49f92cd4d29c438e439ddc103f6610c009817ac54b07ff3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "testFeatureRegistrationViaCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.FeatureProviderClient org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest.featureProviderClient",
+    "trace_ref": "b353d33434f62b93b49f92cd4d29c438e439ddc103f6610c009817ac54b07ff3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+    "name": "testPriorities",
+    "seconds": "0.134",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test301Default",
+    "seconds": "0.253",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test301Follows",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test302Default",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test302Follows",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test303Default",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test303Follows",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test307Default",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test307Follows",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeMethodOnBaseInterface",
+    "seconds": "0.144",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeMethodOnChildInterface",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeOverriddenMethodOnChildInterface",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenClientHeaderParamComputeValueSpecifiesMethodWithInvalidSignature",
+    "seconds": "0.128",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenClientHeaderParamComputeValueSpecifiesMissingMethod",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMismatchedPathParameter",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMissingPathParamAnnotation_templateDeclaredAtMethodLevel",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMissingPathParamAnnotation_templateDeclaredAtTypeLevel",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMultipleHTTPMethodAnnotations",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithPathParamAnnotationButNoURITemplate",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleClientHeaderParamsSpecifySameHeaderOnInterface",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleClientHeaderParamsSpecifySameHeaderOnMethod",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleHeaderValuesSpecifiedIncludeComputeMethodOnInterface",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleHeaderValuesSpecifiedIncludeComputeMethodOnMethod",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+    "name": "testGetExecutionWithBuiltClient",
+    "seconds": "0.241",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "testInvokesPostOperationWithRegisteredProviders",
+    "seconds": "0.253",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "testInvokesPutOperationWithRegisteredProviders",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest.cdiJsonPClient",
+    "trace_ref": "4c0b110a8753e8817a0b29171b32ab0b313019efcddd321a91179bb16c8f263d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testGetExecutesForBothClients",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest.cdiJsonPClient",
+    "trace_ref": "4c0b110a8753e8817a0b29171b32ab0b313019efcddd321a91179bb16c8f263d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testGetSingleExecutesForBothClients",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest.cdiJsonPClient",
+    "trace_ref": "4c0b110a8753e8817a0b29171b32ab0b313019efcddd321a91179bb16c8f263d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testPostExecutes",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest.cdiJsonPClient",
+    "trace_ref": "4c0b110a8753e8817a0b29171b32ab0b313019efcddd321a91179bb16c8f263d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testPutExecutes",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest.cdiJsonPClient",
+    "trace_ref": "4c0b110a8753e8817a0b29171b32ab0b313019efcddd321a91179bb16c8f263d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperationWithAnnotatedProviders",
+    "seconds": "0.259",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperationWithAnnotatedProviders",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+    "name": "testRequestFilterReturnsMethodInvoked",
+    "seconds": "0.137",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "testOverrideInterfaceAndProviderAnnotationOnBuilder",
+    "seconds": "0.239",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "testOverrideProviderAnnotationOnBuilder",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "testProducesConsumesAnnotationOnInterface",
+    "seconds": "0.131",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "testProducesConsumesAnnotationOnMethod",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testCanCallStaticLoader",
+    "seconds": "0.064",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testIllegalStateExceptionThrownWhenNoBaseUriOrUrlSpecified",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testLastBaseUriOrBaseUrlCallWins",
+    "seconds": "0.065",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber",
+    "seconds": "0.063",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber1",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber2",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testNullHostName",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testProxy",
+    "seconds": "0.184",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "arrayPairs",
+    "seconds": "0.126",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "commaSeparated",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "defaultStyleIsMultiPair",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "explicitMultiPair",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+    "name": "testRegistrarInvoked",
+    "seconds": "0.137",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+    "name": "testRestClientListenerInvoked",
+    "seconds": "0.124",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "canInvokeMethodOnSubResourceInterface",
+    "seconds": "0.129",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "exceptionMappedOnSubResourceInterface",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testAsyncInvocationInterceptorProvider",
+    "seconds": "0.265",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testExecutorService",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testInterfaceMethodWithCompletionStageObjectReturnIsInvokedAsynchronously",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testNullExecutorServiceThrowsIllegalArgumentException",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApiAsync org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest.api",
+    "trace_ref": "c3947bb1e21c1418cf48dd8c9b495a7efee33545db1cd3ac3774b6dd52b94bed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "testHasDependentScopedByDefault",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApiAsync org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest.api",
+    "trace_ref": "c3947bb1e21c1418cf48dd8c9b495a7efee33545db1cd3ac3774b6dd52b94bed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "testInvokesGetOperationWithCDIBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApiAsync org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest.api",
+    "trace_ref": "c3947bb1e21c1418cf48dd8c9b495a7efee33545db1cd3ac3774b6dd52b94bed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+    "name": "testClientHeadersFactoryInvoked",
+    "seconds": "0.138",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test301Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test301Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test302Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test302Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test303Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test303Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test307Default",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test307Follows",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest.defaultClient",
+    "trace_ref": "5698d0d3fd6808ccfea65c3ca906dc187425bbfd371d5fa93591739f49cbcc0d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ClientWithURIAndInterceptor org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest.client",
+    "trace_ref": "2f101c33d0231519e75d048cf6dce0fcc9704060daed5cdfeda9c817029fd723"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "testInterceptorInvoked",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ClientWithURIAndInterceptor org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest.client",
+    "trace_ref": "2f101c33d0231519e75d048cf6dce0fcc9704060daed5cdfeda9c817029fd723"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "testInterceptorNotInvokedWhenNoAnnotationApplied",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ClientWithURIAndInterceptor org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest.client",
+    "trace_ref": "2f101c33d0231519e75d048cf6dce0fcc9704060daed5cdfeda9c817029fd723"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest.api",
+    "trace_ref": "23034f4b3237d32c1ab486ba1d900c8d6f76b1a0268b959fa5f2f9158024c503"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "testHasDependentScopedByDefault",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest.api",
+    "trace_ref": "23034f4b3237d32c1ab486ba1d900c8d6f76b1a0268b959fa5f2f9158024c503"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "testInvokesGetOperationWithCDIBean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest.api",
+    "trace_ref": "23034f4b3237d32c1ab486ba1d900c8d6f76b1a0268b959fa5f2f9158024c503"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaMPConfigWithConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaMPConfigWithConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.InterfaceWithProvidersDefined org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest.clientProvidersViaAnnotation",
+    "trace_ref": "af2baf08c6c0a350b74ace46b9b3b500197be60697da388dc4eadbe45299dd0b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest.configClient",
+    "trace_ref": "c41f0209dffbc6f97b50966485324b43e3554edfd1431c2a342c88d5025f6045"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedInMPConfig",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest.configClient",
+    "trace_ref": "c41f0209dffbc6f97b50966485324b43e3554edfd1431c2a342c88d5025f6045"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedViaAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest.configClient",
+    "trace_ref": "c41f0209dffbc6f97b50966485324b43e3554edfd1431c2a342c88d5025f6045"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedViaRestClientBuilder",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest.configClient",
+    "trace_ref": "c41f0209dffbc6f97b50966485324b43e3554edfd1431c2a342c88d5025f6045"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testInstanceProviderSpecifiedViaRestClientBuilderDoesNotUseCDIManagedProvider",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest.configClient",
+    "trace_ref": "c41f0209dffbc6f97b50966485324b43e3554edfd1431c2a342c88d5025f6045"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest.client",
+    "trace_ref": "dd4d681b7e449093b788356136b7e1cb57544eaf11d060429b5fce20a9f6cdb9"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+    "name": "testProxy",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest.client",
+    "trace_ref": "dd4d681b7e449093b788356136b7e1cb57544eaf11d060429b5fce20a9f6cdb9"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest$DefaultStringClient org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest.defaultClient",
+    "trace_ref": "d53de7a82306b7a034cfb059ce9d451193cf006d5a17ab9ace78964d15e65416"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "arrayPairs",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest$DefaultStringClient org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest.defaultClient",
+    "trace_ref": "d53de7a82306b7a034cfb059ce9d451193cf006d5a17ab9ace78964d15e65416"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "commaSeparated",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest$DefaultStringClient org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest.defaultClient",
+    "trace_ref": "d53de7a82306b7a034cfb059ce9d451193cf006d5a17ab9ace78964d15e65416"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "defaultStyleIsMultiPair",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest$DefaultStringClient org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest.defaultClient",
+    "trace_ref": "d53de7a82306b7a034cfb059ce9d451193cf006d5a17ab9ace78964d15e65416"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "explicitMultiPair",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest$DefaultStringClient org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest.defaultClient",
+    "trace_ref": "d53de7a82306b7a034cfb059ce9d451193cf006d5a17ab9ace78964d15e65416"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.004",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest.api",
+    "trace_ref": "fa099ca5c654bdc53b39844e3f7a689482d7dc973a468a008cc57df0671f98e7"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testBaseUriInRegisterRestClientAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest.api",
+    "trace_ref": "fa099ca5c654bdc53b39844e3f7a689482d7dc973a468a008cc57df0671f98e7"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testMPConfigURIOverridesBaseUriInRegisterRestClientAnnotation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest.api",
+    "trace_ref": "fa099ca5c654bdc53b39844e3f7a689482d7dc973a468a008cc57df0671f98e7"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testURItakesPrecedenceOverURL",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.SimpleGetApi org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest.api",
+    "trace_ref": "fa099ca5c654bdc53b39844e3f7a689482d7dc973a468a008cc57df0671f98e7"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "autoCloseableClosed",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.create(jakarta.enterprise.context.spi.CreationalContext)\" because \"resolved\" is null",
+    "trace_ref": "3cc06286cef0d5d2095408ac38d1f464bd9d8fb05af1cc27eddaf5d8957ff322"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "closeableClosed",
+    "seconds": "0.005",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.create(jakarta.enterprise.context.spi.CreationalContext)\" because \"resolved\" is null",
+    "trace_ref": "009cf719f2aad467b094da8368ad69cf44749abef60c27efa644bb0e723fafcf"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "stringClosed",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.create(jakarta.enterprise.context.spi.CreationalContext)\" because \"resolved\" is null",
+    "trace_ref": "6cd7709138bf7d347c850ff83cbffca23f8a58af549f4d420cd8522340f7c527"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ConfigKeyClient org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest.client1",
+    "trace_ref": "caa5057123e5ae6734c26c7dc7ef3c9cb203b6b59e3e06cf1750235543158372"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+    "name": "testConfigKeyUsedForUri",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ConfigKeyClient org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest.client1",
+    "trace_ref": "caa5057123e5ae6734c26c7dc7ef3c9cb203b6b59e3e06cf1750235543158372"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.004",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ConfigKeyClient org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest.client1",
+    "trace_ref": "bb42c82eed46cadf8fb6f6d7ee300672a83db699a61a0bd34d0c3ee6336303e4"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "testConfigKeyUsedForUri",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ConfigKeyClient org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest.client1",
+    "trace_ref": "bb42c82eed46cadf8fb6f6d7ee300672a83db699a61a0bd34d0c3ee6336303e4"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "testFullyQualifiedClassnamePropTakesPrecedenceOverConfigKey",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.ConfigKeyClient org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest.client1",
+    "trace_ref": "bb42c82eed46cadf8fb6f6d7ee300672a83db699a61a0bd34d0c3ee6336303e4"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScoped",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "8d129f1195720467acd2946fce2b6c03ccd417bbc077b48750f6730f6fd29701"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScopedFromConfigKey",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "c5ffc06eabd14fdcaa25e5a36957be075790cd9bd7f981906d556f9778f7b34b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScopedWhenAnnotated",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "4a890842d41401a64ee7fd854810b0a38dea1a7feb76442181d16ba29d1316ae"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScoped",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "addbae6c324e216d607489c996bfbba932cdb6694bc65b4650fdcfdd10e1973d"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScopedFromConfigKey",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "6bd88d3f1613945023c206a7c06c0ac21f5c4cb981de829ac17841c0d68c4600"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScopedWhenAnnotated",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "69263a97e10aadeb413ec6ba534f9ff17cef08967ace0e28505ef33da00145d1"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScoped",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "184f9a6a5b511cf660ccf02b69b8680fc2e3b68604c09428227489b793f9c280"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScopedFromConfigKey",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "4cae7c32ac02fcadd1dfdddd851570c1ed74d759aad53f07891ab4eaae2e21f0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScopedWhenAnnotated",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "80cc4fc038493ee851b29d82fd22bb301a71ef7ba2791f6840a3bdfe27b5761b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSessionScopedFromConfigKey",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "d11b421b62da0658729bfe8b2635d8d0065feb3fd7599aecf1d7e218771f048c"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSessionScopedWhenAnnotated",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "903d73b164dcce338a4f67a7a4bfb0fa3da4908452008388b500f416ec9bdd1e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSingletonScoped",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "3d1ecf415eee25235c756fd5413491e0a81771cb7db49e6632404666d5e69068"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScoped",
+    "seconds": "0.008",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "ad1c8e46ad8789a0ed68949c66eeff3478bd6210e8d2da0eaf631ec26612ce48"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScopedFromConfigKey",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "447eb1561fd2794ba06da65f4da4057620bbbfc31259af33304505d1b4db0b8b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScopedWhenAnnotated",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.NullPointerException: Cannot invoke \"jakarta.enterprise.inject.spi.Bean.getScope()\" because \"resolved\" is null",
+    "trace_ref": "66af38bd6a5f9b2de575e4bf56b45dafd5074aef480d3ee6b2661e7bca542657"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonBClient org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest.cdiJsonBClient",
+    "trace_ref": "7b329ec476fd5827a9f5e0784bb1146f9836c271536ed1b036428d08978b1749"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "testCanSeePrivatePropertiesViaContextResolver",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonBClient org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest.cdiJsonBClient",
+    "trace_ref": "7b329ec476fd5827a9f5e0784bb1146f9836c271536ed1b036428d08978b1749"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "testGetExecutesForBothClients",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonBClient org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest.cdiJsonBClient",
+    "trace_ref": "7b329ec476fd5827a9f5e0784bb1146f9836c271536ed1b036428d08978b1749"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testCommentOnlySse",
+    "seconds": "0.189",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_InboundSseEvent",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_JsonObject",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_String",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testNamedEventSse",
+    "seconds": "1.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testServerClosesConnection",
+    "seconds": "1.524",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec104_mustSignalOnErrorWhenFails",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipping because no error state Publisher provided, and the test requires it. Please implement PublisherVerification#createFailedPublisher to run this test.",
+    "trace_ref": "e6dfb290fa6082e5e91a8a89c597e549b77c6d4629668b4065bf8ba520d7424e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec105_emptyStreamMustTerminateBySignallingOnComplete",
+    "seconds": "5.192",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_maySupportMultiSubscribe",
+    "seconds": "5.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfront",
+    "seconds": "0.007",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Async error during test execution: Attempted read on closed stream.",
+    "trace_ref": "a43a1e5a8d27aa8f2c0ad3b6e56739af55faee1659183c2b94bb00201deb3bec"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfrontAndCompleteAsExpected",
+    "seconds": "0.009",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Expected element but got end-of-stream",
+    "trace_ref": "ed9d5d54a0726077cd024311cb53da61409635eb80f6b9c35ffaa7bc0977abb3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingOneByOne",
+    "seconds": "0.006",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Expected element but got end-of-stream",
+    "trace_ref": "2de3c3ea408c42f2bd86e71be6c0fcc340eaaf7bf0bd8e4ad3e4ccc4eb04dabc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_registeredSubscribersMustReceiveOnNextOrOnCompleteSignals",
+    "seconds": "5.009",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Async error during test execution: Attempted read on closed stream.",
+    "trace_ref": "a37d4f8a02344e2794dd66058dd567c760f6bbefc2d65d22fbe312dc1f5d280f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec309_requestNegativeNumberMaySignalIllegalArgumentExceptionWithSpecificMessage",
+    "seconds": "5.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_createPublisher1MustProduceAStreamOfExactly1Element",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_createPublisher3MustProduceAStreamOfExactly3Elements",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec101_subscriptionRequestMustResultInTheCorrectNumberOfProducedElements",
+    "seconds": "15.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec102_maySignalLessThanRequestedAndTerminateSubscription",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec105_mustSignalOnCompleteWhenFiniteStreamTerminates",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec107_mustNotEmitFurtherSignalsOnceOnCompleteHasBeenSignalled",
+    "seconds": "5.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_mayRejectCallsToSubscribeIfPublisherIsUnableOrUnwillingToServeThemRejectionMustTriggerOnErrorAfterOnSubscribe",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipping because no error state Publisher provided, and the test requires it. Please implement PublisherVerification#createFailedPublisher to run this test.",
+    "trace_ref": "b05aec0cce2ba0d7570715d3fb9f13791f41f2fb7ce6d8535df4408544d79ffe"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_mustIssueOnSubscribeForNonNullSubscriber",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_subscribeThrowNPEOnNullSubscriber",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec302_mustAllowSynchronousRequestCallsFromOnNextAndOnSubscribe",
+    "seconds": "5.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec303_mustNotAllowUnboundedRecursion",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec306_afterSubscriptionIsCancelledRequestMustBeNops",
+    "seconds": "5.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec307_afterSubscriptionIsCancelledAdditionalCancelationsMustBeNops",
+    "seconds": "5.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec309_requestNegativeNumberMustSignalIllegalArgumentException",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec309_requestZeroMustSignalIllegalArgumentException",
+    "seconds": "5.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec312_cancelMustMakeThePublisherToEventuallyStopSignaling",
+    "seconds": "10.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec313_cancelMustMakeThePublisherEventuallyDropAllReferencesToTheSubscriber",
+    "seconds": "0.327",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustNotSignalOnErrorWhenPendingAboveLongMaxValue",
+    "seconds": "5.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustSupportACumulativePendingElementCountUpToLongMaxValue",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustSupportAPendingElementCountUpToLongMaxValue",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_validate_boundedDepthOfOnNextAndRequestRecursion",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_validate_maxElementsFromPublisher",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "stochastic_spec103_mustSignalOnMethodsSequentially",
+    "seconds": "0.338",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec106_mustConsiderSubscriptionCancelledAfterOnErrorOrOnCompleteHasBeenCalled",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "d773d1d18965237b932e368b3dd596df7709fdd6d57f61d43b454e847e7909dd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec107_mustNotEmitFurtherSignalsOnceOnErrorHasBeenSignalled",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "505c04f4183801faf17540f5121c844c918a1b09dfb736c677f4938dff91ed93"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec108_possiblyCanceledSubscriptionShouldNotReceiveOnErrorOrOnCompleteSignals",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "739e279a9eddc01e3ce1c6d2648124ad3a953d0ce3f6876554da61867f752513"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec109_subscribeShouldNotThrowNonFatalThrowable",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "b742c498ec0b71c279e9f1b8672f1a043dbba965b4fde69284c2d1fc918561cb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec110_rejectASubscriptionRequestIfTheSameSubscriberSubscribesTwice",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "0ac167a6d4162d2f78181c1f49b869f6c92ae714324b73c32cef71765f3af8bc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec304_requestShouldNotPerformHeavyComputations",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "79c487affd826772a1f5e24a846feb2f48c9f841e61a03edf7c3b7494756dbad"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec305_cancelMustNotSynchronouslyPerformHeavyComputation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "87b45a4501c11d4c6a27b750327cc3a9bb41065527ab1bba15d897a4620b8e6b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "shouldFailedMutualSslWithoutSslContext",
+    "seconds": "0.208",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "shouldSucceedMutualSslWithValidSslContext",
+    "seconds": "0.074",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithRejectingHostnameVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithRejectingHostnameVerifierCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithoutHostnameAndNoVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldPassSslSessionAndHostnameToHostnameVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldPassSslSessionAndHostnameToHostnameVerifierCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldSucceedWithAcceptingHostnameVerifier",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldSucceedWithAcceptingHostnameVerifierCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest.clientWithHostnameVerifier",
+    "trace_ref": "182f7d577affb28ba02245e0aae87c1887511b51b75c6594d99eefd4a48f2594"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.006",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithInvalidClientSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithInvalidClientSignatureCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithNoClientSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithNoClientSignatureCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignature",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignatureCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignatureFromClasspathCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest.clientWithNoSslStores",
+    "trace_ref": "2976453517d2485fc685fb9c18754c7fe0832aac63cef00e95e04e962eb4dbd0"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "arquillianBeforeTest",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithNonMatchingKeystore",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithNonMatchingKeystoreCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithSelfSignedKeystore",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithSelfSignedKeystoreCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystore",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystoreCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystoreFromResourceCDI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.IllegalStateException: Cannot enrich TCK injection point private org.eclipse.microprofile.rest.client.tck.interfaces.JsonPClient org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest.clientWithNoSslStores",
+    "trace_ref": "faf05b456abb4613ddad74816212143ae80f629bb613bcf2ebdf03b895f7df26"
+  }
+]

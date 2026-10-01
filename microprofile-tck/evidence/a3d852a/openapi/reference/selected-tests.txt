@@ -1,0 +1,16 @@
+org.eclipse.microprofile.openapi.tck.AirlinesAppTest
+org.eclipse.microprofile.openapi.tck.FilterTest
+org.eclipse.microprofile.openapi.tck.ModelConstructionTest
+org.eclipse.microprofile.openapi.tck.ModelReaderAppTest
+org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustComponentTest
+org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustWebHookTest
+org.eclipse.microprofile.openapi.tck.OASConfigScanDisableTest
+org.eclipse.microprofile.openapi.tck.OASConfigSchemaTest
+org.eclipse.microprofile.openapi.tck.OASConfigServersTest
+org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest
+org.eclipse.microprofile.openapi.tck.OASScanConfigTests
+org.eclipse.microprofile.openapi.tck.PetStoreAppTest
+org.eclipse.microprofile.openapi.tck.StaticDocumentCustomDialectTest
+org.eclipse.microprofile.openapi.tck.StaticDocumentTest
+org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationDisabledTest
+org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest

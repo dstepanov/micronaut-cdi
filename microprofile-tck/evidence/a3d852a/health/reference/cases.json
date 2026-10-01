@@ -1,0 +1,170 @@
+[
+  {
+    "class": "org.eclipse.microprofile.health.tck.CDIProducedProceduresTest",
+    "name": "testFailureReadinessResponsePayload",
+    "seconds": "0.128",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.CDIProducedProceduresTest",
+    "name": "testSuccessStartupResponsePayload",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.CDIProducedProceduresTest",
+    "name": "testSuccessfulLivenessResponsePayload",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.ConfigTest",
+    "name": "testEmptyReadinessWithConfig",
+    "seconds": "0.117",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.DelayedCheckTest",
+    "name": "testSuccessResponsePayload",
+    "seconds": "3.142",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.DelegateHealthSuccessfulTest",
+    "name": "testSuccessfulDelegateInvocation",
+    "seconds": "0.129",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.EnforceQualifierTest",
+    "name": "testFailureResponsePayload",
+    "seconds": "0.126",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.HealthCheckResponseAttributesTest",
+    "name": "testSuccessResponsePayload",
+    "seconds": "0.13",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.HealthCheckResponseValidationTest",
+    "name": "testValidateConcreteHealthCheckResponse",
+    "seconds": "0.178",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.JsonSchemaValidationTest",
+    "name": "testPayloadJsonVerifiesWithTheSpecificationSchema",
+    "seconds": "0.271",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest",
+    "name": "testFailureLivenessResponsePayload",
+    "seconds": "0.133",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest",
+    "name": "testSuccessfulReadinessResponsePayload",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleProceduresFailedTest",
+    "name": "testFailureResponsePayload",
+    "seconds": "0.134",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleReadinessFailedTest",
+    "name": "testFailureResponsePayload",
+    "seconds": "0.145",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleReadinessFailedTest",
+    "name": "testSuccessfulLivenessResponsePayload",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleStartupFailedTest",
+    "name": "testFailingHealthResponsePayload",
+    "seconds": "0.155",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleStartupFailedTest",
+    "name": "testFailingStartupResponsePayload",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleStartupFailedTest",
+    "name": "testSuccessfulLivenessResponsePayload",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.MultipleStartupFailedTest",
+    "name": "testSuccessfulReadinessResponsePayload",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.NoProcedureSuccessfulTest",
+    "name": "testSuccessResponsePayload",
+    "seconds": "0.128",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest",
+    "name": "testSuccessfulLivenessResponsePayload",
+    "seconds": "0.167",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest",
+    "name": "testSuccessfulReadinessResponsePayload",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.SingleLivenessFailedTest",
+    "name": "testFailureResponsePayload",
+    "seconds": "0.131",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.SingleLivenessSuccessfulTest",
+    "name": "testSuccessResponsePayload",
+    "seconds": "0.148",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.SingleReadinessFailedTest",
+    "name": "testFailureResponsePayload",
+    "seconds": "0.137",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.SingleReadinessSuccessfulTest",
+    "name": "testSuccessResponsePayload",
+    "seconds": "0.123",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.SingleStartupFailedTest",
+    "name": "testFailedResponsePayload",
+    "seconds": "0.126",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.health.tck.SingleStartupSuccessfulTest",
+    "name": "testSuccessResponsePayload",
+    "seconds": "0.129",
+    "status": "passed"
+  }
+]

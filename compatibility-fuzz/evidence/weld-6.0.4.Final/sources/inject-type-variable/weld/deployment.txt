@@ -1,0 +1,3 @@
+org.jboss.weld.exceptions.DefinitionException: WELD-001407: Cannot declare an injection point with a type variable: [BackedAnnotatedField] @Inject org.example.cdi.fuzz.generated.Mutation13$A.x
+	at org.example.cdi.fuzz.generated.Mutation13$A.x(A.java:0)
+  StackTrace

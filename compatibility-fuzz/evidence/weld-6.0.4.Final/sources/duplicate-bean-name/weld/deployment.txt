@@ -1,0 +1,1 @@
+org.jboss.weld.exceptions.DeploymentException: WELD-001414: Bean name is ambiguous. Name same resolves to beans: [Managed Bean [class org.example.cdi.fuzz.generated.Mutation4$B] with qualifiers [@Default @Named @Any], Managed Bean [class org.example.cdi.fuzz.generated.Mutation4$A] with qualifiers [@Default @Named @Any]]

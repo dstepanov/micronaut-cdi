@@ -1,0 +1,630 @@
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java
+index 536269e..0f672d9 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java
+@@ -331,17 +331,15 @@ public final class CdiAssignability {
+             return true;
+         }
+         if (CdiTypes.isArray(required) || CdiTypes.isArray(candidate)) {
+-            // two array types match when their element types do, by these rules again; a class component is the
+-            // same type or not, with no boxing, since an int[] is not an Integer[]
++            // section 2.4.2.1 requires identical element types, not the parameterized assignability rules:
++            // List<String>[] is neither an Object[] nor a List<?>[] bean type. Event arrays have their own
++            // covariant matching above.
+             Argument<?> requiredComponent = required.componentType();
+             Argument<?> candidateComponent = candidate.componentType();
+             if (requiredComponent == null || candidateComponent == null) {
+                 return CdiTypes.isObject(required);
+             }
+-            if (CdiTypes.isClass(requiredComponent) && CdiTypes.isClass(candidateComponent)) {
+-                return requiredComponent.getType().equals(candidateComponent.getType());
+-            }
+-            return isAssignable(requiredComponent, candidateComponent);
++            return requiredComponent.equalsStructure(candidateComponent);
+         }
+         Class<?> requiredRaw = rawTypeOf(required);
+         Class<?> candidateRaw = rawTypeOf(candidate);
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java
+index cd69799..7cfe4d3 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java
+@@ -220,6 +220,21 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
+      * bean's, say.
+      */
+     static <U> Argument<U> askedAs(Argument<U> selected, BeanDefinition<U> definition) {
++        if (CdiTypes.isArray(selected)) {
++            // The producer's compiled definition may expose only the raw array argument. The lookup already
++            // matched its recorded CDI types, so preserve the component's parameters for candidate resolution.
++            return selected;
++        }
++        if (CdiTypes.isArray(definition.asArgument())) {
++            // A qualified Object lookup can select an array producer too. Resolve it by its recorded array
++            // type rather than the erased array argument of the generated definition.
++            for (Argument<?> type : CdiBean.typesOf(definition, definition.getBeanType())) {
++                if (CdiTypes.isArray(type)) {
++                    @SuppressWarnings("unchecked") Argument<U> array = (Argument<U>) type;
++                    return array;
++                }
++            }
++        }
+         if (definition.isCandidateBean(selected)) {
+             if (selected.getTypeParameters().length > 0) {
+                 // a parameterized selection carries what a parameterized built-in reads: what an Event<X> is of
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java
+index d47ee86..c4dfa02 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java
+@@ -24,12 +24,13 @@ import io.micronaut.inject.QualifiedBeanType;
+ 
+ 
+ /**
+- * Micronaut's resolution, widened to the type rules of section 2.4.2.1 where the two disagree.
++ * Micronaut's resolution, adjusted to the type rules of section 2.4.2.1 where the two disagree.
+  *
+  * <p>Micronaut's own candidate test answers most lookups; what it does not know are the specification's rules
+  * for a bean whose type carries type variables — a generic dependent bean is a candidate for whatever fits its
+  * bounds, and a raw producer for a required type that says nothing. When Micronaut says no to a lookup with
+- * type arguments, the specification's own matching gets the last word.</p>
++ * type arguments, the specification's own matching gets the last word. Arrays also use that matching,
++ * including raw array lookups, since their element types must be identical.</p>
+  *
+  * @author Denis Stepanov
+  * @since 1.0
+@@ -87,6 +88,18 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
+         Argument<T> beanType,
+         io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
+         java.util.Collection<io.micronaut.inject.BeanDefinition<T>> candidates) {
++        if (beanType.getType() == jakarta.inject.Provider.class && candidates.size() == 2
++            && candidates.stream().anyMatch(candidate ->
++                candidate instanceof io.micronaut.inject.provider.JakartaProviderBeanDefinition)) {
++            // Instance extends Provider. Its built-in factory captures the injection point and owns the
++            // dependent instances it creates; Micronaut's ordinary Provider does not retain that metadata.
++            // Resolve only this overlap between the two built-ins, leaving user-defined providers alone.
++            for (BeanDefinition<T> candidate : candidates) {
++                if (candidate instanceof CdiInstanceFactory<?>) {
++                    return java.util.Optional.of(candidate);
++                }
++            }
++        }
+         if (qualifier != null) {
+             return java.util.Optional.empty();
+         }
+@@ -157,7 +170,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
+ 
+     @Override
+     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
+-        if (beanType.getTypeParameters().length > 0 && candidate instanceof BeanDefinition<?> definition
++        if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
++            && candidate instanceof BeanDefinition<?> definition
+             && isBeanOfTheSpecification(definition)) {
+             // a parameterized lookup of a bean of the specification is answered by the rules of section
+             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable
+diff --git a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/DeploymentValidation.java b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/DeploymentValidation.java
+index 8add61c..b4290f4 100644
+--- a/cdi/src/main/java/io/micronaut/cdi/internal/runtime/DeploymentValidation.java
++++ b/cdi/src/main/java/io/micronaut/cdi/internal/runtime/DeploymentValidation.java
+@@ -47,9 +47,9 @@ import java.util.Set;
+  *
+  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
+  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
+- * {@code Event}, {@code Optional}, the injection point itself - are left to their own lateness, and so are the
+- * injection points Micronaut resolves by its own rules: a collection, which is the beans of its element type and
+- * is empty rather than unsatisfied where there are none, and one marked nullable.</p>
++ * {@code Event}, the injection point itself - are left to their own lateness, and so are injection points
++ * marked nullable and the stream/map aggregation supplied by Micronaut. Optional and collection injection
++ * points require a bean of their full declared type, just like other CDI injection points.</p>
+  *
+  * @author Denis Stepanov
+  * @since 1.0
+@@ -63,8 +63,7 @@ final class DeploymentValidation {
+         "io.micronaut.context.BeanProvider",
+         "jakarta.enterprise.event.Event",
+         "jakarta.enterprise.inject.spi.InjectionPoint",
+-        "jakarta.enterprise.inject.spi.EventMetadata",
+-        "java.util.Optional"
++        "jakarta.enterprise.inject.spi.EventMetadata"
+     );
+ 
+     private final CdiBeanContainer container;
+@@ -195,11 +194,12 @@ final class DeploymentValidation {
+ 
+     /**
+      * Whether Micronaut injects the beans of the element type at the injection point rather than a bean of its
+-     * type: a collection, a stream or a map. An array is resolved as a bean of the array type.
++     * type: a stream or a map, and Iterable types that are not Collections. Arrays, Optional and Collections
++     * are resolved as beans of their declared type.
+      */
+     private static boolean isCollectedByMicronaut(Argument<?> argument) {
+         Class<?> type = argument.getType();
+-        return Iterable.class.isAssignableFrom(type)
++        return (Iterable.class.isAssignableFrom(type) && !java.util.Collection.class.isAssignableFrom(type))
+             || java.util.stream.Stream.class.isAssignableFrom(type)
+             || java.util.Map.class.isAssignableFrom(type);
+     }
+diff --git a/test-suite-java/src/test/java/io/micronaut/cdi/test/AssignabilityRulesTest.java b/test-suite-java/src/test/java/io/micronaut/cdi/test/AssignabilityRulesTest.java
+index 43eb85c..e6f7548 100644
+--- a/test-suite-java/src/test/java/io/micronaut/cdi/test/AssignabilityRulesTest.java
++++ b/test-suite-java/src/test/java/io/micronaut/cdi/test/AssignabilityRulesTest.java
+@@ -127,7 +127,7 @@ class AssignabilityRulesTest {
+         assertTrue(event(anyFoo, stringFoo));
+         Type anyFoos = literal(new TypeLiteral<Foo<?>[]>() { });
+         Type stringFoos = literal(new TypeLiteral<Foo<String>[]>() { });
+-        assertTrue(bean(anyFoos, stringFoos), "Foo<?>[] is matched by Foo<String>[]");
++        assertFalse(bean(anyFoos, stringFoos), "array element types must be identical, including their arguments");
+         assertTrue(event(anyFoos, stringFoos));
+         assertFalse(bean(stringFoos, anyFoos), "Foo<String>[] is not matched by Foo<?>[]: a wildcard is no bean type");
+         Type listOfStringsFoo = literal(new TypeLiteral<Foo<List<String>>>() { });
+diff --git a/test-suite-java/src/test/java/io/micronaut/cdi/test/DeploymentValidationTest.java b/test-suite-java/src/test/java/io/micronaut/cdi/test/DeploymentValidationTest.java
+index 55ab2d1..5a986c6 100644
+--- a/test-suite-java/src/test/java/io/micronaut/cdi/test/DeploymentValidationTest.java
++++ b/test-suite-java/src/test/java/io/micronaut/cdi/test/DeploymentValidationTest.java
+@@ -13,8 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
+  * application context, whether or not anything ever asks for the bean that has the problem: an unsatisfied or
+  * ambiguous dependency, at a field or a parameter of an observer or a disposer method alike (CDI 4.1 section
+  * 5.2.2), an injection point that resolves to a bean in a normal scope that cannot be proxied (sections 3.10 and
+- * 5.4), and two beans of one name or a name that is the path prefix of another (section 5.3.1). A collection is
+- * collected by Micronaut, and is satisfied by no beans at all.
++ * 5.4), and two beans of one name or a name that is the path prefix of another (section 5.3.1). Optional and collection injection require a bean of the full declared type.
+  * Each deployment is compiled in memory, since a class compiled with this suite would be in the deployment of
+  * every test.
+  */
+@@ -160,20 +159,32 @@ class DeploymentValidationTest {
+     }
+ 
+     @Test
+-    void anEmptyCollectionIsNoUnsatisfiedDependency() {
+-        try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
+-            package valid;
+-
+-            @jakarta.enterprise.context.Dependent
+-            public class Consumer {
+-                @jakarta.inject.Inject
+-                java.util.List<Element> none;
++    void missingOptionalAndCollectionProducersAreDeploymentProblems() {
++        for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
++            "java.util.Set<Element>", "java.util.Collection<Element>")) {
++            assertRejected("""
++                package invalid;
++                @jakarta.enterprise.context.Dependent
++                public class Consumer {
++                    @jakarta.inject.Inject %s missing;
++                    public interface Element {}
++                }
++                """.formatted(type), "has no bean to satisfy it");
++        }
++    }
+ 
+-                public interface Element {
++    @Test
++    void ambiguousOptionalAndCollectionProducersAreDeploymentProblems() {
++        for (String type : java.util.List.of("java.util.Optional<String>", "java.util.List<String>", "java.util.Set<String>")) {
++            assertRejected("""
++                package invalid;
++                @jakarta.enterprise.context.Dependent
++                public class Consumer {
++                    @jakarta.inject.Inject %s ambiguous;
++                    @jakarta.enterprise.inject.Produces %s first() { return null; }
++                    @jakarta.enterprise.inject.Produces %s second() { return null; }
+                 }
+-            }
+-            """)) {
+-            assertTrue(context.isRunning());
++                """.formatted(type, type, type), "is ambiguous");
+         }
+     }
+ 
+diff --git a/test-suite-java/src/test/java/io/micronaut/cdi/test/GenericArrayBeanTypeTest.java b/test-suite-java/src/test/java/io/micronaut/cdi/test/GenericArrayBeanTypeTest.java
+index cb33ba6..f8d7a6a 100644
+--- a/test-suite-java/src/test/java/io/micronaut/cdi/test/GenericArrayBeanTypeTest.java
++++ b/test-suite-java/src/test/java/io/micronaut/cdi/test/GenericArrayBeanTypeTest.java
+@@ -17,6 +17,7 @@ package io.micronaut.cdi.test;
+ 
+ import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+ import io.micronaut.context.ApplicationContext;
++import io.micronaut.cdi.internal.type.SpecificationTypes;
+ import jakarta.enterprise.context.Dependent;
+ import jakarta.enterprise.inject.Instance;
+ import jakarta.enterprise.inject.Produces;
+@@ -47,8 +48,20 @@ class GenericArrayBeanTypeTest {
+             assertTrue(beans.iterator().next().getTypes().contains(crates), "and the bean has the type itself");
+             Crate<String>[] produced = context.getBean(Consumer.class).crates.get();
+             assertEquals("produced", produced[0].value);
+-            assertTrue(container.getBeans(new TypeLiteral<Crate<Integer>[]>() { }.getType()).isEmpty(),
+-                "Crate<Integer>[] does not");
++            assertEquals("produced", context.getBean(Consumer.class).direct[0].value,
++                "direct field injection uses the same exact array bean");
++            assertTrue(container.getBeans(new TypeLiteral<Crate<Long>[]>() { }.getType()).isEmpty(),
++                "Crate<Long>[] does not");
++            for (Type incompatible : new Type[]{Object[].class, Crate[].class,
++                new TypeLiteral<Crate<?>[]>() { }.getType()}) {
++                assertTrue(container.getBeans(incompatible).isEmpty(), "no CDI bean for " + incompatible);
++                assertTrue(context.findBean(SpecificationTypes.argumentOf(incompatible)).isEmpty(),
++                    "Micronaut candidate resolution also rejects " + incompatible);
++            }
++            assertTrue(context.getBean(Consumer.class).wildcards.isUnsatisfied());
++            assertTrue(context.getBean(Consumer.class).objects.isUnsatisfied());
++            Crate<?>[] throughObject = (Crate<?>[]) context.getBean(Consumer.class).integers.get();
++            assertEquals(123, throughObject[0].value, "Object remains a bean type of a generic array producer");
+         }
+     }
+ 
+@@ -67,11 +80,31 @@ class GenericArrayBeanTypeTest {
+         Crate<String>[] crates() {
+             return new Crate[]{new Crate<>("produced")};
+         }
++
++        @SuppressWarnings("unchecked")
++        @Produces
++        @jakarta.inject.Named("array-through-object")
++        Crate<Integer>[] integers() {
++            return new Crate[]{new Crate<>(123)};
++        }
+     }
+ 
+     @Dependent
+     static class Consumer {
+         @jakarta.inject.Inject
+         Instance<Crate<String>[]> crates;
++
++        @jakarta.inject.Inject
++        Crate<String>[] direct;
++
++        @jakarta.inject.Inject
++        Instance<Crate<?>[]> wildcards;
++
++        @jakarta.inject.Inject
++        Instance<Object[]> objects;
++
++        @jakarta.inject.Inject
++        @jakarta.inject.Named("array-through-object")
++        Instance<Object> integers;
+     }
+ }
+diff --git a/cdi-processor/src/main/java/io/micronaut/cdi/processor/CdiInjectionPointResolver.java b/cdi-processor/src/main/java/io/micronaut/cdi/processor/CdiInjectionPointResolver.java
+new file mode 100644
+index 0000000..f56bf89
+--- /dev/null
++++ b/cdi-processor/src/main/java/io/micronaut/cdi/processor/CdiInjectionPointResolver.java
+@@ -0,0 +1,54 @@
++/*
++ * Copyright 2017-2026 original authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package io.micronaut.cdi.processor;
++
++import io.micronaut.context.beans.definition.BeanDefinitionInjectionPoint;
++import io.micronaut.core.annotation.AnnotationMetadata;
++import io.micronaut.core.annotation.Internal;
++import io.micronaut.inject.ast.ClassElement;
++import io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver;
++import io.micronaut.inject.visitor.VisitorContext;
++
++import java.util.Collection;
++import java.util.Optional;
++
++/**
++ * Resolves CDI Optional and collection injection as a bean of the full declared type.
++ * The early Core resolver hook preserves ordinary Micronaut injection for other beans.
++ *
++ * @author Denis Stepanov
++ * @since 1.0
++ */
++@Internal
++public final class CdiInjectionPointResolver implements BeanDefinitionInjectionPointResolver {
++    @Override
++    public Optional<BeanDefinitionInjectionPoint<ClassElement>> resolve(
++        ClassElement beanType, ClassElement requestedType, AnnotationMetadata annotationMetadata,
++        String parameterName, VisitorContext visitorContext) {
++        // Proxy constructors contain a generated list of interceptor registrations. Those are Core's
++        // dependencies, not CDI injection points, and must keep their built-in collection routing.
++        if (parameterName.equals("$interceptors") || requestedType.getFirstTypeArgument()
++            .map(type -> type.isAssignable(io.micronaut.context.BeanRegistration.class)).orElse(false)) {
++            return Optional.empty();
++        }
++        if ((beanType.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")
++            || beanType.hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope"))
++            && (requestedType.isAssignable(Optional.class) || requestedType.isAssignable(Collection.class))) {
++            return Optional.of(new BeanDefinitionInjectionPoint.BeanInjectionPoint<>(requestedType, annotationMetadata));
++        }
++        return Optional.empty();
++    }
++}
+diff --git a/cdi-processor/src/main/resources/META-INF/services/io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver b/cdi-processor/src/main/resources/META-INF/services/io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver
+new file mode 100644
+index 0000000..9fc4d7f
+--- /dev/null
++++ b/cdi-processor/src/main/resources/META-INF/services/io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver
+@@ -0,0 +1 @@
++io.micronaut.cdi.processor.CdiInjectionPointResolver
+diff --git a/test-suite-java/src/test/java/io/micronaut/cdi/test/ProviderInjectionPointTest.java b/test-suite-java/src/test/java/io/micronaut/cdi/test/ProviderInjectionPointTest.java
+new file mode 100644
+index 0000000..6a72018
+--- /dev/null
++++ b/test-suite-java/src/test/java/io/micronaut/cdi/test/ProviderInjectionPointTest.java
+@@ -0,0 +1,118 @@
++/*
++ * Copyright 2017-2026 original authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package io.micronaut.cdi.test;
++
++import io.micronaut.context.ApplicationContext;
++import jakarta.enterprise.context.Dependent;
++import jakarta.enterprise.inject.Produces;
++import jakarta.enterprise.inject.spi.InjectionPoint;
++import jakarta.enterprise.util.Nonbinding;
++import jakarta.inject.Inject;
++import jakarta.inject.Provider;
++import jakarta.inject.Qualifier;
++import org.junit.jupiter.api.Test;
++
++import java.lang.annotation.Retention;
++import java.lang.annotation.Target;
++
++import static java.lang.annotation.ElementType.*;
++import static java.lang.annotation.RetentionPolicy.RUNTIME;
++import static org.junit.jupiter.api.Assertions.*;
++
++class ProviderInjectionPointTest {
++    @Test
++    void deferredProvidersKeepEachRequestingInjectionPoint() {
++        try (ApplicationContext context = ApplicationContext.run()) {
++            FieldConsumer field = context.getBean(FieldConsumer.class);
++            ConstructorConsumer constructor = context.getBean(ConstructorConsumer.class);
++            InitializerConsumer initializer = context.getBean(InitializerConsumer.class);
++            assertPoint(field.payload.get(), FieldConsumer.class, "payload", "field");
++            assertPoint(constructor.payload.get(), ConstructorConsumer.class, ConstructorConsumer.class.getName(), "constructor");
++            assertPoint(initializer.payload.get(), InitializerConsumer.class, "initialize", "initializer");
++            // Alternate calls after construction: neither a discarded resolution path nor the most recent
++            // injection is the metadata of these two independent providers.
++            assertPoint(field.payload.get(), FieldConsumer.class, "payload", "field");
++            assertPoint(constructor.payload.get(), ConstructorConsumer.class, ConstructorConsumer.class.getName(), "constructor");
++            assertNull(context.getBean(DirectLookup.class).injectionPoint(),
++                "a direct lookup after Provider.get() has no requesting injection point");
++        }
++    }
++
++    @Test
++    void aFailingDeferredCreationDoesNotLeaveItsInjectionPointBehind() {
++        try (ApplicationContext context = ApplicationContext.run()) {
++            FailingConsumer consumer = context.getBean(FailingConsumer.class);
++            assertThrows(IllegalStateException.class, consumer.payload::get);
++            assertNull(context.getBean(DirectLookup.class).injectionPoint());
++            assertPoint(context.getBean(FieldConsumer.class).payload.get(), FieldConsumer.class, "payload", "field");
++        }
++    }
++
++    private static void assertPoint(Payload payload, Class<?> owner, String member, String key) {
++        InjectionPoint point = payload.injectionPoint();
++        assertNotNull(point, "the deferred producer receives its requesting injection point");
++        assertEquals(owner, point.getBean().getBeanClass());
++        assertEquals(member, point.getMember().getName());
++        assertEquals(key, point.getQualifiers().stream().filter(Key.class::isInstance)
++            .map(Key.class::cast).findFirst().orElseThrow().value());
++        assertEquals(Payload.class, point.getType(), "the lookup describes the selected bean type");
++    }
++
++    @Qualifier
++    @Retention(RUNTIME)
++    @Target({FIELD, PARAMETER, METHOD})
++    @interface Key { @Nonbinding String value() default ""; }
++
++    record Payload(InjectionPoint injectionPoint) { }
++    record DirectLookup(InjectionPoint injectionPoint) { }
++
++    @Dependent
++    static class Producer {
++        @Produces @Key
++        Payload payload(@io.micronaut.core.annotation.Nullable InjectionPoint point) {
++            if (point != null && point.getQualifiers().stream().filter(Key.class::isInstance)
++                .map(Key.class::cast).anyMatch(key -> key.value().equals("fail"))) {
++                throw new IllegalStateException("failed deferred creation");
++            }
++            return new Payload(point);
++        }
++
++        @Produces
++        DirectLookup direct(@io.micronaut.core.annotation.Nullable InjectionPoint point) { return new DirectLookup(point); }
++    }
++
++    @Dependent
++    static class FieldConsumer {
++        @Inject @Key("field") Provider<Payload> payload;
++    }
++
++    @Dependent
++    static class ConstructorConsumer {
++        final Provider<Payload> payload;
++        @Inject ConstructorConsumer(@Key("constructor") Provider<Payload> payload) { this.payload = payload; }
++    }
++
++    @Dependent
++    static class InitializerConsumer {
++        Provider<Payload> payload;
++        @Inject void initialize(@Key("initializer") Provider<Payload> payload) { this.payload = payload; }
++    }
++
++    @Dependent
++    static class FailingConsumer {
++        @Inject @Key("fail") Provider<Payload> payload;
++    }
++}
+diff --git a/test-suite-java/src/test/java/io/micronaut/cdi/test/ContainerTypeInjectionTest.java b/test-suite-java/src/test/java/io/micronaut/cdi/test/ContainerTypeInjectionTest.java
+new file mode 100644
+index 0000000..ab0f106
+--- /dev/null
++++ b/test-suite-java/src/test/java/io/micronaut/cdi/test/ContainerTypeInjectionTest.java
+@@ -0,0 +1,151 @@
++package io.micronaut.cdi.test;
++
++import io.micronaut.context.ApplicationContext;
++import jakarta.enterprise.context.Dependent;
++import jakarta.enterprise.inject.Disposes;
++import jakarta.enterprise.inject.Produces;
++import jakarta.enterprise.inject.spi.InjectionPoint;
++import jakarta.inject.Inject;
++import jakarta.inject.Qualifier;
++import org.junit.jupiter.api.Test;
++
++import java.lang.annotation.Retention;
++import java.lang.annotation.Target;
++import java.lang.reflect.ParameterizedType;
++import java.util.ArrayList;
++import java.util.Collection;
++import java.util.Collections;
++import java.util.IdentityHashMap;
++import java.util.List;
++import java.util.Optional;
++import java.util.Set;
++
++import static java.lang.annotation.ElementType.*;
++import static java.lang.annotation.RetentionPolicy.RUNTIME;
++import static org.junit.jupiter.api.Assertions.*;
++
++class ContainerTypeInjectionTest {
++    enum Shape { OPTIONAL, LIST, SET, COLLECTION }
++
++    @Qualifier
++    @Retention(RUNTIME)
++    @Target({FIELD, METHOD, PARAMETER})
++    @interface Container { Shape value(); }
++
++    record Value(String text) { }
++
++    @Dependent
++    static class Producers {
++        static final Set<Object> CREATED = Collections.newSetFromMap(new IdentityHashMap<>());
++        static final Set<Object> DISPOSED = Collections.newSetFromMap(new IdentityHashMap<>());
++        static final List<InjectionPoint> POINTS = new ArrayList<>();
++
++        private <T> T record(T result, InjectionPoint point, Class<?> rawType, Shape shape) {
++            assertNotNull(point);
++            assertEquals(rawType, ((ParameterizedType) point.getType()).getRawType());
++            assertEquals(Value.class, ((ParameterizedType) point.getType()).getActualTypeArguments()[0]);
++            assertTrue(point.getQualifiers().stream().anyMatch(q -> q instanceof Container c && c.value() == shape));
++            POINTS.add(point);
++            CREATED.add(result);
++            return result;
++        }
++
++        @Produces @Container(Shape.OPTIONAL)
++        Optional<Value> optional(InjectionPoint point) {
++            return record(Optional.of(new Value("optional")), point, Optional.class, Shape.OPTIONAL);
++        }
++        @Produces @Container(Shape.LIST)
++        List<Value> list(InjectionPoint point) {
++            return record(new ArrayList<>(List.of(new Value("list"))), point, List.class, Shape.LIST);
++        }
++        @Produces @Container(Shape.SET)
++        Set<Value> set(InjectionPoint point) {
++            return record(new java.util.HashSet<>(Set.of(new Value("set"))), point, Set.class, Shape.SET);
++        }
++        @Produces @Container(Shape.COLLECTION)
++        Collection<Value> collection(InjectionPoint point) {
++            return record(new ArrayList<>(List.of(new Value("collection"))), point, Collection.class, Shape.COLLECTION);
++        }
++        // A matching element producer must not supply or augment the List bean.
++        @Produces @Container(Shape.LIST)
++        Value element() { return new Value("element"); }
++
++        void optionalDisposed(@Disposes @Container(Shape.OPTIONAL) Optional<Value> value) { DISPOSED.add(value); }
++        void listDisposed(@Disposes @Container(Shape.LIST) List<Value> value) { DISPOSED.add(value); }
++        void setDisposed(@Disposes @Container(Shape.SET) Set<Value> value) { DISPOSED.add(value); }
++        void collectionDisposed(@Disposes @Container(Shape.COLLECTION) Collection<Value> value) { DISPOSED.add(value); }
++    }
++
++    @Dependent
++    static class Fields {
++        @Inject @Container(Shape.OPTIONAL) Optional<Value> optional;
++        @Inject @Container(Shape.LIST) List<Value> list;
++        @Inject @Container(Shape.SET) Set<Value> set;
++        @Inject @Container(Shape.COLLECTION) Collection<Value> collection;
++        @Inject @Container(Shape.LIST) List<Value> $list;
++    }
++
++    @Dependent
++    static class Constructor {
++        final Optional<Value> optional;
++        final List<Value> list;
++        final Set<Value> set;
++        @Inject Constructor(@Container(Shape.OPTIONAL) Optional<Value> optional,
++                            @Container(Shape.LIST) List<Value> list,
++                            @Container(Shape.SET) Set<Value> set) {
++            this.optional = optional; this.list = list; this.set = set;
++        }
++    }
++
++    @Dependent
++    static class Initializer {
++        Optional<Value> optional;
++        List<Value> list;
++        Set<Value> set;
++        @Inject void initialize(@Container(Shape.OPTIONAL) Optional<Value> optional,
++                                @Container(Shape.LIST) List<Value> list,
++                                @Container(Shape.SET) Set<Value> set) {
++            this.optional = optional; this.list = list; this.set = set;
++        }
++    }
++
++    @Test
++    void declaredContainerBeansAreInjectedAndDisposedWithTheirOwner() {
++        Producers.CREATED.clear(); Producers.DISPOSED.clear(); Producers.POINTS.clear();
++        try (ApplicationContext context = ApplicationContext.run()) {
++            var registration = context.getBeanRegistration(Fields.class, null);
++            Fields fields = registration.getBean();
++            assertValues(fields.optional, fields.list, fields.set);
++            assertEquals(List.of(new Value("collection")), fields.collection);
++            assertEquals(List.of(new Value("list")), fields.$list);
++            assertTrue(Producers.POINTS.stream().allMatch(point -> point.getBean().getBeanClass() == Fields.class));
++            assertEquals(Set.of("optional", "list", "set", "collection", "$list"),
++                Producers.POINTS.stream().map(point -> point.getMember().getName()).collect(java.util.stream.Collectors.toSet()));
++            registration.close();
++            assertEquals(5, Producers.DISPOSED.size());
++            assertTrue(Producers.CREATED.stream().allMatch(Producers.DISPOSED::contains));
++
++            var constructorRegistration = context.getBeanRegistration(Constructor.class, null);
++            Constructor constructor = constructorRegistration.getBean();
++            assertValues(constructor.optional, constructor.list, constructor.set);
++            var initializerRegistration = context.getBeanRegistration(Initializer.class, null);
++            Initializer initializer = initializerRegistration.getBean();
++            assertValues(initializer.optional, initializer.list, initializer.set);
++            assertTrue(Producers.POINTS.stream().anyMatch(point -> point.getBean().getBeanClass() == Constructor.class
++                && point.getMember() instanceof java.lang.reflect.Constructor<?>));
++            assertTrue(Producers.POINTS.stream().anyMatch(point -> point.getBean().getBeanClass() == Initializer.class
++                && point.getMember().getName().equals("initialize")));
++            constructorRegistration.close();
++            initializerRegistration.close();
++        }
++        assertEquals(11, Producers.CREATED.size());
++        assertEquals(11, Producers.DISPOSED.size());
++        assertTrue(Producers.CREATED.stream().allMatch(Producers.DISPOSED::contains));
++    }
++
++    private static void assertValues(Optional<Value> optional, List<Value> list, Set<Value> set) {
++        assertEquals(Optional.of(new Value("optional")), optional);
++        assertEquals(List.of(new Value("list")), list);
++        assertEquals(Set.of(new Value("set")), set);
++    }
++}

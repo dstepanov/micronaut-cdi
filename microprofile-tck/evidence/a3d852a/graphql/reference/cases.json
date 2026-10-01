@@ -1,0 +1,1450 @@
+[
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[0](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6a8a3688)",
+    "seconds": "0.109",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[1](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@b9d8c21b)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[2](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9b95851e)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[3](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5e5ad937)",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[4](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@2e13dc13)",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[5](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@ca6c53c1)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[6](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@95ff37f5)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[7](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9b85f381)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[8](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@f3934215)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[9](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@21dcf02f)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[10](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@58f8a686)",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[11](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@ae730714)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[12](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@1b8b6a06)",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[13](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@1468e0bc)",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[14](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@733ca717)",
+    "seconds": "0.008",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidLocalDateFormattedValue failed errors[message=Validation error of type WrongType: argument 'date' with value 'StringValue{value='Today'}' is not a valid 'Date' @ 'checkInWithCorrectDateFormat']\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'date' with value 'StringValue{value='Today'}' is not a valid 'Date']\nUnexpected: a JSON object\n\ninvalidLocalDateFormattedValue failed errors[message=Exception while fetching data (/checkInWithCorrectDateFormat) : Text 'Today' could not be parsed at index 0]\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'date' with value 'StringValue{value='Today'}' is not a valid 'Date']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "f8a5f40aaad51a6453c05cb0ab7aa03881d145aaadd6b0678fad7faa982006ad"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[15](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@be3d4ba2)",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: unknownField failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type FieldUndefined: Field 'weaknesses' in type 'SuperHero' is undefined @ 'allHeroes/weaknesses']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (FieldUndefined@[allHeroes/weaknesses]) : Field 'weaknesses' in type 'SuperHero' is undefined]\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "1ea4a650f206dd1e0135d225f1f5b932d9de06d4149c3fb58d44356795dc54e2"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[16](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e8f184bf)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[17](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@3a379feb)",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[18](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c20e29f)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[19](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c146b491)",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[20](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@afa96f02)",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[21](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e62142ec)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[22](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@8f63238b)",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[23](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d867d51b)",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[24](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@33db0c70)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[25](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c75c5bf5)",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidLocalTimeValue failed errors[message=Validation error of type WrongType: argument 'time' with value 'StringValue{value='Today'}' is not a valid 'Time' @ 'startPatrolling']\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'time' with value 'StringValue{value='Today'}' is not a valid 'Time']\nUnexpected: a JSON object\n\ninvalidLocalTimeValue failed errors[message=Exception while fetching data (/startPatrolling) : Text 'Today' could not be parsed at index 0]\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'time' with value 'StringValue{value='Today'}' is not a valid 'Time']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "f6d9fcdaeb0f55822e92cb1f35ea713839ae1eb4567c97835741a8289ed701ec"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[26](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@754bddc0)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[27](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@39cc3a3)",
+    "seconds": "0.009",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidEnumValue failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type WrongType: argument 'hero.tshirtSize' with value 'EnumValue{name='XLTall'}' is not a valid 'ShirtSize' - Expected enum literal value not in allowable values -  'EnumValue{name='XLTall'}'. @ 'createNewHero']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (WrongType@[createNewHero]) : argument 'hero.tshirtSize' with value 'EnumValue{name='XLTall'}' is not a valid 'ShirtSize' - Literal value not in allowable values for enum 'ShirtSize' - 'EnumValue{name='XLTall'}']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "416696f336a60ab50a775bbcb6d65180365869413058ce045fff7febb50daa41"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[28](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@16737f5d)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[29](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6bcd99c7)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[30](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@f9d952b5)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[31](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@725e98ad)",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[32](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@a28d4ad7)",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[33](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@45fa7be4)",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: unknownMutation failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type FieldUndefined: Field 'createNewHeroCat' in type 'Mutation' is undefined @ 'createNewHeroCat']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (FieldUndefined@[createNewHeroCat]) : Field 'createNewHeroCat' in type 'Mutation' is undefined]\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "444d654a94f8891ac55a79b680d313c6bda7107f6ee13fb30039cd366c66558e"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[34](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c4fe7f7a)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[35](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5fdb5aea)",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidLocalTimeFormattedValue failed errors[message=Exception while fetching data (/startPatrollingWithCorrectDateFormat) : Text 'Today' could not be parsed at index 0]\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'time' with value 'StringValue{value='Today'}' is not a valid 'Time']\nUnexpected: a JSON object\n\ninvalidLocalTimeFormattedValue failed errors[message=Validation error of type WrongType: argument 'time' with value 'StringValue{value='Today'}' is not a valid 'Time' @ 'startPatrollingWithCorrectDateFormat']\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'time' with value 'StringValue{value='Today'}' is not a valid 'Time']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "55f7649af55e730c47e8e23adbba88d110833fc4e9da93c60d868c07dcf75063"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[36](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@38986980)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[37](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d17831ab)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[38](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@b8828c2d)",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[39](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@faf87bac)",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidDataTypeValue failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type WrongType: argument 'powerLevel' with value 'StringValue{value='Unlimited'}' is not a valid 'Int' @ 'updateItemPowerLevel']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (WrongType@[updateItemPowerLevel]) : argument 'powerLevel' with value 'StringValue{value='Unlimited'}' is not a valid 'Int' - SRGQL000022: Can not parse a number from [StringValue{value='Unlimited'}]]\nUnexpected: a JSON object\n\ninvalidDataTypeValue failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type WrongType: argument 'powerLevel' with value 'StringValue{value='Unlimited'}' is not a valid 'Int' - Expected AST type 'IntValue' but was 'StringValue'. @ 'updateItemPowerLevel']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (WrongType@[updateItemPowerLevel]) : argument 'powerLevel' with value 'StringValue{value='Unlimited'}' is not a valid 'Int' - SRGQL000022: Can not parse a number from [StringValue{value='Unlimited'}]]\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "7f428cd574a9e7854b45d83200e16726740e2ee0e47b7d3e9bbc9a7ca4d0838f"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[40](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c86e55b7)",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[41](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@feb3682f)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[42](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@1cb1257b)",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[43](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c0ccd070)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[44](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@484219fc)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[45](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@3cbae4c)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[46](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@88fe7ff6)",
+    "seconds": "0.015",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: createNewUnnamedHero failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type WrongType: argument 'hero' with value 'ObjectValue{objectFields=[ObjectField{name='realName', value=StringValue{value='John Smith'}}]}' is missing required fields '[name]' @ 'createNewHero']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (WrongType@[createNewHero]) : argument 'hero' with value 'ObjectValue{objectFields=[ObjectField{name='realName', value=StringValue{value='John Smith'}}]}' is missing required fields '[name]']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "639d70c628b5bc9e48ea7ab694740b8e4cd6aa1692ad867da315125fc7819eb1"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[47](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@a987543a)",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidLocalDateValue failed errors[message=Validation error of type WrongType: argument 'date' with value 'StringValue{value='Today'}' is not a valid 'Date' @ 'checkIn']\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'date' with value 'StringValue{value='Today'}' is not a valid 'Date']\nUnexpected: a JSON object\n\ninvalidLocalDateValue failed errors[message=Exception while fetching data (/checkIn) : Text 'Today' could not be parsed at index 0]\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'date' with value 'StringValue{value='Today'}' is not a valid 'Date']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "b25fe6e0cdc21d5e0809d5dc8af3a10785ed8e698a31c28dee13ee137438783d"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[48](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@869977fe)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[49](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@ef9dd6ed)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[50](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@93470514)",
+    "seconds": "0.034",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[51](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d43f5d8b)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[52](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5b0ce5f2)",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidLocalDateTimeFormattedValue failed errors[message=Exception while fetching data (/battleWithCorrectDateFormat) : Text 'Today' could not be parsed at index 0]\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'dateTime' with value 'StringValue{value='Today'}' is not a valid 'DateTime']\nUnexpected: a JSON object\n\ninvalidLocalDateTimeFormattedValue failed errors[message=Validation error of type WrongType: argument 'dateTime' with value 'StringValue{value='Today'}' is not a valid 'DateTime' @ 'battleWithCorrectDateFormat']\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'dateTime' with value 'StringValue{value='Today'}' is not a valid 'DateTime']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "d194369c1dbcdaae3db990d7fba3555bc1d65edcef568f21e1d0ffec4f142579"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[53](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9696e88e)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[54](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@541fac92)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[55](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d89f4aa2)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[56](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@da28f207)",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[57](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@222fd38f)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[58](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@8f0bca08)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[59](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@a3b39f1b)",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[60](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d0d22776)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[61](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@602a77ec)",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[62](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9606c4ad)",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[63](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@116cf682)",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[64](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e21bca4)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[65](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@3ecb2107)",
+    "seconds": "0.038",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[66](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@bf6e80cb)",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[67](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@767439b8)",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[68](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@2f7c53ba)",
+    "seconds": "0.004",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: unknownQuery failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type FieldUndefined: Field 'allHeroesWhoLikeIceCream' in type 'Query' is undefined @ 'allHeroesWhoLikeIceCream']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (FieldUndefined@[allHeroesWhoLikeIceCream]) : Field 'allHeroesWhoLikeIceCream' in type 'Query' is undefined]\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "d294aec0f374036c5ffbd120529c7885c5482cf770d2ecf5fea035413d89b732"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[69](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@36b03eae)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[70](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6c4f09a1)",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[71](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e3e15fcf)",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: invalidLocalDateTimeValue failed errors[message=Validation error of type WrongType: argument 'dateTime' with value 'StringValue{value='Today'}' is not a valid 'DateTime' @ 'battle']\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'dateTime' with value 'StringValue{value='Today'}' is not a valid 'DateTime']\nUnexpected: a JSON object\n\ninvalidLocalDateTimeValue failed errors[message=Exception while fetching data (/battle) : Text 'Today' could not be parsed at index 0]\nExpected: a JSON object\n     but none found\n ; errors[message=argument 'dateTime' with value 'StringValue{value='Today'}' is not a valid 'DateTime']\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "9899799c69c5b008d5479bd602d89995ce61617a18e69fe9e7f2b552af147e62"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[72](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9502885d)",
+    "seconds": "0.003",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: createNewNullNamedHero failed \nExpected: data\n     but none found\n ; errors[message=Validation error of type WrongType: argument 'hero.name' with value 'NullValue{}' must not be null @ 'createNewHero']\nExpected: a JSON object\n     but none found\n ; errors[message=Validation error (WrongType@[createNewHero]) : argument 'hero.name' with value 'NullValue{}' must not be null]\nUnexpected: a JSON object\n\n\n",
+    "trace_ref": "8e32912c259c20a9f58dfe7713a52b6cda63a70ad58af772ac618fedbe20f141"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[73](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@4b5b0604)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[74](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5e9e3984)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[75](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@99bb976e)",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[76](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@46337a42)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[77](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@8c10128f)",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[78](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c0428f81)",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[79](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@93c3d2f6)",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[80](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6ccb248a)",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testResponse",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[0](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@684e8c9d)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[1](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@773014d3)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[2](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@c1050f2)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[3](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5c53f292)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[4](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5ff00507)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[5](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5c134052)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[6](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@545b5ed0)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[7](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@19fd43da)",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[8](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@834e986)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[9](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2e5e6fc4)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[10](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@61ffd148)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[11](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3bc69ce9)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[12](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@11dcd42c)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[13](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@12f279b5)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[14](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@162c1dfb)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[15](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@73894c5a)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[16](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2251b3bc)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[17](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7741d346)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[18](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6042d663)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[19](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3f1a9a53)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[20](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3a4aadf8)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[21](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@64b70f41)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[22](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@da4cf09)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[23](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@39941489)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[24](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@60cb1ed6)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[25](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1f9d4b0e)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[26](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1ca610a0)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[27](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@47829d6d)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[28](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3d40a3b4)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[29](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@23ad71bf)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[30](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@47b269c4)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[31](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@64aeaf29)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[32](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6f6efa4f)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[33](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3730f716)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[34](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@e3b0369)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[35](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@15a3b42)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[36](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7b2bf745)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[37](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5d318e91)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[38](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4342c13)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[39](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5f0bab7e)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[40](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@157d3a45)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[41](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@575cabf0)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[42](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@390037e7)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[43](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2b08772d)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[44](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@29bcf51d)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[45](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4e245739)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[46](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@45e617c4)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[47](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@637791d)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[48](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@422ab737)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[49](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@11381415)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[50](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5403799b)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[51](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@27f3f512)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[52](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3d53e6f7)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[53](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@262a1fad)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[54](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@51da32e5)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[55](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4bb147ec)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[56](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3dc40ab9)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[57](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@174721c4)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[58](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@47b33e07)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[59](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@590765c4)",
+    "seconds": "0.002",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: [testJsonDefault] (60) - Expecting an id in the default value for item for provisionHero expected [true] but found [false]",
+    "trace_ref": "1744244b437466710df71416fd5098fb62344461fae054d41473fda6dc7749c3"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[60](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@12d2ddde)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[61](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@59838256)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[62](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@523a7801)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[63](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@61cda923)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[64](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@77cb452c)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[65](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7b5cc918)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[66](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@53aa38be)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[67](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@50b93353)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[68](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@35adf623)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[69](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6c8fe7a4)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[70](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5d7911d5)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[71](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4a9a878)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[72](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1b7f06c7)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[73](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@feb098f)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[74](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@776015fc)",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[75](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@316cda31)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[76](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6909f6be)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[77](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@73c48264)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[78](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@66e17eff)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[79](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3421debd)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[80](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@764b14b8)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[81](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@f5a7226)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[82](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@100ad67e)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[83](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@77b3752b)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[84](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6b321262)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[85](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2eda4eeb)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[86](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1af4955e)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[87](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@ee21292)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[88](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2282400e)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[89](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3a1f2a1)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[90](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5d05f453)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[91](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4d93f75b)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[92](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2bb41f5c)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[93](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@35650279)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[94](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3292d91a)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[95](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@69f2cb04)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[96](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@28babeca)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[97](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@656a3d6b)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[98](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@58833798)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[99](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3f8dfe74)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[100](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@570ba13)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[101](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6c977dcf)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[102](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@385dfb63)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[103](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@d325518)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[104](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@392781e)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[105](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@79b18230)",
+    "seconds": "0.0",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: [Basic Scalar Types] (23) - Expecting a String Array Scalar (for Java Char[]) Type in type ScalarHolder expected [true] but found [false]",
+    "trace_ref": "f8db6b8f98aa55ae157d0bf01695a1ea1021b19c1ebbf20f2e1f80cbc3fcb078"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[106](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@796d33eb)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[107](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5fdfe8cf)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[108](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7d42404e)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[109](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2a4f8009)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[110](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@69a024a0)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[111](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@32a4ecbe)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[112](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@196624bf)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[113](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5934153e)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[114](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@43471a7e)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[115](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@388c519)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[116](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2ce03e86)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[117](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@51d0ec6f)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[118](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@47a7c93e)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[119](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@53aa2fc9)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[120](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@52f6900a)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[121](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@36c7cbe1)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[122](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5d5c41e5)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[123](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@171dc7c3)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[124](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@335f5c69)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[125](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6dca31eb)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[126](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@71664560)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[127](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@285005b8)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[128](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4c731956)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[129](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@740dcae3)",
+    "seconds": "0.0",
+    "status": "test_failure",
+    "message": "java.lang.AssertionError: [Basic Scalar Types] (47) - Expecting a non null Stirng Array (for Java Char[]) Scalar Type in type Query expected [true] but found [false]",
+    "trace_ref": "6c85af6ad3beab3e8ffb18d3b424fe72c30d38cff933bd882ad1ecba2e1a9084"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[130](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4e80a001)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[131](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7455dacb)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[132](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@52bd9a27)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[133](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5ed5b321)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[134](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6d6bff89)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[135](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@61149fa5)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[136](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@10980560)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[137](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3d9f0a5)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[138](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1cb9ef52)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[139](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@a0bf272)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[140](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4c07d1fc)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[141](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2506e949)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[142](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@54af3cb9)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[143](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@531ec978)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[144](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1d3c112a)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[145](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7a083b96)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[146](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@260e3837)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[147](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4dfdfe7d)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[148](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@72028a45)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[149](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@172f4514)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[150](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@a54acec)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[151](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@41f3aaf1)",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[152](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2eb60c71)",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[153](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6a950a3b)",
+    "seconds": "0.001",
+    "status": "passed"
+  }
+]

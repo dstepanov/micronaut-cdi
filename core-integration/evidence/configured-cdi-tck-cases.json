@@ -1,0 +1,4167 @@
+[
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.unsatisfied.DisposerMethodParameterInjectionValidationTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.TooManyScopesTest",
+    "name": "testTooManyScopesSpecifiedInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.withAroundInvoke.SingleInterceptorInstanceTest",
+    "name": "testAroundConstructInvokedAfterDependencyInjectionOnInterceptorClasses[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.InterceptedMethodInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.injectionpoint.broken.reference.unresolved.UnsatisfiedInjectableReferenceTest",
+    "name": "testUnsatisfiedReference",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.priority.ProducerExplicitPriorityTest",
+    "name": "testAlternativeProducerWithPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.priority.ProducerExplicitPriorityTest",
+    "name": "testPriorityOnProducerOverPriorityOnClass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.sync.FireSyncEventTest",
+    "name": "testSyncObservesCalledInSameThread",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.LookupAmbiguousTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.beanConstructor.BeanConstructorWithParametersTest",
+    "name": "testDeployment",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.BuiltinInterceptorInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.customQualifier.CustomQualifierTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.inheritance.StereotypeInheritenceTest",
+    "name": "testInheritence",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testBeanCreateInjectsDependenciesAndInvokesInitializerToInstantiateInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testContextCreatesNewInstanceForInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testContextualDestroyCatchesException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testContextualDestroyDisposesWhenNecessary",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testCreateInjectsFieldsDeclaredInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testCreateReturnsSameBeanPushed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testCreationExceptionWrapsCheckedExceptionThrownFromCreate",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testDependentsDestroyedAfterPreDestroy",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testIndirectSubClassInheritsPostConstructOnSuperclass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testIndirectSubClassInheritsPreDestroyOnSuperclass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testInjectionOfParametersIntoBeanConstructor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testManagedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testPostConstructPreDestroy",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testQualifierTypeAnnotatedConstructor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testSubClassDoesNotInheritPostConstructOnSuperclassBlockedByIntermediateClass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testSubClassDoesNotInheritPreDestroyConstructOnSuperclassBlockedByIntermediateClass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testSubClassInheritsPostConstructOnSuperclass[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testSubClassInheritsPreDestroyOnSuperclass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest",
+    "name": "testUncheckedExceptionThrownFromCreateNotWrapped",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptedBeanTypeParamConstructorTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.abortProcessing.orderedObservers.ExceptionInOrderedObserversAbortsProcessingTest",
+    "name": "testOrderedObserversAbortedCorrectly",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.raw.RawEventObserverInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.DependentBeanFinalMethodInterceptorTest",
+    "name": "testFinalMethodWithClassLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.interceptors.contract.invocationContext.InterceptorBindingsWithAtInterceptorsTest",
+    "name": "testInterceptorBindingsEmptyWithAtInterceptors",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyTypesTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.custom.CustomRequestContextSETest",
+    "name": "defineCustomRequestContext",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.inject.InjectAnnotatedProducerFieldTest",
+    "name": "testInjectAnnotatedProducerFieldNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.array.ProducerFieldArrayTypeVariableTest",
+    "name": "testBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserver.SyntheticObserverTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithObservesAndObservesAsyncParametersTest",
+    "name": "testObserverMethodMustHaveOnlyOneEventParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.scopeConflict.IncompatibleStereotypesTest",
+    "name": "testMultipleIncompatibleScopeStereotypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContext2Test",
+    "name": "testDestroyForSameCreationalContextOnly",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.BadArgumentLookupEqualToNumberOfParamsTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.NormalScopedBeanFinalMethodInterceptorTest",
+    "name": "testFinalMethodWithClassLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupDependentTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupEventTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.normal.scope.NormalScopedBeanWithInjectionPoint",
+    "name": "testRequestScopedBeanWithInjectionPoint",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.ambiguous.DisposerMethodParameterInjectionValidationTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.vetoed.VetoedTest",
+    "name": "testClassLevelVeto",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.vetoed.VetoedTest",
+    "name": "testPackageLevelVeto",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testApiTypeForArrayTypeReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testApiTypeForClassReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testApiTypeForInterfaceReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testApiTypeForPrimitiveReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testBeanDeclaresMultipleProducerFields",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testDefaultBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testDefaultNamed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testDefaultNamedByStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testNamedField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testNonStaticProducerFieldNotIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testNonStaticProducerFieldNotInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testParameterizedReturnType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testProducerFieldWithTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest",
+    "name": "testStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.interceptor.InterceptorInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PrivateFinalMethodTest",
+    "name": "testClassWithPrivateFinalMethodCanBeProxied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.ObserverNotificationTest",
+    "name": "testObserverMethodNotInvokedIfNoActiveContext",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.ObserverNotificationTest",
+    "name": "testObserversNotified",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest",
+    "name": "testApplicationScopedComponent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest",
+    "name": "testNothingHappensIfNoInstanceToDestroy[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest",
+    "name": "testRequestScopedComponent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest",
+    "name": "builtInInterceptorHasGivenPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest",
+    "name": "classInterceptorRequestContextActivation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest",
+    "name": "methodInterceptorRequestContextActivation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest",
+    "name": "testProducerFieldOnAlternativeIsNotEliminated[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest",
+    "name": "testProducerMethodOnAlternativeIsNotEliminated[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.bindings.AroundInvokeInterceptorTest",
+    "name": "testBusinessMethodIntercepted[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testCreateFailsIfProducerReturnsNullAndNotDependent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testCreateRethrowsUncheckedException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testCreateReturnsNullIfProducerDoesAndDependent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testCreateWrapsCheckedExceptionAndRethrows",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testProducerMethodBeanCreate",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testProducerMethodBeanDestroy",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testProducerMethodInvokedOnCreate",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest",
+    "name": "testWhenApplicationInvokesProducerMethodParametersAreNotInjected",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.nonDependent.NonDependentInterceptorTest",
+    "name": "testDeploymentWithScopedInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest",
+    "name": "testDestroyingDependentInstances[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest",
+    "name": "testDestroyingInterceptedDependentBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.initializerUnallowed.InitializerUnallowedDefinitionTest",
+    "name": "testInitializerUnallowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.privateConstructor.PrivateConstructorTest",
+    "name": "testClassWithPrivateConstructor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamInitializerTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "instanceSelectAnnotationThrowsISEWhenAccessedAfterShutdown",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "instanceSelectClassThrowsISEWhenAccessedAfterShutdown",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "seContainerThrowsISEWhenAccessingBmAtShutdownContainer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testAddExtensionAsClass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testAddExtensionAsExtensionInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testAddInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testAddPackageNotRecursively",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testAddPackageRecursively",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testAlternativesInSE",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testContainerCloseMethodOnNotInitializedContainer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testContainerIsInitialized",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testInvocationOfInitializedMethodReturnsNewSeContainerInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testSeContainerLookup",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest",
+    "name": "testSyntheticArchive",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.raw.RawEventDisposerInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierNotInheritedTest",
+    "name": "testResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest",
+    "name": "testNormalScopedUnproxyableBeanWithFinalClassResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest",
+    "name": "testNormalScopedUnproxyableBeanWithPackagePrivateFinalMethodResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest",
+    "name": "testNormalScopedUnproxyableBeanWithPrivateConstructorResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest",
+    "name": "testNormalScopedUnproxyableBeanWithProtectedFinalMethodResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest",
+    "name": "testNormalScopedUnproxyableBeanWithPublicFinalMethodResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.genericbroken.GenericManagedBeanTest",
+    "name": "testNonDependentGenericManagedBeanNotOk",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest",
+    "name": "testInterceptorAppliedToBeanWithAllBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest",
+    "name": "testInterceptorNotAppliedToBeanWithSomeBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest",
+    "name": "testMultipleInterceptorsOnMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalClass.FinalClassTest",
+    "name": "testInjectionPointWithUnproxyableTypeWhichResolvesToNormalScopedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.normalScopedWithPublicField.NormalScopedWithPublicFieldTest",
+    "name": "testNormalScopedBeanCanNotHavePublicField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.FinalClassClassLevelInterceptorTest",
+    "name": "testFinalClassWithClassLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testDisposerMethodsAreIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testInitializerMethodsNotIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testLifecycleCallbacksAreIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testManagedBeanIsIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testObjectMethodsAreNotIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testObserverMethodsAreIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest",
+    "name": "testProducerMethodsAreIntercepted",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PackagePrivateFinalMethodNotProxyableTest",
+    "name": "testClassWithPublicFinalMethodCannotBeProxied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.overriding.InterceptorBindingOverridingTest",
+    "name": "testInterceptorBindingOverriden",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanInitializerInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testGetBeanClassOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testGetDeclaringBeanOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testGetNotifyOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testGetObservedQualifiersOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testGetObservedTypeOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testGetTransactionPhaseOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testInstanceOfBeanForEveryEnabledObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest",
+    "name": "testNotifyOnObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testEventTypeAssignableToATypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testEventTypeResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testObservedEventTypeParameterIsActualType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testObservedEventTypeParameterIsActualTypeNested",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testObservedEventTypeParameterIsTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testObservedEventTypeParameterIsWildcard",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testParameterizedEventTypeAssignableToRawType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest",
+    "name": "testResolvingChecksTypeParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContextTest",
+    "name": "testDestroyForSameCreationalContextOnly",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupBeanManagerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.ThrowingInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.ChecksEventTypeWhenResolvingTest",
+    "name": "testResolvingChecksEventType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedAsyncObserves.ParameterAnnotatedAsyncObservesTest",
+    "name": "testInitializerMethodHasParameterAnnotatedAsyncObserves",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.broken.type.variable.TypeVariableInjectionPointTest",
+    "name": "testTypeVariableInjectionPoint",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationNoParamTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest",
+    "name": "testEventAlwaysHasAnyBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest",
+    "name": "testEventBindingTypeTargetsFieldParameterElementTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest",
+    "name": "testEventBindingTypeTargetsMethodFieldParameterElementTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest",
+    "name": "testFireEventWithNonBindingAnnotationsFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest",
+    "name": "testFireEventWithNonRuntimeBindingTypeFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest",
+    "name": "testNonRuntimeBindingTypeIsNotAnEventBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.prefix.NamePrefixTest",
+    "name": "testDuplicateBeanNamePrefix",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.injectionPointWithNamed2.NamedNonFieldInjectionPointTest",
+    "name": "testNamedObserverMethodInjectionPointNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.PrimitiveParametersInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.customPseudoScope.CustomPseudoScopeTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest",
+    "name": "testBeanOverridesPriorityFromStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest",
+    "name": "testBeanPriorityFromStereotypeOverridesOtherAlternative",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest",
+    "name": "testStereotypeWithAlternativeAndPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest",
+    "name": "testStereotypeWithPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.interceptorOrder.InterceptorOrderTest",
+    "name": "testInterceptorsInvocationOrder[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceProducerMethodInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.array.ProducerFieldArrayWildcardTest",
+    "name": "testBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyTypesTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveWithSystemPropertyTest",
+    "name": "testImplicitArchiveDiscovered",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.broken.field.InjectedFieldAnnotatedWithProducesTest",
+    "name": "testDeployment",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.prodfield.ProducerFieldBeanInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.ConflictingPrioritiesFromSingleStereotypeTest",
+    "name": "testConflictingPrioritiesFromStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.observer.async.InterceptorWithAsyncObserverMethodTest",
+    "name": "testInterceptorWithAsyncObserverMethodNotOk",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testMultipleQualifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifierDeclaredInheritedIsBlockedByIntermediateClass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifierDeclaredInheritedIsIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifierDeclaredInheritedIsInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifierDeclaresBindingAnnotation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifierNotDeclaredInheritedIsNotIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifierNotDeclaredInheritedIsNotInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest",
+    "name": "testQualifiersDeclaredInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanFieldInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserverOfParameterizedType.SyntheticObserverOfParameterizedTypeTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testAsyncObserver",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testBeanManagerResolveObserversSignature",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testBeanManagerResolveObserversWithIllegalQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testMethodWithParameterAnnotatedWithObservesRegistersObserverMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testMultipleObserverMethodsForSameEventPermissible",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testMultipleObserverMethodsOnBeanPermissible",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testObserverMethodAutomaticallyRegistered",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testObserverMethodMayHaveMultipleBindingTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testObserverMethodNotAutomaticallyRegisteredForDisabledBeans",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testObserverMethodRegistration",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testObserverMethodWithoutBindingTypesObservesEventsWithoutBindingTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest",
+    "name": "testSyncObserver",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.ArgumentArraySizeWithLookupTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalClassWithInheritedClassLevelInterceptorTest",
+    "name": "testFinalClassWithInheritedClassLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.scopeConflict.transitive.TransitiveIncompatibleStereotypesTest",
+    "name": "testMultipleTransitiveIncompatibleScopeStereotypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.prefix.ExpandedNamePrefixTest",
+    "name": "testDuplicateBeanNamePrefix",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest",
+    "name": "programmaticRequestContextActivation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest",
+    "name": "requestControllerBuiltInBeanAvailable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest",
+    "name": "requestControllerDeactivatedThrowsException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.ConflictingPriorityStereotypesTest",
+    "name": "testConflictingPrioritiesFromStereotypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.bothObservesAnnotations.ObserverMethodParameterAnnotatedAsSyncAndAsyncTest",
+    "name": "observerMethodMustBeSyncOrAsync",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.inheritance.DisposerMethodInheritanceTest",
+    "name": "testManagedBeanDisposerMethodNotInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.raw.RawEventInitMethodInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest",
+    "name": "testAssignableTypeParams",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest",
+    "name": "testNotAssignableTypeParams",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.normalScopedWithPublicStaticField.NormalScopedWithPublicStaticFieldTest",
+    "name": "testNormalScopedBeanCanHavePublicStaticField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.abortProcessing.ObserverExceptionAbortsProcessingTest",
+    "name": "testObserverThrowsExceptionAbortsNotifications",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveWhenEvaluatingElExpression",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest",
+    "name": "testDependentsDestroyedWhenElEvaluationCompletes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.context.dependent.DependentContextTest",
+    "name": "testInstanceUsedForElEvaluationNotShared",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyMessagesTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.array.ProducerMethodArrayWildcardTest",
+    "name": "testBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.decorated.DecoratedBeanConstructorInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.broken.disabled.DisabledBeanNotAvailableForInjectionTest",
+    "name": "testDeployment",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedManagedBeanTest",
+    "name": "testInvalidTypedValueOnManagedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanInjectionPoint.SyntheticBeanInjectionPointTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.interceptor.InterceptorNotResolvedInterModuleTest",
+    "name": "testInterceptorNotAvailableForInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest",
+    "name": "testGetAnnotatedType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest",
+    "name": "testGetBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest",
+    "name": "testGetMember",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest",
+    "name": "testGetQualifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest",
+    "name": "testGetType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest",
+    "name": "testIsTransient",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest",
+    "name": "testImplicitEventExistsForEachEventType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest",
+    "name": "testImplicitEventHasAllExplicitBindingTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest",
+    "name": "testImplicitEventHasDependentScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest",
+    "name": "testImplicitEventHasImplementation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest",
+    "name": "testImplicitEventHasNoName",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.LookupUnsatisfiedTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParams2Test",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.interceptor.DisposerMethodOnInterceptorTest",
+    "name": "testDisposerMethodNotAllowedOnInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithWildcard.ParameterizedTypeWithWildcardTest",
+    "name": "testParameterizedReturnTypeWithWildcard",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.member.InterceptorBindingTypeWithMemberTest",
+    "name": "testInterceptorBindingTypeWithMember",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.member.InterceptorBindingTypeWithMemberTest",
+    "name": "testInterceptorBindingTypeWithNonBindingMember",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalMethodWithInheritedStereotypeInterceptorTest",
+    "name": "testFinalClassWithInheritedStereotypeInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithActualTypeTest",
+    "name": "testInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testApiTypeInjectionPoint",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testCurrentBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testDependentScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetAnnotatedField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetAnnotatedParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetBindingTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetMemberConstructor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetMemberField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetMemberMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testGetType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testIsTransient",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest",
+    "name": "testNullInjectionPointInjectedIntoNonInjectedObject",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamConstructorTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.changeInterceptorBinding.ChangeInterceptorBindingTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.binding.DuplicateBindingTypesWhenResolvingTest",
+    "name": "testDuplicateBindingTypesWhenResolvingFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParameterizedReturnTypeWithTypeVariableTest",
+    "name": "testNonDependentScopedProducerMethodWithParameterizedTypeWithTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.inheritance.ObserverInheritanceTest",
+    "name": "testNonStaticObserverMethodInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithTwoEventParametersTest",
+    "name": "testObserverMethodMustHaveOnlyOneEventParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.intercepted.InterceptedBeanInitializerInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.BadArgumentLookupLessThanZeroTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest",
+    "name": "testCallbackOverridenByCallback",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest",
+    "name": "testCallbackOverridenByNonCallback",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.DestroyedInstanceReturnedByGetTest",
+    "name": "testDestroyedInstanceMustNotBeReturnedByGet",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.unresolvedMethod.UnresolvedDisposalMethodDefinitionTest",
+    "name": "testUnresolvedDisposalMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithTypeVariableTest",
+    "name": "testInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.BadArgumentLookupGreaterThanNumberOfParamsTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.MissingArgumentsInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.disposer.DisposerInjectionPointMetadataTest",
+    "name": "testDisposerWithInjectionPointMetadata",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest",
+    "name": "testBindingTypeOnInitializerParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest",
+    "name": "testMultipleInitializerMethodsAreCalled",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testAroundInvokeAndLifeCycleCallbackInterceptorsCanBeDefinedOnTheSameClass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testLifeCycleCallbackInterceptorNotInvokedForMethodLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testPackagePrivateLifecycleInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testPostConstructInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testPreDestroyInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testPrivateLifecycleInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testProtectedLifecycleInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testPublicLifecycleInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest",
+    "name": "testSingleMethodInterposingMultipleLifecycleCallbackEvents",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.select.SelectEventTest",
+    "name": "testEventSelectReturnsEventOfSameType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.select.SelectEventTest",
+    "name": "testEventSelectThrowsExceptionForDuplicateBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.select.SelectEventTest",
+    "name": "testEventSelectThrowsExceptionIfAnnotationIsNotBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.select.SelectEventTest",
+    "name": "testEventSelectThrowsExceptionIfEventTypeHasTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.select.SelectEventTest",
+    "name": "testEventSelectWithSubtypeThrowsExceptionForDuplicateBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.select.SelectEventTest",
+    "name": "testEventSelectWithSubtypeThrowsExceptionIfAnnotationIsNotBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.isProducer.ObserverMethodAnnotatedProducesTest",
+    "name": "testObserverMethodAnnotatedProducesFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.VoidMethodInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceFieldInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest",
+    "name": "testLifecycleInterception",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest",
+    "name": "testMultipleLifecycleInterceptors",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.NonPrivateNonStaticSuperclassMethodTest",
+    "name": "testClassWithPublicFinalMethodCannotBeProxied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.request.RequestContextTest",
+    "name": "requestContextIsActiveDuringAsyncObserverNotification",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.request.RequestContextTest",
+    "name": "requestContextIsActiveDuringPostConstructCallback",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptorTypeParamConstructorTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.GoodInstanceInvokerTest",
+    "name": "test[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanWithLookup.SyntheticBeanWithLookupTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.raw.RawEventConstructorInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasDisposesParameter.ConstructorHasDisposesParameterTest",
+    "name": "testConstructorHasDisposesParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.AroundConstructLifeCycleTest",
+    "name": "testAroundConstructInvokedAfterDependencyInjectionOnInterceptorClasses[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.AroundConstructLifeCycleTest",
+    "name": "testInstanceNotCreatedUnlessInvocationContextProceedCalled[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceConstructorInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.exceptions.aroundInvoke.ExceptionTest",
+    "name": "testExceptions1",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.exceptions.aroundInvoke.ExceptionTest",
+    "name": "testExceptions2",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest",
+    "name": "testDisposerCalledOnce1",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest",
+    "name": "testDisposerCalledOnce2",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest",
+    "name": "testDisposerCalledOnce3",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest",
+    "name": "testDisposerCalledOnce4",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest",
+    "name": "testDisposerCalledOnce5",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest",
+    "name": "testDisposerCalledOnce6",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.primitive.PrimitiveInjectionPointTest",
+    "name": "testPrimitiveInjectionPointResolvedToNonPrimitiveProducerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.registration.RegistrationTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.validation.ValidationTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.broken.raw.ParameterizedTypesInjectionRawAmbiguousTest",
+    "name": "testInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.intercepted.InterceptedBeanFieldInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest",
+    "name": "testScopeIsRetained",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.changeInjectionPoint.ChangeInjectionPointTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.beanNotManaged.ObserverMethodOnIncorrectBeanTest",
+    "name": "testObserverMethodNotOnManagedOrSessionBeanFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest",
+    "name": "testConstructorLevelBinding[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest",
+    "name": "testMultipleConstructorLevelBinding[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest",
+    "name": "testOverridingTypeLevelBinding[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest",
+    "name": "testTypeLevelAndConstructorLevelBinding[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest",
+    "name": "testTypeLevelBinding[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.observer.InterceptorWithObserverMethodTest",
+    "name": "testInterceptorWithObserverMethodNotOk",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.ContextSETest",
+    "name": "applicationContextSharedBetweenAllBeansWithinContainer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.ContextSETest",
+    "name": "testEventIsFiredWhenAplicationContextDestroyed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.context.ContextSETest",
+    "name": "testEventIsFiredWhenAplicationContextInitialized",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.interceptors.tests.contract.method.MethodLevelInterceptorTest",
+    "name": "testExcludeClassInterceptors",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.interceptors.tests.contract.method.MethodLevelInterceptorTest",
+    "name": "testInterceptorCanBeAppliedToMoreThanOneMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest",
+    "name": "testEventTypeIncludesAllSuperclassesAndInterfacesOfEventObject",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest",
+    "name": "testEventTypeIsArray",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest",
+    "name": "testEventTypeIsConcreteTypeWithNoTypeVariables",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.objmethod.ObjectMethodButNotToStringInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.stereotype.priority.StereotypeWithAlternativeSelectedByPriorityTest",
+    "name": "testStereotypeAlternativeIsEnabled",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest",
+    "name": "testInterceptorBindingTypeMemberValuesComparedWithEquals",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest",
+    "name": "testInterceptorBindingTypeWithMember",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest",
+    "name": "testInterceptorBindingTypeWithNonBindingMember",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.SimpleInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testInstanceOfInterceptorForEveryEnabledInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testInterceptionType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testInterceptorBindingAnnotation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testInterceptorBindingTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testInterceptorBindingsCanDeclareOtherInterceptorBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testInterceptorsImplementInterceptorInterface",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testNoBindingTypesToResolveInterceptorsFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testNonBindingTypeToResolveInterceptorsFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testResolveInterceptorsReturnsOrderedList",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testSameBindingTypesToResolveInterceptorsFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest",
+    "name": "testStereotypeInterceptorBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.dependentIsConditionalObserver.DependentIsConditionalObserverTest",
+    "name": "testDependentBeanWithConditionalObserverMethodIsDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedDisposes.ParameterAnnotatedDisposesTest",
+    "name": "testInitializerMethodHasParameterAnnotatedDisposes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest",
+    "name": "testBusinessMethodInterceptorBindings[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest",
+    "name": "testConstructorInterceptorBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest",
+    "name": "testLifecycleInterceptorBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest",
+    "name": "testInjectionPoint[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest",
+    "name": "testInjectionPointDefinition",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest",
+    "name": "testObserver[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest",
+    "name": "testObserverResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.requiredtype.LegalRequiredTypeTest",
+    "name": "testLegalRequiredType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest",
+    "name": "testLifecycleCallbackInterceptorCanCatchException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest",
+    "name": "testPostConstructCanThrowRuntimeException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest",
+    "name": "testPreDestroyNotInvokedWhenInstanceDiscarded",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest",
+    "name": "testFireEventLowerPriorityBeforeDefaultPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest",
+    "name": "testFireEventToMultipleObserversWithPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest",
+    "name": "testPrioritizedEventBaseclass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest",
+    "name": "testPrioritizedEventSubclass",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest",
+    "name": "testResolveObserversLowerPriorityBeforeDefaultPriority",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest",
+    "name": "testParameterizedResolvedType[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest",
+    "name": "testSimpleEvent[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testEventObjectTypeUsed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments2",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testSelectedEventTypeUsedForResolvingEventTypeArguments",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testSelectedEventTypeUsedForResolvingEventTypeArguments2",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testUnresolvedTypeVariableDetected1",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testUnresolvedTypeVariableDetected2",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testUnresolvedTypeVariableDetected3",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest",
+    "name": "testWildcardIsResolvable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.raw.RawEventFieldInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest",
+    "name": "testApplicationScopedComponent[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest",
+    "name": "testNothingHappensIfNoInstanceToDestroy[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest",
+    "name": "testNullParameter[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest",
+    "name": "testRequestScopedComponent[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest",
+    "name": "testGetAfterDestroyingContextualInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest",
+    "name": "testGetHandle",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest",
+    "name": "testHandles",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest",
+    "name": "testIsResolvable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testBeanMatching",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testBeanMatchingDefaultQualifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testBeanMatchingNonQualifiersException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testBeanMatchingNullException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatching",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatchingAnyQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatchingDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatchingNonQualifiersException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatchingNullException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatchingParameterized",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testEventMatchingTypeVarException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest",
+    "name": "testNonLegalBeanTypesIgnored",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.interceptor.InterceptorNotResolvedTest",
+    "name": "testInterceptorNotAvailableForInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.field.ProducerFieldTooManyScopesTest",
+    "name": "testTooManyScopesSpecifiedInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.priority.inherited.StereotypeInheritedPriorityTest",
+    "name": "testPriorityWasInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.extensions.beanManager.el.WrapExpressionFactoryTest",
+    "name": "testWrapping",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasAsyncObservesParameter.ConstructorHasAsyncObservesParameterTest",
+    "name": "testConstructorHasAsyncObservesParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest",
+    "name": "testClientProxyInvocation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest",
+    "name": "testClientProxyUsedForNormalScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.NormalScopedBeanFinalClassInterceptorTest",
+    "name": "testFinalClassWithClassLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.priority.contextLifecycleEvent.ApplicationContextLifecycleEventObserverOrderingTest",
+    "name": "testContextLifecycleEventOrdering",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.tooManyInitializerAnnotatedConstructors.TooManyInitializerAnnotatedConstructorsTest",
+    "name": "testTooManyInitializerAnnotatedConstructor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithWildcard.ParametrizedTypeWithWildcard02Test",
+    "name": "testParameterizedReturnTypeWithDoubleWildcard",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerFieldBeanCreate",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerFieldBeanDestroy",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerFieldForNullValueNotDependent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerFieldNotAnotherBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerFieldReturnsNullIsDependent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerFieldReturnsNullIsNotDependent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest",
+    "name": "testProducerStaticFieldBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testBeanManagerFireEvent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testDuplicateBindingsToFireEventFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testEventFireThrowsExceptionIfEventObjectTypeContainsUnresovableTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testEventProvidesMethodForFiringEventsWithCombinationOfTypeAndBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testEventSelectedFiresAndObserversNotified",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testInjectedAnyEventCanFireEvent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testInjectedEventAcceptsEventObject",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testInjectedEventCanHaveBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testInjectedEventCanSpecifyBindingsDynamically",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.FireEventTest",
+    "name": "testTypeVariableEventTypeFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testAnyBeanHasDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testDefaultQualifierDeclaredInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testDefaultQualifierForInjectionPoint",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testNamedAndAnyBeanHasDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testNamedBeanHasDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testProducedAnyBeanHasDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testProducedNamedAndAnyBeanHasDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest",
+    "name": "testProducedNamedBeanHasDefaultQualifier",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.BadInstanceInvokerTest",
+    "name": "test[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative02Test",
+    "name": "testDependencyResolvable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.any.AnyInjectionTest",
+    "name": "testAnyInjectionIfExactlyOneBeanForType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest",
+    "name": "testJavaBeansPropertyName",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest",
+    "name": "testMethodName",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest",
+    "name": "testProducerMethodQualifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testDefaultScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testMultipleCompatibleScopeStereotypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testMultipleIncompatibleScopeStereotypesWithScopeSpecified",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeDeclaredInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeSpecifiedAndStereotyped",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeDeclaredInheritedIsBlockedByIntermediateScopeTypeMarkedInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeDeclaredInheritedIsBlockedByIntermediateScopeTypeNotMarkedInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeDeclaredInheritedIsIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeDeclaredInheritedIsInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeDeclaresScopeTypeAnnotation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeHasCorrectTarget",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeNotDeclaredInheritedIsNotIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypeNotDeclaredInheritedIsNotInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testScopeTypesAreExtensible",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest",
+    "name": "testWebBeanScopeTypeOverridesStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.lifecycle.StartupShutdownTest",
+    "name": "testEventsObserved",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testAllQualifiersSpecifiedForResolutionMustAppearOnBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testBeanTypesOnManagedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testBeanTypesOnProducerField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testBeanTypesOnProducerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testDefaultBindingTypeAssumed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testGenericBeanTypesOnManagedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testGenericBeanTypesOnProducerField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testGenericBeanTypesOnProducerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testResolveByTypeWithArray",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testResolveByTypeWithNonBindingMembers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testResolveByTypeWithPrimitives",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest",
+    "name": "testResolveByTypeWithTypeParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.nonbinding.NonBindingTypesWhenResolvingTest",
+    "name": "testNonBindingTypeAnnotationWhenResolvingFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.resolve.binding.ResolvingChecksBindingTypeMembersTest",
+    "name": "testResolvingChecksBindingTypeMembers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.contextualReference.InvalidContextualReferenceTest",
+    "name": "testReferenceUsedAfterContainerShutdown",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.broken.validation.unsatisfied.ObserverMethodParameterInjectionValidationTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.inherited.StereotypeInheritedPriorityConflictTest",
+    "name": "testInheritedStereotypesAreConflicting",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.order.lifecycleCallback.PostConstructOrderTest",
+    "name": "testInvocationOrder",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.injectionPointWithNamed.NamedNonFieldInjectionPointTest",
+    "name": "testNamedProducerInjectionPointNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest",
+    "name": "testExceptions[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest",
+    "name": "testInterceptorInvocation[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest",
+    "name": "testReplacingParameters[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.raw.RawEventProducerMethodInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.metadata.broken.initializer.InvalidEventMetadataInjectionPointTest",
+    "name": "testDeployment",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.duplicity.DuplicitNameTest",
+    "name": "testDuplicateNamedBeans",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.ResolutionByNameTest",
+    "name": "testAmbiguousELNamesResolved",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.events.lifecycle.StartupShutdownTest",
+    "name": "testEvents",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveSETest",
+    "name": "testImplicitArchiveDiscovered",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest",
+    "name": "testMultipleExceptionsDuringVariousObserversNotification",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest",
+    "name": "testSingleExceptionDuringVariousObserversNotification",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.observes.ObserverParameterUnallowedDefinitionTest",
+    "name": "testObserverParameterUnallowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointGetAnnotated",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointGetBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointGetMember",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointGetQualifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointGetType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointIsDelegate",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest",
+    "name": "testInjectionPointIsTransient",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.manager.ManagerTest",
+    "name": "testContainerProvidesManagerBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.manager.ManagerTest",
+    "name": "testGetReferenceReturnsContextualInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.manager.ManagerTest",
+    "name": "testGetReferenceWithIllegalBeanType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.manager.ManagerTest",
+    "name": "testInjectingManager",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.manager.ManagerTest",
+    "name": "testManagerBeanHasCurrentBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.manager.ManagerTest",
+    "name": "testManagerBeanIsDependentScoped",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.typeVariable.ProducerFieldWithTypeVariableTest",
+    "name": "testProducerFieldWithTypeOfTypeVariableNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dependency.resolution.broken.unsatisfied.UnsatisfiedDependencyTest",
+    "name": "testUnsatisfiedDependency",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasObservesParameter.ConstructorHasObservesParameterTest",
+    "name": "testConstructorHasObservesParameter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.InstanceLookupDependentTest",
+    "name": "test[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testCallingCreationalContextReleaseDestroysDependents",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextGetWithCreateFalseReturnsNull",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextGetWithCreationalContextReturnsNewInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActive",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveDuringBeanCreation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveDuringInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveWhenCreatingObserverMethodInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveWhenInvokingDisposalMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveWhenInvokingProducerField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextIsActiveWhenInvokingProducerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testContextScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDependentBeanIsDependentObjectOfBeanInjectedInto",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDependentScopedInterceptorsAreDependentObjectsOfBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDependentsDestroyedWhenDisposerMethodCompletes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDependentsDestroyedWhenObserverMethodEvaluationCompletes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDependentsDestroyedWhenProducerFieldCompletes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDependentsDestroyedWhenProducerMethodCompletes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDestroyingManagedParentDestroysDependentsOfSameBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testDestroyingSimpleParentDestroysDependents",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testInstanceNotSharedBetweenInjectionPoints",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testInstanceUsedForDisposalMethodNotShared",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testInstanceUsedForObserverMethodNotShared",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testInstanceUsedForProducerFieldNotShared",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.DependentContextTest",
+    "name": "testInstanceUsedForProducerMethodNotShared",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PublicFinalMethodNotProxyableTest",
+    "name": "testClassWithPublicFinalMethodCannotBeProxied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalClassWithInheritedStereotypeInterceptorTest",
+    "name": "testFinalMethodWithInheritedStereotypeInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest",
+    "name": "testBindingTypesAppliedToDisposalMethodParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest",
+    "name": "testDisposalMethodCalledForProducerField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest",
+    "name": "testDisposalMethodForMultipleProducerMethods",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest",
+    "name": "testDisposalMethodOnNonBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest",
+    "name": "testDisposalMethodParametersGetInjected",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.instance.BuiltinInstanceDependentObjectTest",
+    "name": "testInstanceDependentObject",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.tooManyScopes.TooManyScopeTypesTest",
+    "name": "testStereotypeWithTooManyScopeTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.method.MethodFromDifferentClassInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterAnnotatedObserves.ParameterAnnotatedObservesTest",
+    "name": "testProducerMethodWithParameterAnnotatedObserves",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.primitive.UnproxyableTest",
+    "name": "testInjectionPointWithUnproxyableTypeWhichResolvesToNormalScopedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.GetOnInactiveContextTest",
+    "name": "testInvokingGetOnInactiveContextFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.ProtectedFinalMethodNotProxyableTest",
+    "name": "testClassWithPublicFinalMethodCannotBeProxied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParams2Test",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dependency.resolution.broken.ambiguous.AmbiguousDependencyTest",
+    "name": "testAmbiguousDependency",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptorTypeParamInitializerTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidStereotypeInterceptorBindingAnnotationsTest",
+    "name": "testInterceptorBindingsWithConflictingAnnotationMembersNotOk",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParamsTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testEventObjectContainsTypeVariablesWhenResolvingFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testNonStaticObserverMethodIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testNonStaticObserverMethodInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testObserverMethodNotifiedWhenQualifiersMatch",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testObserverMethodParameterInjectionPoints",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testPrivateObserverMethodInvoked",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.EventTest",
+    "name": "testStaticObserverMethodInvoked",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest",
+    "name": "resolutionWithRepeatableQualifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamFieldTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.typeVariable2.RequestScopedProducerFieldWithTypeVariableTest",
+    "name": "testRequestScopedProducerFieldParameterizedWithTypeVariableNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.array.ProducerMethodArrayTypeVariableTest",
+    "name": "testBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest",
+    "name": "beanSetOfBeanTypesContainsOnlyLegalTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest",
+    "name": "producerFieldsetOfBeanTypesContainsOnlyLegalTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest",
+    "name": "producerMethodsetOfBeanTypesContainsOnlyLegalTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.InstanceLookupTest",
+    "name": "test[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest",
+    "name": "testExceptions[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest",
+    "name": "testInterceptorInvocation[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest",
+    "name": "testReplacingParameters[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierNotDeclaredTest",
+    "name": "testResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.runtimeException.ObserverExceptionRethrownTest",
+    "name": "testNonTransactionalObserverThrowsNonCheckedExceptionIsRethrown",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.GetWithNoCreationalContextTest",
+    "name": "testGetWithoutCreationalContextReturnsNull",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToRawTypeTest",
+    "name": "testInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterAnnotatedDisposes.ParameterAnnotatedDisposesTest",
+    "name": "testProducerMethodWithParameterAnnotatedDisposes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.binding.members.array.BindingAnnotationWithMemberTest",
+    "name": "testArrayMemberWithNonBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.interceptor.StereotypeWithMultipleInterceptorBindingsTest",
+    "name": "testMultipleInterceptorBindings[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.order.aroundConstruct.AroundConstructOrderTest",
+    "name": "testInvocationOrder[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.customCDIProvider.CustomCDIProviderTest",
+    "name": "testCustomCDIProvider",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative03Test",
+    "name": "testMultipleAlternativeBeansWithProducers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testAbstractApiType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testBeanClassOnSimpleBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testBeanClientCanCastBeanInstanceToAnyBeanType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testBeanExtendsAnotherBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testBeanTypesNonEmpty",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testFinalApiType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testGenericBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testHasScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testMultipleStereotypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testQualifiersNonEmpty",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest",
+    "name": "testRawBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyMessagesTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidTransitiveInterceptorBindingAnnotationsTest",
+    "name": "testInterceptorBindingsWithConflictingAnnotationMembersNotOk",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptorTypeParamFieldTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.wildcard.ProducerFieldTypeWithWildcardTest",
+    "name": "testProducerFieldTypeWithWildcard",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.PrimitiveReturnValueInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.VarargsMethodInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.async.basic.MixedObserversTest",
+    "name": "testAsyncObserversCalledInDifferentThread",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.async.basic.MixedObserversTest",
+    "name": "testQualifiedAsyncEventIsDeliveredOnlyToAsyncObservers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.async.basic.MixedObserversTest",
+    "name": "testSyncEventIsDeliveredOnlyToSyncObservers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testExplicitScopeOverridesMergedScopesFromMultipleStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testMultipleStereotypesAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testOneStereotypeAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeDeclaredInheritedIsIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeDeclaredInheritedIsInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeNotDeclaredInheritedIsNotIndirectlyInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeNotDeclaredInheritedIsNotInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeScopeIsOverriddenByIndirectlyInheritedScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeScopeIsOverriddenByInheritedScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeWithScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest",
+    "name": "testStereotypeWithoutScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.interceptor.ProducerMethodOnInterceptorTest",
+    "name": "testProducerMethodNotAllowedOnInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.param.modification.SyncEventModificationTest",
+    "name": "testModifiedEventParameterIsPropagated",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptedBeanTypeParamFieldTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.se.container.customClassloader.CustomClassLoaderSETest",
+    "name": "testCustomClassLoader",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithWildcardTest",
+    "name": "testInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiParams.MultipleDisposeParametersDefinitionTest",
+    "name": "testMultipleDisposeParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.parameters.DisposedParameterPositionTest",
+    "name": "testDisposedParameterPosition",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.prefix.ExpandedNamePrefix2Test",
+    "name": "testDuplicateBeanNamePrefix",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.prodmethod.ProducerMethodBeanInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest",
+    "name": "testInstanceProvidedForEveryLegalBeanType[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest",
+    "name": "testNameOfBuiltinInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest",
+    "name": "testScopeOfBuiltinInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.async.executor.FireAsyncWithCustomExecutorTest",
+    "name": "testCustomExecutor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.broken.generic.GenericInitializerMethodTest",
+    "name": "testGenericInitializerMethodNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.implementation.builtin.metadata.broken.injection.BuiltinDecoratorInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.inOtherBda.ScopeDefinedInOtherBDATest",
+    "name": "testCustomScopeInOtherBDAisBeanDefiningAnnotation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptedBeanTypeParamInitializerTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.customNormalScope.CustomNormalScopeTest",
+    "name": "commandContextController",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.customNormalScope.CustomNormalScopeTest",
+    "name": "commandExecutor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testAbstractClassDeclaredInJavaNotDiscovered",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testDependentScopedBeanCanHaveNonStaticPublicField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testEmptyConstructorUsed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testExtensionNotDiscoveredAsSimpleBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testInitializerAnnotatedConstructor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testInitializerAnnotatedConstructorUsedOverEmptyConstuctor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testInterfaceNotDiscoveredAsSimpleBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testNonStaticInnerClassDeclaredInJavaNotDiscovered",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testSimpleBeanOnlyIfConstructorIsInitializer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testSimpleBeanOnlyIfConstructorParameterless",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testSingletonScopedBeanCanHaveNonStaticPublicField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest",
+    "name": "testStaticInnerClassDeclaredInJavaAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceInitMethodInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.ctor.ConstructorInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.StaticFinalMethodTest",
+    "name": "testClassWithStaticFinalMethodCanBeProxied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithActualTypesToParameterizedTypeWithActualTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithActualTypesToParameterizedTypeWithWildcards",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithActualTypesToParameterizedTypeWithWildcardsAtInjectionPoint",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariableWithMultipleBoundsToParameterizedTypeWithTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithActualTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcardWithLowerBound",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcards",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcards2",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityOfParameterizedTypeWithTypeVariablesWithMultipleBoundsToParameterizedTypeWithActualTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest",
+    "name": "testAssignabilityToRawType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementNoParamTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testAmbiguousDependencyNotResolved",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testAmbiguousDependencyResolved",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testDetermineInterceptorBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testDetermineQualifierType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testDetermineScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testDetermineScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testDetermineStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testGetContexts",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testResolveWithEmptySet",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest",
+    "name": "testResolveWithNull",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierInheritedTest",
+    "name": "testResolution",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.interceptor.InterceptedBeanProxyTest",
+    "name": "testClientProxyBeanWithBoundInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest",
+    "name": "testInjectionOfBeanWithTypeVariableWithMultipleBounds",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest",
+    "name": "testInjectionOfBeanWithTypeVariableWithMultipleBoundsToParameterizedTypeWithActualType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest",
+    "name": "testInjectionOfBeanWithWildcardWithTypeVariableAsLowerBound",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testDefaultNamed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNameStartingWithDollarCharacter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNameStartingWithLowerCaseCharacter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNameStartingWithMultipleUpperCaseCharacters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNameStartingWithUnderScoreCharacter",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNamedNotDeclaredByBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNamedNotDeclaredByStereotype",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testNonDefaultNamed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest",
+    "name": "testStereotypeDefaultsName",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithTypeVariableUpperBoundTest",
+    "name": "testInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.types.ManagedBeanTypesTest",
+    "name": "testGenericHierarchyBeanTypes",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.broken.nonEmptyNamed.NonEmptyNamedTest",
+    "name": "testStereotypeWithNonEmptyNamed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.InvokerVisibilityTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.ExcessArgumentsInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test",
+    "name": "testAlternativeManagedBeanSelected",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test",
+    "name": "testAlternativeProducerSelected",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest",
+    "name": "testStereotypeDeclaringNamed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest",
+    "name": "testStereotypeNamedOverridenByBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest",
+    "name": "testPackagePrivateAroundInvokeInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest",
+    "name": "testPrivateAroundInvokeInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest",
+    "name": "testProtectedAroundInvokeInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.InstanceMethodInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.typeVariableReturnType.TypeVariableReturnTypeTest",
+    "name": "testTypeVariableNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.InvokerAssignabilityTest",
+    "name": "testNonNull[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.InvokerAssignabilityTest",
+    "name": "testNull[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.order.aroundInvoke.AroundInvokeOrderTest",
+    "name": "testInvocationOrder",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.injection.BeanContainerInjectionTest",
+    "name": "testInjectionOfBeanContainerType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.InstanceLookupStaticMethodTest",
+    "name": "test[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest",
+    "name": "testAsyncConditionalObserver",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest",
+    "name": "testConditionalObserver",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest",
+    "name": "testConditionalObserverMethodNotInvokedIfNoActiveContext",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest",
+    "name": "testNotifyEnumerationContainsNotifyValues",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest",
+    "name": "testObserverMethodInvokedOnReturnedInstanceFromContext",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.array.ArrayTest",
+    "name": "testInjectionPointWithArrayType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.StaticMethodInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalMethodWithInheritedClassLevelInterceptorTest",
+    "name": "testFinalMethodWithInheritedClassLevelInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterAnnotatedObservesAsync.ParameterAnnotatedAsyncObservesTest",
+    "name": "testProducerMethodWithParameterAnnotatedAsyncObserves",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceDisposerInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.broken.validation.ambiguous.ObserverMethodParameterInjectionValidationTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testApiTypeForArrayTypeReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testApiTypeForClassReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testApiTypeForInterfaceReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testApiTypeForPrimitiveReturn",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testBindingTypesAppliedToProducerMethodParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testDefaultBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testDefaultNamedMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testDependentProducerReturnsNullValue",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testNamedMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testNonDependentProducerReturnsNullValue",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testNonStaticDisposerMethodWithStaticProducer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testNonStaticProducerMethodNotInherited",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testParameterizedReturnType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testProducerOnNonBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testScopeType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testStaticDisposerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testStaticDisposerMethodWithNonStaticProducer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testStaticMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testStereotypeSpecifiesScope",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest",
+    "name": "testTypeVariableReturnType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.deployment.discovery.EmptyBeansXmlDiscoveryTest",
+    "name": "testBeanArchiveWithEmptyBeansXml",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedObserves.ParameterAnnotatedObservesTest",
+    "name": "testInitializerMethodHasParameterAnnotatedObserves",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "beanManageCreateInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "cdiSelectLookup",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testAlternatives",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testAmbiguousDependencyThrowsException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testDuplicateBindingsThrowsException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testGetMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testIsAmbiguous",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testIsUnsatisfied",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testIteratorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testNonBindingThrowsException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testObtainsInjectsInstanceOfInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testStream[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest",
+    "name": "testUnsatisfiedDependencyThrowsException",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedProducerMethodTest",
+    "name": "testInvalidTypedValueOnProducerField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.inject.DeploymentFailureTest",
+    "name": "testDeploymentFailsBeforeNotifyingObserversAfterBeanDiscovery",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.checkedException.CheckedExceptionWrappedTest",
+    "name": "testNonTransactionalObserverThrowsCheckedExceptionIsWrappedAndRethrown",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest",
+    "name": "testConstructorAndInitializer",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest",
+    "name": "testProducerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.changeBeanQualifier.ChangeBeanQualifierTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.priority.PriorityTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.broken.observer.isDisposer.ObserverMethodAnnotatedDisposesTest",
+    "name": "testObserverMethodWithDisposesParamFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBean.SyntheticBeanTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testCircularInjectionOnOneNormalAndOneDependentBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testCircularInjectionOnTwoNormalBeans",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testNormalAndDependentCircularConstructors",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testNormalCircularConstructors",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testNormalProducerMethodDeclaredOnDependentBeanWhichInjectsProducedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testNormalProducerMethodDeclaredOnNormalBeanWhichInjectsProducedBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest",
+    "name": "testSelfConsumingConstructorsOnNormalBean",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupInstanceTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamDisposerTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.injectionpoint.broken.reference.ambiguous.AmbiguousInjectableReferenceTest",
+    "name": "testUnsatisfiedReference",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest",
+    "name": "testInterceptorInstanceCreatedWhenTargetInstanceCreated[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest",
+    "name": "testInterceptorMethodsCalledAfterDependencyInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testBusinessMethodNotCalledWithoutProceedInvocation",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testContextData",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testCtxProceedForLifecycleCallbackInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testGetInterceptorBindings",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testGetMethodForAroundInvokeInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testGetMethodForLifecycleCallbackInterceptorMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testGetTargetMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testGetTimerMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testIllegalNumberOfParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testIllegalTypeOfParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testMethodParameters",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest",
+    "name": "testProceedReturnsNullForVoidMethod",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedProducerFieldTest",
+    "name": "testInvalidTypedValueOnProducerField",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.fires.nonbinding.NonBindingTypePassedToFireTest",
+    "name": "testExceptionThrownIfNonBindingTypePassedToFire",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.injectionpoint.named.NamedAtInjectionPointTest",
+    "name": "testFieldNameUsedAsBeanName",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.inspectAnnotatedSubtypes.InspectAnnotatedSubtypesTest",
+    "name": "test",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.ambiguous.AmbiguousELNamesTest",
+    "name": "testAmbiguousELNamesResolved",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceObserverInjectionTest",
+    "name": "testDefinitionError",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiple.MultipleDisposerMethodsForProducerMethodTest",
+    "name": "testMultipleDisposerMethodsForProducerMethodNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.returnValueIgnored.AroundConstructInterceptorReturnValueTest",
+    "name": "testAroundConstructInvokedAfterDependencyInjectionOnInterceptorClasses[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest",
+    "name": "testGetBeans",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest",
+    "name": "testGetBeansDoesNotResolveAlternatives",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest",
+    "name": "testNoBindingImpliesCurrent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest",
+    "name": "testNonBindingType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest",
+    "name": "testSameBindingTwice",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest",
+    "name": "testTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest",
+    "name": "testObserverMethodCanObserveArrayTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest",
+    "name": "testObserverMethodCanObserveArrayWildcard",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest",
+    "name": "testObserverMethodCanObserveTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest",
+    "name": "testObserverMethodCanObserveWildcardType",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.intercepted.InterceptedBeanConstructorInjectionTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.extensions.beanManager.equivalence.qualifier.QualifierEquivalenceTest",
+    "name": "testAreQualifiersEquivalent",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.extensions.beanManager.equivalence.qualifier.QualifierEquivalenceTest",
+    "name": "testGetQualifierHashCode",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.invalid.privatemethod.PrivateMethodInvokerTest",
+    "name": "trigger",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamProducerTest",
+    "name": "testDeploymentFails",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.producesUnallowed.ProducesUnallowedDefinitionTest",
+    "name": "testProducesUnallowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParametrizedReturnTypeWithTypeVariable02Test",
+    "name": "testNonDependentScopedProducerMethodWithParameterizedTypeWithTypeVariable",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.method.ProducerMethodTooManyScopesTest",
+    "name": "testTooManyScopesSpecifiedInJava",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.context.GetFromContextualTest",
+    "name": "testGetMayNotCreateNewInstanceUnlessCreationalContextGiven",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.binding.members.annotation.BindingAnnotationWithMemberTest",
+    "name": "testAnnotationMemberWithNonBinding",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest",
+    "name": "testInterceptorBindingDirectlyInheritedFromManagedBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest",
+    "name": "testInterceptorBindingIndirectlyInheritedFromManagedBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest",
+    "name": "testMethodInterceptorBindingDirectlyInheritedFromManagedBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest",
+    "name": "testMethodInterceptorBindingDirectlyNotInheritedFromManagedBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest",
+    "name": "testMethodInterceptorBindingIndirectlyInheritedFromManagedBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest",
+    "name": "testMethodInterceptorBindingIndirectlyNotInheritedFromManagedBean[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.interceptor.ProducerFieldOnInterceptorTest",
+    "name": "testProducerFieldNotAllowedOnInterceptor",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.interceptors.definition.interceptorOrder.InterceptorOrderTest",
+    "name": "testInterceptorsCalledInOrderDefinedByBeansXml[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.interceptors.definition.interceptorOrder.InterceptorOrderTest",
+    "name": "testInterceptorsInvocationOrder[0](null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.invokers.basic.ZeroParametersInvokerTest",
+    "name": "test[0](null, null)",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest",
+    "name": "shouldFail",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest",
+    "name": "testBeanNameWithSeparatedListOfELIdentifiers",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest",
+    "name": "testContextCreatesNewInstanceForInjection",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest",
+    "name": "testELResolverReturnsContextualInstance",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest",
+    "name": "testQualifiedNameLookup",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.full.lookup.el.ResolutionByNameTest",
+    "name": "testUnresolvedNameReturnsNull",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.lookup.byname.broken.injectionPointWithNamed3.NamedNonFieldInjectionPointTest",
+    "name": "testNamedInitializerMethodInjectionPointNotAllowed",
+    "status": "passed"
+  },
+  {
+    "class": "org.jboss.cdi.tck.tests.implementation.initializer.broken.methodAnnotatedProduces.InitializerMethodAnnotatedProducesTest",
+    "name": "testInitializerMethodAnnotatedProduces",
+    "status": "passed"
+  }
+]

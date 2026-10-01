@@ -1,0 +1,4401 @@
+{
+  "saved_utc": "2026-10-01T10:43:13.465973+00:00",
+  "scope": "Functional MicroProfile integration, not security testing or certification",
+  "cdi_revision": "a3d852ab8877f3edf604f0afb8542c911c2108af",
+  "interceptors_revision": "d9307e56e25637730ea44766a820c8b357ee0bf2",
+  "java": "openjdk version \"25.0.2\" 2026-01-20\nOpenJDK Runtime Environment (build 25.0.2+10-69)\nOpenJDK 64-Bit Server VM (build 25.0.2+10-69, mixed mode, sharing)",
+  "components": {
+    "config": {
+      "group": "org.eclipse.microprofile.config",
+      "artifact": "microprofile-config-tck",
+      "version": "3.1.2",
+      "implementation": [
+        "io.smallrye.config:smallrye-config:3.18.3"
+      ]
+    },
+    "fault-tolerance": {
+      "group": "org.eclipse.microprofile.fault-tolerance",
+      "artifact": "microprofile-fault-tolerance-tck",
+      "version": "4.1.2",
+      "implementation": [
+        "io.smallrye:smallrye-fault-tolerance:6.11.4",
+        "org.eclipse.microprofile.metrics:microprofile-metrics-api:4.0.1"
+      ]
+    },
+    "health": {
+      "group": "org.eclipse.microprofile.health",
+      "artifact": "microprofile-health-tck",
+      "version": "4.0.2",
+      "implementation": [
+        "io.smallrye:smallrye-health:4.3.0"
+      ]
+    },
+    "openapi": {
+      "group": "org.eclipse.microprofile.openapi",
+      "artifact": "microprofile-openapi-tck",
+      "version": "4.1.1",
+      "implementation": [
+        "io.smallrye:smallrye-open-api-core:4.3.5",
+        "io.smallrye:smallrye-open-api-jaxrs:4.3.5",
+        "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
+        "jakarta.validation:jakarta.validation-api:3.1.1",
+        "org.eclipse.microprofile.rest.client:microprofile-rest-client-api:4.0"
+      ]
+    },
+    "rest-client": {
+      "group": "org.eclipse.microprofile.rest.client",
+      "artifact": "microprofile-rest-client-tck",
+      "version": "4.0",
+      "implementation": [
+        "org.jboss.resteasy.microprofile:microprofile-rest-client:3.0.1.Final"
+      ]
+    },
+    "jwt": {
+      "group": "org.eclipse.microprofile.jwt",
+      "artifact": "microprofile-jwt-auth-tck",
+      "version": "2.1",
+      "implementation": [
+        "io.smallrye:smallrye-jwt:4.6.4",
+        "io.smallrye:smallrye-jwt-build:4.6.4"
+      ]
+    },
+    "telemetry-metrics": {
+      "group": "org.eclipse.microprofile.telemetry",
+      "artifact": "microprofile-telemetry-metrics-tck",
+      "version": "2.1",
+      "implementation": [
+        "io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5"
+      ]
+    },
+    "telemetry-logs": {
+      "group": "org.eclipse.microprofile.telemetry",
+      "artifact": "microprofile-telemetry-logs-tck",
+      "version": "2.1",
+      "implementation": [
+        "io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5"
+      ]
+    },
+    "context-propagation": {
+      "group": "org.eclipse.microprofile.context-propagation",
+      "artifact": "microprofile-context-propagation-tck",
+      "version": "1.3",
+      "implementation": [
+        "io.smallrye:smallrye-context-propagation:2.4.0",
+        "jakarta.transaction:jakarta.transaction-api:2.0.1"
+      ]
+    },
+    "reactive-streams": {
+      "group": "org.eclipse.microprofile.reactive-streams-operators",
+      "artifact": "microprofile-reactive-streams-operators-tck",
+      "version": "3.0.1",
+      "implementation": [
+        "io.smallrye.reactive:smallrye-reactive-streams-operators:1.0.13"
+      ]
+    },
+    "reactive-messaging": {
+      "group": "org.eclipse.microprofile.reactive.messaging",
+      "artifact": "microprofile-reactive-messaging-tck",
+      "version": "3.0.1",
+      "implementation": [
+        "io.smallrye.reactive:smallrye-reactive-messaging-provider:4.37.0"
+      ]
+    },
+    "telemetry-tracing": {
+      "group": "org.eclipse.microprofile.telemetry",
+      "artifact": "microprofile-telemetry-tracing-tck",
+      "version": "2.1",
+      "implementation": [
+        "io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5"
+      ]
+    },
+    "graphql": {
+      "group": "org.eclipse.microprofile.graphql",
+      "artifact": "microprofile-graphql-tck",
+      "version": "2.0",
+      "implementation": [
+        "io.smallrye:smallrye-graphql-cdi:2.18.5"
+      ]
+    },
+    "metrics-api": {
+      "group": "org.eclipse.microprofile.metrics",
+      "artifact": "microprofile-metrics-api-tck",
+      "version": "5.1.2",
+      "implementation": [
+        "io.smallrye:smallrye-metrics:5.1.0"
+      ]
+    },
+    "metrics-rest": {
+      "group": "org.eclipse.microprofile.metrics",
+      "artifact": "microprofile-metrics-rest-tck",
+      "version": "5.1.2",
+      "implementation": [
+        "io.smallrye:smallrye-metrics:5.1.0"
+      ]
+    },
+    "metrics-optional": {
+      "group": "org.eclipse.microprofile.metrics",
+      "artifact": "microprofile-metrics-optional-tck",
+      "version": "5.1.2",
+      "implementation": [
+        "io.smallrye:smallrye-metrics:5.1.0"
+      ]
+    }
+  },
+  "runs": {
+    "config/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 34,
+        "skipped": 378
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueBrokenInjectionTest",
+          "timestamp": "2026-10-01T10:12:04.897Z",
+          "seconds": "0.964"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+          "timestamp": "2026-10-01T10:11:34.926Z",
+          "seconds": "1.705"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+          "timestamp": "2026-10-01T10:11:36.988Z",
+          "seconds": "0.922"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+          "timestamp": "2026-10-01T10:11:38.272Z",
+          "seconds": "1.011"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+          "timestamp": "2026-10-01T10:11:39.656Z",
+          "seconds": "0.894"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPropertyNameMatchingTest",
+          "timestamp": "2026-10-01T10:11:40.972Z",
+          "seconds": "0.919"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest",
+          "timestamp": "2026-10-01T10:11:42.272Z",
+          "seconds": "0.918"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+          "timestamp": "2026-10-01T10:11:43.545Z",
+          "seconds": "0.893"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+          "timestamp": "2026-10-01T10:11:44.782Z",
+          "seconds": "1.033"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+          "timestamp": "2026-10-01T10:11:46.247Z",
+          "seconds": "0.896"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+          "timestamp": "2026-10-01T10:11:47.495Z",
+          "seconds": "0.845"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+          "timestamp": "2026-10-01T10:11:48.719Z",
+          "seconds": "1.309"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CustomConfigSourceTest",
+          "timestamp": "2026-10-01T10:11:50.357Z",
+          "seconds": "0.842"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+          "timestamp": "2026-10-01T10:11:51.542Z",
+          "seconds": "0.959"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+          "timestamp": "2026-10-01T10:11:52.885Z",
+          "seconds": "1.02"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+          "timestamp": "2026-10-01T10:11:54.248Z",
+          "seconds": "0.955"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.WarPropertiesLocationTest",
+          "timestamp": "2026-10-01T10:11:55.555Z",
+          "seconds": "1.094"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.ConfigPropertiesMissingPropertyInjectionTest",
+          "timestamp": "2026-10-01T10:11:57.021Z",
+          "seconds": "0.705"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingConverterOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:11:58.088Z",
+          "seconds": "0.748"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:11:59.192Z",
+          "seconds": "0.723"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnObserverMethodInjectionTest",
+          "timestamp": "2026-10-01T10:12:00.250Z",
+          "seconds": "0.758"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.WrongConverterOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:12:01.365Z",
+          "seconds": "0.749"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest",
+          "timestamp": "2026-10-01T10:12:02.454Z",
+          "seconds": "0.814"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.NullConvertersTest",
+          "timestamp": "2026-10-01T10:12:03.652Z",
+          "seconds": "0.879"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+          "timestamp": "2026-10-01T10:12:06.240Z",
+          "seconds": "1.079"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTest",
+          "timestamp": "2026-10-01T10:12:07.682Z",
+          "seconds": "0.851"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+          "timestamp": "2026-10-01T10:12:08.886Z",
+          "seconds": "0.913"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.ConfigPropertyFileProfileTest",
+          "timestamp": "2026-10-01T10:12:10.148Z",
+          "seconds": "0.912"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.DevConfigProfileTest",
+          "timestamp": "2026-10-01T10:12:11.465Z",
+          "seconds": "0.884"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.InvalidConfigProfileTest",
+          "timestamp": "2026-10-01T10:12:12.797Z",
+          "seconds": "0.913"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.OverrideConfigProfileTest",
+          "timestamp": "2026-10-01T10:12:14.070Z",
+          "seconds": "0.881"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.ProdProfileTest",
+          "timestamp": "2026-10-01T10:12:15.290Z",
+          "seconds": "0.91"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.TestConfigProfileTest",
+          "timestamp": "2026-10-01T10:12:16.568Z",
+          "seconds": "0.892"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.TestCustomConfigProfile",
+          "timestamp": "2026-10-01T10:12:17.817Z",
+          "seconds": "0.876"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-config-tck-3.1.2-sources.jar": "adf197bb241e92cc629274eddf7717cbe50c6a99cb30c301b389e0f00d0e4bf1"
+      }
+    },
+    "config/imported": {
+      "task": "tckImportedSuite",
+      "counts": {
+        "passed": 105,
+        "setup_failure": 11,
+        "skipped": 266,
+        "test_failure": 7
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueBrokenInjectionTest",
+          "timestamp": "2026-10-01T10:31:40.865Z",
+          "seconds": "1.666"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+          "timestamp": "2026-10-01T10:30:54.410Z",
+          "seconds": "2.216"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+          "timestamp": "2026-10-01T10:31:18.820Z",
+          "seconds": "1.352"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+          "timestamp": "2026-10-01T10:30:57.465Z",
+          "seconds": "1.475"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+          "timestamp": "2026-10-01T10:30:59.318Z",
+          "seconds": "1.271"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPropertyNameMatchingTest",
+          "timestamp": "2026-10-01T10:31:20.546Z",
+          "seconds": "1.344"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest",
+          "timestamp": "2026-10-01T10:31:00.959Z",
+          "seconds": "1.271"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+          "timestamp": "2026-10-01T10:31:02.610Z",
+          "seconds": "1.31"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+          "timestamp": "2026-10-01T10:31:04.307Z",
+          "seconds": "1.433"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+          "timestamp": "2026-10-01T10:31:22.299Z",
+          "seconds": "1.279"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+          "timestamp": "2026-10-01T10:31:23.947Z",
+          "seconds": "1.372"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+          "timestamp": "2026-10-01T10:31:06.171Z",
+          "seconds": "1.714"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CustomConfigSourceTest",
+          "timestamp": "2026-10-01T10:31:25.710Z",
+          "seconds": "1.316"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+          "timestamp": "2026-10-01T10:31:27.418Z",
+          "seconds": "1.402"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+          "timestamp": "2026-10-01T10:31:08.284Z",
+          "seconds": "1.429"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+          "timestamp": "2026-10-01T10:31:29.207Z",
+          "seconds": "1.535"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.WarPropertiesLocationTest",
+          "timestamp": "2026-10-01T10:31:31.138Z",
+          "seconds": "1.498"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.ConfigPropertiesMissingPropertyInjectionTest",
+          "timestamp": "2026-10-01T10:31:10.099Z",
+          "seconds": "1.069"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingConverterOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:31:33.253Z",
+          "seconds": "2.322"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:31:11.563Z",
+          "seconds": "1.301"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnObserverMethodInjectionTest",
+          "timestamp": "2026-10-01T10:31:13.230Z",
+          "seconds": "1.68"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.WrongConverterOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:31:15.287Z",
+          "seconds": "1.148"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest",
+          "timestamp": "2026-10-01T10:31:36.358Z",
+          "seconds": "1.931"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.NullConvertersTest",
+          "timestamp": "2026-10-01T10:31:38.853Z",
+          "seconds": "1.572"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+          "timestamp": "2026-10-01T10:31:43.138Z",
+          "seconds": "1.695"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTest",
+          "timestamp": "2026-10-01T10:31:16.845Z",
+          "seconds": "1.528"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+          "timestamp": "2026-10-01T10:31:45.309Z",
+          "seconds": "1.868"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.ConfigPropertyFileProfileTest",
+          "timestamp": "2026-10-01T10:31:47.713Z",
+          "seconds": "1.836"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.DevConfigProfileTest",
+          "timestamp": "2026-10-01T10:31:50.098Z",
+          "seconds": "1.724"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.InvalidConfigProfileTest",
+          "timestamp": "2026-10-01T10:31:52.249Z",
+          "seconds": "1.577"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.OverrideConfigProfileTest",
+          "timestamp": "2026-10-01T10:31:54.297Z",
+          "seconds": "1.614"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.ProdProfileTest",
+          "timestamp": "2026-10-01T10:31:56.430Z",
+          "seconds": "1.531"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.TestConfigProfileTest",
+          "timestamp": "2026-10-01T10:31:58.498Z",
+          "seconds": "1.631"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.TestCustomConfigProfile",
+          "timestamp": "2026-10-01T10:32:00.749Z",
+          "seconds": "1.522"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-config-tck-3.1.2-sources.jar": "adf197bb241e92cc629274eddf7717cbe50c6a99cb30c301b389e0f00d0e4bf1"
+      }
+    },
+    "config/reference": {
+      "task": "tckReferenceSuite",
+      "counts": {
+        "passed": 378
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueBrokenInjectionTest",
+          "timestamp": "2026-10-01T10:32:27.276Z",
+          "seconds": "0.488"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+          "timestamp": "2026-10-01T10:32:03.777Z",
+          "seconds": "1.784"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest",
+          "timestamp": "2026-10-01T10:32:06.110Z",
+          "seconds": "0.845"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+          "timestamp": "2026-10-01T10:32:07.419Z",
+          "seconds": "0.586"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest",
+          "timestamp": "2026-10-01T10:32:08.397Z",
+          "seconds": "0.5"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CDIPropertyNameMatchingTest",
+          "timestamp": "2026-10-01T10:32:09.329Z",
+          "seconds": "0.472"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest",
+          "timestamp": "2026-10-01T10:32:10.222Z",
+          "seconds": "0.466"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ClassConverterTest",
+          "timestamp": "2026-10-01T10:32:11.098Z",
+          "seconds": "0.481"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigPropertiesTest",
+          "timestamp": "2026-10-01T10:32:12.087Z",
+          "seconds": "0.824"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigProviderTest",
+          "timestamp": "2026-10-01T10:32:13.353Z",
+          "seconds": "0.534"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConfigValueTest",
+          "timestamp": "2026-10-01T10:32:14.296Z",
+          "seconds": "0.486"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ConverterTest",
+          "timestamp": "2026-10-01T10:32:15.226Z",
+          "seconds": "1.019"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CustomConfigSourceTest",
+          "timestamp": "2026-10-01T10:32:16.636Z",
+          "seconds": "0.462"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.CustomConverterTest",
+          "timestamp": "2026-10-01T10:32:17.528Z",
+          "seconds": "0.538"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.ImplicitConverterTest",
+          "timestamp": "2026-10-01T10:32:18.484Z",
+          "seconds": "0.62"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.PropertyExpressionsTest",
+          "timestamp": "2026-10-01T10:32:19.508Z",
+          "seconds": "0.577"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.WarPropertiesLocationTest",
+          "timestamp": "2026-10-01T10:32:20.482Z",
+          "seconds": "0.451"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.ConfigPropertiesMissingPropertyInjectionTest",
+          "timestamp": "2026-10-01T10:32:21.382Z",
+          "seconds": "0.465"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingConverterOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:32:22.298Z",
+          "seconds": "0.365"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:32:23.089Z",
+          "seconds": "0.338"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.MissingValueOnObserverMethodInjectionTest",
+          "timestamp": "2026-10-01T10:32:23.821Z",
+          "seconds": "0.424"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.broken.WrongConverterOnInstanceInjectionTest",
+          "timestamp": "2026-10-01T10:32:24.638Z",
+          "seconds": "0.348"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest",
+          "timestamp": "2026-10-01T10:32:25.392Z",
+          "seconds": "0.459"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.NullConvertersTest",
+          "timestamp": "2026-10-01T10:32:26.252Z",
+          "seconds": "0.485"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest",
+          "timestamp": "2026-10-01T10:32:28.312Z",
+          "seconds": "0.503"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTest",
+          "timestamp": "2026-10-01T10:32:29.216Z",
+          "seconds": "0.364"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup",
+          "timestamp": "2026-10-01T10:32:30.011Z",
+          "seconds": "0.574"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.ConfigPropertyFileProfileTest",
+          "timestamp": "2026-10-01T10:32:31.223Z",
+          "seconds": "0.49"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.DevConfigProfileTest",
+          "timestamp": "2026-10-01T10:32:32.112Z",
+          "seconds": "0.426"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.InvalidConfigProfileTest",
+          "timestamp": "2026-10-01T10:32:32.957Z",
+          "seconds": "0.428"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.OverrideConfigProfileTest",
+          "timestamp": "2026-10-01T10:32:33.773Z",
+          "seconds": "0.458"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.ProdProfileTest",
+          "timestamp": "2026-10-01T10:32:34.620Z",
+          "seconds": "0.432"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.TestConfigProfileTest",
+          "timestamp": "2026-10-01T10:32:35.422Z",
+          "seconds": "0.45"
+        },
+        {
+          "class": "org.eclipse.microprofile.config.tck.profile.TestCustomConfigProfile",
+          "timestamp": "2026-10-01T10:32:36.273Z",
+          "seconds": "0.444"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-config-tck-3.1.2-sources.jar": "adf197bb241e92cc629274eddf7717cbe50c6a99cb30c301b389e0f00d0e4bf1"
+      }
+    },
+    "fault-tolerance/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 118,
+        "skipped": 470
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationGloballyEnableOnMethodTest",
+          "timestamp": "2026-10-01T09:56:47.016Z",
+          "seconds": "1.838"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationOnClassEnableOnMethodTest",
+          "timestamp": "2026-10-01T09:56:51.402Z",
+          "seconds": "1.822"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationGloballyEnableOnClassTest",
+          "timestamp": "2026-10-01T09:56:44.471Z",
+          "seconds": "2.101"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerFailureSuccessNegTest",
+          "timestamp": "2026-10-01T09:58:15.338Z",
+          "seconds": "1.175"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerFailureReqVolNegTest",
+          "timestamp": "2026-10-01T09:58:12.226Z",
+          "seconds": "1.154"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerFailureRatioNegTest",
+          "timestamp": "2026-10-01T09:58:07.461Z",
+          "seconds": "1.174"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerFailureRatioPosTest",
+          "timestamp": "2026-10-01T09:58:09.023Z",
+          "seconds": "1.192"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerFailureSuccess0Test",
+          "timestamp": "2026-10-01T09:58:13.771Z",
+          "seconds": "1.197"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.interceptor.ftPriorityChange.FaultToleranceInterceptorPriorityChangeAnnotationConfTest",
+          "timestamp": "2026-10-01T09:57:56.684Z",
+          "seconds": "1.603"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerFailureReqVol0Test",
+          "timestamp": "2026-10-01T09:58:10.612Z",
+          "seconds": "1.229"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationGloballyEnableOnClassDisableOnMethod",
+          "timestamp": "2026-10-01T09:56:42.170Z",
+          "seconds": "1.812"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.AsyncCancellationTest",
+          "timestamp": "2026-10-01T09:54:43.803Z",
+          "seconds": "1.381"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.AsyncFallbackTest",
+          "timestamp": "2026-10-01T09:54:45.572Z",
+          "seconds": "1.23"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.AsyncTimeoutTest",
+          "timestamp": "2026-10-01T09:54:47.236Z",
+          "seconds": "1.303"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.AsynchronousCSTest",
+          "timestamp": "2026-10-01T09:54:48.883Z",
+          "seconds": "1.246"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.AsynchronousTest",
+          "timestamp": "2026-10-01T09:54:50.491Z",
+          "seconds": "1.29"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerBulkheadTest",
+          "timestamp": "2026-10-01T09:54:52.113Z",
+          "seconds": "1.462"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerExceptionHierarchyTest",
+          "timestamp": "2026-10-01T09:54:53.946Z",
+          "seconds": "1.336"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerInitialSuccessTest",
+          "timestamp": "2026-10-01T09:54:55.638Z",
+          "seconds": "1.163"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerLateSuccessTest",
+          "timestamp": "2026-10-01T09:54:57.158Z",
+          "seconds": "1.165"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerRetryTest",
+          "timestamp": "2026-10-01T09:54:58.677Z",
+          "seconds": "1.493"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerTest",
+          "timestamp": "2026-10-01T09:55:00.540Z",
+          "seconds": "1.477"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.CircuitBreakerTimeoutTest",
+          "timestamp": "2026-10-01T09:55:02.454Z",
+          "seconds": "1.489"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.ConfigTest",
+          "timestamp": "2026-10-01T09:55:04.318Z",
+          "seconds": "1.343"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.FallbackExceptionHierarchyTest",
+          "timestamp": "2026-10-01T09:55:06.056Z",
+          "seconds": "1.317"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.FallbackTest",
+          "timestamp": "2026-10-01T09:55:07.756Z",
+          "seconds": "1.465"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.RetryConditionTest",
+          "timestamp": "2026-10-01T09:55:09.625Z",
+          "seconds": "1.563"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.RetryExceptionHierarchyTest",
+          "timestamp": "2026-10-01T09:55:11.599Z",
+          "seconds": "1.386"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.RetryTest",
+          "timestamp": "2026-10-01T09:55:13.377Z",
+          "seconds": "1.407"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.RetryTimeoutTest",
+          "timestamp": "2026-10-01T09:55:15.128Z",
+          "seconds": "1.418"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.TimeoutGlobalConfigTest",
+          "timestamp": "2026-10-01T09:55:16.947Z",
+          "seconds": "1.665"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.TimeoutMethodConfigTest",
+          "timestamp": "2026-10-01T09:55:19.112Z",
+          "seconds": "1.274"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.TimeoutTest",
+          "timestamp": "2026-10-01T09:55:20.753Z",
+          "seconds": "1.666"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.TimeoutUninterruptableTest",
+          "timestamp": "2026-10-01T09:55:22.939Z",
+          "seconds": "3.097"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.ZeroRetryJitterTest",
+          "timestamp": "2026-10-01T09:55:26.523Z",
+          "seconds": "2.802"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadAsynchRetryTest",
+          "timestamp": "2026-10-01T09:55:29.926Z",
+          "seconds": "3.524"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadAsynchTest",
+          "timestamp": "2026-10-01T09:55:34.002Z",
+          "seconds": "2.655"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadFutureTest",
+          "timestamp": "2026-10-01T09:55:37.240Z",
+          "seconds": "2.262"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadPressureTest",
+          "timestamp": "2026-10-01T09:55:40.362Z",
+          "seconds": "3.287"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadSynchConfigTest",
+          "timestamp": "2026-10-01T09:55:44.488Z",
+          "seconds": "4.111"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadSynchRetryTest",
+          "timestamp": "2026-10-01T09:55:49.319Z",
+          "seconds": "2.831"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.BulkheadSynchTest",
+          "timestamp": "2026-10-01T09:55:53.086Z",
+          "seconds": "5.944"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.bulkhead.lifecycle.BulkheadLifecycleTest",
+          "timestamp": "2026-10-01T09:56:00.031Z",
+          "seconds": "4.095"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.circuitbreaker.CircuitBreakerConfigGlobalTest",
+          "timestamp": "2026-10-01T09:56:04.920Z",
+          "seconds": "2.41"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.circuitbreaker.CircuitBreakerConfigOnMethodTest",
+          "timestamp": "2026-10-01T09:56:07.952Z",
+          "seconds": "2.199"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.circuitbreaker.lifecycle.CircuitBreakerLifecycleTest",
+          "timestamp": "2026-10-01T09:56:10.781Z",
+          "seconds": "3.376"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.BulkheadConfigTest",
+          "timestamp": "2026-10-01T09:56:14.658Z",
+          "seconds": "2.537"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.CircuitBreakerConfigTest",
+          "timestamp": "2026-10-01T09:56:17.805Z",
+          "seconds": "2.169"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.CircuitBreakerSkipOnConfigTest",
+          "timestamp": "2026-10-01T09:56:20.482Z",
+          "seconds": "3.062"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.ConfigPropertyGlobalVsClassTest",
+          "timestamp": "2026-10-01T09:56:24.060Z",
+          "seconds": "1.714"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.ConfigPropertyGlobalVsClassVsMethodTest",
+          "timestamp": "2026-10-01T09:56:26.134Z",
+          "seconds": "1.692"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.ConfigPropertyOnClassAndMethodTest",
+          "timestamp": "2026-10-01T09:56:28.472Z",
+          "seconds": "1.575"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.FallbackApplyOnConfigTest",
+          "timestamp": "2026-10-01T09:56:30.444Z",
+          "seconds": "1.995"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.FallbackConfigTest",
+          "timestamp": "2026-10-01T09:56:32.843Z",
+          "seconds": "2.063"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.FallbackSkipOnConfigTest",
+          "timestamp": "2026-10-01T09:56:35.329Z",
+          "seconds": "2.062"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.RetryConfigTest",
+          "timestamp": "2026-10-01T09:56:37.783Z",
+          "seconds": "1.619"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.config.TimeoutConfigTest",
+          "timestamp": "2026-10-01T09:56:39.923Z",
+          "seconds": "1.891"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationGloballyTest",
+          "timestamp": "2026-10-01T09:56:49.301Z",
+          "seconds": "1.698"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationOnClassTest",
+          "timestamp": "2026-10-01T09:56:53.600Z",
+          "seconds": "1.631"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableAnnotationOnMethodsTest",
+          "timestamp": "2026-10-01T09:56:55.598Z",
+          "seconds": "1.564"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableFTEnableGloballyTest",
+          "timestamp": "2026-10-01T09:56:57.493Z",
+          "seconds": "1.559"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableFTEnableOnClassTest",
+          "timestamp": "2026-10-01T09:56:59.410Z",
+          "seconds": "1.407"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableFTEnableOnMethodTest",
+          "timestamp": "2026-10-01T09:57:01.202Z",
+          "seconds": "1.496"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.disableEnv.DisableTest",
+          "timestamp": "2026-10-01T09:57:03.068Z",
+          "seconds": "1.424"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodAbstractTest",
+          "timestamp": "2026-10-01T09:57:04.916Z",
+          "seconds": "1.279"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodBasicTest",
+          "timestamp": "2026-10-01T09:57:06.586Z",
+          "seconds": "1.171"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodDefaultMethodTest",
+          "timestamp": "2026-10-01T09:57:08.128Z",
+          "seconds": "1.284"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodGenericAbstractTest",
+          "timestamp": "2026-10-01T09:57:09.776Z",
+          "seconds": "1.351"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodGenericArrayTest",
+          "timestamp": "2026-10-01T09:57:11.515Z",
+          "seconds": "1.34"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodGenericComplexTest",
+          "timestamp": "2026-10-01T09:57:13.237Z",
+          "seconds": "1.29"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodGenericDeepTest",
+          "timestamp": "2026-10-01T09:57:14.909Z",
+          "seconds": "1.256"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodGenericTest",
+          "timestamp": "2026-10-01T09:57:16.511Z",
+          "seconds": "1.436"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodGenericWildcardTest",
+          "timestamp": "2026-10-01T09:57:18.310Z",
+          "seconds": "1.217"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodInPackageTest",
+          "timestamp": "2026-10-01T09:57:19.893Z",
+          "seconds": "1.333"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodInterfaceTest",
+          "timestamp": "2026-10-01T09:57:21.588Z",
+          "seconds": "1.315"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodOutOfPackageTest",
+          "timestamp": "2026-10-01T09:57:23.282Z",
+          "seconds": "1.182"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodPrivateTest",
+          "timestamp": "2026-10-01T09:57:24.821Z",
+          "seconds": "1.248"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodSubclassOverrideTest",
+          "timestamp": "2026-10-01T09:57:26.413Z",
+          "seconds": "1.187"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodSubclassTest",
+          "timestamp": "2026-10-01T09:57:28.049Z",
+          "seconds": "1.128"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodSuperclassPrivateTest",
+          "timestamp": "2026-10-01T09:57:29.550Z",
+          "seconds": "1.186"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodSuperclassTest",
+          "timestamp": "2026-10-01T09:57:31.133Z",
+          "seconds": "1.676"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodVarargsTest",
+          "timestamp": "2026-10-01T09:57:33.278Z",
+          "seconds": "1.58"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodWildcardNegativeTest",
+          "timestamp": "2026-10-01T09:57:35.206Z",
+          "seconds": "1.758"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.fallbackmethod.FallbackMethodWildcardTest",
+          "timestamp": "2026-10-01T09:57:37.585Z",
+          "seconds": "1.527"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.illegalConfig.IncompatibleFallbackMethodTest",
+          "timestamp": "2026-10-01T09:57:39.635Z",
+          "seconds": "2.708"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.illegalConfig.IncompatibleFallbackMethodWithArgsTest",
+          "timestamp": "2026-10-01T09:57:43.214Z",
+          "seconds": "2.97"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.illegalConfig.IncompatibleFallbackPolicies",
+          "timestamp": "2026-10-01T09:57:46.830Z",
+          "seconds": "2.546"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.illegalConfig.IncompatibleFallbackTest",
+          "timestamp": "2026-10-01T09:57:50.405Z",
+          "seconds": "2.238"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.interceptor.FaultToleranceInterceptorTest",
+          "timestamp": "2026-10-01T09:57:53.114Z",
+          "seconds": "2.985"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidAsynchronousClassTest",
+          "timestamp": "2026-10-01T09:57:58.688Z",
+          "seconds": "1.876"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidAsynchronousMethodTest",
+          "timestamp": "2026-10-01T09:58:00.953Z",
+          "seconds": "1.38"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidBulkheadAsynchQueueTest",
+          "timestamp": "2026-10-01T09:58:02.723Z",
+          "seconds": "1.232"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidBulkheadValueTest",
+          "timestamp": "2026-10-01T09:58:04.314Z",
+          "seconds": "1.094"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidCircuitBreakerDelayTest",
+          "timestamp": "2026-10-01T09:58:05.792Z",
+          "seconds": "1.184"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidRetryDelayDurationTest",
+          "timestamp": "2026-10-01T09:58:16.891Z",
+          "seconds": "1.218"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidRetryDelayTest",
+          "timestamp": "2026-10-01T09:58:18.499Z",
+          "seconds": "1.228"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidRetryJitterTest",
+          "timestamp": "2026-10-01T09:58:20.086Z",
+          "seconds": "1.106"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidRetryMaxRetriesTest",
+          "timestamp": "2026-10-01T09:58:21.575Z",
+          "seconds": "1.187"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.invalidParameters.InvalidTimeoutValueTest",
+          "timestamp": "2026-10-01T09:58:23.150Z",
+          "seconds": "1.178"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.AllMetricsTest",
+          "timestamp": "2026-10-01T09:58:24.700Z",
+          "seconds": "1.698"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.BulkheadMetricTest",
+          "timestamp": "2026-10-01T09:58:26.800Z",
+          "seconds": "1.779"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.CircuitBreakerMetricTest",
+          "timestamp": "2026-10-01T09:58:28.961Z",
+          "seconds": "1.804"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.ClashingNameTest",
+          "timestamp": "2026-10-01T09:58:31.182Z",
+          "seconds": "1.473"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.ClassLevelMetricTest",
+          "timestamp": "2026-10-01T09:58:33.022Z",
+          "seconds": "1.659"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.FallbackMetricTest",
+          "timestamp": "2026-10-01T09:58:35.041Z",
+          "seconds": "1.658"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.MetricsDisabledTest",
+          "timestamp": "2026-10-01T09:58:37.119Z",
+          "seconds": "1.492"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.RetryMetricTest",
+          "timestamp": "2026-10-01T09:58:38.970Z",
+          "seconds": "1.66"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.metrics.TimeoutMetricTest",
+          "timestamp": "2026-10-01T09:58:41.004Z",
+          "seconds": "1.642"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.AllAnnotationTelemetryTest",
+          "timestamp": "2026-10-01T09:58:43.049Z",
+          "seconds": "1.642"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.BulkheadTelemetryTest",
+          "timestamp": "2026-10-01T09:58:45.076Z",
+          "seconds": "1.666"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.CircuitBreakerTelemetryTest",
+          "timestamp": "2026-10-01T09:58:47.120Z",
+          "seconds": "1.929"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.ClashingNameTelemetryTest",
+          "timestamp": "2026-10-01T09:58:49.517Z",
+          "seconds": "2.093"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.ClassLevelTelemetryTest",
+          "timestamp": "2026-10-01T09:58:51.965Z",
+          "seconds": "2.071"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.FallbackTelemetryTest",
+          "timestamp": "2026-10-01T09:58:54.407Z",
+          "seconds": "1.855"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.FaultToleranceDisabledTelemetryTest",
+          "timestamp": "2026-10-01T09:58:56.625Z",
+          "seconds": "1.86"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.RetryTelemetryTest",
+          "timestamp": "2026-10-01T09:58:58.922Z",
+          "seconds": "2.01"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.telemetryMetrics.TimeoutTelemetryTest",
+          "timestamp": "2026-10-01T09:59:01.436Z",
+          "seconds": "1.889"
+        },
+        {
+          "class": "org.eclipse.microprofile.fault.tolerance.tck.visibility.retry.RetryVisibilityTest",
+          "timestamp": "2026-10-01T09:59:03.791Z",
+          "seconds": "2.052"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-fault-tolerance-tck-4.1.2-sources.jar": "f3aee2c133d4bdd1388a702881acf930f06134a6dda26c8f063cb5e2ffbba90f"
+      }
+    },
+    "health/native": {
+      "task": "tckSuite",
+      "counts": {
+        "passed": 28
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.health.tck.CDIProducedProceduresTest",
+          "timestamp": "2026-10-01T10:03:02.539Z",
+          "seconds": "1.77"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.ConfigTest",
+          "timestamp": "2026-10-01T10:03:04.840Z",
+          "seconds": "1.666"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.DelayedCheckTest",
+          "timestamp": "2026-10-01T10:03:06.908Z",
+          "seconds": "7.742"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.DelegateHealthSuccessfulTest",
+          "timestamp": "2026-10-01T10:03:15.120Z",
+          "seconds": "2.0"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.EnforceQualifierTest",
+          "timestamp": "2026-10-01T10:03:17.897Z",
+          "seconds": "1.842"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.HealthCheckResponseAttributesTest",
+          "timestamp": "2026-10-01T10:03:20.240Z",
+          "seconds": "2.075"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.HealthCheckResponseValidationTest",
+          "timestamp": "2026-10-01T10:03:23.013Z",
+          "seconds": "2.026"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.JsonSchemaValidationTest",
+          "timestamp": "2026-10-01T10:03:25.577Z",
+          "seconds": "2.072"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest",
+          "timestamp": "2026-10-01T10:03:28.219Z",
+          "seconds": "1.636"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleProceduresFailedTest",
+          "timestamp": "2026-10-01T10:03:30.356Z",
+          "seconds": "1.642"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleReadinessFailedTest",
+          "timestamp": "2026-10-01T10:03:32.690Z",
+          "seconds": "1.727"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleStartupFailedTest",
+          "timestamp": "2026-10-01T10:03:34.886Z",
+          "seconds": "2.103"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.NoProcedureSuccessfulTest",
+          "timestamp": "2026-10-01T10:03:37.372Z",
+          "seconds": "1.816"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest",
+          "timestamp": "2026-10-01T10:03:39.577Z",
+          "seconds": "2.107"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleLivenessFailedTest",
+          "timestamp": "2026-10-01T10:03:42.084Z",
+          "seconds": "1.933"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleLivenessSuccessfulTest",
+          "timestamp": "2026-10-01T10:03:44.501Z",
+          "seconds": "2.16"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleReadinessFailedTest",
+          "timestamp": "2026-10-01T10:03:47.197Z",
+          "seconds": "1.656"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleReadinessSuccessfulTest",
+          "timestamp": "2026-10-01T10:03:49.262Z",
+          "seconds": "1.71"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleStartupFailedTest",
+          "timestamp": "2026-10-01T10:03:51.387Z",
+          "seconds": "1.698"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleStartupSuccessfulTest",
+          "timestamp": "2026-10-01T10:03:53.492Z",
+          "seconds": "1.648"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-health-tck-4.0.2-sources.jar": "2cbd3d26711d2d564d927e6f724fe3d7f11eb60176774e32ddcba83a044431d8"
+      }
+    },
+    "health/reference": {
+      "task": "tckReferenceSuite",
+      "counts": {
+        "passed": 28
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.health.tck.CDIProducedProceduresTest",
+          "timestamp": "2026-10-01T10:03:55.811Z",
+          "seconds": "0.63"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.ConfigTest",
+          "timestamp": "2026-10-01T10:03:56.864Z",
+          "seconds": "0.551"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.DelayedCheckTest",
+          "timestamp": "2026-10-01T10:03:57.819Z",
+          "seconds": "3.585"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.DelegateHealthSuccessfulTest",
+          "timestamp": "2026-10-01T10:04:01.802Z",
+          "seconds": "0.546"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.EnforceQualifierTest",
+          "timestamp": "2026-10-01T10:04:02.736Z",
+          "seconds": "0.537"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.HealthCheckResponseAttributesTest",
+          "timestamp": "2026-10-01T10:04:03.658Z",
+          "seconds": "0.538"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.HealthCheckResponseValidationTest",
+          "timestamp": "2026-10-01T10:04:04.574Z",
+          "seconds": "0.589"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.JsonSchemaValidationTest",
+          "timestamp": "2026-10-01T10:04:05.562Z",
+          "seconds": "0.698"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest",
+          "timestamp": "2026-10-01T10:04:06.676Z",
+          "seconds": "0.58"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleProceduresFailedTest",
+          "timestamp": "2026-10-01T10:04:07.622Z",
+          "seconds": "0.565"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleReadinessFailedTest",
+          "timestamp": "2026-10-01T10:04:08.641Z",
+          "seconds": "0.655"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.MultipleStartupFailedTest",
+          "timestamp": "2026-10-01T10:04:09.694Z",
+          "seconds": "0.648"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.NoProcedureSuccessfulTest",
+          "timestamp": "2026-10-01T10:04:10.737Z",
+          "seconds": "0.605"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest",
+          "timestamp": "2026-10-01T10:04:11.733Z",
+          "seconds": "0.678"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleLivenessFailedTest",
+          "timestamp": "2026-10-01T10:04:12.831Z",
+          "seconds": "0.594"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleLivenessSuccessfulTest",
+          "timestamp": "2026-10-01T10:04:13.824Z",
+          "seconds": "0.727"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleReadinessFailedTest",
+          "timestamp": "2026-10-01T10:04:15.026Z",
+          "seconds": "0.564"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleReadinessSuccessfulTest",
+          "timestamp": "2026-10-01T10:04:16.011Z",
+          "seconds": "0.54"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleStartupFailedTest",
+          "timestamp": "2026-10-01T10:04:16.919Z",
+          "seconds": "0.554"
+        },
+        {
+          "class": "org.eclipse.microprofile.health.tck.SingleStartupSuccessfulTest",
+          "timestamp": "2026-10-01T10:04:17.872Z",
+          "seconds": "0.54"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-health-tck-4.0.2-sources.jar": "2cbd3d26711d2d564d927e6f724fe3d7f11eb60176774e32ddcba83a044431d8"
+      }
+    },
+    "openapi/native": {
+      "task": "tckSuite",
+      "counts": {
+        "passed": 344
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+          "timestamp": "2026-10-01T10:01:50.674Z",
+          "seconds": "8.869"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+          "timestamp": "2026-10-01T10:01:59.992Z",
+          "seconds": "3.371"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+          "timestamp": "2026-10-01T10:02:03.838Z",
+          "seconds": "1.725"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+          "timestamp": "2026-10-01T10:02:05.992Z",
+          "seconds": "4.792"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustComponentTest",
+          "timestamp": "2026-10-01T10:02:11.189Z",
+          "seconds": "1.96"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustWebHookTest",
+          "timestamp": "2026-10-01T10:02:13.615Z",
+          "seconds": "1.94"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASConfigScanDisableTest",
+          "timestamp": "2026-10-01T10:02:15.989Z",
+          "seconds": "2.307"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASConfigSchemaTest",
+          "timestamp": "2026-10-01T10:02:18.674Z",
+          "seconds": "2.431"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASConfigServersTest",
+          "timestamp": "2026-10-01T10:02:21.516Z",
+          "seconds": "2.469"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+          "timestamp": "2026-10-01T10:02:24.376Z",
+          "seconds": "1.544"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeMultiple",
+          "timestamp": "2026-10-01T10:02:26.401Z",
+          "seconds": "1.985"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeOnly",
+          "timestamp": "2026-10-01T10:02:28.395Z",
+          "seconds": "0.265"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeMultiple",
+          "timestamp": "2026-10-01T10:02:28.664Z",
+          "seconds": "0.212"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeOnly",
+          "timestamp": "2026-10-01T10:02:28.880Z",
+          "seconds": "0.203"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeClassInclude",
+          "timestamp": "2026-10-01T10:02:29.086Z",
+          "seconds": "0.18"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeMultiple",
+          "timestamp": "2026-10-01T10:02:29.270Z",
+          "seconds": "0.211"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeOnly",
+          "timestamp": "2026-10-01T10:02:29.487Z",
+          "seconds": "0.222"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludesAroundInclude",
+          "timestamp": "2026-10-01T10:02:29.712Z",
+          "seconds": "0.174"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeClassExclude",
+          "timestamp": "2026-10-01T10:02:29.889Z",
+          "seconds": "0.168"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeMultiple",
+          "timestamp": "2026-10-01T10:02:30.060Z",
+          "seconds": "0.177"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeOnly",
+          "timestamp": "2026-10-01T10:02:30.241Z",
+          "seconds": "0.171"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludesAroundExcludes",
+          "timestamp": "2026-10-01T10:02:30.418Z",
+          "seconds": "0.189"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPartialPackage",
+          "timestamp": "2026-10-01T10:02:30.611Z",
+          "seconds": "0.187"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+          "timestamp": "2026-10-01T10:02:31.274Z",
+          "seconds": "4.226"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentCustomDialectTest",
+          "timestamp": "2026-10-01T10:02:35.918Z",
+          "seconds": "1.694"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentTest",
+          "timestamp": "2026-10-01T10:02:38.027Z",
+          "seconds": "2.409"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationDisabledTest",
+          "timestamp": "2026-10-01T10:02:40.866Z",
+          "seconds": "2.144"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+          "timestamp": "2026-10-01T10:02:43.542Z",
+          "seconds": "4.158"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-openapi-tck-4.1.1-sources.jar": "a21ae7761f0eaa1c96270bb888c9de6a7f2b4fb62609d48145b44b705ae5545d"
+      }
+    },
+    "openapi/reference": {
+      "task": "tckReferenceSuite",
+      "counts": {
+        "passed": 344
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+          "timestamp": "2026-10-01T10:09:39.962Z",
+          "seconds": "6.472"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+          "timestamp": "2026-10-01T10:09:46.815Z",
+          "seconds": "2.149"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+          "timestamp": "2026-10-01T10:09:49.345Z",
+          "seconds": "0.644"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+          "timestamp": "2026-10-01T10:09:50.359Z",
+          "seconds": "3.274"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustComponentTest",
+          "timestamp": "2026-10-01T10:09:54.003Z",
+          "seconds": "1.12"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustWebHookTest",
+          "timestamp": "2026-10-01T10:09:55.490Z",
+          "seconds": "1.136"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASConfigScanDisableTest",
+          "timestamp": "2026-10-01T10:09:56.998Z",
+          "seconds": "1.155"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASConfigSchemaTest",
+          "timestamp": "2026-10-01T10:09:58.505Z",
+          "seconds": "1.32"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASConfigServersTest",
+          "timestamp": "2026-10-01T10:10:00.187Z",
+          "seconds": "1.558"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+          "timestamp": "2026-10-01T10:10:02.114Z",
+          "seconds": "0.524"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeMultiple",
+          "timestamp": "2026-10-01T10:10:03.058Z",
+          "seconds": "1.264"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeOnly",
+          "timestamp": "2026-10-01T10:10:04.328Z",
+          "seconds": "0.101"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeMultiple",
+          "timestamp": "2026-10-01T10:10:04.432Z",
+          "seconds": "0.075"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeOnly",
+          "timestamp": "2026-10-01T10:10:04.511Z",
+          "seconds": "0.069"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeClassInclude",
+          "timestamp": "2026-10-01T10:10:04.583Z",
+          "seconds": "0.064"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeMultiple",
+          "timestamp": "2026-10-01T10:10:04.651Z",
+          "seconds": "0.07"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeOnly",
+          "timestamp": "2026-10-01T10:10:04.724Z",
+          "seconds": "0.07"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludesAroundInclude",
+          "timestamp": "2026-10-01T10:10:04.797Z",
+          "seconds": "0.057"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeClassExclude",
+          "timestamp": "2026-10-01T10:10:04.857Z",
+          "seconds": "0.06"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeMultiple",
+          "timestamp": "2026-10-01T10:10:04.919Z",
+          "seconds": "0.064"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeOnly",
+          "timestamp": "2026-10-01T10:10:04.985Z",
+          "seconds": "0.054"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludesAroundExcludes",
+          "timestamp": "2026-10-01T10:10:05.042Z",
+          "seconds": "0.056"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPartialPackage",
+          "timestamp": "2026-10-01T10:10:05.101Z",
+          "seconds": "0.043"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+          "timestamp": "2026-10-01T10:10:05.503Z",
+          "seconds": "2.344"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentCustomDialectTest",
+          "timestamp": "2026-10-01T10:09:36.126Z",
+          "seconds": "1.14"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentTest",
+          "timestamp": "2026-10-01T10:09:37.635Z",
+          "seconds": "1.822"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationDisabledTest",
+          "timestamp": "2026-10-01T10:10:08.200Z",
+          "seconds": "1.221"
+        },
+        {
+          "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+          "timestamp": "2026-10-01T10:10:09.787Z",
+          "seconds": "2.586"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-openapi-tck-4.1.1-sources.jar": "a21ae7761f0eaa1c96270bb888c9de6a7f2b4fb62609d48145b44b705ae5545d"
+      }
+    },
+    "rest-client/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 55,
+        "skipped": 196,
+        "passed": 31
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+          "timestamp": "2026-10-01T10:10:13.190Z",
+          "seconds": "1.183"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+          "timestamp": "2026-10-01T10:10:14.790Z",
+          "seconds": "1.316"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+          "timestamp": "2026-10-01T10:10:16.507Z",
+          "seconds": "0.947"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+          "timestamp": "2026-10-01T10:10:17.803Z",
+          "seconds": "0.893"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+          "timestamp": "2026-10-01T10:10:19.155Z",
+          "seconds": "0.03"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+          "timestamp": "2026-10-01T10:10:19.618Z",
+          "seconds": "0.883"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+          "timestamp": "2026-10-01T10:10:20.863Z",
+          "seconds": "0.883"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+          "timestamp": "2026-10-01T10:10:22.099Z",
+          "seconds": "0.888"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+          "timestamp": "2026-10-01T10:10:23.337Z",
+          "seconds": "1.128"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+          "timestamp": "2026-10-01T10:10:24.817Z",
+          "seconds": "0.86"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+          "timestamp": "2026-10-01T10:10:26.029Z",
+          "seconds": "0.924"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+          "timestamp": "2026-10-01T10:10:27.301Z",
+          "seconds": "0.875"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+          "timestamp": "2026-10-01T10:10:28.536Z",
+          "seconds": "0.946"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+          "timestamp": "2026-10-01T10:10:29.861Z",
+          "seconds": "1.024"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+          "timestamp": "2026-10-01T10:10:31.242Z",
+          "seconds": "0.906"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+          "timestamp": "2026-10-01T10:10:32.495Z",
+          "seconds": "1.147"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+          "timestamp": "2026-10-01T10:10:34.022Z",
+          "seconds": "0.955"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+          "timestamp": "2026-10-01T10:10:35.341Z",
+          "seconds": "1.269"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+          "timestamp": "2026-10-01T10:10:36.997Z",
+          "seconds": "1.018"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:10:38.409Z",
+          "seconds": "0.894"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+          "timestamp": "2026-10-01T10:10:39.707Z",
+          "seconds": "1.238"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+          "timestamp": "2026-10-01T10:10:41.321Z",
+          "seconds": "0.946"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+          "timestamp": "2026-10-01T10:10:42.657Z",
+          "seconds": "1.225"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+          "timestamp": "2026-10-01T10:10:44.265Z",
+          "seconds": "0.897"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+          "timestamp": "2026-10-01T10:10:45.562Z",
+          "seconds": "1.281"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+          "timestamp": "2026-10-01T10:10:47.207Z",
+          "seconds": "0.927"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+          "timestamp": "2026-10-01T10:10:48.488Z",
+          "seconds": "0.916"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+          "timestamp": "2026-10-01T10:10:49.807Z",
+          "seconds": "1.016"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+          "timestamp": "2026-10-01T10:10:51.211Z",
+          "seconds": "0.923"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+          "timestamp": "2026-10-01T10:10:52.508Z",
+          "seconds": "1.029"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+          "timestamp": "2026-10-01T10:10:53.939Z",
+          "seconds": "0.949"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+          "timestamp": "2026-10-01T10:10:55.294Z",
+          "seconds": "1.266"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+          "timestamp": "2026-10-01T10:10:56.934Z",
+          "seconds": "1.029"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:10:58.365Z",
+          "seconds": "0.997"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+          "timestamp": "2026-10-01T10:10:59.737Z",
+          "seconds": "1.165"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+          "timestamp": "2026-10-01T10:11:01.377Z",
+          "seconds": "1.065"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+          "timestamp": "2026-10-01T10:11:02.836Z",
+          "seconds": "0.98"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:11:04.222Z",
+          "seconds": "0.954"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+          "timestamp": "2026-10-01T10:11:05.545Z",
+          "seconds": "1.263"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+          "timestamp": "2026-10-01T10:11:07.192Z",
+          "seconds": "1.013"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+          "timestamp": "2026-10-01T10:11:08.580Z",
+          "seconds": "1.161"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+          "timestamp": "2026-10-01T10:11:10.126Z",
+          "seconds": "1.014"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+          "timestamp": "2026-10-01T10:11:11.527Z",
+          "seconds": "1.13"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+          "timestamp": "2026-10-01T10:11:13.024Z",
+          "seconds": "1.052"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+          "timestamp": "2026-10-01T10:11:14.477Z",
+          "seconds": "1.059"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+          "timestamp": "2026-10-01T10:11:16.039Z",
+          "seconds": "1.241"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+          "timestamp": "2026-10-01T10:11:17.692Z",
+          "seconds": "1.118"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+          "timestamp": "2026-10-01T10:11:19.318Z",
+          "seconds": "1.073"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+          "timestamp": "2026-10-01T10:11:20.832Z",
+          "seconds": "1.063"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+          "timestamp": "2026-10-01T10:11:22.295Z",
+          "seconds": "1.013"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+          "timestamp": "2026-10-01T10:11:23.686Z",
+          "seconds": "1.147"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+          "timestamp": "2026-10-01T10:11:25.237Z",
+          "seconds": "1.068"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+          "timestamp": "2026-10-01T10:11:26.670Z",
+          "seconds": "2.884"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+          "timestamp": "2026-10-01T10:11:29.935Z",
+          "seconds": "88.98"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+          "timestamp": "2026-10-01T10:12:59.345Z",
+          "seconds": "1.72"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+          "timestamp": "2026-10-01T10:13:01.776Z",
+          "seconds": "1.475"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+          "timestamp": "2026-10-01T10:13:04.010Z",
+          "seconds": "1.519"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+          "timestamp": "2026-10-01T10:13:06.228Z",
+          "seconds": "1.542"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-rest-client-tck-4.0-sources.jar": "53133f73af073511bd260718f6cc5ccafaae60b16e5cb3f2ad36e7d9353f1754"
+      }
+    },
+    "rest-client/imported": {
+      "task": "tckImportedSuite",
+      "counts": {
+        "passed": 132,
+        "setup_failure": 17,
+        "skipped": 77,
+        "test_failure": 18
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+          "timestamp": "2026-10-01T10:25:25.588Z",
+          "seconds": "1.365"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+          "timestamp": "2026-10-01T10:25:27.628Z",
+          "seconds": "1.355"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+          "timestamp": "2026-10-01T10:25:29.698Z",
+          "seconds": "1.276"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+          "timestamp": "2026-10-01T10:25:31.640Z",
+          "seconds": "1.138"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+          "timestamp": "2026-10-01T10:25:33.507Z",
+          "seconds": "1.41"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+          "timestamp": "2026-10-01T10:25:35.633Z",
+          "seconds": "1.074"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+          "timestamp": "2026-10-01T10:25:37.354Z",
+          "seconds": "1.231"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+          "timestamp": "2026-10-01T10:25:39.247Z",
+          "seconds": "1.094"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+          "timestamp": "2026-10-01T10:25:41.087Z",
+          "seconds": "1.349"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+          "timestamp": "2026-10-01T10:25:43.091Z",
+          "seconds": "1.431"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+          "timestamp": "2026-10-01T10:25:45.186Z",
+          "seconds": "1.348"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+          "timestamp": "2026-10-01T10:25:47.227Z",
+          "seconds": "1.078"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+          "timestamp": "2026-10-01T10:25:48.992Z",
+          "seconds": "1.133"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+          "timestamp": "2026-10-01T10:25:50.779Z",
+          "seconds": "1.307"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+          "timestamp": "2026-10-01T10:24:44.180Z",
+          "seconds": "1.045"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+          "timestamp": "2026-10-01T10:25:52.766Z",
+          "seconds": "1.339"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+          "timestamp": "2026-10-01T10:25:54.789Z",
+          "seconds": "1.448"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+          "timestamp": "2026-10-01T10:25:56.907Z",
+          "seconds": "1.487"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+          "timestamp": "2026-10-01T10:25:59.086Z",
+          "seconds": "1.288"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:26:01.104Z",
+          "seconds": "1.305"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+          "timestamp": "2026-10-01T10:26:03.073Z",
+          "seconds": "1.566"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+          "timestamp": "2026-10-01T10:24:45.914Z",
+          "seconds": "1.05"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+          "timestamp": "2026-10-01T10:26:05.314Z",
+          "seconds": "1.534"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+          "timestamp": "2026-10-01T10:26:07.522Z",
+          "seconds": "1.11"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+          "timestamp": "2026-10-01T10:26:09.252Z",
+          "seconds": "1.556"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+          "timestamp": "2026-10-01T10:26:11.478Z",
+          "seconds": "1.039"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+          "timestamp": "2026-10-01T10:26:13.199Z",
+          "seconds": "1.057"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+          "timestamp": "2026-10-01T10:26:14.955Z",
+          "seconds": "1.346"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+          "timestamp": "2026-10-01T10:26:16.972Z",
+          "seconds": "1.09"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+          "timestamp": "2026-10-01T10:26:18.710Z",
+          "seconds": "1.033"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+          "timestamp": "2026-10-01T10:26:20.402Z",
+          "seconds": "1.022"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+          "timestamp": "2026-10-01T10:26:22.078Z",
+          "seconds": "1.353"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+          "timestamp": "2026-10-01T10:26:24.080Z",
+          "seconds": "1.403"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:24:47.651Z",
+          "seconds": "1.022"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+          "timestamp": "2026-10-01T10:26:26.137Z",
+          "seconds": "1.131"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+          "timestamp": "2026-10-01T10:24:49.371Z",
+          "seconds": "1.064"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+          "timestamp": "2026-10-01T10:24:51.086Z",
+          "seconds": "0.999"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:24:52.748Z",
+          "seconds": "1.036"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+          "timestamp": "2026-10-01T10:24:54.459Z",
+          "seconds": "1.5"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+          "timestamp": "2026-10-01T10:24:56.656Z",
+          "seconds": "1.034"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+          "timestamp": "2026-10-01T10:24:58.356Z",
+          "seconds": "1.03"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+          "timestamp": "2026-10-01T10:25:00.087Z",
+          "seconds": "0.998"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+          "timestamp": "2026-10-01T10:25:01.757Z",
+          "seconds": "1.073"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+          "timestamp": "2026-10-01T10:25:03.523Z",
+          "seconds": "0.975"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+          "timestamp": "2026-10-01T10:25:05.157Z",
+          "seconds": "0.977"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+          "timestamp": "2026-10-01T10:25:06.790Z",
+          "seconds": "0.951"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+          "timestamp": "2026-10-01T10:25:08.404Z",
+          "seconds": "0.96"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+          "timestamp": "2026-10-01T10:25:10.037Z",
+          "seconds": "1.059"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+          "timestamp": "2026-10-01T10:25:11.754Z",
+          "seconds": "0.978"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+          "timestamp": "2026-10-01T10:25:13.392Z",
+          "seconds": "0.972"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+          "timestamp": "2026-10-01T10:25:15.041Z",
+          "seconds": "0.981"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+          "timestamp": "2026-10-01T10:25:16.703Z",
+          "seconds": "1.13"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+          "timestamp": "2026-10-01T10:26:27.895Z",
+          "seconds": "2.764"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+          "timestamp": "2026-10-01T10:26:31.347Z",
+          "seconds": "87.102"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+          "timestamp": "2026-10-01T10:27:59.117Z",
+          "seconds": "1.45"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+          "timestamp": "2026-10-01T10:25:18.494Z",
+          "seconds": "1.32"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+          "timestamp": "2026-10-01T10:25:20.785Z",
+          "seconds": "1.421"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+          "timestamp": "2026-10-01T10:25:23.224Z",
+          "seconds": "1.32"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-rest-client-tck-4.0-sources.jar": "53133f73af073511bd260718f6cc5ccafaae60b16e5cb3f2ad36e7d9353f1754"
+      }
+    },
+    "rest-client/reference": {
+      "task": "tckReferenceSuite",
+      "counts": {
+        "passed": 214,
+        "skipped": 13
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+          "timestamp": "2026-10-01T10:33:39.887Z",
+          "seconds": "0.64"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+          "timestamp": "2026-10-01T10:33:41.528Z",
+          "seconds": "0.768"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+          "timestamp": "2026-10-01T10:33:43.318Z",
+          "seconds": "0.968"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+          "timestamp": "2026-10-01T10:33:45.189Z",
+          "seconds": "0.706"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+          "timestamp": "2026-10-01T10:33:46.820Z",
+          "seconds": "0.972"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+          "timestamp": "2026-10-01T10:33:48.652Z",
+          "seconds": "0.656"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+          "timestamp": "2026-10-01T10:33:50.113Z",
+          "seconds": "0.847"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+          "timestamp": "2026-10-01T10:33:51.801Z",
+          "seconds": "0.669"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+          "timestamp": "2026-10-01T10:33:53.198Z",
+          "seconds": "0.653"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+          "timestamp": "2026-10-01T10:33:54.666Z",
+          "seconds": "0.799"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+          "timestamp": "2026-10-01T10:33:56.270Z",
+          "seconds": "0.865"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+          "timestamp": "2026-10-01T10:33:57.930Z",
+          "seconds": "0.71"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+          "timestamp": "2026-10-01T10:33:59.463Z",
+          "seconds": "0.63"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+          "timestamp": "2026-10-01T10:34:00.947Z",
+          "seconds": "0.85"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+          "timestamp": "2026-10-01T10:34:02.572Z",
+          "seconds": "0.705"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+          "timestamp": "2026-10-01T10:34:04.078Z",
+          "seconds": "0.621"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+          "timestamp": "2026-10-01T10:34:05.531Z",
+          "seconds": "1.124"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+          "timestamp": "2026-10-01T10:34:07.459Z",
+          "seconds": "0.664"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+          "timestamp": "2026-10-01T10:34:08.898Z",
+          "seconds": "0.68"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:34:10.348Z",
+          "seconds": "0.755"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+          "timestamp": "2026-10-01T10:34:11.834Z",
+          "seconds": "0.828"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+          "timestamp": "2026-10-01T10:34:13.454Z",
+          "seconds": "0.985"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+          "timestamp": "2026-10-01T10:34:15.197Z",
+          "seconds": "0.82"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+          "timestamp": "2026-10-01T10:34:16.767Z",
+          "seconds": "0.569"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+          "timestamp": "2026-10-01T10:34:18.105Z",
+          "seconds": "0.806"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+          "timestamp": "2026-10-01T10:34:19.693Z",
+          "seconds": "0.647"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+          "timestamp": "2026-10-01T10:34:21.102Z",
+          "seconds": "0.609"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+          "timestamp": "2026-10-01T10:34:22.475Z",
+          "seconds": "0.795"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+          "timestamp": "2026-10-01T10:34:24.051Z",
+          "seconds": "0.63"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+          "timestamp": "2026-10-01T10:34:25.458Z",
+          "seconds": "0.597"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+          "timestamp": "2026-10-01T10:34:26.791Z",
+          "seconds": "0.579"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+          "timestamp": "2026-10-01T10:34:28.144Z",
+          "seconds": "0.669"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+          "timestamp": "2026-10-01T10:34:29.573Z",
+          "seconds": "0.79"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:34:31.097Z",
+          "seconds": "0.82"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+          "timestamp": "2026-10-01T10:34:32.666Z",
+          "seconds": "0.598"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+          "timestamp": "2026-10-01T10:34:33.998Z",
+          "seconds": "0.965"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+          "timestamp": "2026-10-01T10:34:35.698Z",
+          "seconds": "0.591"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+          "timestamp": "2026-10-01T10:34:37.007Z",
+          "seconds": "0.74"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+          "timestamp": "2026-10-01T10:34:38.478Z",
+          "seconds": "0.91"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+          "timestamp": "2026-10-01T10:34:40.098Z",
+          "seconds": "0.581"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+          "timestamp": "2026-10-01T10:34:41.403Z",
+          "seconds": "0.698"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+          "timestamp": "2026-10-01T10:34:42.771Z",
+          "seconds": "0.578"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+          "timestamp": "2026-10-01T10:34:44.123Z",
+          "seconds": "0.738"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+          "timestamp": "2026-10-01T10:34:45.546Z",
+          "seconds": "0.537"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+          "timestamp": "2026-10-01T10:34:46.754Z",
+          "seconds": "0.54"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+          "timestamp": "2026-10-01T10:34:47.994Z",
+          "seconds": "0.578"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+          "timestamp": "2026-10-01T10:34:49.296Z",
+          "seconds": "0.405"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+          "timestamp": "2026-10-01T10:34:50.391Z",
+          "seconds": "0.414"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+          "timestamp": "2026-10-01T10:34:51.484Z",
+          "seconds": "0.427"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+          "timestamp": "2026-10-01T10:34:52.624Z",
+          "seconds": "0.42"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+          "timestamp": "2026-10-01T10:34:53.722Z",
+          "seconds": "0.413"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+          "timestamp": "2026-10-01T10:34:54.811Z",
+          "seconds": "0.771"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+          "timestamp": "2026-10-01T10:34:56.234Z",
+          "seconds": "2.762"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+          "timestamp": "2026-10-01T10:34:59.664Z",
+          "seconds": "107.278"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+          "timestamp": "2026-10-01T10:36:47.597Z",
+          "seconds": "1.168"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+          "timestamp": "2026-10-01T10:33:32.428Z",
+          "seconds": "1.089"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+          "timestamp": "2026-10-01T10:33:34.335Z",
+          "seconds": "2.444"
+        },
+        {
+          "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+          "timestamp": "2026-10-01T10:33:37.605Z",
+          "seconds": "1.423"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-rest-client-tck-4.0-sources.jar": "53133f73af073511bd260718f6cc5ccafaae60b16e5cb3f2ad36e7d9353f1754"
+      }
+    },
+    "jwt/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 36,
+        "skipped": 139,
+        "test_failure": 34,
+        "passed": 41
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsJWKLocationTest",
+          "timestamp": "2026-10-01T10:13:41.154Z",
+          "seconds": "1.697"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsPEMLocationTest",
+          "timestamp": "2026-10-01T10:13:43.521Z",
+          "seconds": "1.666"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsPEMTest",
+          "timestamp": "2026-10-01T10:13:45.631Z",
+          "seconds": "1.654"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.IssValidationFailTest",
+          "timestamp": "2026-10-01T10:13:47.702Z",
+          "seconds": "1.839"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.IssValidationTest",
+          "timestamp": "2026-10-01T10:13:49.996Z",
+          "seconds": "1.681"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsBase64JWKTest",
+          "timestamp": "2026-10-01T10:13:52.082Z",
+          "seconds": "1.491"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsFileLocationURLTest",
+          "timestamp": "2026-10-01T10:13:54.043Z",
+          "seconds": "1.578"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationTest",
+          "timestamp": "2026-10-01T10:13:56.046Z",
+          "seconds": "1.493"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest",
+          "timestamp": "2026-10-01T10:13:57.988Z",
+          "seconds": "1.875"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKSLocationTest",
+          "timestamp": "2026-10-01T10:14:00.520Z",
+          "seconds": "1.985"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKSTest",
+          "timestamp": "2026-10-01T10:14:03.021Z",
+          "seconds": "1.937"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKTest",
+          "timestamp": "2026-10-01T10:14:05.526Z",
+          "seconds": "1.69"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationTest",
+          "timestamp": "2026-10-01T10:14:07.650Z",
+          "seconds": "1.668"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest",
+          "timestamp": "2026-10-01T10:14:09.716Z",
+          "seconds": "1.73"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMTest",
+          "timestamp": "2026-10-01T10:14:11.846Z",
+          "seconds": "1.738"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieIgnoredTest",
+          "timestamp": "2026-10-01T10:14:14.067Z",
+          "seconds": "1.641"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieTest",
+          "timestamp": "2026-10-01T10:14:16.256Z",
+          "seconds": "1.641"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.jwe.PrivateKeyAsJWKClasspathTest",
+          "timestamp": "2026-10-01T10:14:18.410Z",
+          "seconds": "2.321"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.jwe.PrivateKeyAsJWKSClasspathTest",
+          "timestamp": "2026-10-01T10:14:21.277Z",
+          "seconds": "1.849"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.config.jwe.PrivateKeyAsPEMClasspathTest",
+          "timestamp": "2026-10-01T10:14:23.549Z",
+          "seconds": "2.485"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.ejb.EjbTest",
+          "timestamp": "2026-10-01T10:14:26.617Z",
+          "seconds": "1.88"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jacc.SubjectTest",
+          "timestamp": "2026-10-01T10:14:28.922Z",
+          "seconds": "2.047"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ApplicationScopedInjectionTest",
+          "timestamp": "2026-10-01T10:14:31.465Z",
+          "seconds": "1.741"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudArrayValidationTest",
+          "timestamp": "2026-10-01T10:14:33.944Z",
+          "seconds": "2.556"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationBadAudTest",
+          "timestamp": "2026-10-01T10:14:37.160Z",
+          "seconds": "2.62"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationMissingAudTest",
+          "timestamp": "2026-10-01T10:14:40.539Z",
+          "seconds": "2.115"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationTest",
+          "timestamp": "2026-10-01T10:14:43.100Z",
+          "seconds": "1.948"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+          "timestamp": "2026-10-01T10:14:45.610Z",
+          "seconds": "2.91"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+          "timestamp": "2026-10-01T10:14:49.268Z",
+          "seconds": "2.095"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.EmptyTokenTest",
+          "timestamp": "2026-10-01T10:14:51.893Z",
+          "seconds": "1.976"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.InvalidTokenTest",
+          "timestamp": "2026-10-01T10:14:54.305Z",
+          "seconds": "1.835"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+          "timestamp": "2026-10-01T10:14:56.647Z",
+          "seconds": "2.519"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+          "timestamp": "2026-10-01T10:14:59.774Z",
+          "seconds": "2.432"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrincipalInjectionTest",
+          "timestamp": "2026-10-01T10:15:02.752Z",
+          "seconds": "1.998"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+          "timestamp": "2026-10-01T10:15:05.170Z",
+          "seconds": "2.447"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+          "timestamp": "2026-10-01T10:15:08.149Z",
+          "seconds": "1.677"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+          "timestamp": "2026-10-01T10:15:10.311Z",
+          "seconds": "1.514"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RsaKeySignatureTest",
+          "timestamp": "2026-10-01T10:15:12.235Z",
+          "seconds": "1.523"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.TokenAgeTest",
+          "timestamp": "2026-10-01T10:15:14.225Z",
+          "seconds": "1.419"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.UnsecuredPingTest",
+          "timestamp": "2026-10-01T10:15:16.039Z",
+          "seconds": "1.601"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.DecryptKeyAlgorithmDefaultTest",
+          "timestamp": "2026-10-01T10:15:18.075Z",
+          "seconds": "1.51"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaep256Test",
+          "timestamp": "2026-10-01T10:15:19.991Z",
+          "seconds": "1.698"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaepTest",
+          "timestamp": "2026-10-01T10:15:22.278Z",
+          "seconds": "1.503"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+          "timestamp": "2026-10-01T10:15:24.216Z",
+          "seconds": "1.817"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.container.servlet.ServletTest",
+          "timestamp": "2026-10-01T10:15:26.467Z",
+          "seconds": "1.715"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+          "timestamp": "2026-10-01T10:15:28.575Z",
+          "seconds": "0.414"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+          "timestamp": "2026-10-01T10:15:29.340Z",
+          "seconds": "0.17"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+          "timestamp": "2026-10-01T10:15:30.011Z",
+          "seconds": "0.174"
+        },
+        {
+          "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+          "timestamp": "2026-10-01T10:15:30.556Z",
+          "seconds": "0.393"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-jwt-auth-tck-2.1-test-sources.jar": "3be56a6b3a32e1062d51e362e734e4daa028dc92066bf06deeb38e646325ad8e"
+      }
+    },
+    "telemetry-metrics/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 16,
+        "skipped": 23
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncDoubleCounterTest",
+          "timestamp": "2026-10-01T10:01:42.199Z",
+          "seconds": "1.462"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncLongCounterTest",
+          "timestamp": "2026-10-01T10:01:44.088Z",
+          "seconds": "1.549"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleCounterTest",
+          "timestamp": "2026-10-01T10:01:46.082Z",
+          "seconds": "1.743"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleGaugeTest",
+          "timestamp": "2026-10-01T10:01:48.277Z",
+          "seconds": "1.718"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleHistogramTest",
+          "timestamp": "2026-10-01T10:01:50.446Z",
+          "seconds": "1.432"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleUpDownCounterTest",
+          "timestamp": "2026-10-01T10:01:52.398Z",
+          "seconds": "1.521"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongCounterTest",
+          "timestamp": "2026-10-01T10:01:54.376Z",
+          "seconds": "1.32"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongGaugeTest",
+          "timestamp": "2026-10-01T10:01:56.124Z",
+          "seconds": "1.297"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongHistogramTest",
+          "timestamp": "2026-10-01T10:01:57.890Z",
+          "seconds": "1.202"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongUpDownCounterTest",
+          "timestamp": "2026-10-01T10:01:59.511Z",
+          "seconds": "1.162"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.http.HttpHistogramTest",
+          "timestamp": "2026-10-01T10:02:01.107Z",
+          "seconds": "1.227"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmClassesTest",
+          "timestamp": "2026-10-01T10:02:02.743Z",
+          "seconds": "1.236"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmCpuTest",
+          "timestamp": "2026-10-01T10:02:04.417Z",
+          "seconds": "1.221"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmGarbageCollectionTest",
+          "timestamp": "2026-10-01T10:02:06.058Z",
+          "seconds": "1.265"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest",
+          "timestamp": "2026-10-01T10:02:07.882Z",
+          "seconds": "1.207"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmThreadTest",
+          "timestamp": "2026-10-01T10:02:09.485Z",
+          "seconds": "1.079"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-telemetry-metrics-tck-2.1-sources.jar": "025e6fbee42ece9ceebce5ae02306b08631a9fa4895cad5665021310dbe01970"
+      }
+    },
+    "telemetry-logs/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 2,
+        "skipped": 3
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.telemetry.logs.tck.application.JulTest",
+          "timestamp": "2026-10-01T10:02:11.368Z",
+          "seconds": "1.032"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.logs.tck.config.ServerInstanceTest",
+          "timestamp": "2026-10-01T10:02:12.885Z",
+          "seconds": "1.144"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-telemetry-logs-tck-2.1-sources.jar": "c362cf6248a6707bce2bbf94034c966a6cf67b5e43d630e2dd524e9acf86081b"
+      }
+    },
+    "context-propagation/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 8,
+        "skipped": 83
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.context.tck.ContextManagerTest",
+          "timestamp": "2026-10-01T09:50:37.074Z",
+          "seconds": "1.163"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+          "timestamp": "2026-10-01T09:50:38.643Z",
+          "seconds": "1.5"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+          "timestamp": "2026-10-01T09:50:40.578Z",
+          "seconds": "1.913"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.TckTest",
+          "timestamp": "2026-10-01T09:50:42.867Z",
+          "seconds": "1.267"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+          "timestamp": "2026-10-01T09:50:44.608Z",
+          "seconds": "1.717"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+          "timestamp": "2026-10-01T09:50:46.698Z",
+          "seconds": "1.731"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+          "timestamp": "2026-10-01T09:50:48.960Z",
+          "seconds": "1.875"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+          "timestamp": "2026-10-01T09:50:51.330Z",
+          "seconds": "1.518"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-context-propagation-tck-1.3-sources.jar": "c39df2474df7dba8c8b1984bb02c2b31480d7325ab485b1f9a15308c36f99657"
+      }
+    },
+    "context-propagation/imported": {
+      "task": "tckImportedSuite",
+      "counts": {
+        "setup_failure": 1,
+        "skipped": 1,
+        "passed": 11,
+        "test_failure": 71
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.context.tck.ContextManagerTest",
+          "timestamp": "2026-10-01T09:51:06.518Z",
+          "seconds": "0.271"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.MPConfigTest",
+          "timestamp": "2026-10-01T09:50:54.524Z",
+          "seconds": "1.961"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.ManagedExecutorTest",
+          "timestamp": "2026-10-01T09:50:57.024Z",
+          "seconds": "2.197"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.TckTest",
+          "timestamp": "2026-10-01T09:51:07.204Z",
+          "seconds": "1.375"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.ThreadContextTest",
+          "timestamp": "2026-10-01T09:51:08.991Z",
+          "seconds": "1.685"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.cdi.BasicCDITest",
+          "timestamp": "2026-10-01T09:50:59.681Z",
+          "seconds": "1.907"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.cdi.CDIContextTest",
+          "timestamp": "2026-10-01T09:51:02.027Z",
+          "seconds": "1.678"
+        },
+        {
+          "class": "org.eclipse.microprofile.context.tck.cdi.JTACDITest",
+          "timestamp": "2026-10-01T09:51:04.095Z",
+          "seconds": "1.985"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-context-propagation-tck-1.3-sources.jar": "c39df2474df7dba8c8b1984bb02c2b31480d7325ab485b1f9a15308c36f99657"
+      }
+    },
+    "reactive-streams/native": {
+      "task": "tckSuite",
+      "counts": {
+        "passed": 1269,
+        "skipped": 679
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnErrorResumeStageVerification$OnErrorResumeWithVerification",
+          "timestamp": "2026-10-01T09:56:26.940Z",
+          "seconds": "24.428"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FromCompletionStageNullableVerification",
+          "timestamp": "2026-10-01T09:51:10.397Z",
+          "seconds": "0.318"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnErrorResumeStageVerification$OnErrorResumeWithPublisherVerification",
+          "timestamp": "2026-10-01T10:02:12.675Z",
+          "seconds": "31.438"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.DistinctStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:51:20.136Z",
+          "seconds": "36.528"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CoupledStageVerification$SubscriberVerification",
+          "timestamp": "2026-10-01T10:02:44.128Z",
+          "seconds": "7.04"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CoupledStageVerification$PublisherVerification",
+          "timestamp": "2026-10-01T10:00:57.709Z",
+          "seconds": "31.453"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CancelStageVerification$SubscriberVerification",
+          "timestamp": "2026-10-01T10:02:44.113Z",
+          "seconds": "0.005"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CoupledStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:51:11.050Z",
+          "seconds": "9.086"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.ConcatStageVerification$PublisherVerification",
+          "timestamp": "2026-10-01T10:00:25.258Z",
+          "seconds": "32.451"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FilterStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:52:56.618Z",
+          "seconds": "31.518"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.LimitStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:54:37.448Z",
+          "seconds": "36.484"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnStagesVerification$OnTerminateVerification",
+          "timestamp": "2026-10-01T09:58:04.344Z",
+          "seconds": "36.475"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnErrorResumeStageVerification$OnErrorResumeVerification",
+          "timestamp": "2026-10-01T09:55:50.446Z",
+          "seconds": "36.494"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.SkipStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:59:17.291Z",
+          "seconds": "31.478"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnStagesVerification$OnCompleteVerification",
+          "timestamp": "2026-10-01T09:56:51.368Z",
+          "seconds": "36.485"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.PeekStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:58:40.819Z",
+          "seconds": "36.472"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapCompletionStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:53:28.136Z",
+          "seconds": "22.432"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.MapStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:55:13.932Z",
+          "seconds": "36.514"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OfStageVerification$PublisherVerification",
+          "timestamp": "2026-10-01T10:01:41.222Z",
+          "seconds": "31.453"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CollectStageVerification$CollectSubscriberVerification",
+          "timestamp": "2026-10-01T10:02:44.118Z",
+          "seconds": "0.003"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapIterableStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:53:50.568Z",
+          "seconds": "23.44"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnStagesVerification$OnErrorVerification",
+          "timestamp": "2026-10-01T09:57:27.853Z",
+          "seconds": "36.491"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FromCompletionStageVerification$PublisherVerification",
+          "timestamp": "2026-10-01T10:01:35.194Z",
+          "seconds": "6.028"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CollectStageVerification$ToListSubscriberVerification",
+          "timestamp": "2026-10-01T10:02:44.121Z",
+          "seconds": "0.004"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FromCompletionStageNullableVerification$PublisherVerification",
+          "timestamp": "2026-10-01T10:01:29.162Z",
+          "seconds": "6.032"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapStageVerification$InnerSubscriberVerification",
+          "timestamp": "2026-10-01T10:02:51.168Z",
+          "seconds": "7.145"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapStageVerification$OuterProcessorVerification",
+          "timestamp": "2026-10-01T09:54:14.008Z",
+          "seconds": "23.44"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FindFirstStageVerification$SubscriberVerification",
+          "timestamp": "2026-10-01T10:02:44.125Z",
+          "seconds": "0.003"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.EmptyProcessorVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:52:20.128Z",
+          "seconds": "36.49"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.DropWhileStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:51:56.664Z",
+          "seconds": "23.464"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.TakeWhileStageVerification$ProcessorVerification",
+          "timestamp": "2026-10-01T09:59:48.769Z",
+          "seconds": "36.489"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.api.CompletionRunnerVerification",
+          "timestamp": "2026-10-01T09:51:08.590Z",
+          "seconds": "0.011"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.api.CompletionSubscriberVerification",
+          "timestamp": "2026-10-01T09:51:08.601Z",
+          "seconds": "0.012"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.api.ProcessorBuilderVerification",
+          "timestamp": "2026-10-01T09:51:08.612Z",
+          "seconds": "0.029"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.api.PublisherBuilderVerification",
+          "timestamp": "2026-10-01T09:51:08.641Z",
+          "seconds": "0.022"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.api.ReactiveStreamsVerification",
+          "timestamp": "2026-10-01T09:51:08.663Z",
+          "seconds": "0.008"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.api.SubscriberBuilderVerification",
+          "timestamp": "2026-10-01T09:51:08.670Z",
+          "seconds": "0.002"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CancelStageVerification",
+          "timestamp": "2026-10-01T09:51:08.671Z",
+          "seconds": "0.023"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CollectStageVerification",
+          "timestamp": "2026-10-01T09:51:08.693Z",
+          "seconds": "0.014"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.ConcatStageVerification",
+          "timestamp": "2026-10-01T09:51:08.707Z",
+          "seconds": "0.005"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.CoupledStageVerification",
+          "timestamp": "2026-10-01T09:51:08.712Z",
+          "seconds": "0.007"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.DistinctStageVerification",
+          "timestamp": "2026-10-01T09:51:08.718Z",
+          "seconds": "0.003"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.DropWhileStageVerification",
+          "timestamp": "2026-10-01T09:51:08.721Z",
+          "seconds": "0.003"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FilterStageVerification",
+          "timestamp": "2026-10-01T09:51:08.723Z",
+          "seconds": "0.003"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FindFirstStageVerification",
+          "timestamp": "2026-10-01T09:51:08.725Z",
+          "seconds": "0.006"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapCompletionStageVerification",
+          "timestamp": "2026-10-01T09:51:08.730Z",
+          "seconds": "0.619"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapIterableStageVerification",
+          "timestamp": "2026-10-01T09:51:09.348Z",
+          "seconds": "0.008"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FlatMapStageVerification",
+          "timestamp": "2026-10-01T09:51:09.355Z",
+          "seconds": "1.043"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.FromCompletionStageVerification",
+          "timestamp": "2026-10-01T09:51:10.715Z",
+          "seconds": "0.319"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.LimitStageVerification",
+          "timestamp": "2026-10-01T09:51:11.034Z",
+          "seconds": "0.002"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.MapStageVerification",
+          "timestamp": "2026-10-01T09:51:11.036Z",
+          "seconds": "0.001"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OfStageVerification",
+          "timestamp": "2026-10-01T09:51:11.037Z",
+          "seconds": "0.002"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnErrorResumeStageVerification",
+          "timestamp": "2026-10-01T09:51:11.039Z",
+          "seconds": "0.004"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.OnStagesVerification",
+          "timestamp": "2026-10-01T09:51:11.042Z",
+          "seconds": "0.004"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.PeekStageVerification",
+          "timestamp": "2026-10-01T09:51:11.045Z",
+          "seconds": "0.002"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.SkipStageVerification",
+          "timestamp": "2026-10-01T09:51:11.047Z",
+          "seconds": "0.0"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.SubscriberStageVerification",
+          "timestamp": "2026-10-01T09:51:11.047Z",
+          "seconds": "0.002"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.streams.operators.tck.spi.TakeWhileStageVerification",
+          "timestamp": "2026-10-01T09:51:11.048Z",
+          "seconds": "0.003"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-reactive-streams-operators-tck-3.0.1-sources.jar": "7ecbcc6ab3d1cef7f3b708abdad934fd8af7735fc84aa74376b154c21f09b543"
+      }
+    },
+    "reactive-messaging/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 64
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.ThrowExceptionOverflowStrategyTest",
+          "timestamp": "2026-10-01T10:00:23.942Z",
+          "seconds": "1.871"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.EmitterOfMessageAcknowledgementTest",
+          "timestamp": "2026-10-01T09:59:20.215Z",
+          "seconds": "1.652"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.BufferOverflowStrategyOverflowTest",
+          "timestamp": "2026-10-01T09:59:59.039Z",
+          "seconds": "1.466"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.ThrowExceptionOverflowStrategyOverflowTest",
+          "timestamp": "2026-10-01T10:00:21.950Z",
+          "seconds": "1.598"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.EmitterOfPayloadAcknowledgementTest",
+          "timestamp": "2026-10-01T09:59:22.253Z",
+          "seconds": "1.655"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherBuilderPayloadTest",
+          "timestamp": "2026-10-01T09:59:35.646Z",
+          "seconds": "1.622"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousMessageProcessorAckTest",
+          "timestamp": "2026-10-01T09:59:12.108Z",
+          "seconds": "1.656"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherBuilderMessageTest",
+          "timestamp": "2026-10-01T09:59:33.189Z",
+          "seconds": "2.1"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousPayloadProcessorAckTest",
+          "timestamp": "2026-10-01T09:59:16.238Z",
+          "seconds": "1.715"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.LatestOverflowStrategyOverflowTest",
+          "timestamp": "2026-10-01T10:00:17.231Z",
+          "seconds": "1.901"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionMessageBeanWithPayloadsWithAckTest",
+          "timestamp": "2026-10-01T09:59:51.124Z",
+          "seconds": "1.785"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DefaultOverflowStrategyOverflowWithoutBufferSizeTest",
+          "timestamp": "2026-10-01T10:00:04.610Z",
+          "seconds": "1.767"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionEmittingDataAfterTerminationTest",
+          "timestamp": "2026-10-01T09:59:45.022Z",
+          "seconds": "1.65"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionDifferentFlavourSameChannelTest",
+          "timestamp": "2026-10-01T09:59:30.917Z",
+          "seconds": "1.756"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionAfterTerminatingWithErrorTest",
+          "timestamp": "2026-10-01T09:59:41.524Z",
+          "seconds": "1.414"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DefaultOverflowStrategyOverflowTest",
+          "timestamp": "2026-10-01T10:00:02.608Z",
+          "seconds": "1.725"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousMessageSubscriberAckTest",
+          "timestamp": "2026-10-01T09:59:14.101Z",
+          "seconds": "1.809"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.AsynchronousPayloadSubscriberAckTest",
+          "timestamp": "2026-10-01T09:59:18.244Z",
+          "seconds": "1.667"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.ProcessorChainTest",
+          "timestamp": "2026-10-01T09:59:08.434Z",
+          "seconds": "1.541"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.SimpleIncomingTest",
+          "timestamp": "2026-10-01T09:59:10.279Z",
+          "seconds": "1.527"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.MessageProcessorAckTest",
+          "timestamp": "2026-10-01T09:59:24.224Z",
+          "seconds": "1.974"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.PayloadProcessorAckTest",
+          "timestamp": "2026-10-01T09:59:26.558Z",
+          "seconds": "1.741"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.acknowledgement.PayloadSubscriberAckTest",
+          "timestamp": "2026-10-01T09:59:28.649Z",
+          "seconds": "1.877"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherPayloadTest",
+          "timestamp": "2026-10-01T09:59:37.563Z",
+          "seconds": "1.748"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.ChannelInjectionPublisherTest",
+          "timestamp": "2026-10-01T09:59:39.626Z",
+          "seconds": "1.592"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionConnectedToProcessorTest",
+          "timestamp": "2026-10-01T09:59:43.227Z",
+          "seconds": "1.468"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionEmittingMessageTest",
+          "timestamp": "2026-10-01T09:59:46.987Z",
+          "seconds": "1.486"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionEmittingNullTest",
+          "timestamp": "2026-10-01T09:59:48.798Z",
+          "seconds": "1.921"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionMissingChannelTest",
+          "timestamp": "2026-10-01T09:59:53.221Z",
+          "seconds": "1.53"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionPayloadsTest",
+          "timestamp": "2026-10-01T09:59:55.077Z",
+          "seconds": "1.735"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.EmitterInjectionPayloadsWithAckTest",
+          "timestamp": "2026-10-01T09:59:57.101Z",
+          "seconds": "1.577"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.BufferOverflowStrategyTest",
+          "timestamp": "2026-10-01T10:00:00.802Z",
+          "seconds": "1.509"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DefaultOverflowStrategyTest",
+          "timestamp": "2026-10-01T10:00:06.844Z",
+          "seconds": "1.908"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DropOverflowStrategyOverflowTest",
+          "timestamp": "2026-10-01T10:00:09.195Z",
+          "seconds": "1.884"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.DropOverflowStrategyTest",
+          "timestamp": "2026-10-01T10:00:11.427Z",
+          "seconds": "2.884"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.FailOverflowStrategyOverflowTest",
+          "timestamp": "2026-10-01T10:00:14.802Z",
+          "seconds": "2.056"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.channel.overflow.LatestOverflowStrategyTest",
+          "timestamp": "2026-10-01T10:00:19.591Z",
+          "seconds": "1.973"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.connector.ConnectorTest",
+          "timestamp": "2026-10-01T10:00:26.298Z",
+          "seconds": "1.775"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.connector.MissingConnectorTest",
+          "timestamp": "2026-10-01T10:00:28.418Z",
+          "seconds": "2.372"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.invalid.InvalidConfigurationTest",
+          "timestamp": "2026-10-01T10:00:31.094Z",
+          "seconds": "6.188"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.metrics.MetricsTest",
+          "timestamp": "2026-10-01T10:00:37.645Z",
+          "seconds": "1.833"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.scope.ApplicationScopeTest",
+          "timestamp": "2026-10-01T10:00:39.960Z",
+          "seconds": "1.606"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.scope.DependantScopeTest",
+          "timestamp": "2026-10-01T10:00:41.940Z",
+          "seconds": "1.583"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.invalid.InvalidSubscriberSignatureTest",
+          "timestamp": "2026-10-01T10:00:43.901Z",
+          "seconds": "2.216"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.processors.ProcessorShapeTest",
+          "timestamp": "2026-10-01T10:00:46.563Z",
+          "seconds": "1.925"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.publishers.PublisherShapeTest",
+          "timestamp": "2026-10-01T10:00:48.797Z",
+          "seconds": "1.666"
+        },
+        {
+          "class": "org.eclipse.microprofile.reactive.messaging.tck.signatures.subscribers.SubscriberShapeTest",
+          "timestamp": "2026-10-01T10:00:50.787Z",
+          "seconds": "1.644"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-reactive-messaging-tck-3.0.1-sources.jar": "4852bfbc10b6509e8ae8d66ab1dbd53e2c4c1f0670472b75693ff133fc57295d"
+      }
+    },
+    "telemetry-tracing/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 24,
+        "skipped": 58
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsClientAsyncTest",
+          "timestamp": "2026-10-01T10:00:53.585Z",
+          "seconds": "1.79"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest",
+          "timestamp": "2026-10-01T10:00:55.920Z",
+          "seconds": "1.662"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.async.MpRestClientAsyncTest",
+          "timestamp": "2026-10-01T10:00:58.105Z",
+          "seconds": "1.711"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.BaggageBeanTest",
+          "timestamp": "2026-10-01T10:01:00.268Z",
+          "seconds": "1.479"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.OpenTelemetryBeanTest",
+          "timestamp": "2026-10-01T10:01:02.199Z",
+          "seconds": "1.262"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.SpanBeanTest",
+          "timestamp": "2026-10-01T10:01:03.994Z",
+          "seconds": "1.374"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.cdi.TracerTest",
+          "timestamp": "2026-10-01T10:01:05.833Z",
+          "seconds": "1.292"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.B3MultiPropagationTest",
+          "timestamp": "2026-10-01T10:01:07.566Z",
+          "seconds": "1.716"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.B3PropagationTest",
+          "timestamp": "2026-10-01T10:01:09.705Z",
+          "seconds": "1.552"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.BaggageTest",
+          "timestamp": "2026-10-01T10:01:11.647Z",
+          "seconds": "1.392"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.JaegerPropagationTest",
+          "timestamp": "2026-10-01T10:01:13.481Z",
+          "seconds": "1.463"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.PropagatorSpiTest",
+          "timestamp": "2026-10-01T10:01:15.364Z",
+          "seconds": "1.749"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDefaultTest",
+          "timestamp": "2026-10-01T10:01:17.543Z",
+          "seconds": "1.594"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanDisabledTest",
+          "timestamp": "2026-10-01T10:01:19.568Z",
+          "seconds": "1.658"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestClientSpanTest",
+          "timestamp": "2026-10-01T10:01:21.662Z",
+          "seconds": "1.503"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDefaultTest",
+          "timestamp": "2026-10-01T10:01:23.606Z",
+          "seconds": "1.38"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanDisabledTest",
+          "timestamp": "2026-10-01T10:01:25.457Z",
+          "seconds": "1.473"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.RestSpanTest",
+          "timestamp": "2026-10-01T10:01:27.707Z",
+          "seconds": "1.556"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.W3BaggagePropagationTest",
+          "timestamp": "2026-10-01T10:01:29.667Z",
+          "seconds": "1.704"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.rest.W3PropagationTest",
+          "timestamp": "2026-10-01T10:01:31.786Z",
+          "seconds": "1.5"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.CustomizerSpiTest",
+          "timestamp": "2026-10-01T10:01:33.687Z",
+          "seconds": "1.589"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.ExporterSpiTest",
+          "timestamp": "2026-10-01T10:01:35.710Z",
+          "seconds": "1.428"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.ResourceSpiTest",
+          "timestamp": "2026-10-01T10:01:37.571Z",
+          "seconds": "1.702"
+        },
+        {
+          "class": "org.eclipse.microprofile.telemetry.tracing.tck.spi.SamplerSpiTest",
+          "timestamp": "2026-10-01T10:01:39.709Z",
+          "seconds": "1.42"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-telemetry-tracing-tck-2.1-sources.jar": "b0764c0842541b7bed340f192a5ec769e10ebc059c97dcfac1941c57237cdafe"
+      }
+    },
+    "graphql/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 2,
+        "skipped": 236
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+          "timestamp": "2026-10-01T10:24:29.108Z",
+          "seconds": "1.784"
+        },
+        {
+          "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+          "timestamp": "2026-10-01T10:24:31.240Z",
+          "seconds": "1.794"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-graphql-tck-2.0-sources.jar": "f222afd8a71883db7f921de35a8713223db7052e1accca8b7f64cb54a0d1a46c"
+      }
+    },
+    "graphql/imported": {
+      "task": "tckImportedSuite",
+      "counts": {
+        "setup_failure": 2,
+        "skipped": 236
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+          "timestamp": "2026-10-01T10:24:34.016Z",
+          "seconds": "1.798"
+        },
+        {
+          "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+          "timestamp": "2026-10-01T10:24:36.176Z",
+          "seconds": "1.954"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-graphql-tck-2.0-sources.jar": "f222afd8a71883db7f921de35a8713223db7052e1accca8b7f64cb54a0d1a46c"
+      }
+    },
+    "graphql/reference": {
+      "task": "tckReferenceSuite",
+      "counts": {
+        "passed": 220,
+        "test_failure": 16
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+          "timestamp": "2026-10-01T10:24:39.056Z",
+          "seconds": "1.8"
+        },
+        {
+          "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+          "timestamp": "2026-10-01T10:24:41.250Z",
+          "seconds": "1.019"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-graphql-tck-2.0-sources.jar": "f222afd8a71883db7f921de35a8713223db7052e1accca8b7f64cb54a0d1a46c"
+      }
+    },
+    "metrics-api/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 40
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.MetricFilterTest",
+          "timestamp": "2026-10-01T10:08:34.599Z",
+          "seconds": "0.975"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.MetricIDTest",
+          "timestamp": "2026-10-01T10:08:35.837Z",
+          "seconds": "0.95"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.MetricRegistryTest",
+          "timestamp": "2026-10-01T10:08:37.152Z",
+          "seconds": "0.915"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.cdi.ApplicationScopedTimedMethodBeanTest",
+          "timestamp": "2026-10-01T10:08:38.368Z",
+          "seconds": "0.997"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.cdi.GaugeInjectionBeanTest",
+          "timestamp": "2026-10-01T10:08:39.681Z",
+          "seconds": "1.026"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.cdi.TimerInjectionBeanTest",
+          "timestamp": "2026-10-01T10:08:41.015Z",
+          "seconds": "0.983"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.cdi.stereotype.StereotypeCountedClassBeanTest",
+          "timestamp": "2026-10-01T10:08:42.288Z",
+          "seconds": "1.095"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.config.BadHistogramTimerConfigTest",
+          "timestamp": "2026-10-01T10:08:43.691Z",
+          "seconds": "1.06"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.config.HistogramConfigFieldBeanTest",
+          "timestamp": "2026-10-01T10:08:45.237Z",
+          "seconds": "1.193"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.config.TimerConfigFieldBeanTest",
+          "timestamp": "2026-10-01T10:08:46.740Z",
+          "seconds": "1.048"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.inheritance.InheritedGaugeMethodBeanTest",
+          "timestamp": "2026-10-01T10:08:48.068Z",
+          "seconds": "1.099"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.inheritance.InheritedTimedMethodBeanTest",
+          "timestamp": "2026-10-01T10:08:49.485Z",
+          "seconds": "1.134"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.inheritance.VisibilityTimedMethodBeanTest",
+          "timestamp": "2026-10-01T10:08:50.913Z",
+          "seconds": "1.066"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.ConcreteExtendedTimedBeanTest",
+          "timestamp": "2026-10-01T10:08:52.293Z",
+          "seconds": "0.977"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.ConcreteTimedBeanTest",
+          "timestamp": "2026-10-01T10:08:53.549Z",
+          "seconds": "1.004"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.CountedClassBeanTest",
+          "timestamp": "2026-10-01T10:08:54.850Z",
+          "seconds": "1.016"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.CountedMethodBeanTest",
+          "timestamp": "2026-10-01T10:08:56.153Z",
+          "seconds": "1.08"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.CountedMethodTagBeanTest",
+          "timestamp": "2026-10-01T10:08:57.550Z",
+          "seconds": "1.041"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.CounterFieldBeanTest",
+          "timestamp": "2026-10-01T10:08:58.889Z",
+          "seconds": "0.968"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.CounterTest",
+          "timestamp": "2026-10-01T10:09:00.207Z",
+          "seconds": "0.926"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.DefaultNameMetricMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:01.468Z",
+          "seconds": "1.153"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.GaugeMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:02.949Z",
+          "seconds": "1.216"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.GaugeTest",
+          "timestamp": "2026-10-01T10:09:04.480Z",
+          "seconds": "1.032"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.HistogramFieldBeanTest",
+          "timestamp": "2026-10-01T10:09:05.819Z",
+          "seconds": "1.054"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.HistogramTest",
+          "timestamp": "2026-10-01T10:09:07.155Z",
+          "seconds": "1.074"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.MultipleMetricsConstructorBeanTest",
+          "timestamp": "2026-10-01T10:09:08.506Z",
+          "seconds": "1.175"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.MultipleMetricsMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:10.003Z",
+          "seconds": "1.183"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.OverloadedTimedMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:11.465Z",
+          "seconds": "1.141"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedClassBeanTest",
+          "timestamp": "2026-10-01T10:09:12.892Z",
+          "seconds": "1.238"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedConstructorBeanTest",
+          "timestamp": "2026-10-01T10:09:14.417Z",
+          "seconds": "1.015"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedMethodBeanLookupTest",
+          "timestamp": "2026-10-01T10:09:15.715Z",
+          "seconds": "1.003"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:16.989Z",
+          "seconds": "1.032"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.TimerFieldBeanTest",
+          "timestamp": "2026-10-01T10:09:18.302Z",
+          "seconds": "0.958"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.metrics.TimerTest",
+          "timestamp": "2026-10-01T10:09:19.533Z",
+          "seconds": "0.952"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.tags.CounterFieldTagBeanTest",
+          "timestamp": "2026-10-01T10:09:20.772Z",
+          "seconds": "0.954"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.tags.GaugeTagMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:22.006Z",
+          "seconds": "0.989"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.tags.HistogramTagFieldBeanTest",
+          "timestamp": "2026-10-01T10:09:23.271Z",
+          "seconds": "0.922"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.tags.TagsTest",
+          "timestamp": "2026-10-01T10:09:24.462Z",
+          "seconds": "0.92"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.tags.TimedTagMethodBeanTest",
+          "timestamp": "2026-10-01T10:09:25.691Z",
+          "seconds": "0.998"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.tck.tags.TimerTagFieldBeanTest",
+          "timestamp": "2026-10-01T10:09:26.991Z",
+          "seconds": "0.956"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-metrics-api-tck-5.1.2-sources.jar": "c869187e7301d56e0cd27d867e90d82a945fd652c8fea8d8bfddc0c5c313d502"
+      }
+    },
+    "metrics-rest/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 4
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.metrics.test.HistogramTimerConfigurationTest",
+          "timestamp": "2026-10-01T10:09:28.751Z",
+          "seconds": "1.183"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.test.MpMetricTest",
+          "timestamp": "2026-10-01T10:09:30.315Z",
+          "seconds": "1.237"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.test.ReusedMetricsTest",
+          "timestamp": "2026-10-01T10:09:31.860Z",
+          "seconds": "1.036"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.test.multipleinstances.MultipleBeanInstancesTest",
+          "timestamp": "2026-10-01T10:09:33.212Z",
+          "seconds": "1.045"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-metrics-rest-tck-5.1.2-sources.jar": "10b4eafb7fa7d6c449e41e62c1d24359cd2d2b2f9d6366aa3c9ebbac8477c068"
+      }
+    },
+    "metrics-optional/native": {
+      "task": "tckSuite",
+      "counts": {
+        "setup_failure": 2
+      },
+      "suites": [
+        {
+          "class": "org.eclipse.microprofile.metrics.test.optional.MPMetricBaseMetricsTest",
+          "timestamp": "2026-10-01T10:13:35.766Z",
+          "seconds": "1.38"
+        },
+        {
+          "class": "org.eclipse.microprofile.metrics.test.optional.MpMetricOptionalTest",
+          "timestamp": "2026-10-01T10:13:37.514Z",
+          "seconds": "1.675"
+        }
+      ],
+      "source_artifacts": {
+        "microprofile-metrics-optional-tck-5.1.2-sources.jar": "4b53e67d7f5c4de81f8dd86a4aa77291c2ac4fb1eb057ddb216efb1849d0a245"
+      }
+    }
+  },
+  "runner_sha256_at_snapshot": {
+    "FINDINGS.md": "6527bf04a8bd0b0c30dabe042a41ab10dfab0ae33d27b137ad89379c1154ce62",
+    "README.md": "537358f248cd214e093d5f16134b231233f3c0eaac09175e44239c7848e6df61",
+    "components.json": "ae7a02830734bbb525c7db9c9ba3e19c4104ba55d775fb5b26c9eaafa19ee38a",
+    "config/build.gradle": "c8cfe34d7591f7ff62db95b47567a81c33863eda81f7e71ce97e98cfebf4ca32",
+    "context-propagation/build.gradle": "592f182e0d90ca7796e500085ecc66347eb5d840307bb788a150f6378baacb1d",
+    "fault-tolerance/build.gradle": "75ae7f44e4211c9ab459a38fef568d06aeb5f82a3c414d99821dc77f969f83a3",
+    "graphql/build.gradle": "83607f4ab03e643be51e2ab9d7da342f90096241487317e5640b4e28d4254b4f",
+    "graphql/src/test/java/io/micronaut/cdi/mptck/graphql/GraphQlDiscovery.java": "33b760d0f330161c749776ef07db13e7f85a72dd89db75a4a33955ba08f74d0c",
+    "graphql/src/test/java/io/micronaut/cdi/mptck/graphql/SmallRyeGraphQlEndpoint.java": "9016f81b6a965e1a63ace69bb93202f70d48f50add2cdd12796c39792476f4e5",
+    "graphql/src/test/resources/META-INF/services/io.micronaut.cdi.mptck.EndpointAdapter": "c367522a859ccf6b6b0bccbacd0d0825c547e8d727830feb4fb540084ce92442",
+    "health/build.gradle": "66ddea3c3f752e707428772b62d6b6208923b061fd3ed930688474484095922a",
+    "health/src/test/java/io/micronaut/cdi/mptck/health/SmallRyeHealthEndpoint.java": "f17eb374de5bb4a29b4f86c1a94d948888b2bd1f5cd75aa889de37edf24b033e",
+    "health/src/test/resources/META-INF/services/io.micronaut.cdi.mptck.EndpointAdapter": "c7724cfa623b21b93841207b678926023ad1a2266b1c0ab3fb32beaecae0992f",
+    "jwt/build.gradle": "25b48df1207cd33d6697deebd6fdc25bffb3bde94413dd14d1869f5fbeaae72e",
+    "metrics-api/build.gradle": "ca7e3248ebbad2d80da4684785e7d21a7b783d1e27b005b66bca462957169971",
+    "metrics-optional/build.gradle": "66011958c9f65716c8aff1fc0c293a0eb20294333f364c9e8396d22ea52a9121",
+    "metrics-optional/src/test/resources/META-INF/beans.xml": "812e2e963ab7109d7629568a8f082780654630920faeaf4ee76f508947cb5d37",
+    "metrics-rest/build.gradle": "4eeb68931b2060dd3c4c1bcc6178a25aaf91f4e1194d0545454e05d0407cb686",
+    "openapi/build.gradle": "73f47ebeb384ed0da182f6b9d89b1d07236290477e272ed5bcbf3b2eafee8015",
+    "openapi/src/test/java/io/micronaut/cdi/mptck/openapi/SmallRyeOpenApiEndpoint.java": "1aa9d283960717e78010d1a6c38681c1503dbb6121dd0f464a7fe2aebe55cd44",
+    "openapi/src/test/resources/META-INF/services/io.micronaut.cdi.mptck.EndpointAdapter": "afdfea2cebc8e2c6c263c25a2f47601617f1ad1a4c9211308e8a9fd776aa8c65",
+    "reactive-messaging/build.gradle": "be8045658cd1881dc65f76bf964906f4e950613660a770c7f07ea0e9e4a9fd93",
+    "reactive-streams/build.gradle": "f1db3eebc82aa58364716224f9010dcae17ee595fe415f35fbc489705084f47a",
+    "reactive-streams/src/test/java/io/micronaut/cdi/mptck/streams/SmallRyeStreamsTck.java": "31cdc90b2647cc198ad17416f785bc9dd1ff0f75cf3fc90ded260846f57781db",
+    "rest-client/build.gradle": "3ef36c68f5f7ad9dc8c086f7e27423ba688eed42f59c30241a4af74d3e85a4e4",
+    "rest-client/src/test/java/io/micronaut/cdi/mptck/rest/WireMockEndpoint.java": "86947dd428b95f82c39e319c478e70da219110ff246eba09802225f433370486",
+    "rest-client/src/test/resources/META-INF/services/io.micronaut.cdi.mptck.EndpointAdapter": "510efa72d9bc28ac49bb17c7cf693ee8dfe1e43fbf11ea8eb2af369275f1e5be",
+    "rest-client/src/test/resources/META-INF/services/org.testng.ITestNGListener": "510efa72d9bc28ac49bb17c7cf693ee8dfe1e43fbf11ea8eb2af369275f1e5be",
+    "snapshot.py": "c80b20e4d9829232a9e7a737fdb8392e8a905a3c04d6955d2a9c034b742bc0d0",
+    "support/build.gradle": "5e697d229317fa20ae46c81e1000cf82687a26827eeb987786d3c1f6e86782ee",
+    "support/src/main/java/io/micronaut/cdi/mptck/ArchiveClassLoader.java": "5a05a3f10f11b41b693f6af8ba48602f379ce5c918e11884772fceb4b705ac69",
+    "support/src/main/java/io/micronaut/cdi/mptck/CurrentDeployment.java": "4b375d572f7ed24e9c65cf3bb250ae20eace26035b03fc538dfef95b0ccc0494",
+    "support/src/main/java/io/micronaut/cdi/mptck/DeploymentCompiler.java": "3aca629d365e565e87ed144444d16cb9b531221a862053caa3eb19285254bf41",
+    "support/src/main/java/io/micronaut/cdi/mptck/EndpointAdapter.java": "214a1f086de8cf5087b0edc6194c07f95af4c57d23e10c17872f000a33292783",
+    "support/src/main/java/io/micronaut/cdi/mptck/GeneratedClasses.java": "1a88ff57224a5438d5c387ffab15f62f6f00ac917d52561ac723db12cccc8c00",
+    "support/src/main/java/io/micronaut/cdi/mptck/HttpEndpoint.java": "7025220501eed4aba06181f6465233d9227770b17836832f7f315ae4677d2058",
+    "support/src/main/java/io/micronaut/cdi/mptck/MicronautArquillianExtension.java": "70f24d55442022147f6224fa5703fa53f5c9822654f81361f0f79a0be8f97d54",
+    "support/src/main/java/io/micronaut/cdi/mptck/MicronautContainerConfiguration.java": "7b101ad1c861706004f0c0577f759da4e2ecda4c29b76264830cbe44d1a4734e",
+    "support/src/main/java/io/micronaut/cdi/mptck/MicronautDeployableContainer.java": "74c3983d0e2be430f007fbc940fe636260c8f73dc121dbde33a2eb9090a0ceec",
+    "support/src/main/java/io/micronaut/cdi/mptck/MicronautTestEnricher.java": "3d57db6002b6e0470a5e45d999579345e9ebd0cbe5c62586d099358d022aa947",
+    "support/src/main/java/io/micronaut/cdi/mptck/ReferenceAnchor.java": "037584cd2c7ad27aaafe93afd162d62fb06f6153ee86180bb9abe0e6768f1f7d",
+    "support/src/main/java/io/micronaut/cdi/mptck/TckProgress.java": "82eaebfce30d953538860d0bd002d5d3deeda6f3514ec5376f77850452a3fe42",
+    "support/src/main/java/io/micronaut/cdi/mptck/UriProvider.java": "439bd44e503a3c0fb3623b6c8f70772e94a76a337e77c2bc98cf23dc4533f4aa",
+    "support/src/main/java/io/micronaut/cdi/mptck/UrlProvider.java": "53d4c672fc10005b0b5fe8ce23c698f013fa04f631ae5efa21c231342eaa7552",
+    "support/src/main/resources/META-INF/services/org.jboss.arquillian.core.spi.LoadableExtension": "0142cc6092f021e6ee7678e1f5e9160d9fdacfc432ff91a839bbdc6e6b83500f",
+    "support/src/main/resources/META-INF/services/org.testng.ITestNGListener": "a3aa2abc679e1b12feab9d0f0829e640f8472a3a8484868e150780726d997582",
+    "tck.gradle": "d069b0dda8c69f26c9d561cf26ef032a209ae8c7460a85260b85a9567ee3018f",
+    "telemetry-logs/build.gradle": "0cbff6b040bfea5bae8cacd556035f11cd06d33d3ef53d6dd56cbda2910cbee2",
+    "telemetry-metrics/build.gradle": "cd55c3b4b7085987124bdfb471c1f737bc18a5a4cccf92e599b2869b759ba315",
+    "telemetry-tracing/build.gradle": "fc06563939b9e524f53241115b31de8d9f3f2f1d8d69165d5086bb89e0639334"
+  },
+  "evidence_sha256": {
+    "config/imported/artifacts.tsv": "7d5316e4435382b9e5df8c66c74420ca5a7b0b01e672991cecf69880971dd6b6",
+    "config/imported/cases.json": "b881cedc47ae3cf2b00b89291af13134236dfd69e99d81dba6a599943be89d0f",
+    "config/imported/deployments.json": "6484653830419d98ce297c00ebefa65a90aa4046c6228f996625caa139972ecb",
+    "config/imported/selected-tests.txt": "8ea53e26b9be450bd1adaa6472b5a2279d011909a35d41e9bad8eaa536378298",
+    "config/imported/traces.json": "d2cb9cfd3b59b0fd416654f6d15cab5618e50d763149ed40dfa85f3ab6832e07",
+    "config/native/artifacts.tsv": "0c77a1b850e78d12fdd4fb3bbe057d255b93debc2853dca700951eb05d6d3d4e",
+    "config/native/cases.json": "4336436be96be52314672ec0534f276b3867cb51654acc1c9545f9194c9108d8",
+    "config/native/deployments.json": "4ff13bbdd3798ac83fddbff79a8e70b56b8fb053af1eda29fa5515f063bccfe9",
+    "config/native/selected-tests.txt": "8ea53e26b9be450bd1adaa6472b5a2279d011909a35d41e9bad8eaa536378298",
+    "config/native/traces.json": "510668c96d8ebe003076cef81fade18eeed6fbbc9dcfbccf7da4fca48e844419",
+    "config/reference/artifacts.tsv": "7d5316e4435382b9e5df8c66c74420ca5a7b0b01e672991cecf69880971dd6b6",
+    "config/reference/cases.json": "59aa77b7a397409d3849cf3650fdf8c3bfe827d248aa7a2504edded32ba96e91",
+    "config/reference/deployments.json": "ec482d39b266a679bc36dedf2f363c0a31b9a1931fb754028469bf8a9994f117",
+    "config/reference/selected-tests.txt": "8ea53e26b9be450bd1adaa6472b5a2279d011909a35d41e9bad8eaa536378298",
+    "config/reference/traces.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "context-propagation/imported/artifacts.tsv": "04cd46d464bdfdd516b1971b740326d762cd369579b1dce8720b2fc5344ee110",
+    "context-propagation/imported/cases.json": "54f016fd41e8c342f06db8ae1be2d2e5cd6e0c72532d8a78be00c6058eaa5296",
+    "context-propagation/imported/deployments.json": "437560459eddea76d44bd5b0a28a4cbf91c14fc74cc3b51a6bde49d7220fbbab",
+    "context-propagation/imported/selected-tests.txt": "d5b1fae07680f3876e920f1e3c7203bf6bb37754b9c1f71f67eadb00b4364990",
+    "context-propagation/imported/traces.json": "743aa150f7f1f0c6f1d72dd76f851a6420e5557b8eca1c05890a6329ffacefed",
+    "context-propagation/native/artifacts.tsv": "04cd46d464bdfdd516b1971b740326d762cd369579b1dce8720b2fc5344ee110",
+    "context-propagation/native/cases.json": "68dc7db331e111c8311db1707da901bf15129f5a63efa3b82ae240cfec936775",
+    "context-propagation/native/deployments.json": "8757ed6c0c98b79cabcac32da1dd2758b2fc6fc38d2772d24c2e3c199fb2f308",
+    "context-propagation/native/selected-tests.txt": "d5b1fae07680f3876e920f1e3c7203bf6bb37754b9c1f71f67eadb00b4364990",
+    "context-propagation/native/traces.json": "09ca64ce855c4825f4e25703c68a6e58ede8f547cd281d225a3e814037f7dc55",
+    "fault-tolerance/native/artifacts.tsv": "714760a55d040a9ea7686412f95f655fddaf327fa4c7b07fdb3637702e0bf52e",
+    "fault-tolerance/native/cases.json": "4c7acb79d219ce5a3bdc17af3f91cafdcf934227cd4cab53cc88834add174d52",
+    "fault-tolerance/native/deployments.json": "c1c7540a8c9aa53e0e91e0561761003529b584f488bcc89fc140e5771875950d",
+    "fault-tolerance/native/selected-tests.txt": "d0b00efc3ce49674b827eabc33eec806f1aab7bcb550bca4c722308eeabd1728",
+    "fault-tolerance/native/traces.json": "015bc2b38fede41fb6ee02bddbaf7eed3395157da8ec54ec3baec7eb4d82a630",
+    "graphql/imported/artifacts.tsv": "a80070f5e8f669299b03489b0a182d24b653891b59c99cc03f8e8533b1422c1f",
+    "graphql/imported/cases.json": "48b1886dca36e5eaae2f84dd4a5c4ac0f212fd35dd727bda1d5cb222efbe8474",
+    "graphql/imported/deployments.json": "d5b362d7e9bdab95205f1a3e8ccc270b48ad743519b80bbd66fce6eb1ad7e41b",
+    "graphql/imported/selected-tests.txt": "f3ddce7e1ac4b1111225d67546e155af3fd5334f08dab5cf7f2280f001acddf9",
+    "graphql/imported/traces.json": "e0d8b33942bcd77a05da5f27e306416fa8f788276ef02924ff983e071dcc71dc",
+    "graphql/native/artifacts.tsv": "a80070f5e8f669299b03489b0a182d24b653891b59c99cc03f8e8533b1422c1f",
+    "graphql/native/cases.json": "09f2fcfdb492235754681ea5cf251ec34d9032d55c4443907a9a4d68f78f6628",
+    "graphql/native/deployments.json": "6c65e1e5e1fb96ef5ccfb17920c5d632e8cc04516e56a3b808a93b2cd7d06724",
+    "graphql/native/selected-tests.txt": "f3ddce7e1ac4b1111225d67546e155af3fd5334f08dab5cf7f2280f001acddf9",
+    "graphql/native/traces.json": "e5e0585a2ffaa15aec69fed80b86fb7c9084982403eb69a6454bb53454a63650",
+    "graphql/reference/artifacts.tsv": "a80070f5e8f669299b03489b0a182d24b653891b59c99cc03f8e8533b1422c1f",
+    "graphql/reference/cases.json": "aed54ab80893074328977fb1e35fdd289b22be0a9eb5af9328fae954d3eecfd3",
+    "graphql/reference/deployments.json": "3c34d795aefaac1f5ca48d88dc09dd0437a232dfbc9a51683782248f6a74c319",
+    "graphql/reference/selected-tests.txt": "f3ddce7e1ac4b1111225d67546e155af3fd5334f08dab5cf7f2280f001acddf9",
+    "graphql/reference/traces.json": "040aa38f3d442502e9310e0d43ffff17355d3725e1f1c6f36789088ead382769",
+    "health/native/artifacts.tsv": "89d39bc001ce5303ea370188c48c950bb9a7d413f70acb684c7c2669edd9c302",
+    "health/native/cases.json": "77999e798d10d6f57a11154c08112643f287f541c3ab347fe868e034b7f90c94",
+    "health/native/deployments.json": "c368f0cb94929bc7377aeb0ec9ecca7f519d97831d680331c5ab3e6d65054ff9",
+    "health/native/selected-tests.txt": "ccf5401b776dfddb0158059b80c7cee7b944e4025b0357395c7ba3ce450789c5",
+    "health/native/traces.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "health/reference/artifacts.tsv": "89d39bc001ce5303ea370188c48c950bb9a7d413f70acb684c7c2669edd9c302",
+    "health/reference/cases.json": "cf11499cc271a9ecf6a939328b31a0098ef8fcd3846e65ff8fb50de7e0ba40ff",
+    "health/reference/deployments.json": "342eb0ac2aee0e060e411ef21e34bda129d15732cdf6d55697e0ab924b51f2d1",
+    "health/reference/selected-tests.txt": "ccf5401b776dfddb0158059b80c7cee7b944e4025b0357395c7ba3ce450789c5",
+    "health/reference/traces.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "jwt/native/artifacts.tsv": "a88330e2021f80c3f2c6a2cf00bd8374614bb45bcd65efd4666e51098e0f03af",
+    "jwt/native/cases.json": "1059063d7965c64bb9db6d60c295bb53fbd8c08640566c3ad369f894b755b45c",
+    "jwt/native/deployments.json": "a1d6f29929c172f0844b932dd818e5bc0a4f855f0aeab64d82a2350b651fb608",
+    "jwt/native/selected-tests.txt": "c966f9ee4804046efa81c7166c8ac1d767135f39fc6e2201d342743612eacde4",
+    "jwt/native/traces.json": "0e65dbf4489d1c24f532a2697a84377243efc17041854c0a0c5395276c2e62b0",
+    "metrics-api/native/artifacts.tsv": "04ec1ec3757cf5b7932acf6d9c79e125ded9cd0cb4c6f7fc6ff3e6bc655af364",
+    "metrics-api/native/cases.json": "c2fa6256d73bd1183fd5c0d4386682cb673eeb40accfee388713a7d8631d8a49",
+    "metrics-api/native/deployments.json": "de4c7f465df7ca4f919ee84695392deb61ed339bfcc279961dcb50f292104f8e",
+    "metrics-api/native/selected-tests.txt": "b8ee8360e9342dda9ea53ce47d8247353d6b2714179a9937968b3470423cfb57",
+    "metrics-api/native/traces.json": "b38fa2d9643f1dfced53c1e2f493bf0489f6a89b2cc8691d356f2670318a3660",
+    "metrics-optional/native/artifacts.tsv": "a12a05e5b5f4208c692a2b9927520ffd842b1df8065c0264af8d94c49032bf15",
+    "metrics-optional/native/cases.json": "f5abe4e38fefeae9a39c77dece0d686f00d22118fc2a293adfaa38322efff409",
+    "metrics-optional/native/deployments.json": "4ba222e8c6a57f76f5ed3699d86f3f3998eeb2e535d4f8fbec19d16a225dbc87",
+    "metrics-optional/native/selected-tests.txt": "9f68e7dcf36c3ab78e1da0fedc1c46d0afbe70f30fc324de9f85e6b73ac639c6",
+    "metrics-optional/native/traces.json": "44675ee93d643a19450ebb384e19a7fc7457dacb0a7a38be068130297fe5faef",
+    "metrics-rest/native/artifacts.tsv": "1a2671612a00d2b7da62a2b3909376ccace525a53433ee64e237e5ee7d5b6cb6",
+    "metrics-rest/native/cases.json": "a473029f4c114858f47fc4493f7a37dffc287fd2874d7cd9757339299b33e8d8",
+    "metrics-rest/native/deployments.json": "9f4dc82baecfae79038acf5bdc79a36feed78c6987d746dbd602de484d33c477",
+    "metrics-rest/native/selected-tests.txt": "9d280e1ecb95023e8e89b38a2f05adfe9c4beb43b9e300c05324960358d6b67d",
+    "metrics-rest/native/traces.json": "f6e2d8a5be1fdbfb6292830ddc573fd801421ca836abdf533d966867be2ee713",
+    "openapi/native/artifacts.tsv": "f344f5244b7b597143fe540e4ffda035dbb774dad0cea5b713c13a318c63f2fa",
+    "openapi/native/cases.json": "938970d7cd179bd15a4c646329ca4031cdd565990f43c780160fb9dd0ad3a12c",
+    "openapi/native/deployments.json": "307a5deb51aa5db24de7212103078f4f49f8571f67775d38076e9a7c148972c8",
+    "openapi/native/selected-tests.txt": "36a61430767975d2a73425aac43e5a5e4c41b023f8b66d1b1e714f770d1ce388",
+    "openapi/native/traces.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "openapi/reference/artifacts.tsv": "3565b2d86bf5e692193aa0267cb4ba082236f134ace697c87ca3828f02523bca",
+    "openapi/reference/cases.json": "48ed189525851627f2a3053c2f3ba0932e0e5aae8e7835128328f630066238a1",
+    "openapi/reference/deployments.json": "688d9f10baa7f97ac6984d92c96bbc58416919225b322d5d9f0e78e9b19c3eb4",
+    "openapi/reference/selected-tests.txt": "36a61430767975d2a73425aac43e5a5e4c41b023f8b66d1b1e714f770d1ce388",
+    "openapi/reference/traces.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "reactive-messaging/native/artifacts.tsv": "95df035a7decab43b4ad2ebc67f36ab98574e3762a32fbae8ec8ca356c1ecfb3",
+    "reactive-messaging/native/cases.json": "5434cb4a589709628a48cc2c2da796cd6b66abff6cb0e4e929e7c9506b85f8dd",
+    "reactive-messaging/native/deployments.json": "0c4e772c21a21bcaf31a8ba28e57c5f5906f4a4b989264c7fc4783c815b77569",
+    "reactive-messaging/native/selected-tests.txt": "c18f919605a4991c99a6794cd66aa34d32eb379963fbb7972d785d1c222bb058",
+    "reactive-messaging/native/traces.json": "b6828f70903005e927af0718ce40e7716b569f2739b6e9300a288ab826c5a350",
+    "reactive-streams/native/artifacts.tsv": "95e7250e967eaf46137c118bd9f1992a18fd93b168202bd22d6d5dd963ce9a24",
+    "reactive-streams/native/cases.json": "990a8a77d67578e036038c2c58ca22b92f5235b67b03b78397b2e03f2656fd97",
+    "reactive-streams/native/deployments.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "reactive-streams/native/selected-tests.txt": "57d212ef31618eea79acdab86b03c46c657dd4bf807878ecd2c542d158453eaa",
+    "reactive-streams/native/traces.json": "84423c169ac6bbe836419bce55a65b838b456e888251c1a442b2d1bff65819d1",
+    "rest-client/imported/artifacts.tsv": "4aa4b25424fee23a7048fbdb255bfda54a2873ff54fbe0cfb2d033d18fa550b4",
+    "rest-client/imported/cases.json": "62fefe13e25659cba44140b18446e072e3e4d245d7cdfd2e9fcbc62448752cf4",
+    "rest-client/imported/deployments.json": "fe282b26d3673fa5ef765f4166578da02b38149c1d8f55b5f6e7588592695e54",
+    "rest-client/imported/selected-tests.txt": "ef6ad22335f8e6331d2b28180bb33563a5450f4cada1dc42fac9ab0c8efd361a",
+    "rest-client/imported/traces.json": "ad7c60cebe67d21e4badce09b5044d493015774ef8a731622d4099163a0f25b4",
+    "rest-client/native/artifacts.tsv": "69e4e589e53560fde196d98792fd3bccd7432d8fe9b06730aab2dc50031c942a",
+    "rest-client/native/cases.json": "4c6e3d3d6c2a430559eedcebf324a681b8fc9b228b47b735c5a7268362ab0119",
+    "rest-client/native/deployments.json": "742e647e617dfd3807edf25c9c51c17e1213567487cca1d5668d80ee7cb5a167",
+    "rest-client/native/selected-tests.txt": "ef6ad22335f8e6331d2b28180bb33563a5450f4cada1dc42fac9ab0c8efd361a",
+    "rest-client/native/traces.json": "1bb4f582092fc1d2b26dd046058f603b047ced654d4103444d5eab8d6b982daa",
+    "rest-client/reference/artifacts.tsv": "c94c769441fffedb471478a8c4bb3fa6185c997fa6e8041912d9f026fe960944",
+    "rest-client/reference/cases.json": "bf7592c4ef043103bf288f2743f4794aaad20cd189e60e54c27de8742790c6d9",
+    "rest-client/reference/deployments.json": "87d6ea5d4fb652889126a63a3ea62d4a9f21e2cc8e63d6e7e82689e3c056dc17",
+    "rest-client/reference/selected-tests.txt": "ef6ad22335f8e6331d2b28180bb33563a5450f4cada1dc42fac9ab0c8efd361a",
+    "rest-client/reference/traces.json": "205a7e734e84e27290ff9e894233c2f9e7e1f46f03ab5958fa894d3e19ccbeed",
+    "summary.tsv": "83a603b4354921f0425d949b251c96c98a11e655d0eb005b7094e2db49bfba4c",
+    "telemetry-logs/native/artifacts.tsv": "f01a001879b4bd798ad482bd03a66705fc99debb82007947fd0d69475e995c08",
+    "telemetry-logs/native/cases.json": "c02d5f3ee389064e10191ff9c7dbcf35e8e9293118a797cad4143a4e4f7bbc63",
+    "telemetry-logs/native/deployments.json": "a35dc9eb2ce1d4f85cc2d9934f400942118a7186a420cb2b679addf76f05f15d",
+    "telemetry-logs/native/selected-tests.txt": "a8304a1fda30bfa814fe61ea391d68b2229372a562ff531baada0479e24c4496",
+    "telemetry-logs/native/traces.json": "4ce8e4ece765b5fc85b911a020146ef229c3949d98a77141d45459e714012bd7",
+    "telemetry-metrics/native/artifacts.tsv": "9b51cde4a96feb0cf1d60fc0a11d253fe0b8c4187781c4faac87c983dd448a41",
+    "telemetry-metrics/native/cases.json": "889605adf0160caf742434785ac9dbb988e9fce5a426dad4c27bc74bc745cf29",
+    "telemetry-metrics/native/deployments.json": "a2fb70c5291db154e3a89448b787af63334286c081074ab0f1d51a3029e52b5d",
+    "telemetry-metrics/native/selected-tests.txt": "65cc3c08140b61a5011506d8407a5bc5814aab63ba8b85321ed5e01823385816",
+    "telemetry-metrics/native/traces.json": "538be165bde8ce4b9e88819ea84808074c3a7e7bee89e9f0d0f6be2d080b164d",
+    "telemetry-tracing/native/artifacts.tsv": "809a6419fa3ae49fe3920a630afd253622b70444f34e65bcdb238d1c7f3db1e4",
+    "telemetry-tracing/native/cases.json": "e67ef003f198c27aabf1b42af36f4b1907fbe57c452d888019cc9dd3422eade5",
+    "telemetry-tracing/native/deployments.json": "ae26c1dd2433e3eee542291375b5304269e19dd9e9d1a5ccbdf4477b9e689c25",
+    "telemetry-tracing/native/selected-tests.txt": "c1fe72db00d9bbc199ee200e2f8cf5ff28360fc3c00c95b0478e0fe23732606d",
+    "telemetry-tracing/native/traces.json": "1cd334e16d530d11e3b37baf53000ddcea0d87b9314af82a65b65ef5ae7056f8"
+  },
+  "notes": [
+    "Setup callbacks are separate from failed test assertions; skipped methods did not pass.",
+    "Run timestamps are per suite. Helpers evolved during bring-up; see FINDINGS for remaining runner limitations.",
+    "Weld reference also enables CDI Full vendor extensions. Imported mode deliberately omits those vendor extensions."
+  ]
+}

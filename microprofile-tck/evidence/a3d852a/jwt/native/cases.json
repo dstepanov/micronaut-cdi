@@ -1,0 +1,1920 @@
+[
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsJWKLocationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.687",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ECPublicKeyAsJWKLocationTest.war",
+    "trace_ref": "3bd9378d7bc8e0d3bc2d0b493264164a1ad2727b1047bb03348eee264b4ed14a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsJWKLocationTest",
+    "name": "testKeyAsLocation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ECPublicKeyAsJWKLocationTest.war",
+    "trace_ref": "3bd9378d7bc8e0d3bc2d0b493264164a1ad2727b1047bb03348eee264b4ed14a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsPEMLocationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.659",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ECPublicKeyAsPEMLocationTest.war",
+    "trace_ref": "a7c10f88bd39fe5c57b42cdf2f0bb3d1fc8d34caba6df6693c1ea457a6dba91d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsPEMLocationTest",
+    "name": "testKeyAsLocationResource",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ECPublicKeyAsPEMLocationTest.war",
+    "trace_ref": "a7c10f88bd39fe5c57b42cdf2f0bb3d1fc8d34caba6df6693c1ea457a6dba91d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsPEMTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.647",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ECPublicKeyAsPEMTest.war",
+    "trace_ref": "6e02e138943b0be8e226dbae6288900747ca1ba45756550153c95cf4390f8a28"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.ECPublicKeyAsPEMTest",
+    "name": "testKeyAsPEM",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ECPublicKeyAsPEMTest.war",
+    "trace_ref": "6e02e138943b0be8e226dbae6288900747ca1ba45756550153c95cf4390f8a28"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.IssValidationFailTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.83",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-IssValidationFailTest.war",
+    "trace_ref": "584e007cc1d34d85cb9e7a9a952592ce2c675f847d59ca35a50c259d3e678ade"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.IssValidationFailTest",
+    "name": "testNotRequiredIssMismatchFailure",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-IssValidationFailTest.war",
+    "trace_ref": "584e007cc1d34d85cb9e7a9a952592ce2c675f847d59ca35a50c259d3e678ade"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.IssValidationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.674",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-IssValidationTest.war",
+    "trace_ref": "63f2f27beef2cdf94c36d2a924373436a6cf9b7dcd5a9b5ec666506f9ac37b5e"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.IssValidationTest",
+    "name": "testRequiredIss",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-IssValidationTest.war",
+    "trace_ref": "63f2f27beef2cdf94c36d2a924373436a6cf9b7dcd5a9b5ec666506f9ac37b5e"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsBase64JWKTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.482",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsBase64JWKTest.war",
+    "trace_ref": "e512aa8e04db4c994a3744149fc45b4dee7e05845ce72c3da2843875d99586e9"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsBase64JWKTest",
+    "name": "testKeyAsBase64JWK",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsBase64JWKTest.war",
+    "trace_ref": "e512aa8e04db4c994a3744149fc45b4dee7e05845ce72c3da2843875d99586e9"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsFileLocationURLTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.57",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsFileLocationURLTest.war",
+    "trace_ref": "f7fb7da423ead736835187a90750aabb8eff6e4444fcc981df1db046158115ef"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsFileLocationURLTest",
+    "name": "testKeyAsLocationUrl",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsFileLocationURLTest.war",
+    "trace_ref": "f7fb7da423ead736835187a90750aabb8eff6e4444fcc981df1db046158115ef"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.484",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKLocationTest.war",
+    "trace_ref": "61f4d9b04d0132521e075bc6a612c305690c0b9da521046f7b7eedc84afe4e46"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationTest",
+    "name": "testKeyAsLocation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKLocationTest.war",
+    "trace_ref": "61f4d9b04d0132521e075bc6a612c305690c0b9da521046f7b7eedc84afe4e46"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.854",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKLocationURLTest.war",
+    "trace_ref": "6f6ecb5b72a63ec4efb83345162174c2ea79a10583307233ed72e16875228725"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest",
+    "name": "validateLocationUrlContents",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKLocationURLTest.war",
+    "trace_ref": "6f6ecb5b72a63ec4efb83345162174c2ea79a10583307233ed72e16875228725"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest",
+    "name": "testKeyAsLocationUrl",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.Throwable: Method org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest.testKeyAsLocationUrl() on instance org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest@5c7933ad depends on not successfully finished methods \n[org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest.validateLocationUrlContents() on instance org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKLocationURLTest@5c7933ad]",
+    "trace_ref": "60a4f513934f157784022e0e970ae0d61d86e1aa7f5b193a6cf5a40f5d491230"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKSLocationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.971",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKSLocationTest.war",
+    "trace_ref": "49c3441a48300862b0f999f63758fe5400657fc0ec9ebc0ef3dcb0f4f985aa42"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKSLocationTest",
+    "name": "testKeyAsLocation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKSLocationTest.war",
+    "trace_ref": "49c3441a48300862b0f999f63758fe5400657fc0ec9ebc0ef3dcb0f4f985aa42"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKSTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.916",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKSTest.war",
+    "trace_ref": "04cdd58bf73a29d441958de7ae042646ca0e273a17c0718881607f30b225d20d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKSTest",
+    "name": "testKeyAsJWKS",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKSTest.war",
+    "trace_ref": "04cdd58bf73a29d441958de7ae042646ca0e273a17c0718881607f30b225d20d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.68",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKTest.war",
+    "trace_ref": "adcd11816973b9784a5408db6475f147d1d462f0173f077e9cada43557c46ead"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsJWKTest",
+    "name": "testKeyAsJWK",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsJWKTest.war",
+    "trace_ref": "adcd11816973b9784a5408db6475f147d1d462f0173f077e9cada43557c46ead"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.661",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsPEMLocationTest.war",
+    "trace_ref": "8b4e2daa06f3d59ccf3629c637666fdf611b4a081290adfd8494f216d015e514"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationTest",
+    "name": "testKeyAsLocationResource",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsPEMLocationTest.war",
+    "trace_ref": "8b4e2daa06f3d59ccf3629c637666fdf611b4a081290adfd8494f216d015e514"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.716",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsPEMLocationURLTest.war",
+    "trace_ref": "b27ddbc8ab44a4a2faa3db0ca1ce20185dc5b4664df062a70383bfc044d589bd"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest",
+    "name": "validateLocationUrlContents",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsPEMLocationURLTest.war",
+    "trace_ref": "b27ddbc8ab44a4a2faa3db0ca1ce20185dc5b4664df062a70383bfc044d589bd"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest",
+    "name": "testKeyAsLocationUrl",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "java.lang.Throwable: Method org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest.testKeyAsLocationUrl() on instance org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest@5c7933ad depends on not successfully finished methods \n[org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest.validateLocationUrlContents() on instance org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMLocationURLTest@5c7933ad]",
+    "trace_ref": "2a865c6fa3bab72f17dae22aecf1b66c68c9c6eda0910a3ab3ef9e5f559aef83"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.722",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsPEMTest.war",
+    "trace_ref": "a8fb7e87359483d9511e70f6df66702fcde17f538e9e97ce0369e830e31987ce"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.PublicKeyAsPEMTest",
+    "name": "testKeyAsPEM",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PublicKeyAsPEMTest.war",
+    "trace_ref": "a8fb7e87359483d9511e70f6df66702fcde17f538e9e97ce0369e830e31987ce"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieIgnoredTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.626",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAsCookieIgnored.war",
+    "trace_ref": "e53ed73f78f132bc34e2c4a75caf16b13f3064972b861249daaf6243069fc97f"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieIgnoredTest",
+    "name": "noTokenHeaderSetToCookie",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAsCookieIgnored.war",
+    "trace_ref": "e53ed73f78f132bc34e2c4a75caf16b13f3064972b861249daaf6243069fc97f"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieIgnoredTest",
+    "name": "validJwt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAsCookieIgnored.war",
+    "trace_ref": "e53ed73f78f132bc34e2c4a75caf16b13f3064972b861249daaf6243069fc97f"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.632",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAsCookie.war",
+    "trace_ref": "41fbfd4310f512a22b643f3546db4e0fc8ad405bfca3a74334c5ca9c5470cb37"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.TokenAsCookieTest",
+    "name": "validJwt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAsCookie.war",
+    "trace_ref": "41fbfd4310f512a22b643f3546db4e0fc8ad405bfca3a74334c5ca9c5470cb37"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.jwe.PrivateKeyAsJWKClasspathTest",
+    "name": "testKeyAsLocation",
+    "seconds": "0.342",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "e9a6ecf0d9b52580b6c33f4cafae76a6ef36de6de584c8597a3baf47fc20418a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.jwe.PrivateKeyAsJWKSClasspathTest",
+    "name": "testKeyAsLocation",
+    "seconds": "0.254",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "4f1c9e71c45714c4f3f1b183fa8f2940333c310705ce68a7506025c93327835e"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.config.jwe.PrivateKeyAsPEMClasspathTest",
+    "name": "testKeyAsLocationResource",
+    "seconds": "0.333",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "762fe6a5d58c01e422cacdf6f8e01c4b4dc336a574aeedee2a565f34558fe51b"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.ejb.EjbTest",
+    "name": "callEjbEcho",
+    "seconds": "0.136",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "ff5de7f371688391b389d2b6d02b9cab07a23ab967714091827fc7b5d2b99d99"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.ejb.EjbTest",
+    "name": "getSubjectClass",
+    "seconds": "0.01",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "46bda2423e8159881b8fc16125e167b46320dd84bcf88b6d5f0a2f0f3cb081f4"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.ejb.EjbTest",
+    "name": "testEJBPrincipalClass",
+    "seconds": "0.01",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "aea6a0be659ee58dc3c2e981050645e79f837f04b645fe60a3112e70acfbd47b"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jacc.SubjectTest",
+    "name": "getSubjectClass",
+    "seconds": "0.139",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "19992de75aa39b13163321000dcc233e5ed11ff2507ae0a1c5a1c64bd39d6c43"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ApplicationScopedInjectionTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.636",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ApplicationScopedInjectionTest.war",
+    "trace_ref": "92989f560103f14f09652732984c679373b46ffc043bcc2f81dfe5e1d631eeb6"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ApplicationScopedInjectionTest",
+    "name": "verifyInjectedRawToken1Provider",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ApplicationScopedInjectionTest.war",
+    "trace_ref": "92989f560103f14f09652732984c679373b46ffc043bcc2f81dfe5e1d631eeb6"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ApplicationScopedInjectionTest",
+    "name": "verifyInjectedRawTokenClaimValue",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ApplicationScopedInjectionTest.war",
+    "trace_ref": "92989f560103f14f09652732984c679373b46ffc043bcc2f81dfe5e1d631eeb6"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ApplicationScopedInjectionTest",
+    "name": "verifyInjectedRawTokenJwt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ApplicationScopedInjectionTest.war",
+    "trace_ref": "92989f560103f14f09652732984c679373b46ffc043bcc2f81dfe5e1d631eeb6"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudArrayValidationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.542",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudArrayValidationTest.war",
+    "trace_ref": "8cdf0bb85bb8d71591d1b985a07d0bd88aab6c9556d7e3e6f010a8d87b17c7c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudArrayValidationTest",
+    "name": "testRequiredAudMatch",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudArrayValidationTest.war",
+    "trace_ref": "8cdf0bb85bb8d71591d1b985a07d0bd88aab6c9556d7e3e6f010a8d87b17c7c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationBadAudTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.602",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudValidationBadAudTest.war",
+    "trace_ref": "aa8175093634ece789cb669a4f3572dfd479efd3594c57b1d185596e2e8406d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationBadAudTest",
+    "name": "testRequiredAudMismatchFailure",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudValidationBadAudTest.war",
+    "trace_ref": "aa8175093634ece789cb669a4f3572dfd479efd3594c57b1d185596e2e8406d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationMissingAudTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.104",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudValidationMissingAudTest.war",
+    "trace_ref": "5e25987909f13b9c5410c7e8bc936ceeff2626b92f3400957ea78fbde7bf4335"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationMissingAudTest",
+    "name": "testRequiredAudMissingFailure",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudValidationMissingAudTest.war",
+    "trace_ref": "5e25987909f13b9c5410c7e8bc936ceeff2626b92f3400957ea78fbde7bf4335"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.94",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudValidationTest.war",
+    "trace_ref": "eae14729e32dad0a371bdc9232b0d8c9c0bd46e71e5a67787ae3f15c2e9168c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.AudValidationTest",
+    "name": "testRequiredAudMatch",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-AudValidationTest.war",
+    "trace_ref": "eae14729e32dad0a371bdc9232b0d8c9c0bd46e71e5a67787ae3f15c2e9168c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.531",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedAudience",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedAudienceStandard",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedAuthTimeStandard",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedCustomBoolean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedCustomDouble",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedCustomInteger",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedCustomString",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedIssuedAt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedIssuedAtStandard",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedJTI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedJTIStandard",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedOptionalAuthTime",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedOptionalCustomMissing",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedOptionalSubject",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedRawToken",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedRawTokenStandard",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyInjectedSubjectStandard",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyIssuerClaim",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ClaimValueInjectionTest",
+    "name": "verifyIssuerStandardClaim",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-ClaimValueInjectionTest.war",
+    "trace_ref": "6de783139044c180d86b0160bc6f9a0d3b431603b93bbe7be852d95bd54f628a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.064",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-CookieTokenTest.war",
+    "trace_ref": "6795da4a5ddf4810c2d107bc65d7277cc07fc43ac9f7fa5e0ca709163eedb819"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+    "name": "emptyCookie",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-CookieTokenTest.war",
+    "trace_ref": "6795da4a5ddf4810c2d107bc65d7277cc07fc43ac9f7fa5e0ca709163eedb819"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+    "name": "expiredCookie",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-CookieTokenTest.war",
+    "trace_ref": "6795da4a5ddf4810c2d107bc65d7277cc07fc43ac9f7fa5e0ca709163eedb819"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+    "name": "ignoreHeaderIfCookieSet",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-CookieTokenTest.war",
+    "trace_ref": "6795da4a5ddf4810c2d107bc65d7277cc07fc43ac9f7fa5e0ca709163eedb819"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+    "name": "validCookieJwt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-CookieTokenTest.war",
+    "trace_ref": "6795da4a5ddf4810c2d107bc65d7277cc07fc43ac9f7fa5e0ca709163eedb819"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.CookieTokenTest",
+    "name": "wrongCookieName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-CookieTokenTest.war",
+    "trace_ref": "6795da4a5ddf4810c2d107bc65d7277cc07fc43ac9f7fa5e0ca709163eedb819"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.EmptyTokenTest",
+    "name": "emptyToken",
+    "seconds": "0.141",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "cb5e2daad9e46c813491bdf21a78bcb4ca59507425f561758a625d9def00fa46"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.EmptyTokenTest",
+    "name": "invalidToken",
+    "seconds": "0.018",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "e13c0d053094e1e09d65c4112d28bdbbc7bd02ab3b054714c6b5cf49ac22667a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.EmptyTokenTest",
+    "name": "validToken",
+    "seconds": "0.096",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "8a5f9c7d924828dca47e6e8506b1ee458acf261b3b27a3baafd7e0e2f62643a8"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.InvalidTokenTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.802",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-InvalidTokenTest.war",
+    "trace_ref": "ab0af9a039bf96cb390b332e38ce133b8e5404f5848382376ed78051b79031f8"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.InvalidTokenTest",
+    "name": "callEchoBadIssuer",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-InvalidTokenTest.war",
+    "trace_ref": "ab0af9a039bf96cb390b332e38ce133b8e5404f5848382376ed78051b79031f8"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.InvalidTokenTest",
+    "name": "callEchoBadSigner",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-InvalidTokenTest.war",
+    "trace_ref": "ab0af9a039bf96cb390b332e38ce133b8e5404f5848382376ed78051b79031f8"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.InvalidTokenTest",
+    "name": "callEchoBadSignerAlg",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-InvalidTokenTest.war",
+    "trace_ref": "ab0af9a039bf96cb390b332e38ce133b8e5404f5848382376ed78051b79031f8"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.InvalidTokenTest",
+    "name": "callEchoExpiredToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-InvalidTokenTest.war",
+    "trace_ref": "ab0af9a039bf96cb390b332e38ce133b8e5404f5848382376ed78051b79031f8"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.321",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedAudience",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedAudience2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedAuthTime",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedAuthTime2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomDouble",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomDouble2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomDoubleArray",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomInteger",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomInteger2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomIntegerArray",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomString",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomString2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedCustomStringArray",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedIssuedAt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedIssuedAt2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedJTI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedJTI2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedRawToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyInjectedRawToken2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyIssuerClaim",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.JsonValueInjectionTest",
+    "name": "verifyIssuerClaim2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-JsonValueInjectionTest.war",
+    "trace_ref": "75e3d924c580a9c5e49acff078c2c0cc1227dc367c732e39ac82c5c69da19e54"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "2.222",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedAudience",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedCustomBoolean",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedCustomString",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedExpiration",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedGroups",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedIssuedAt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedJTI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedRawToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedSUB",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyInjectedUPN",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrimitiveInjectionTest",
+    "name": "verifyIssuerClaim",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrimitiveInjectionTest.war",
+    "trace_ref": "8629fcfff3ebad55487f356752263246bb17ef4bbebc55a274fde3262b65e254"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrincipalInjectionTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.909",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrincipalInjectionTest.war",
+    "trace_ref": "018f50fd7d2fc81c0ac82e787d0488130b42a4fc6a705f5b34722c11b93eeda4"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.PrincipalInjectionTest",
+    "name": "verifyInjectedPrincipal",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-PrincipalInjectionTest.war",
+    "trace_ref": "018f50fd7d2fc81c0ac82e787d0488130b42a4fc6a705f5b34722c11b93eeda4"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedAudience",
+    "seconds": "0.133",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "f283f62875963b95d8d2fc394312a35045a08bc2ee95aae94c27fead9a517bce"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedAudience2",
+    "seconds": "0.011",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "b72f3d9c7e68c1f371c46db064301a23abd46bcc48946501681e791dbeb85212"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedCustomDouble",
+    "seconds": "0.01",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "8dd8e18c856adb48289c43783b38881d587cdf260028766a90a63026523b23d6"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedCustomDouble2",
+    "seconds": "0.01",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "cb02219fa2295a688d8274bc1f1fc8d4cd1be1be9e211a12a3a72edc089b2133"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedCustomInteger",
+    "seconds": "0.009",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "7b776034358d1d7b8200da054b8da80977e6c5618d58bb7b391ae1796cf0ff19"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedCustomInteger2",
+    "seconds": "0.01",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "d7294b083f347c16cf88464435a7b8c113b0bf7c45f266614a4a36d343428739"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedCustomString",
+    "seconds": "0.008",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "b4922fd19b979656c42b98995f236ec6e43c4f90465976578ccdbdc3b710094b"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedCustomString2",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "929a2bac3124cb9740c6865d4221984f2c5cbf97483fbb41f1ff91e220dd3be0"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedIssuedAt",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "cf767100ebbbb400ea2780a2a4312923907c4bc253d0688efb93c90fd46f50bf"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedIssuedAt2",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "0ef026f3defba689192ebc7d4014331b784984e48545d3b8e1a9b83f12445977"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedJTI",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "d89f50475caabf55cb2c8edb2a75e4c9b373a093356e8cb4e90a8cbe25467d9f"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedJTI2",
+    "seconds": "0.007",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "aa2736f68cf04a748cd716b8470ae58569eaa75b4d9086e3302c28912581479d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedOptionalAuthTime",
+    "seconds": "0.005",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "2c266c08e91cb6e54da039f3c6af39898537000340e0d197ef297d18057c59b4"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedOptionalAuthTime2",
+    "seconds": "0.009",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "7e4c8580db19b513dddb770d7eb8dd2d50bf25934fc8c86255ad3cf953065149"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedOptionalCustomMissing",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "6082c91c7be3514ef04082db660ebfe5813dbfb537c66c5fd4e1355a3a648353"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedOptionalSubject",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "e43399ef2cc47f14c071973c032027bf1e9f5a7a1e54612b36b242bd4dec0ced"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedOptionalSubject2",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "42f5d148c82e587161752c405f5b97e5c7e98e83151549232131f1bb37befd51"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedRawToken",
+    "seconds": "0.005",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "22c24bf166ca87a8246ece370e598a87ee53030d0e817157307eb0fec5e57d04"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyInjectedRawToken2",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "61e36ba182dec1621ce6109511d3a2699eaf00b365d8d5ff2ce4f53b7a321eed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyIssuerClaim",
+    "seconds": "0.005",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "f626a35dbad0e6af1452025db6efe287e88c1248799c35419b4244d6fba717d9"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.ProviderInjectionTest",
+    "name": "verifyIssuerClaim2",
+    "seconds": "0.006",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "192401f75058828c8e923af792fc385a35c8423a8ddac603d5e4c0aab6690931"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.565",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyAudience",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyExpiration",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyIssuedAt",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyIssuerClaim",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyJTI",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyOptionalAudience",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifySubClaim",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyTokenWithIatOlderThanExp",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyTokenWithoutExpiration",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyTokenWithoutName",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RequiredClaimsTest",
+    "name": "verifyUPN",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RequiredClaimsTest.war",
+    "trace_ref": "3f2fe300403a37c1d0918587decd9330c1afd7e25c7a7d01503367eed45c06c7"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.402",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEcho",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEcho2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEchoBASIC",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEchoNoAuth",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEchoNoGroups",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEchoSignEncryptToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callEchoSignToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "callHeartbeat",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "checkIsUserInRole",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "checkIsUserInRoleToken2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "echoNeedsToken2Role",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "echoWithToken2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "getInjectedPrincipal",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "getPrincipalClass",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "noTokenHeaderSetToCookie",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RolesAllowedTest",
+    "name": "testNeedsGroup1Mapping",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedTest.war",
+    "trace_ref": "88e1ea69d2dbdb0cca5be7a492f89b63822781776476b9451ecdd7cc4a3e9076"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RsaKeySignatureTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.453",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RsaKeySignatureTest.war",
+    "trace_ref": "21e0ba1437da1846b5f7bca9b40d07c20a292dd36fde91e38bd9c4febbe805f2"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.RsaKeySignatureTest",
+    "name": "callEcho",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RsaKeySignatureTest.war",
+    "trace_ref": "21e0ba1437da1846b5f7bca9b40d07c20a292dd36fde91e38bd9c4febbe805f2"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.TokenAgeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.407",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAgeTest.war",
+    "trace_ref": "673f79324ef165527d8fdabc4a4ffd2be0dc7a2284b5c34bca1d3981bee197af"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.TokenAgeTest",
+    "name": "callEchoAgedToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAgeTest.war",
+    "trace_ref": "673f79324ef165527d8fdabc4a4ffd2be0dc7a2284b5c34bca1d3981bee197af"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.TokenAgeTest",
+    "name": "callEchoValidToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-TokenAgeTest.war",
+    "trace_ref": "673f79324ef165527d8fdabc4a4ffd2be0dc7a2284b5c34bca1d3981bee197af"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.UnsecuredPingTest",
+    "name": "callEchoNoAuth",
+    "seconds": "0.116",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "82b1d3451a72295a4e778b2d07cbd98b6841b032984760f91ec8b0a4baeaebac"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.DecryptKeyAlgorithmDefaultTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.496",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-DecryptKeyAlgorithmDefaultTest.war",
+    "trace_ref": "420c224d55f926c9aa562635e3030d594a940870d73a7b2f6ef416b31a99a79d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.DecryptKeyAlgorithmDefaultTest",
+    "name": "callEchoRsaOaep",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-DecryptKeyAlgorithmDefaultTest.war",
+    "trace_ref": "420c224d55f926c9aa562635e3030d594a940870d73a7b2f6ef416b31a99a79d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.DecryptKeyAlgorithmDefaultTest",
+    "name": "callEchoRsaOaep256",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-DecryptKeyAlgorithmDefaultTest.war",
+    "trace_ref": "420c224d55f926c9aa562635e3030d594a940870d73a7b2f6ef416b31a99a79d"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaep256Test",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.675",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptRsaOaep256Test.war",
+    "trace_ref": "869c887b76e90c8cb1587779e58fc115a74766c9153a58960396c3ca14870467"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaep256Test",
+    "name": "callEchoRsaOaep",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptRsaOaep256Test.war",
+    "trace_ref": "869c887b76e90c8cb1587779e58fc115a74766c9153a58960396c3ca14870467"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaep256Test",
+    "name": "callEchoRsaOaep256",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptRsaOaep256Test.war",
+    "trace_ref": "869c887b76e90c8cb1587779e58fc115a74766c9153a58960396c3ca14870467"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaepTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.354",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptRsaOaepTest.war",
+    "trace_ref": "3cc4f5b5025404f6a8f447548b8e97435e83119b386d909c35487aac69d7a5ea"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaepTest",
+    "name": "callEchoRsaOaep",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptRsaOaepTest.war",
+    "trace_ref": "3cc4f5b5025404f6a8f447548b8e97435e83119b386d909c35487aac69d7a5ea"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptRsaOaepTest",
+    "name": "callEchoRsaOaep256",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptRsaOaepTest.war",
+    "trace_ref": "3cc4f5b5025404f6a8f447548b8e97435e83119b386d909c35487aac69d7a5ea"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.604",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEcho2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEchoBASIC",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEchoNoAuth",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEchoRsaOaep",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEchoSignEncryptToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEchoSignToken",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callEchoWithoutCty",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "callHeartbeat",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "checkIsUserInRole",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "checkIsUserInRoleToken2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "echoNeedsToken2Role",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "echoWithToken2",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "getInjectedPrincipal",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "getPrincipalClass",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.jaxrs.jwe.RolesAllowedSignEncryptTest",
+    "name": "testNeedsGroup1Mapping",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile jwt deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/jwt/build/deployments/native/0001-RolesAllowedSignEncryptTest.war",
+    "trace_ref": "fac42c6ea0adb526799c0f95a4ea54f0c66757a2b7ef2512e16712403805357a"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.servlet.ServletTest",
+    "name": "getServletPrincipalClass",
+    "seconds": "0.12",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "914db814a5328f55cfaf45dec1be7a86775ce1f10243b6a51fe095ce39112ee2"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.container.servlet.ServletTest",
+    "name": "getServletSubjectClass",
+    "seconds": "0.009",
+    "status": "test_failure",
+    "message": "jakarta.ws.rs.ProcessingException: java.net.ConnectException: Connection refused",
+    "trace_ref": "fa34452522a1f59c6cc239ace401a4f0495d128b71b9a5714bbdaedede1ff0cd"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testExpGrace",
+    "seconds": "0.143",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testFailAlgorithm",
+    "seconds": "0.06",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testFailEncryption",
+    "seconds": "0.168",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testFailExpired",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testFailIssuer",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testFailJustExpired",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testValidTokenWithRSAOAEP",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testValidTokenWithRsaOaep256",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsEncryptTest",
+    "name": "testValidateSignedToken",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+    "name": "testKeyPairGeneration1024Length",
+    "seconds": "0.066",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+    "name": "testKeyPairGeneration2048Length",
+    "seconds": "0.074",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+    "name": "testReadJwkPrivateKey",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+    "name": "testReadJwkPublicKey",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+    "name": "testReadPrivateKey",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsExtraTest",
+    "name": "testReadPublicKey",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testEncryptECSignedClaims",
+    "seconds": "0.094",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testEncryptSignedClaims",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testEncryptSignedClaimsWithRsaOaep256",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testEncryptSignedClaimsWithoutCty",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testNestedSignedByECKeyVerifiedByRSKey",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testNestedSignedByRSKeyVerifiedByECKey",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testValidateEncryptedOnlyToken",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsSignEncryptTest",
+    "name": "testValidateSignedToken",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testExpGrace",
+    "seconds": "0.07",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testExpGraceDeprecated",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailAlgorithm",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailAlgorithmDeprecated",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailExpired",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailExpiredDeprecated",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailIssuer",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailIssuerDeprecated",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailJustExpired",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailJustExpiredDeprecated",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailSignature",
+    "seconds": "0.13",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testFailSignatureDeprecated",
+    "seconds": "0.064",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testSignedByECKeyVerifiedByRSKey",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testSignedByRSKeyVerifiedByECKey",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testValidToken",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testValidToken1024BitKeyLength",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testValidTokenDeprecated",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.jwt.tck.util.TokenUtilsTest",
+    "name": "testValidTokenEC256",
+    "seconds": "0.006",
+    "status": "passed"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "class": "io.micronaut.inject.collect.InjectCollectionBeanSpec",
+    "name": "test resolve collection bean",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.collect.InjectCollectionBeanSpec",
+    "name": "test resolve iterable bean",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.collect.InjectCollectionBeanSpec",
+    "name": "test resolve sequenced set bean",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.field.optionalinjection.FieldOptionalSpec",
+    "name": "test injection of optional objects",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.constructor.optionalinjection.ConstructorOptionalSpec",
+    "name": "test injection of optional objects",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.constructor.collectioninjection.ConstructorCollectionInjectionSpec",
+    "name": "test injection with constructor",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.containerresolver.ExactContainerResolverSpec",
+    "name": "classpath resolver overrides Optional and collection routing for fields constructors and methods",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.inject.method.optionalinjection.SetterWithOptionalSpec",
+    "name": "test injection of optional objects",
+    "status": "passed"
+  }
+]

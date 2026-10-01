@@ -1,0 +1,1390 @@
+[
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderClass",
+    "seconds": "0.079",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderClassWithPriorities",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderInstance",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterAMultiTypedProviderInstanceWithPriorities",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterInstance",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterInstanceWithPriority",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "shouldRegisterProvidersWithPriority",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.AdditionalRegistrationTest",
+    "name": "testPropertiesRegistered",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.BeanParamTest",
+    "name": "sendsParamsSpecifiedInBeanParam",
+    "seconds": "0.215",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CallMultipleMappersTest",
+    "name": "testCallsTwoProvidersWithTwoRegisteredProvider",
+    "seconds": "0.301",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderInterface",
+    "seconds": "0.158",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderMethod",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientBuilderHeaderTest",
+    "name": "testHeaderBuilderMethodNullValue",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnInterface",
+    "seconds": "0.275",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnMethod",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testComputedClientHeaderParamOnMethodOverridesClientHeaderParamOnInterface",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExceptionInRequiredComputeMethodThrowsClientErrorException",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnInterface",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnMethod",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testExplicitClientHeaderParamOnMethodOverridesClientHeaderParamOnInterface",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderNotSentWhenExceptionThrownAndRequiredIsFalse",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesComputedClientHeaderParamOnInterface",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesComputedClientHeaderParamOnMethod",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesExplicitClientHeaderParamOnInterface",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testHeaderParamOverridesExplicitClientHeaderParamOnMethod",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testMultivaluedHeaderInterfaceExplicit",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeaderParamTest",
+    "name": "testMultivaluedHeaderSentWhenInvokingComputeMethodFromSeparateClass",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientHeadersFactoryTest",
+    "name": "testClientHeadersFactoryInvoked",
+    "seconds": "0.178",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ClientReuseTest",
+    "name": "shouldReuseClientAfterFailure",
+    "seconds": "0.305",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterAutoCloseableClose",
+    "seconds": "0.153",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseOnInterfaceThatExtendsAutoCloseable",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseOnInterfaceThatExtendsCloseable",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CloseTest",
+    "name": "expectIllegalStateExceptionAfterCloseableClose",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.CustomHttpMethodTest",
+    "name": "invokesUserDefinedHttpMethod",
+    "seconds": "0.152",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperConfigTest",
+    "name": "testNoExceptionThrownWhenDisabledDuringBuild",
+    "seconds": "0.26",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testExceptionThrownWhenPropertySetToFalse",
+    "seconds": "0.272",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testLowerPriorityMapperTakesPrecedenceFromDefault",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testNoExceptionThrownWhenDisabledDuringBuild",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultExceptionMapperTest",
+    "name": "testPropagationOfResponseDetailsFromDefaultMapper",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "testDefaultMIMETypeIsApplicationJson_Accept",
+    "seconds": "0.17",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.DefaultMIMETypeTest",
+    "name": "testDefaultMIMETypeIsApplicationJson_ContentType",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "uploadFile",
+    "seconds": "0.149",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.EntityPartTest",
+    "name": "uploadMultipleFiles",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "testWithOneRegisteredProvider",
+    "seconds": "0.244",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ExceptionMapperTest",
+    "name": "testWithTwoRegisteredProviders",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "testFeatureRegistrationViaBuilder",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FeatureRegistrationTest",
+    "name": "testFeatureRegistrationViaCDI",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FilterPriorityTest",
+    "name": "testPriorities",
+    "seconds": "0.142",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test301Default",
+    "seconds": "0.299",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test301Follows",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test302Default",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test302Follows",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test303Default",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test303Follows",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test307Default",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.FollowRedirectsTest",
+    "name": "test307Follows",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeMethodOnBaseInterface",
+    "seconds": "0.146",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeMethodOnChildInterface",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InheritanceTest",
+    "name": "canInvokeOverriddenMethodOnChildInterface",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenClientHeaderParamComputeValueSpecifiesMethodWithInvalidSignature",
+    "seconds": "0.139",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenClientHeaderParamComputeValueSpecifiesMissingMethod",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMismatchedPathParameter",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMissingPathParamAnnotation_templateDeclaredAtMethodLevel",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMissingPathParamAnnotation_templateDeclaredAtTypeLevel",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithMultipleHTTPMethodAnnotations",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenInterfaceHasMethodWithPathParamAnnotationButNoURITemplate",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleClientHeaderParamsSpecifySameHeaderOnInterface",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleClientHeaderParamsSpecifySameHeaderOnMethod",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleHeaderValuesSpecifiedIncludeComputeMethodOnInterface",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvalidInterfaceTest",
+    "name": "testExceptionThrownWhenMultipleHeaderValuesSpecifiedIncludeComputeMethodOnMethod",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeSimpleGetOperationTest",
+    "name": "testGetExecutionWithBuiltClient",
+    "seconds": "0.271",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "testInvokesPostOperationWithRegisteredProviders",
+    "seconds": "0.275",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithBuiltProvidersTest",
+    "name": "testInvokesPutOperationWithRegisteredProviders",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testGetExecutesForBothClients",
+    "seconds": "0.142",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testGetSingleExecutesForBothClients",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testPostExecutes",
+    "seconds": "0.03",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithJsonPProviderTest",
+    "name": "testPutExecutes",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperationWithAnnotatedProviders",
+    "seconds": "0.271",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperationWithAnnotatedProviders",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.InvokedMethodTest",
+    "name": "testRequestFilterReturnsMethodInvoked",
+    "seconds": "0.136",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "testOverrideInterfaceAndProviderAnnotationOnBuilder",
+    "seconds": "0.247",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.MultiRegisteredTest",
+    "name": "testOverrideProviderAnnotationOnBuilder",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "testProducesConsumesAnnotationOnInterface",
+    "seconds": "0.148",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProducesConsumesTest",
+    "name": "testProducesConsumesAnnotationOnMethod",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testCanCallStaticLoader",
+    "seconds": "0.076",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testIllegalStateExceptionThrownWhenNoBaseUriOrUrlSpecified",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProvidesRestClientBuilderTest",
+    "name": "testLastBaseUriOrBaseUrlCallWins",
+    "seconds": "0.07",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber",
+    "seconds": "0.083",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber1",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testInvalidPortNumber2",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testNullHostName",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ProxyServerTest",
+    "name": "testProxy",
+    "seconds": "0.198",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "arrayPairs",
+    "seconds": "0.137",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "commaSeparated",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "defaultStyleIsMultiPair",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.QueryParamStyleTest",
+    "name": "explicitMultiPair",
+    "seconds": "0.003",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientBuilderListenerTest",
+    "name": "testRegistrarInvoked",
+    "seconds": "0.153",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.RestClientListenerTest",
+    "name": "testRestClientListenerInvoked",
+    "seconds": "0.127",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "canInvokeMethodOnSubResourceInterface",
+    "seconds": "0.147",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.SubResourceTest",
+    "name": "exceptionMappedOnSubResourceInterface",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testAsyncInvocationInterceptorProvider",
+    "seconds": "0.251",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testExecutorService",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testInterfaceMethodWithCompletionStageObjectReturnIsInvokedAsynchronously",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.AsyncMethodTest",
+    "name": "testNullExecutorServiceThrowsIllegalArgumentException",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "testHasDependentScopedByDefault",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.asynctests.CDIInvokeAsyncSimpleGetOperationTest",
+    "name": "testInvokesGetOperationWithCDIBean",
+    "seconds": "0.132",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIClientHeadersFactoryTest",
+    "name": "testClientHeadersFactoryInvoked",
+    "seconds": "0.143",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test301Default",
+    "seconds": "0.133",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test301Follows",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test302Default",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test302Follows",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test303Default",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test303Follows",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test307Default",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIFollowRedirectsTest",
+    "name": "test307Follows",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "testInterceptorInvoked",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInterceptorTest",
+    "name": "testInterceptorNotInvokedWhenNoAnnotationApplied",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "testHasDependentScopedByDefault",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeSimpleGetOperationTest",
+    "name": "testInvokesGetOperationWithCDIBean",
+    "seconds": "0.116",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaAnnotation",
+    "seconds": "0.127",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaMPConfig",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPostOperation_viaMPConfigWithConfigKey",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaAnnotation",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaMPConfig",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIInvokeWithRegisteredProvidersTest",
+    "name": "testInvokesPutOperation_viaMPConfigWithConfigKey",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedInMPConfig",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedViaAnnotation",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testCDIProviderSpecifiedViaRestClientBuilder",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIManagedProviderTest",
+    "name": "testInstanceProviderSpecifiedViaRestClientBuilderDoesNotUseCDIManagedProvider",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIProxyServerTest",
+    "name": "testProxy",
+    "seconds": "0.122",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "arrayPairs",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "commaSeparated",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "defaultStyleIsMultiPair",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIQueryParamStyleTest",
+    "name": "explicitMultiPair",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testBaseUriInRegisterRestClientAnnotation",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testMPConfigURIOverridesBaseUriInRegisterRestClientAnnotation",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.CDIURIvsURLConfigTest",
+    "name": "testURItakesPrecedenceOverURL",
+    "seconds": "0.111",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "autoCloseableClosed",
+    "seconds": "0.13",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "closeableClosed",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ClientClosedTest",
+    "name": "stringClosed",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyForMultipleInterfacesTest",
+    "name": "testConfigKeyUsedForUri",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "testConfigKeyUsedForUri",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.ConfigKeyTest",
+    "name": "testFullyQualifiedClassnamePropTakesPrecedenceOverConfigKey",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScoped",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScopedFromConfigKey",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasAppScopeTest",
+    "name": "testHasApplicationScopedWhenAnnotated",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScoped",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScopedFromConfigKey",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasConversationScopeTest",
+    "name": "testHasConversationScopedWhenAnnotated",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScoped",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScopedFromConfigKey",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest",
+    "name": "testHasRequestScopedWhenAnnotated",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSessionScopedFromConfigKey",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSessionScopedWhenAnnotated",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSessionScopeTest",
+    "name": "testHasSingletonScoped",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScoped",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScopedFromConfigKey",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.cditests.HasSingletonScopeTest",
+    "name": "testHasSingletonScopedWhenAnnotated",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "testCanSeePrivatePropertiesViaContextResolver",
+    "seconds": "0.163",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.jsonb.InvokeWithJsonBProviderTest",
+    "name": "testGetExecutesForBothClients",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testCommentOnlySse",
+    "seconds": "0.189",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_InboundSseEvent",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_JsonObject",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testDataOnlySse_String",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testNamedEventSse",
+    "seconds": "1.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.BasicReactiveStreamsTest",
+    "name": "testServerClosesConnection",
+    "seconds": "1.516",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec104_mustSignalOnErrorWhenFails",
+    "seconds": "0.002",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipping because no error state Publisher provided, and the test requires it. Please implement PublisherVerification#createFailedPublisher to run this test.",
+    "trace_ref": "e6dfb290fa6082e5e91a8a89c597e549b77c6d4629668b4065bf8ba520d7424e"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec105_emptyStreamMustTerminateBySignallingOnComplete",
+    "seconds": "5.192",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_maySupportMultiSubscribe",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfront",
+    "seconds": "0.012",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Expected element but got end-of-stream",
+    "trace_ref": "3699f31c5cf26be0b8994fb5d7a03e4d83abe405af67df0e654e2f4dcafcd906"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfrontAndCompleteAsExpected",
+    "seconds": "0.006",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Expected element but got end-of-stream",
+    "trace_ref": "ed9d5d54a0726077cd024311cb53da61409635eb80f6b9c35ffaa7bc0977abb3"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingOneByOne",
+    "seconds": "0.006",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Async error during test execution: Attempted read on closed stream.",
+    "trace_ref": "43f6a1ef2c00e3190993287b6014badcb937b5656e566cad89e5656d444807df"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec111_registeredSubscribersMustReceiveOnNextOrOnCompleteSignals",
+    "seconds": "5.01",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipped because tested publisher does NOT implement this OPTIONAL requirement. Reason for skipping was: Async error during test execution: Attempted read on closed stream.",
+    "trace_ref": "a37d4f8a02344e2794dd66058dd567c760f6bbefc2d65d22fbe312dc1f5d280f"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "optional_spec309_requestNegativeNumberMaySignalIllegalArgumentExceptionWithSpecificMessage",
+    "seconds": "5.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_createPublisher1MustProduceAStreamOfExactly1Element",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_createPublisher3MustProduceAStreamOfExactly3Elements",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec101_subscriptionRequestMustResultInTheCorrectNumberOfProducedElements",
+    "seconds": "15.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec102_maySignalLessThanRequestedAndTerminateSubscription",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec105_mustSignalOnCompleteWhenFiniteStreamTerminates",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec107_mustNotEmitFurtherSignalsOnceOnCompleteHasBeenSignalled",
+    "seconds": "5.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_mayRejectCallsToSubscribeIfPublisherIsUnableOrUnwillingToServeThemRejectionMustTriggerOnErrorAfterOnSubscribe",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Skipping because no error state Publisher provided, and the test requires it. Please implement PublisherVerification#createFailedPublisher to run this test.",
+    "trace_ref": "b05aec0cce2ba0d7570715d3fb9f13791f41f2fb7ce6d8535df4408544d79ffe"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_mustIssueOnSubscribeForNonNullSubscriber",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec109_subscribeThrowNPEOnNullSubscriber",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec302_mustAllowSynchronousRequestCallsFromOnNextAndOnSubscribe",
+    "seconds": "5.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec303_mustNotAllowUnboundedRecursion",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec306_afterSubscriptionIsCancelledRequestMustBeNops",
+    "seconds": "5.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec307_afterSubscriptionIsCancelledAdditionalCancelationsMustBeNops",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec309_requestNegativeNumberMustSignalIllegalArgumentException",
+    "seconds": "5.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec309_requestZeroMustSignalIllegalArgumentException",
+    "seconds": "5.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec312_cancelMustMakeThePublisherToEventuallyStopSignaling",
+    "seconds": "30.044",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec313_cancelMustMakeThePublisherEventuallyDropAllReferencesToTheSubscriber",
+    "seconds": "0.336",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustNotSignalOnErrorWhenPendingAboveLongMaxValue",
+    "seconds": "5.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustSupportACumulativePendingElementCountUpToLongMaxValue",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_spec317_mustSupportAPendingElementCountUpToLongMaxValue",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_validate_boundedDepthOfOnNextAndRequestRecursion",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "required_validate_maxElementsFromPublisher",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "stochastic_spec103_mustSignalOnMethodsSequentially",
+    "seconds": "0.343",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec106_mustConsiderSubscriptionCancelledAfterOnErrorOrOnCompleteHasBeenCalled",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "d773d1d18965237b932e368b3dd596df7709fdd6d57f61d43b454e847e7909dd"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec107_mustNotEmitFurtherSignalsOnceOnErrorHasBeenSignalled",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "505c04f4183801faf17540f5121c844c918a1b09dfb736c677f4938dff91ed93"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec108_possiblyCanceledSubscriptionShouldNotReceiveOnErrorOrOnCompleteSignals",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "739e279a9eddc01e3ce1c6d2648124ad3a953d0ce3f6876554da61867f752513"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec109_subscribeShouldNotThrowNonFatalThrowable",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "b742c498ec0b71c279e9f1b8672f1a043dbba965b4fde69284c2d1fc918561cb"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec110_rejectASubscriptionRequestIfTheSameSubscriberSubscribesTwice",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "0ac167a6d4162d2f78181c1f49b869f6c92ae714324b73c32cef71765f3af8bc"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec304_requestShouldNotPerformHeavyComputations",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "79c487affd826772a1f5e24a846feb2f48c9f841e61a03edf7c3b7494756dbad"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.sse.ReactiveStreamsPublisherTckTest",
+    "name": "untested_spec305_cancelMustNotSynchronouslyPerformHeavyComputation",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.testng.SkipException: Not verified by this TCK.",
+    "trace_ref": "87b45a4501c11d4c6a27b750327cc3a9bb41065527ab1bba15d897a4620b8e6b"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "shouldFailedMutualSslWithoutSslContext",
+    "seconds": "0.2",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslContextTest",
+    "name": "shouldSucceedMutualSslWithValidSslContext",
+    "seconds": "0.065",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithRejectingHostnameVerifier",
+    "seconds": "0.105",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithRejectingHostnameVerifierCDI",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldFailWithoutHostnameAndNoVerifier",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldPassSslSessionAndHostnameToHostnameVerifier",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldPassSslSessionAndHostnameToHostnameVerifierCDI",
+    "seconds": "0.009",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldSucceedWithAcceptingHostnameVerifier",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslHostnameVerifierTest",
+    "name": "shouldSucceedWithAcceptingHostnameVerifierCDI",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithInvalidClientSignature",
+    "seconds": "0.112",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithInvalidClientSignatureCDI",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithNoClientSignature",
+    "seconds": "0.036",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldFailWithNoClientSignatureCDI",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignature",
+    "seconds": "0.052",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignatureCDI",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslMutualTest",
+    "name": "shouldWorkWithClientSignatureFromClasspathCDI",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithNonMatchingKeystore",
+    "seconds": "0.114",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithNonMatchingKeystoreCDI",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithSelfSignedKeystore",
+    "seconds": "0.03",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldFailWithSelfSignedKeystoreCDI",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystore",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystoreCDI",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.rest.client.tck.ssl.SslTrustStoreTest",
+    "name": "shouldSucceedWithRegisteredSelfSignedKeystoreFromResourceCDI",
+    "seconds": "0.01",
+    "status": "passed"
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "config-cdi-import-optional": {
+    "$Integration4$Consumer$Definition.class": [
+      "30: invokevirtual #242                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ]
+  },
+  "config-cdi-import-list": {
+    "$Integration8$Consumer$Definition.class": [
+      "30: invokevirtual #242                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ]
+  },
+  "config-cdi-import-set": {
+    "$Integration9$Consumer$Definition.class": [
+      "30: invokevirtual #242                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ]
+  },
+  "config-cdi-import-optional-constructor": {
+    "$Integration36$Consumer$Definition.class": [
+      "31: invokespecial #218                // Method io/micronaut/context/AbstractInitializableBeanDefinitionAndReference.getBeanForConstructorArgument:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ]
+  },
+  "config-cdi-import-list-initializer": {
+    "$Integration39$Consumer$Definition.class": [
+      "33: invokevirtual #240                // Method getBeanForMethodArgument:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;IILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ]
+  },
+  "jwt-claim-import-groups": {
+    "$Integration29$Consumer$Definition.class": [
+      "13: invokevirtual #205                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;",
+      "29: invokevirtual #205                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ],
+    "$Integration29$Producer$Current0$Definition$Intercepted$Definition.class": [
+      "18: invokespecial #314                // Method io/micronaut/context/AbstractInitializableBeanDefinitionAndReference.getBeanForConstructorArgument:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;",
+      "73: invokespecial #314                // Method io/micronaut/context/AbstractInitializableBeanDefinitionAndReference.getBeanForConstructorArgument:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ],
+    "$Integration29$ClaimsBean$Definition.class": [
+      "30: invokevirtual #276                // Method getBeanForField:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ],
+    "$Integration29$ClaimsBean$Definition$Intercepted$Definition.class": [
+      "18: invokespecial #263                // Method org/example/mp/generated/$Integration29$ClaimsBean$Definition.getBeanForConstructorArgument:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;",
+      "73: invokespecial #263                // Method org/example/mp/generated/$Integration29$ClaimsBean$Definition.getBeanForConstructorArgument:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;ILio/micronaut/context/Qualifier;)Ljava/lang/Object;"
+    ]
+  }
+}

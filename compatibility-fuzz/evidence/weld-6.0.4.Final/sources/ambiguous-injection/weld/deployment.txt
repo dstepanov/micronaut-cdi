@@ -1,0 +1,6 @@
+org.jboss.weld.exceptions.DeploymentException: WELD-001409: Ambiguous dependencies for type Runnable with qualifiers @Default
+  at injection point [BackedAnnotatedField] @Inject org.example.cdi.fuzz.generated.Mutation1$Consumer.x
+  at org.example.cdi.fuzz.generated.Mutation1$Consumer.x(Consumer.java:0)
+  Possible dependencies: 
+  - Managed Bean [class org.example.cdi.fuzz.generated.Mutation1$B] with qualifiers [@Any @Default],
+  - Managed Bean [class org.example.cdi.fuzz.generated.Mutation1$A] with qualifiers [@Any @Default]

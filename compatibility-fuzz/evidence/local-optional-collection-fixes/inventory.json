@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-01",
+  "scope": "Functional CDI Lite compatibility",
+  "cdi_revision": "a3d852ab8877f3edf604f0afb8542c911c2108af",
+  "interceptors_revision": "d9307e56e25637730ea44766a820c8b357ee0bf2",
+  "weld": "6.0.4.Final",
+  "seed": "0xcd140",
+  "command": "./gradlew :micronaut-compatibility-fuzz:test -PcompatibilityFuzz -PjakartaInterceptorsDir=build/fuzz-interceptors -PfuzzWeldVersion=6.0.4.Final -PfuzzSeed=840000 -PmicronautCoreDir=build/optional-collection-core",
+  "java": "openjdk version \"25.0.2\" 2026-01-20\nOpenJDK Runtime Environment (build 25.0.2+10-69)\nOpenJDK 64-Bit Server VM (build 25.0.2+10-69, mixed mode, sharing)",
+  "comparisons": 2293,
+  "differing_rows": 8,
+  "families": {
+    "types": {
+      "comparisons": 1606,
+      "differences": 0
+    },
+    "bean-types": {
+      "comparisons": 22,
+      "differences": 0
+    },
+    "qualifiers": {
+      "comparisons": 323,
+      "differences": 0
+    },
+    "events": {
+      "comparisons": 8,
+      "differences": 0
+    },
+    "parameters": {
+      "comparisons": 196,
+      "differences": 0
+    },
+    "parameter-array": {
+      "comparisons": 3,
+      "differences": 2
+    },
+    "handles": {
+      "comparisons": 64,
+      "differences": 0
+    },
+    "injection-default": {
+      "comparisons": 1,
+      "differences": 1
+    },
+    "injection-list": {
+      "comparisons": 1,
+      "differences": 0
+    },
+    "source": {
+      "comparisons": 69,
+      "differences": 5
+    }
+  },
+  "suites": {
+    "CDI Java": {
+      "tests": 323,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "CDI configured TCK": {
+      "tests": 833,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Interceptors Java": {
+      "tests": 241,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Differential drivers": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "evidence_hashes": {
+    "results.tsv": "9b9b15e72b8532cf6534c7bf7ff766da8d12475c7f4d4f66f55eb3ffaddc6dac",
+    "source-results.tsv": "30ff6badd760f4cc3712cdb22deec636125af94e1a813873cbb377b2cb5795fe",
+    "artifacts.tsv": "4729d4b7a08728c878130575bd7d119e76fa14ec55947293600f45c922de1258",
+    "source-hashes.json": "bf72356e0d4677d54b3223c7bc6b1a5bc3ed64527de07cf695885cb13c08cb9f",
+    "runtime-and-processor.patch": "5383033093c19b612f7e081cc288b6e46bb20b6328890414f9c3fa3690f281cc"
+  },
+  "working_tree": "Local uncommitted CDI runtime/processor changes and patched Core, not unchanged published snapshots",
+  "core_revision": "55ceb9892508f7102909120788cf4d8dd0edd5c7",
+  "core_patch": "../../../core-integration/optional-collection-injection.patch",
+  "core_patch_sha256": "cc28edbdcd679caed4f97c94ccf6145a9e01c8969c6b3d550b6dd5207e00241a",
+  "local_source_hashes": "source-hashes.json",
+  "local_patch": "runtime-and-processor.patch",
+  "verification": "../../../core-integration/evidence/verification.json"
+}

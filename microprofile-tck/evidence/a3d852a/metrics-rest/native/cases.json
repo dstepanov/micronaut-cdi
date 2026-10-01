@@ -1,0 +1,34 @@
+[
+  {
+    "class": "org.eclipse.microprofile.metrics.test.HistogramTimerConfigurationTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-rest deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-rest/build/deployments/native/0001-ec7fc9d3-0dd8-4fcc-97ad-4827f9137a74.war",
+    "trace_ref": "3f6491bf8678995e37be232f851771cb3fa48db16876588ce1b987b2537a6d6e"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.test.MpMetricTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-rest deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-rest/build/deployments/native/0001-2e28487b-02f0-4b26-91cb-36139db2f8a6.war",
+    "trace_ref": "1926eaa4f87a48bb75c13863554bcdf79af84898161a8a439b2fce5b000890db"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.test.ReusedMetricsTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-rest deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-rest/build/deployments/native/0001-cc6518b0-cd9a-4b62-a9b3-2c9b92183e81.war",
+    "trace_ref": "e4c62aa265c0074ffba65bf43a65dfa14eb3200e260330f04f917995f3584196"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.test.multipleinstances.MultipleBeanInstancesTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-rest deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-rest/build/deployments/native/0001-4e5c941c-711f-4768-be24-2e90482de74d.war",
+    "trace_ref": "08121aea33c109c753a6b286a75786c1d13bfc0163d8624d2819a31f7944602e"
+  }
+]

@@ -1,0 +1,3 @@
+org.jboss.weld.exceptions.DeploymentException: WELD-001410: The injection point has non-proxyable dependencies: [BackedAnnotatedField] @Inject org.example.cdi.fuzz.generated.Mutation29$Consumer.a
+	at org.example.cdi.fuzz.generated.Mutation29$Consumer.a(Consumer.java:0)
+  StackTrace

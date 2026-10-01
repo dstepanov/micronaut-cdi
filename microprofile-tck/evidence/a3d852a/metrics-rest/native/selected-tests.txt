@@ -1,0 +1,4 @@
+org.eclipse.microprofile.metrics.test.HistogramTimerConfigurationTest
+org.eclipse.microprofile.metrics.test.MpMetricTest
+org.eclipse.microprofile.metrics.test.ReusedMetricsTest
+org.eclipse.microprofile.metrics.test.multipleinstances.MultipleBeanInstancesTest

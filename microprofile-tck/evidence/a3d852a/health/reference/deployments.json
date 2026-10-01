@@ -1,0 +1,82 @@
+{
+  "0001-CDIProducedProceduresTest.war": {
+    "archive.txt": "CDIProducedProceduresTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/CDIProducedProcedureCheck.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/CDIProducedProceduresTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-ConfigTest.war": {
+    "archive.txt": "ConfigTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/ConfigTest.class\n/META-INF/\n/META-INF/microprofile-config.properties",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-DelayedCheckTest.war": {
+    "archive.txt": "DelayedCheckTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/DelayedCheck.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/DelayedCheckTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-DelegateHealthSuccessfulTest.war": {
+    "archive.txt": "DelegateHealthSuccessfulTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/DelegateHealth.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/DelegationTarget.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/DelegateHealthSuccessfulTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-EnforceQualifierTest.war": {
+    "archive.txt": "EnforceQualifierTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/CheckWithoutQualifier.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/EnforceQualifierTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-HealthCheckResponseAttributesTest.war": {
+    "archive.txt": "HealthCheckResponseAttributesTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/CheckWithAttributes.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/HealthCheckResponseAttributesTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-HealthCheckResponseValidationTest.war": {
+    "archive.txt": "HealthCheckResponseValidationTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/HealthCheckResponseValidationTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-JsonSchemaValidationTest.war": {
+    "archive.txt": "JsonSchemaValidationTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/JsonSchemaValidationTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-MultipleLivenessFailedTest.war": {
+    "archive.txt": "MultipleLivenessFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/MultipleLivenessFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-MultipleProceduresFailedTest.war": {
+    "archive.txt": "MultipleProceduresFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/MultipleProceduresFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-MultipleReadinessFailedTest.war": {
+    "archive.txt": "MultipleReadinessFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/MultipleReadinessFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-MultipleStartupFailedTest.war": {
+    "archive.txt": "MultipleStartupFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedStartup.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/MultipleStartupFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-NoProcedureSuccessfulTest.war": {
+    "archive.txt": "NoProcedureSuccessfulTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/NoProcedureSuccessfulTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-OnlySuccessfulProcedureTest.war": {
+    "archive.txt": "OnlySuccessfulProcedureTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/OnlySuccessfulProcedureTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-SingleLivenessFailedTest.war": {
+    "archive.txt": "SingleLivenessFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/SingleLivenessFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-SingleLivenessSuccessfulTest.war": {
+    "archive.txt": "SingleLivenessSuccessfulTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulLiveness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/SingleLivenessSuccessfulTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-SingleReadinessFailedTest.war": {
+    "archive.txt": "SingleReadinessFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/SingleReadinessFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-SingleReadinessSuccessfulTest.war": {
+    "archive.txt": "SingleReadinessSuccessfulTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulReadiness.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/SingleReadinessSuccessfulTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-SingleStartupFailedTest.war": {
+    "archive.txt": "SingleStartupFailedTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/FailedStartup.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/TCKBase.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/TCKBase$Response.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/SingleStartupFailedTest.class",
+    "outcome.txt": "STARTED\n"
+  },
+  "0001-SingleStartupSuccessfulTest.war": {
+    "archive.txt": "SingleStartupSuccessfulTest.war:\n/WEB-INF/\n/WEB-INF/beans.xml\n/WEB-INF/classes/\n/WEB-INF/classes/org/\n/WEB-INF/classes/org/eclipse/\n/WEB-INF/classes/org/eclipse/microprofile/\n/WEB-INF/classes/org/eclipse/microprofile/health/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/deployment/SuccessfulStartup.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/TCKBase.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/TCKBase$Response.class\n/WEB-INF/classes/org/eclipse/microprofile/health/tck/SingleStartupSuccessfulTest.class",
+    "outcome.txt": "STARTED\n"
+  }
+}

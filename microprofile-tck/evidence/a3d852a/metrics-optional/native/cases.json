@@ -1,0 +1,18 @@
+[
+  {
+    "class": "org.eclipse.microprofile.metrics.test.optional.MPMetricBaseMetricsTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-optional deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-optional/build/deployments/native/0001-5b9196d6-abb9-4697-baf7-cabab21c6100.war",
+    "trace_ref": "864483e8add5996216b290b36e76c1ecc7bd155702b5593525bd3814182d828c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.test.optional.MpMetricOptionalTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-optional deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-optional/build/deployments/native/0001-optionalTCK.war",
+    "trace_ref": "fcddc4c7f961c755e971d206e4c66e87db6da711f40c42904ab85bff7c98b604"
+  }
+]

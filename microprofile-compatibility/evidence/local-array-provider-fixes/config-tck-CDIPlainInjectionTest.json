@@ -1,0 +1,30 @@
+{
+  "mode": "imported",
+  "filter": "*CDIPlainInjectionTest*",
+  "cases": [
+    {
+      "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+      "method": "canInjectDefaultPropertyPath",
+      "timestamp": "2026-10-01T11:50:37.403Z",
+      "status": "passed"
+    },
+    {
+      "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+      "method": "canInjectDynamicValuesViaCdiProvider",
+      "timestamp": "2026-10-01T11:50:37.403Z",
+      "status": "passed"
+    },
+    {
+      "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+      "method": "canInjectSimpleValuesWhenDefined",
+      "timestamp": "2026-10-01T11:50:37.403Z",
+      "status": "passed"
+    },
+    {
+      "class": "org.eclipse.microprofile.config.tck.CDIPlainInjectionTest",
+      "method": "injectedValuesAreEqualToProgrammaticValues",
+      "timestamp": "2026-10-01T11:50:37.403Z",
+      "status": "passed"
+    }
+  ]
+}

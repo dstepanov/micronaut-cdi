@@ -1,0 +1,1 @@
+org.jboss.weld.exceptions.DefinitionException: WELD-000810: Cannot place qualifiers on final fields:  [EnhancedAnnotatedFieldImpl] @Inject final org.example.cdi.fuzz.generated.Mutation8$Consumer.x

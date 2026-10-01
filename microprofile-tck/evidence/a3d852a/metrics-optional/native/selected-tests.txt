@@ -1,0 +1,2 @@
+org.eclipse.microprofile.metrics.test.optional.MPMetricBaseMetricsTest
+org.eclipse.microprofile.metrics.test.optional.MpMetricOptionalTest

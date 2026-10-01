@@ -1,0 +1,314 @@
+[
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncDoubleCounterTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.454",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-eec61017-2a48-4c88-b7f0-1ef35cfa4a79.war",
+    "trace_ref": "24096db77c05538ca5d62c36e279d02bfc53252e05be2679d7e4e6b6792db395"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncDoubleCounterTest",
+    "name": "testAsyncDoubleCounter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-eec61017-2a48-4c88-b7f0-1ef35cfa4a79.war",
+    "trace_ref": "24096db77c05538ca5d62c36e279d02bfc53252e05be2679d7e4e6b6792db395"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncLongCounterTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.538",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-fb911b4f-ccdf-44a9-ae39-9b522d002882.war",
+    "trace_ref": "612a087a37834b73d1f5a523ad70faa06c8e826fbc894938bf63c99a08322e3a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.AsyncLongCounterTest",
+    "name": "testAsyncLongCounter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-fb911b4f-ccdf-44a9-ae39-9b522d002882.war",
+    "trace_ref": "612a087a37834b73d1f5a523ad70faa06c8e826fbc894938bf63c99a08322e3a"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleCounterTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.735",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-bebbac96-5dfd-466a-87be-a1f1a0a35477.war",
+    "trace_ref": "5665a23ffd32fbee4b9dd74ffdd228cf12ed4989f78ada424c54fe8fdfccbdd6"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleCounterTest",
+    "name": "testDoubleCounter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-bebbac96-5dfd-466a-87be-a1f1a0a35477.war",
+    "trace_ref": "5665a23ffd32fbee4b9dd74ffdd228cf12ed4989f78ada424c54fe8fdfccbdd6"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleGaugeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.708",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-8e1e4b9f-b60c-4bf7-a925-839bbe222ebd.war",
+    "trace_ref": "c81ce4446958ec52b9b6ae9622c7a5b557d186bf3070aeb4f146611ad302d4d3"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleGaugeTest",
+    "name": "testDoubleGauge",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-8e1e4b9f-b60c-4bf7-a925-839bbe222ebd.war",
+    "trace_ref": "c81ce4446958ec52b9b6ae9622c7a5b557d186bf3070aeb4f146611ad302d4d3"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleHistogramTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.41",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-909f2342-92dd-4561-8b17-42bdad8b193b.war",
+    "trace_ref": "f3125dfaba5b48225a5c3e0f825d104876ed5e24e3a7afdf0103a6a6f8b32c7f"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleHistogramTest",
+    "name": "testDoubleHistogram",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-909f2342-92dd-4561-8b17-42bdad8b193b.war",
+    "trace_ref": "f3125dfaba5b48225a5c3e0f825d104876ed5e24e3a7afdf0103a6a6f8b32c7f"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleUpDownCounterTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.512",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-760aa3a6-7d93-400e-9e3e-86daf2145c70.war",
+    "trace_ref": "c9276123c6ef896ef0a30fc55a12e7bc52869427096e41d84d906eee2d772897"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.DoubleUpDownCounterTest",
+    "name": "testDoubleUpDownCounter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-760aa3a6-7d93-400e-9e3e-86daf2145c70.war",
+    "trace_ref": "c9276123c6ef896ef0a30fc55a12e7bc52869427096e41d84d906eee2d772897"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongCounterTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.299",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-37c51dc1-17f3-44bc-9b53-4df7d38b4ca8.war",
+    "trace_ref": "f5b19957d9d8a90c8de41d11eebfe854bff4a4eaa2f66040a343776c229b99b3"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongCounterTest",
+    "name": "testLongCounter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-37c51dc1-17f3-44bc-9b53-4df7d38b4ca8.war",
+    "trace_ref": "f5b19957d9d8a90c8de41d11eebfe854bff4a4eaa2f66040a343776c229b99b3"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongGaugeTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.288",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-c21afe35-c6e3-45d7-8655-3630e781eb54.war",
+    "trace_ref": "7fc41ced72fd290419445314d20a18683786a8fc9b03325709cea15ce3f3bf56"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongGaugeTest",
+    "name": "testLongGauge",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-c21afe35-c6e3-45d7-8655-3630e781eb54.war",
+    "trace_ref": "7fc41ced72fd290419445314d20a18683786a8fc9b03325709cea15ce3f3bf56"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongHistogramTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.193",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-64d313c6-cc46-4a6d-89ef-de646d8ea9f9.war",
+    "trace_ref": "08331653fb40a415c354da3a97244a72e211e5179e35363190de372a6192acea"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongHistogramTest",
+    "name": "testLongHistogram",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-64d313c6-cc46-4a6d-89ef-de646d8ea9f9.war",
+    "trace_ref": "08331653fb40a415c354da3a97244a72e211e5179e35363190de372a6192acea"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongUpDownCounterTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.154",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-db8b7e5d-261f-4158-b411-b88ccfea36e9.war",
+    "trace_ref": "adfbe16e03fb2877eb8c874fb1a83bd2b94e71a6bdcc484c5bb8c0f21be786a6"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.cdi.LongUpDownCounterTest",
+    "name": "testLongUpDownCounter",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-db8b7e5d-261f-4158-b411-b88ccfea36e9.war",
+    "trace_ref": "adfbe16e03fb2877eb8c874fb1a83bd2b94e71a6bdcc484c5bb8c0f21be786a6"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.http.HttpHistogramTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.22",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-7f0b5916-a18b-4674-8d76-3d30337a572d.war",
+    "trace_ref": "9af5749333b29b7e53ab83ce5d8375f125779ace42d8c7c06989539c2446e136"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.application.http.HttpHistogramTest",
+    "name": "collectsHttpRouteFromEndAttributes",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-7f0b5916-a18b-4674-8d76-3d30337a572d.war",
+    "trace_ref": "9af5749333b29b7e53ab83ce5d8375f125779ace42d8c7c06989539c2446e136"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmClassesTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.203",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-a77bb5e5-f910-47dd-8055-8ba8847759ec.war",
+    "trace_ref": "26e65cc57623e2c640c91dc669e352be1926382d78805f1b3569bbfa7a2a8a45"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmClassesTest",
+    "name": "testClassCountMetrics",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-a77bb5e5-f910-47dd-8055-8ba8847759ec.war",
+    "trace_ref": "26e65cc57623e2c640c91dc669e352be1926382d78805f1b3569bbfa7a2a8a45"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmClassesTest",
+    "name": "testClassLoadedMetrics",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-a77bb5e5-f910-47dd-8055-8ba8847759ec.war",
+    "trace_ref": "26e65cc57623e2c640c91dc669e352be1926382d78805f1b3569bbfa7a2a8a45"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmClassesTest",
+    "name": "testClassUnloadedMetrics",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-a77bb5e5-f910-47dd-8055-8ba8847759ec.war",
+    "trace_ref": "26e65cc57623e2c640c91dc669e352be1926382d78805f1b3569bbfa7a2a8a45"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmCpuTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.205",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-597dcf00-9a13-40f5-8226-74158d8d9c5d.war",
+    "trace_ref": "6e58b3e2b0943f12e470debac09bad4c3f0ef68763fcb6dde78a90e4b567f317"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmCpuTest",
+    "name": "testCpuCountMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-597dcf00-9a13-40f5-8226-74158d8d9c5d.war",
+    "trace_ref": "6e58b3e2b0943f12e470debac09bad4c3f0ef68763fcb6dde78a90e4b567f317"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmCpuTest",
+    "name": "testCpuRecentUtilizationMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-597dcf00-9a13-40f5-8226-74158d8d9c5d.war",
+    "trace_ref": "6e58b3e2b0943f12e470debac09bad4c3f0ef68763fcb6dde78a90e4b567f317"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmCpuTest",
+    "name": "testCpuTimeMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-597dcf00-9a13-40f5-8226-74158d8d9c5d.war",
+    "trace_ref": "6e58b3e2b0943f12e470debac09bad4c3f0ef68763fcb6dde78a90e4b567f317"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmGarbageCollectionTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.258",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-962d320f-270a-466b-8ff4-fdbb06b69812.war",
+    "trace_ref": "d5f8b3cd24728c62c7897a83861725ee909f1c9e2743a9d7222ef16edb01c3af"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmGarbageCollectionTest",
+    "name": "testGarbageCollectionCountMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-962d320f-270a-466b-8ff4-fdbb06b69812.war",
+    "trace_ref": "d5f8b3cd24728c62c7897a83861725ee909f1c9e2743a9d7222ef16edb01c3af"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.185",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-08b99b41-abab-48d0-9c38-57148ed20898.war",
+    "trace_ref": "7c0177e1fa64cb70216e80c0d2c721027e99bc716647ec795f8abe9b7dde511c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest",
+    "name": "testJvmMemoryCommittedMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-08b99b41-abab-48d0-9c38-57148ed20898.war",
+    "trace_ref": "7c0177e1fa64cb70216e80c0d2c721027e99bc716647ec795f8abe9b7dde511c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest",
+    "name": "testJvmMemoryUsedMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-08b99b41-abab-48d0-9c38-57148ed20898.war",
+    "trace_ref": "7c0177e1fa64cb70216e80c0d2c721027e99bc716647ec795f8abe9b7dde511c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest",
+    "name": "testMemoryLimitMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-08b99b41-abab-48d0-9c38-57148ed20898.war",
+    "trace_ref": "7c0177e1fa64cb70216e80c0d2c721027e99bc716647ec795f8abe9b7dde511c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmMemoryTest",
+    "name": "testMemoryUsedAfterLastGcMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-08b99b41-abab-48d0-9c38-57148ed20898.war",
+    "trace_ref": "7c0177e1fa64cb70216e80c0d2c721027e99bc716647ec795f8abe9b7dde511c"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmThreadTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.071",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-86093832-4324-447e-838a-db9d74b1f6e8.war",
+    "trace_ref": "a1ca8e1ad191e801268d7b48caba0a18d0c0c3f627b6fd71c6cae529a163f722"
+  },
+  {
+    "class": "org.eclipse.microprofile.telemetry.metrics.tck.jvm.JvmThreadTest",
+    "name": "testThreadCountMetric",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile telemetry-metrics deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/telemetry-metrics/build/deployments/native/0001-86093832-4324-447e-838a-db9d74b1f6e8.war",
+    "trace_ref": "a1ca8e1ad191e801268d7b48caba0a18d0c0c3f627b6fd71c6cae529a163f722"
+  }
+]

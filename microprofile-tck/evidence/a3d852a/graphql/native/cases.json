@@ -1,0 +1,1906 @@
+[
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.615",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[0](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6a8a3688)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[1](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@b9d8c21b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[2](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9b95851e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[3](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5e5ad937)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[4](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@2e13dc13)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[5](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@ca6c53c1)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[6](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@95ff37f5)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[7](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9b85f381)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[8](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@f3934215)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[9](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@21dcf02f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[10](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@58f8a686)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[11](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@ae730714)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[12](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@1b8b6a06)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[13](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@1468e0bc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[14](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@733ca717)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[15](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@be3d4ba2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[16](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e8f184bf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[17](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@3a379feb)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[18](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c20e29f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[19](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c146b491)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[20](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@afa96f02)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[21](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e62142ec)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[22](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@8f63238b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[23](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d867d51b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[24](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@33db0c70)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[25](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c75c5bf5)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[26](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@754bddc0)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[27](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@39cc3a3)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[28](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@16737f5d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[29](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6bcd99c7)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[30](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@f9d952b5)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[31](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@725e98ad)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[32](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@a28d4ad7)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[33](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@45fa7be4)",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[34](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c4fe7f7a)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[35](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5fdb5aea)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[36](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@38986980)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[37](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d17831ab)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[38](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@b8828c2d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[39](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@faf87bac)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[40](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c86e55b7)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[41](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@feb3682f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[42](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@1cb1257b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[43](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c0ccd070)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[44](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@484219fc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[45](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@3cbae4c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[46](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@88fe7ff6)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[47](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@a987543a)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[48](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@869977fe)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[49](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@ef9dd6ed)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[50](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@93470514)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[51](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d43f5d8b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[52](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5b0ce5f2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[53](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9696e88e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[54](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@541fac92)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[55](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d89f4aa2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[56](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@da28f207)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[57](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@222fd38f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[58](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@8f0bca08)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[59](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@a3b39f1b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[60](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@d0d22776)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[61](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@602a77ec)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[62](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9606c4ad)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[63](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@116cf682)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[64](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e21bca4)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[65](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@3ecb2107)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[66](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@bf6e80cb)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[67](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@767439b8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[68](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@2f7c53ba)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[69](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@36b03eae)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[70](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6c4f09a1)",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[71](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@e3e15fcf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[72](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@9502885d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[73](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@4b5b0604)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[74](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@5e9e3984)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[75](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@99bb976e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[76](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@46337a42)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[77](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@8c10128f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[78](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@c0428f81)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[79](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@93c3d2f6)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.ExecutionDynamicTest",
+    "name": "testSpecification[80](org.eclipse.microprofile.graphql.tck.dynamic.execution.TestData@6ccb248a)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-dynamic.war",
+    "trace_ref": "51c96b739f41649e0518c9fe19903508c32f3572d765c9a13ccf72385282e3a0"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "arquillianBeforeClass",
+    "seconds": "1.603",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testResponse",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[0](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6b5dc4bb)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[1](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@eba64a9)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[2](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@12568b11)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[3](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@210c4071)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[4](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@473e0536)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[5](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4c02f50)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[6](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@156322ce)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[7](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@39a809db)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[8](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@399ef33f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[9](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@19f72e12)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[10](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5cdb7b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[11](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@f62ae87)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[12](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@22a10b71)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[13](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@31881213)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[14](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@707b0b9b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[15](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@16e6a643)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[16](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7574d30b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[17](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@59f59a0a)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[18](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1377b7bf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[19](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@640c8cd)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[20](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@32fccfc2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[21](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@62dfe32e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[22](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6924ff83)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[23](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@14574cdf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[24](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6eb506d0)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[25](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@51ea9f02)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[26](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3aac9173)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[27](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@38f12596)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[28](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@fcd300e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[29](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@ddd0e97)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[30](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4101d2c7)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[31](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1724c649)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[32](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@233202aa)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[33](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@70916715)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[34](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@66d8a602)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[35](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2fb36d8d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[36](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1a5478e8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[37](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@a8dedda)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[38](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5409305f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[39](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2350e46)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[40](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1e686da2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[41](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@66ee4640)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[42](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@43e6bcfd)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[43](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5216e43c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[44](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@d2eddc2)",
+    "seconds": "0.001",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[45](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4483e237)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[46](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@515c3dd2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[47](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@798ac54d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[48](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@627a1c77)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[49](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5d12fa92)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[50](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1a26eecb)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[51](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7bcd497)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[52](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5a41183b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[53](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6b5ad1bb)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[54](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@57dee2b9)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[55](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@32089590)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[56](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@531455c1)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[57](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1dd17c0c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[58](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5a131edc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[59](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2b2f8cf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[60](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3df88502)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[61](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@61defefb)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[62](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@382e7f70)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[63](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@26a2106e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[64](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@19d483dc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[65](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7daecd21)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[66](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@304f4888)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[67](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@470ce6e7)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[68](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6e13e2fc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[69](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4b477d05)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[70](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@344d6bb3)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[71](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@25fa5c0c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[72](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4f06006d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[73](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5ec80bbd)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[74](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@49588c70)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[75](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@591e27f1)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[76](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@64078e6a)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[77](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@380f9c1d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[78](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@28f33810)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[79](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@76527a00)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[80](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@27777afd)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[81](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@290964bd)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[82](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@17caf362)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[83](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@39d5376c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[84](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2f59ecf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[85](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@79927a7c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[86](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@20ca2c3f)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[87](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@593f6c3)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[88](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@17f8c75e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[89](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@e182453)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[90](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@34ceefb5)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[91](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6654e105)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[92](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6859f102)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[93](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@39d0775c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[94](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7c7335dc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[95](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@35c55050)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[96](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6f36c42)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[97](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2df019b8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[98](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1c04dae9)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[99](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5f7e2ca8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[100](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@36821a1b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[101](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5fb8ad3d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[102](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2fc72df3)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[103](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6c758c74)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[104](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@66c58c03)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[105](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@36b5dbdf)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[106](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7b0a864e)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[107](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@12b9d405)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[108](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@232e4e1d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[109](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4df5b562)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[110](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@c5dc3db)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[111](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3699c795)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[112](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@470a2845)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[113](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3744c760)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[114](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@ef09e1)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[115](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6d6e8dfc)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[116](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@13ac7281)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[117](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1ab6a093)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[118](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4f2ab774)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[119](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5e774546)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[120](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5479abd8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[121](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@20c5b5f8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[122](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@46f43f50)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[123](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@743a9292)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[124](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@67c1f5be)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[125](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@685e8e17)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[126](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@740610a2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[127](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7edab945)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[128](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@672c6b93)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[129](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7231c423)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[130](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5ee63d9)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[131](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@3d2ec8b2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[132](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@14f1db20)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[133](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@56034552)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[134](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6f914212)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[135](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@4a0b1701)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[136](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@451f08ea)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[137](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7f68e671)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[138](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@757501da)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[139](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7f3aa737)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[140](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5c807e6b)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[141](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@796affb8)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[142](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@455082d2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[143](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6f77917c)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[144](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2e6066e1)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[145](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7ba0c0e5)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[146](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1cf45f46)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[147](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@1bc467bd)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[148](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@6050d04d)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[149](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@834944)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[150](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@5d9b79a2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[151](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@7b4791d9)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[152](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@2394fad2)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  },
+  {
+    "class": "org.eclipse.microprofile.graphql.tck.dynamic.SchemaDynamicValidityTest",
+    "name": "testPartsOfSchema[153](org.eclipse.microprofile.graphql.tck.dynamic.schema.TestData@46092840)",
+    "seconds": "0.0",
+    "status": "skipped",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile graphql deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/graphql/build/deployments/native/0001-tck-schematest.war",
+    "trace_ref": "97e31ad4714cefa74a3451e8b8ecf9fe8aa381556a0d5c54574dc656280e3dab"
+  }
+]

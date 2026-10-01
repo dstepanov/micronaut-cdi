@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-01",
+  "scope": "Functional CDI Lite compatibility",
+  "cdi_revision": "a3d852ab8877f3edf604f0afb8542c911c2108af",
+  "interceptors_revision": "d9307e56e25637730ea44766a820c8b357ee0bf2",
+  "weld": "6.0.4.Final",
+  "seed": "0xcd140",
+  "command": "./gradlew :micronaut-compatibility-fuzz:test -PcompatibilityFuzz -PjakartaInterceptorsDir=build/fuzz-interceptors -PfuzzWeldVersion=6.0.4.Final -PfuzzSeed=840000",
+  "java": "openjdk version \"25.0.2\" 2026-01-20\nOpenJDK Runtime Environment (build 25.0.2+10-69)\nOpenJDK 64-Bit Server VM (build 25.0.2+10-69, mixed mode, sharing)",
+  "comparisons": 2293,
+  "differing_rows": 9,
+  "families": {
+    "types": {
+      "comparisons": 1606,
+      "differences": 0
+    },
+    "bean-types": {
+      "comparisons": 22,
+      "differences": 0
+    },
+    "qualifiers": {
+      "comparisons": 323,
+      "differences": 0
+    },
+    "events": {
+      "comparisons": 8,
+      "differences": 0
+    },
+    "parameters": {
+      "comparisons": 196,
+      "differences": 0
+    },
+    "parameter-array": {
+      "comparisons": 3,
+      "differences": 2
+    },
+    "handles": {
+      "comparisons": 64,
+      "differences": 0
+    },
+    "injection-default": {
+      "comparisons": 1,
+      "differences": 1
+    },
+    "injection-list": {
+      "comparisons": 1,
+      "differences": 1
+    },
+    "source": {
+      "comparisons": 69,
+      "differences": 5
+    }
+  },
+  "suites": {
+    "CDI Java": {
+      "tests": 321,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "CDI configured TCK": {
+      "tests": 833,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Interceptors Java": {
+      "tests": 241,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "Differential drivers": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "evidence_hashes": {
+    "results.tsv": "fc49051545359ad70b8503ed9c48b57bbe57f0731cc8a3424198a1fd3ac015d1",
+    "source-results.tsv": "30ff6badd760f4cc3712cdb22deec636125af94e1a813873cbb377b2cb5795fe",
+    "artifacts.tsv": "76b6f04debcc12bdbdaf22d513d1485faa4d6fba67fabe744a9b99dc707770d2"
+  },
+  "working_tree": "Local uncommitted array and Provider fixes on top of cdi_revision",
+  "runtime_patch_sha256": "90673d7aee72572875968df34ccbd8138142ef94152d0841bcc79bd3f3b762ae",
+  "runtime_source_sha256": {
+    "cdi/src/main/java/io/micronaut/cdi/MicronautBeanContainer.java": "7acaeff00a70c9ed66cd0175b60ca3e82e60c347937c1728aa7fc2fb34b11c30",
+    "cdi/src/main/java/io/micronaut/cdi/MicronautEvent.java": "61cfd2127df543e4d68e2c3859c35a3aa09e84723205eb1d1b3397ad5a9970cb",
+    "cdi/src/main/java/io/micronaut/cdi/MicronautInjectionPoint.java": "426b65228e58f1840d5eb9d752cccc5a34a473843db59f2fde88672fa30bb686",
+    "cdi/src/main/java/io/micronaut/cdi/MicronautInstance.java": "de539c7957dd770f094b3ba13ee4640863dcc79a3470e1174ee483aac8b1d208",
+    "cdi/src/main/java/io/micronaut/cdi/internal/context/ApplicationScope.java": "e4b347ff99aa4044f2115fee8278393a7ea4fb39f5acb8249cbaf5c2b0e80b32",
+    "cdi/src/main/java/io/micronaut/cdi/internal/context/FreshInstance.java": "1e08a2d65091d8a1a09b46b72275edd276f1bd24a571a27f6cb759be2c7031b6",
+    "cdi/src/main/java/io/micronaut/cdi/internal/context/RequestScope.java": "2640368d79b2f84dae68ee641fa65d470828f3a3d71335a57a7d20dc291d168f",
+    "cdi/src/main/java/io/micronaut/cdi/internal/context/package-info.java": "38df6006743cf561d729421df0504437b64aea94cc9d85d6ad756722f15e656b",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/CdiParameters.java": "5e1b9b166667d82059d3e9db8c949ed168c2aea6b2f2b372ff8a469ebeef1d64",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/ExtensionComponents.java": "ce819819cd700fe37f135f076c8eb40396c326eb2cc2dda5f043924b0d81e53e",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/ExtensionContexts.java": "b060234e6c08fa22d97aa1efb3e316c2154591f65aeea8b76df8e336c5a55b8c",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/ExtensionCustomScope.java": "001df2e7fe64d9c23a010c34f6dcd9d031268781c472de86b1035a69be494945",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/RecordedSynthesis.java": "accd776cfbf69f891ffb77b6f8984bb7aae24165b5cec5e2d7e853943d563ecf",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/SyntheticObserverMethod.java": "e56f35ed46c9edea0e7d01e527b46bc9b5ecd285b2f390718f9cf4220bcdde85",
+    "cdi/src/main/java/io/micronaut/cdi/internal/extension/package-info.java": "31a8dd1edc33f81640941789668e2687acb7f2600313b3603a76e5206135f37c",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/ActivateRequestContextJakartaInterceptor.java": "3ec724445e9facd284fcbcfcab48bec972a1ff2b38774abf871c3ebefab5be1d",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/BindingTypes.java": "aba4158285e87d3dec769491ab97cabd885c75102a0e93f971a4b87de8380815",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAnnotations.java": "3571d2a68bc7bc6de9d09fb375a995d3c652bc0148dd596bba2b1bc8c02d8e48",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiAssignability.java": "e4a2d081cab8cc580f0222cfd583f8bdff918bbd6f2c05fc027e0fee04c1b3c6",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiBean.java": "39d4f07e188fb9c3ad49a1d59cfe851161f9d830f8a5dfc6291bdc07eef5499a",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiBeanContainer.java": "1b0d3d290aaa090325cbfcf634790d07ab5806d21867c9619aefe847c91e8b00",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiContext.java": "22f0417218e9a34e8a7e0da8dca52e224ec1392c0380af371df3d33a63da2646",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiContextConfigurer.java": "d08b39966c33c91b3539fbc35a192b4529fee429fa473e2f862de9306a77184b",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiCreationalContext.java": "99b5bfe95c855e8c6fdbf11062885178041162351055c6659301db048a7e55ad",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiCurrentInjectionPointFactory.java": "fdba4ac13016528657a676cea71ebe1c7229b876ce2acf878628a4627f4b0faa",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiEvent.java": "0b122ff99f051c97d67bc8ac4175d324ef078b11c88932f1d096cd7e4adeaa99",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiEventFactory.java": "c44af2f27a079fe5b13a5fd669c18c325249061113d03a69105813b1bb84f0b2",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiEventMetadata.java": "152a892ea3bff4ae19724516107a63d1cf7ca2b2a39ff0b548180b622b589b30",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInjectionPoint.java": "6d17957196fa073058504eb0b726d8a10fb6e4e9b29fe98102df0ecc173f1208",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInjectionPointFactory.java": "ad12ceb39a10be5b625a676fd2ce94285fe191c89012fbc8327d8ee60e84421a",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstance.java": "bcb7e387a337a1635232d7c8326ce3bed655321dd6c0d6dc181de511b482a2b1",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInstanceFactory.java": "3b93e38648e2d86466e9eddbb1b0391e9f5dbe80336fc3b54b1dfbf07ba05dff",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInterceptor.java": "c614606eef6fee1a53a6910c8e88e3de0bc2530ce9b599240aa411de8664545f",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiInterceptorEnablement.java": "a538b838f22fbd1166744bc37ee717fe2b8eddb9bcb0c2570ae5d162ed559472",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiNotifiable.java": "e7c7cf734a8253385fd1dc74753c021ea61084023ab80c6601ae435c5a8955ab",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiObserverMethod.java": "4face44a7d888fd5454d283e6d0cded8215c13988b1c3954c6b817d5d8e96e72",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiParameterizedType.java": "f87cf493113c7c3932f3bda82adf076496e845cd77b0ebdcb07a02c52a44b992",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiQualifier.java": "af812d0f48a429629cff57d24c563a7bf758bb9a1ab73ce11d03ab5f494c4b02",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiQualifiers.java": "d230ca675e5af00a984f190ddbebfcd225bc65239f897aba3135436c0ad3342a",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolution.java": "3e0baaeffab77b3e5214276bc63dfcf7dbad8d261bf9261d7f1925e06dbed776",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiResolutionCustomizer.java": "21ca1588d716b17ec886876980a776964c0bdca202726ea62bb7cc5167bb82d4",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiRunning.java": "3bbfc530f0ae36303d77fc3d4823854a278b5e790b5e9bb6550b32da1f2a7f00",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CdiTypes.java": "0ecb2ddfd358a866e2abac8b13a0edb0e96eca6bc7d99ea610f4f9351c63739e",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/ContainerLifecycle.java": "256a2c40d7f4756c298baa493625f33f30775a1fe39fc9c07e7adad88dc632ab",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/CurrentInjectionPoint.java": "377bbe28237754558945ee28cf638f9238b4eb22be89e38123c53629d090a0e6",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/DeploymentValidation.java": "3b3dae7dfab6f992261340e8f328f9e64e36e629f985214970f07e7f695940ae",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/DisposerInvoker.java": "282d86efed5025040bf17357b5ddd649f8d2d537702e7228067d41893c5fd732",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/ExtensionQualifiers.java": "46f0308e31e5a4ca400decf32987dcf89aeedf1ac92104dd564e00e5b42d2303",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/ForeignObserverMethod.java": "2d50ac76e4b72efedfeff862107805d069866edd61e4b78712a69801e4412943",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/MicronautCDI.java": "fce6d1fe6ea8eae990c4401c03ebd6a908408685d093a2492534e6454e90d260",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/MicronautCDIProvider.java": "bf598448c6d6340bfd6808b8a8e86467f54666fdbec37319a37bbee8a75dc9cf",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/MicronautRequestContextController.java": "151b85ba74398ef5c072a63b0d043bebef34e47739bb76ca5ab1f280d0704650",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/NotABean.java": "f9c2691b1a163ee2a2b68042b0398f3930f02730601db9f26a05378f5fab6ed1",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/ObserverRegistry.java": "a12520add25fd88314646f19e84e9a58d209fb60377ceba1681074474c35f139",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/QualifierOverlay.java": "df1da2dc382dd2d7de6c8d7181c769662921f1da8fd605a1bdf46d0046a657fe",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/RecordedInvoker.java": "c1e67c941d00b2559e554deefc062d3b6f7560859f1629fab2fb9586b9133aed",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/RecordedTypeIndex.java": "5374c6766c23570206e4e04b31a3e43ac79df60f7b5deaeeacfac2ffb85b791b",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/RecordedTypes.java": "b8aefeefbb5e05c987bbabf173215d4614f2ca2f92ed691752cf1913e0cfcf80",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/UnselectedAlternative.java": "7b7cf20fe687c480127704b4f9dcd562984d7e2518ab804f97066213a4ce80ba",
+    "cdi/src/main/java/io/micronaut/cdi/internal/runtime/package-info.java": "83d8762e099cabef3c91491e561e64cbef39748d1f52dfce47e0d3e59bc9cca3",
+    "cdi/src/main/java/io/micronaut/cdi/internal/type/GenericArrayValue.java": "86f577b60ad4d068914ca93377985a02c7d8d239548bbad8d7ab6d783e3bf8b0",
+    "cdi/src/main/java/io/micronaut/cdi/internal/type/ParameterizedValue.java": "2965eab013c9d85de8886102e566c2a75bcb48006a336968bd2eb428dc833bb4",
+    "cdi/src/main/java/io/micronaut/cdi/internal/type/SpecificationTypes.java": "49d4c178a1c430de8a3d1b08c49e2434f32b40bce9085a1e724d4fbbe2fa598f",
+    "cdi/src/main/java/io/micronaut/cdi/internal/type/TypeVariableValue.java": "80cf6ad7342c960e2baf644356efaaddcdc256d9a421f6bca553a15a35db0036",
+    "cdi/src/main/java/io/micronaut/cdi/internal/type/WildcardValue.java": "f3e8cff0650cbd2797867faa2dc34e5651e06ea6e6d455ece4657be620744af5",
+    "cdi/src/main/java/io/micronaut/cdi/internal/type/package-info.java": "24d02fb4e29664466a1997589603982fdabae1b100398accdf1e0df8564e1460",
+    "cdi/src/main/java/io/micronaut/cdi/package-info.java": "37683ec0e6bb48e42c7d111c7702a9c89bac81c88b7389c54346cc25fce1b1b9",
+    "cdi/src/main/java/io/micronaut/cdi/se/MicronautSeContainer.java": "cfbcf0e40cdddad7e350976c942e27aeb378212c5cd98fe5cf22fdfacb99d855",
+    "cdi/src/main/java/io/micronaut/cdi/se/MicronautSeContainerInitializer.java": "0e6371f8a5ced5e8ab07ce2de15a4f1bb54672e8e464551168d2f09081d01fb9",
+    "cdi/src/main/java/io/micronaut/cdi/se/package-info.java": "7b6d4966643118bb18d8fe0a15372368bbd5fcba0261618661a50b9d9f3f1f3f",
+    "cdi/src/main/java/io/micronaut/cdi/spi/CdiReflection.java": "c617c16bffff398a12e5cea4a13766d849fdc03c8d01fd50359cada26064acbb",
+    "cdi/src/main/java/io/micronaut/cdi/spi/ExpressionLanguageBridge.java": "98be2a0020b4c242f20a38d30f335a9ab3cf7e2d87cbb9ab8f88dcdbd7fcdf80",
+    "cdi/src/main/java/io/micronaut/cdi/spi/PortableExtensions.java": "dd23766fb0becdadde6d77debd4bb5a5747991993dd217845f6815ba7fbd6b80",
+    "cdi/src/main/java/io/micronaut/cdi/spi/package-info.java": "1c722db2838101e2f5409d3757227c7366efbc24128543a8da02c028d4d3c646"
+  }
+}

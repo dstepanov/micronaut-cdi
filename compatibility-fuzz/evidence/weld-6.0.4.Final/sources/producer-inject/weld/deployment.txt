@@ -1,0 +1,3 @@
+org.jboss.weld.exceptions.DefinitionException: WELD-000807: Initializer method cannot be annotated @Produces [EnhancedAnnotatedMethodImpl] @Inject @Produces org.example.cdi.fuzz.generated.Mutation17$A.value()
+	at org.example.cdi.fuzz.generated.Mutation17$A.value(A.java:0)
+  StackTrace:

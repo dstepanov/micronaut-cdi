@@ -1,0 +1,82 @@
+{
+  "timestamp_utc": "2026-10-01T12:35:59.505984+00:00",
+  "cdi_base": "a3d852ab8877f3edf604f0afb8542c911c2108af",
+  "interceptors": "d9307e56e25637730ea44766a820c8b357ee0bf2",
+  "core_base": "55ceb9892508f7102909120788cf4d8dd0edd5c7",
+  "working_tree": "Local uncommitted CDI and Core changes, no publication or upstream submission",
+  "core_patch": "../optional-collection-injection.patch",
+  "core_patch_sha256": "cc28edbdcd679caed4f97c94ccf6145a9e01c8969c6b3d550b6dd5207e00241a",
+  "build_option": "-PmicronautCoreDir=build/optional-collection-core",
+  "suites": {
+    "Java CDI": {
+      "tests": 323,
+      "passed": 323,
+      "failed": 0,
+      "skipped": 0,
+      "case_file": "java-cdi-cases.json"
+    },
+    "Configured CDI TCK": {
+      "tests": 833,
+      "passed": 833,
+      "failed": 0,
+      "skipped": 0,
+      "case_file": "configured-cdi-tck-cases.json"
+    },
+    "Reflection-free CDI": {
+      "tests": 55,
+      "passed": 55,
+      "failed": 0,
+      "skipped": 0,
+      "case_file": "reflection-free-cdi-cases.json"
+    },
+    "Core integration and controls": {
+      "tests": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "case_file": "core-integration-and-controls-cases.json"
+    },
+    "Config filtered imported": {
+      "tests": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "case_file": "config-filtered-imported-cases.json"
+    }
+  },
+  "checks": {
+    "runtime_check": "passed",
+    "processor_check": "passed",
+    "root_diff_check": "passed",
+    "core_diff_check": "passed",
+    "core_patch_reverse_apply_check": "passed"
+  },
+  "library_campaign": {
+    "comparisons": 46,
+    "matched": 41,
+    "differences": 5,
+    "evidence": "../../microprofile-compatibility/evidence/local-optional-collection-fixes/inventory.json"
+  },
+  "differential_campaign": {
+    "comparisons": 2293,
+    "differences": 8,
+    "evidence": "../../compatibility-fuzz/evidence/local-optional-collection-fixes/inventory.json"
+  },
+  "additional_attempt": {
+    "class": "org.eclipse.microprofile.config.tck.ArrayConverterTest",
+    "result": "1 setup failure, 138 skipped; exact array bean types absent in imported mode",
+    "cases": "config-three-class-cases.json",
+    "already_blocked_in_baseline": true
+  },
+  "evidence_sha256": {
+    "array-converter-baseline-blocker.txt": "cf090027209745fff462917f444553758e7045d791f190292c6dc408cbafe0fa",
+    "configured-cdi-tck-cases.json": "95fd4f01701c13255ca39bf8cd57e10829c78f7f4ae7867156e511fdfaa6a326",
+    "config-filtered-imported-cases.json": "eda6ba5fb396d6e1b9b46ebae823778ef8241fb0fa76a631d376bf98171d0443",
+    "core-integration-and-controls-cases.json": "01f2143e6c88f5de0780016d53690f2d77e5a02540ab4a9e9fb4b4d7cf7cb61d",
+    "java-cdi-cases.json": "3463684d8abdbed82fd49b9c591a3081e71131df6c4732fa6ea1ae008cef14f6",
+    "reflection-free-cdi-cases.json": "ab24f83c266292ccb06ff1c4ac619fa958e9101e7c00359c59627ecb326eefb4",
+    "array-converter-existing-blocker.txt": "d43b4cc9a23a62fa45e758070804de776e5206610dfb3875f54c2cb82dcb6870",
+    "config-filtered-artifacts.tsv": "6ec73589f195bcc956dde6dc90e561f53613311227aa2a12e1a94b096e6ff6a8",
+    "config-three-class-cases.json": "4d41b7f697a55eeb44d6620da0488497e265214f1d2bfc2c8ca81569e83744a3"
+  }
+}

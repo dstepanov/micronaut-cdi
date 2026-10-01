@@ -1,0 +1,277 @@
+[
+  {
+    "class": "io.micronaut.cdi.test.noreflection.BeanTypesWithoutReflectionTest",
+    "name": "aParameterizedLookupIsResolvedByArgument()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.BeanTypesWithoutReflectionTest",
+    "name": "theBeanTypesAreTheClosureTheHierarchyGives()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.BeanTypesWithoutReflectionTest",
+    "name": "aParameterizedInjectionPointIsResolvedByItsTypeArguments()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.EventSelectionTypeWithoutReflectionTest",
+    "name": "selectingAQualifierKeepsTheTypeTheEventWasSelectedAs()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ShutdownOrderWithoutReflectionTest",
+    "name": "theApplicationContextIsDestroyedBetweenItsTwoEvents()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ObservedTypesWithoutReflectionTest",
+    "name": "anEventIsMatchedByTheParameterizedSupertypeOfItsClass()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ObservedTypesWithoutReflectionTest",
+    "name": "anEventOfAGenericClassFiredWithoutItsTypeArgumentsIsRefused()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ObservedTypesWithoutReflectionTest",
+    "name": "theObservedTypeOfAnInheritedObserverIsWhatTheBeanClassMakesOfTheVariable()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ObservedTypesWithoutReflectionTest",
+    "name": "theObservedTypeKeepsTheWildcardItWasWrittenWith()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ObservedTypesWithoutReflectionTest",
+    "name": "anEventSelectedByArgumentIsMatchedByTheArgument()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ObservedTypesWithoutReflectionTest",
+    "name": "anEventIsMatchedByTheTypeArgumentsOfWhatItWasFiredAs()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "aLiteralWithMembersNeedsTheModuleAndNamesTheAlternative()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "theQualifiersOfABeanAsAnnotationInstancesNeedTheModule()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anEventSelectedByAMarkerLiteralNeedsNoReflection()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "everyLookupTheContainerHandsOutSelectsByAnnotationValue()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anEventSelectedByArgumentIsFiredAsThatType()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anEventIsObservedByItsQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anInterceptorIsBoundByItsBinding()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anEventSelectedByAnnotationValueNotifiesTheObserversOfTheQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "aMarkerQualifierGivenAsALiteralNeedsNoReflection()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anInjectionPointIsResolvedByItsQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "aSelectionByAnnotationValueIsHeldToTheRulesOfTheSpecification()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "anInjectedQualifiedEventNotifiesTheObserversOfItsQualifier()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "aLookupIsSelectedByAnnotationValue()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "theContainerLooksBeansUpByArgumentAndAnnotationValue()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.QualifiersWithoutReflectionTest",
+    "name": "thereIsNoReflectionModule()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.BeanCreateWithoutReflectionTest",
+    "name": "creatingABeanCreatesANewInstanceAndTheContextHoldsOne()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.RawAndArrayBeanTypesWithoutReflectionTest",
+    "name": "theSupertypesOfARawBeanTypeAreErased()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.RawAndArrayBeanTypesWithoutReflectionTest",
+    "name": "anArrayOfAParameterizedTypeIsResolvedByItsArguments()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.LookupQualifierMembersWithoutReflectionTest",
+    "name": "aQualifierSelectedAsAnAnnotationValueIsReportedWithItsNonbindingMember()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.LookupQualifierMembersWithoutReflectionTest",
+    "name": "everyWayOfObtainingTheBeanReportsTheSame()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.LookupQualifierMembersWithoutReflectionTest",
+    "name": "aLookupThatSelectsNoQualifierRequiresTheDefaultOne()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ReflectiveApiWithoutReflectionTest",
+    "name": "theMemberOfAnInjectionPointNeedsTheModule()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ReflectiveApiWithoutReflectionTest",
+    "name": "anAnnotationTheBuildRecordedNothingOfNeedsTheModule()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ReflectiveApiWithoutReflectionTest",
+    "name": "theScopeAndTheStereotypesOfABeanAreTheClassesItWasCompiledWith()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ReflectiveApiWithoutReflectionTest",
+    "name": "theDefinitionOfAStereotypeNeedsTheModule()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContainerCleanupWithoutReflectionTest",
+    "name": "whatAConstructorThrowsComesOutOfAHandleAsItDoesOutOfGet()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContainerCleanupWithoutReflectionTest",
+    "name": "anInstanceIsDisposedOfByTheDisposerOfItsOwnProducer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContainerCleanupWithoutReflectionTest",
+    "name": "theBeansOfARequestAreDestroyedWhileItIsActive()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContainerCleanupWithoutReflectionTest",
+    "name": "closingAnSeContainerDestroysTheDependentsLookedUpThroughIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "aSyntheticBeanIsABeanOfTheContainer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "aSyntheticBeanIsDisposedOfByItsDisposer()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "aSyntheticBeanIsCreatedByItsCreatorFromTheRecordedParameters()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "theContainerRunsNoExtension()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "aSyntheticObserverIsNotified()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "aSyntheticBeanIsInjected()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.SyntheticComponentsWithoutReflectionTest",
+    "name": "thereIsNoReflectionModule()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.PortableExtensionWithoutReflectionTest",
+    "name": "aBootstrapHandedAnExtensionClassNamesTheModuleThatRunsIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.PortableExtensionWithoutReflectionTest",
+    "name": "aBootstrapHandedAnExtensionInstanceNamesTheModuleThatRunsIt()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.PortableExtensionWithoutReflectionTest",
+    "name": "aBootstrapHandedNoExtensionStarts()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContextsAndInjectionPointsWithoutReflectionTest",
+    "name": "anInstanceAScopeHoldsIsDestroyedOnce()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContextsAndInjectionPointsWithoutReflectionTest",
+    "name": "aBeanReportsTheParametersItIsMadeWithAsItsInjectionPoints()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.ContextsAndInjectionPointsWithoutReflectionTest",
+    "name": "aSingletonDestroyedThroughItsContextIsDestroyed()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.InstanceIterationWithoutReflectionTest",
+    "name": "aDependentBeanObtainedByIteratingIsDestroyedAsOneObtainedByGetIs()",
+    "status": "passed"
+  },
+  {
+    "class": "io.micronaut.cdi.test.noreflection.InstanceIterationWithoutReflectionTest",
+    "name": "everyWayOfObtainingADependentBeanGivesItTheLookupsInjectionPoint()",
+    "status": "passed"
+  }
+]

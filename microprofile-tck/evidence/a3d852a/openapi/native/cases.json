@@ -1,0 +1,2066 @@
+[
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAPIResponse[0](JSON)",
+    "seconds": "0.818",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAPIResponse[1](YAML)",
+    "seconds": "0.141",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAPIResponses[0](JSON)",
+    "seconds": "0.118",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAPIResponses[1](YAML)",
+    "seconds": "0.099",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesDefault[0](JSON)",
+    "seconds": "0.047",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesDefault[1](YAML)",
+    "seconds": "0.049",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesFalse[0](JSON)",
+    "seconds": "0.06",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesFalse[1](YAML)",
+    "seconds": "0.057",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesTrue[0](JSON)",
+    "seconds": "0.063",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesTrue[1](YAML)",
+    "seconds": "0.063",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesTypeString[0](JSON)",
+    "seconds": "0.054",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testAdditionalPropertiesTypeString[1](YAML)",
+    "seconds": "0.066",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testCallbackAnnotations[0](JSON)",
+    "seconds": "0.055",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testCallbackAnnotations[1](YAML)",
+    "seconds": "0.051",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testCallbackOperationAnnotations[0](JSON)",
+    "seconds": "0.066",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testCallbackOperationAnnotations[1](YAML)",
+    "seconds": "0.07",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testComponents[0](JSON)",
+    "seconds": "0.083",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testComponents[1](YAML)",
+    "seconds": "0.064",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContact[0](JSON)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContact[1](YAML)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentExampleAttribute[0](JSON)",
+    "seconds": "0.029",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentExampleAttribute[1](YAML)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentInAPIResponse[0](JSON)",
+    "seconds": "0.07",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentInAPIResponse[1](YAML)",
+    "seconds": "0.069",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentInParameter[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentInParameter[1](YAML)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentInRequestBody[0](JSON)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testContentInRequestBody[1](YAML)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testDefaultParameterRequirement[0](JSON)",
+    "seconds": "0.063",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testDefaultParameterRequirement[1](YAML)",
+    "seconds": "0.073",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testEncodingRequestBody[0](JSON)",
+    "seconds": "0.032",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testEncodingRequestBody[1](YAML)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testEncodingResponses[0](JSON)",
+    "seconds": "0.073",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testEncodingResponses[1](YAML)",
+    "seconds": "0.067",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExampleObject[0](JSON)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExampleObject[1](YAML)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExceptionMappers[0](JSON)",
+    "seconds": "0.045",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExceptionMappers[1](YAML)",
+    "seconds": "0.048",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExplode[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExplode[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExtensionParsing[0](JSON)",
+    "seconds": "0.033",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExtensionParsing[1](YAML)",
+    "seconds": "0.032",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExternalDocumentation[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testExternalDocumentation[1](YAML)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testHeaderInAPIResponse[0](JSON)",
+    "seconds": "0.061",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testHeaderInAPIResponse[1](YAML)",
+    "seconds": "0.062",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testHeaderInComponents[0](JSON)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testHeaderInComponents[1](YAML)",
+    "seconds": "0.04",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testHeaderInEncoding[0](JSON)",
+    "seconds": "0.04",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testHeaderInEncoding[1](YAML)",
+    "seconds": "0.051",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testInfo[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testInfo[1](YAML)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testLicense[0](JSON)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testLicense[1](YAML)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testLink[0](JSON)",
+    "seconds": "0.05",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testLink[1](YAML)",
+    "seconds": "0.043",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testLinkParameter[0](JSON)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testLinkParameter[1](YAML)",
+    "seconds": "0.041",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOAuthFlow[0](JSON)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOAuthFlow[1](YAML)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOAuthFlows[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOAuthFlows[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOAuthScope[0](JSON)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOAuthScope[1](YAML)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOpenAPIDefinitionExtension[0](JSON)",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOpenAPIDefinitionExtension[1](YAML)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationAirlinesResource[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationAirlinesResource[1](YAML)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationAvailabilityResource[0](JSON)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationAvailabilityResource[1](YAML)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationBookingResource[0](JSON)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationBookingResource[1](YAML)",
+    "seconds": "0.044",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationReviewResource[0](JSON)",
+    "seconds": "0.081",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationReviewResource[1](YAML)",
+    "seconds": "0.049",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationUserResource[0](JSON)",
+    "seconds": "0.097",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testOperationUserResource[1](YAML)",
+    "seconds": "0.076",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testParameter[0](JSON)",
+    "seconds": "0.241",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testParameter[1](YAML)",
+    "seconds": "0.194",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testPathItem[0](JSON)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testPathItem[1](YAML)",
+    "seconds": "0.055",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testPathItemOperation[0](JSON)",
+    "seconds": "0.069",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testPathItemOperation[1](YAML)",
+    "seconds": "0.068",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRef[0](JSON)",
+    "seconds": "0.063",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRef[1](YAML)",
+    "seconds": "0.064",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRefHeaderInAPIResponse[0](JSON)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRefHeaderInAPIResponse[1](YAML)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRefHeaderInEncoding[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRefHeaderInEncoding[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRequestBodyAnnotations[0](JSON)",
+    "seconds": "0.09",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRequestBodyAnnotations[1](YAML)",
+    "seconds": "0.077",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRestClientNotPickedUp[0](JSON)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testRestClientNotPickedUp[1](YAML)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSchema[0](JSON)",
+    "seconds": "0.101",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSchema[1](YAML)",
+    "seconds": "0.092",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSchemaProperty[0](JSON)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSchemaProperty[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSchemaPropertyValuesOverrideClassPropertyValues[0](JSON)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSchemaPropertyValuesOverrideClassPropertyValues[1](YAML)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecuirtyRequirementInCallback[0](JSON)",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecuirtyRequirementInCallback[1](YAML)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecurityRequirement[0](JSON)",
+    "seconds": "0.04",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecurityRequirement[1](YAML)",
+    "seconds": "0.047",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecurityScheme[0](JSON)",
+    "seconds": "0.029",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecurityScheme[1](YAML)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecuritySchemes[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testSecuritySchemes[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testServer[0](JSON)",
+    "seconds": "0.131",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testServer[1](YAML)",
+    "seconds": "0.133",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testStaticFileDefinitions[0](JSON)",
+    "seconds": "0.086",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testStaticFileDefinitions[1](YAML)",
+    "seconds": "0.086",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testTagDeclarations[0](JSON)",
+    "seconds": "0.033",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testTagDeclarations[1](YAML)",
+    "seconds": "0.042",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testTagsInOperations[0](JSON)",
+    "seconds": "0.056",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testTagsInOperations[1](YAML)",
+    "seconds": "0.059",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testVersion[0](JSON)",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testVersion[1](YAML)",
+    "seconds": "0.012",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testWebhooks[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.AirlinesAppTest",
+    "name": "testWebhooks[1](YAML)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterAPIResponse[0](JSON)",
+    "seconds": "0.601",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterAPIResponse[1](YAML)",
+    "seconds": "0.075",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterCallback[0](JSON)",
+    "seconds": "0.026",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterCallback[1](YAML)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterHeader[0](JSON)",
+    "seconds": "0.049",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterHeader[1](YAML)",
+    "seconds": "0.045",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterLink[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterLink[1](YAML)",
+    "seconds": "0.026",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterOpenAPI[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterOpenAPI[1](YAML)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterOperation[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterOperation[1](YAML)",
+    "seconds": "0.026",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterParameter[0](JSON)",
+    "seconds": "0.054",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterParameter[1](YAML)",
+    "seconds": "0.044",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterPathItemAddOperation[0](JSON)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterPathItemAddOperation[1](YAML)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterPathItemEnsureOrder[0](JSON)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterPathItemEnsureOrder[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterRequestBody[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterRequestBody[1](YAML)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterSchema[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterSchema[1](YAML)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterSecurityScheme[0](JSON)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterSecurityScheme[1](YAML)",
+    "seconds": "0.03",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterServer[0](JSON)",
+    "seconds": "0.092",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterServer[1](YAML)",
+    "seconds": "0.109",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterTag[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.FilterTest",
+    "name": "testFilterTag[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "apiResponseTest",
+    "seconds": "0.007",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "apiResponsesTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "callbackTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "componentsTest",
+    "seconds": "0.004",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "contactTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "contentTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "discriminatorTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "encodingTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "exampleTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "externalDocumentationTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "headerTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "infoTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "licenseTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "linkTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "mediaTypeTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "oAuthFlowTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "oAuthFlowsTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "openAPITest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "operationTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "parameterTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "pathItemTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "pathsTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "requestBodyTest",
+    "seconds": "0.0",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "schemaTest",
+    "seconds": "0.006",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "securityRequirementTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "securitySchemeTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "serverTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "serverVariableTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "tagTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "testSchemaArbitraryProperties",
+    "seconds": "0.008",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelConstructionTest",
+    "name": "xmlTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testAPIResponse[0](JSON)",
+    "seconds": "0.654",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testAPIResponse[1](YAML)",
+    "seconds": "0.105",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testAvailabilityGetParameter[0](JSON)",
+    "seconds": "0.23",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testAvailabilityGetParameter[1](YAML)",
+    "seconds": "0.164",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testComponents[0](JSON)",
+    "seconds": "0.07",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testComponents[1](YAML)",
+    "seconds": "0.07",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testContact[0](JSON)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testContact[1](YAML)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testContentInAPIResponse[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testContentInAPIResponse[1](YAML)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testExampleObject[0](JSON)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testExampleObject[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testExternalDocumentation[0](JSON)",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testExternalDocumentation[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testHeaderInComponents[0](JSON)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testHeaderInComponents[1](YAML)",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testInfo[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testInfo[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testLicense[0](JSON)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testLicense[1](YAML)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testOperationAirlinesResource[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testOperationAirlinesResource[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testOperationAvailabilityResource[0](JSON)",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testOperationAvailabilityResource[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testOperationBookingResource[0](JSON)",
+    "seconds": "0.024",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testOperationBookingResource[1](YAML)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testPathItemWithRef[0](JSON)",
+    "seconds": "0.03",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testPathItemWithRef[1](YAML)",
+    "seconds": "0.033",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testReferences[0](JSON)",
+    "seconds": "0.073",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testReferences[1](YAML)",
+    "seconds": "0.068",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testRequestBodyInOperations[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testRequestBodyInOperations[1](YAML)",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSchema[0](JSON)",
+    "seconds": "0.029",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSchema[1](YAML)",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSchemaCustomProperties[0](JSON)",
+    "seconds": "0.106",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSchemaCustomProperties[1](YAML)",
+    "seconds": "0.111",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSchemaDialect[0](JSON)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSchemaDialect[1](YAML)",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSecurityRequirement[0](JSON)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSecurityRequirement[1](YAML)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSecurityScheme[0](JSON)",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSecurityScheme[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSecuritySchemes[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testSecuritySchemes[1](YAML)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testServer[0](JSON)",
+    "seconds": "0.056",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testServer[1](YAML)",
+    "seconds": "0.059",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testTagDeclarations[0](JSON)",
+    "seconds": "0.047",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testTagDeclarations[1](YAML)",
+    "seconds": "0.046",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testTagsInOperations[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testTagsInOperations[1](YAML)",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testVersion[0](JSON)",
+    "seconds": "0.01",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testVersion[1](YAML)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testWebhooks[0](JSON)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppTest",
+    "name": "testWebhooks[1](YAML)",
+    "seconds": "0.029",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustComponentTest",
+    "name": "testDocumentCreated[0](JSON)",
+    "seconds": "0.599",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustComponentTest",
+    "name": "testDocumentCreated[1](YAML)",
+    "seconds": "0.048",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustWebHookTest",
+    "name": "testDocumentCreated[0](JSON)",
+    "seconds": "0.66",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.ModelReaderAppWithJustWebHookTest",
+    "name": "testDocumentCreated[1](YAML)",
+    "seconds": "0.055",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASConfigScanDisableTest",
+    "name": "testScanDisable[0](JSON)",
+    "seconds": "0.716",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASConfigScanDisableTest",
+    "name": "testScanDisable[1](YAML)",
+    "seconds": "0.062",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASConfigSchemaTest",
+    "name": "testSchemaConfigApplied[0](JSON)",
+    "seconds": "0.68",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASConfigSchemaTest",
+    "name": "testSchemaConfigApplied[1](YAML)",
+    "seconds": "0.075",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASConfigServersTest",
+    "name": "testServer[0](JSON)",
+    "seconds": "0.69",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASConfigServersTest",
+    "name": "testServer[1](YAML)",
+    "seconds": "0.133",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+    "name": "baseInterfaceTest",
+    "seconds": "0.005",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+    "name": "customAbstractClassTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+    "name": "customClassTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+    "name": "extendedBaseInterfaceTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+    "name": "extendedInterfaceTest",
+    "seconds": "0.001",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASFactoryErrorTest",
+    "name": "nullValueTest",
+    "seconds": "0.002",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeMultiple",
+    "name": "testExcludeMultiple[0](JSON)",
+    "seconds": "0.612",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeMultiple",
+    "name": "testExcludeMultiple[1](YAML)",
+    "seconds": "0.061",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeOnly",
+    "name": "testExcludeOnly[0](JSON)",
+    "seconds": "0.027",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigExcludeOnly",
+    "name": "testExcludeOnly[1](YAML)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeMultiple",
+    "name": "testIncludeMultiple[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeMultiple",
+    "name": "testIncludeMultiple[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeOnly",
+    "name": "testIncludeOnly[0](JSON)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigIncludeOnly",
+    "name": "testIncludeOnly[1](YAML)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeClassInclude",
+    "name": "testPackageExcludeClassInclude[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeClassInclude",
+    "name": "testPackageExcludeClassInclude[1](YAML)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeMultiple",
+    "name": "testPackageExcludeMultiple[0](JSON)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeMultiple",
+    "name": "testPackageExcludeMultiple[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeOnly",
+    "name": "testPackageExcludeOnly[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludeOnly",
+    "name": "testPackageExcludeOnly[1](YAML)",
+    "seconds": "0.02",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludesAroundInclude",
+    "name": "testPackageExcludesAroundInclude[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageExcludesAroundInclude",
+    "name": "testPackageExcludesAroundInclude[1](YAML)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeClassExclude",
+    "name": "testPackageIncludeClassExclude[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeClassExclude",
+    "name": "testPackageIncludeClassExclude[1](YAML)",
+    "seconds": "0.016",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeMultiple",
+    "name": "testPackageIncludeMultiple[0](JSON)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeMultiple",
+    "name": "testPackageIncludeMultiple[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeOnly",
+    "name": "testPackageIncludeOnly[0](JSON)",
+    "seconds": "0.014",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludeOnly",
+    "name": "testPackageIncludeOnly[1](YAML)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludesAroundExcludes",
+    "name": "testPackageIncludesAroundExcludes[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPackageIncludesAroundExcludes",
+    "name": "testPackageIncludesAroundExcludes[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPartialPackage",
+    "name": "testPartialPackage[0](JSON)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.OASScanConfigTests$ScanConfigPartialPackage",
+    "name": "testPartialPackage[1](YAML)",
+    "seconds": "0.013",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testAPIResponseSchema[0](JSON)",
+    "seconds": "0.732",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testAPIResponseSchema[1](YAML)",
+    "seconds": "0.119",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testAPIResponseSchemaDefaultResponseCode[0](JSON)",
+    "seconds": "0.074",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testAPIResponseSchemaDefaultResponseCode[1](YAML)",
+    "seconds": "0.071",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testDefaultResponseType",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testExtensionPlacement[0](JSON)",
+    "seconds": "0.039",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testExtensionPlacement[1](YAML)",
+    "seconds": "0.045",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testOAuthFlow[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testOAuthFlow[1](YAML)",
+    "seconds": "0.022",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testOAuthFlows[0](JSON)",
+    "seconds": "0.015",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testOAuthFlows[1](YAML)",
+    "seconds": "0.018",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testOpenAPIEssentials[0](JSON)",
+    "seconds": "0.011",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testOpenAPIEssentials[1](YAML)",
+    "seconds": "0.033",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testRequestBodySchema[0](JSON)",
+    "seconds": "0.042",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testRequestBodySchema[1](YAML)",
+    "seconds": "0.063",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSchema[0](JSON)",
+    "seconds": "0.081",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSchema[1](YAML)",
+    "seconds": "0.066",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSecurityRequirement[0](JSON)",
+    "seconds": "0.074",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSecurityRequirement[1](YAML)",
+    "seconds": "0.079",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSecurityScheme[0](JSON)",
+    "seconds": "0.087",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSecurityScheme[1](YAML)",
+    "seconds": "0.079",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSecuritySchemes[0](JSON)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.PetStoreAppTest",
+    "name": "testSecuritySchemes[1](YAML)",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentCustomDialectTest",
+    "name": "testStaticDocumentCustomDialect[0](JSON)",
+    "seconds": "0.627",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentCustomDialectTest",
+    "name": "testStaticDocumentCustomDialect[1](YAML)",
+    "seconds": "0.055",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentTest",
+    "name": "testStaticDocument[0](JSON)",
+    "seconds": "1.043",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.StaticDocumentTest",
+    "name": "testStaticDocument[1](YAML)",
+    "seconds": "0.298",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationDisabledTest",
+    "name": "beanValidationScanningDisabledTest[0](JSON)",
+    "seconds": "0.653",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationDisabledTest",
+    "name": "beanValidationScanningDisabledTest[1](YAML)",
+    "seconds": "0.058",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "defaultAndOtherGroupsTest[0](JSON)",
+    "seconds": "0.93",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "defaultAndOtherGroupsTest[1](YAML)",
+    "seconds": "0.071",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "maxDecimalExclusiveTest[0](JSON)",
+    "seconds": "0.073",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "maxDecimalExclusiveTest[1](YAML)",
+    "seconds": "0.066",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "maxDecimalInclusiveTest[0](JSON)",
+    "seconds": "0.061",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "maxDecimalInclusiveTest[1](YAML)",
+    "seconds": "0.054",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "maxIntTest[0](JSON)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "maxIntTest[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "minDecimalExclusiveTest[0](JSON)",
+    "seconds": "0.048",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "minDecimalExclusiveTest[1](YAML)",
+    "seconds": "0.055",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "minDecimalInclusiveTest[0](JSON)",
+    "seconds": "0.043",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "minDecimalInclusiveTest[1](YAML)",
+    "seconds": "0.047",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "minIntTest[0](JSON)",
+    "seconds": "0.019",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "minIntTest[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "negativeIntTest[0](JSON)",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "negativeIntTest[1](YAML)",
+    "seconds": "0.034",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "negativeOrZeroIntTest[0](JSON)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "negativeOrZeroIntTest[1](YAML)",
+    "seconds": "0.034",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "nonDefaultGroupTest[0](JSON)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "nonDefaultGroupTest[1](YAML)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notBlankStringTest[0](JSON)",
+    "seconds": "0.017",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notBlankStringTest[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notEmptyListTest[0](JSON)",
+    "seconds": "0.036",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notEmptyListTest[1](YAML)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notEmptyMapTest[0](JSON)",
+    "seconds": "0.029",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notEmptyMapTest[1](YAML)",
+    "seconds": "0.035",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notEmptyStringTest[0](JSON)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "notEmptyStringTest[1](YAML)",
+    "seconds": "0.028",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "overridenBySchemaAnnotationTest[0](JSON)",
+    "seconds": "0.023",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "overridenBySchemaAnnotationTest[1](YAML)",
+    "seconds": "0.021",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "parameterTest[0](JSON)",
+    "seconds": "0.031",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "parameterTest[1](YAML)",
+    "seconds": "0.025",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "positiveIntTest[0](JSON)",
+    "seconds": "0.03",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "positiveIntTest[1](YAML)",
+    "seconds": "0.034",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "positiveOrZeroIntTest[0](JSON)",
+    "seconds": "0.032",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "positiveOrZeroIntTest[1](YAML)",
+    "seconds": "0.034",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "sizedListTest[0](JSON)",
+    "seconds": "0.037",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "sizedListTest[1](YAML)",
+    "seconds": "0.043",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "sizedMapTest[0](JSON)",
+    "seconds": "0.037",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "sizedMapTest[1](YAML)",
+    "seconds": "0.039",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "sizedStringTest[0](JSON)",
+    "seconds": "0.037",
+    "status": "passed"
+  },
+  {
+    "class": "org.eclipse.microprofile.openapi.tck.beanvalidation.BeanValidationTest",
+    "name": "sizedStringTest[1](YAML)",
+    "seconds": "0.044",
+    "status": "passed"
+  }
+]

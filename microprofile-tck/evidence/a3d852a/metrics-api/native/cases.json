@@ -1,0 +1,322 @@
+[
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.MetricFilterTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-51a3732a-0497-4fd3-af75-e6c2405332bf.war",
+    "trace_ref": "08dc6c25014d8bd47684654421395a94ae611462986c95242ee2f595ca825324"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.MetricIDTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-0137f7ec-cc20-4464-a3db-f334a141ba1d.war",
+    "trace_ref": "a49f590293cb40ec494dce36777a7e2d76b4fe6450b4bad9e5fea82f2bac14c0"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.MetricRegistryTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-9dc8ad4b-ef71-495d-9096-ae7bbdf57c47.war",
+    "trace_ref": "6353d6f54d5190208f2270dc3c7bac6ed5b25c96e2611fb83da0a31301131f45"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.cdi.ApplicationScopedTimedMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-fb162fb2-9b58-4dcc-bcf8-9fbbb5e18ccb.war",
+    "trace_ref": "45bc15c8bcc85d83201823a386a3ad9e7d8ba4524e28fdfd0ba612661758379d"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.cdi.GaugeInjectionBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-38b1cbc6-2b31-498b-9191-2f5b89a3f88f.war",
+    "trace_ref": "13864ef83058c3570af397cc0e6cc686cea67ad12358c5a531fcc02f814dbca3"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.cdi.TimerInjectionBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-eb069f49-f4ea-4a64-969a-45a8424b2649.war",
+    "trace_ref": "58c1188b1c14e539f1750a5a2fdc9d0ff4a546139e6c9cc802d630111fd131bd"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.cdi.stereotype.StereotypeCountedClassBeanTest",
+    "name": "classMethod",
+    "seconds": "0.005",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-b721da87-fba3-4537-b04e-b6304c362912.war",
+    "trace_ref": "202d02ec85427a5c141eed64a0509a7a660ea8b65929d8f3a1b5febb58412438"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.config.BadHistogramTimerConfigTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-be84c52d-0c7b-4a99-abfd-36687c9e5069.war",
+    "trace_ref": "0e9070525ae7d4d1fe98bfb955240eb7a6c574025627a13b64574b7074fbfc5c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.config.HistogramConfigFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-cb4286d3-4e79-452a-96ae-24bf05d36cbf.war",
+    "trace_ref": "c8aff118aacfe77fb4e8749ca60d748e194f48f304fb96da746eaf955a877ed5"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.config.TimerConfigFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-57e1d9ab-1ab4-4f8c-8c96-b1cf42fc3c0c.war",
+    "trace_ref": "65938021cc227a94bdbac78efd16fbe383bdb8d087d1c6f96d989216b4ed099c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.inheritance.InheritedGaugeMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-f391eac4-ff94-417e-bcb3-fbcf0823dbfc.war",
+    "trace_ref": "fa4ad67b853668ef7698b6b874fab40ed72eb7034998d91327307f93f2ad901c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.inheritance.InheritedTimedMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-ce94cd08-7503-4299-89a4-fef697c12729.war",
+    "trace_ref": "5ccd010cd8c51a7ab779164eaf73795bfe378f0b44ef06e00a4c835fda92ab92"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.inheritance.VisibilityTimedMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-c5a81477-9f37-4405-8685-c738e2adfa3a.war",
+    "trace_ref": "56bd48257ad35244fbc9605fc46c7c6a9f11c6d976e0968ba640d54a4d74c110"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.ConcreteExtendedTimedBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-349f7f09-f5da-46ff-aed6-7cd3ebf5a9eb.war",
+    "trace_ref": "4534cf7538cd911944248f2520b2588632844e8ab8704ed898ff63908a7bae04"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.ConcreteTimedBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-742d8c52-5519-47bb-977f-3a78688e590e.war",
+    "trace_ref": "bea46f21dfba480d1d0756ef30fabdbd8242d3a667da6755ab8c03a18c3f48d3"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.CountedClassBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-3ddcc6cc-93e6-4f10-9b19-d5a1ef78a478.war",
+    "trace_ref": "042fd281e1ab8fb556b32f35dcaf5bffe30a8e12df52d117e85ce8b8da13ab8d"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.CountedMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.0",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-8d581fe6-db12-4acd-8993-c1b252f52583.war",
+    "trace_ref": "3efceeb663eb767acba5bbaf2fd0628d1921177bc72614b4bf187d0ac7ee6c06"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.CountedMethodTagBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-c74c999f-a4e2-4406-a346-3187ea4f319f.war",
+    "trace_ref": "4808411cbeca1e626f647c073d91e692e6aaf4d3b455ca1ff061640f8eb164c1"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.CounterFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-572803e6-4eef-4ae2-8896-eb0b30687f56.war",
+    "trace_ref": "da56eeda25bba7339fafc4b64c63918a81fd40dbfadce43cf57458bb0048eebf"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.CounterTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-9433a1fb-8de1-4f15-8649-a6ed0424124d.war",
+    "trace_ref": "d0791474c5ad0c6820da59a8fe81e1857bbd74ac9e94ee79c6512254cfd8eb3e"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.DefaultNameMetricMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-2f626da7-890c-411c-a9d6-2dcab0ad3657.war",
+    "trace_ref": "31b27d579caee4bbd8f160a13d5420db400e506a0149d19c98e18749811e8cf1"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.GaugeMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-17b375af-7ccf-42db-926d-409c58cf2e69.war",
+    "trace_ref": "1fb8f0629085aa6ec2169cf2d00a12d471a8de021ae46055570e901fd09159ef"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.GaugeTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-12867879-2ce5-4114-8c2f-2acebd17dcb7.war",
+    "trace_ref": "53935f1f86e4e8c9cbdbee2017a75ffb457d4fa5f840f2fcf0e539956cc84c33"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.HistogramFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-a9a0f702-7b29-4fdf-927b-a38306adeeda.war",
+    "trace_ref": "20a18ce6e57f9c5168512ecded51261b9a8ad1c6c83eecbb1df3a3448def608c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.HistogramTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-467d06a6-fbce-46b9-902b-0bd73f0beaaf.war",
+    "trace_ref": "c72b888f2c272765bff3e7941442683836fc7b1dd137e134ad3b8e86c8dd66bb"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.MultipleMetricsConstructorBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-984b01a9-1da1-4175-b165-3882f9bc2635.war",
+    "trace_ref": "b2e78e1b48468f8aaf0c1191831a85717a1b648b61eb25e6e8822cb50c0a934c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.MultipleMetricsMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-2259b63a-361a-4cb8-ac93-e1ccd50a9c6e.war",
+    "trace_ref": "9692a7a3c6ab91d369053210cfaa751fcf3abaeecf1c14ce6404956686b37c45"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.OverloadedTimedMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-dc109640-9414-4257-a45c-f805e85e7177.war",
+    "trace_ref": "1b8082885d870b39e1c5137fd3594c67e62e92a97506837433e495b92f6b8160"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedClassBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-e2d9ed1e-9121-45e9-a25d-ab96426de7aa.war",
+    "trace_ref": "96621050d6723dd1272a171144144c73b5ae3f41e7ded7e568cf08ee218e9039"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedConstructorBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-ad586ca7-e193-478b-9135-d10ae52d5e7a.war",
+    "trace_ref": "ebea8c0e7a39a2d902638ae82c2bbb2acaf228adedd60b8e9287cafe3bdb0282"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedMethodBeanLookupTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-b9eaab21-8e8c-4fd6-94e9-f3a972ee497d.war",
+    "trace_ref": "97f0788d50cef29eaf3e746a30c5e2761ebf65499faf714a0b945ca43c447a22"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.TimedMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-49ac06f3-4b7c-499e-962f-ac7d9de12ac9.war",
+    "trace_ref": "d3d0c57fbbdb30cd54379e494e0a73cf5a650a81fa8f81648bac1ffcadf4d97c"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.TimerFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.002",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-8d4c9cf3-7a72-4f83-ade5-1bd8e135888d.war",
+    "trace_ref": "3dcbb2cfe2ca213f183cf44261fb473bf7693513198d193464238095027e41a7"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.metrics.TimerTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-e8e8b930-ce57-492e-9695-2b9fbbd50104.war",
+    "trace_ref": "65f666c0aae1e9abbbed8d4dc3dc0d412a91d34895f66320d1de45252f9b96a5"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.tags.CounterFieldTagBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-9b916d89-5001-43df-b1d7-c131fffb8b17.war",
+    "trace_ref": "b8b7720d14d4238d547516d3b5da853d81b57fca69866d52172491c20c45dc16"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.tags.GaugeTagMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-49a3d208-17e3-45a0-a619-60d7c31984c8.war",
+    "trace_ref": "f32c3bec838c0d7a013142ecbbb9f37a8ebdee17454f50ddb35bfcfcffc501ae"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.tags.HistogramTagFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-d6e8283f-32a3-4cf3-855b-60929524db46.war",
+    "trace_ref": "1e22cdba5450ec231881d7379850170b2e60567be1947d43ff5f0d721f2b4d4d"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.tags.TagsTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-e12cf8f2-fc8e-4bfa-896b-c9dcf03bb7df.war",
+    "trace_ref": "896861ddad8df596762a5df33f59ac48458b18184cfcdb66e3dbb77da8404d76"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.tags.TimedTagMethodBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-1cf22796-0ef1-4882-904b-a54fbcb4ef46.war",
+    "trace_ref": "749419ec0500a4ef003d09a73271ec118ebed8b8efa291f6fa7c62d5179cc08f"
+  },
+  {
+    "class": "org.eclipse.microprofile.metrics.tck.tags.TimerTagFieldBeanTest",
+    "name": "classMethod",
+    "seconds": "0.001",
+    "status": "setup_failure",
+    "message": "org.jboss.arquillian.container.spi.client.container.DeploymentException: MicroProfile metrics-api deployment failed; evidence: /Users/denisstepanov/dev/micronaut-cdi/microprofile-tck/metrics-api/build/deployments/native/0001-1ef70d67-7fcf-494e-8ade-3c068271b51c.war",
+    "trace_ref": "a75f6559d84d0ee7d0f3f57077e7641974080da2f4c107b3b6f93df825acc9bb"
+  }
+]
