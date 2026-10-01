@@ -34,6 +34,25 @@ class InjectionDefinitionErrorTest {
             """, "An injected field may not be final");
     }
 
+    @Test
+    void anInjectionPointOfATypeVariableOfAGenericBeanIsRefused() {
+        // CDI 4.1 section 5.2.3: an injection point whose type is a type variable is a definition error. A
+        // generic bean class has nothing to resolve its variable: only an abstract class's is resolved, by the
+        // bean that extends it
+        assertRefused("""
+            package broken;
+
+            import jakarta.enterprise.context.Dependent;
+            import jakarta.inject.Inject;
+
+            @Dependent
+            public class Subject<T> {
+                @Inject
+                T value;
+            }
+            """, "An injection point whose declared type is a type variable is a definition error");
+    }
+
     static void assertRefused(String source, String expected) {
         try (JavaParser parser = new JavaParser()) {
             assertThrows(RuntimeException.class, () -> parser.generate("broken.Subject", source),

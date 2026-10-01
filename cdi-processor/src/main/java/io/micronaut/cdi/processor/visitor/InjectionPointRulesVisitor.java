@@ -70,9 +70,10 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return;
         }
         boolean normalScoped = isNormalScoped(element);
-        // a type variable of a generic bean class is resolved by whoever extends it; one declared anywhere
-        // else has nothing to resolve it and is the definition error of section 2.5.2.1
-        boolean genericClass = !element.getDeclaredGenericPlaceholders().isEmpty();
+        // a type variable of a generic class is resolved by whoever extends it, where the class is no bean of
+        // its own; a bean has nothing to resolve its variable, and an injection point of it is the definition
+        // error of CDI 4.1 section 5.2.3, as is one declared anywhere else
+        boolean genericClass = !element.getDeclaredGenericPlaceholders().isEmpty() && !declaresABean(element);
         int injectedConstructors = 0;
         for (ConstructorElement constructor : element.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {
             for (ParameterElement parameter : constructor.getParameters()) {
@@ -283,6 +284,16 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         java.util.List<? extends ClassElement> uppers = wildcard.getUpperBounds();
         return uppers.isEmpty() || uppers.size() == 1 && "java.lang.Object".equals(uppers.get(0).getName());
+    }
+
+    /**
+     * Whether the class is a bean in its own right: it declares a bean defining annotation, a scope or a
+     * stereotype, rather than being only a class beans extend.
+     */
+    private static boolean declaresABean(ClassElement element) {
+        return element.hasStereotype("jakarta.inject.Scope")
+            || element.hasStereotype(Cdi.NORMAL_SCOPE)
+            || element.hasStereotype(Cdi.STEREOTYPE);
     }
 
     private boolean isInjected(io.micronaut.inject.ast.Element element) {
