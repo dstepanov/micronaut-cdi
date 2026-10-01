@@ -81,7 +81,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     private static void record(ClassElement type, Element on) {
         List<AnnotationValue<CdiRecordedType>> closure = new ArrayList<>();
         try {
-            collect(type, java.util.Map.of(), closure, true);
+            collect(type, java.util.Map.of(), closure, true, false);
         } catch (RuntimeException e) {
             // a hierarchy the compiler cannot resolve is a broken compilation of its own, and is left to the
             // compiler to report
@@ -100,7 +100,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
      */
     public static List<AnnotationValue<CdiRecordedType>> closureOf(ClassElement type, boolean erasedBounds) {
         List<AnnotationValue<CdiRecordedType>> closure = new ArrayList<>();
-        collect(type, java.util.Map.of(), closure, erasedBounds);
+        collect(type, java.util.Map.of(), closure, erasedBounds, false);
         return closure;
     }
 
@@ -109,17 +109,27 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
      * theirs in turn, each with the variables it names bound to what the type below it gives them. An array
      * and a primitive have no closure beyond themselves, and {@code Object}, which every closure ends in, is
      * left for the reader to add once.
+     *
+     * <p>The supertypes of a raw type are erased, as the language has them (JLS 4.8): a raw {@code Box} that
+     * implements {@code View<T>} is a {@code View}, not a {@code View<T>} that any lookup of a {@code View} would
+     * match.</p>
      */
     private static void collect(ClassElement type, java.util.Map<String, ClassElement> bindings,
-                                List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds) {
+                                List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds,
+                                boolean erased) {
         if ("java.lang.Object".equals(type.getName()) && !type.isArray()) {
             return;
         }
-        closure.add(erasedBounds ? RecordedTypeValues.ofBeanType(type, bindings)
-            : RecordedTypeValues.of(type, bindings));
+        if (erased) {
+            closure.add(RecordedTypeValues.ofErasure(type));
+        } else {
+            closure.add(erasedBounds ? RecordedTypeValues.ofBeanType(type, bindings)
+                : RecordedTypeValues.of(type, bindings));
+        }
         if (type.isArray() || type.isPrimitive()) {
             return;
         }
+        boolean raw = erased || type.isRawType() && !type.getTypeArguments().isEmpty();
         // what this type gives its own variables: an argument written as a variable of the type below is what
         // the type below was given
         java.util.Map<String, ClassElement> own = new java.util.LinkedHashMap<>();
@@ -129,8 +139,8 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
             own.put(name, bound != null ? bound : argument);
         });
         for (ClassElement anInterface : type.getInterfaces()) {
-            collect(anInterface, own, closure, erasedBounds);
+            collect(anInterface, own, closure, erasedBounds, raw);
         }
-        type.getSuperType().ifPresent(superType -> collect(superType, own, closure, erasedBounds));
+        type.getSuperType().ifPresent(superType -> collect(superType, own, closure, erasedBounds, raw));
     }
 }

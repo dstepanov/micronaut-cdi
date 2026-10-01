@@ -79,6 +79,18 @@ public final class RecordedTypeValues {
         return of(type, bindings, new HashSet<>(), true);
     }
 
+    /**
+     * The record of the erasure of a type: its class alone, without the arguments it was written with.
+     *
+     * @param type The type, a class or an interface
+     * @return The record
+     */
+    public static AnnotationValue<CdiRecordedType> ofErasure(ClassElement type) {
+        return AnnotationValue.builder(CdiRecordedType.class)
+            .member("value", new AnnotationClassValue<>(type.getName()))
+            .build();
+    }
+
     private static AnnotationValue<CdiRecordedType> of(ClassElement type, Map<String, ClassElement> bindings,
                                                        Set<String> variables) {
         return of(type, bindings, variables, false);
