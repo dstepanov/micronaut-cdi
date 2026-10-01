@@ -153,7 +153,7 @@ records each: the closure of a bean on the bean or on its producer; the observed
 closure and the type variables of every class a compilation compiles, on a class it generates in the package of
 the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
-in `io.micronaut.cdi.runtime.type`. The type of an event is the class of the event object with its type variables resolved from the
+in `io.micronaut.cdi.internal.type`. The type of an event is the class of the event object with its type variables resolved from the
 type the event was fired as, worked out from that record, and an object whose class leaves a variable
 unresolved is refused from it.
 
@@ -169,7 +169,7 @@ states the event type in full and needs no record and no module.
 *Sections 2.4.5.7, 2.4.5.8, 2.4.6, 2.8.4.3, 2.9.1.5 and 2.9.1.9 to 2.9.1.11, and of CDI Full 3.9.1 and 3.9.3.10.*
 `micronaut-cdi` reads no class back, and the build holds it to that: the `NoReflection` check allows it nothing
 but the accessors of a `java.lang.reflect.Type` it was handed and the making of the value classes of
-`io.micronaut.cdi.runtime.type`, which such a type is reported as. The
+`io.micronaut.cdi.internal.type`, which such a type is reported as. The
 methods of the specification that return a reflection object, or that can only be answered from one, are
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
 module: `InjectionPoint.getMember()`, `getAnnotated()` and `isTransient()`; the qualifiers and interceptor

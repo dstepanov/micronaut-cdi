@@ -1,1 +1,1 @@
-io.micronaut.cdi.runtime.MicronautCDIProvider
+io.micronaut.cdi.internal.runtime.MicronautCDIProvider

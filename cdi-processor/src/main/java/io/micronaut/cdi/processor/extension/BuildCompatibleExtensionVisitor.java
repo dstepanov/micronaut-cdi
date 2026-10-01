@@ -642,7 +642,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         // the built-in beans are beans of the application too (section 2.10.3): no class of the compilation
         // declares them, so the phase is told about them here
-        context.getClassElement("io.micronaut.cdi.runtime.CdiBeanContainer").ifPresent(container -> {
+        context.getClassElement("io.micronaut.cdi.internal.runtime.CdiBeanContainer").ifPresent(container -> {
             ElementBeanInfo builtIn = new ElementBeanInfo(container, null);
             for (Registrar registrar : registrars) {
                 if (registrar.matches(builtIn)) {

@@ -15,8 +15,8 @@
  */
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
-import io.micronaut.cdi.runtime.CdiInstance;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;

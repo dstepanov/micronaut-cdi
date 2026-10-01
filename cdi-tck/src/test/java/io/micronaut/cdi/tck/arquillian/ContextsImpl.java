@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.tck.arquillian;
 
-import io.micronaut.cdi.context.RequestScope;
+import io.micronaut.cdi.internal.context.RequestScope;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.spi.Context;

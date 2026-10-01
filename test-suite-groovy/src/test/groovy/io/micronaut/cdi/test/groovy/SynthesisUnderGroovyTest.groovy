@@ -1,7 +1,7 @@
 package io.micronaut.cdi.test.groovy
 
-import io.micronaut.cdi.runtime.CdiBeanContainer
-import io.micronaut.cdi.runtime.CdiReflection
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer
+import io.micronaut.cdi.spi.CdiReflection
 import io.micronaut.cdi.test.extension.Tended
 import io.micronaut.cdi.test.extension.TendedContext
 import io.micronaut.cdi.test.extension.signpost.Arrival

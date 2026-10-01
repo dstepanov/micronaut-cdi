@@ -1,7 +1,7 @@
 
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.runtime.CdiParameterizedType;
+import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.util.TypeLiteral;

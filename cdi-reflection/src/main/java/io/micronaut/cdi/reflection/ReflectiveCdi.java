@@ -15,9 +15,9 @@
  */
 package io.micronaut.cdi.reflection;
 
-import io.micronaut.cdi.runtime.CdiParameterizedType;
-import io.micronaut.cdi.runtime.CdiReflection;
-import io.micronaut.cdi.runtime.CdiTypes;
+import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
+import io.micronaut.cdi.spi.CdiReflection;
+import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;

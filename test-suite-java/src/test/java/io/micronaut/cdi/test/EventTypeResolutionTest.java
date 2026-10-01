@@ -19,8 +19,8 @@ class EventTypeResolutionTest {
 
     @Test
     void aDeclaredParameterResolvesTheVariable() {
-        Type declared = io.micronaut.cdi.runtime.CdiParameterizedType.of(Duck.class, new Type[]{String.class});
-        Type resolved = io.micronaut.cdi.runtime.CdiTypes.eventTypeOf(Duck.class, declared);
+        Type declared = io.micronaut.cdi.internal.runtime.CdiParameterizedType.of(Duck.class, new Type[]{String.class});
+        Type resolved = io.micronaut.cdi.internal.runtime.CdiTypes.eventTypeOf(Duck.class, declared);
         assertEquals("io.micronaut.cdi.test.EventTypeResolutionTest$Duck<java.lang.String>",
             resolved.getTypeName());
     }
@@ -29,8 +29,8 @@ class EventTypeResolutionTest {
     void aSupertypeParameterResolvesTheSubtypeVariable() {
         // how Bar relates to Foo is resolved by a running container, from what was compiled or by the reflection module
         try (ApplicationContext ignored = ApplicationContext.run()) {
-            Type declared = io.micronaut.cdi.runtime.CdiParameterizedType.of(Foo.class, new Type[]{Integer.class});
-            Type resolved = io.micronaut.cdi.runtime.CdiTypes.eventTypeOf(Bar.class, declared);
+            Type declared = io.micronaut.cdi.internal.runtime.CdiParameterizedType.of(Foo.class, new Type[]{Integer.class});
+            Type resolved = io.micronaut.cdi.internal.runtime.CdiTypes.eventTypeOf(Bar.class, declared);
             assertEquals("io.micronaut.cdi.test.EventTypeResolutionTest$Bar<java.lang.Integer>",
                 resolved.getTypeName());
         }

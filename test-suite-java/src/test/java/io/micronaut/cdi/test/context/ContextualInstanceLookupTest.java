@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test.context;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.extension.mapscope.MapContext;
 import io.micronaut.cdi.test.extension.mapscope.MapScoped;
 import io.micronaut.context.ApplicationContext;

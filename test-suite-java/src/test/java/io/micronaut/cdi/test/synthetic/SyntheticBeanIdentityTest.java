@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test.synthetic;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.extension.Zest;
 import io.micronaut.cdi.test.extension.mapscope.Twin;
 import io.micronaut.context.ApplicationContext;

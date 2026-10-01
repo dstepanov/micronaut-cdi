@@ -3,7 +3,7 @@ package io.micronaut.cdi.test.noreflection;
 import io.micronaut.cdi.MicronautBeanContainer;
 import io.micronaut.cdi.MicronautEvent;
 import io.micronaut.cdi.MicronautInstance;
-import io.micronaut.cdi.runtime.CdiReflection;
+import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.Argument;

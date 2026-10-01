@@ -1,7 +1,7 @@
 package io.micronaut.cdi.test.noreflection;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
-import io.micronaut.cdi.runtime.CdiReflection;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.spi.AlterableContext;

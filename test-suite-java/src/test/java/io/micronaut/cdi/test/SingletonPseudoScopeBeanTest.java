@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.spi.Bean;

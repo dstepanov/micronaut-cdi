@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.el;
 
-import io.micronaut.cdi.runtime.CdiTypes;
+import io.micronaut.cdi.internal.runtime.CdiTypes;
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
 import jakarta.el.PropertyNotWritableException;

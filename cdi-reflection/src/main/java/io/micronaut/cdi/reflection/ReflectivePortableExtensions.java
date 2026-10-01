@@ -16,15 +16,15 @@
 package io.micronaut.cdi.reflection;
 
 import io.micronaut.cdi.internal.metadata.CdiProducer;
-import io.micronaut.cdi.runtime.CdiAssignability;
-import io.micronaut.cdi.runtime.CdiBean;
-import io.micronaut.cdi.runtime.CdiBeanContainer;
-import io.micronaut.cdi.runtime.CdiQualifier;
-import io.micronaut.cdi.runtime.ObserverRegistry;
-import io.micronaut.cdi.runtime.QualifierOverlay;
-import io.micronaut.cdi.runtime.extension.ExtensionContexts;
-import io.micronaut.cdi.runtime.extension.PortableExtensions;
-import io.micronaut.cdi.runtime.type.SpecificationTypes;
+import io.micronaut.cdi.internal.runtime.CdiAssignability;
+import io.micronaut.cdi.internal.runtime.CdiBean;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiQualifier;
+import io.micronaut.cdi.internal.runtime.ObserverRegistry;
+import io.micronaut.cdi.internal.runtime.QualifierOverlay;
+import io.micronaut.cdi.internal.extension.ExtensionContexts;
+import io.micronaut.cdi.spi.PortableExtensions;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;

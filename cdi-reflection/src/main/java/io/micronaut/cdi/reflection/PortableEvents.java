@@ -15,9 +15,9 @@
  */
 package io.micronaut.cdi.reflection;
 
-import io.micronaut.cdi.runtime.CdiQualifier;
-import io.micronaut.cdi.runtime.ObserverRegistry;
-import io.micronaut.cdi.runtime.extension.ExtensionContexts;
+import io.micronaut.cdi.internal.runtime.CdiQualifier;
+import io.micronaut.cdi.internal.runtime.ObserverRegistry;
+import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;

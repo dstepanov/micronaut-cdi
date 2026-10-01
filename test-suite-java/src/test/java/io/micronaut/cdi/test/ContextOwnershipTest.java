@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.context.RequestScope;
+import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;

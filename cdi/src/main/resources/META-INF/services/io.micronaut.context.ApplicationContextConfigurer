@@ -1,1 +1,1 @@
-io.micronaut.cdi.runtime.CdiContextConfigurer
+io.micronaut.cdi.internal.runtime.CdiContextConfigurer

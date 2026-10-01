@@ -26,7 +26,7 @@ import java.lang.annotation.RetentionPolicy;
  * <p>Section 2.1.7 leaves an alternative without a priority out of the beans, but the SE bootstrap of the
  * specification lets a program select one as the container is built — {@code selectAlternatives} names the
  * class, {@code selectAlternativeStereotypes} a stereotype it carries. The compiler writes this beside the
- * {@code io.micronaut.cdi.runtime.UnselectedAlternative} condition so that the condition knows which names select the bean.</p>
+ * {@code io.micronaut.cdi.internal.runtime.UnselectedAlternative} condition so that the condition knows which names select the bean.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

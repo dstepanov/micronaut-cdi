@@ -7,7 +7,7 @@ plugins {
 // Micronaut Argument. No class or package is allowed reflection, and no call is suppressed in the source. What is
 // allowed is a short list of calls, none of which looks anything up on a class. The interfaces of the specification are
 // written in java.lang.reflect.Type, so a type a program hands in is read, once, into an argument, and a type the
-// container reports is made from one; both happen in io.micronaut.cdi.runtime.type and nowhere else. Reading a class
+// container reports is made from one; both happen in io.micronaut.cdi.internal.type and nowhere else. Reading a class
 // back - its hierarchy, its members, its annotations - is what the optional micronaut-cdi-reflection module does where
 // an application asks. Anything else, anywhere, fails the build.
 //
@@ -23,7 +23,7 @@ noReflection {
 
     // the value classes those interfaces are handed out as, which only the boundary class of their package
     // makes, from an argument: making one reads no class
-    allowCalls 'io.micronaut.cdi.runtime.type.*#<init>|bounds'
+    allowCalls 'io.micronaut.cdi.internal.type.*#<init>|bounds'
 }
 
 dependencies {

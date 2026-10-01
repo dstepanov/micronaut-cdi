@@ -1,0 +1,370 @@
+/*
+ * Copyright 2017-2026 original authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.micronaut.cdi.internal.runtime;
+
+import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.Qualifier;
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
+import io.micronaut.inject.ProxyBeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.event.Reception;
+import jakarta.enterprise.event.TransactionPhase;
+import jakarta.enterprise.inject.spi.ObserverMethod;
+import org.jspecify.annotations.Nullable;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Set;
+
+/**
+ * One observer method, read from the executable method the annotation processor found and marked.
+ *
+ * <p>What it observes is read off the parameter it observes rather than from anything recorded beside it: the
+ * parameter carries its type and its qualifiers, which is what the specification says an observer observes.
+ * Notifying it is an invocation of the executable method Micronaut generated, on an instance of the bean that
+ * declares it, with the event in the parameter's place and the other parameters resolved from the container as
+ * the injection points they are.</p>
+ *
+ * @param <T> The observed event type
+ * @author Denis Stepanov
+ * @since 1.0
+ */
+@Internal
+public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifiable {
+
+    private final BeanContext beanContext;
+    private final BeanDefinition<?> declaring;
+    private final ExecutableMethod<?, ?> method;
+    private final int observedParameter;
+    private final boolean async;
+    private final boolean ifExists;
+    private final boolean staticMethod;
+    private final int priority;
+    private final TransactionPhase during;
+    /**
+     * The bean declaring the method, read when a notification first needs it.
+     */
+    private volatile @Nullable CdiBean<?> declaringBean;
+    // what the observer observes never changes, and resolving it walks the declaring class's methods: every
+    // event fired asks every observer, so the answer is worked out once and kept
+    private volatile @Nullable Type observedType;
+    private volatile @Nullable Argument<?> observedArgument;
+    private final @Nullable AnnotationValue<Annotation> recordedType;
+    private volatile java.util.@Nullable List<CdiQualifier> observedQualifiers;
+    private volatile @Nullable Set<Annotation> observedQualifierInstances;
+
+    CdiObserverMethod(BeanContext beanContext,
+                      BeanDefinition<?> declaring,
+                      ExecutableMethod<?, ?> method,
+                      AnnotationValue<CdiObserver> observer) {
+        this.beanContext = beanContext;
+        this.declaring = declaring;
+        this.method = method;
+        this.observedParameter = observer.intValue("observedParameter").orElse(0);
+        java.util.List<AnnotationValue<Annotation>> recorded = observer.getAnnotations("observedType");
+        this.recordedType = recorded.isEmpty() ? null : recorded.get(0);
+        this.async = observer.booleanValue("async").orElse(false);
+        this.ifExists = observer.booleanValue("ifExists").orElse(false);
+        this.staticMethod = observer.booleanValue("staticMethod").orElse(false);
+        this.priority = observer.intValue("priority").orElse(DEFAULT_PRIORITY);
+        this.during = transactionPhaseNamed(observer.stringValue("during").orElse("IN_PROGRESS"));
+    }
+
+    /**
+     * The parameter the observer observes, which carries both what it observes and how it is qualified.
+     *
+     * @return The observed parameter
+     */
+    public Argument<?> observed() {
+        return method.getArguments()[observedParameter];
+    }
+
+    @Override
+    public Class<?> getBeanClass() {
+        if (declaring instanceof ProxyBeanDefinition<?> proxy) {
+            return proxy.getTargetType();
+        }
+        return declaring.getBeanType();
+    }
+
+    @Override
+    public Type getObservedType() {
+        Type resolved = observedType;
+        if (resolved == null) {
+            resolved = CdiTypes.typeOf(observedArgument());
+            observedType = resolved;
+        }
+        return resolved;
+    }
+
+    @Override
+    public Argument<?> observedArgument() {
+        Argument<?> resolved = observedArgument;
+        if (resolved == null) {
+            // the source of truth is what the processor recorded of the parameter: the compiled argument erases
+            // a wildcard or a variable, and the record keeps them, with the variables of a generic superclass
+            // that declares the method resolved for the bean class
+            Argument<?> recorded = recordedType == null ? null : RecordedTypes.find(recordedType);
+            resolved = recorded != null ? recorded : observed();
+            observedArgument = resolved;
+        }
+        return resolved;
+    }
+
+    @Override
+    public Set<Annotation> getObservedQualifiers() {
+        Set<Annotation> resolved = observedQualifierInstances;
+        if (resolved == null) {
+            // kept unmodifiable: the set is shared by everyone who asks
+            resolved = java.util.Collections.unmodifiableSet(CdiQualifier.instances(observedQualifiers()));
+            observedQualifierInstances = resolved;
+        }
+        return resolved;
+    }
+
+    @Override
+    public java.util.List<CdiQualifier> observedQualifiers() {
+        java.util.List<CdiQualifier> resolved = observedQualifiers;
+        if (resolved == null) {
+            // shared by every resolution rather than built for each
+            resolved = java.util.List.copyOf(CdiQualifier.declared(observed().getAnnotationMetadata()));
+            observedQualifiers = resolved;
+        }
+        return resolved;
+    }
+
+    @Override
+    public Reception getReception() {
+        return ifExists ? Reception.IF_EXISTS : Reception.ALWAYS;
+    }
+
+    @Override
+    public TransactionPhase getTransactionPhase() {
+        // there are no transactions in CDI Lite, so every observer is notified as the event fires — but the
+        // phase it asked for is still what it declared
+        return during;
+    }
+
+    /**
+     * The phase the processor recorded by its name, found among the constants rather than with {@code valueOf}, which
+     * builds and keeps a map of them by name reflectively.
+     */
+    private static TransactionPhase transactionPhaseNamed(String name) {
+        for (TransactionPhase phase : TransactionPhase.values()) {
+            if (phase.name().equals(name)) {
+                return phase;
+            }
+        }
+        throw new IllegalStateException("The observer records the unknown transaction phase " + name);
+    }
+
+    @Override
+    public jakarta.enterprise.inject.spi.Bean<?> getDeclaringBean() {
+        return beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
+    }
+
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
+    @Override
+    public boolean isAsync() {
+        return async;
+    }
+
+    @Override
+    public void notify(T event) {
+        notify(event, new CdiEventMetadata(observedQualifiers(), null, observedArgument()));
+    }
+
+    /**
+     * Notifies the observer of an event, with the metadata of the firing.
+     *
+     * @param event    The event
+     * @param metadata What the observer may ask about the firing
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void notifyWith(Object event, jakarta.enterprise.inject.spi.EventMetadata metadata) {
+        notify((T) event, metadata);
+    }
+
+    void notify(T event, jakarta.enterprise.inject.spi.EventMetadata metadata) {
+        Object target = null;
+        io.micronaut.context.BeanRegistration<?> transientTarget = null;
+        if (!staticMethod) {
+            // a static observer method is notified without an instance of the bean that declares it, which is
+            // what the specification allows and what the executable method Micronaut generated for it expects
+            if (ifExists && !exists()) {
+                // the observer is notified only if an instance of its bean exists already, and none does
+                return;
+            }
+            if (!ifExists && !contextIsActive()) {
+                // a bean in a normal scope is reachable only while its context is active; while it is not,
+                // the observer is simply not notified
+                return;
+            }
+            if (isDependent()) {
+                // a dependent observer bean exists for the one notification: it is created for it, and it and
+                // everything created along with it are destroyed when the notification completes
+                transientTarget = registrationOfDeclaring();
+                target = transientTarget.bean();
+            } else {
+                target = beanContext.getBean(declaring);
+                if (target instanceof io.micronaut.aop.InterceptedProxy<?> proxy) {
+                    // the observer method may be protected, which a client proxy does not delegate: the
+                    // notification goes to the instance the context holds
+                    target = proxy.interceptedTarget();
+                }
+            }
+        }
+        Argument<?>[] arguments = method.getArguments();
+        Object[] parameters = new Object[arguments.length];
+        java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
+        // the try begins before the parameters resolve: a parameter that fails to resolve must not leave the
+        // dependent observer instance — or the parameters resolved before it — undestroyed
+        try {
+            for (int i = 0; i < arguments.length; i++) {
+                if (i == observedParameter) {
+                    parameters[i] = event;
+                } else if (arguments[i].getType() == jakarta.enterprise.inject.spi.EventMetadata.class) {
+                    // the metadata of the firing is supplied by the notification rather than resolved
+                    parameters[i] = metadata;
+                } else {
+                    parameters[i] = resolve(arguments[i], transientArguments);
+                }
+            }
+            invoke(target, parameters);
+        } finally {
+            RuntimeException destructionFailure = null;
+            if (transientTarget != null) {
+                try {
+                    transientTarget.close();
+                } catch (RuntimeException e) {
+                    destructionFailure = e;
+                }
+            }
+            for (io.micronaut.context.BeanRegistration<?> registration : transientArguments) {
+                try {
+                    registration.close();
+                } catch (RuntimeException e) {
+                    if (destructionFailure == null) {
+                        destructionFailure = e;
+                    } else {
+                        destructionFailure.addSuppressed(e);
+                    }
+                }
+            }
+            if (destructionFailure != null) {
+                throw destructionFailure;
+            }
+        }
+    }
+
+    private boolean isDependent() {
+        return CdiResolution.isDependent(declaring);
+    }
+
+    private io.micronaut.context.BeanRegistration<?> registrationOfDeclaring() {
+        // the registration of this very definition, rather than of whatever re-resolving its type would pick
+        return beanContext.getBeanRegistration(declaring);
+    }
+
+    @SuppressWarnings({"unchecked", "NullAway"})
+    private void invoke(@Nullable Object target, Object[] parameters) {
+        // a static observer method is dispatched without reading the target at all, so there is no instance to
+        // pass and none is expected
+        try {
+            ((ExecutableMethod<Object, ?>) method).invoke(target, parameters);
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
+            // section 2.8.5: a checked exception an observer throws is wrapped and rethrown
+            throw new jakarta.enterprise.event.ObserverException(e.getMessage(), e);
+        }
+    }
+
+    private boolean exists() {
+        // section 2.8.2: a conditional observer is notified only if an instance of its bean already exists in
+        // a context that is active — an inactive context holds nothing reachable, and is not an error. The
+        // context is asked about the bean itself, so that an instance of a subclass bean, or a bean that could
+        // be created, is not taken for one
+        CdiBean<?> bean = declaringBean();
+        jakarta.enterprise.context.spi.Context context = activeContextOf(bean);
+        return context != null && context.get(bean) != null;
+    }
+
+    /**
+     * Whether the context the declaring bean lives in is active: an observer of a bean in a normal scope is not
+     * notified while the context of that scope is not.
+     */
+    private boolean contextIsActive() {
+        CdiBean<?> bean = declaringBean();
+        if (!bean.isNormalScoped()) {
+            return true;
+        }
+        try {
+            beanContext.getBean(CdiBeanContainer.class).getContext(bean.getScope());
+            return true;
+        } catch (jakarta.enterprise.context.ContextNotActiveException e) {
+            return false;
+        } catch (IllegalArgumentException e) {
+            // a scope no context is registered for: resolving the bean reports that, not this check
+            return true;
+        }
+    }
+
+    private jakarta.enterprise.context.spi.@Nullable Context activeContextOf(CdiBean<?> bean) {
+        try {
+            return beanContext.getBean(CdiBeanContainer.class).getContext(bean.getScope());
+        } catch (jakarta.enterprise.context.ContextNotActiveException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private CdiBean<?> declaringBean() {
+        CdiBean<?> bean = declaringBean;
+        if (bean == null) {
+            bean = beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
+            declaringBean = bean;
+        }
+        return bean;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object resolve(Argument<?> argument,
+                           java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments) {
+        Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
+        io.micronaut.context.BeanRegistration<Object> registration =
+            beanContext.getBeanRegistration((Argument<Object>) argument, qualifier);
+        if (CdiResolution.isDependent(registration.getBeanDefinition())) {
+            // a dependent argument exists for the one notification, and is destroyed when it completes
+            transientArguments.add(registration);
+        }
+        return registration.bean();
+    }
+
+    @Override
+    public String toString() {
+        return "Observer[" + getBeanClass().getName() + "#" + method.getName() + "]";
+    }
+}

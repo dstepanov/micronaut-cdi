@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.runtime.ObserverRegistry;
+import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;

@@ -12,7 +12,7 @@ class GenericsProbeTest {
             "org.jboss.cdi.tck.tests.inheritance.generics")) {
             System.out.println("DBG defs=" + context.getBeanDefinitions(Foo.class).size());
             try {
-                context.getBean(io.micronaut.cdi.context.RequestScope.class).activate();
+                context.getBean(io.micronaut.cdi.internal.context.RequestScope.class).activate();
                 Foo foo = context.getBean(Foo.class);
                 System.out.println("DBG baz=" + foo.getBaz() + " t1=" + foo.getT1());
                 jakarta.enterprise.inject.spi.BeanManager manager =

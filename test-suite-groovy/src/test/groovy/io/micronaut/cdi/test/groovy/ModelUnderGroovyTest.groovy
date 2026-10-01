@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test.groovy
 
-import io.micronaut.cdi.runtime.CdiBeanContainer
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer
 import io.micronaut.cdi.test.PlainScannedBean
 import io.micronaut.cdi.test.extension.Recorded
 import io.micronaut.cdi.test.extension.Seen

@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.extension.Flavor;
 import io.micronaut.cdi.test.extension.Port;
 import io.micronaut.cdi.test.extension.PortImpl;

@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  * Reads the request scope as the Micronaut scope of the same meaning, whose context is
- * {@code io.micronaut.cdi.context.RequestScope}.
+ * {@code io.micronaut.cdi.internal.context.RequestScope}.
  *
  * @author Denis Stepanov
  * @since 1.0

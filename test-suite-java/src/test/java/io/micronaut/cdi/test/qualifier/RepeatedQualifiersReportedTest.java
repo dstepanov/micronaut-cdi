@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test.qualifier;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.repeatable.Start;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.Dependent;

@@ -15,9 +15,9 @@
  */
 package io.micronaut.cdi.se;
 
-import io.micronaut.cdi.runtime.extension.PortableExtensions;
-import io.micronaut.cdi.runtime.UnselectedAlternative;
-import io.micronaut.cdi.runtime.CdiInterceptorEnablement;
+import io.micronaut.cdi.spi.PortableExtensions;
+import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
+import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.core.annotation.Internal;

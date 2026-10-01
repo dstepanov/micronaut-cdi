@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.tck.arquillian;
 
-import io.micronaut.cdi.context.RequestScope;
+import io.micronaut.cdi.internal.context.RequestScope;
 import org.jboss.arquillian.core.api.annotation.Observes;
 import org.jboss.arquillian.test.spi.event.suite.After;
 import org.jboss.arquillian.test.spi.event.suite.Before;

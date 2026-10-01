@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.extension.Ledger;
 import io.micronaut.cdi.test.extension.Tier;
 import io.micronaut.context.ApplicationContext;

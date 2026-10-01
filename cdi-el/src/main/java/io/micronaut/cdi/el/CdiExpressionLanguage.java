@@ -15,7 +15,7 @@
  */
 package io.micronaut.cdi.el;
 
-import io.micronaut.cdi.runtime.ExpressionLanguageBridge;
+import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.context.BeanContext;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;

@@ -52,7 +52,7 @@ class GenericAssignabilityTest {
             GenericAssignabilityTest.class.getDeclaredMethod("typeHolder").getTypeParameters();
         try (ApplicationContext context = ApplicationContext.run()) {
             BeanManager manager = context.getBean(BeanManager.class);
-            java.lang.reflect.Type dao = io.micronaut.cdi.runtime.CdiParameterizedType.of(
+            java.lang.reflect.Type dao = io.micronaut.cdi.internal.runtime.CdiParameterizedType.of(
                 Dao.class, new java.lang.reflect.Type[]{vars[0], vars[2]});
             Set<Bean<?>> beans = manager.getBeans(dao);
             for (Bean<?> bean : beans) {
@@ -90,10 +90,10 @@ class GenericAssignabilityTest {
             GenericAssignabilityTest.class.getDeclaredMethod("typeHolder").getTypeParameters();
         try (ApplicationContext context = ApplicationContext.run()) {
             BeanManager manager = context.getBean(BeanManager.class);
-            java.lang.reflect.Type matching = io.micronaut.cdi.runtime.CdiParameterizedType.of(
+            java.lang.reflect.Type matching = io.micronaut.cdi.internal.runtime.CdiParameterizedType.of(
                 Result.class, new java.lang.reflect.Type[]{vars[0], vars[1]});
             assertEquals(1, manager.getBeans(matching).size(), "T1 extends RuntimeException, T2 extends T1");
-            java.lang.reflect.Type notMatching = io.micronaut.cdi.runtime.CdiParameterizedType.of(
+            java.lang.reflect.Type notMatching = io.micronaut.cdi.internal.runtime.CdiParameterizedType.of(
                 Result.class, new java.lang.reflect.Type[]{vars[0], vars[2]});
             assertEquals(0, manager.getBeans(notMatching).size(), "T3 is unbounded, beyond Exception");
         }

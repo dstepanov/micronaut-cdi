@@ -148,8 +148,8 @@ public final class MicronautTestEnricher implements TestEnricher {
                 qualifiers.add(annotation);
             }
         }
-        return new io.micronaut.cdi.runtime.CdiEvent<>(
-            context.getBean(io.micronaut.cdi.runtime.ObserverRegistry.class),
+        return new io.micronaut.cdi.internal.runtime.CdiEvent<>(
+            context.getBean(io.micronaut.cdi.internal.runtime.ObserverRegistry.class),
             parameterized.getActualTypeArguments()[0], qualifiers, null);
     }
 

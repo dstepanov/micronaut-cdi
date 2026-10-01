@@ -57,7 +57,7 @@ import java.util.TreeMap;
  * <p>A disposer method is resolved here too. The specification declares it beside the producer, on the same class,
  * and matches it to the producer by the type and the qualifiers of its {@code Disposes} parameter; that search is
  * done now rather than at runtime, and what it found is recorded on the producer with {@link CdiDisposer} for
- * {@code io.micronaut.cdi.runtime.DisposerInvoker} to invoke as the produced bean is destroyed.</p>
+ * {@code io.micronaut.cdi.internal.runtime.DisposerInvoker} to invoke as the produced bean is destroyed.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -347,7 +347,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     .toList();
                 producer.annotate(io.micronaut.context.annotation.Requires.class, builder -> builder
                     .member("condition", new AnnotationClassValue<>(
-                        "io.micronaut.cdi.runtime.UnselectedAlternative")));
+                        "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
                 String className = element.getName();
                 producer.annotate("io.micronaut.cdi.internal.metadata.CdiSelectableAlternative", builder -> {
                     builder.value(className);

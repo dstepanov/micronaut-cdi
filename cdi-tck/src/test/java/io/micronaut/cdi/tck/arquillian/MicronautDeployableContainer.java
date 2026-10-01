@@ -248,7 +248,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             ApplicationContext context = ApplicationContext.builder()
                 .classLoader(loader)
                 .beansPredicate(bean -> {
-                    if (io.micronaut.cdi.runtime.extension.ExtensionComponents
+                    if (io.micronaut.cdi.internal.extension.ExtensionComponents
                         .isComponent(bean.getAnnotationMetadata())) {
                         // what the deployment's extensions synthesised, recorded on the definition of a class
                         // they named: part of the deployment whether or not the class is a bean of the archive

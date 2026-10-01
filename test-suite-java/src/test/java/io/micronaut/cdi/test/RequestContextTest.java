@@ -1,6 +1,6 @@
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.context.RequestScope;
+import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.propagation.PropagatedContext;
 import io.micronaut.core.propagation.PropagatedContextConfiguration;

@@ -2,7 +2,7 @@ package io.micronaut.cdi.test.noreflection;
 
 import io.micronaut.cdi.MicronautBeanContainer;
 import io.micronaut.cdi.MicronautEvent;
-import io.micronaut.cdi.runtime.CdiReflection;
+import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -136,8 +136,8 @@ class ObservedTypesWithoutReflectionTest {
 
     private Type observedBy(Class<?> beanClass) {
         MicronautBeanContainer container = (MicronautBeanContainer) CDI.current().getBeanContainer();
-        for (ObserverMethod<?> observer : ((io.micronaut.cdi.runtime.CdiBeanContainer) container)
-            .beanContext().getBean(io.micronaut.cdi.runtime.ObserverRegistry.class).observers()) {
+        for (ObserverMethod<?> observer : ((io.micronaut.cdi.internal.runtime.CdiBeanContainer) container)
+            .beanContext().getBean(io.micronaut.cdi.internal.runtime.ObserverRegistry.class).observers()) {
             if (observer.getBeanClass() == beanClass) {
                 return observer.getObservedType();
             }

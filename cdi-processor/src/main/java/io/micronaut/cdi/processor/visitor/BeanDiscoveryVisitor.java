@@ -151,7 +151,7 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
                 .toList();
             element.annotate(Requires.class, builder -> builder
                 .member("condition", new AnnotationClassValue<>(
-                    "io.micronaut.cdi.runtime.UnselectedAlternative")));
+                    "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
             String className = element.getName();
             element.annotate("io.micronaut.cdi.internal.metadata.CdiSelectableAlternative", builder -> {
                 builder.value(className);
@@ -239,6 +239,6 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
      */
     private static void notABean(ClassElement element) {
         element.annotate(Requires.class, builder -> builder
-            .member("condition", new AnnotationClassValue<>("io.micronaut.cdi.runtime.NotABean")));
+            .member("condition", new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.NotABean")));
     }
 }

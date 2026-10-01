@@ -15,8 +15,8 @@
  */
 package io.micronaut.cdi.se;
 
-import io.micronaut.cdi.runtime.CdiBeanContainer;
-import io.micronaut.cdi.runtime.CdiInstance;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -54,7 +54,7 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
         // the dependent instances obtained through the container belong to it. They are released as the
         // container stops, once it has said so: section 2.8.6.2 has Shutdown observed as the container is about
         // to shut down, so its observers find them in place
-        context.getBean(io.micronaut.cdi.runtime.ContainerLifecycle.class).releaseAsTheContainerStops(lookup::close);
+        context.getBean(io.micronaut.cdi.internal.runtime.ContainerLifecycle.class).releaseAsTheContainerStops(lookup::close);
     }
 
     @Override

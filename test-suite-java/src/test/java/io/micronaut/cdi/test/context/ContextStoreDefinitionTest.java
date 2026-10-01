@@ -1,7 +1,7 @@
 package io.micronaut.cdi.test.context;
 
-import io.micronaut.cdi.context.ApplicationScope;
-import io.micronaut.cdi.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.context.ApplicationScope;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.context.ApplicationScoped;
