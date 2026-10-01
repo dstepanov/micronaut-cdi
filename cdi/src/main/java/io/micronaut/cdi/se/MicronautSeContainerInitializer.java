@@ -270,6 +270,13 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * container has.
      */
     private boolean belongsToSyntheticArchive(io.micronaut.inject.BeanType<?> bean) {
+        String producer = producerOf(bean);
+        if (producer != null && isSelected(producer)) {
+            // a bean produced by a member of an application class belongs to the archive its producer is in,
+            // whatever type it produces - and so does the client proxy of one in a normal scope, which declares
+            // itself and is of the produced type
+            return true;
+        }
         if (bean instanceof BeanDefinition<?> definition) {
             // a bean produced by a member of an application class belongs to the archive its producer is in,
             // whatever type it produces
@@ -293,6 +300,11 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     }
 
     private static boolean onClasspath(io.micronaut.inject.BeanType<?> bean, Set<String> classpath) {
+        String producer = producerOf(bean);
+        if (producer != null && classpath.contains(outerClassOf(producer))) {
+            // what a producer produces, its client proxy included, is where the producer is
+            return true;
+        }
         if (bean instanceof BeanDefinition<?> definition) {
             // the client proxy of a bean declares itself; it is in the archive its bean class is in
             Class<?> declaring = definition instanceof ProxyBeanDefinition<?> proxied
@@ -310,6 +322,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
         String name = type.getName();
         return isInfrastructure(name) || classpath.contains(outerClassOf(name));
+    }
+
+    /**
+     * The class that declares the producer of a produced bean, as the processor recorded it, or {@code null} for
+     * a bean that is a class itself.
+     */
+    private static @org.jspecify.annotations.Nullable String producerOf(io.micronaut.inject.BeanType<?> bean) {
+        if (!(bean instanceof BeanDefinition<?> definition)) {
+            return null;
+        }
+        return definition.getAnnotationMetadata()
+            .stringValue("io.micronaut.cdi.annotation.CdiProducer", "declaringType").orElse(null);
     }
 
     /**
