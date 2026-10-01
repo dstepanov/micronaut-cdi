@@ -1,0 +1,27 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'openapi',
+    artifact: 'org.eclipse.microprofile.openapi:microprofile-openapi-tck:4.1.1',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye:smallrye-open-api-core:4.3.5'
+    testImplementation 'io.smallrye:smallrye-open-api-jaxrs:4.3.5'
+    testImplementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+    testImplementation 'jakarta.validation:jakarta.validation-api:3.1.1'
+    testImplementation 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api:4.0'
+}
+
+dependencies {
+    testImplementation 'org.osgi:org.osgi.annotation.versioning:1.1.2'
+}
+
+dependencies {
+    // Micronaut's BOM uses Groovy 5; REST Assured 6 is the compatible harness release.
+    testImplementation 'io.rest-assured:rest-assured:6.0.1'
+}

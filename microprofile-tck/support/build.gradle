@@ -1,0 +1,23 @@
+plugins {
+    id 'io.micronaut.build.internal.cdi-base'
+    id 'java-library'
+}
+configurations.all { resolutionStrategy.preferProjectModules() }
+dependencies {
+    api platform(libs.micronaut.core)
+    api projects.micronautCdi
+    api projects.micronautCdiReflection
+    implementation projects.micronautCdiProcessor
+    implementation mn.micronaut.inject.java
+    implementation libs.managed.micronaut.jakarta.interceptors.processor
+    api libs.arquillian.container.spi
+    api libs.arquillian.testng
+    implementation libs.testng
+    implementation libs.arquillian.container.impl
+    implementation libs.arquillian.container.test.impl
+    implementation libs.shrinkwrap.impl
+    implementation libs.shrinkwrap.descriptors
+    // Shared configuration bootstrap; this is the external implementation, not Micronaut Config.
+    api 'io.smallrye.config:smallrye-config:3.18.3'
+}
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none'] }

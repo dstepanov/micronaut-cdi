@@ -1,0 +1,28 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'config',
+    artifact: 'org.eclipse.microprofile.config:microprofile-config-tck:3.1.2',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye.config:smallrye-config:3.18.3'
+}
+
+// Prerequisites declared by the upstream Config TCK's setup checks.
+tasks.withType(Test).configureEach {
+    environment 'MP_TCK_ENV_DUMMY', 'dummy'
+    environment 'my_int_property', '45'
+    environment 'MY_BOOLEAN_PROPERTY', 'true'
+    environment 'my_string_property', 'haha'
+    environment 'MY_STRING_PROPERTY', 'woohoo'
+    environment 'config_ordinal', '45'
+    environment 'customer_name', 'Bob'
+    systemProperty 'mp.tck.prop.dummy', 'dummy'
+    systemProperty 'config_ordinal', '120'
+    systemProperty 'customer.hobby', 'Tennis'
+}

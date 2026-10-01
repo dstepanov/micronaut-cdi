@@ -13,8 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * application context, whether or not anything ever asks for the bean that has the problem: an unsatisfied or
  * ambiguous dependency, at a field or a parameter of an observer or a disposer method alike (CDI 4.1 section
  * 5.2.2), an injection point that resolves to a bean in a normal scope that cannot be proxied (sections 3.10 and
- * 5.4), and two beans of one name or a name that is the path prefix of another (section 5.3.1). A collection is
- * collected by Micronaut, and is satisfied by no beans at all.
+ * 5.4), and two beans of one name or a name that is the path prefix of another (section 5.3.1). Optional and collection injection require a bean of the full declared type.
  * Each deployment is compiled in memory, since a class compiled with this suite would be in the deployment of
  * every test.
  */
@@ -160,20 +159,32 @@ class DeploymentValidationTest {
     }
 
     @Test
-    void anEmptyCollectionIsNoUnsatisfiedDependency() {
-        try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
-            package valid;
-
-            @jakarta.enterprise.context.Dependent
-            public class Consumer {
-                @jakarta.inject.Inject
-                java.util.List<Element> none;
-
-                public interface Element {
+    void missingOptionalAndCollectionProducersAreDeploymentProblems() {
+        for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
+            "java.util.Set<Element>", "java.util.Collection<Element>")) {
+            assertRejected("""
+                package invalid;
+                @jakarta.enterprise.context.Dependent
+                public class Consumer {
+                    @jakarta.inject.Inject %s missing;
+                    public interface Element {}
                 }
-            }
-            """)) {
-            assertTrue(context.isRunning());
+                """.formatted(type), "has no bean to satisfy it");
+        }
+    }
+
+    @Test
+    void ambiguousOptionalAndCollectionProducersAreDeploymentProblems() {
+        for (String type : java.util.List.of("java.util.Optional<String>", "java.util.List<String>", "java.util.Set<String>")) {
+            assertRejected("""
+                package invalid;
+                @jakarta.enterprise.context.Dependent
+                public class Consumer {
+                    @jakarta.inject.Inject %s ambiguous;
+                    @jakarta.enterprise.inject.Produces %s first() { return null; }
+                    @jakarta.enterprise.inject.Produces %s second() { return null; }
+                }
+                """.formatted(type, type, type), "is ambiguous");
         }
     }
 

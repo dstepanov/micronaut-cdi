@@ -1,0 +1,194 @@
+diff --git a/core-processor/src/main/java/io/micronaut/inject/utils/BeanInjectionUtils.java b/core-processor/src/main/java/io/micronaut/inject/utils/BeanInjectionUtils.java
+index 2a65fd3..bb7e2f5 100644
+--- a/core-processor/src/main/java/io/micronaut/inject/utils/BeanInjectionUtils.java
++++ b/core-processor/src/main/java/io/micronaut/inject/utils/BeanInjectionUtils.java
+@@ -39,6 +39,8 @@ import io.micronaut.core.annotation.AnnotationUtil;
+ import io.micronaut.core.annotation.Creator;
+ import io.micronaut.core.annotation.ReflectiveAccess;
+ import io.micronaut.core.expressions.EvaluatedExpressionReference;
++import io.micronaut.core.io.service.SoftServiceLoader;
++import io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver;
+ import io.micronaut.inject.ast.ClassElement;
+ import io.micronaut.inject.ast.ConstructorElement;
+ import io.micronaut.inject.ast.Element;
+@@ -67,6 +69,9 @@ import java.util.stream.Stream;
+  */
+ public class BeanInjectionUtils {
+
++    private static final List<BeanDefinitionInjectionPointResolver> INJECTION_POINT_RESOLVERS =
++        SoftServiceLoader.load(BeanDefinitionInjectionPointResolver.class, BeanInjectionUtils.class.getClassLoader()).collectAll();
++
+     /**
+      * Creates a {@link FieldDefinition} describing injection for the supplied field.
+      *
+@@ -310,6 +315,13 @@ public class BeanInjectionUtils {
+                     return result;
+                 }
+             }
++            for (BeanDefinitionInjectionPointResolver resolver : INJECTION_POINT_RESOLVERS) {
++                Optional<BeanDefinitionInjectionPoint<ClassElement>> resolved =
++                    resolver.resolve(beanType, genericType, annotationMetadata, parameterName, visitorContext);
++                if (resolved.isPresent()) {
++                    return resolved.get();
++                }
++            }
+             isArray = genericType.isArray();
+             if (genericType.isAssignable(Collection.class) || isArray) {
+                 ClassElement typeArgument = genericType.isArray() ? genericType.fromArray() : genericType.getFirstTypeArgument().orElse(null);
+diff --git a/core-processor/src/main/java/io/micronaut/inject/visitor/BeanDefinitionInjectionPointResolver.java b/core-processor/src/main/java/io/micronaut/inject/visitor/BeanDefinitionInjectionPointResolver.java
+index 9077225..5f5d707 100644
+--- a/core-processor/src/main/java/io/micronaut/inject/visitor/BeanDefinitionInjectionPointResolver.java
++++ b/core-processor/src/main/java/io/micronaut/inject/visitor/BeanDefinitionInjectionPointResolver.java
+@@ -23,13 +23,21 @@ import io.micronaut.inject.ast.ClassElement;
+ import java.util.Optional;
+
+ /**
+- * Resolves injection point shapes which are not part of the core Java type model.
++ * Resolves injection point shapes for language and container integrations.
+  *
+  * <p>Language integrations can use this extension point to map collection-like,
+  * optional, or other language-specific types to one of the standard
+  * {@link BeanDefinitionInjectionPoint} implementations. Returning an empty
+  * optional lets the core processor treat the requested type as a single bean.</p>
+  *
++ * <p>Implementations registered through {@link java.util.ServiceLoader} on the
++ * processor classpath are consulted before the built-in bean container shapes,
++ * after explicit parameter and property/value injection. They may return a
++ * {@link BeanDefinitionInjectionPoint.BeanInjectionPoint} to request one bean of
++ * the full declared type instead of optional wrapping or collection aggregation.
++ * Returning empty preserves the built-in behavior. The visitor context's
++ * language-specific resolver is still consulted after the built-in shapes.</p>
++ *
+  * @author Graeme Rocher
+  * @since 5.2.0
+  */
+diff --git a/inject-java/src/test/java/io/micronaut/inject/containerresolver/ExactContainerResolver.java b/inject-java/src/test/java/io/micronaut/inject/containerresolver/ExactContainerResolver.java
+new file mode 100644
+index 0000000..da424a3
+--- /dev/null
++++ b/inject-java/src/test/java/io/micronaut/inject/containerresolver/ExactContainerResolver.java
+@@ -0,0 +1,38 @@
++/*
++ * Copyright 2017-2026 original authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package io.micronaut.inject.containerresolver;
++
++import io.micronaut.context.beans.definition.BeanDefinitionInjectionPoint;
++import io.micronaut.core.annotation.AnnotationMetadata;
++import io.micronaut.inject.ast.ClassElement;
++import io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver;
++import io.micronaut.inject.visitor.VisitorContext;
++
++import java.util.Collection;
++import java.util.Optional;
++
++public final class ExactContainerResolver implements BeanDefinitionInjectionPointResolver {
++    @Override
++    public Optional<BeanDefinitionInjectionPoint<ClassElement>> resolve(
++        ClassElement beanType, ClassElement requestedType, AnnotationMetadata metadata,
++        String parameterName, VisitorContext visitorContext) {
++        if (beanType.getName().startsWith("test.exactcontainers.")
++            && (requestedType.isAssignable(Optional.class) || requestedType.isAssignable(Collection.class))) {
++            return Optional.of(new BeanDefinitionInjectionPoint.BeanInjectionPoint<>(requestedType, metadata));
++        }
++        return Optional.empty();
++    }
++}
+diff --git a/inject-java/src/test/groovy/io/micronaut/inject/containerresolver/ExactContainerResolverSpec.groovy b/inject-java/src/test/groovy/io/micronaut/inject/containerresolver/ExactContainerResolverSpec.groovy
+new file mode 100644
+index 0000000..c7a410f
+--- /dev/null
++++ b/inject-java/src/test/groovy/io/micronaut/inject/containerresolver/ExactContainerResolverSpec.groovy
+@@ -0,0 +1,73 @@
++/*
++ * Copyright 2017-2026 original authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package io.micronaut.inject.containerresolver
++
++import io.micronaut.annotation.processing.test.AbstractTypeElementSpec
++
++class ExactContainerResolverSpec extends AbstractTypeElementSpec {
++    void 'classpath resolver overrides Optional and collection routing for fields constructors and methods'() {
++        given:
++        def context = buildContext('test.exactcontainers.Consumer', '''
++            package test.exactcontainers;
++            import jakarta.inject.*;
++            import io.micronaut.context.annotation.*;
++            import java.util.*;
++            @Singleton
++            class Consumer {
++                @Inject @Named("exact") Optional<String> fieldOptional;
++                @Inject @Named("exact") List<String> fieldList;
++                @Inject @Named("exact") Set<String> fieldSet;
++                @Value("${answer:property}") Optional<String> property;
++                final Optional<String> ctorOptional;
++                final List<String> ctorList;
++                final Set<String> ctorSet;
++                Optional<String> methodOptional;
++                List<String> methodList;
++                Set<String> methodSet;
++                Consumer(@Named("exact") Optional<String> o, @Named("exact") List<String> l, @Named("exact") Set<String> s) {
++                    ctorOptional = o; ctorList = l; ctorSet = s;
++                }
++                @Inject void init(@Named("exact") Optional<String> o, @Named("exact") List<String> l, @Named("exact") Set<String> s) {
++                    methodOptional = o; methodList = l; methodSet = s;
++                }
++            }
++            @Factory class Producers {
++                @Singleton @Named("exact") Optional<String> optional() { return Optional.of("optional"); }
++                @Singleton @Named("exact") List<String> list() { return List.of("list"); }
++                @Singleton @Named("exact") Set<String> set() { return Set.of("set"); }
++                @Singleton @Named("exact") String element() { return "element"; }
++            }
++        ''')
++
++        when:
++        def bean = getBean(context, 'test.exactcontainers.Consumer')
++
++        then:
++        bean.fieldOptional == Optional.of('optional')
++        bean.ctorOptional == bean.fieldOptional
++        bean.methodOptional == bean.fieldOptional
++        bean.fieldList == ['list']
++        bean.ctorList == bean.fieldList
++        bean.methodList == bean.fieldList
++        bean.fieldSet == (['set'] as Set)
++        bean.ctorSet == bean.fieldSet
++        bean.methodSet == bean.fieldSet
++        bean.property == Optional.of('property')
++
++        cleanup:
++        context.close()
++    }
++}
+diff --git a/inject-java/src/test/resources/META-INF/services/io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver b/inject-java/src/test/resources/META-INF/services/io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver
+new file mode 100644
+index 0000000..491cf56
+--- /dev/null
++++ b/inject-java/src/test/resources/META-INF/services/io.micronaut.inject.visitor.BeanDefinitionInjectionPointResolver
+@@ -0,0 +1 @@
++io.micronaut.inject.containerresolver.ExactContainerResolver

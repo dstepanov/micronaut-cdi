@@ -1,0 +1,41 @@
+plugins {
+    id 'io.micronaut.build.internal.cdi-test-suite'
+}
+
+def weldVersion = providers.gradleProperty('fuzzWeldVersion').getOrElse('6.0.4.Final')
+
+dependencies {
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    testAnnotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    testImplementation projects.micronautCdiReflection
+    testImplementation projects.micronautCdiProcessor
+    testImplementation mn.micronaut.inject.java
+    testImplementation libs.managed.micronaut.jakarta.interceptors.processor
+    testImplementation "org.jboss.weld.se:weld-se-core:${weldVersion}"
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}
+
+tasks.named('test') {
+    outputs.upToDateWhen { false }
+    systemProperty 'fuzz.output', layout.buildDirectory.file("campaigns/${weldVersion}/results.tsv").get().asFile.absolutePath
+    systemProperty 'fuzz.classpath', sourceSets.test.runtimeClasspath.asPath
+    systemProperty 'fuzz.sources', layout.buildDirectory.dir("campaigns/${weldVersion}/source-mutations").get().asFile.absolutePath
+    systemProperty 'fuzz.seed', providers.gradleProperty('fuzzSeed').getOrElse('0xCD140')
+    testLogging.showStandardStreams = false
+    doFirst {
+        def target = layout.buildDirectory.file("campaigns/${weldVersion}/artifacts.tsv").get().asFile
+        target.parentFile.mkdirs()
+        def artifacts = (configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts +
+            configurations.testAnnotationProcessor.resolvedConfiguration.resolvedArtifacts).unique { it.file }
+        target.text = artifacts.collect { artifact ->
+            def hash = java.security.MessageDigest.getInstance('SHA-256').digest(artifact.file.bytes).encodeHex()
+            "${artifact.moduleVersion.id}\t${artifact.file.name}\t${hash}"
+        }.sort().join('\n') + '\n'
+    }
+}

@@ -220,6 +220,21 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * bean's, say.
      */
     static <U> Argument<U> askedAs(Argument<U> selected, BeanDefinition<U> definition) {
+        if (CdiTypes.isArray(selected)) {
+            // The producer's compiled definition may expose only the raw array argument. The lookup already
+            // matched its recorded CDI types, so preserve the component's parameters for candidate resolution.
+            return selected;
+        }
+        if (CdiTypes.isArray(definition.asArgument())) {
+            // A qualified Object lookup can select an array producer too. Resolve it by its recorded array
+            // type rather than the erased array argument of the generated definition.
+            for (Argument<?> type : CdiBean.typesOf(definition, definition.getBeanType())) {
+                if (CdiTypes.isArray(type)) {
+                    @SuppressWarnings("unchecked") Argument<U> array = (Argument<U>) type;
+                    return array;
+                }
+            }
+        }
         if (definition.isCandidateBean(selected)) {
             if (selected.getTypeParameters().length > 0) {
                 // a parameterized selection carries what a parameterized built-in reads: what an Event<X> is of

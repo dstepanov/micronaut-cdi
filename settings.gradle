@@ -41,6 +41,25 @@ include 'test-suite-kotlin'
 include 'test-suite-groovy'
 include 'test-suite-no-reflection'
 
+// Opt-in differential compatibility campaign; keeps Weld off the normal test classpath.
+if (providers.gradleProperty('compatibilityFuzz').isPresent()) {
+    include 'compatibility-fuzz'
+}
+if (providers.gradleProperty('microprofileCompatibility').isPresent()) {
+    include 'microprofile-compatibility'
+}
+// External implementations exercised by their unmodified upstream TCKs.
+if (providers.gradleProperty('microprofileTck').isPresent()) {
+    ['support', 'config', 'fault-tolerance', 'health', 'openapi', 'rest-client',
+     'context-propagation', 'reactive-streams', 'reactive-messaging', 'jwt',
+     'telemetry-tracing', 'telemetry-metrics', 'telemetry-logs', 'graphql',
+     'metrics-api', 'metrics-rest', 'metrics-optional'].each { component ->
+        def name = "microprofile-tck-${component}"
+        include name
+        project(":${name}").projectDir = file("microprofile-tck/${component}")
+    }
+}
+
 // Jakarta Interceptors and Jakarta Expression Language are implemented by sibling projects rather than again here:
 // the interception of a bean and the evaluation of an expression are the business of their own specifications, and
 // Contexts and Dependency Injection defers to them.
@@ -77,6 +96,8 @@ if (!siblingCheckout('jakartaInterceptorsDir')) {
     }
 }
 siblingCheckout('jakartaElDir')
+// A Core checkout containing the early injection-point resolver hook can be used until it is published.
+siblingCheckout('micronautCoreDir')
 
 micronautBuild {
     useStandardizedProjectNames.set(true)

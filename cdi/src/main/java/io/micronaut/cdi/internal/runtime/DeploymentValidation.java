@@ -47,9 +47,9 @@ import java.util.Set;
  *
  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
- * {@code Event}, {@code Optional}, the injection point itself - are left to their own lateness, and so are the
- * injection points Micronaut resolves by its own rules: a collection, which is the beans of its element type and
- * is empty rather than unsatisfied where there are none, and one marked nullable.</p>
+ * {@code Event}, the injection point itself - are left to their own lateness, and so are injection points
+ * marked nullable and the stream/map aggregation supplied by Micronaut. Optional and collection injection
+ * points require a bean of their full declared type, just like other CDI injection points.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -63,8 +63,7 @@ final class DeploymentValidation {
         "io.micronaut.context.BeanProvider",
         "jakarta.enterprise.event.Event",
         "jakarta.enterprise.inject.spi.InjectionPoint",
-        "jakarta.enterprise.inject.spi.EventMetadata",
-        "java.util.Optional"
+        "jakarta.enterprise.inject.spi.EventMetadata"
     );
 
     private final CdiBeanContainer container;
@@ -195,11 +194,12 @@ final class DeploymentValidation {
 
     /**
      * Whether Micronaut injects the beans of the element type at the injection point rather than a bean of its
-     * type: a collection, a stream or a map. An array is resolved as a bean of the array type.
+     * type: a stream or a map, and Iterable types that are not Collections. Arrays, Optional and Collections
+     * are resolved as beans of their declared type.
      */
     private static boolean isCollectedByMicronaut(Argument<?> argument) {
         Class<?> type = argument.getType();
-        return Iterable.class.isAssignableFrom(type)
+        return (Iterable.class.isAssignableFrom(type) && !java.util.Collection.class.isAssignableFrom(type))
             || java.util.stream.Stream.class.isAssignableFrom(type)
             || java.util.Map.class.isAssignableFrom(type);
     }

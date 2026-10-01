@@ -331,17 +331,15 @@ public final class CdiAssignability {
             return true;
         }
         if (CdiTypes.isArray(required) || CdiTypes.isArray(candidate)) {
-            // two array types match when their element types do, by these rules again; a class component is the
-            // same type or not, with no boxing, since an int[] is not an Integer[]
+            // section 2.4.2.1 requires identical element types, not the parameterized assignability rules:
+            // List<String>[] is neither an Object[] nor a List<?>[] bean type. Event arrays have their own
+            // covariant matching above.
             Argument<?> requiredComponent = required.componentType();
             Argument<?> candidateComponent = candidate.componentType();
             if (requiredComponent == null || candidateComponent == null) {
                 return CdiTypes.isObject(required);
             }
-            if (CdiTypes.isClass(requiredComponent) && CdiTypes.isClass(candidateComponent)) {
-                return requiredComponent.getType().equals(candidateComponent.getType());
-            }
-            return isAssignable(requiredComponent, candidateComponent);
+            return requiredComponent.equalsStructure(candidateComponent);
         }
         Class<?> requiredRaw = rawTypeOf(required);
         Class<?> candidateRaw = rawTypeOf(candidate);

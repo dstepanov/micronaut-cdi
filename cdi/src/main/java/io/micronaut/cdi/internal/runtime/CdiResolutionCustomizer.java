@@ -24,12 +24,13 @@ import io.micronaut.inject.QualifiedBeanType;
 
 
 /**
- * Micronaut's resolution, widened to the type rules of section 2.4.2.1 where the two disagree.
+ * Micronaut's resolution, adjusted to the type rules of section 2.4.2.1 where the two disagree.
  *
  * <p>Micronaut's own candidate test answers most lookups; what it does not know are the specification's rules
  * for a bean whose type carries type variables — a generic dependent bean is a candidate for whatever fits its
  * bounds, and a raw producer for a required type that says nothing. When Micronaut says no to a lookup with
- * type arguments, the specification's own matching gets the last word.</p>
+ * type arguments, the specification's own matching gets the last word. Arrays also use that matching,
+ * including raw array lookups, since their element types must be identical.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -87,6 +88,18 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         Argument<T> beanType,
         io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
         java.util.Collection<io.micronaut.inject.BeanDefinition<T>> candidates) {
+        if (beanType.getType() == jakarta.inject.Provider.class && candidates.size() == 2
+            && candidates.stream().anyMatch(candidate ->
+                candidate instanceof io.micronaut.inject.provider.JakartaProviderBeanDefinition)) {
+            // Instance extends Provider. Its built-in factory captures the injection point and owns the
+            // dependent instances it creates; Micronaut's ordinary Provider does not retain that metadata.
+            // Resolve only this overlap between the two built-ins, leaving user-defined providers alone.
+            for (BeanDefinition<T> candidate : candidates) {
+                if (candidate instanceof CdiInstanceFactory<?>) {
+                    return java.util.Optional.of(candidate);
+                }
+            }
+        }
         if (qualifier != null) {
             return java.util.Optional.empty();
         }
@@ -157,7 +170,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
 
     @Override
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
-        if (beanType.getTypeParameters().length > 0 && candidate instanceof BeanDefinition<?> definition
+        if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
+            && candidate instanceof BeanDefinition<?> definition
             && isBeanOfTheSpecification(definition)) {
             // a parameterized lookup of a bean of the specification is answered by the rules of section
             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable

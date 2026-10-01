@@ -1,0 +1,42 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+dependencies {
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    testImplementation projects.micronautCdiReflection
+    testImplementation projects.micronautCdiProcessor
+    testImplementation mn.micronaut.inject.java
+    testImplementation libs.managed.micronaut.jakarta.interceptors.processor
+    testImplementation 'org.jboss.weld.se:weld-se-core:6.0.4.Final'
+    testImplementation 'io.smallrye.config:smallrye-config:3.18.3'
+    testImplementation 'io.smallrye:smallrye-fault-tolerance:6.11.4'
+    testImplementation 'io.smallrye:smallrye-health:4.3.0'
+    testImplementation 'io.smallrye:smallrye-open-api-core:4.3.5'
+    testImplementation 'io.smallrye:smallrye-open-api-jaxrs:4.3.5'
+    testImplementation 'org.jboss.resteasy.microprofile:microprofile-rest-client:3.0.1.Final'
+    testImplementation('io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5') {
+        // Keep the reference container unambiguous: Helidon also distributes a fork with the same class names.
+        exclude group: 'io.helidon.microprofile.weld', module: 'weld-se-core'
+    }
+    testImplementation 'io.smallrye:smallrye-jwt:4.6.4'
+    testImplementation 'io.smallrye:smallrye-jwt-build:4.6.4'
+    testImplementation 'org.eclipse.parsson:parsson:1.1.7'
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}
+
+tasks.named('test') {
+    outputs.upToDateWhen { false }
+    systemProperty 'mp.classpath', sourceSets.test.runtimeClasspath.asPath
+    systemProperty 'mp.output', layout.buildDirectory.dir('campaign').get().asFile.absolutePath
+    maxHeapSize = '1g'
+    doFirst {
+        def target = layout.buildDirectory.file('campaign/artifacts.tsv').get().asFile
+        target.parentFile.mkdirs()
+        target.text = configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts.collect { a ->
+            def hash = java.security.MessageDigest.getInstance('SHA-256').digest(a.file.bytes).encodeHex()
+            "${a.moduleVersion.id}\t${a.file.name}\t${hash}"
+        }.sort().join('\n') + '\n'
+    }
+}

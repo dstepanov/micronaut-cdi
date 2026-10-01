@@ -1,0 +1,14 @@
+// Run the same Config TCK with the previously excluded class included, without editing its checkout.
+gradle.projectsEvaluated {
+    def tckProject = rootProject.findProject(':micronaut-microprofile-config-tck')
+    if (tckProject == null) {
+        return
+    }
+    def suite = gradle.startParameter.projectProperties['mpConfigSuite']
+    if (suite == null) {
+        throw new GradleException('Supply -PmpConfigSuite=/absolute/path/to/config-full-suite.xml')
+    }
+    tckProject.tasks.named('tckSuite').configure {
+        useTestNG { suiteXmlFiles = [new File(suite)] }
+    }
+}

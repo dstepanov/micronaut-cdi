@@ -1,0 +1,14 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'telemetry-logs',
+    artifact: 'org.eclipse.microprofile.telemetry:microprofile-telemetry-logs-tck:2.1',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation('io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5') { exclude group: 'io.helidon.microprofile.weld', module: 'weld-se-core' }
+}

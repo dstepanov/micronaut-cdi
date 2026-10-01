@@ -1,0 +1,45 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<!-- The whole kit: every class of it that has a test, listed so that a test that is left out can be left out by name.
+     What is left out, and why, is recorded in CONFORMANCE.md. -->
+<suite name="microprofile-config-TCK" verbose="1" configfailurepolicy="continue">
+    <test name="microprofile-config 3.1 TCK">
+        <classes>
+            <class name="org.eclipse.microprofile.config.tck.ArrayConverterTest"/>
+            <class name="org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest"/>
+            <class name="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.CDIPropertyExpressionsTest"/>
+            <class name="org.eclipse.microprofile.config.tck.CDIPropertyNameMatchingTest"/>
+            <!-- left out: an Optional parameter of an injected method is unwrapped by Micronaut Core and the result
+                 cast to Optional, see notes/micronaut-core-optional-argument-expression.md -->
+            <class name="org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.ClassConverterTest"/>
+            <class name="org.eclipse.microprofile.config.tck.ConfigPropertiesTest"/>
+            <class name="org.eclipse.microprofile.config.tck.ConfigProviderTest"/>
+            <class name="org.eclipse.microprofile.config.tck.ConfigValueTest"/>
+            <class name="org.eclipse.microprofile.config.tck.ConverterTest"/>
+            <class name="org.eclipse.microprofile.config.tck.CustomConfigSourceTest"/>
+            <class name="org.eclipse.microprofile.config.tck.CustomConverterTest"/>
+            <class name="org.eclipse.microprofile.config.tck.ImplicitConverterTest"/>
+            <class name="org.eclipse.microprofile.config.tck.PropertyExpressionsTest"/>
+            <class name="org.eclipse.microprofile.config.tck.WarPropertiesLocationTest"/>
+            <class name="org.eclipse.microprofile.config.tck.broken.ConfigPropertiesMissingPropertyInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.broken.MissingConverterOnInstanceInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.broken.MissingValueOnInstanceInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.broken.MissingValueOnObserverMethodInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.broken.WrongConverterOnInstanceInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.configsources.DefaultConfigSourceOrdinalTest"/>
+            <class name="org.eclipse.microprofile.config.tck.converters.NullConvertersTest"/>
+            <class name="org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueBrokenInjectionTest"/>
+            <class name="org.eclipse.microprofile.config.tck.converters.convertToNull.ConvertedNullValueTest"/>
+            <class name="org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTest"/>
+            <class name="org.eclipse.microprofile.config.tck.emptyvalue.EmptyValuesTestProgrammaticLookup"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.ConfigPropertyFileProfileTest"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.DevConfigProfileTest"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.InvalidConfigProfileTest"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.OverrideConfigProfileTest"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.ProdProfileTest"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.TestConfigProfileTest"/>
+            <class name="org.eclipse.microprofile.config.tck.profile.TestCustomConfigProfile"/>
+        </classes>
+    </test>
+</suite>

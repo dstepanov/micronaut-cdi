@@ -219,6 +219,10 @@ out, so that what is not covered is as visible in a test report as what is.
 
 ## Building
 
+External MicroProfile implementations can be exercised with their upstream TCKs through the opt-in
+[MicroProfile TCK runner](microprofile-tck/README.md). Its [results and proposed improvements](microprofile-tck/FINDINGS.md)
+separate CDI behavior differences from vendor integration and server requirements.
+
 The build takes [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors)
 at its `main` branch as a Gradle [source dependency](https://blog.gradle.org/introducing-source-dependencies):
 `settings.gradle` maps its modules to its Git repository, and Gradle checks the repository out under
@@ -239,6 +243,10 @@ the place of the repository or of the release:
 Micronaut itself comes from Maven Central and, while this builds on a snapshot of Micronaut Core, from the
 snapshot repository. The local Maven repository is not consulted: a stale local publication of a snapshot would
 shadow the published one.
+
+Optional and collection injection in CDI beans needs the early Core resolver hook until it is published in
+Micronaut Core. The [Core integration instructions](core-integration/README.md) include the source patch and
+the `-PmicronautCoreDir` build option used to verify this change.
 
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.

@@ -1,0 +1,20 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'context-propagation',
+    artifact: 'org.eclipse.microprofile.context-propagation:microprofile-context-propagation-tck:1.3',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye:smallrye-context-propagation:2.4.0'
+    testImplementation 'jakarta.transaction:jakarta.transaction-api:2.0.1'
+}
+
+dependencies {
+    testImplementation 'io.smallrye:smallrye-context-propagation-cdi:2.4.0'
+    testImplementation 'io.smallrye:smallrye-context-propagation-jta:2.4.0'
+}

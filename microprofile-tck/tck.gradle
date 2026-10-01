@@ -1,0 +1,105 @@
+// Download and compile the upstream tests without annotation processing. Each Arquillian archive is
+// subsequently compiled with the CDI processors; invalid-deployment tests must reach deployment first.
+configurations {
+    upstreamSources { canBeConsumed = false; transitive = false }
+}
+dependencies {
+    testImplementation platform(libs.junit.bom)
+    upstreamSources "${mpTck.artifact}:${mpTck.sourceClassifier}@jar"
+    testImplementation mpTck.artifact
+    if (mpTck.component == 'jwt') testImplementation "${mpTck.artifact}:tests@jar"
+    testImplementation projects.micronautMicroprofileTckSupport
+    testRuntimeOnly 'org.jboss.weld.se:weld-se-core:6.0.4.Final'
+    testImplementation libs.testng
+    testRuntimeOnly 'org.slf4j:slf4j-simple:2.0.17'
+    if (mpTck.framework == 'junit4') {
+        testImplementation 'org.jboss.arquillian.junit:arquillian-junit-container:1.9.1.Final'
+        testImplementation 'junit:junit:4.13.2'
+    }
+}
+def unpack = tasks.register('upstreamTck', Sync) {
+    from({ configurations.upstreamSources.files.collect { zipTree(it) } })
+    into layout.buildDirectory.dir('upstream')
+}
+sourceSets.test.java.srcDir(unpack)
+sourceSets.test.resources.srcDir(layout.buildDirectory.dir('upstream'))
+tasks.named('processTestResources') {
+    dependsOn unpack
+    exclude '**/*.java'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none'] }
+
+def suiteFile = layout.buildDirectory.file('suite.xml')
+def suite = tasks.register('upstreamSuite') {
+    dependsOn unpack
+    inputs.dir(layout.buildDirectory.dir('upstream'))
+    inputs.property('component', mpTck.component)
+    inputs.property('framework', mpTck.framework)
+    outputs.file(suiteFile)
+    outputs.file(layout.buildDirectory.file('selected-tests.txt'))
+    doLast {
+        def classes = []
+        if (mpTck.component == 'reactive-streams') {
+            classes << 'io.micronaut.cdi.mptck.streams.SmallRyeStreamsTck'
+        } else {
+            fileTree(layout.buildDirectory.dir('upstream')).matching { include '**/*.java' }.each { source ->
+                def code = source.text
+                def pkg = (code =~ /(?m)^package\s+([\w.]+)\s*;/)
+                def type = (code =~ /(?m)^public\s+(?:final\s+)?class\s+(\w+)/)
+                if (pkg.find() && type.find() && (code =~ /@Test\b/).find()) {
+                    classes << "${pkg.group(1)}.${type.group(1)}"
+                }
+            }
+        }
+        suiteFile.get().asFile.text = '<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">\n' +
+            '<suite name="MicroProfile ' + mpTck.component + '" verbose="0"><test name="Upstream"><classes>\n' +
+            classes.sort().collect { '  <class name="' + it + '"/>' }.join('\n') +
+            '\n</classes></test></suite>\n'
+        layout.buildDirectory.file('selected-tests.txt').get().asFile.text = classes.sort().join('\n') + '\n'
+    }
+}
+['tckSuite': 'native', 'tckImportedSuite': 'imported', 'tckReferenceSuite': 'reference'].each { taskName, mode ->
+    tasks.register(taskName, Test) {
+        group = 'verification'
+        description = "Runs the unmodified ${mpTck.component} TCK (${mode} integration)."
+        dependsOn suite, tasks.named('testClasses')
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        if (mpTck.framework == 'junit4') {
+            useJUnit()
+            include 'org/eclipse/microprofile/**'
+        } else {
+            useTestNG()
+            scanForTestClasses = false
+        }
+        failOnNoDiscoveredTests = true
+        maxHeapSize = '2g'
+        maxParallelForks = 1
+        // Each test class gets a clean loader. Compiled library definitions may contain deployment-specific
+        // metadata and cannot be redefined in another archive's runtime package in the same JVM.
+        forkEvery = 1
+        ignoreFailures = providers.gradleProperty('mpTckIgnoreFailures').isPresent()
+        outputs.upToDateWhen { false }
+        systemProperty 'mp.tck.component', mpTck.component
+        systemProperty 'mp.tck.mode', mode
+        systemProperty 'mp.tck.sources', layout.buildDirectory.dir('upstream').get().asFile.absolutePath
+        systemProperty 'mp.tck.evidence', layout.buildDirectory.dir("deployments/${mode}").get().asFile.absolutePath
+        systemProperty 'smallrye.faulttolerance.mp-compatibility', 'true'
+        doFirst {
+            if (mpTck.framework != 'junit4') {
+                include layout.buildDirectory.file('selected-tests.txt').get().asFile.readLines()
+                    .findAll { !it.isBlank() }.collect { it.replace('.', '/') + '.class' }
+            }
+            delete layout.buildDirectory.dir("deployments/${mode}")
+            systemProperty 'mp.tck.classpath', classpath.asPath
+            def manifest = layout.buildDirectory.file("artifacts-${mode}.tsv").get().asFile
+            manifest.text = configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts.collect { a ->
+                def hash = java.security.MessageDigest.getInstance('SHA-256').digest(a.file.bytes).encodeHex()
+                "${a.moduleVersion.id}\t${a.file.name}\t${hash}"
+            }.sort().join('\n') + '\n'
+        }
+    }
+}
+// Keep these diagnostic suites opt-in even when this project's ordinary check task is selected.
+tasks.named('test') { enabled = false }

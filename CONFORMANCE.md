@@ -100,11 +100,11 @@ that cannot be told apart, or to a bean in a normal scope that cannot be proxied
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
-by Micronaut's rules. So is an injection point Micronaut resolves its own way: a field, constructor or
-initializer parameter of a collection, a stream or a map, which is the beans of its element type and is empty
-rather than unsatisfied where there are none (see below), and one marked nullable. The parameter of an observer or
+by Micronaut's rules. So is an injection point Micronaut resolves its own way: a stream, a map, or an
+Iterable that is not a Collection, which collects beans of its element type, and one marked nullable. CDI
+Optional and Collection injection points are validated against a bean of their full declared type. The parameter of an observer or
 a disposer method is resolved by the container as a bean of its type, a collection included, and is validated as
-one. An injection point of `Instance`, `Provider`, `Event`, `Optional` or `InjectionPoint`
+one. An injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`
 resolves late by design and is not validated.
 
 A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
@@ -192,18 +192,32 @@ observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as 
 instance created for that, and is destroyed when the context has stopped. What an observer of these events
 throws is logged and stops neither the events after it nor the context from stopping.
 
-### An injection point of a collection type collects the beans of its element type
+### Optional and collection injection require the Core integration hook
 
-*Section 2.4.2.* The specification has no collection injection: `List<Foo>` is a bean type like any other, an
-injection point of it is satisfied by a bean that has it among its types - a producer of `List<Foo>`, typically -
-and is unsatisfied where there is none; every bean of `Foo` is what `Instance<Foo>` is for. Micronaut decides
-while a bean compiles that an injection point of `Collection`, `List`, `Set` or another collection type is
-injected with all the beans of the element type, and that is what happens here: `@Inject List<Foo>` is the beans
-of `Foo` - the elements of a produced `List<Foo>` among them - rather than the produced list, and is empty
-rather than unsatisfied where there are none. An array is resolved as the specification has it, and a
-programmatic lookup of the collection type - `Instance<List<Foo>>`, `BeanContainer.getBeans` - resolves the bean
-of that type. The hook Micronaut gives for the array, `BeanResolutionCustomizer.shouldResolveArrayAsBean`, is
-asked for an array only, so the collection cannot be decided the same way here.
+*Section 2.4.2.* CDI treats `Optional<Foo>`, `List<Foo>`, `Set<Foo>` and other Collection types as bean types
+of their own. The processor's `CdiInjectionPointResolver` selects ordinary bean injection for them, preserving
+the full declared type and its qualifiers for fields, constructors and initializer parameters. Missing or
+ambiguous beans are deployment problems. Dependent container producers are disposed with their owning bean.
+An element producer does not supply or augment a collection producer.
+
+This requires the early resolver hook in [the Core patch](core-integration/optional-collection-injection.patch),
+built through `-PmicronautCoreDir=build/optional-collection-core` until a Core snapshot containing the hook is
+published. The unpatched Core snapshot routes these types through optional wrapping or element aggregation;
+installing the CDI processor's service alone does not intercept those branches. See
+[Core integration](core-integration/README.md) for reproduction instructions. Existing compiled consumers must
+be recompiled against the patched Core processor. Ordinary Micronaut beans retain their built-in injection.
+
+Typed `Instance<Optional<Foo>>`, `Instance<List<Foo>>` and `Instance<Set<Foo>>` remain exact CDI lookups and
+work without this compiler hook. Stream, Map and non-Collection Iterable aggregation remain separate deviations.
+
+### Deferred Provider lookup keeps the requesting injection point
+
+An injected `Provider<Foo>` uses the built-in CDI Instance factory, whose type extends Provider, in preference
+to Micronaut's ordinary Provider when those are the two competing built-ins. It keeps the requesting bean,
+member and qualifiers for each later creation, including after another provider has been called. A failed
+creation clears that metadata too. User-defined Provider candidates are not resolved by this preference.
+`ProviderInjectionPointTest` covers field, constructor and initializer injection and a failing deferred creation;
+the external Config TCK's `CDIPlainInjectionTest` and paired Weld probes cover a real Config producer.
 
 Such an injection point is also not an unsatisfied dependency when there are no beans of the element type: the
 container does not report it as it validates the deployment.
