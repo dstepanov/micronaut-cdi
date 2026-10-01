@@ -122,7 +122,7 @@ public final class RecordedTypeValues {
             return record.member("kind", "PRIMITIVE").member("name", component.getName()).build();
         }
         record.member("value", new AnnotationClassValue<>(component.getName()));
-        if (dimensions == 0 && !component.isRawType() && !component.getTypeArguments().isEmpty()) {
+        if (!component.isRawType() && !component.getTypeArguments().isEmpty()) {
             member(record, CdiRecordedType.ARGUMENTS, component.getTypeArguments().values(), bindings, variables, erasedBounds, false);
         }
         return record.build();

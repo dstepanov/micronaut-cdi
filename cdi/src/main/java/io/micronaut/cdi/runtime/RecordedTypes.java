@@ -91,7 +91,15 @@ public final class RecordedTypes {
             return arrayOf(raw, record);
         }
         Argument<?>[] typeArguments = all(arguments);
-        return typeArguments == null ? null : Argument.of(raw, (String) null, typeArguments);
+        if (typeArguments == null) {
+            return null;
+        }
+        // an array of a parameterized type, List<String>[], keeps the arguments of its element type
+        Argument<?> type = Argument.of(raw, (String) null, typeArguments);
+        for (int i = record.intValue("dimensions").orElse(0); i > 0; i--) {
+            type = type.arrayType();
+        }
+        return type;
     }
 
     private static Argument<?> @Nullable [] all(List<AnnotationValue<Annotation>> records) {
