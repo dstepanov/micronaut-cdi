@@ -17,6 +17,7 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
@@ -47,8 +48,20 @@ class GenericArrayBeanTypeTest {
             assertTrue(beans.iterator().next().getTypes().contains(crates), "and the bean has the type itself");
             Crate<String>[] produced = context.getBean(Consumer.class).crates.get();
             assertEquals("produced", produced[0].value);
-            assertTrue(container.getBeans(new TypeLiteral<Crate<Integer>[]>() { }.getType()).isEmpty(),
-                "Crate<Integer>[] does not");
+            assertEquals("produced", context.getBean(Consumer.class).direct[0].value,
+                "direct field injection uses the same exact array bean");
+            assertTrue(container.getBeans(new TypeLiteral<Crate<Long>[]>() { }.getType()).isEmpty(),
+                "Crate<Long>[] does not");
+            for (Type incompatible : new Type[]{Object[].class, Crate[].class,
+                new TypeLiteral<Crate<?>[]>() { }.getType()}) {
+                assertTrue(container.getBeans(incompatible).isEmpty(), "no CDI bean for " + incompatible);
+                assertTrue(context.findBean(SpecificationTypes.argumentOf(incompatible)).isEmpty(),
+                    "Micronaut candidate resolution also rejects " + incompatible);
+            }
+            assertTrue(context.getBean(Consumer.class).wildcards.isUnsatisfied());
+            assertTrue(context.getBean(Consumer.class).objects.isUnsatisfied());
+            Crate<?>[] throughObject = (Crate<?>[]) context.getBean(Consumer.class).integers.get();
+            assertEquals(123, throughObject[0].value, "Object remains a bean type of a generic array producer");
         }
     }
 
@@ -67,11 +80,31 @@ class GenericArrayBeanTypeTest {
         Crate<String>[] crates() {
             return new Crate[]{new Crate<>("produced")};
         }
+
+        @SuppressWarnings("unchecked")
+        @Produces
+        @jakarta.inject.Named("array-through-object")
+        Crate<Integer>[] integers() {
+            return new Crate[]{new Crate<>(123)};
+        }
     }
 
     @Dependent
     static class Consumer {
         @jakarta.inject.Inject
         Instance<Crate<String>[]> crates;
+
+        @jakarta.inject.Inject
+        Crate<String>[] direct;
+
+        @jakarta.inject.Inject
+        Instance<Crate<?>[]> wildcards;
+
+        @jakarta.inject.Inject
+        Instance<Object[]> objects;
+
+        @jakarta.inject.Inject
+        @jakarta.inject.Named("array-through-object")
+        Instance<Object> integers;
     }
 }

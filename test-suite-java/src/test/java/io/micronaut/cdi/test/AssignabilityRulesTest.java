@@ -127,7 +127,7 @@ class AssignabilityRulesTest {
         assertTrue(event(anyFoo, stringFoo));
         Type anyFoos = literal(new TypeLiteral<Foo<?>[]>() { });
         Type stringFoos = literal(new TypeLiteral<Foo<String>[]>() { });
-        assertTrue(bean(anyFoos, stringFoos), "Foo<?>[] is matched by Foo<String>[]");
+        assertFalse(bean(anyFoos, stringFoos), "array element types must be identical, including their arguments");
         assertTrue(event(anyFoos, stringFoos));
         assertFalse(bean(stringFoos, anyFoos), "Foo<String>[] is not matched by Foo<?>[]: a wildcard is no bean type");
         Type listOfStringsFoo = literal(new TypeLiteral<Foo<List<String>>>() { });
