@@ -128,6 +128,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             if (!injected && !producer && !disposer && !observer) {
                 continue;
             }
+            if (injected && producer) {
+                // CDI 4.1 sections 3.2.2 and 3.7.1: a producer method is not an initializer method
+                context.fail("A method may not be annotated both Inject and Produces (CDI 4.1 section 3.2.2)",
+                    method);
+            }
             if (injected && disposer) {
                 // section 3.3.7: an initializer method is not a disposer
                 context.fail("A method may not be annotated Inject and declare a disposed parameter "

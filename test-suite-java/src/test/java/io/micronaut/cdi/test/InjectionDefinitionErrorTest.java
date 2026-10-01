@@ -53,6 +53,27 @@ class InjectionDefinitionErrorTest {
             """, "An injection point whose declared type is a type variable is a definition error");
     }
 
+    @Test
+    void aProducerMethodThatIsAnInitializerIsRefused() {
+        // CDI 4.1 section 3.2.2: a producer method annotated Inject is a definition error
+        assertRefused("""
+            package broken;
+
+            import jakarta.enterprise.context.Dependent;
+            import jakarta.enterprise.inject.Produces;
+            import jakarta.inject.Inject;
+
+            @Dependent
+            public class Subject {
+                @Produces
+                @Inject
+                String value() {
+                    return "produced";
+                }
+            }
+            """, "A method may not be annotated both Inject and Produces");
+    }
+
     static void assertRefused(String source, String expected) {
         try (JavaParser parser = new JavaParser()) {
             assertThrows(RuntimeException.class, () -> parser.generate("broken.Subject", source),
