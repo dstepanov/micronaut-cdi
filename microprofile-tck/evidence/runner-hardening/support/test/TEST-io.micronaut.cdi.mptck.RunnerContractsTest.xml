@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.micronaut.cdi.mptck.RunnerContractsTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:36:48.259Z" hostname="denis-mbp.local" time="1.547">
+  <properties/>
+  <testcase name="archiveResourcesDoNotLeakAcrossDeployments" classname="io.micronaut.cdi.mptck.RunnerContractsTest" time="0.014"/>
+  <testcase name="cleanupContinuesAfterEndpointFailureAndNeverLeavesStaleResources" classname="io.micronaut.cdi.mptck.RunnerContractsTest" time="0.004"/>
+  <testcase name="generatedDefinitionsAreScopedToTheirParentLoader" classname="io.micronaut.cdi.mptck.RunnerContractsTest" time="0.393"/>
+  <testcase name="producerReceivesUnmanagedMemberAndDependentsAreReleased" classname="io.micronaut.cdi.mptck.RunnerContractsTest" time="1.12"/>
+  <testcase name="serviceIsolationPreservesIntegrationProviders" classname="io.micronaut.cdi.mptck.RunnerContractsTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

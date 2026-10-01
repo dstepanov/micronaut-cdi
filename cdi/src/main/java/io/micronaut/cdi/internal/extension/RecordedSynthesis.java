@@ -158,9 +158,29 @@ public final class RecordedSynthesis {
             new IllegalStateException("The implementation class " + record.stringValue("implementation").orElse("")
                 + " of a synthetic bean is not on the classpath"));
         Class<? extends Annotation> scope = scopeOf(record);
+        List<Argument<?>> declaredTypes = record.getAnnotations("typeRecords").stream()
+            .map(io.micronaut.cdi.internal.runtime.RecordedTypes::typeOf).toList();
+        Class<?>[] exposedTypes = declaredTypes.isEmpty() ? record.classValues("types")
+            : declaredTypes.stream().map(Argument::getType).toArray(Class<?>[]::new);
+        // Core requires its primary type to implement every exposed type. The CDI bean class is independent
+        // of this storage type: synthetic creation may declare Object as its bean class and return an array.
+        Class<T> runtimeType = implementation;
+        for (Class<?> candidate : exposedTypes) {
+            if (java.util.Arrays.stream(exposedTypes).allMatch(type -> type.isAssignableFrom(candidate))) {
+                runtimeType = (Class<T>) candidate;
+                break;
+            }
+        }
+        Argument<T> runtimeArgument = Argument.of(runtimeType);
+        for (Argument<?> type : declaredTypes) {
+            if (type.getType() == runtimeType) {
+                runtimeArgument = (Argument<T>) type;
+                break;
+            }
+        }
         RuntimeBeanDefinition.Builder<T> builder = RuntimeBeanDefinition
-            .builder(Argument.of(implementation), creationContext ->
-                create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
+            .builder(runtimeArgument, creationContext ->
+                create(exposedTypes, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
                     creationContext));
         List<AnnotationValue<Annotation>> qualifiers = record.getAnnotations(CdiSyntheticBean.QUALIFIERS);
         Qualifier<T> qualifier = CdiQualifiers.ofValues(qualifiers, Set.of(record.stringValues("nonbinding")));
@@ -172,7 +192,8 @@ public final class RecordedSynthesis {
             qualifier = qualifier == null ? named : Qualifiers.byQualifiers(qualifier, named);
         }
         builder.qualifier(qualifier);
-        builder.annotationMetadata(metadataOf(record, qualifiers, name, scope));
+        builder.annotationMetadata(metadataOf(record, qualifiers, name, scope,
+            creator.getDeclaringType().orElse(creator.getBeanType())));
         if (scope != null && scope.getName().equals("jakarta.inject.Singleton")) {
             builder.singleton(true);
             builder.scope(Singleton.class);
@@ -188,7 +209,7 @@ public final class RecordedSynthesis {
         }
         // the bean types are exactly what was declared (or the API's {Object} default) — the implementation
         // class is not among them unless the extension said so
-        builder.exposedTypes(record.classValues("types"));
+        builder.exposedTypes(exposedTypes);
         // the definition disposes of each instance it created as the instance is destroyed, which is the moment
         // the extension meant (section 2.10.5)
         builder.disposer((context, instance) ->
@@ -253,8 +274,16 @@ public final class RecordedSynthesis {
     private static AnnotationMetadata metadataOf(AnnotationValue<CdiSyntheticBean> record,
                                                  List<AnnotationValue<Annotation>> qualifiers,
                                                  @Nullable String name,
-                                                 @Nullable Class<? extends Annotation> scope) {
+                                                 @Nullable Class<? extends Annotation> scope,
+                                                 Class<?> origin) {
         MutableAnnotationMetadata metadata = new MutableAnnotationMetadata();
+        metadata.addDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiSyntheticInstance", Map.of(
+            "beanClass", record.classValue("implementation").orElseThrow(), "origin", origin));
+        List<AnnotationValue<Annotation>> types = record.getAnnotations("typeRecords");
+        if (!types.isEmpty()) {
+            metadata.addDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiBeanTypes",
+                Map.of(AnnotationMetadata.VALUE_MEMBER, types.toArray(AnnotationValue<?>[]::new)));
+        }
         for (AnnotationValue<Annotation> qualifier : qualifiers) {
             metadata.addDeclaredAnnotation(qualifier.getAnnotationName(), qualifier.getValues());
             metadata.addDeclaredStereotype(List.of(qualifier.getAnnotationName()),
@@ -300,13 +329,13 @@ public final class RecordedSynthesis {
      * from the definition the compiler generated for the creator class. What the creator needs from the
      * container it asks the lookup it is handed for.
      */
-    private <T> T create(Class<T> implementation,
+    private <T> T create(Class<?>[] beanTypes,
                          @Nullable Class<? extends Annotation> scope,
                          BeanDefinition<SyntheticBeanCreator<T>> creatorDefinition,
                          CdiParameters parameters,
                          RuntimeBeanDefinition.CreationContext creationContext) {
         SyntheticBeanCreator<T> creator = beanContext.getBean(creatorDefinition);
-        CdiInjectionPoint injectionPoint = currentInjectionPointOf(implementation, scope, creationContext);
+        CdiInjectionPoint injectionPoint = currentInjectionPointOf(beanTypes, scope, creationContext);
         if (injectionPoint != null) {
             CurrentInjectionPoint.enter(injectionPoint);
         }
@@ -338,7 +367,7 @@ public final class RecordedSynthesis {
      * section 2.10.5 hands the creation function a lookup that can answer {@code InjectionPoint}.
      */
     private @Nullable CdiInjectionPoint currentInjectionPointOf(
-        Class<?> implementation, @Nullable Class<? extends Annotation> scope,
+        Class<?>[] beanTypes, @Nullable Class<? extends Annotation> scope,
         RuntimeBeanDefinition.CreationContext creationContext) {
         if (scope != null && !DEPENDENT.equals(scope.getName())) {
             // for anything but a dependent bean the specification leaves the answer open, and null it is
@@ -351,7 +380,10 @@ public final class RecordedSynthesis {
             return null;
         }
         Argument<?> argument = segment.getArgument();
-        if (argument == null || !argument.getType().isAssignableFrom(implementation)) {
+        // A synthetic creator may return a value of an exposed bean type different from its implementation
+        // class, e.g. an Object creator exposing String[]. Match the declared bean types, not that class.
+        if (argument == null || java.util.Arrays.stream(beanTypes)
+            .noneMatch(type -> argument.getType().isAssignableFrom(type))) {
             return null;
         }
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);

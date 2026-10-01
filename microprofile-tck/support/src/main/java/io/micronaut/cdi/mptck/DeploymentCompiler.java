@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Runs the production processors on precisely the source classes belonging to one deployment. */
 final class DeploymentCompiler {
-    static Path compile(Set<String> classes, Path output, List<String> imports) throws IOException {
+    static Path compile(Set<String> classes, Path output, List<String> imports, List<String> archiveExtensions) throws IOException {
         Files.createDirectories(output);
         Path sources = Path.of(System.getProperty("mp.tck.sources"));
         Set<java.io.File> files = new LinkedHashSet<>();
@@ -36,15 +36,16 @@ final class DeploymentCompiler {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) throw new IllegalStateException("A JDK is required to compile TCK deployments");
         boolean success;
-        boolean graphql = System.getProperty("mp.tck.component").equals("graphql")
-            && System.getProperty("mp.tck.mode").equals("imported");
-        if (graphql) {
-            try {
-                var extension = (jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension)
-                    Class.forName("io.micronaut.cdi.mptck.graphql.GraphQlDiscovery").getConstructor().newInstance();
-                io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-            } catch (ReflectiveOperationException e) { throw new IllegalStateException("Cannot create GraphQL discovery integration", e); }
+        boolean graphql = "graphql".equals(System.getProperty("mp.tck.component"))
+            && "imported".equals(System.getProperty("mp.tck.mode"));
+        List<jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension> extensions = new ArrayList<>();
+        for (String name : archiveExtensions) extensions.add(buildExtension(name));
+        if (graphql) extensions.add(buildExtension("io.micronaut.cdi.mptck.graphql.GraphQlDiscovery"));
+        for (String name : System.getProperty("mp.tck.buildExtensions", "").split(",")) {
+            if (!name.isBlank()) extensions.add(buildExtension(name.trim()));
         }
+        boolean override = !archiveExtensions.isEmpty() || graphql || System.getProperty("mp.tck.buildExtensions") != null;
+        if (override) io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.overrideExtensions(extensions);
         try (var manager = compiler.getStandardFileManager(diagnostics, null, null)) {
             var task = compiler.getTask(null, manager, diagnostics,
                 List.of("-classpath", System.getProperty("mp.tck.classpath"), "-sourcepath", "",
@@ -59,12 +60,20 @@ final class DeploymentCompiler {
                 new io.micronaut.annotation.processing.BeanDefinitionInjectProcessor()));
             success = task.call();
         } finally {
-            if (graphql) io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.overrideExtensions(null);
+            if (override) io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.overrideExtensions(null);
         }
         String report = String.join("\n", diagnostics.getDiagnostics().stream().map(Object::toString).toList());
         Files.writeString(output.resolve("diagnostics.txt"), report);
         Files.writeString(output.resolve("sources.txt"), String.join("\n", files.stream().map(Object::toString).toList()));
         if (!success) throw new jakarta.enterprise.inject.spi.DefinitionException("Deployment compilation rejected:\n" + report);
         return compiled;
+    }
+    private static jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension buildExtension(String name) {
+        try {
+            return (jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension)
+                Class.forName(name).getConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Cannot create build-compatible TCK integration " + name, e);
+        }
     }
 }

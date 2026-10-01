@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.SingleReadinessFailedTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:10:10.585Z" hostname="denis-mbp.local" time="1.378">
+  <properties/>
+  <testcase name="testFailureResponsePayload" classname="org.eclipse.microprofile.health.tck.SingleReadinessFailedTest" time="0.11"/>
+  <system-out><![CDATA[{"status":"DOWN","checks":[{"name":"failed-check","status":"DOWN"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:10:11 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: SingleReadinessFailedTest#testFailureResponsePayload
+]]></system-err>
+</testsuite>

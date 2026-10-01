@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.DelegateHealthSuccessfulTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:09:46.872Z" hostname="denis-mbp.local" time="1.369">
+  <properties/>
+  <testcase name="testSuccessfulDelegateInvocation" classname="org.eclipse.microprofile.health.tck.DelegateHealthSuccessfulTest" time="0.114"/>
+  <system-out><![CDATA[{"status":"UP","checks":[{"name":"delegate-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:09:48 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: DelegateHealthSuccessfulTest#testSuccessfulDelegateInvocation
+]]></system-err>
+</testsuite>

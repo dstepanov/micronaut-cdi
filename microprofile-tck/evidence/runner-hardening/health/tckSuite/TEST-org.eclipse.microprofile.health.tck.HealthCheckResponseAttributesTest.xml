@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.HealthCheckResponseAttributesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:09:50.339Z" hostname="denis-mbp.local" time="1.667">
+  <properties/>
+  <testcase name="testSuccessResponsePayload" classname="org.eclipse.microprofile.health.tck.HealthCheckResponseAttributesTest" time="0.116"/>
+  <system-out><![CDATA[{"status":"UP","checks":[{"name":"attributes-check","status":"UP","data":{"first-key":"first-val","second-key":"second-val"}}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:09:51 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: HealthCheckResponseAttributesTest#testSuccessResponsePayload
+]]></system-err>
+</testsuite>

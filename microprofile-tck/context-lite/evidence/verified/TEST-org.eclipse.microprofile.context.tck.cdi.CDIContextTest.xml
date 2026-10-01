@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.context.tck.cdi.CDIContextTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-01T13:48:11.774Z" hostname="denis-mbp.local" time="1.492">
+  <properties/>
+  <testcase name="testCDIMECtxClearsRequestScopedBean" classname="org.eclipse.microprofile.context.tck.cdi.CDIContextTest" time="0.025"/>
+  <testcase name="testCDIMECtxPropagatesRequestScopedBean" classname="org.eclipse.microprofile.context.tck.cdi.CDIContextTest" time="0.003"/>
+  <testcase name="testCDITCCtxClear" classname="org.eclipse.microprofile.context.tck.cdi.CDIContextTest" time="0.004"/>
+  <testcase name="testCDITCCtxPropagate" classname="org.eclipse.microprofile.context.tck.cdi.CDIContextTest" time="0.003"/>
+  <system-out><![CDATA[CDIContextTest.war:
+/WEB-INF/
+/WEB-INF/classes/
+/WEB-INF/classes/org/
+/WEB-INF/classes/org/eclipse/
+/WEB-INF/classes/org/eclipse/microprofile/
+/WEB-INF/classes/org/eclipse/microprofile/context/
+/WEB-INF/classes/org/eclipse/microprofile/context/tck/
+/WEB-INF/classes/org/eclipse/microprofile/context/tck/cdi/
+/WEB-INF/classes/org/eclipse/microprofile/context/tck/cdi/AbstractBean.class
+/WEB-INF/classes/org/eclipse/microprofile/context/tck/cdi/RequestScopedBean.class
+/WEB-INF/classes/org/eclipse/microprofile/context/tck/cdi/SessionScopedBean.class
+/WEB-INF/classes/org/eclipse/microprofile/context/tck/cdi/ConversationScopedBean.class
+/META-INF/
+/META-INF/beans.xml
+>>> BEGIN Method.testCDIMECtxClearsRequestScopedBean
+<<< END Method.testCDIMECtxClearsRequestScopedBean SUCCESS
+>>> BEGIN Method.testCDIMECtxPropagatesRequestScopedBean
+<<< END Method.testCDIMECtxPropagatesRequestScopedBean SUCCESS
+>>> BEGIN Method.testCDITCCtxClear
+<<< END Method.testCDITCCtxClear SUCCESS
+>>> BEGIN Method.testCDITCCtxPropagate
+<<< END Method.testCDITCCtxPropagate SUCCESS
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

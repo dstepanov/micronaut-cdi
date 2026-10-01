@@ -16,16 +16,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** An archive is compiled and booted through the real Micronaut CDI SE initializer. */
 public final class MicronautDeployableContainer implements DeployableContainer<MicronautContainerConfiguration> {
     private static final AtomicInteger NEXT = new AtomicInteger();
+    private static final String FORK = ProcessHandle.current().pid() + "-" + System.currentTimeMillis();
     @Override public Class<MicronautContainerConfiguration> getConfigurationClass() { return MicronautContainerConfiguration.class; }
     @Override public void setup(MicronautContainerConfiguration config) { }
     @Override public void start() { }
     @Override public void stop() { }
     @Override public ProtocolDescription getDefaultProtocol() { return new ProtocolDescription("Local"); }
     @Override public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
+        if (CurrentDeployment.container != null || CurrentDeployment.loader != null) {
+            throw new DeploymentException("HARNESS: a deployment is already active; undeploy it before deploying another archive");
+        }
         String component = System.getProperty("mp.tck.component");
-        boolean imported = System.getProperty("mp.tck.mode").equals("imported");
-        boolean reference = System.getProperty("mp.tck.mode").equals("reference");
-        Path evidence = Path.of(System.getProperty("mp.tck.evidence"), String.format("%04d-%s", NEXT.incrementAndGet(), archive.getName()));
+        boolean imported = "imported".equals(System.getProperty("mp.tck.mode"));
+        boolean lite = "lite".equals(System.getProperty("mp.tck.mode"));
+        boolean reference = "reference".equals(System.getProperty("mp.tck.mode"));
+        Path evidence = Path.of(System.getProperty("mp.tck.evidence"), String.format("%04d-fork-%s-%s", NEXT.incrementAndGet(), FORK, archive.getName()));
         CurrentDeployment.evidence = evidence;
         ClassLoader previous = Thread.currentThread().getContextClassLoader();
         CurrentDeployment.previousLoader = previous;
@@ -35,7 +40,10 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             Set<String> classes = new TreeSet<>();
             collect(archive, classes);
             List<String> imports = new ArrayList<>();
-            if ((imported && component.equals("config")) || Set.of("health", "context-propagation", "fault-tolerance", "jwt").contains(component)) {
+            for (String name : System.getProperty("mp.tck.imports", "").split(",")) {
+                if (!name.isBlank()) imports.add(name.trim());
+            }
+            if (((imported || lite) && component.equals("config")) || Set.of("health", "context-propagation", "fault-tolerance", "jwt").contains(component)) {
                 imports.add("io.smallrye.config.inject.ConfigProducer");
             }
             if (component.equals("health")) imports.addAll(List.of("io.smallrye.health.SmallRyeHealthReporter", "io.smallrye.health.AsyncHealthCheckFactory"));
@@ -46,7 +54,8 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             if (reference) {
                 compiled = Files.createDirectories(evidence.resolve("classes"));
             } else {
-                compiled = DeploymentCompiler.compile(classes, evidence, imports);
+                compiled = DeploymentCompiler.compile(classes, evidence, imports,
+                    archiveExtensions(archive, "META-INF/services/jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension"));
                 GeneratedClasses.install(compiled, classes, previous);
             }
             var loader = new ArchiveClassLoader(archive, compiled.toUri().toURL(), previous);
@@ -57,8 +66,10 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             jakarta.enterprise.inject.spi.CDI.setCDIProvider(reference
                 ? (jakarta.enterprise.inject.spi.CDIProvider) loader.loadClass("org.jboss.weld.environment.se.WeldSEProvider").getConstructor().newInstance()
                 : new io.micronaut.cdi.internal.runtime.MicronautCDIProvider());
-            org.eclipse.microprofile.config.spi.ConfigProviderResolver.setInstance(new io.smallrye.config.SmallRyeConfigProviderResolver());
-            io.smallrye.config.Config.getOrCreate(loader);
+            CurrentDeployment.previousConfigResolver = org.eclipse.microprofile.config.spi.ConfigProviderResolver.instance();
+            CurrentDeployment.configResolver = new io.smallrye.config.SmallRyeConfigProviderResolver();
+            org.eclipse.microprofile.config.spi.ConfigProviderResolver.setInstance(CurrentDeployment.configResolver);
+            CurrentDeployment.config = io.smallrye.config.Config.getOrCreate(loader);
             List<Class<?>> beans = new ArrayList<>();
             for (String name : classes) {
                 // Parent binaries preserve the test's class identity; generated definitions are deployment-local.
@@ -88,7 +99,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                     }
                 }
             }
-            if (!imported) {
+            if (!imported && !lite) {
                 String vendor = switch (component) {
                     case "config" -> "io.smallrye.config.inject.ConfigExtension";
                     case "fault-tolerance" -> "io.smallrye.faulttolerance.FaultToleranceExtension";
@@ -113,44 +124,94 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 CurrentDeployment.context = (io.micronaut.context.ApplicationContext) bridge.getField("context").get(access);
                 CurrentDeployment.request = (jakarta.enterprise.context.control.RequestContextController) bridge.getField("request").get(access);
             }
-            CurrentDeployment.uri = java.net.URI.create("http://localhost:1");
+            CurrentDeployment.uri = null;
             for (EndpointAdapter adapter : ServiceLoader.load(EndpointAdapter.class, previous)) {
-                CurrentDeployment.endpoint = adapter.start(classes, loader);
+                AutoCloseable endpoint = adapter.start(classes, loader);
+                if (endpoint != null) CurrentDeployment.endpoints.add(endpoint);
             }
             Files.writeString(evidence.resolve("outcome.txt"), "STARTED\n");
+            index(evidence, archive.getName(), "STARTED");
             return new ProtocolMetaData();
         } catch (Throwable failure) {
             try {
                 java.io.StringWriter trace = new java.io.StringWriter();
                 failure.printStackTrace(new java.io.PrintWriter(trace));
                 Files.writeString(evidence.resolve("failure.txt"), trace.toString());
+                Files.writeString(evidence.resolve("outcome.txt"), "FAILED\n");
+                index(evidence, archive.getName(), "FAILED");
             } catch (java.io.IOException writing) { failure.addSuppressed(writing); }
-            cleanup();
+            try { cleanup(); } catch (Throwable closing) { failure.addSuppressed(closing); }
             throw new DeploymentException("MicroProfile " + component + " deployment failed; evidence: " + evidence, failure);
         }
     }
     @Override public void undeploy(Archive<?> archive) { cleanup(); }
     @Override public void deploy(Descriptor descriptor) { throw new UnsupportedOperationException("Descriptor-only deployments are unsupported"); }
     @Override public void undeploy(Descriptor descriptor) { }
-    private static void cleanup() {
-        try { if (CurrentDeployment.endpoint != null) CurrentDeployment.endpoint.close(); }
-        catch (Exception failure) { throw new IllegalStateException("Cannot stop TCK HTTP endpoint", failure); }
-        finally {
-            CurrentDeployment.endpoint = null;
-            try { if (CurrentDeployment.container != null) CurrentDeployment.container.close(); }
-            finally {
-                CurrentDeployment.container = null;
-                CurrentDeployment.context = null;
-                CurrentDeployment.request = null;
-                if (CurrentDeployment.loader != null) {
-                    org.eclipse.microprofile.config.spi.ConfigProviderResolver.instance()
-                        .releaseConfig(io.smallrye.config.Config.getOrCreate(CurrentDeployment.loader));
-                    try { CurrentDeployment.loader.close(); } catch (java.io.IOException failure) { throw new java.io.UncheckedIOException(failure); }
-                }
-                CurrentDeployment.loader = null;
-                if (CurrentDeployment.previousLoader != null) Thread.currentThread().setContextClassLoader(CurrentDeployment.previousLoader);
+    static void cleanup() {
+        // Stop accepting requests before destroying test-owned dependents and the container. Each
+        // cleanup step still runs if a previous step failed; never retain a stale deployment globally.
+        List<AutoCloseable> closing = new ArrayList<>(CurrentDeployment.endpoints);
+        Collections.reverse(closing);
+        CurrentDeployment.endpoints.clear();
+        closing.add(MicronautTestEnricher::releaseAll);
+        if (CurrentDeployment.container != null) closing.add(CurrentDeployment.container);
+        if (CurrentDeployment.config != null && CurrentDeployment.configResolver != null) {
+            var config = CurrentDeployment.config;
+            var resolver = CurrentDeployment.configResolver;
+            closing.add(() -> resolver.releaseConfig(config));
+        }
+        if (CurrentDeployment.loader != null) closing.add(CurrentDeployment.loader);
+        Throwable failure = null;
+        try {
+            for (AutoCloseable resource : closing) {
+                try { resource.close(); }
+                catch (Throwable e) { if (failure == null) failure = e; else failure.addSuppressed(e); }
+            }
+        } finally {
+            CurrentDeployment.container = null;
+            CurrentDeployment.context = null;
+            CurrentDeployment.request = null;
+            CurrentDeployment.loader = null;
+            CurrentDeployment.config = null;
+            CurrentDeployment.configResolver = null;
+            CurrentDeployment.uri = null;
+            if (CurrentDeployment.previousConfigResolver != null) {
+                org.eclipse.microprofile.config.spi.ConfigProviderResolver.setInstance(CurrentDeployment.previousConfigResolver);
+                CurrentDeployment.previousConfigResolver = null;
+            }
+            if (CurrentDeployment.previousLoader != null) {
+                Thread.currentThread().setContextClassLoader(CurrentDeployment.previousLoader);
+                CurrentDeployment.previousLoader = null;
             }
         }
+        if (failure != null) throw new IllegalStateException("Cannot clean up TCK deployment", failure);
+    }
+    private static void index(Path evidence, String archive, String outcome) throws java.io.IOException {
+        // Suites use one serial fork at a time. Include the fork identity because NEXT restarts in each
+        // JVM; otherwise different test classes overwrite a same-named archive's diagnostics.
+        Files.writeString(evidence.getParent().resolve("deployment-index.tsv"),
+            FORK + "\t" + archive + "\t" + outcome + "\t" + evidence.getFileName() + "\n",
+            java.nio.charset.StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+    private static List<String> archiveExtensions(Archive<?> archive, String service) throws java.io.IOException {
+        Set<String> names = new LinkedHashSet<>();
+        for (var entry : archive.getContent().entrySet()) {
+            var asset = entry.getValue().getAsset();
+            if (asset instanceof ArchiveAsset nested) {
+                names.addAll(archiveExtensions(nested.getArchive(), service));
+            } else {
+                String path = entry.getKey().get().substring(1);
+                if (path.equals(service) || path.equals("WEB-INF/classes/" + service)) {
+                    try (var input = asset.openStream()) {
+                        for (String line : new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\n")) {
+                            String name = line.split("#", 2)[0].trim();
+                            if (!name.isEmpty()) names.add(name);
+                        }
+                    }
+                }
+            }
+        }
+        return List.copyOf(names);
     }
     private static void collect(Archive<?> archive, Set<String> classes) {
         for (var entry : archive.getContent().entrySet()) {

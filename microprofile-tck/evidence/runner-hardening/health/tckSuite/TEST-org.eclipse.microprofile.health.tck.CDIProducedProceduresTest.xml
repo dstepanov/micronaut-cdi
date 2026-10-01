@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.CDIProducedProceduresTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:09:35.419Z" hostname="denis-mbp.local" time="1.433">
+  <properties/>
+  <testcase name="testFailureReadinessResponsePayload" classname="org.eclipse.microprofile.health.tck.CDIProducedProceduresTest" time="0.108"/>
+  <testcase name="testSuccessStartupResponsePayload" classname="org.eclipse.microprofile.health.tck.CDIProducedProceduresTest" time="0.003"/>
+  <testcase name="testSuccessfulLivenessResponsePayload" classname="org.eclipse.microprofile.health.tck.CDIProducedProceduresTest" time="0.003"/>
+  <system-out><![CDATA[{"status":"DOWN","checks":[{"name":"cdi-produced-failed-check","status":"DOWN"}]}
+{"status":"UP","checks":[{"name":"cdi-produced-successful-check","status":"UP"}]}
+{"status":"UP","checks":[{"name":"cdi-produced-successful-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:09:36 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: CDIProducedProceduresTest#testFailureReadinessResponsePayload
+Oct 01, 2026 5:09:36 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: CDIProducedProceduresTest#testSuccessStartupResponsePayload
+Oct 01, 2026 5:09:36 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: CDIProducedProceduresTest#testSuccessfulLivenessResponsePayload
+]]></system-err>
+</testsuite>

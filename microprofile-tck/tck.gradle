@@ -32,26 +32,48 @@ tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none
 
 def suiteFile = layout.buildDirectory.file('suite.xml')
 def suite = tasks.register('upstreamSuite') {
-    dependsOn unpack
+    dependsOn unpack, tasks.named('testClasses')
+    inputs.files(sourceSets.test.output.classesDirs)
+    inputs.files(sourceSets.test.runtimeClasspath)
     inputs.dir(layout.buildDirectory.dir('upstream'))
     inputs.property('component', mpTck.component)
     inputs.property('framework', mpTck.framework)
     outputs.file(suiteFile)
     outputs.file(layout.buildDirectory.file('selected-tests.txt'))
+    outputs.file(layout.buildDirectory.file('test-discovery.tsv'))
     doLast {
         def classes = []
-        if (mpTck.component == 'reactive-streams') {
-            classes << 'io.micronaut.cdi.mptck.streams.SmallRyeStreamsTck'
-        } else {
-            fileTree(layout.buildDirectory.dir('upstream')).matching { include '**/*.java' }.each { source ->
+        def inventory = []
+        def urls = sourceSets.test.runtimeClasspath.files.collect { it.toURI().toURL() } as URL[]
+        // Inspect compiled binaries without initialization. This includes inherited tests, class-level
+        // TestNG annotations and factories that a source-only @Test expression silently omitted.
+        def loader = new URLClassLoader(urls, ClassLoader.getPlatformClassLoader())
+        try {
+            fileTree(layout.buildDirectory.dir('upstream')).matching { include '**/*.java' }.files.sort { it.path }.each { source ->
                 def code = source.text
-                def pkg = (code =~ /(?m)^package\s+([\w.]+)\s*;/)
-                def type = (code =~ /(?m)^public\s+(?:final\s+)?class\s+(\w+)/)
-                if (pkg.find() && type.find() && (code =~ /@Test\b/).find()) {
-                    classes << "${pkg.group(1)}.${type.group(1)}"
+                def pkg = (code =~ /(?m)^\s*package\s+([\w.]+)\s*;/)
+                def type = (code =~ /(?m)^\s*public\s+(?:(?:final|abstract|strictfp)\s+)*class\s+(\w+)/)
+                if (!pkg.find() || !type.find()) {
+                    inventory << "${source.name}\tdeclaration is not a public class"
+                    return
                 }
+                def name = "${pkg.group(1)}.${type.group(1)}"
+                def candidate = Class.forName(name, false, loader)
+                def concrete = !java.lang.reflect.Modifier.isAbstract(candidate.modifiers)
+                def annotations = candidate.annotations.collect { it.annotationType().name }
+                def testAnnotations = mpTck.framework == 'junit4' ? ['org.junit.Test'] : ['org.testng.annotations.Test', 'org.testng.annotations.Factory']
+                def methods = candidate.methods.findAll { method ->
+                    method.annotations.any { annotation -> testAnnotations.contains(annotation.annotationType().name) }
+                }
+                def selected = concrete && (annotations.any { testAnnotations.contains(it) } || !methods.isEmpty())
+                if (selected) classes << name
+                inventory << "${name}\t${selected ? 'selected' : concrete ? 'support class' : 'abstract class'}\t${methods.collect { it.declaringClass.name + '#' + it.name }.sort().join(',')}"
             }
-        }
+            if (mpTck.component == 'reactive-streams') classes << 'io.micronaut.cdi.mptck.streams.SmallRyeStreamsTck'
+        } finally { loader.close() }
+        classes = classes.unique().sort()
+        if (classes.isEmpty()) throw new GradleException("No concrete upstream test classes selected for ${mpTck.component}")
+        layout.buildDirectory.file('test-discovery.tsv').get().asFile.text = 'class\tselection\ttest-or-factory-methods\n' + inventory.join('\n') + '\n'
         suiteFile.get().asFile.text = '<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">\n' +
             '<suite name="MicroProfile ' + mpTck.component + '" verbose="0"><test name="Upstream"><classes>\n' +
             classes.sort().collect { '  <class name="' + it + '"/>' }.join('\n') +
@@ -68,7 +90,7 @@ def suite = tasks.register('upstreamSuite') {
         classpath = sourceSets.test.runtimeClasspath
         if (mpTck.framework == 'junit4') {
             useJUnit()
-            include 'org/eclipse/microprofile/**'
+            scanForTestClasses = false
         } else {
             useTestNG()
             scanForTestClasses = false
@@ -87,10 +109,28 @@ def suite = tasks.register('upstreamSuite') {
         systemProperty 'mp.tck.evidence', layout.buildDirectory.dir("deployments/${mode}").get().asFile.absolutePath
         systemProperty 'smallrye.faulttolerance.mp-compatibility', 'true'
         doFirst {
-            if (mpTck.framework != 'junit4') {
-                include layout.buildDirectory.file('selected-tests.txt').get().asFile.readLines()
-                    .findAll { !it.isBlank() }.collect { it.replace('.', '/') + '.class' }
+            def selected = layout.buildDirectory.file('selected-tests.txt').get().asFile.readLines().findAll { !it.isBlank() }
+            def requested = new LinkedHashSet(filter.includePatterns)
+            // TestNG runs @BeforeClass even for classes whose methods a Gradle --tests filter excludes.
+            // Prune class files as well, so a focused run does not deploy every unrelated TCK archive.
+            if (filter.metaClass.hasProperty(filter, 'commandLineIncludePatterns')) requested.addAll(filter.commandLineIncludePatterns)
+            if (!requested.isEmpty()) {
+                def methodInventory = layout.buildDirectory.file('test-discovery.tsv').get().asFile.readLines().drop(1)
+                    .findAll { it.contains('\tselected\t') }.collectEntries { line ->
+                        def columns = line.split('\t', -1)
+                        [(columns[0]): columns[2].split(',').findAll { !it.isBlank() }.collect { it.substring(it.lastIndexOf('#') + 1) }]
+                    }
+                selected = selected.findAll { name ->
+                    requested.any { pattern ->
+                        def regex = pattern.split('\\*', -1).collect { java.util.regex.Pattern.quote(it) }.join('.*')
+                        def simple = name.substring(name.lastIndexOf('.') + 1)
+                        name.matches(regex) || simple.matches(regex) || pattern.startsWith(name + '.') || pattern.startsWith(simple + '.')
+                            || methodInventory.getOrDefault(name, []).any { method -> (name + '.' + method).matches(regex) || (simple + '.' + method).matches(regex) }
+                    }
+                }
             }
+            if (selected.isEmpty()) throw new GradleException("No upstream test classes match requested filters: ${requested}")
+            include selected.collect { it.replace('.', '/') + '.class' }
             delete layout.buildDirectory.dir("deployments/${mode}")
             systemProperty 'mp.tck.classpath', classpath.asPath
             def manifest = layout.buildDirectory.file("artifacts-${mode}.tsv").get().asFile

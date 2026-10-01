@@ -161,7 +161,8 @@ class DeploymentValidationTest {
     @Test
     void missingOptionalAndCollectionProducersAreDeploymentProblems() {
         for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
-            "java.util.Set<Element>", "java.util.Collection<Element>")) {
+            "java.util.Set<Element>", "java.util.Collection<Element>", "java.util.Map<String, Element>",
+            "java.util.stream.Stream<Element>", "java.lang.Iterable<Element>")) {
             assertRejected("""
                 package invalid;
                 @jakarta.enterprise.context.Dependent
@@ -174,8 +175,20 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void aUserFieldStartingWithDollarStillRequiresAContainerProducer() {
+        assertRejected("""
+            package invalid;
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject java.util.Optional<String> $missing;
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
     void ambiguousOptionalAndCollectionProducersAreDeploymentProblems() {
-        for (String type : java.util.List.of("java.util.Optional<String>", "java.util.List<String>", "java.util.Set<String>")) {
+        for (String type : java.util.List.of("java.util.Optional<String>", "java.util.List<String>", "java.util.Set<String>",
+            "java.util.Map<String, String>", "java.util.stream.Stream<String>", "java.lang.Iterable<String>")) {
             assertRejected("""
                 package invalid;
                 @jakarta.enterprise.context.Dependent
@@ -190,7 +203,7 @@ class DeploymentValidationTest {
 
     static void assertRejected(String source, String expected) {
         RuntimeException failure = assertThrows(RuntimeException.class,
-            () -> InMemoryDeployment.start("invalid.Consumer", source).close());
+            () -> InMemoryDeployment.start("invalid.Consumer", source).close(), source);
         DeploymentException problem = null;
         for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
             if (cause instanceof DeploymentException deployment) {

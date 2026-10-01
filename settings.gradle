@@ -50,8 +50,8 @@ if (providers.gradleProperty('microprofileCompatibility').isPresent()) {
 }
 // External implementations exercised by their unmodified upstream TCKs.
 if (providers.gradleProperty('microprofileTck').isPresent()) {
-    ['support', 'config', 'fault-tolerance', 'health', 'openapi', 'rest-client',
-     'context-propagation', 'reactive-streams', 'reactive-messaging', 'jwt',
+    ['support', 'config', 'config-lite', 'fault-tolerance', 'health', 'openapi', 'rest-client',
+     'context-propagation', 'context-lite', 'reactive-streams', 'reactive-messaging', 'jwt',
      'telemetry-tracing', 'telemetry-metrics', 'telemetry-logs', 'graphql',
      'metrics-api', 'metrics-rest', 'metrics-optional'].each { component ->
         def name = "microprofile-tck-${component}"

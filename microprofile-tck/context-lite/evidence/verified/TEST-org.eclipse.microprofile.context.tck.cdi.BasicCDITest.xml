@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.context.tck.cdi.BasicCDITest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-01T13:48:16.135Z" hostname="denis-mbp.local" time="1.68">
+  <properties/>
+  <testcase name="applicationDefinesProducerOfThreadContext" classname="org.eclipse.microprofile.context.tck.cdi.BasicCDITest" time="0.015"/>
+  <testcase name="applicationDefinesProducerUsingInjectedThreadContext" classname="org.eclipse.microprofile.context.tck.cdi.BasicCDITest" time="0.004"/>
+  <testcase name="testBasicExecutorUsable" classname="org.eclipse.microprofile.context.tck.cdi.BasicCDITest" time="0.004"/>
+  <testcase name="testVerifyInjection" classname="org.eclipse.microprofile.context.tck.cdi.BasicCDITest" time="0.001"/>
+  <system-out><![CDATA[>>> BEGIN Method.applicationDefinesProducerOfThreadContext
+<<< END Method.applicationDefinesProducerOfThreadContext SUCCESS
+>>> BEGIN Method.applicationDefinesProducerUsingInjectedThreadContext
+<<< END Method.applicationDefinesProducerUsingInjectedThreadContext SUCCESS
+>>> BEGIN Method.testBasicExecutorUsable
+<<< END Method.testBasicExecutorUsable SUCCESS
+>>> BEGIN Method.testVerifyInjection
+<<< END Method.testVerifyInjection SUCCESS
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:33:26.433Z" hostname="denis-mbp.local" time="0.742">
+  <properties/>
+  <testcase name="testOptionalInjection" classname="org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest" time="0.009"/>
+  <testcase name="testOptionalInjectionWithNoDefaultValueOrElseIsReturned" classname="org.eclipse.microprofile.config.tck.CdiOptionalInjectionTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:33:26 P.M. org.jboss.weld.bootstrap.WeldStartup <clinit>
+INFO: WELD-000900: 6.0.4 (Final)
+Oct 01, 2026 5:33:26 P.M. org.jboss.weld.bootstrap.WeldStartup startContainer
+INFO: WELD-000101: Transactional services not available. Injection of @Inject UserTransaction not available. Transactional observers will be invoked synchronously.
+Oct 01, 2026 5:33:27 P.M. org.jboss.weld.environment.se.WeldContainer fireContainerInitializedEvent
+INFO: WELD-ENV-002003: Weld SE container daa634e1-1c42-4452-a2ea-76bcbf55eecf initialized
+]]></system-err>
+</testsuite>

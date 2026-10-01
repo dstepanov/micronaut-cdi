@@ -14,7 +14,10 @@ public final class CurrentDeployment {
     static ArchiveClassLoader loader;
     static ClassLoader previousLoader;
     static java.nio.file.Path evidence;
-    static AutoCloseable endpoint;
+    static final java.util.List<AutoCloseable> endpoints = new java.util.ArrayList<>();
+    static org.eclipse.microprofile.config.Config config;
+    static org.eclipse.microprofile.config.spi.ConfigProviderResolver configResolver;
+    static org.eclipse.microprofile.config.spi.ConfigProviderResolver previousConfigResolver;
     static URI uri;
 
     public static ApplicationContext context() {

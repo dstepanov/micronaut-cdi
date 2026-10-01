@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.MultipleStartupFailedTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:10:01.811Z" hostname="denis-mbp.local" time="1.417">
+  <properties/>
+  <testcase name="testFailingHealthResponsePayload" classname="org.eclipse.microprofile.health.tck.MultipleStartupFailedTest" time="0.118"/>
+  <testcase name="testFailingStartupResponsePayload" classname="org.eclipse.microprofile.health.tck.MultipleStartupFailedTest" time="0.003"/>
+  <testcase name="testSuccessfulLivenessResponsePayload" classname="org.eclipse.microprofile.health.tck.MultipleStartupFailedTest" time="0.003"/>
+  <testcase name="testSuccessfulReadinessResponsePayload" classname="org.eclipse.microprofile.health.tck.MultipleStartupFailedTest" time="0.003"/>
+  <system-out><![CDATA[{"status":"DOWN","checks":[{"name":"successful-check","status":"UP"},{"name":"successful-check","status":"UP"},{"name":"failed-check","status":"DOWN"}]}
+{"status":"DOWN","checks":[{"name":"failed-check","status":"DOWN"}]}
+{"status":"UP","checks":[{"name":"successful-check","status":"UP"}]}
+{"status":"UP","checks":[{"name":"successful-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:10:03 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: MultipleStartupFailedTest#testFailingHealthResponsePayload
+Oct 01, 2026 5:10:03 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: MultipleStartupFailedTest#testFailingStartupResponsePayload
+Oct 01, 2026 5:10:03 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: MultipleStartupFailedTest#testSuccessfulLivenessResponsePayload
+Oct 01, 2026 5:10:03 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: MultipleStartupFailedTest#testSuccessfulReadinessResponsePayload
+]]></system-err>
+</testsuite>

@@ -7,8 +7,12 @@ import java.util.*;
 
 /** Generated definitions need the runtime package of their host to access package-private TCK beans. */
 final class GeneratedClasses {
-    private static final Map<String, byte[]> DEFINED = new HashMap<>();
+    // Bytecode belongs to the loader that defined it. An unrelated parent loader must not be
+    // mistaken for an already installed deployment; weak keys do not retain finished test loaders.
+    private static final Map<ClassLoader, Map<String, byte[]>> DEFINED = new WeakHashMap<>();
     static void install(Path compiled, Set<String> archive, ClassLoader parent) throws java.io.IOException {
+        Map<String, byte[]> defined;
+        synchronized (DEFINED) { defined = DEFINED.computeIfAbsent(parent, ignored -> new HashMap<>()); }
         Map<String, Class<?>> anchors = new HashMap<>();
         for (String name : archive) {
             try {
@@ -23,7 +27,7 @@ final class GeneratedClasses {
                 name = name.substring(0, name.length() - 6);
                 // The type index describes this archive, so it and its definition stay deployment-local.
                 if (name.contains("CdiTypeIndex")) continue;
-                byte[] known = DEFINED.get(name);
+                byte[] known = defined.get(name);
                 byte[] bytes = Files.readAllBytes(file);
                 if (known != null) {
                     if (!Arrays.equals(known, bytes)) {
@@ -53,7 +57,7 @@ final class GeneratedClasses {
                 try {
                     byte[] bytes = pending.get(name);
                     MethodHandles.privateLookupIn(host, MethodHandles.lookup()).defineClass(bytes);
-                    DEFINED.put(name, bytes);
+                    defined.put(name, bytes);
                     pending.remove(name);
                     progress = true;
                 } catch (IllegalAccessException | LinkageError ignored) {

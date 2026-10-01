@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:09:56.375Z" hostname="denis-mbp.local" time="1.393">
+  <properties/>
+  <testcase name="testFailureLivenessResponsePayload" classname="org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest" time="0.109"/>
+  <testcase name="testSuccessfulReadinessResponsePayload" classname="org.eclipse.microprofile.health.tck.MultipleLivenessFailedTest" time="0.003"/>
+  <system-out><![CDATA[{"status":"DOWN","checks":[{"name":"failed-check","status":"DOWN"},{"name":"successful-check","status":"UP"}]}
+{"status":"UP","checks":[{"name":"successful-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:09:57 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: MultipleLivenessFailedTest#testFailureLivenessResponsePayload
+Oct 01, 2026 5:09:57 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: MultipleLivenessFailedTest#testSuccessfulReadinessResponsePayload
+]]></system-err>
+</testsuite>

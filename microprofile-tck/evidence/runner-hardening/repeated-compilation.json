@@ -1,0 +1,8 @@
+{
+  "same_source": "HarnessFixtures.java",
+  "difference": "Core annotation type registration instructions omitted after shared runtime registration cache populated",
+  "first_definition_sha256": "9ee96b4576eefda05540cbdea10481909ce1d851f98b7fcd501f3add87febe61",
+  "second_definition_sha256": "17d1ca09a6d22db8cfa4312eb16e4a5608eeb5cbb556b374bb6acb8e63caec0c",
+  "core_location": "core-processor/src/main/java/io/micronaut/inject/annotation/AnnotationMetadataGenUtils.java:addAnnotationDefaultsInternal",
+  "classification": "Shared processor/runtime loader behavior; not proven semantic CDI defect. Changed-byte guard and fork-per-class remain."
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:33:23.906Z" hostname="denis-mbp.local" time="1.349">
+  <properties/>
+  <testcase name="canInjectDefaultPropertyPath" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.016"/>
+  <testcase name="canInjectDynamicValuesViaCdiProvider" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.004"/>
+  <testcase name="canInjectSimpleValuesWhenDefined" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.025"/>
+  <testcase name="injectedValuesAreEqualToProgrammaticValues" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.011"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:33:24 P.M. org.jboss.weld.bootstrap.WeldStartup <clinit>
+INFO: WELD-000900: 6.0.4 (Final)
+Oct 01, 2026 5:33:24 P.M. org.jboss.weld.bootstrap.WeldStartup startContainer
+INFO: WELD-000101: Transactional services not available. Injection of @Inject UserTransaction not available. Transactional observers will be invoked synchronously.
+Oct 01, 2026 5:33:24 P.M. org.jboss.weld.environment.se.WeldContainer fireContainerInitializedEvent
+INFO: WELD-ENV-002003: Weld SE container 5bc746ca-e6ed-4454-bd4e-ab7305f45101 initialized
+]]></system-err>
+</testsuite>

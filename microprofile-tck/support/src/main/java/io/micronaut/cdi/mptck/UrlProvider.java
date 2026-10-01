@@ -9,7 +9,7 @@ import java.net.URL;
 public final class UrlProvider implements ResourceProvider {
     @Override public boolean canProvide(Class<?> type) { return type == URL.class; }
     @Override public Object lookup(ArquillianResource resource, Annotation... annotations) {
-        try { return java.net.URI.create(CurrentDeployment.uri + "/").toURL(); }
+        try { return MicronautTestEnricher.resource(URL.class); }
         catch (java.net.MalformedURLException e) { throw new IllegalStateException(e); }
     }
 }

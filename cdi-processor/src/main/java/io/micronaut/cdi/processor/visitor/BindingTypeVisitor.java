@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Records what the container needs to know of a qualifier or an interceptor binding type without reading the
@@ -60,6 +62,7 @@ public final class BindingTypeVisitor implements TypeElementVisitor<Object, Obje
     private static final String MICRONAUT_NONBINDING = "io.micronaut.context.annotation.NonBinding";
 
     private final Set<String> written = new HashSet<>();
+    private final Map<String, ClassElement> pending = new LinkedHashMap<>();
 
     @Override
     public VisitorKind getVisitorKind() {
@@ -112,6 +115,22 @@ public final class BindingTypeVisitor implements TypeElementVisitor<Object, Obje
     }
 
     private void record(ClassElement type, ClassElement origin, VisitorContext context) {
+        pending.putIfAbsent(type.getName(), origin);
+    }
+
+    @Override
+    public void finish(VisitorContext context) {
+        if (io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.hasPendingEnhancements()) {
+            return;
+        }
+        for (Map.Entry<String, ClassElement> entry : pending.entrySet()) {
+            io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.enhancedAnnotation(entry.getKey())
+                .or(() -> context.getClassElement(entry.getKey()))
+                .ifPresent(type -> write(type, entry.getValue(), context));
+        }
+    }
+
+    private void write(ClassElement type, ClassElement origin, VisitorContext context) {
         if (!written.add(type.getName())) {
             return;
         }

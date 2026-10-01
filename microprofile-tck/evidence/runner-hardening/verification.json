@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-01",
+  "results": {
+    "support:test": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "health:tckSuite": {
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "config:tckImportedSuite": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "config:tckReferenceSuite": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "scope": {
+    "support": "Five contract tests include producer field/initializer/test parameter metadata, private initializer inheritance and unannotated overrides, deferred qualifiers with competing producer, dependent lifecycle, actual HTTP request context, archive BCE execution/reset, resource and service isolation, per-parent generated definitions, and cleanup after failure.",
+    "health": "Complete selected upstream Health suite.",
+    "config": "Only CDIPlainInjectionTest (4 methods) and CdiOptionalInjectionTest (2 methods), in imported and Weld reference modes."
+  },
+  "remaining": [
+    "Changed generated definition bytes cannot be installed twice into the same parent classloader; fresh fork retained. Identical archive recompile can generate differing normal-scope definitions.",
+    "Generic JAX-RS fixture hosting, JWT request setup, Metrics exposition and Telemetry collectors require component endpoint adapters.",
+    "Test entry-point inventory does not automatically classify specification-required and optional groups."
+  ],
+  "runner_source_sha256": {
+    "microprofile-tck/support/build.gradle": "2dbceeeacbba8d2eb5e9650f97450f893ed73feebf5fa175cc7b15e874b774c2",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/ArchiveClassLoader.java": "da75acf99021d6518acfdde44a93d8ca38338c2514e635627e0072eaa9aebb0a",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/CurrentDeployment.java": "dbc30de366d941b68e5afa79e886a60b124085540e4345d7cff1ebeb847461e2",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/DeploymentCompiler.java": "c27afeb33896c8e0667a50bb3b2be73583e7a779405aee9edc45c45b264bc983",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/EndpointAdapter.java": "214a1f086de8cf5087b0edc6194c07f95af4c57d23e10c17872f000a33292783",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/GeneratedClasses.java": "548b32a7115a0f94f63506a3a6c1ac737c8f9b09517bc1fc1d13800087559163",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/HttpEndpoint.java": "4220a955a81eafe1a2fc2ea815106ecf16bdaf7c35f17fdec82c21fc96f64eb2",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/MicronautArquillianExtension.java": "17d3066e0fabd91c3db7df32e395429c464fe225408ef4d119fe74e1a21f58bb",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/MicronautContainerConfiguration.java": "7b101ad1c861706004f0c0577f759da4e2ecda4c29b76264830cbe44d1a4734e",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/MicronautDeployableContainer.java": "cd5c1363ffa91a003b2caa97bd6f3cf80de17a34566f3c3c0f7310458932bc95",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/MicronautTestEnricher.java": "05d32015634fd3f51dcf1503f566d076454b98f47689426e38fa9947fb5de272",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/ReferenceAnchor.java": "037584cd2c7ad27aaafe93afd162d62fb06f6153ee86180bb9abe0e6768f1f7d",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/TckProgress.java": "82eaebfce30d953538860d0bd002d5d3deeda6f3514ec5376f77850452a3fe42",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/TestInjectionPoint.java": "704ee6ea8355e6110b41697e8f50eee21fbfbf8c5271ca04be148e18be9bfe96",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/UriProvider.java": "7dbc7150fdcd9fac333ddf83ac293c05013f62c9c4ded702b95fa7cca518fefa",
+    "microprofile-tck/support/src/main/java/io/micronaut/cdi/mptck/UrlProvider.java": "8fc5a86e9639cc0be8c5392285d547345da09d3af603b653f66fb3c29eef1bd2",
+    "microprofile-tck/support/src/test/java/io/micronaut/cdi/mptck/RunnerContractsTest.java": "b6c59e7cb469c85b0104442fc7af515db2a8f80a49ab701a705e7568a7558315",
+    "microprofile-tck/support/src/test/java/io/micronaut/cdi/mptck/fixtures/HarnessFixtures.java": "aee730f31798cc21f87864258a8c4ffb78983880a47733b0bc8bfb62a3e1d1c2",
+    "microprofile-tck/tck.gradle": "3bcbda7f51d5788943c61e4ab45b6e572ccf1da16ff2417a8d7da2644a3bd086"
+  },
+  "core_checkout": "build/optional-collection-core",
+  "interceptors_checkout": "build/fuzz-interceptors"
+}

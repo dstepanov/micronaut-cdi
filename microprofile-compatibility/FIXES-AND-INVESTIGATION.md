@@ -67,9 +67,9 @@ matches Weld and no longer includes the competing element producer.
 
 ## Implemented change for the two investigated cases
 
-The proposed strict CDI path is implemented in the Core patch plus CDI processor service and deployment
-validation. Both codebases and the related tests pass with the patched Core checkout. This is an unpublished
-Core integration requirement: using an unpatched processor snapshot does not enable the early service hook.
+The current strict CDI path uses the Core `@ResolveWith` / `BeanInjectionProvider` API and a context-managed
+CDI provider, replacing the earlier processor service. Both codebases and related tests pass with the patched
+Core checkout. Until the API is published, both the patched processor and runtime are required.
 See [Core integration](../core-integration/README.md) for the patch, required checkout and build commands.
 
 The unmodified Config TCK's `CDIPlainInjectionTest` and `CdiOptionalInjectionTest` pass **all 6 methods** in
@@ -79,7 +79,12 @@ types that the native vendor extension would register. This was already a setup 
 baseline. The [three-class diagnostic evidence](../core-integration/evidence/config-three-class-cases.json)
 preserves the failure and skips; they are not counted as passed tests.
 
-## Verification
+That imported-mode blocker is now resolved by the separate build-compatible Config adapter. Its complete
+unchanged suite passes 378 tests in 34 classes with no failures or skips. The current CDI verification passes
+332 Java tests, 833 configured TCK tests and 55 reflection-free tests. See
+[current integration work](../microprofile-tck/INTEGRATION-PLAN.md) for the provider, adapter and runner changes.
+
+## Earlier campaign verification
 
 - **323** Java CDI tests pass, including the array and new Provider regressions.
 - **833** configured CDI TCK tests pass.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.JsonSchemaValidationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:09:54.528Z" hostname="denis-mbp.local" time="1.488">
+  <properties/>
+  <testcase name="testPayloadJsonVerifiesWithTheSpecificationSchema" classname="org.eclipse.microprofile.health.tck.JsonSchemaValidationTest" time="0.247"/>
+  <system-out><![CDATA[{"status":"UP","checks":[{"name":"successful-check","status":"UP"},{"name":"successful-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:09:55 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: JsonSchemaValidationTest#testPayloadJsonVerifiesWithTheSpecificationSchema
+]]></system-err>
+</testsuite>

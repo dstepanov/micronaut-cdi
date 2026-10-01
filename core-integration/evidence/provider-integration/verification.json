@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-01",
+  "coreHead": "5cf87331980f5c73c7b7e809096b5cba5e642e34",
+  "coreBase": "9af0b30128966a93a24172c30342eb468cedb773",
+  "corePr": "https://github.com/micronaut-projects/micronaut-core/pull/13611",
+  "interceptorPr": "https://github.com/dstepanov/micronaut-jakarta-interceptors/pull/7",
+  "checks": {
+    "core": {
+      "classes": 2,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "build/optional-collection-core/inject-java/build/test-results/test"
+    },
+    "java": {
+      "classes": 104,
+      "tests": 332,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "test-suite-java/build/test-results/test"
+    },
+    "cdiTck": {
+      "classes": 363,
+      "tests": 833,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "cdi-tck/build/test-results/tckSuite"
+    },
+    "noReflection": {
+      "classes": 14,
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "test-suite-no-reflection/build/test-results/test"
+    },
+    "configLite": {
+      "classes": 34,
+      "tests": 378,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "microprofile-tck/config/build/test-results/tckLiteSuite"
+    },
+    "contextLite": {
+      "classes": 1,
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "microprofile-tck/context-lite/build/test-results/test"
+    },
+    "runner": {
+      "classes": 1,
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xmlDirectory": "microprofile-tck/support/build/test-results/test"
+    }
+  },
+  "limitations": [
+    "Component and configured CDI TCK results do not establish full MicroProfile platform certification.",
+    "Context session/conversation and JTA integrations remain unsupported or unverified.",
+    "Multiple changed deployments in one parent test loader remain unsupported.",
+    "General synthetic beans with multiple unrelated declared types require further runtime support."
+  ]
+}

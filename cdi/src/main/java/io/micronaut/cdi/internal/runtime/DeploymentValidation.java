@@ -48,8 +48,8 @@ import java.util.Set;
  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
  * {@code Event}, the injection point itself - are left to their own lateness, and so are injection points
- * marked nullable and the stream/map aggregation supplied by Micronaut. Optional and collection injection
- * points require a bean of their full declared type, just like other CDI injection points.</p>
+ * marked nullable. Container injection points require a bean of their full declared type, just like other
+ * CDI injection points.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -86,17 +86,17 @@ final class DeploymentValidation {
                 continue;
             }
             for (Argument<?> argument : definition.getConstructor().getArguments()) {
-                validate(definition, argument, true);
+                validate(definition, argument);
             }
             for (FieldInjectionPoint<?, ?> field : definition.getInjectedFields()) {
-                validate(definition, field.asArgument(), true);
+                validate(definition, field.asArgument());
             }
             for (MethodInjectionPoint<?, ?> method : definition.getInjectedMethods()) {
                 if (method.isPostConstructMethod() || method.isPreDestroyMethod()) {
                     continue;
                 }
                 for (Argument<?> argument : method.getArguments()) {
-                    validate(definition, argument, true);
+                    validate(definition, argument);
                 }
             }
             validateDisposer(definition, beans);
@@ -139,7 +139,7 @@ final class DeploymentValidation {
                 Argument<?>[] arguments = executable.getArguments();
                 for (int i = 0; i < arguments.length; i++) {
                     if (i != disposed) {
-                        validate(definition, arguments[i], false);
+                        validate(definition, arguments[i]);
                     }
                 }
                 return;
@@ -161,7 +161,7 @@ final class DeploymentValidation {
             Argument<?>[] arguments = method.getArguments();
             for (int i = 0; i < arguments.length; i++) {
                 if (i != observed) {
-                    validate(definition, arguments[i], false);
+                    validate(definition, arguments[i]);
                 }
             }
         }
@@ -190,18 +190,6 @@ final class DeploymentValidation {
             }
         }
         return false;
-    }
-
-    /**
-     * Whether Micronaut injects the beans of the element type at the injection point rather than a bean of its
-     * type: a stream or a map, and Iterable types that are not Collections. Arrays, Optional and Collections
-     * are resolved as beans of their declared type.
-     */
-    private static boolean isCollectedByMicronaut(Argument<?> argument) {
-        Class<?> type = argument.getType();
-        return (Iterable.class.isAssignableFrom(type) && !java.util.Collection.class.isAssignableFrom(type))
-            || java.util.stream.Stream.class.isAssignableFrom(type)
-            || java.util.Map.class.isAssignableFrom(type);
     }
 
     /**
@@ -237,17 +225,13 @@ final class DeploymentValidation {
      * Resolves the injection point the way the container resolves it, and reports the bean it resolves to
      * where that bean is in a normal scope and cannot be proxied.
      */
-    private void validate(BeanDefinition<?> definition, Argument<?> argument, boolean injectedByMicronaut) {
+    private void validate(BeanDefinition<?> definition, Argument<?> argument) {
         if (LAZY_KINDS.contains(argument.getType().getName())
-            || isContainerMachinery(argument)
-            || argument.getName().startsWith("$")) {
+            || isContainerMachinery(argument)) {
             return;
         }
-        if (argument.isNullable() || injectedByMicronaut && isCollectedByMicronaut(argument)) {
-            // an injection point Micronaut resolves by its own rules: an optional one, and a collection that
-            // Micronaut injects - into a field, a constructor or an initializer - which is the beans of its
-            // element type and is empty rather than unsatisfied where there are none. The parameter of an
-            // observer or a disposer method is resolved by the container as a bean of its type
+        if (argument.isNullable()) {
+            // An explicitly nullable injection point may have no bean.
             return;
         }
         List<CdiQualifier> qualifiers = CdiQualifier.declared(argument.getAnnotationMetadata());

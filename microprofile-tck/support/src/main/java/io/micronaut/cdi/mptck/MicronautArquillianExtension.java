@@ -22,8 +22,11 @@ public final class MicronautArquillianExtension implements LoadableExtension {
             if (CurrentDeployment.request != null) activated.set(CurrentDeployment.request.activate());
         }
         public void after(@Observes After event) {
-            if (activated.get() && CurrentDeployment.request != null) CurrentDeployment.request.deactivate();
-            activated.remove();
+            try { MicronautTestEnricher.releaseParameters(); }
+            finally {
+                try { if (activated.get() && CurrentDeployment.request != null) CurrentDeployment.request.deactivate(); }
+                finally { activated.remove(); }
+            }
         }
     }
 }

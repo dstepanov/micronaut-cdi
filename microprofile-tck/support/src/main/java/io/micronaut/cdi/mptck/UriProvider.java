@@ -10,7 +10,7 @@ import java.net.URI;
 public final class UriProvider implements ResourceProvider {
     @Override public boolean canProvide(Class<?> type) { return type == URI.class; }
     @Override public Object lookup(ArquillianResource resource, Annotation... annotations) {
-        return System.getProperty("mp.tck.component").equals("graphql")
-            ? URI.create(CurrentDeployment.uri + "/") : CurrentDeployment.uri;
+        try { return MicronautTestEnricher.resource(URI.class); }
+        catch (java.net.MalformedURLException e) { throw new IllegalStateException(e); }
     }
 }

@@ -1,0 +1,360 @@
+--- first-compilation
+
++++ after-runtime-initialization
+
+@@ -1029,32 +1029,18 @@
+
+       2065: putstatic     #196                // Field $EXPOSED_TYPES:Ljava/util/Set;
+       2068: goto          2071
+       2071: invokestatic  #202                // Method $micronaut_load_class_value_2:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2074: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2077: invokestatic  #209                // Method $micronaut_load_class_value_3:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2080: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2083: invokestatic  #212                // Method $micronaut_load_class_value_4:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2086: ldc           #81                 // String normal
+-      2088: iconst_0
+-      2089: invokestatic  #87                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+-      2092: invokestatic  #49                 // InterfaceMethod java/util/Map.of:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map;
+-      2095: invokestatic  #216                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationDefaults:(Lio/micronaut/core/annotation/AnnotationClassValue;Ljava/util/Map;)V
+-      2098: invokestatic  #219                // Method $micronaut_load_class_value_5:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2101: ldc           #221                // String passivating
+-      2103: iconst_0
+-      2104: invokestatic  #87                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+-      2107: invokestatic  #49                 // InterfaceMethod java/util/Map.of:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map;
+-      2110: invokestatic  #216                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationDefaults:(Lio/micronaut/core/annotation/AnnotationClassValue;Ljava/util/Map;)V
+-      2113: invokestatic  #224                // Method $micronaut_load_class_value_6:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2116: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2119: invokestatic  #74                 // Method $micronaut_load_class_value_1:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2122: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2125: invokestatic  #227                // Method $micronaut_load_class_value_7:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2128: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2131: invokestatic  #230                // Method $micronaut_load_class_value_8:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2134: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2137: invokestatic  #233                // Method $micronaut_load_class_value_9:()Lio/micronaut/core/annotation/AnnotationClassValue;
+-      2140: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationType:(Lio/micronaut/core/annotation/AnnotationClassValue;)V
+-      2143: return
++      2074: ldc           #81                 // String normal
++      2076: iconst_0
++      2077: invokestatic  #87                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
++      2080: invokestatic  #49                 // InterfaceMethod java/util/Map.of:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map;
++      2083: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationDefaults:(Lio/micronaut/core/annotation/AnnotationClassValue;Ljava/util/Map;)V
++      2086: invokestatic  #209                // Method $micronaut_load_class_value_3:()Lio/micronaut/core/annotation/AnnotationClassValue;
++      2089: ldc           #211                // String passivating
++      2091: iconst_0
++      2092: invokestatic  #87                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
++      2095: invokestatic  #49                 // InterfaceMethod java/util/Map.of:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map;
++      2098: invokestatic  #206                // Method io/micronaut/inject/annotation/DefaultAnnotationMetadata.registerAnnotationDefaults:(Lio/micronaut/core/annotation/AnnotationClassValue;Ljava/util/Map;)V
++      2101: return
+       Exception table:
+          from    to  target type
+            968  1993  1996   Class java/lang/Throwable
+@@ -1064,7 +1050,7 @@
+
+     Code:
+          0: new           #2                  // class io/micronaut/cdi/mptck/fixtures/$HarnessFixtures$RequestBean$Definition
+          3: dup
+-         4: invokespecial #236                // Method "<init>":()V
++         4: invokespecial #214                // Method "<init>":()V
+          7: areturn
+ 
+   public boolean isProxiedBean();
+@@ -1091,7 +1077,7 @@
+
+     Code:
+          0: new           #147                // class io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean
+          3: dup
+-         4: invokespecial #248                // Method io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean."<init>":()V
++         4: invokespecial #226                // Method io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean."<init>":()V
+          7: areturn
+ 
+   public java.lang.Object dispose(io.micronaut.context.BeanResolutionContext, io.micronaut.context.BeanContext, java.lang.Object);
+@@ -1100,11 +1086,11 @@
+
+          1: aload_1
+          2: aload_2
+          3: aload_3
+-         4: invokevirtual #253                // Method preDestroy:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;Ljava/lang/Object;)Ljava/lang/Object;
++         4: invokevirtual #231                // Method preDestroy:(Lio/micronaut/context/BeanResolutionContext;Lio/micronaut/context/BeanContext;Ljava/lang/Object;)Ljava/lang/Object;
+          7: checkcast     #147                // class io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean
+         10: astore        4
+         12: aload         4
+-        14: invokevirtual #255                // Method io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean.close:()V
++        14: invokevirtual #233                // Method io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean.close:()V
+         17: aload         4
+         19: areturn
+ 
+@@ -1116,9 +1102,9 @@
+
+   public boolean isCandidateBean(io.micronaut.core.type.Argument);
+     Code:
+          0: aload_1
+-         1: invokeinterface #268,  1          // InterfaceMethod io/micronaut/core/type/Argument.getType:()Ljava/lang/Class;
++         1: invokeinterface #246,  1          // InterfaceMethod io/micronaut/core/type/Argument.getType:()Ljava/lang/Class;
+          6: ldc           #147                // class io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean
+-         8: invokevirtual #274                // Method java/lang/Class.isAssignableFrom:(Ljava/lang/Class;)Z
++         8: invokevirtual #252                // Method java/lang/Class.isAssignableFrom:(Ljava/lang/Class;)Z
+         11: ireturn
+ 
+   public io.micronaut.inject.ReplacesDefinition getReplacesDefinition();
+@@ -1136,15 +1122,15 @@
+
+          9: aconst_null
+         10: aconst_null
+         11: getstatic     #171                // Field $EXEC:Lio/micronaut/cdi/mptck/fixtures/$HarnessFixtures$RequestBean$Definition$Exec;
+-        14: checkcast     #281                // class io/micronaut/inject/ExecutableMethodsDefinition
++        14: checkcast     #259                // class io/micronaut/inject/ExecutableMethodsDefinition
+         17: aconst_null
+         18: getstatic     #189                // Field $INFO:Lio/micronaut/context/AbstractInitializableBeanDefinition$PrecalculatedInfo;
+         21: iconst_0
+-        22: anewarray     #283                // class io/micronaut/context/condition/Condition
++        22: anewarray     #261                // class io/micronaut/context/condition/Condition
+         25: iconst_0
+-        26: anewarray     #283                // class io/micronaut/context/condition/Condition
++        26: anewarray     #261                // class io/micronaut/context/condition/Condition
+         29: getstatic     #173                // Field $FAILURE:Ljava/lang/Throwable;
+-        32: invokespecial #286                // Method io/micronaut/context/AbstractInitializableBeanDefinitionAndReference."<init>":(Ljava/lang/Class;Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodOrFieldReference;Lio/micronaut/core/annotation/AnnotationMetadata;[Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodReference;[Lio/micronaut/context/AbstractInitializableBeanDefinition$FieldReference;[Lio/micronaut/context/AbstractInitializableBeanDefinition$AnnotationReference;Lio/micronaut/inject/ExecutableMethodsDefinition;Ljava/util/Map;Lio/micronaut/context/AbstractInitializableBeanDefinition$PrecalculatedInfo;[Lio/micronaut/context/condition/Condition;[Lio/micronaut/context/condition/Condition;Ljava/lang/Throwable;)V
++        32: invokespecial #264                // Method io/micronaut/context/AbstractInitializableBeanDefinitionAndReference."<init>":(Ljava/lang/Class;Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodOrFieldReference;Lio/micronaut/core/annotation/AnnotationMetadata;[Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodReference;[Lio/micronaut/context/AbstractInitializableBeanDefinition$FieldReference;[Lio/micronaut/context/AbstractInitializableBeanDefinition$AnnotationReference;Lio/micronaut/inject/ExecutableMethodsDefinition;Ljava/util/Map;Lio/micronaut/context/AbstractInitializableBeanDefinition$PrecalculatedInfo;[Lio/micronaut/context/condition/Condition;[Lio/micronaut/context/condition/Condition;Ljava/lang/Throwable;)V
+         35: return
+ 
+   public io.micronaut.cdi.mptck.fixtures.$HarnessFixtures$RequestBean$Definition();
+@@ -1152,7 +1138,7 @@
+
+          0: aload_0
+          1: ldc           #147                // class io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean
+          3: getstatic     #153                // Field $CONSTRUCTOR:Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodOrFieldReference;
+-         6: invokespecial #291                // Method "<init>":(Ljava/lang/Class;Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodOrFieldReference;)V
++         6: invokespecial #269                // Method "<init>":(Ljava/lang/Class;Lio/micronaut/context/AbstractInitializableBeanDefinition$MethodOrFieldReference;)V
+          9: return
+ 
+   public boolean isParallel();
+@@ -1165,7 +1151,7 @@
+
+          0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+          3: dup
+          4: ldc           #147                // class io/micronaut/cdi/mptck/fixtures/HarnessFixtures$RequestBean
+-         6: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
++         6: invokespecial #273                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+          9: areturn
+         10: nop
+         11: nop
+@@ -1173,8 +1159,8 @@
+
+         13: astore_0
+         14: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+         17: dup
+-        18: ldc_w         #297                // String io.micronaut.cdi.mptck.fixtures.HarnessFixtures$RequestBean
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
++        18: ldc_w         #275                // String io.micronaut.cdi.mptck.fixtures.HarnessFixtures$RequestBean
++        21: invokespecial #278                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+         24: areturn
+         25: nop
+         26: nop
+@@ -1187,8 +1173,8 @@
+
+     Code:
+          0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+          3: dup
+-         4: ldc_w         #302                // class io/micronaut/runtime/context/scope/ScopedProxy
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
++         4: ldc_w         #280                // class io/micronaut/runtime/context/scope/ScopedProxy
++         7: invokespecial #273                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+         10: areturn
+         11: nop
+         12: nop
+@@ -1197,7 +1183,7 @@
+
+         15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+         18: dup
+         19: ldc           #65                 // String io.micronaut.runtime.context.scope.ScopedProxy
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
++        21: invokespecial #278                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+         24: areturn
+         25: nop
+         26: nop
+@@ -1210,54 +1196,8 @@
+
+     Code:
+          0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+          3: dup
+-         4: ldc_w         #304                // class jakarta/enterprise/context/RequestScoped
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+-        10: areturn
+-        11: nop
+-        12: nop
+-        13: athrow
+-        14: astore_0
+-        15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-        18: dup
+-        19: ldc           #89                 // String jakarta.enterprise.context.RequestScoped
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+-        24: areturn
+-        25: nop
+-        26: nop
+-        27: athrow
+-      Exception table:
+-         from    to  target type
+-             0    11    14   Class java/lang/Throwable
+-
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_3();
+-    Code:
+-         0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-         3: dup
+-         4: ldc_w         #306                // class io/micronaut/cdi/internal/metadata/CdiRequestScope
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+-        10: areturn
+-        11: nop
+-        12: nop
+-        13: athrow
+-        14: astore_0
+-        15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-        18: dup
+-        19: ldc           #61                 // String io.micronaut.cdi.internal.metadata.CdiRequestScope
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+-        24: areturn
+-        25: nop
+-        26: nop
+-        27: athrow
+-      Exception table:
+-         from    to  target type
+-             0    11    14   Class java/lang/Throwable
+-
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_4();
+-    Code:
+-         0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-         3: dup
+-         4: ldc_w         #308                // class io/micronaut/cdi/internal/metadata/CdiScope
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
++         4: ldc_w         #282                // class io/micronaut/cdi/internal/metadata/CdiScope
++         7: invokespecial #273                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+         10: areturn
+         11: nop
+         12: nop
+@@ -1266,7 +1206,7 @@
+
+         15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+         18: dup
+         19: ldc           #79                 // String io.micronaut.cdi.internal.metadata.CdiScope
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
++        21: invokespecial #278                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+         24: areturn
+         25: nop
+         26: nop
+@@ -1275,12 +1215,12 @@
+
+          from    to  target type
+              0    11    14   Class java/lang/Throwable
+ 
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_5();
++  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_3();
+     Code:
+          0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+          3: dup
+-         4: ldc_w         #310                // class jakarta/enterprise/context/NormalScope
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
++         4: ldc_w         #284                // class jakarta/enterprise/context/NormalScope
++         7: invokespecial #273                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+         10: areturn
+         11: nop
+         12: nop
+@@ -1289,99 +1229,7 @@
+
+         15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+         18: dup
+         19: ldc           #115                // String jakarta.enterprise.context.NormalScope
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+-        24: areturn
+-        25: nop
+-        26: nop
+-        27: athrow
+-      Exception table:
+-         from    to  target type
+-             0    11    14   Class java/lang/Throwable
+-
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_6();
+-    Code:
+-         0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-         3: dup
+-         4: ldc_w         #312                // class io/micronaut/cdi/internal/metadata/CdiApplicationScope
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+-        10: areturn
+-        11: nop
+-        12: nop
+-        13: athrow
+-        14: astore_0
+-        15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-        18: dup
+-        19: ldc           #96                 // String io.micronaut.cdi.internal.metadata.CdiApplicationScope
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+-        24: areturn
+-        25: nop
+-        26: nop
+-        27: athrow
+-      Exception table:
+-         from    to  target type
+-             0    11    14   Class java/lang/Throwable
+-
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_7();
+-    Code:
+-         0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-         3: dup
+-         4: ldc_w         #314                // class io/micronaut/aop/InterceptorBindingDefinitions
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+-        10: areturn
+-        11: nop
+-        12: nop
+-        13: athrow
+-        14: astore_0
+-        15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-        18: dup
+-        19: ldc           #109                // String io.micronaut.aop.InterceptorBindingDefinitions
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+-        24: areturn
+-        25: nop
+-        26: nop
+-        27: athrow
+-      Exception table:
+-         from    to  target type
+-             0    11    14   Class java/lang/Throwable
+-
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_8();
+-    Code:
+-         0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-         3: dup
+-         4: ldc_w         #316                // class io/micronaut/cdi/internal/metadata/CdiBeanTypes
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+-        10: areturn
+-        11: nop
+-        12: nop
+-        13: athrow
+-        14: astore_0
+-        15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-        18: dup
+-        19: ldc           #31                 // String io.micronaut.cdi.internal.metadata.CdiBeanTypes
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+-        24: areturn
+-        25: nop
+-        26: nop
+-        27: athrow
+-      Exception table:
+-         from    to  target type
+-             0    11    14   Class java/lang/Throwable
+-
+-  private static final io.micronaut.core.annotation.AnnotationClassValue $micronaut_load_class_value_9();
+-    Code:
+-         0: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-         3: dup
+-         4: ldc_w         #318                // class jakarta/enterprise/inject/Default
+-         7: invokespecial #295                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/Class;)V
+-        10: areturn
+-        11: nop
+-        12: nop
+-        13: athrow
+-        14: astore_0
+-        15: new           #39                 // class io/micronaut/core/annotation/AnnotationClassValue
+-        18: dup
+-        19: ldc           #98                 // String jakarta.enterprise.inject.Default
+-        21: invokespecial #300                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
++        21: invokespecial #278                // Method io/micronaut/core/annotation/AnnotationClassValue."<init>":(Ljava/lang/String;)V
+         24: areturn
+         25: nop
+         26: nop

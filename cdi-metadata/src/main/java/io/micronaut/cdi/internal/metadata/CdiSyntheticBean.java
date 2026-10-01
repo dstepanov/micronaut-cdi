@@ -64,6 +64,13 @@ public @interface CdiSyntheticBean {
     Class<?>[] types() default {};
 
     /**
+     * The declared bean types with their generic arguments and array dimensions retained.
+     *
+     * @return The complete type records
+     */
+    CdiRecordedType[] typeRecords() default {};
+
+    /**
      * The annotation types of the qualifiers, in the order of the qualifiers.
      *
      * @return The annotation types

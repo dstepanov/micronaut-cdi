@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.micronaut.cdi.microprofile.context.ContextProviderTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-01T13:46:21.988Z" hostname="denis-mbp.local" time="0.258">
+  <properties/>
+  <testcase name="inactiveCaptureMasksReceivingRequestAndRestoresIt()" classname="io.micronaut.cdi.microprofile.context.ContextProviderTest" time="0.156"/>
+  <testcase name="clearedRequestIsFreshPerInvocationAndRestoredAfterFailure()" classname="io.micronaut.cdi.microprofile.context.ContextProviderTest" time="0.018"/>
+  <testcase name="clearedHandleRejectsWrongThreadAndDestroysExactlyOnce()" classname="io.micronaut.cdi.microprofile.context.ContextProviderTest" time="0.015"/>
+  <testcase name="propagatedRequestSharesIdentityAndRestoresWorkerContextWithoutDestroyingOwner()" classname="io.micronaut.cdi.microprofile.context.ContextProviderTest" time="0.017"/>
+  <testcase name="smallRyeBuildersUseServiceProviderAndRealCdiRequestBeans()" classname="io.micronaut.cdi.microprofile.context.ContextProviderTest" time="0.042"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+</testsuite>

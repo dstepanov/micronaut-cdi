@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.SingleReadinessSuccessfulTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:10:12.325Z" hostname="denis-mbp.local" time="1.348">
+  <properties/>
+  <testcase name="testSuccessResponsePayload" classname="org.eclipse.microprofile.health.tck.SingleReadinessSuccessfulTest" time="0.113"/>
+  <system-out><![CDATA[{"status":"UP","checks":[{"name":"successful-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:10:13 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: SingleReadinessSuccessfulTest#testSuccessResponsePayload
+]]></system-err>
+</testsuite>

@@ -108,7 +108,7 @@ final class ArchiveClassLoader extends java.net.URLClassLoader {
             || name.equals("META-INF/services/jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension");
         if (!archiveOnly) {
             for (URL url : Collections.list(super.getResources(name))) {
-                if (!name.startsWith("META-INF/services/") || !url.toString().contains("-tck-")) {
+                if (!name.startsWith("META-INF/services/") || !upstreamTckResource(url)) {
                     urls.add(url);
                 }
             }
@@ -123,6 +123,12 @@ final class ArchiveClassLoader extends java.net.URLClassLoader {
         if (own != null) return new ByteArrayInputStream(own.get(0));
         if (name.equals("META-INF/microprofile-config.properties")) return null;
         return super.getResourceAsStream(name);
+    }
+
+    private static boolean upstreamTckResource(URL url) {
+        // Inspect the upstream artifact filename, not arbitrary path text. Integration artifacts such
+        // as micronaut-microprofile-tck-context-lite are real providers and must remain discoverable.
+        return url.toExternalForm().matches(".*/[^/]*-tck-[0-9][^/]*\\.jar!.*");
     }
 
     private static String resourceName(String name) {

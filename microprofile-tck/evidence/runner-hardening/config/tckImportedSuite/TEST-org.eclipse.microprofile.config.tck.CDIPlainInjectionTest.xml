@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:33:14.713Z" hostname="denis-mbp.local" time="3.444">
+  <properties/>
+  <testcase name="canInjectDefaultPropertyPath" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.01"/>
+  <testcase name="canInjectDynamicValuesViaCdiProvider" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.016"/>
+  <testcase name="canInjectSimpleValuesWhenDefined" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.034"/>
+  <testcase name="injectedValuesAreEqualToProgrammaticValues" classname="org.eclipse.microprofile.config.tck.CDIPlainInjectionTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

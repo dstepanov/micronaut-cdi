@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-01T14:10:05.263Z" hostname="denis-mbp.local" time="1.379">
+  <properties/>
+  <testcase name="testSuccessfulLivenessResponsePayload" classname="org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest" time="0.122"/>
+  <testcase name="testSuccessfulReadinessResponsePayload" classname="org.eclipse.microprofile.health.tck.OnlySuccessfulProcedureTest" time="0.004"/>
+  <system-out><![CDATA[{"status":"UP","checks":[{"name":"successful-check","status":"UP"}]}
+{"status":"UP","checks":[{"name":"successful-check","status":"UP"}]}
+]]></system-out>
+  <system-err><![CDATA[Oct 01, 2026 5:10:06 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: OnlySuccessfulProcedureTest#testSuccessfulLivenessResponsePayload
+Oct 01, 2026 5:10:06 P.M. org.eclipse.microprofile.health.tck.TCKBase beforeMethod
+INFO: Running test: OnlySuccessfulProcedureTest#testSuccessfulReadinessResponsePayload
+]]></system-err>
+</testsuite>
