@@ -463,6 +463,13 @@ as executable methods; a bean without a name, and an application without the mod
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
 
+The `tckSignatureTest` task checks the API dependencies resolved with `micronaut-cdi-reflection` against the
+official CDI 4.1.0 `sigtest-jdk17` baseline, using Jakarta SigTest 2.2 and its Java 17 platform API view.
+It checks `jakarta.decorator`, `jakarta.enterprise` (including subpackages), and `jakarta.interceptor`.
+The EL API is supplied only to resolve the deprecated BeanManager signatures. The task is part of `check`;
+its report is `cdi-tck/build/reports/tckSignatureTest/signatures.txt`. Passing this API check alone does not
+establish TCK conformance; the runtime and language-model tests are separate requirements.
+
 The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 985 `assert` statements, and 186 calls of
 its own assertion helpers, about the language model of
 section 12 — the `ClassInfo`, `MethodInfo`, `Type` and `AnnotationInfo` a build compatible extension reads a
