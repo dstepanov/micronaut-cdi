@@ -8,6 +8,7 @@ import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.inject.Inject;
 import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.Test;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -28,7 +29,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ContainerTypeInjectionTest {
-    enum Shape { OPTIONAL, LIST, SET, COLLECTION, MAP, ITERABLE, STREAM, ARRAY }
+    enum Shape { OPTIONAL, LIST, SET, COLLECTION, MAP, ITERABLE, STREAM, ARRAY, ABSENT }
 
     @Qualifier
     @Retention(RUNTIME)
@@ -183,6 +184,18 @@ class ContainerTypeInjectionTest {
         assertEquals(15, Producers.CREATED.size());
         assertEquals(15, Producers.DISPOSED.size());
         assertTrue(Producers.CREATED.stream().allMatch(Producers.DISPOSED::contains));
+    }
+
+    @Dependent
+    static class NullableContainer {
+        @Inject @Nullable @Container(Shape.ABSENT) List<Value> absent;
+    }
+
+    @Test
+    void missingNullableContainerIsAcceptedByCore() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            assertNull(context.getBean(NullableContainer.class).absent);
+        }
     }
 
     private static void assertValues(Optional<Value> optional, List<Value> list, Set<Value> set) {

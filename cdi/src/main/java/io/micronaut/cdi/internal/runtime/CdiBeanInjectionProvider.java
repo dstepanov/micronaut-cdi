@@ -20,7 +20,6 @@ import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
-import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.inject.Singleton;
@@ -44,16 +43,13 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
     @SuppressWarnings("unchecked")
     @Override
     public <T> @Nullable T get(BeanResolutionContext resolutionContext, Argument<T> argument,
-                               @Nullable Qualifier<T> qualifier, boolean nullable) {
+                               @Nullable Qualifier<T> qualifier) {
         // Resolve qualifiers through CDI's final binding records, including build-time enhancements.
         // Then let the active Core context create the selected definition and retain its dependents.
         Bean<?> selected = container.resolve(container.beansOf(argument,
             CdiQualifier.declared(argument.getAnnotationMetadata())));
         if (selected == null) {
-            if (nullable) {
-                return null;
-            }
-            throw new NoSuchBeanException(argument, qualifier);
+            return null;
         }
         BeanDefinition<T> definition = (BeanDefinition<T>) ((CdiBean<?>) selected).definition();
         return resolutionContext.getBean(CdiInstance.askedAs(argument, definition), CdiInstance.only(definition));
