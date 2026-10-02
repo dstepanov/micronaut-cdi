@@ -1,0 +1,36 @@
+plugins {
+    id 'io.micronaut.build.internal.cdi-base'
+    id 'java-library'
+}
+configurations.all { resolutionStrategy.preferProjectModules() }
+dependencies {
+    api platform(libs.micronaut.core)
+    api projects.micronautCdi
+    api projects.micronautCdiReflection
+    implementation projects.micronautCdiProcessor
+    implementation mn.micronaut.inject.java
+    implementation libs.managed.micronaut.jakarta.interceptors.processor
+    api libs.arquillian.container.spi
+    api libs.arquillian.testng
+    implementation libs.testng
+    implementation libs.arquillian.container.impl
+    implementation libs.arquillian.container.test.impl
+    implementation libs.shrinkwrap.impl
+    implementation libs.shrinkwrap.descriptors
+    // Shared configuration bootstrap; this is the external implementation, not Micronaut Config.
+    api 'io.smallrye.config:smallrye-config:3.18.3'
+}
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none'] }
+
+dependencies { testImplementation libs.testng }
+tasks.named('test', Test) {
+    useTestNG()
+    systemProperty 'mp.tck.component', 'runner-contracts'
+    systemProperty 'mp.tck.mode', 'imported'
+    systemProperty 'mp.tck.sources', file('src/test/java').absolutePath
+    systemProperty 'mp.tck.evidence', layout.buildDirectory.dir('runner-contracts').get().asFile.absolutePath
+    doFirst {
+        delete layout.buildDirectory.dir('runner-contracts')
+        systemProperty 'mp.tck.classpath', sourceSets.test.runtimeClasspath.asPath
+    }
+}
