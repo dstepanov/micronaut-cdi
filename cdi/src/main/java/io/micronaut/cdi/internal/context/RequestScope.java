@@ -371,6 +371,90 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         return currentInstances() != null;
     }
 
+    /**
+     * Captures this container's request without transferring its ownership. Ending a propagation restores
+     * the receiving thread's previous request; only the original request owner destroys the captured beans.
+     * A snapshot must not be started after that owner has ended the request.
+     *
+     * @return A reusable snapshot, including an inactive request when none is active
+     */
+    public Snapshot capture() {
+        Instances captured = currentInstances();
+        return () -> {
+            if (captured != null && !live.contains(captured)) {
+                throw new IllegalStateException("The captured request context has already ended");
+            }
+            return guarded(install(captured)::close);
+        };
+    }
+
+    /**
+     * Captures the cleared form of the current request. An active request becomes a fresh active request
+     * for each invocation; an inactive request remains inactive. Fresh instances belong to the invocation
+     * and are destroyed before the previous receiving context is restored.
+     *
+     * @return A reusable cleared snapshot
+     */
+    public Snapshot captureCleared() {
+        boolean active = isActive();
+        return () -> {
+            if (!active) {
+                return guarded(install(null)::close);
+            }
+            Instances fresh = newInstances();
+            PropagatedContext.Scope installed = install(fresh);
+            try {
+                initializedEvent();
+            } catch (RuntimeException | Error failure) {
+                try {
+                    destroy(fresh);
+                } finally {
+                    installed.close();
+                }
+                throw failure;
+            }
+            return guarded(() -> {
+                try {
+                    endWhileActive(fresh);
+                } finally {
+                    try {
+                        installed.close();
+                    } finally {
+                        destroyedEvent();
+                    }
+                }
+            });
+        };
+    }
+
+    private static PropagatedContext.Scope guarded(Runnable close) {
+        Thread receivingThread = Thread.currentThread();
+        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        return () -> {
+            if (Thread.currentThread() != receivingThread) {
+                throw new IllegalStateException("A request snapshot must end on the thread that began it");
+            }
+            if (closed.compareAndSet(false, true)) {
+                close.run();
+            }
+        };
+    }
+
+    @SuppressWarnings("deprecation")
+    private PropagatedContext.Scope install(@Nullable Instances instances) {
+        PropagatedContext receiving = PropagatedContext.getOrEmpty();
+        PropagatedContext installed = receiving;
+        for (Instances existing : receiving.findAll(Instances.class).toList()) {
+            if (existing.owner() == this) {
+                installed = installed.minus(existing);
+            }
+        }
+        if (instances != null) {
+            installed = installed.plus(instances);
+        }
+        return installed.propagate();
+    }
+
     @Override
     public boolean isRunning() {
         return true;
@@ -430,6 +514,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     private void ended(Instances instances) {
         live.remove(instances);
+    }
+
+    /** An opaque request snapshot. Begin and close its scope on the same receiving thread. */
+    @FunctionalInterface
+    public interface Snapshot {
+        /** @return The handle restoring the receiving thread's previous request */
+        PropagatedContext.Scope begin();
     }
 
     /**
