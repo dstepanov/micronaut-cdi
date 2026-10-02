@@ -15,6 +15,10 @@ plugins {
 // Nothing is vendored: the sources are resolved from Maven Central at build time. They are Apache 2.0 licensed, as
 // this project is.
 configurations {
+    tckDistribution {
+        canBeConsumed = false
+        transitive = false
+    }
     tckSignatureBaseline {
         canBeConsumed = false
         transitive = false
@@ -37,6 +41,7 @@ configurations {
 }
 
 dependencies {
+    tckDistribution libs.cdi.tck.core
     tckSignatureBaseline "jakarta.enterprise:cdi-tck-core-impl:${libs.versions.cdi.tck.get()}:sigtest-jdk17@sig"
     tckSignatureTool 'jakarta.tck:sigtest-maven-plugin:2.2'
     tckSignatureRuntime platform(libs.micronaut.core)
@@ -207,17 +212,13 @@ def prepareTckLibrary = tasks.register('prepareTckLibrary') {
     }
 }
 
-def tckSuite = tasks.register('tckSuite', Test) {
-    description = 'Runs the technology compatibility kit through the Arquillian adapter.'
+def configureTckRunner = {
     group = 'verification'
     dependsOn prepareTckLibrary
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
-    useTestNG {
-        suites file('src/test/resources/tck-suite.xml')
-    }
-    // core mode is what the kit calls running against CDI Lite: the properties of the full profile — a data
-    // source, JMS — are not required and the suite holds the implementation to Lite
+    // Core mode suppresses EE environment requirements (such as a data source and JMS). The TestNG group
+    // exclusions, not this property, select CDI Lite.
     systemProperty 'org.jboss.cdi.tck.cdiCoreMode', 'true'
     systemProperty 'org.jboss.cdi.tck.libraryDirectory', tckLibraryDir.get().asFile.absolutePath
     systemProperty 'org.jboss.cdi.tck.testTimeoutFactor', '100'
@@ -235,9 +236,38 @@ def tckSuite = tasks.register('tckSuite', Test) {
     scanForTestClasses = false
 }
 
+tasks.register('tckSuite', Test) {
+    configure configureTckRunner
+    description = 'Runs the curated TCK regression suite, including selected SE and CDI Full tests.'
+    useTestNG {
+        suites file('src/test/resources/tck-suite.xml')
+    }
+}
+
+def officialTckSuite = tasks.register('officialTckSuite', Sync) {
+    description = 'Extracts the unmodified suite descriptor from the official TCK distribution.'
+    from({ zipTree(configurations.tckDistribution.singleFile) }) {
+        include 'tck-tests.xml'
+    }
+    into layout.buildDirectory.dir('generated/tck-official-suite')
+}
+
+tasks.register('tckLite', Test) {
+    configure configureTckRunner
+    description = 'Runs the official CDI TCK suite with the CDI Lite group exclusions.'
+    dependsOn officialTckSuite
+    useTestNG {
+        suites layout.buildDirectory.file('generated/tck-official-suite/tck-tests.xml').get().asFile
+        excludeGroups 'cdi-full', 'se'
+    }
+    // Gradle does not discover the tests in our output directories; TestNG discovers them in the TCK jar.
+    // Still reject a broken extraction or discovery setup that would otherwise produce a green empty run.
+    failOnNoDiscoveredTests = true
+}
+
 // the kit is the measure of done, so the build is not done without it
 tasks.named('check') {
-    dependsOn 'tckSuite', 'tckSignatureTest'
+    dependsOn 'tckSuite', 'tckLite', 'tckSignatureTest'
 }
 
 dependencies {

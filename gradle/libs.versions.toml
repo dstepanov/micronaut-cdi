@@ -10,7 +10,8 @@ managed-micronaut-jakarta-el = "1.1.0"
 
 junit = "5.14.4"
 cdi-tck = "4.1.0"
-testng = "7.10.2"
+# Match CDI TCK 4.1.0: its supplied suite uses EmailableReporter, removed in TestNG 7.10.
+testng = "7.9.0"
 arquillian = "1.9.1.Final"
 shrinkwrap = "1.2.6"
 shrinkwrap-descriptors = "2.0.0"
