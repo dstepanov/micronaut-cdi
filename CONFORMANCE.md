@@ -434,7 +434,16 @@ than pretended here: `BootstrapSEContainerTest`'s `testAddDecorator` (decorators
 deployments share one class path here, so the extensions its SE archives declare as service providers are
 listed in one service file of the module, and a bootstrap admits the ones whose class is in its deployment.
 
-The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
+The `tckLite` task extracts the unmodified `tck-tests.xml` from the official CDI 4.1.0 TCK artifact and runs
+it through the Arquillian adapter with the Lite exclusions `cdi-full,se`. All 779 tests pass, with no skips;
+their class and method identities match the Lite subset of the regression suite. This preserves the kit's required
+`SingleTestClassMethodInterceptor` listener and package discovery. TestNG 7.9.0 matches the TCK's dependency;
+newer versions removed an optional reporter named in the supplied XML. The task is part of `check`; its results
+are under `cdi-tck/build/reports/tests/tckLite`. The `cdiCoreMode` property disables EE environment requirements;
+the group exclusions select Lite. The existing scenario recompilation remains in use, so this runner does not
+by itself establish certification eligibility or verify that scenario bytecode matches the original kit.
+
+The separate `tckSuite` task runs the regression suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
 and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The
 kit has 816 test methods outside `tests/full`, and 811 of them run, all passing, as part of `check`. The five
 that do not are the two SE tests above and three methods the kit itself tags `cdi-full` inside Lite packages,
