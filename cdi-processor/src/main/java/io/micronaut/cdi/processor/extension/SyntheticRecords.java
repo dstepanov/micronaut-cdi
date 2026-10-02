@@ -143,7 +143,8 @@ final class SyntheticRecords {
      */
     static List<String> nonbindingMembersOf(VisitorContext context, DiscoveredClasses discovered, String annotation) {
         List<String> members = new ArrayList<>();
-        ClassElement declaration = context.getClassElement(annotation).orElse(null);
+        ClassElement declaration = BuildCompatibleExtensionVisitor.enhancedAnnotation(annotation)
+            .or(() -> context.getClassElement(annotation)).orElse(null);
         if (declaration != null) {
             for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
                 if (member.hasAnnotation(NONBINDING)) {
