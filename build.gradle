@@ -3,6 +3,15 @@ plugins {
     id "io.micronaut.build.internal.parent"
 }
 
+if (providers.gradleProperty('microprofileTck').isPresent()) {
+    tasks.register('microprofileTck') {
+        group = 'verification'
+        description = 'Runs every external MicroProfile implementation with its upstream TCK.'
+        dependsOn subprojects.findAll { it.name.startsWith('micronaut-microprofile-tck-') && !it.name.endsWith('-support') && !it.name.endsWith('-lite') }
+            .collect { "${it.path}:tckSuite" }
+    }
+}
+
 // The specification this module implements, fetched rather than vendored, so that what the implementation is read
 // against is the published document itself and stays a download rather than a copy in this repository.
 tasks.register('fetchSpec') {
