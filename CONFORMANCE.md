@@ -384,15 +384,16 @@ because bean-archive membership is a per-deployment question a global compilatio
 bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
 deployment ever admits is the difference visible to code that counts beans.
 
-### Two findings of a reading of ArC's test suite, reported as the class compiles
+### An interception finding from a reading of ArC's test suite
 
-Both are reported by the compiler rather than at runtime, so neither has a test that runs. A disposer method is
-bound to a producer by the rules of typesafe resolution (section 3.4.3), and the qualifiers are compared here for
-equality and one occurrence at a time: a producer and a disposer qualified with the same repeatable qualifier
-written twice do not match, and every such disposer matches every such producer, so the class is refused with
-both "more than one disposer" and "no producer". And an interceptor binding declared on a class reaches the
-producer methods of that class, so what a producer of an intercepted class produces is proxied as though it were
-intercepted — which a primitive cannot be, and the class is refused.
+An interceptor binding declared on a class reaches the producer methods of that class, so what a producer of
+an intercepted class produces is proxied as though it were intercepted — which a primitive cannot be, and the
+class is refused by the compiler.
+
+Disposer qualifier matching now follows required-qualifier matching: a producer may carry extra qualifiers,
+repeated qualifiers are compared individually, annotation defaults are included, and nonbinding members are
+ignored. An explicit `@Any` does not erase other qualifiers on the disposed parameter. Generic-bound matching
+is a separate limitation of the current disposer type comparison.
 
 ### Known limitations a review has named
 
