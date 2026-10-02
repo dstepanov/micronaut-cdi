@@ -1,0 +1,22 @@
+plugins {
+    id 'io.micronaut.build.internal.cdi-test-suite'
+    id 'java-library'
+}
+tasks.named('jar') { archiveBaseName = 'micronaut-cdi-context-lite' }
+dependencies {
+    api platform(libs.micronaut.core)
+    api projects.micronautCdi
+    api 'io.smallrye:smallrye-context-propagation:2.4.0'
+    annotationProcessor platform(libs.micronaut.core)
+    annotationProcessor projects.micronautCdiProcessor
+    annotationProcessor mn.micronaut.inject.java
+    annotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    testAnnotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly 'io.smallrye.config:smallrye-config:3.18.3'
+    testRuntimeOnly libs.junit.jupiter.engine
+}
