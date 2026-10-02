@@ -250,7 +250,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         return definition.asArgument();
     }
 
-    private static <U> io.micronaut.context.Qualifier<U> only(BeanDefinition<U> definition) {
+    static <U> io.micronaut.context.Qualifier<U> only(BeanDefinition<U> definition) {
         return new io.micronaut.context.Qualifier<U>() {
             @Override
             public <BT extends io.micronaut.inject.BeanType<U>> java.util.stream.Stream<BT> reduce(
