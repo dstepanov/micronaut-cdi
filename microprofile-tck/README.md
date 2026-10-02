@@ -25,3 +25,7 @@ The Config task adds the build-compatible SmallRye adapter, synthetic metadata c
 ```
 
 Native, imported and Weld reference tasks are separate controls. `microprofileTck` runs native component suites and excludes support and standalone adapter libraries.
+
+## Context Propagation
+
+The Context task adds a standard request ThreadContextProvider and compiled default producers while retaining SmallRye Context Propagation 2.4.0. Five independent controls and eight unchanged upstream request/default-injection tests pass. Session/conversation and JTA support remain absent or unverified. [Example and reproduction](context-lite/README.md).
