@@ -81,6 +81,11 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Class<?> getBeanClass() {
+        Class<?> synthetic = definition.getAnnotationMetadata()
+            .classValue("io.micronaut.cdi.internal.metadata.CdiSyntheticInstance", "beanClass").orElse(null);
+        if (synthetic != null) {
+            return synthetic;
+        }
         // the bean class of a produced bean is the class that declares its producer (the specification's
         // Bean.getBeanClass), not the class of what it produces
         Class<?> declaring = definition.getAnnotationMetadata()

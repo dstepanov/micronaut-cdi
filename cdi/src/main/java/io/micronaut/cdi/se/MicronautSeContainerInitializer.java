@@ -270,6 +270,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * container has.
      */
     private boolean belongsToSyntheticArchive(io.micronaut.inject.BeanType<?> bean) {
+        String syntheticOrigin = syntheticOriginOf(bean);
+        if (syntheticOrigin != null) {
+            return isSelected(syntheticOrigin) || isInfrastructure(syntheticOrigin);
+        }
         String producer = producerOf(bean);
         if (producer != null) {
             // a bean produced by a member of a class belongs to the archive its producer is in, whatever type it
@@ -300,6 +304,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     }
 
     private static boolean onClasspath(io.micronaut.inject.BeanType<?> bean, Set<String> classpath) {
+        String syntheticOrigin = syntheticOriginOf(bean);
+        if (syntheticOrigin != null) {
+            return isInfrastructure(syntheticOrigin) || classpath.contains(outerClassOf(syntheticOrigin));
+        }
         String producer = producerOf(bean);
         if (producer != null && classpath.contains(outerClassOf(producer))) {
             // what a producer produces, its client proxy included, is where the producer is
@@ -334,6 +342,11 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         }
         return definition.getAnnotationMetadata()
             .stringValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
+    }
+
+    private static @org.jspecify.annotations.Nullable String syntheticOriginOf(io.micronaut.inject.BeanType<?> bean) {
+        return bean.getAnnotationMetadata().classValue(
+            "io.micronaut.cdi.internal.metadata.CdiSyntheticInstance", "origin").map(Class::getName).orElse(null);
     }
 
     /**
