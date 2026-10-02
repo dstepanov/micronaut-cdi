@@ -589,10 +589,18 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (contexts.isEmpty()) {
             throw new IllegalArgumentException("There is no context for the scope " + scopeType.getName());
         }
+        Context active = null;
         for (Context context : contexts) {
             if (context.isActive()) {
-                return context;
+                if (active != null) {
+                    throw new IllegalStateException("More than one context of " + scopeType.getName()
+                        + " is active on the current thread");
+                }
+                active = context;
             }
+        }
+        if (active != null) {
+            return active;
         }
         throw new jakarta.enterprise.context.ContextNotActiveException("No context of "
             + scopeType.getName() + " is active on the current thread");
