@@ -23,12 +23,10 @@ import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.AnnotationClassValue;
-import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
-import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
@@ -40,9 +38,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Reads the producer methods and the producer fields of a class as the Micronaut factory it is.
@@ -64,15 +60,6 @@ import java.util.TreeMap;
  */
 @Internal
 public final class ProducerVisitor implements TypeElementVisitor<Object, Object> {
-
-    /**
-     * The qualifiers that take no part in matching a disposer to its producer.
-     */
-    private static final Set<String> NOT_COMPARED = Set.of(
-        Cdi.DEFAULT,
-        Cdi.ANY,
-        "io.micronaut.context.annotation.Primary"
-    );
 
     /**
      * The Micronaut scopes a producer may carry, which is what the scope of the specification it declares has
@@ -483,14 +470,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * Finds the disposer of a producer among the disposers the same class declares, which is where the
-     * specification has it declared.
-     *
-     * <p>A disposer disposes of a producer when the type of its disposed parameter is the type the producer
-     * produces and their qualifiers are the same, which is the resolution rule of the specification narrowed to
-     * the one class the two are declared on.</p>
-     */
-    /**
      * Whether the produced type's arguments fit the disposed parameter's: a disposer of {@code List<String>}
      * does not dispose of what a producer of {@code List<Integer>} produces, though the two erase alike. A
      * raw side fits any parameterization, and a variable or wildcard on the disposer's side admits what the
@@ -520,6 +499,14 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         return true;
     }
 
+    /**
+     * Finds the disposer of a producer among the disposers the same class declares, which is where the
+     * specification has it declared.
+     *
+     * <p>A disposer disposes of a producer when the type of its disposed parameter matches the type the producer
+     * produces and the producer has every qualifier the disposed parameter requires, which is the resolution rule of the specification narrowed to
+     * the one class the two are declared on.</p>
+     */
     private @Nullable MethodElement findDisposer(MemberElement producer,
                                                  List<MethodElement> disposers,
                                                  VisitorContext context) {
@@ -534,11 +521,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 || !typeArgumentsCompatible(produced, disposed.getGenericType())) {
                 continue;
             }
-            // a disposed parameter qualified Any disposes of what every producer of the type produced, however
-            // those producers are qualified; anything else has to be qualified the same way the producer is
-            if (!disposed.hasDeclaredAnnotation(Cdi.ANY)
-                && !disposed.hasDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiAny")
-                && !qualifiers(disposed).equals(qualifiers(producer))) {
+            if (!DisposerQualifiers.matches(producer, disposed, context)) {
                 continue;
             }
             if (found != null) {
@@ -557,29 +540,4 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         return ((FieldElement) producer).getGenericType();
     }
 
-    /**
-     * The qualifiers an element declares, as the names of the qualifier annotations mapped to their members.
-     *
-     * <p>They are read into a sorted map so that two elements qualified the same way compare equal whichever
-     * order the qualifiers were written in. Only the qualifiers the element declares itself are read: the
-     * annotation metadata of a member carries what its class declares as well, and a disposer parameter is
-     * compared against a producer of another class as often as not.</p>
-     *
-     * <p>The default qualifier is left out of the comparison, along with the Micronaut annotation that goes with
-     * it. It is given to a bean rather than written on one, and a disposer parameter is not a bean, so counting
-     * it would have every disposer fail to match the producer it was written for.</p>
-     */
-    private static Map<String, Map<CharSequence, Object>> qualifiers(Element element) {
-        Map<String, Map<CharSequence, Object>> qualifiers = new TreeMap<>();
-        for (String name : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
-            if (NOT_COMPARED.contains(name) || !element.hasDeclaredAnnotation(name)) {
-                continue;
-            }
-            AnnotationValue<?> annotation = element.getAnnotation(name);
-            if (annotation != null) {
-                qualifiers.put(name, annotation.getValues());
-            }
-        }
-        return qualifiers;
-    }
 }
