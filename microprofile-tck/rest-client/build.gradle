@@ -1,0 +1,29 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'rest-client',
+    artifact: 'org.eclipse.microprofile.rest.client:microprofile-rest-client-tck:4.0',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'org.jboss.resteasy.microprofile:microprofile-rest-client:3.0.1.Final'
+}
+
+dependencies {
+    testImplementation 'org.eclipse.parsson:parsson:1.1.7'
+    testImplementation 'org.eclipse:yasson:3.0.4'
+    testImplementation 'org.jboss.resteasy:resteasy-json-p-provider:6.2.14.Final'
+    testImplementation 'org.jboss.resteasy:resteasy-json-binding-provider:6.2.14.Final'
+}
+
+dependencies {
+    testImplementation platform('org.jboss.resteasy:resteasy-bom:6.2.14.Final')
+    testImplementation 'org.jboss.resteasy:resteasy-multipart-provider:6.2.14.Final'
+}
+
+// REST Client 4.0 targets Jakarta REST 3.1. Avoid the core BOM's newer, incompatible RuntimeDelegate SPI.
+configurations.all { resolutionStrategy.force 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0' }

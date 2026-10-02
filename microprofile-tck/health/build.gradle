@@ -1,0 +1,14 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'health',
+    artifact: 'org.eclipse.microprofile.health:microprofile-health-tck:4.0.2',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye:smallrye-health:4.3.0'
+}

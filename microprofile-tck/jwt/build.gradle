@@ -1,0 +1,29 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'jwt',
+    artifact: 'org.eclipse.microprofile.jwt:microprofile-jwt-auth-tck:2.1',
+    sourceClassifier: 'test-sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye:smallrye-jwt:4.6.4'
+    testImplementation 'io.smallrye:smallrye-jwt-build:4.6.4'
+}
+
+dependencies {
+    testImplementation 'org.eclipse.parsson:parsson:1.1.7'
+    testImplementation 'org.eclipse:yasson:3.0.4'
+    testImplementation 'org.glassfish.jersey.core:jersey-client:3.1.11'
+    testImplementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.11'
+    testImplementation 'org.osgi:org.osgi.annotation.versioning:1.1.2'
+}
+
+dependencies {
+    testImplementation 'jakarta.ejb:jakarta.ejb-api:4.0.1'
+    testImplementation 'jakarta.authorization:jakarta.authorization-api:2.1.0'
+    testImplementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+}

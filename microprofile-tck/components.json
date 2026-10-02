@@ -1,0 +1,137 @@
+{
+  "config": {
+    "group": "org.eclipse.microprofile.config",
+    "artifact": "microprofile-config-tck",
+    "version": "3.1.2",
+    "implementation": [
+      "io.smallrye.config:smallrye-config:3.18.3"
+    ]
+  },
+  "fault-tolerance": {
+    "group": "org.eclipse.microprofile.fault-tolerance",
+    "artifact": "microprofile-fault-tolerance-tck",
+    "version": "4.1.2",
+    "implementation": [
+      "io.smallrye:smallrye-fault-tolerance:6.11.4",
+      "org.eclipse.microprofile.metrics:microprofile-metrics-api:4.0.1"
+    ]
+  },
+  "health": {
+    "group": "org.eclipse.microprofile.health",
+    "artifact": "microprofile-health-tck",
+    "version": "4.0.2",
+    "implementation": [
+      "io.smallrye:smallrye-health:4.3.0"
+    ]
+  },
+  "openapi": {
+    "group": "org.eclipse.microprofile.openapi",
+    "artifact": "microprofile-openapi-tck",
+    "version": "4.1.1",
+    "implementation": [
+      "io.smallrye:smallrye-open-api-core:4.3.5",
+      "io.smallrye:smallrye-open-api-jaxrs:4.3.5",
+      "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
+      "jakarta.validation:jakarta.validation-api:3.1.1",
+      "org.eclipse.microprofile.rest.client:microprofile-rest-client-api:4.0"
+    ]
+  },
+  "rest-client": {
+    "group": "org.eclipse.microprofile.rest.client",
+    "artifact": "microprofile-rest-client-tck",
+    "version": "4.0",
+    "implementation": [
+      "org.jboss.resteasy.microprofile:microprofile-rest-client:3.0.1.Final"
+    ]
+  },
+  "jwt": {
+    "group": "org.eclipse.microprofile.jwt",
+    "artifact": "microprofile-jwt-auth-tck",
+    "version": "2.1",
+    "implementation": [
+      "io.smallrye:smallrye-jwt:4.6.4",
+      "io.smallrye:smallrye-jwt-build:4.6.4"
+    ]
+  },
+  "telemetry-metrics": {
+    "group": "org.eclipse.microprofile.telemetry",
+    "artifact": "microprofile-telemetry-metrics-tck",
+    "version": "2.1",
+    "implementation": [
+      "io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5"
+    ]
+  },
+  "telemetry-logs": {
+    "group": "org.eclipse.microprofile.telemetry",
+    "artifact": "microprofile-telemetry-logs-tck",
+    "version": "2.1",
+    "implementation": [
+      "io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5"
+    ]
+  },
+  "context-propagation": {
+    "group": "org.eclipse.microprofile.context-propagation",
+    "artifact": "microprofile-context-propagation-tck",
+    "version": "1.3",
+    "implementation": [
+      "io.smallrye:smallrye-context-propagation:2.4.0",
+      "jakarta.transaction:jakarta.transaction-api:2.0.1"
+    ]
+  },
+  "reactive-streams": {
+    "group": "org.eclipse.microprofile.reactive-streams-operators",
+    "artifact": "microprofile-reactive-streams-operators-tck",
+    "version": "3.0.1",
+    "implementation": [
+      "io.smallrye.reactive:smallrye-reactive-streams-operators:1.0.13"
+    ]
+  },
+  "reactive-messaging": {
+    "group": "org.eclipse.microprofile.reactive.messaging",
+    "artifact": "microprofile-reactive-messaging-tck",
+    "version": "3.0.1",
+    "implementation": [
+      "io.smallrye.reactive:smallrye-reactive-messaging-provider:4.37.0"
+    ]
+  },
+  "telemetry-tracing": {
+    "group": "org.eclipse.microprofile.telemetry",
+    "artifact": "microprofile-telemetry-tracing-tck",
+    "version": "2.1",
+    "implementation": [
+      "io.helidon.microprofile.telemetry:helidon-microprofile-telemetry:4.5.5"
+    ]
+  },
+  "graphql": {
+    "group": "org.eclipse.microprofile.graphql",
+    "artifact": "microprofile-graphql-tck",
+    "version": "2.0",
+    "implementation": [
+      "io.smallrye:smallrye-graphql-cdi:2.18.5"
+    ]
+  },
+  "metrics-api": {
+    "group": "org.eclipse.microprofile.metrics",
+    "artifact": "microprofile-metrics-api-tck",
+    "version": "5.1.2",
+    "implementation": [
+      "io.smallrye:smallrye-metrics:5.1.0"
+    ]
+  },
+  "metrics-rest": {
+    "group": "org.eclipse.microprofile.metrics",
+    "artifact": "microprofile-metrics-rest-tck",
+    "version": "5.1.2",
+    "implementation": [
+      "io.smallrye:smallrye-metrics:5.1.0"
+    ]
+  },
+  "metrics-optional": {
+    "group": "org.eclipse.microprofile.metrics",
+    "artifact": "microprofile-metrics-optional-tck",
+    "version": "5.1.2",
+    "implementation": [
+      "io.smallrye:smallrye-metrics:5.1.0"
+    ]
+  }
+}

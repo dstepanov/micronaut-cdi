@@ -1,0 +1,36 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'reactive-streams',
+    artifact: 'org.eclipse.microprofile.reactive-streams-operators:microprofile-reactive-streams-operators-tck:3.0.1',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye.reactive:smallrye-reactive-streams-operators:1.0.13'
+}
+
+configurations { engineProcessor }
+dependencies {
+    engineProcessor projects.micronautCdiProcessor
+    engineProcessor mn.micronaut.inject.java
+}
+tasks.register('compileEngineProducer', JavaCompile) {
+    dependsOn tasks.named('compileTestJava')
+    source = fileTree('src/test/java')
+    classpath = sourceSets.test.runtimeClasspath
+    options.annotationProcessorPath = configurations.engineProcessor
+    options.compilerArgs.removeAll { it == '-proc:none' }
+    destinationDirectory = layout.buildDirectory.dir('engine-definitions')
+}
+tasks.matching { it.name in ['tckSuite', 'tckImportedSuite'] }.configureEach {
+    dependsOn tasks.named('compileEngineProducer')
+    classpath += files(layout.buildDirectory.dir('engine-definitions'))
+}
+
+dependencies {
+    testImplementation 'org.eclipse.microprofile.reactive-streams-operators:microprofile-reactive-streams-operators-api:3.0.1'
+}

@@ -1,0 +1,15 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'fault-tolerance',
+    artifact: 'org.eclipse.microprofile.fault-tolerance:microprofile-fault-tolerance-tck:4.1.2',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye:smallrye-fault-tolerance:6.11.4'
+    testImplementation 'org.eclipse.microprofile.metrics:microprofile-metrics-api:4.0.1'
+}

@@ -1,0 +1,20 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'reactive-messaging',
+    artifact: 'org.eclipse.microprofile.reactive.messaging:microprofile-reactive-messaging-tck:3.0.1',
+    sourceClassifier: 'sources',
+    framework: 'junit4'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye.reactive:smallrye-reactive-messaging-provider:4.37.0'
+}
+
+dependencies {
+    testImplementation 'org.eclipse.microprofile.reactive-streams-operators:microprofile-reactive-streams-operators-api:3.0.1'
+    testImplementation 'io.smallrye.reactive:smallrye-reactive-streams-operators:1.0.13'
+    testImplementation 'org.eclipse.microprofile.metrics:microprofile-metrics-api:4.0.1'
+}

@@ -29,3 +29,7 @@ Native, imported and Weld reference tasks are separate controls. `microprofileTc
 ## Context Propagation
 
 The Context task adds a standard request ThreadContextProvider and compiled default producers while retaining SmallRye Context Propagation 2.4.0. Five independent controls and eight unchanged upstream request/default-injection tests pass. Session/conversation and JTA support remain absent or unverified. [Example and reproduction](context-lite/README.md).
+
+## Broader component harnesses
+
+This separate branch adds the earlier native/imported/reference harnesses for the remaining components. Coordinates are in `components.json`. Several components still need build-time adapters, server integration or version alignment; these projects are not included in the five-task implementation stack. Detailed investigation and historical results remain on the research archive branch.
