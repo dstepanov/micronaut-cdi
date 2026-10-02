@@ -15,6 +15,21 @@ plugins {
 // Nothing is vendored: the sources are resolved from Maven Central at build time. They are Apache 2.0 licensed, as
 // this project is.
 configurations {
+    tckSignatureBaseline {
+        canBeConsumed = false
+        transitive = false
+    }
+    tckSignatureTool {
+        canBeConsumed = false
+        transitive = false
+    }
+    tckSignatureRuntime {
+        canBeConsumed = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+        }
+    }
     tckSources {
         canBeConsumed = false
         transitive = false
@@ -22,8 +37,47 @@ configurations {
 }
 
 dependencies {
+    tckSignatureBaseline "jakarta.enterprise:cdi-tck-core-impl:${libs.versions.cdi.tck.get()}:sigtest-jdk17@sig"
+    tckSignatureTool 'jakarta.tck:sigtest-maven-plugin:2.2'
+    tckSignatureRuntime platform(libs.micronaut.core)
+    tckSignatureRuntime projects.micronautCdiReflection
+    // Resolve the deprecated BeanManager EL signatures without adding CDI's optional EL integration API.
+    tckSignatureRuntime 'jakarta.el:jakarta.el-api:6.0.0'
     tckSources(variantOf(libs.cdi.tck.core) { classifier('sources') })
     tckSources(variantOf(libs.cdi.tck.api) { classifier('sources') })
+}
+
+// Use the official baseline against the APIs resolved with the runtime, so dependency drift fails verification.
+tasks.register('tckSignatureTest', JavaExec) {
+    description = 'Checks the runtime APIs against the official CDI 4.1 signature baseline.'
+    group = 'verification'
+    classpath = configurations.tckSignatureTool
+    mainClass = 'com.sun.tdk.signaturetest.SignatureTest'
+    inputs.files(configurations.tckSignatureBaseline)
+    inputs.files(configurations.tckSignatureRuntime).withPropertyName('checkedRuntime').withNormalizer(ClasspathNormalizer)
+    dependsOn configurations.tckSignatureRuntime
+    def report = layout.buildDirectory.file('reports/tckSignatureTest/signatures.txt')
+    outputs.file(report)
+    // SigTest uses the JavaTest convention: 95 means success, rather than the usual zero.
+    ignoreExitValue = true
+    doFirst {
+        report.get().asFile.parentFile.mkdirs()
+        setArgs([
+            '-static', '-b', '-Mode', 'bin',
+            '-PackageWithoutSubpackages', 'jakarta.decorator',
+            '-Package', 'jakarta.enterprise',
+            '-PackageWithoutSubpackages', 'jakarta.interceptor',
+            '-BootCP', '17',
+            '-FileName', configurations.tckSignatureBaseline.singleFile.absolutePath,
+            '-Classpath', configurations.tckSignatureRuntime.asPath,
+            '-Out', report.get().asFile.absolutePath
+        ])
+    }
+    doLast {
+        if (executionResult.get().exitValue != 95) {
+            throw new GradleException("CDI signature verification failed. See ${report.get().asFile}")
+        }
+    }
 }
 
 // The packages of the kit that are compiled here, and so the part of the specification this module is held to.
@@ -183,7 +237,7 @@ def tckSuite = tasks.register('tckSuite', Test) {
 
 // the kit is the measure of done, so the build is not done without it
 tasks.named('check') {
-    dependsOn 'tckSuite'
+    dependsOn 'tckSuite', 'tckSignatureTest'
 }
 
 dependencies {
