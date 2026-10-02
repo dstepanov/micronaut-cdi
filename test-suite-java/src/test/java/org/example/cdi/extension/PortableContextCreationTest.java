@@ -2,6 +2,7 @@ package org.example.cdi.extension;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
@@ -23,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * A context a portable extension adds for a scope holds the instances of that scope, and the container goes through
@@ -90,6 +92,54 @@ class PortableContextCreationTest {
 
         void add(@Observes AfterBeanDiscovery event) {
             event.addContext(context);
+        }
+    }
+
+    static class SwitchableContext extends HoldingRequestContext {
+        boolean active;
+
+        @Override
+        public boolean isActive() {
+            return active;
+        }
+    }
+
+    static class AddingTwo implements Extension {
+        final SwitchableContext first = new SwitchableContext();
+        final SwitchableContext second = new SwitchableContext();
+
+        void add(@Observes AfterBeanDiscovery event) {
+            event.addContext(first);
+            event.addContext(second);
+        }
+    }
+
+    @Test
+    void contextLookupRequiresExactlyOneActiveContext() {
+        AddingTwo adding = new AddingTwo();
+        try (SeContainer container = SeContainerInitializer.newInstance().disableDiscovery()
+            .addBeanClasses(Stay.class).addExtensions(adding).initialize()) {
+            BeanManager manager = container.getBeanManager();
+            assertEquals(2, manager.getContexts(RequestScoped.class).size());
+            assertThrows(ContextNotActiveException.class, () -> manager.getContext(RequestScoped.class));
+            assertThrows(ContextNotActiveException.class, () -> container.select(Stay.class).get().name());
+
+            // An inactive first context must not hide the active second one.
+            adding.second.active = true;
+            assertSame(adding.second, manager.getContext(RequestScoped.class));
+            assertEquals("stay", container.select(Stay.class).get().name());
+            assertEquals(0, adding.first.held.size());
+            assertEquals(1, adding.second.held.size());
+
+            adding.first.active = true;
+            assertThrows(IllegalStateException.class, () -> manager.getContext(RequestScoped.class));
+            assertThrows(IllegalStateException.class, () -> container.select(Stay.class).get().name());
+            assertEquals(0, adding.first.held.size(), "Ambiguity must be detected before creating an instance");
+
+            adding.second.active = false;
+            assertSame(adding.first, manager.getContext(RequestScoped.class));
+            assertEquals("stay", container.select(Stay.class).get().name());
+            assertEquals(1, adding.first.held.size());
         }
     }
 

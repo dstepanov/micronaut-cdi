@@ -90,10 +90,18 @@ final class ExtensionCustomScope implements CustomScope<Annotation>, io.micronau
     }
 
     private AlterableContext activeContext() {
+        AlterableContext active = null;
         for (AlterableContext context : contexts) {
             if (context.isActive()) {
-                return context;
+                if (active != null) {
+                    throw new IllegalStateException("More than one context of " + scopeAnnotation.getName()
+                        + " is active on the current thread");
+                }
+                active = context;
             }
+        }
+        if (active != null) {
+            return active;
         }
         throw new ContextNotActiveException("No context of " + scopeAnnotation.getName()
             + " is active on the current thread");
