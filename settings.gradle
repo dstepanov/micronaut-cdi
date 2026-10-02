@@ -41,6 +41,15 @@ include 'test-suite-kotlin'
 include 'test-suite-groovy'
 include 'test-suite-no-reflection'
 
+// External implementations exercised by their unchanged upstream TCKs.
+if (providers.gradleProperty('microprofileTck').isPresent()) {
+    ['support', 'config', 'config-lite', 'context-propagation', 'context-lite'].each { component ->
+        def name = "microprofile-tck-${component}"
+        include name
+        project(":${name}").projectDir = file("microprofile-tck/${component}")
+    }
+}
+
 // Jakarta Interceptors and Jakarta Expression Language are implemented by sibling projects rather than again here:
 // the interception of a bean and the evaluation of an expression are the business of their own specifications, and
 // Contexts and Dependency Injection defers to them.
@@ -77,6 +86,8 @@ if (!siblingCheckout('jakartaInterceptorsDir')) {
     }
 }
 siblingCheckout('jakartaElDir')
+// Use the matching Core injection-provider processor and runtime until published.
+siblingCheckout('micronautCoreDir')
 
 micronautBuild {
     useStandardizedProjectNames.set(true)

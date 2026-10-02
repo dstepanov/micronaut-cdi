@@ -240,5 +240,8 @@ Micronaut itself comes from Maven Central and, while this builds on a snapshot o
 snapshot repository. The local Maven repository is not consulted: a stale local publication of a snapshot would
 shadow the published one.
 
+CDI container injection requires the matching Core provider API until published. See
+[Core integration](core-integration/README.md) for the patch and included-build instructions.
+
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.

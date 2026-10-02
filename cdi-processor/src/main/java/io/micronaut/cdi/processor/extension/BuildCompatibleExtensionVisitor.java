@@ -91,6 +91,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         new java.util.concurrent.ConcurrentHashMap<>();
 
     private final List<Enhancer> enhancers = new ArrayList<>();
+    private final java.util.Set<String> enhancedAnnotationTypes = new java.util.LinkedHashSet<>();
+    private final Map<String, ClassElement> enhancedAnnotations = new java.util.LinkedHashMap<>();
     private final List<Registrar> registrars = new ArrayList<>();
     private final List<ExtensionMethod> discoveries = new ArrayList<>();
     private final List<ExtensionMethod> synthesizers = new ArrayList<>();
@@ -215,6 +217,28 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         BuildCompatibleExtensionVisitor visitor = current;
         return visitor == null ? java.util.Set.of()
             : java.util.Set.copyOf(visitor.discovered.scannedClasses());
+    }
+
+    /**
+     * Whether another compiler round is needed before the final enhanced declarations can be recorded.
+     *
+     * @return Whether enhancement or imported-class processing remains pending
+     */
+    public static boolean hasPendingEnhancements() {
+        BuildCompatibleExtensionVisitor visitor = current;
+        return visitor != null && visitor.triggerWritten && !visitor.synthesized;
+    }
+
+    /**
+     * The final enhanced declaration of an explicitly requested dependency annotation.
+     *
+     * @param name The annotation name
+     * @return Its mutable compilation model, where enhancement supplied one
+     */
+    public static java.util.Optional<ClassElement> enhancedAnnotation(String name) {
+        BuildCompatibleExtensionVisitor visitor = current;
+        return visitor == null ? java.util.Optional.empty()
+            : java.util.Optional.ofNullable(visitor.enhancedAnnotations.get(name));
     }
 
     private static void validateDiscovery(Method method) {
@@ -496,6 +520,24 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         for (String describedClass : discovered.describedClassNames()) {
             context.getClassElement(describedClass).ifPresent(this::applyWhatWasDiscovered);
         }
+        // An annotation from a dependency is not a bean class and may never be visited by ClassImport.
+        // Enhance explicitly requested annotation declarations before consumers fold in their metadata.
+        Messages messages = new VisitorMessages(context);
+        for (Enhancer enhancer : enhancers) {
+            for (Class<?> type : enhancer.enhancement().types()) {
+                if (!type.isAnnotation() || !enhancedAnnotationTypes.add(type.getName())) {
+                    continue;
+                }
+                context.getClassElement(type.getName()).ifPresent(annotation -> {
+                    for (Enhancer matching : enhancers) {
+                        if (matching.matches(annotation)) {
+                            matching.enhance(annotation, messages, context);
+                        }
+                    }
+                    enhancedAnnotations.put(type.getName(), annotation);
+                });
+            }
+        }
     }
 
     @Override
@@ -539,6 +581,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         Messages messages = new VisitorMessages(context);
+        if (enhancedAnnotationTypes.contains(element.getName())) {
+            return;
+        }
         for (Enhancer enhancer : enhancers) {
             if (enhancer.matches(element)) {
                 enhancer.enhance(element, messages, context);
