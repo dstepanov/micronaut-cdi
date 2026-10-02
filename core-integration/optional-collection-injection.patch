@@ -35,10 +35,10 @@ index 2a65fd3..de311c8 100644
                  ClassElement typeArgument = genericType.isArray() ? genericType.fromArray() : genericType.getFirstTypeArgument().orElse(null);
 diff --git a/inject-java/src/test/groovy/io/micronaut/inject/containerresolver/ExactContainerResolverSpec.groovy b/inject-java/src/test/groovy/io/micronaut/inject/containerresolver/ExactContainerResolverSpec.groovy
 new file mode 100644
-index 0000000..1d50668
+index 0000000..963f9c5
 --- /dev/null
 +++ b/inject-java/src/test/groovy/io/micronaut/inject/containerresolver/ExactContainerResolverSpec.groovy
-@@ -0,0 +1,229 @@
+@@ -0,0 +1,305 @@
 +/*
 + * Copyright 2017-2026 original authors
 + *
@@ -61,6 +61,82 @@ index 0000000..1d50668
 +import spock.lang.Unroll
 +
 +class ExactContainerResolverSpec extends AbstractTypeElementSpec {
++    void 'non-required field and method injection accept missing provider values without nullable arguments'() {
++        given:
++        def context = buildContext('test.provideroptional.Consumer', '''
++            package test.provideroptional;
++            import jakarta.inject.Singleton;
++            import io.micronaut.context.*;
++            import io.micronaut.context.annotation.*;
++            import io.micronaut.inject.autowired.Autowired;
++            import io.micronaut.core.type.Argument;
++            @Singleton class Consumer {
++                @Autowired(required = false) @ResolveWith(AbsentProvider.class) String field;
++                boolean called;
++                @Autowired(required = false)
++                void init(@ResolveWith(AbsentProvider.class) String value) { called = true; }
++            }
++            @Singleton class AbsentProvider implements BeanInjectionProvider {
++                static int calls;
++                public <T> T get(BeanResolutionContext context, Argument<T> argument,
++                    io.micronaut.context.Qualifier<T> qualifier) {
++                    if (argument.isNullable()) throw new AssertionError("Expected non-nullable argument");
++                    calls++;
++                    return null;
++                }
++            }
++        ''')
++
++        when:
++        def bean = getBean(context, 'test.provideroptional.Consumer')
++
++        then:
++        bean.field == null
++        !bean.called
++        context.classLoader.loadClass('test.provideroptional.AbsentProvider').calls == 2
++
++        cleanup:
++        context.close()
++    }
++
++    void 'provider receives each-bean qualifier that is absent from argument metadata'() {
++        given:
++        def context = buildContext('test.providerqualifier.Consumer', '''
++            package test.providerqualifier;
++            import jakarta.inject.*;
++            import io.micronaut.context.*;
++            import io.micronaut.context.annotation.*;
++            import io.micronaut.core.type.Argument;
++            import io.micronaut.inject.qualifiers.Qualifiers;
++            @Factory class Values {
++                @Singleton @Named("one") String one() { return "one"; }
++                @Singleton @Named("two") String two() { return "two"; }
++            }
++            @EachBean(String.class) class Consumer {
++                final String value;
++                Consumer(@Parameter @ResolveWith(QualifiedProvider.class) String value) { this.value = value; }
++            }
++            @Singleton class QualifiedProvider implements BeanInjectionProvider {
++                public <T> T get(BeanResolutionContext context, Argument<T> argument,
++                    io.micronaut.context.Qualifier<T> qualifier) {
++                    if (Qualifiers.forArgument(argument) != null) throw new AssertionError("Unexpected annotation qualifier");
++                    if (qualifier == null) throw new AssertionError("Missing context qualifier");
++                    return context.findBean(argument, qualifier).orElse(null);
++                }
++            }
++        ''')
++
++        when:
++        def type = context.classLoader.loadClass('test.providerqualifier.Consumer')
++        def beans = context.getBeansOfType(type)
++
++        then:
++        beans.collect { it.value }.toSet() == ['one', 'two'] as Set
++
++        cleanup:
++        context.close()
++    }
++
 +    void 'annotation selects a context managed provider for fields constructors and methods'() {
 +        given:
 +        def context = buildContext('test.exactcontainers.Consumer', '''
@@ -75,9 +151,9 @@ index 0000000..1d50668
 +            @ResolveWith(ExactProvider.class)
 +            @interface Exact {}
 +            @Singleton class ExactProvider implements BeanInjectionProvider {
-+                public <T> T get(BeanResolutionContext context, Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier, boolean nullable) {
++                public <T> T get(BeanResolutionContext context, Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
 +                    if (context.getPath().peek() == null) throw new AssertionError("No requesting path");
-+                    return nullable ? context.findBean(argument, qualifier).orElse(null) : context.getBean(argument, qualifier);
++                    return context.findBean(argument, qualifier).orElse(null);
 +                }
 +            }
 +            @Singleton
@@ -159,7 +235,7 @@ index 0000000..1d50668
 +            }
 +            @Singleton class BadProvider implements BeanInjectionProvider {
 +                public <T> T get(BeanResolutionContext context, Argument<T> argument,
-+                    io.micronaut.context.Qualifier<T> qualifier, boolean nullable) {
++                    io.micronaut.context.Qualifier<T> qualifier) {
 +                    return (T) RESULT;
 +                }
 +            }
@@ -196,7 +272,7 @@ index 0000000..1d50668
 +            }
 +            class MissingProvider implements BeanInjectionProvider {
 +                public <T> T get(BeanResolutionContext context, Argument<T> argument,
-+                    io.micronaut.context.Qualifier<T> qualifier, boolean nullable) { return null; }
++                    io.micronaut.context.Qualifier<T> qualifier) { return null; }
 +            }
 +            @Factory class Elements { @Singleton String element() { return "element"; } }
 +        ''')
@@ -230,15 +306,15 @@ index 0000000..1d50668
 +            @Prototype class OwnedProvider implements BeanInjectionProvider {
 +                static int destroyed;
 +                public <T> T get(BeanResolutionContext context, Argument<T> argument,
-+                    io.micronaut.context.Qualifier<T> qualifier, boolean nullable) {
++                    io.micronaut.context.Qualifier<T> qualifier) {
 +                    return context.getBean(argument, qualifier);
 +                }
 +                @PreDestroy void close() { destroyed++; }
 +            }
 +            @Singleton class NullProvider implements BeanInjectionProvider {
 +                public <T> T get(BeanResolutionContext context, Argument<T> argument,
-+                    io.micronaut.context.Qualifier<T> qualifier, boolean nullable) {
-+                    if (!nullable) throw new AssertionError("Expected nullable request");
++                    io.micronaut.context.Qualifier<T> qualifier) {
++                    if (!argument.isNullable()) throw new AssertionError("Expected nullable argument");
 +                    return null;
 +                }
 +            }
@@ -269,7 +345,7 @@ index 0000000..1d50668
 +    }
 +}
 diff --git a/inject/src/main/java/io/micronaut/context/AbstractInitializableBeanDefinition.java b/inject/src/main/java/io/micronaut/context/AbstractInitializableBeanDefinition.java
-index 219d0d8..3661f3c 100644
+index 219d0d8..5e87627 100644
 --- a/inject/src/main/java/io/micronaut/context/AbstractInitializableBeanDefinition.java
 +++ b/inject/src/main/java/io/micronaut/context/AbstractInitializableBeanDefinition.java
 @@ -2408,6 +2408,29 @@ public abstract class AbstractInitializableBeanDefinition<T> extends AbstractBea
@@ -287,7 +363,7 @@ index 219d0d8..3661f3c 100644
 +                    }
 +                    BeanInjectionProvider provider = (BeanInjectionProvider) resolutionContext.getBean(Argument.of(providerType), null);
 +                    boolean nullable = argument.isDeclaredNullable() || isOptional;
-+                    K value = provider.get(resolutionContext, argument, qualifier, nullable);
++                    K value = provider.get(resolutionContext, argument, qualifier);
 +                    if (value == null && !nullable) {
 +                        throw new DependencyInjectionException(resolutionContext,
 +                            "The injection provider " + providerType.getName() + " returned null for required " + argument);
@@ -304,7 +380,7 @@ index 219d0d8..3661f3c 100644
                      return k;
 diff --git a/inject/src/main/java/io/micronaut/context/BeanInjectionProvider.java b/inject/src/main/java/io/micronaut/context/BeanInjectionProvider.java
 new file mode 100644
-index 0000000..7be4ec0
+index 0000000..acbbbac
 --- /dev/null
 +++ b/inject/src/main/java/io/micronaut/context/BeanInjectionProvider.java
 @@ -0,0 +1,50 @@
@@ -351,12 +427,12 @@ index 0000000..7be4ec0
 +     * @param resolutionContext The active resolution context, with the requesting path already established
 +     * @param argument The declared injection argument
 +     * @param qualifier The resolved qualifier, or {@code null} for an unqualified request
-+     * @param nullable Whether this injection point permits a {@code null} result
 +     * @param <T> The requested type
-+     * @return The injection value; {@code null} only when nullable is true
++     * @return The injection value, or {@code null} when no value can be supplied. The container accepts
++     *         {@code null} only for a nullable or non-required injection point
 +     */
 +    <T> @Nullable T get(BeanResolutionContext resolutionContext, Argument<T> argument,
-+                        @Nullable Qualifier<T> qualifier, boolean nullable);
++                        @Nullable Qualifier<T> qualifier);
 +}
 diff --git a/inject/src/main/java/io/micronaut/context/annotation/ResolveWith.java b/inject/src/main/java/io/micronaut/context/annotation/ResolveWith.java
 new file mode 100644
