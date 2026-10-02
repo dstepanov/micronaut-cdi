@@ -162,6 +162,11 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     static java.util.List<Argument<?>> typesOf(BeanDefinition<?> definition, Class<?> beanClass) {
+        if (definition instanceof io.micronaut.inject.provider.AbstractProviderDefinition<?>) {
+            // Core's infrastructure providers implement Iterable as a lookup convenience. Their helper
+            // interfaces are not application beans satisfying an ordinary CDI collection injection.
+            return java.util.List.of(definition.asArgument(), Argument.OBJECT_ARGUMENT);
+        }
         java.util.List<Argument<?>> types = new java.util.ArrayList<>();
         // the types a bean narrowed itself to are the ones it named with Typed, which is asked for rather than
         // Micronaut's own set of exposed types: those are what Micronaut resolves the bean by, and it exposes an

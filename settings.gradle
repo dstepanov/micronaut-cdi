@@ -77,6 +77,8 @@ if (!siblingCheckout('jakartaInterceptorsDir')) {
     }
 }
 siblingCheckout('jakartaElDir')
+// Use the matching Core injection-provider processor and runtime until published.
+siblingCheckout('micronautCoreDir')
 
 micronautBuild {
     useStandardizedProjectNames.set(true)

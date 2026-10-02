@@ -100,11 +100,10 @@ that cannot be told apart, or to a bean in a normal scope that cannot be proxied
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
-by Micronaut's rules. So is an injection point Micronaut resolves its own way: a field, constructor or
-initializer parameter of a collection, a stream or a map, which is the beans of its element type and is empty
-rather than unsatisfied where there are none (see below), and one marked nullable. The parameter of an observer or
+by Micronaut's rules. Injection points marked nullable may have no bean; container injection points
+require a bean of their full declared type. The parameter of an observer or
 a disposer method is resolved by the container as a bean of its type, a collection included, and is validated as
-one. An injection point of `Instance`, `Provider`, `Event`, `Optional` or `InjectionPoint`
+one. An injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`
 resolves late by design and is not validated.
 
 A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
@@ -192,21 +191,17 @@ observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as 
 instance created for that, and is destroyed when the context has stopped. What an observer of these events
 throws is logged and stops neither the events after it nor the context from stopping.
 
-### An injection point of a collection type collects the beans of its element type
+### Container injection resolves its full declared bean type
 
-*Section 2.4.2.* The specification has no collection injection: `List<Foo>` is a bean type like any other, an
-injection point of it is satisfied by a bean that has it among its types - a producer of `List<Foo>`, typically -
-and is unsatisfied where there is none; every bean of `Foo` is what `Instance<Foo>` is for. Micronaut decides
-while a bean compiles that an injection point of `Collection`, `List`, `Set` or another collection type is
-injected with all the beans of the element type, and that is what happens here: `@Inject List<Foo>` is the beans
-of `Foo` - the elements of a produced `List<Foo>` among them - rather than the produced list, and is empty
-rather than unsatisfied where there are none. An array is resolved as the specification has it, and a
-programmatic lookup of the collection type - `Instance<List<Foo>>`, `BeanContainer.getBeans` - resolves the bean
-of that type. The hook Micronaut gives for the array, `BeanResolutionCustomizer.shouldResolveArrayAsBean`, is
-asked for an array only, so the collection cannot be decided the same way here.
+*Section 2.4.2.* Arrays, Optional, Collection, Iterable, Map and Stream are bean types of their own.
+The CDI processor selects `CdiBeanInjectionProvider` through Core's `@ResolveWith` annotation on actual
+user injection points. A producer of the full declared type satisfies injection; an element producer does
+not augment it. Missing and ambiguous producers are deployment problems, including legal user names
+beginning with `$`. Dependent produced containers are destroyed with their owning bean.
 
-Such an injection point is also not an unsatisfied dependency when there are no beans of the element type: the
-container does not report it as it validates the deployment.
+This requires both the matching Core processor and runtime until the provider API is published. See
+[Core integration](core-integration/README.md). Existing consumers must be recompiled. Ordinary Micronaut
+beans retain their built-in wrapping and aggregation behavior.
 
 ### A primitive is boxed by the lookup rather than by the bean
 
