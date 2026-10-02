@@ -53,9 +53,19 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
                                 java.util.List<CdiQualifier> qualifiers) {
         jakarta.enterprise.inject.spi.InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
-        if (segment != null) {
+        if (segment != null && segment.getDeclaringType().getBeanType() != getBeanType()) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
             injectedAt = CdiInjectionPoint.of(container.canonicalBean(segment.getDeclaringType()), segment);
+        } else {
+            // Direct registration lookup can supply a synthetic constructor segment for the built-in
+            // Instance itself. That is not the requesting injection point. An unmanaged injection bridge
+            // establishes the actual point explicitly; retain it for deferred Provider calls too.
+            injectedAt = CurrentInjectionPoint.current();
+            if (injectedAt != null) {
+                qualifiers = CdiQualifier.ofInstances(injectedAt.getQualifiers());
+                type = CdiTypes.argumentOf(injectedAt.getType())
+                    .getFirstTypeVariable().orElse(Argument.OBJECT_ARGUMENT);
+            }
         }
         return new CdiInstance<>(context, injectedAt, (Argument<T>) type, qualifiers);
     }
