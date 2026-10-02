@@ -135,17 +135,17 @@ final class VisitorTypes implements Types {
 
     @Override
     public WildcardType wildcardWithUpperBound(Type upperBound) {
-        throw new UnsupportedOperationException("A wildcard type is not composed here yet");
+        return ElementTypes.wildcardWithUpperBound(upperBound);
     }
 
     @Override
     public WildcardType wildcardWithLowerBound(Type lowerBound) {
-        throw new UnsupportedOperationException("A wildcard type is not composed here yet");
+        return ElementTypes.wildcardWithLowerBound(lowerBound);
     }
 
     @Override
     public WildcardType wildcardUnbounded() {
-        throw new UnsupportedOperationException("A wildcard type is not composed here yet");
+        return ElementTypes.wildcardWithUpperBound(ofClass(Object.class.getName()));
     }
 
     private Type element(String name) {
