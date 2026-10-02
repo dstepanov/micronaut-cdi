@@ -153,7 +153,7 @@ public final class ElementTypes {
         for (ClassElement bound : placeholder.getBounds()) {
             bounds.add(of(bound, declaringType));
         }
-        return new Variable(placeholder.getVariableName(), List.copyOf(bounds),
+        return new Variable(placeholder, List.copyOf(bounds),
             annotationsIn(placeholder.getGenericTypeAnnotationMetadata(), declaringType));
     }
 
@@ -169,6 +169,26 @@ public final class ElementTypes {
         // the language model reports it; Micronaut substitutes the declared bound of the type parameter, which
         // the source did not write
         return new Wildcard(objectType(), null, annotations);
+    }
+
+    /**
+     * Composes a wildcard with an upper bound, including Object for an unbounded wildcard.
+     *
+     * @param bound The upper bound
+     * @return The wildcard
+     */
+    public static WildcardType wildcardWithUpperBound(Type bound) {
+        return new Wildcard(Objects.requireNonNull(bound), null, List.of());
+    }
+
+    /**
+     * Composes a wildcard with a lower bound.
+     *
+     * @param bound The lower bound
+     * @return The wildcard
+     */
+    public static WildcardType wildcardWithLowerBound(Type bound) {
+        return new Wildcard(null, Objects.requireNonNull(bound), List.of());
     }
 
     /**
@@ -224,6 +244,15 @@ public final class ElementTypes {
         }
         if (type instanceof Parameterized parameterized) {
             return ((Class) parameterized.genericClass()).element;
+        }
+        if (type instanceof Wildcard wildcard) {
+            Type upper = wildcard.upperBound();
+            Type lower = wildcard.lowerBound();
+            return new ComposedWildcard(elementOf(upper == null ? objectType() : upper),
+                lower == null ? List.of() : List.of(elementOf(lower)));
+        }
+        if (type instanceof Variable variable) {
+            return variable.element;
         }
         throw new IllegalArgumentException("The type " + type + " was not composed by this model");
     }
@@ -497,12 +526,14 @@ public final class ElementTypes {
      */
     private static final class Variable extends Annotated implements TypeVariable {
 
+        private final GenericPlaceholderElement element;
         private final String name;
         private final List<Type> bounds;
 
-        private Variable(String name, List<Type> bounds, List<AnnotationInfo> annotations) {
+        private Variable(GenericPlaceholderElement element, List<Type> bounds, List<AnnotationInfo> annotations) {
             super(annotations);
-            this.name = name;
+            this.element = element;
+            this.name = element.getVariableName();
             this.bounds = bounds;
         }
 
@@ -529,6 +560,69 @@ public final class ElementTypes {
         @Override
         public String toString() {
             return name;
+        }
+    }
+
+    /**
+     * A composed wildcard keeps its AST bounds when used as an argument of another type.
+     *
+     * @param upper The upper bound, Object for a lower-bounded wildcard
+     * @param lower The lower bound, or an empty list for an upper-bounded wildcard
+     */
+    private record ComposedWildcard(ClassElement upper, List<ClassElement> lower) implements WildcardElement {
+        @Override
+        public List<? extends ClassElement> getUpperBounds() {
+            return List.of(upper);
+        }
+
+        @Override
+        public List<? extends ClassElement> getLowerBounds() {
+            return lower;
+        }
+
+        @Override
+        public boolean hasExplicitUpperBound() {
+            return lower.isEmpty();
+        }
+
+        @Override
+        public String getName() {
+            return upper.getName();
+        }
+
+        @Override
+        public boolean isAssignable(String type) {
+            return upper.isAssignable(type);
+        }
+
+        @Override
+        public boolean isProtected() {
+            return upper.isProtected();
+        }
+
+        @Override
+        public boolean isPublic() {
+            return upper.isPublic();
+        }
+
+        @Override
+        public Object getNativeType() {
+            return upper.getNativeType();
+        }
+
+        @Override
+        public Object getGenericNativeType() {
+            return this;
+        }
+
+        @Override
+        public ClassElement toArray() {
+            throw new IllegalArgumentException("A wildcard cannot be an array component");
+        }
+
+        @Override
+        public ClassElement fromArray() {
+            throw new IllegalArgumentException("A wildcard is not an array");
         }
     }
 
