@@ -228,6 +228,9 @@ final class SynthesisPhase {
             .member("id", bean.id())
             .member("implementation", new AnnotationClassValue<>(bean.implementation().getName()))
             .member("types", classValues(bean.types()))
+            .member("typeRecords", bean.types().stream()
+                .map(io.micronaut.cdi.processor.visitor.RecordedTypeValues::of)
+                .toArray(AnnotationValue<?>[]::new))
             .member(CdiSyntheticBean.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]))
             .member("qualifierTypes", typesOf(qualifiers))
             .member("nonbinding", nonbindingOf(qualifiers));
@@ -298,7 +301,13 @@ final class SynthesisPhase {
     private static AnnotationClassValue<?>[] classValues(List<ClassElement> classes) {
         AnnotationClassValue<?>[] values = new AnnotationClassValue<?>[classes.size()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = new AnnotationClassValue<>(classes.get(i).getName());
+            ClassElement type = classes.get(i);
+            int dimensions = 0;
+            while (type.isArray()) {
+                dimensions++;
+                type = type.fromArray();
+            }
+            values[i] = new AnnotationClassValue<>(type.getName() + "[]".repeat(dimensions));
         }
         return values;
     }

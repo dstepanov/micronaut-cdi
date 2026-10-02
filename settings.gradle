@@ -43,7 +43,7 @@ include 'test-suite-no-reflection'
 
 // External implementations exercised by their unchanged upstream TCKs.
 if (providers.gradleProperty('microprofileTck').isPresent()) {
-    ['support'].each { component ->
+    ['support', 'config', 'config-lite'].each { component ->
         def name = "microprofile-tck-${component}"
         include name
         project(":${name}").projectDir = file("microprofile-tck/${component}")

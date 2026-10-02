@@ -1,0 +1,87 @@
+plugins { id 'io.micronaut.build.internal.cdi-test-suite' }
+
+ext.mpTck = [
+    component: 'config',
+    artifact: 'org.eclipse.microprofile.config:microprofile-config-tck:3.1.2',
+    sourceClassifier: 'sources',
+    framework: 'testng'
+]
+
+apply from: rootProject.file('microprofile-tck/tck.gradle')
+
+dependencies {
+    testImplementation 'io.smallrye.config:smallrye-config:3.18.3'
+}
+
+// Prerequisites declared by the upstream Config TCK's setup checks.
+tasks.withType(Test).configureEach {
+    environment 'MP_TCK_ENV_DUMMY', 'dummy'
+    environment 'my_int_property', '45'
+    environment 'MY_BOOLEAN_PROPERTY', 'true'
+    environment 'my_string_property', 'haha'
+    environment 'MY_STRING_PROPERTY', 'woohoo'
+    environment 'config_ordinal', '45'
+    environment 'customer_name', 'Bob'
+    systemProperty 'mp.tck.prop.dummy', 'dummy'
+    systemProperty 'config_ordinal', '120'
+    systemProperty 'customer.hobby', 'Tennis'
+}
+
+// The vendor's CDI Full extension is replaced by build-compatible discovery and synthetic beans.
+dependencies {
+    testImplementation projects.micronautMicroprofileTckConfigLite
+}
+tasks.register('tckLiteSuite', Test) {
+    group = 'verification'
+    description = 'Runs the unchanged Config TCK with the build-compatible SmallRye integration.'
+    dependsOn tasks.named('upstreamSuite'), tasks.named('testClasses')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useTestNG()
+    scanForTestClasses = false
+    failOnNoDiscoveredTests = true
+    maxHeapSize = '2g'
+    maxParallelForks = 1
+    forkEvery = 1
+    ignoreFailures = providers.gradleProperty('mpTckIgnoreFailures').isPresent()
+    outputs.upToDateWhen { false }
+    systemProperty 'mp.tck.component', 'config'
+    systemProperty 'mp.tck.mode', 'lite'
+    systemProperty 'mp.tck.buildExtensions', 'io.micronaut.cdi.mptck.configlite.SmallRyeConfigBuildCompatibleExtension'
+    systemProperty 'mp.tck.sources', layout.buildDirectory.dir('upstream').get().asFile.absolutePath
+    systemProperty 'mp.tck.evidence', layout.buildDirectory.dir('deployments/lite').get().asFile.absolutePath
+    doFirst {
+        def selected = layout.buildDirectory.file('selected-tests.txt').get().asFile.readLines().findAll { !it.isBlank() }
+        def requested = new LinkedHashSet(filter.includePatterns)
+        if (filter.metaClass.hasProperty(filter, 'commandLineIncludePatterns')) requested.addAll(filter.commandLineIncludePatterns)
+        if (!requested.isEmpty()) {
+            def inventory = layout.buildDirectory.file('test-discovery.tsv').get().asFile.readLines().drop(1)
+                .findAll { it.contains('\tselected\t') }.collectEntries { line ->
+                    def columns = line.split('\t', -1)
+                    [(columns[0]): columns[2].split(',').findAll { !it.isBlank() }
+                        .collect { it.substring(it.lastIndexOf('#') + 1) }]
+                }
+            selected = selected.findAll { name ->
+                requested.any { pattern ->
+                    def regex = pattern.split('\\*', -1).collect { java.util.regex.Pattern.quote(it) }.join('.*')
+                    def simple = name.substring(name.lastIndexOf('.') + 1)
+                    name.matches(regex) || simple.matches(regex) || pattern.startsWith(name + '.') || pattern.startsWith(simple + '.')
+                        || inventory.getOrDefault(name, []).any { method -> (name + '.' + method).matches(regex) || (simple + '.' + method).matches(regex) }
+                }
+            }
+        }
+        if (selected.isEmpty()) throw new GradleException("No upstream Config classes match requested filters: ${requested}")
+        include selected.collect { it.replace('.', '/') + '.class' }
+        delete layout.buildDirectory.dir('deployments/lite')
+        systemProperty 'mp.tck.classpath', classpath.asPath
+        layout.buildDirectory.file('artifacts-lite.tsv').get().asFile.text =
+            configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts.collect { artifact ->
+                def hash = java.security.MessageDigest.getInstance('SHA-256').digest(artifact.file.bytes).encodeHex()
+                "${artifact.moduleVersion.id}\t${artifact.file.name}\t${hash}"
+            }.sort().join('\n') + '\n'
+    }
+}
+// Keep the existing native/imported/reference controls independent from the adapter on their classpath.
+['tckSuite', 'tckImportedSuite', 'tckReferenceSuite'].each { taskName ->
+    tasks.named(taskName) { systemProperty 'mp.tck.buildExtensions', '' }
+}

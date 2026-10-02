@@ -1,0 +1,12 @@
+plugins {
+    id 'io.micronaut.build.internal.cdi-base'
+    id 'java-library'
+}
+
+dependencies {
+    api libs.managed.jakarta.cdi.api
+    implementation projects.micronautCdi
+    api 'io.smallrye.config:smallrye-config:3.18.3'
+}
+// This library describes components for consumer compilation; it is not itself a bean archive.
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none'] }

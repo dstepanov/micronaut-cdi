@@ -19,3 +19,9 @@ git -C build/optional-collection-core apply ../../core-integration/optional-coll
 Core branch `codex/task-01-bean-injection-provider` owns the provider API. The stacked `codex/bean-injection-provider-nullability` follow-up retains seven Core regressions covering injection routes, container shapes and qualifiers, meta-annotations, ordinary Micronaut controls, property precedence, invalid/missing providers, nullability and dependent ownership. It adds non-required field/initializer injection and a context-provided `@EachBean` qualifier absent from argument metadata. Runtime and processor Checkstyle pass with existing warnings.
 
 Recorded research and campaign evidence are preserved on `codex/archive/microprofile-integration-2026-10-02`, outside the task stack.
+
+## Config environment qualifier fix
+
+[The stacked environment qualifier fix](https://github.com/dstepanov/micronaut-core/pull/2), on `codex/config-environment-qualifiers`, delegates stereotype-selected annotation values through environment metadata. Without it, qualifiers disappear when annotation members contain `${...}`. The reproduction patch includes this additional Core fix and its independent regression.
+
+The Config adapter retains SmallRye Config 3.18.3 and passes all 378 unchanged Config 3.1.2 TCK methods without skips. See [Config Lite](../microprofile-tck/config-lite/README.md).
