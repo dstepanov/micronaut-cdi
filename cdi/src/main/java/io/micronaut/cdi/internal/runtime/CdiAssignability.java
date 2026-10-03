@@ -229,12 +229,34 @@ public final class CdiAssignability {
      * @return Whether the types match
      */
     public static boolean isEventTypeMatching(Argument<?> observedEventType, Argument<?> eventType) {
-        for (Argument<?> type : typeClosureOf(eventType)) {
+        return isEventTypeMatching(observedEventType, eventTypeClosureOf(eventType));
+    }
+
+    /**
+     * Whether an observer of the given type hears an event of the given type closure: the form for matching one
+     * event against many observers, its closure collected once.
+     *
+     * @param observedEventType The type the observer observes
+     * @param eventTypeClosure  The closure of the type of the event, as {@link #eventTypeClosureOf} has it
+     * @return Whether the types match
+     */
+    static boolean isEventTypeMatching(Argument<?> observedEventType, List<Argument<?>> eventTypeClosure) {
+        for (Argument<?> type : eventTypeClosure) {
             if (isEventAssignable(observedEventType, type)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * The type closure an event of the given type is matched by.
+     *
+     * @param eventType The type of the event
+     * @return The closure
+     */
+    static List<Argument<?>> eventTypeClosureOf(Argument<?> eventType) {
+        return typeClosureOf(eventType);
     }
 
     /**

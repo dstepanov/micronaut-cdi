@@ -30,6 +30,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,9 +53,16 @@ import java.util.Set;
 @Internal
 public final class ObserverRegistry {
 
+    private static final int MAX_CACHED_RESOLUTIONS = 1024;
+
     private final BeanContext beanContext;
     private final List<ObserverMethod<?>> synthetic = new ArrayList<>();
     private volatile @Nullable List<ObserverMethod<?>> observers;
+    /**
+     * The observers each kind of event resolved to, emptied whenever an observer is added. An application fires
+     * events of a bounded number of types, and past the bound the rest are resolved as they are fired.
+     */
+    private volatile Map<Resolution, List<ObserverMethod<?>>> resolved = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -95,6 +103,7 @@ public final class ObserverRegistry {
         // one a program implemented itself says what it observes through the specification's interface alone
         synthetic.add(observer instanceof CdiNotifiable ? observer : new ForeignObserverMethod<>(observer));
         observers = null;
+        resolved = new java.util.concurrent.ConcurrentHashMap<>();
     }
 
     private List<ObserverMethod<?>> find() {
@@ -124,18 +133,32 @@ public final class ObserverRegistry {
      */
     public List<ObserverMethod<?>> resolve(Argument<?> eventType, java.util.Collection<CdiQualifier> eventQualifiers,
                                            boolean async) {
+        List<ObserverMethod<?>> all = observers();
+        Resolution key = new Resolution(eventType, List.copyOf(eventQualifiers), async);
+        Map<Resolution, List<ObserverMethod<?>>> cache = resolved;
+        List<ObserverMethod<?>> cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        // the closure of the event's type is the same for every observer it is matched against
+        List<Argument<?>> closure = CdiAssignability.eventTypeClosureOf(eventType);
         List<ObserverMethod<?>> notified = new ArrayList<>();
-        for (ObserverMethod<?> observer : observers()) {
+        for (ObserverMethod<?> observer : all) {
             if (observer.isAsync() != async) {
                 continue;
             }
-            if (CdiAssignability.isEventTypeMatching(((CdiNotifiable) observer).observedArgument(), eventType)
+            if (CdiAssignability.isEventTypeMatching(((CdiNotifiable) observer).observedArgument(), closure)
                 && CdiAssignability.areEventQualifiersMatching(eventQualifiers,
                     ((CdiNotifiable) observer).observedQualifiers())) {
                 notified.add(observer);
             }
         }
-        return notified;
+        List<ObserverMethod<?>> result = List.copyOf(notified);
+        if (observers == all && cache.size() < MAX_CACHED_RESOLUTIONS) {
+            // kept only while the observers it was resolved among are the current ones
+            cache.putIfAbsent(key, result);
+        }
+        return result;
     }
 
     /**
@@ -226,4 +249,25 @@ public final class ObserverRegistry {
      * declared as is parameterized: the parameterization is not on the object itself and would be lost.</p>
      */
 
+    /**
+     * What an event's observers are resolved by: the type it was fired as, compared by its structure, the
+     * qualifiers it was fired with, and whether it was fired asynchronously.
+     *
+     * @param eventType  The type of the event
+     * @param qualifiers The qualifiers of the event
+     * @param async      Whether it was fired asynchronously
+     */
+    private record Resolution(Argument<?> eventType, List<CdiQualifier> qualifiers, boolean async) {
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Resolution other && async == other.async
+                && eventType.equalsStructure(other.eventType) && qualifiers.equals(other.qualifiers);
+        }
+
+        @Override
+        public int hashCode() {
+            return (eventType.structureHashCode() * 31 + qualifiers.hashCode()) * 31 + Boolean.hashCode(async);
+        }
+    }
 }

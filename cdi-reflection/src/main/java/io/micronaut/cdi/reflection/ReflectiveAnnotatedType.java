@@ -73,13 +73,7 @@ final class ReflectiveAnnotatedType<X> implements AnnotatedType<X> {
 
     @Override
     public Set<Type> getTypeClosure() {
-        Set<Type> closure = new LinkedHashSet<>();
-        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
-            closure.add(current);
-            closure.addAll(java.util.List.of(current.getGenericInterfaces()));
-        }
-        closure.add(Object.class);
-        return closure;
+        return ReflectiveCdi.annotatedTypeClosure(type);
     }
 
     @Override
@@ -89,7 +83,7 @@ final class ReflectiveAnnotatedType<X> implements AnnotatedType<X> {
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return Set.of(type.getAnnotationsByType(annotationType));
+        return new LinkedHashSet<>(java.util.List.of(type.getAnnotationsByType(annotationType)));
     }
 
     @Override

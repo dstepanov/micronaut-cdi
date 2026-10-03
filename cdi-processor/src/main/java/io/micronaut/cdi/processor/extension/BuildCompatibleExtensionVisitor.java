@@ -79,6 +79,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final String TRIGGER = "RegistrationEnd";
     private static final String COMPONENTS = "SyntheticComponents";
     private static final String CONTEXTS = "RegisteredContexts";
+    private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
      * What is kept from the moment a source is generated until the compiler comes to it: the visitor whose
@@ -104,6 +105,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean synthesized;
     private boolean triggerWritten;
     private final TypeIndexCollector typeIndex = new TypeIndexCollector();
+    private final List<ClassElement> contributors = new ArrayList<>();
     private @org.jspecify.annotations.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
@@ -433,9 +435,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             "The marker of the end of registration");
     }
 
-    private static void writeSource(VisitorContext context, String className, String source, String what) {
+    private void writeSource(VisitorContext context, String className, String source, String what) {
         java.util.Optional<io.micronaut.inject.writer.GeneratedFile> generated =
-            context.visitGeneratedSourceFile(GENERATED, className);
+            generatedSource(context, GENERATED, className, contributors());
         if (generated.isEmpty()) {
             context.fail(what + " could not be written: the compilation accepts no generated source, and the "
                 + "synthesis and validation phases of the build compatible extensions need one", null);
@@ -446,6 +448,32 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         } catch (Exception e) {
             throw new IllegalStateException(what + " could not be written", e);
         }
+    }
+
+    /**
+     * Opens a source this visitor generates. Each is written from what the classes of the compilation said - the
+     * marker, the factories, the imports, the type index - rather than from one class.
+     *
+     * <p>Under javac the visitor stays isolating, because only the isolating processor runs it before the other
+     * visitors, as an enhancement has to be, and the source is written with no originating element: Gradle then
+     * recompiles the whole source set rather than part of it, which is what the source needs. Under KSP every
+     * class the compilation has visited so far is named as an origin: a source that names none is dropped as
+     * soon as any file is deleted, with nothing left to regenerate it, while one that names them is generated
+     * again, the other classes it names processed again with it, whenever one of them changes or goes.</p>
+     */
+    static java.util.Optional<io.micronaut.inject.writer.GeneratedFile> generatedSource(
+        VisitorContext context, String packageName, String className, io.micronaut.inject.ast.Element[] origins) {
+        if (context.getLanguage() == VisitorContext.Language.KOTLIN) {
+            return context.visitGeneratedSourceFile(packageName, className, origins);
+        }
+        return context.visitGeneratedSourceFile(packageName, className);
+    }
+
+    /**
+     * The classes of the compilation this visitor has visited, which what it generates is written from.
+     */
+    io.micronaut.inject.ast.Element[] contributors() {
+        return contributors.toArray(new io.micronaut.inject.ast.Element[0]);
     }
 
     private void writeScannedImport(VisitorContext context) {
@@ -460,13 +488,18 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // with nothing on it is never handed to the bean machinery: a generated import names them all, and
         // its processing is what makes each a bean (their scope was put on as they were visited)
         GeneratedSource source = new GeneratedSource(context.getLanguage());
+        List<String> canonicalNames = new ArrayList<>();
+        for (String scanned : discovered.scannedClasses()) {
+            // a class literal names a nested class by its canonical name, never by its binary one
+            canonicalNames.add(context.getClassElement(scanned).map(ClassElement::getCanonicalName).orElse(scanned));
+        }
         source.annotation("io.micronaut.context.annotation.ClassImport",
-            "classes = " + source.classes(discovered.scannedClasses()));
+            "classes = " + source.classes(canonicalNames));
         write(context, "ScannedClassesImport", source, "The scanned classes import");
     }
 
-    private static void write(VisitorContext context, String className, GeneratedSource source, String what) {
-        context.visitGeneratedSourceFile("io.micronaut.cdi.generated", className)
+    private void write(VisitorContext context, String className, GeneratedSource source, String what) {
+        generatedSource(context, GENERATED, className, contributors())
             .ifPresent(file -> {
                 try {
                     file.write(writer -> writer.write(source.classNamed(className)));
@@ -517,10 +550,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         } else {
             if (suffix == null) {
-                // what this compilation generates is named after the first class it compiles, so that two
-                // compilations of one application do not generate the same class
-                suffix = Integer.toHexString(name.hashCode());
+                suffix = suffixOf(name, context);
             }
+            contributors.add(element);
             typeIndex.collect(element);
             if (!triggerWritten && (!typeIndex.isEmpty()
                 || !synthesizers.isEmpty() || !validators.isEmpty() || !registrars.isEmpty())) {
@@ -547,6 +579,36 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
+     * What the classes this compilation generates are named with, so that two compilations of one application -
+     * two modules, or the main and the test classes of one - do not generate the same class.
+     *
+     * <p>It has to be the same from one build to the next: an incremental build that generated the classes under
+     * another name would leave the definitions Micronaut wrote for the old ones behind, naming classes that are
+     * gone. Where the build names the module being compiled, as the Micronaut Gradle plugin does,
+     * the name is made from that, and from how many compilations of the same module are on the class path
+     * already - the main classes are, to the test classes. Otherwise it is made from the first class the
+     * compilation compiles, which a build that compiles everything at once comes to first every time.</p>
+     */
+    private static String suffixOf(String firstClass, VisitorContext context) {
+        Map<String, String> options = context.getOptions();
+        String group = options.get(VisitorContext.MICRONAUT_PROCESSING_GROUP);
+        String module = options.get(VisitorContext.MICRONAUT_PROCESSING_MODULE);
+        if (module == null || module.isEmpty()) {
+            return Integer.toHexString(firstClass.hashCode());
+        }
+        String compilation = group + ":" + module;
+        for (int taken = 0; taken < MAX_COMPILATIONS_OF_A_MODULE; taken++) {
+            String candidate = Integer.toHexString(
+                (taken == 0 ? compilation : compilation + "#" + taken).hashCode());
+            if (context.getClassElement(GENERATED + "." + TRIGGER + candidate).isEmpty()
+                && context.getClassElement(GENERATED + "." + CONTEXTS + candidate).isEmpty()) {
+                return candidate;
+            }
+        }
+        return Integer.toHexString(firstClass.hashCode());
+    }
+
+    /**
      * The generated marker has come past: every class the compilation started with has been registered. Where
      * a generated import named more classes, they come past with or after this marker, so a second marker is
      * written and the phases wait for it.
@@ -566,7 +628,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         if (visitor.suffix != null) {
-            visitor.typeIndex.write(context, visitor.suffix);
+            visitor.typeIndex.write(context, visitor.suffix, visitor.contributors());
         }
         visitor.synthesise(context);
     }
@@ -1174,7 +1236,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         String strings(java.util.Collection<String> values) {
             List<String> literals = new ArrayList<>(values.size());
             for (String value : values) {
-                literals.add('"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"');
+                String escaped = value.replace("\\", "\\\\").replace("\"", "\\\"");
+                if (language != VisitorContext.Language.JAVA) {
+                    // a double-quoted string of Kotlin and of Groovy interpolates what follows a dollar sign,
+                    // and the binary name of a nested class has one
+                    escaped = escaped.replace("$", "\\$");
+                }
+                literals.add('"' + escaped + '"');
             }
             return "value = " + array(literals);
         }
