@@ -40,6 +40,7 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
     @Discovery
     public void zestyIsAQualifier(MetaAnnotations meta) {
         meta.addQualifier(Zesty.class);
+        meta.addQualifier(Zesty.Nested.class);
     }
 
     /**

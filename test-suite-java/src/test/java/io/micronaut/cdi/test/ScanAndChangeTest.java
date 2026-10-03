@@ -29,6 +29,15 @@ class ScanAndChangeTest {
     }
 
     @Test
+    void aScannedNestedClassIsABean() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            assertEquals(1, manager.getBeans(PlainScannedBean.Nested.class).size(),
+                "the nested class the extension scanned by its binary name is a bean");
+        }
+    }
+
+    @Test
     void aRemovedQualifierIsGone() {
         try (ApplicationContext context = ApplicationContext.run()) {
             BeanManager manager = context.getBean(BeanManager.class);

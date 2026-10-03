@@ -23,4 +23,12 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Zesty {
+
+    /**
+     * A nested annotation the discovery phase makes a qualifier too: its binary name has a dollar sign in it,
+     * which a generated Kotlin or Groovy source has to escape.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Nested {
+    }
 }
