@@ -85,6 +85,26 @@ class InjectionPointMetadataTest {
     }
 
     @Test
+    void theTypeClosureOfAnAnnotatedFieldHoldsTheTypesAboveIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Mast mast = container.createInstance().select(Mast.class).get();
+            Set<java.lang.reflect.Type> closure = mast.pennant.at().getAnnotated().getTypeClosure();
+            assertEquals(Set.of(Pennant.class, Record.class, Object.class), closure);
+        }
+    }
+
+    @Test
+    void theTypeClosureOfAnObjectFieldIsObjectAlone() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Flagpole flagpole = container.createInstance().select(Flagpole.class).get();
+            InjectionPoint at = (InjectionPoint) flagpole.flag;
+            assertEquals(Set.of(Object.class), at.getAnnotated().getTypeClosure());
+        }
+    }
+
+    @Test
     void theQualifiersOfTheInjectionPointAreTheOnesThePointDeclared() {
         try (ApplicationContext context = ApplicationContext.run()) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
@@ -108,6 +128,15 @@ class InjectionPointMetadataTest {
          */
         final class Literal extends AnnotationLiteral<Hoisted> implements Hoisted {
         }
+    }
+
+    /**
+     * Qualifies the injection point of type {@code Object}, so that it resolves to one producer alone.
+     */
+    @Qualifier
+    @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Flag {
     }
 
     /**
@@ -144,6 +173,28 @@ class InjectionPointMetadataTest {
         Pennant hoistedPennant(InjectionPoint at) {
             return new Pennant(at);
         }
+
+        /**
+         * @param at The point being injected into
+         * @return The point itself
+         */
+        @Produces
+        @Dependent
+        @Flag
+        Object flag(InjectionPoint at) {
+            return at;
+        }
+    }
+
+    /**
+     * Asks for an object, which is the whole of its type closure.
+     */
+    @Singleton
+    public static class Flagpole {
+
+        @Inject
+        @Flag
+        Object flag;
     }
 
     /**

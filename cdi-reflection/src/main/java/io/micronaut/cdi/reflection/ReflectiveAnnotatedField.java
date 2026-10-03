@@ -66,7 +66,7 @@ final class ReflectiveAnnotatedField<X> implements AnnotatedField<X> {
 
     @Override
     public Set<Type> getTypeClosure() {
-        return Set.of(field.getGenericType(), Object.class);
+        return ReflectiveCdi.annotatedTypeClosure(field.getGenericType());
     }
 
     @Override
@@ -76,7 +76,7 @@ final class ReflectiveAnnotatedField<X> implements AnnotatedField<X> {
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return Set.of(field.getAnnotationsByType(annotationType));
+        return new LinkedHashSet<>(java.util.List.of(field.getAnnotationsByType(annotationType)));
     }
 
     @Override

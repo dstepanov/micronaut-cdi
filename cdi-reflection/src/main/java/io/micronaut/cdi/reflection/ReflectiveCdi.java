@@ -126,6 +126,21 @@ public final class ReflectiveCdi implements CdiReflection {
         return closure;
     }
 
+    /**
+     * The type closure of an annotated element of the given type: the type, every type above it, and
+     * {@code java.lang.Object}, each once.
+     *
+     * @param type The type
+     * @return The closure
+     */
+    static Set<Type> annotatedTypeClosure(Type type) {
+        java.util.List<Type> collected = new java.util.ArrayList<>();
+        collectClosure(type, collected, true);
+        Set<Type> closure = new LinkedHashSet<>(collected);
+        closure.add(Object.class);
+        return closure;
+    }
+
     private static void collectClosure(@Nullable Type type, java.util.List<Type> closure, boolean arrayStops) {
         if (type == null || type == Object.class) {
             return;
