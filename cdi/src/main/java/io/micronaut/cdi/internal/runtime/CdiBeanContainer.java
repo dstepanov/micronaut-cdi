@@ -87,6 +87,15 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private final RequestScope requestScope;
     private final io.micronaut.cdi.internal.context.ApplicationScope applicationScope;
     private volatile @Nullable List<CdiBean<?>> beans;
+    /**
+     * Each bean of {@link #beans} by itself, for finding the container's own bean of a definition.
+     */
+    private volatile @Nullable Map<CdiBean<?>, CdiBean<?>> canonical;
+    /**
+     * The beans narrowed by the class of a bean type, for each class a lookup has asked for: emptied whenever
+     * the beans are read again.
+     */
+    private volatile Map<Class<?>, List<CdiBean<?>>> byClass = new java.util.concurrent.ConcurrentHashMap<>();
     private boolean validated;
     private final ObserverRegistry observers;
 
@@ -191,7 +200,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (CdiBean<?> bean : candidates()) {
+        for (CdiBean<?> bean : candidatesOfType(beanType)) {
             if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {
                 // the built-in event and lookup exist for whatever legal type an injection point asks them
                 // for, so the one bean of each answers every parameterization of its type — and the raw type
@@ -208,6 +217,49 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
         }
         return beans;
+    }
+
+    /**
+     * The beans that may have a bean type matching the given one, in the order of {@link #candidates()}: a bean
+     * type matches a class or a parameterized type only where its own class is the same, a primitive and its
+     * wrapper taken as one, so the beans are narrowed by that class before the rules of the specification
+     * decide. The built-in event and lookup are kept where they answer the class. A type that names no class,
+     * an array, and {@code Object}, which every bean has, are compared against every bean.
+     */
+    private List<CdiBean<?>> candidatesOfType(Argument<?> beanType) {
+        List<CdiBean<?>> all = candidates();
+        Class<?> raw = CdiTypes.classOf(beanType);
+        if (raw == null || raw == Object.class) {
+            return all;
+        }
+        Class<?> key = CdiTypes.boxedOf(raw);
+        Map<Class<?>, List<CdiBean<?>>> index = byClass;
+        List<CdiBean<?>> narrowed = index.get(key);
+        if (narrowed == null) {
+            List<CdiBean<?>> found = new java.util.ArrayList<>();
+            for (CdiBean<?> bean : all) {
+                if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn
+                    ? builtIn.isBeanType(raw) : hasTypeOfClass(bean, key)) {
+                    found.add(bean);
+                }
+            }
+            narrowed = List.copyOf(found);
+            if (beans == all) {
+                // kept only while the beans it was narrowed from are the current ones
+                index.putIfAbsent(key, narrowed);
+            }
+        }
+        return narrowed;
+    }
+
+    private static boolean hasTypeOfClass(CdiBean<?> bean, Class<?> boxedClass) {
+        for (Argument<?> type : bean.types()) {
+            Class<?> raw = CdiTypes.classOf(type);
+            if (raw != null && CdiTypes.boxedOf(raw) == boxedClass) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Argument<?> requireNoTypeVariable(Argument<?> required) {
@@ -251,7 +303,13 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      */
     public CdiBean<?> canonicalBean(io.micronaut.inject.BeanDefinition<?> definition) {
         CdiBean<?> described = new CdiBean<>(beanContext, definition);
-        for (CdiBean<?> candidate : candidates()) {
+        List<CdiBean<?>> all = candidates();
+        Map<CdiBean<?>, CdiBean<?>> index = canonical;
+        if (index != null) {
+            CdiBean<?> found = index.get(described);
+            return found != null ? found : described;
+        }
+        for (CdiBean<?> candidate : all) {
             if (candidate.equals(described)) {
                 return candidate;
             }
@@ -266,6 +324,8 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     public void refreshCandidates() {
         synchronized (this) {
             beans = null;
+            canonical = null;
+            byClass = new java.util.concurrent.ConcurrentHashMap<>();
         }
     }
 
@@ -302,7 +362,13 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         synchronized (this) {
             if (beans == null) {
-                beans = loadCandidates();
+                List<CdiBean<?>> loaded = loadCandidates();
+                Map<CdiBean<?>, CdiBean<?>> byItself = new java.util.HashMap<>();
+                for (CdiBean<?> bean : loaded) {
+                    byItself.putIfAbsent(bean, bean);
+                }
+                canonical = byItself;
+                beans = loaded;
             }
             return beans;
         }

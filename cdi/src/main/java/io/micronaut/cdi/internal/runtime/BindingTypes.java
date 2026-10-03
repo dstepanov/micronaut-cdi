@@ -46,6 +46,13 @@ public final class BindingTypes {
 
     private static final String LOCATION = "META-INF/micronaut-cdi/bindings/";
     private static final Map<String, BindingType> RECORDS = new ConcurrentHashMap<>();
+    /**
+     * The names each class loader has no record of. A lookup by an annotation the application was not compiled
+     * with is made again and again - each selection by it, each resolution it takes part in - and reads the
+     * class path only the first time. Weakly keyed, so that a class loader that is done with is let go.
+     */
+    private static final Map<ClassLoader, Set<String>> MISSING =
+        java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
 
     private BindingTypes() {
     }
@@ -79,8 +86,13 @@ public final class BindingTypes {
         if (loader == null) {
             return null;
         }
+        Set<String> missing = MISSING.computeIfAbsent(loader, absent -> ConcurrentHashMap.newKeySet());
+        if (missing.contains(name)) {
+            return null;
+        }
         try (InputStream in = loader.getResourceAsStream(LOCATION + name)) {
             if (in == null) {
+                missing.add(name);
                 return null;
             }
             boolean qualifier = false;
