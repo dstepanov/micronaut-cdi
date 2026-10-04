@@ -64,6 +64,7 @@ public class CdiBean<T> implements Bean<T> {
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
     private volatile java.util.@Nullable List<CdiQualifier> qualifiers;
+    private volatile java.util.@Nullable List<Argument<?>> types;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
@@ -129,7 +130,13 @@ public class CdiBean<T> implements Bean<T> {
      * @return The bean types
      */
     public java.util.List<Argument<?>> types() {
-        return typesOf(definition, beanClass());
+        // read once: resolution compares them for every lookup, and what the processor recorded does not change
+        java.util.List<Argument<?>> resolved = types;
+        if (resolved == null) {
+            resolved = java.util.List.copyOf(typesOf(definition, beanClass()));
+            types = resolved;
+        }
+        return resolved;
     }
 
     /**

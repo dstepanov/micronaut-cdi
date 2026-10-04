@@ -126,7 +126,7 @@ final class TypeIndexCollector {
      * Writes a class into each package that has something recorded, in the language being compiled: an empty
      * class, whose record is put on it as annotation values when the compiler comes to it.
      */
-    void write(VisitorContext context, String suffix) {
+    void write(VisitorContext context, String suffix, io.micronaut.inject.ast.Element[] origins) {
         boolean kotlin = context.getLanguage() == VisitorContext.Language.KOTLIN;
         byPackage.forEach((packageName, entries) -> {
             for (int from = 0, part = 0; from < entries.size(); from += ENTRIES_PER_CLASS, part++) {
@@ -139,7 +139,7 @@ final class TypeIndexCollector {
                     + (kotlin ? "class " + className + "\n" : "final class " + className + " {\n}\n");
                 RECORDS.put(packageName + "." + className, AnnotationValue.builder(CdiTypeIndex.class)
                     .member("value", chunk.toArray(new AnnotationValue<?>[0])).build());
-                context.visitGeneratedSourceFile(packageName, className).ifPresent(file -> {
+                BuildCompatibleExtensionVisitor.generatedSource(context, packageName, className, origins).ifPresent(file -> {
                     try {
                         file.write(writer -> writer.write(source));
                     } catch (Exception e) {

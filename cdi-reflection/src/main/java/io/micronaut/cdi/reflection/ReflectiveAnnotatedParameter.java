@@ -67,7 +67,7 @@ final class ReflectiveAnnotatedParameter<X> implements AnnotatedParameter<X> {
 
     @Override
     public Set<Type> getTypeClosure() {
-        return Set.of(parameter().getParameterizedType(), Object.class);
+        return ReflectiveCdi.annotatedTypeClosure(parameter().getParameterizedType());
     }
 
     @Override
@@ -77,7 +77,7 @@ final class ReflectiveAnnotatedParameter<X> implements AnnotatedParameter<X> {
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return Set.of(parameter().getAnnotationsByType(annotationType));
+        return new LinkedHashSet<>(java.util.List.of(parameter().getAnnotationsByType(annotationType)));
     }
 
     @Override

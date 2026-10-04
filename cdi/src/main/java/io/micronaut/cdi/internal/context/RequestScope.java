@@ -393,12 +393,15 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         // shut down whose request was never ended — may sit above this container's on the same thread, and is
         // not a request of this one
         return PropagatedContext.getOrEmpty().findAll(Instances.class)
-            .filter(instances -> instances.owner() == this)
+            // a request that has ended stays in every propagated context captured while it was under way - the
+            // context of a task handed to an executor, say - and is not a request to put new beans into
+            .filter(instances -> instances.owner() == this && !instances.ended().get())
             .findFirst().orElse(null);
     }
 
     private Instances newInstances() {
-        Instances instances = new Instances(this, new ConcurrentHashMap<>(8));
+        Instances instances = new Instances(this, new ConcurrentHashMap<>(8),
+            new java.util.concurrent.atomic.AtomicBoolean());
         live.add(instances);
         return instances;
     }
@@ -429,6 +432,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private void ended(Instances instances) {
+        instances.ended().set(true);
         live.remove(instances);
     }
 
@@ -439,8 +443,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      *
      * @param owner The scope the request belongs to, each container having its own
      * @param beans The beans of the request
+     * @param ended Whether the request has ended, its beans destroyed
      */
-    private record Instances(RequestScope owner, Map<BeanIdentifier, CreatedBean<?>> beans)
+    private record Instances(RequestScope owner, Map<BeanIdentifier, CreatedBean<?>> beans,
+                             java.util.concurrent.atomic.AtomicBoolean ended)
         implements PropagatedContextElement {
 
         // one request is one object: the generated equality would compare the bean maps, making every

@@ -1,6 +1,9 @@
 package io.micronaut.cdi.test.groovy
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer
+import io.micronaut.cdi.internal.runtime.ExtensionQualifiers
+import io.micronaut.cdi.test.PlainScannedBean
+import io.micronaut.cdi.test.extension.Zesty
 import io.micronaut.cdi.spi.CdiReflection
 import io.micronaut.cdi.test.extension.Tended
 import io.micronaut.cdi.test.extension.TendedContext
@@ -30,6 +33,19 @@ class SynthesisUnderGroovyTest {
             CdiBeanContainer container = context.getBean(CdiBeanContainer)
             assertEquals(1, container.getBeans("signpost").size())
             assertEquals("this way", container.createInstance().select(Signpost).get().text())
+        } finally {
+            context.close()
+        }
+    }
+
+    @Test
+    void aNestedClassNamedWithADollarSignIsScannedAndQualifies() {
+        // the generated sources name both by a binary name, which a Groovy string would otherwise interpolate
+        ApplicationContext context = ApplicationContext.run()
+        try {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer)
+            assertEquals(1, container.getBeans(PlainScannedBean.Nested).size())
+            assertTrue(ExtensionQualifiers.isKnownQualifier(Zesty.Nested.name))
         } finally {
             context.close()
         }

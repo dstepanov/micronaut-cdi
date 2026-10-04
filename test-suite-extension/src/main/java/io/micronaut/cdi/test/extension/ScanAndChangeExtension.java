@@ -15,6 +15,8 @@ public class ScanAndChangeExtension implements BuildCompatibleExtension {
     @Discovery
     public void scan(ScannedClasses scan) {
         scan.add("io.micronaut.cdi.test.PlainScannedBean");
+        // a nested class, named as Class.getName() names it
+        scan.add("io.micronaut.cdi.test.PlainScannedBean$Nested");
     }
 
     @Enhancement(types = Object.class, withSubtypes = true, withAnnotations = RemovableQualifier.class)

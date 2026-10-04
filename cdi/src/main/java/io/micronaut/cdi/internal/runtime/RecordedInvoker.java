@@ -25,7 +25,6 @@ import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.enterprise.invoke.Invoker;
 import org.jspecify.annotations.Nullable;
 
-
 /**
  * One invoker an extension built (CDI 4.1, chapter 7), read from the record the registration phase wrote, and
  * what invokes the method at runtime.
@@ -50,6 +49,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     private final boolean staticMethod;
     private final boolean instanceLookup;
     private final boolean[] argumentLookups;
+    private volatile @Nullable Target cachedTarget;
 
     public RecordedInvoker(String beanClassName, String methodName, String[] parameterTypeNames,
                            boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups) {
@@ -98,9 +98,16 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                 + beanClassName + "#" + methodName + " in");
         }
         BeanContext beanContext = container.beanContext();
-        BeanDefinition<?> definition = definitionOf(beanContext);
+        Target resolved = cachedTarget;
+        if (resolved == null || resolved.beanContext() != beanContext) {
+            // found once for the container that invokes it: an invoker is meant to be called again and again
+            BeanDefinition<?> named = definitionOf(beanContext);
+            resolved = new Target(beanContext, named, executable(named));
+            cachedTarget = resolved;
+        }
+        BeanDefinition<?> definition = resolved.definition();
         Class<?> beanClass = beanClassOf(definition);
-        ExecutableMethod<Object, Object> method = executable(definition);
+        ExecutableMethod<Object, Object> method = resolved.method();
         Class<?>[] parameterTypes = method.getArgumentTypes();
 
         if (arguments == null) {
@@ -357,5 +364,16 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             }
             return null;
         }
+    }
+
+    /**
+     * The definition and the method an invoker invokes, in the container it found them in.
+     *
+     * @param beanContext The context of the container
+     * @param definition  The definition of the bean
+     * @param method      The method
+     */
+    private record Target(BeanContext beanContext, BeanDefinition<?> definition,
+                          ExecutableMethod<Object, Object> method) {
     }
 }

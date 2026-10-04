@@ -8,4 +8,10 @@ public class PlainScannedBean {
     public String ping() {
         return "scanned";
     }
+
+    /**
+     * A nested class the extension adds by its binary name.
+     */
+    public static class Nested {
+    }
 }

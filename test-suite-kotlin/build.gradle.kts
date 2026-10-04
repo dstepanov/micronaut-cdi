@@ -26,3 +26,10 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.jupiter.engine)
 }
+
+// what the Micronaut Gradle plugin passes every compilation, and what names the classes the processor generates
+// the same from one incremental build to the next
+ksp {
+    arg("micronaut.processing.group", "io.micronaut.cdi")
+    arg("micronaut.processing.module", project.name)
+}
