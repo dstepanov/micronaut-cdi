@@ -381,10 +381,20 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private @Nullable Instances currentInstances() {
+        PropagatedContext context = PropagatedContext.getOrEmpty();
+        // asked on every call through a client proxy of a request scoped bean: the most recent request is
+        // nearly always this container's live one, and is found without walking the context
+        Instances top = context.findOrNull(Instances.class);
+        if (top == null) {
+            return null;
+        }
+        if (top.owner() == this && !top.ended().get()) {
+            return top;
+        }
         // walked rather than peeked: a request of another container — one running alongside, or one already
         // shut down whose request was never ended — may sit above this container's on the same thread, and is
         // not a request of this one
-        return PropagatedContext.getOrEmpty().findAll(Instances.class)
+        return context.findAll(Instances.class)
             // a request that has ended stays in every propagated context captured while it was under way - the
             // context of a task handed to an executor, say - and is not a request to put new beans into
             .filter(instances -> instances.owner() == this && !instances.ended().get())

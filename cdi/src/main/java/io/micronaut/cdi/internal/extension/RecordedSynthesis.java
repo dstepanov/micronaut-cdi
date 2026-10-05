@@ -93,6 +93,10 @@ public final class RecordedSynthesis {
         this.beanContext = beanContext;
     }
 
+    private java.util.Collection<BeanDefinition<Object>> recorded(Class<? extends java.lang.annotation.Annotation> record) {
+        return beanContext.getBeanDefinitions(io.micronaut.inject.qualifiers.Qualifiers.byStereotype(record));
+    }
+
     @PostConstruct
     void register() {
         // a record is identified by the extension that described it, so that a bean two compilations of one
@@ -100,13 +104,18 @@ public final class RecordedSynthesis {
         Map<String, BeanDefinition<?>> beans = new LinkedHashMap<>();
         Map<String, BeanDefinition<?>> disposers = new LinkedHashMap<>();
         Map<String, BeanDefinition<?>> observers = new LinkedHashMap<>();
-        for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            AnnotationMetadata metadata = definition.getAnnotationMetadata();
-            metadata.findAnnotation(CdiSyntheticBean.class).ifPresent(record ->
+        // each kind of record is found by its annotation on the references of the generated factories' methods:
+        // only those definitions are loaded, rather than every definition of the application
+        for (BeanDefinition<?> definition : recorded(CdiSyntheticBean.class)) {
+            definition.getAnnotationMetadata().findAnnotation(CdiSyntheticBean.class).ifPresent(record ->
                 beans.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
-            metadata.findAnnotation(CdiSyntheticDisposer.class).ifPresent(record ->
+        }
+        for (BeanDefinition<?> definition : recorded(CdiSyntheticDisposer.class)) {
+            definition.getAnnotationMetadata().findAnnotation(CdiSyntheticDisposer.class).ifPresent(record ->
                 disposers.putIfAbsent(record.stringValue().orElseThrow(), definition));
-            metadata.findAnnotation(CdiSyntheticObserver.class).ifPresent(record ->
+        }
+        for (BeanDefinition<?> definition : recorded(CdiSyntheticObserver.class)) {
+            definition.getAnnotationMetadata().findAnnotation(CdiSyntheticObserver.class).ifPresent(record ->
                 observers.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
         }
         if (beans.isEmpty() && observers.isEmpty()) {
@@ -282,13 +291,11 @@ public final class RecordedSynthesis {
                 Map.of(AnnotationMetadata.VALUE_MEMBER, -priority[0]));
             metadata.addDeclaredAnnotation("io.micronaut.context.annotation.Primary", Map.of());
         }
-        if (scope != null) {
-            // the effective scope, a stereotype-carried one included: the runtime reads this to know the bean
-            // is not dependent
-            metadata.addDeclaredAnnotation(CdiScope.class.getName(), Map.of(
-                AnnotationMetadata.VALUE_MEMBER, scope.getName(),
-                "normal", record.booleanValue("normal").orElse(false)));
-        }
+        // the effective scope, a stereotype-carried one included: the runtime reads this to know whether the bean
+        // is dependent, and that it is a bean of the specification at all, which a dependent one is as much as any
+        metadata.addDeclaredAnnotation(CdiScope.class.getName(), Map.of(
+            AnnotationMetadata.VALUE_MEMBER, scope != null ? scope.getName() : "jakarta.enterprise.context.Dependent",
+            "normal", record.booleanValue("normal").orElse(false)));
         if (record.booleanValue("alternative").orElse(false)) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }

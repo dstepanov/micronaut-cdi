@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -48,6 +49,12 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     private static final int DEFAULT_PRIORITY = 2500;
 
     @Override
+    public io.micronaut.inject.visitor.TypeElementQuery query() {
+        // only the class is visited: what it declares is read from it, and core need not walk its members
+        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    }
+
+    @Override
     public VisitorKind getVisitorKind() {
         return VisitorKind.ISOLATING;
     }
@@ -70,6 +77,7 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         boolean interceptorClass = element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
+        boolean observing = false;
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             int observed = -1;
             boolean async = false;
@@ -142,6 +150,10 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
                 .member("staticMethod", isStatic)
                 .member("during", during)
                 .member("priority", priority));
+            observing = true;
+        }
+        if (observing) {
+            element.annotate(CdiObserving.class);
         }
     }
 

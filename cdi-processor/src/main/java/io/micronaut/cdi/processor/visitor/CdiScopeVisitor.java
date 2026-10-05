@@ -53,6 +53,12 @@ import java.util.List;
 public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
+    public io.micronaut.inject.visitor.TypeElementQuery query() {
+        // only the class is visited: what it declares is read from it, and core need not walk its members
+        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    }
+
+    @Override
     public VisitorKind getVisitorKind() {
         return VisitorKind.ISOLATING;
     }

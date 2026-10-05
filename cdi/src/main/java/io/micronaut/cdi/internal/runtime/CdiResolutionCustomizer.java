@@ -32,6 +32,10 @@ import io.micronaut.inject.QualifiedBeanType;
  * type arguments, the specification's own matching gets the last word. Arrays also use that matching,
  * including raw array lookups, since their element types must be identical.</p>
  *
+ * <p>Only the beans of the specification are resolved by its rules: a lookup whose candidates include a bean of
+ * Micronaut's own is left to the customizer this one was installed over, Micronaut's default where there was
+ * none, so that adding this module to an application leaves the resolution of its own beans as it was.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
@@ -65,6 +69,15 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     private final java.util.concurrent.ConcurrentHashMap<DefinitionKey, java.util.List<Argument<?>>> beanTypes =
         new java.util.concurrent.ConcurrentHashMap<>();
 
+    private final BeanResolutionCustomizer delegate;
+
+    /**
+     * @param delegate The customizer installed before this one, which resolves what is not the specification's
+     */
+    CdiResolutionCustomizer(BeanResolutionCustomizer delegate) {
+        this.delegate = delegate;
+    }
+
     @Override
     public Argument<?> resolveBeanLookupArgument(Argument<?> beanType) {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type; Micronaut keeps them
@@ -73,14 +86,15 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         if (boxed != null) {
             return Argument.of(boxed, beanType.getAnnotationMetadata(), (Class<?>[]) null);
         }
-        return beanType;
+        return delegate.resolveBeanLookupArgument(beanType);
     }
 
     @Override
     public boolean shouldResolveArrayAsBean(Argument<?> injectionPoint) {
-        // an array is a bean type of its own in the specification: an injection point of an array type is
-        // satisfied by a producer of the array, never by collecting the beans of the component type
-        return true;
+        // an array is a bean type of its own in the specification, but an injection point of a bean of the
+        // specification is marked as it compiles to be resolved by the container (ContainerInjectionVisitor): one
+        // reaching Micronaut's own collecting is a bean of Micronaut's
+        return delegate.shouldResolveArrayAsBean(injectionPoint);
     }
 
     @Override
@@ -100,8 +114,10 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 }
             }
         }
-        if (qualifier != null) {
-            return java.util.Optional.empty();
+        if (qualifier != null || !candidates.stream().allMatch(CdiResolutionCustomizer::isBeanOfTheSpecification)) {
+            // a lookup that names its qualifiers, or one among beans of Micronaut's own - which are not given
+            // the default qualifier - is resolved by Micronaut's rules: a primary bean, a secondary one, order
+            return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
         }
         // an injection point with no qualifier asks for the default one (section 2.1.3): among candidates of
         // which some are qualified — a synthetic bean an extension qualified, say — the default-qualified one
@@ -117,7 +133,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         if (defaulted.size() == 1) {
             return java.util.Optional.of(defaulted.get(0));
         }
-        return java.util.Optional.empty();
+        return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
     }
 
     @Override
@@ -138,7 +154,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 "The producer of " + beanDefinition.getBeanType().getName() + " returned null, which only a "
                     + "producer of a dependent instance may");
         }
-        return java.util.Optional.empty();
+        return delegate.resolveNullBean(requestedBeanType, resolvedBeanType, beanDefinition);
     }
 
     @Override
@@ -152,7 +168,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
             return false;
         }
-        return true;
+        return delegate.shouldInitializeBean(resolutionContext, beanDefinition, bean);
     }
 
     @Override
@@ -165,7 +181,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
             return false;
         }
-        return true;
+        return delegate.shouldPreserveLazyProxyTargetResolutionPath(resolutionContext, proxyBeanDefinition);
     }
 
     @Override
@@ -185,10 +201,10 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 });
                 return CdiAssignability.isTypeMatching(types, beanType);
             } catch (RuntimeException | LinkageError e) {
-                return candidate.isCandidateBean(beanType);
+                return delegate.isCandidateBean(beanType, candidate);
             }
         }
-        return candidate.isCandidateBean(beanType);
+        return delegate.isCandidateBean(beanType, candidate);
     }
 
     /**

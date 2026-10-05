@@ -52,6 +52,12 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
     private static final String INJECTION_POINT = "jakarta.enterprise.inject.spi.InjectionPoint";
 
     @Override
+    public io.micronaut.inject.visitor.TypeElementQuery query() {
+        // only the class is visited: what it declares is read from it, and core need not walk its members
+        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    }
+
+    @Override
     public VisitorKind getVisitorKind() {
         return VisitorKind.ISOLATING;
     }
@@ -67,6 +73,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             // an abstract class is not a bean; its members become injection points through the concrete
             // classes that extend it, which are visited with the abstract class's variables resolved —
             // recording the unresolved form here would shadow that resolution
+            return;
+        }
+        if (!SpecificationBeans.isBeanOfTheSpecification(element)) {
+            // a plain Micronaut class compiled alongside keeps Micronaut's rules: a named parameter without a
+            // value, a qualified field without Inject, which Micronaut injects
             return;
         }
         leaveUninjected(element);
