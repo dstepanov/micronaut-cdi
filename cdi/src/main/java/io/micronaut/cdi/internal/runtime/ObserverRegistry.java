@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -108,7 +109,10 @@ public final class ObserverRegistry {
 
     private List<ObserverMethod<?>> find() {
         List<ObserverMethod<?>> found = new ArrayList<>(synthetic);
-        for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
+        // the beans with observers are marked as they compile: the marker is read from each bean's reference, and
+        // only the definitions of those beans are loaded, rather than every definition of the application
+        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(
+            io.micronaut.inject.qualifiers.Qualifiers.byStereotype(CdiObserving.class))) {
             for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
                 AnnotationValue<CdiObserver> observer = method.getAnnotation(CdiObserver.class);
                 if (observer != null) {

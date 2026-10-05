@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -70,6 +71,7 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         boolean interceptorClass = element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
+        boolean observing = false;
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             int observed = -1;
             boolean async = false;
@@ -142,6 +144,10 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
                 .member("staticMethod", isStatic)
                 .member("during", during)
                 .member("priority", priority));
+            observing = true;
+        }
+        if (observing) {
+            element.annotate(CdiObserving.class);
         }
     }
 

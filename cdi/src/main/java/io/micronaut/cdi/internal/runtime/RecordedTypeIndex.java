@@ -72,7 +72,9 @@ public final class RecordedTypeIndex {
         Map<String, Entry> resolved = entries;
         if (resolved == null) {
             resolved = new HashMap<>();
-            for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
+            // the classes that hold an index are found by the annotation on their references: only theirs are loaded
+            for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(
+                io.micronaut.inject.qualifiers.Qualifiers.byStereotype(CdiTypeIndex.class))) {
                 AnnotationValue<CdiTypeIndex> index = definition.getAnnotationMetadata().getAnnotation(CdiTypeIndex.class);
                 if (index == null) {
                     continue;
