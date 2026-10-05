@@ -251,9 +251,6 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         return definition.asArgument();
     }
 
-    static <U> io.micronaut.context.Qualifier<U> only(BeanDefinition<U> definition) {
-        return new Only<>(definition);
-    }
 
     /**
      * Lets go of every dependent instance this lookup created, which happens when the bean the lookup belongs
@@ -601,34 +598,6 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         @Override
         public void close() {
             destroy();
-        }
-    }
-
-    /**
-     * Narrows the candidates to the one definition a resolution already chose. Equal for the same definition, so
-     * that Micronaut's cache of the candidate a lookup resolves to is hit when the definition is asked for again,
-     * rather than filled with a key nothing finds.
-     *
-     * @param definition The definition chosen
-     * @param <U>        The bean type
-     */
-    private record Only<U>(BeanDefinition<U> definition) implements io.micronaut.context.Qualifier<U> {
-
-        @Override
-        public <BT extends io.micronaut.inject.BeanType<U>> java.util.stream.Stream<BT> reduce(
-            Class<U> beanType, java.util.stream.Stream<BT> candidates) {
-            return candidates.filter(candidate -> candidate.equals(definition));
-        }
-
-        @Override
-        public boolean equals(@org.jspecify.annotations.Nullable Object o) {
-            // by identity: a definition is loaded once for its context
-            return o instanceof Only<?> other && other.definition == definition;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(definition);
         }
     }
 }
