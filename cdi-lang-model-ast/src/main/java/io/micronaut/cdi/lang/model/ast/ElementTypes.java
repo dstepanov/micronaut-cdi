@@ -49,8 +49,8 @@ import java.util.function.Predicate;
  * {@link ClassElement#getTypeAnnotationMetadata() type annotations}, a type variable and a wildcard keep theirs
  * in their {@link io.micronaut.inject.ast.GenericElement#getGenericTypeAnnotationMetadata() generic type
  * annotations}, and every type argument, bound, super type and thrown type is a use of its own. That is what is
- * read here, in whichever language the compilation is in. The one thing the model cannot reach this way is the
- * annotation written on one dimension of an array, which Micronaut's model does not keep.</p>
+ * read here, in whichever language the compilation is in. Array dimensions are read individually as
+ * {@link ClassElement#fromArray()} walks their component types.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

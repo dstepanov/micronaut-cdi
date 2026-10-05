@@ -60,13 +60,6 @@ public final class ApplicationScope extends AbstractConcurrentCustomScope<CdiApp
 
     @Override
     protected Map<BeanIdentifier, CreatedBean<?>> getScopeMap(boolean forCreation) {
-        if (forCreation) {
-            // Contextual.create() asked for a new instance, which the scope creates and does not hold
-            Map<BeanIdentifier, CreatedBean<?>> fresh = FreshInstance.take(this);
-            if (fresh != null) {
-                return fresh;
-            }
-        }
         return instances;
     }
 

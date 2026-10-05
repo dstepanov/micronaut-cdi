@@ -46,8 +46,8 @@ import java.util.Set;
  * <p>The annotations of a declaration are the ones Micronaut recorded, as far as the registered
  * {@link LanguageModelAnnotationFilter}s allow, read the way the specification's model reads: a repeatable
  * annotation Micronaut folded into its container although it was written once is reported as itself, and an
- * annotation interface reports the {@code Retention} it declares. What the record does not hold is not
- * reported: an annotation written on one dimension of an array is not kept.</p>
+ * annotation interface reports the {@code Retention} it declares. Array dimensions retain their own type-use
+ * annotations through Micronaut Core 5.3.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

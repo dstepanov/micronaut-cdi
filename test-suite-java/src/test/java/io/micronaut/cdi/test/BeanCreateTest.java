@@ -2,12 +2,17 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Singleton;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Section 2.5.1: {@code Contextual.create()} creates a new contextual instance, every time it is called. That one
@@ -49,6 +56,71 @@ class BeanCreateTest {
         void destroy() {
             DESTROYED.incrementAndGet();
         }
+    }
+
+    @ApplicationScoped
+    public static class ScopedCallback {
+        boolean requestActive;
+
+        @PostConstruct
+        void initialized() {
+            requestActive = CDI.current().getBeanManager().getContext(RequestScoped.class).isActive();
+        }
+    }
+
+    @Test
+    void freshScopedCreationActivatesRequestContextDuringPostConstruct() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            Bean<ScopedCallback> bean = beanOf(manager, ScopedCallback.class);
+            CreationalContext<ScopedCallback> creation = manager.createCreationalContext(bean);
+            ScopedCallback created = bean.create(creation);
+            assertTrue(created.requestActive);
+            bean.destroy(created, creation);
+            assertThrows(jakarta.enterprise.context.ContextNotActiveException.class,
+                () -> manager.getContext(RequestScoped.class));
+        }
+    }
+
+    @Dependent
+    public static class OwnedDependency {
+        static final AtomicInteger DESTROYED = new AtomicInteger();
+
+        @PreDestroy
+        void destroy() {
+            DESTROYED.incrementAndGet();
+        }
+    }
+
+    @Singleton
+    public static class SingleOwner {
+        @Inject OwnedDependency dependency;
+    }
+
+    @Test
+    void freshSingletonOwnsItsDependentsAndLeavesTheScopedInstanceAlive() {
+        OwnedDependency.DESTROYED.set(0);
+        try (ApplicationContext context = ApplicationContext.run()) {
+            SingleOwner held = context.getBean(SingleOwner.class);
+            BeanManager manager = context.getBean(BeanManager.class);
+            Bean<SingleOwner> bean = beanOf(manager, SingleOwner.class);
+            CreationalContext<SingleOwner> firstContext = manager.createCreationalContext(bean);
+            CreationalContext<SingleOwner> secondContext = manager.createCreationalContext(bean);
+            SingleOwner first = bean.create(firstContext);
+            SingleOwner second = bean.create(secondContext);
+
+            assertNotSame(held, first);
+            assertNotSame(first, second);
+            assertNotSame(first.dependency, second.dependency);
+            bean.destroy(first, firstContext);
+            assertEquals(1, OwnedDependency.DESTROYED.get());
+            firstContext.release();
+            assertEquals(1, OwnedDependency.DESTROYED.get());
+            assertSame(held, context.getBean(SingleOwner.class));
+            bean.destroy(second, secondContext);
+            assertEquals(2, OwnedDependency.DESTROYED.get());
+        }
+        assertEquals(3, OwnedDependency.DESTROYED.get());
     }
 
     @SuppressWarnings("unchecked")

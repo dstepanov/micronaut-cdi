@@ -49,8 +49,8 @@ class LangModelTckTest {
      * "Open points in Micronaut Core" in {@code CONFORMANCE.md}, and the assertion the section stops at.
      */
     private static final Map<String, String> PENDING = Map.of(
-        "AnnotatedTypes", "the annotation on one dimension of an array (CONFORMANCE.md, Open points in "
-            + "Micronaut Core): Micronaut's model keeps one set of annotations for an array type; accepted",
+        "AnnotatedTypes", "the annotation on an unresolved type-variable field is not retained; array dimension "
+            + "annotations now pass (CONFORMANCE.md, Open points in Micronaut Core)",
         "RepeatableAnnotations", "a repeatable annotation written once beside a container the source wrote is "
             + "folded into that container, and the two are not told apart (CONFORMANCE.md, Open points in Micronaut "
             + "Core; the mixed case); accepted"
@@ -68,6 +68,10 @@ class LangModelTckTest {
             } else if ("passed".equals(outcome)) {
                 fail("the section " + section + " passes now: take it off the pending list (" + pending + ")");
             } else {
+                if ("AnnotatedTypes".equals(section)) {
+                    assertTrue(Files.readString(report()).contains("AnnotatedTypes.verifyTypeVariableField"),
+                        "the pending section stopped before the verified array-dimension assertions");
+                }
                 abort("pending on Micronaut core: " + pending);
             }
         })));

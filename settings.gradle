@@ -67,6 +67,8 @@ def siblingCheckout = { String property ->
     return true
 }
 
+siblingCheckout('micronautCoreDir')
+
 if (!siblingCheckout('jakartaInterceptorsDir')) {
     sourceControl {
         gitRepository(uri('https://github.com/dstepanov/micronaut-jakarta-interceptors.git')) {
