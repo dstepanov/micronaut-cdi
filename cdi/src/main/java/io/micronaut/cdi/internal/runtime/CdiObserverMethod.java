@@ -63,6 +63,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
      * The bean declaring the method, read when a notification first needs it.
      */
     private volatile @Nullable CdiBean<?> declaringBean;
+    private volatile @Nullable CdiBeanContainer container;
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
@@ -323,10 +324,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             return true;
         }
         try {
-            beanContext.getBean(CdiBeanContainer.class).getContext(bean.getScope());
-            return true;
-        } catch (jakarta.enterprise.context.ContextNotActiveException e) {
-            return false;
+            return container().activeContext(bean.getScope()) != null;
         } catch (IllegalArgumentException e) {
             // a scope no context is registered for: resolving the bean reports that, not this check
             return true;
@@ -335,10 +333,19 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     private jakarta.enterprise.context.spi.@Nullable Context activeContextOf(CdiBean<?> bean) {
         try {
-            return beanContext.getBean(CdiBeanContainer.class).getContext(bean.getScope());
-        } catch (jakarta.enterprise.context.ContextNotActiveException | IllegalArgumentException e) {
+            return container().activeContext(bean.getScope());
+        } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    private CdiBeanContainer container() {
+        CdiBeanContainer found = container;
+        if (found == null) {
+            found = beanContext.getBean(CdiBeanContainer.class);
+            container = found;
+        }
+        return found;
     }
 
     private CdiBean<?> declaringBean() {

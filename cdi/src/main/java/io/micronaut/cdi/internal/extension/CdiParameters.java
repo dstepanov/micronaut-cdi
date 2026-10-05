@@ -46,6 +46,11 @@ import java.util.Map;
 public final class CdiParameters implements Parameters {
 
     private final Map<String, AnnotationValue<CdiSyntheticParameter>> parameters;
+    /**
+     * The invokers of each parameter that holds them, read once: an invoker finds the method it invokes the first
+     * time it is invoked and keeps it, which a new one read for each {@code get} would do again every time.
+     */
+    private final Map<String, RecordedInvoker[]> invokers = new java.util.concurrent.ConcurrentHashMap<>();
 
     CdiParameters(List<AnnotationValue<CdiSyntheticParameter>> recorded) {
         Map<String, AnnotationValue<CdiSyntheticParameter>> byName = new LinkedHashMap<>();
@@ -61,13 +66,24 @@ public final class CdiParameters implements Parameters {
      * @return The invokers
      */
     List<RecordedInvoker> invokers() {
-        List<RecordedInvoker> invokers = new java.util.ArrayList<>();
+        List<RecordedInvoker> all = new java.util.ArrayList<>();
         for (AnnotationValue<CdiSyntheticParameter> parameter : parameters.values()) {
-            for (AnnotationValue<Annotation> invoker : parameter.getAnnotations("invokers")) {
-                invokers.add(RecordedInvoker.of(invoker));
+            if ("INVOKER".equals(parameter.stringValue("kind").orElse(null))) {
+                all.addAll(java.util.Arrays.asList(invokersOf(parameter)));
             }
         }
-        return invokers;
+        return all;
+    }
+
+    private RecordedInvoker[] invokersOf(AnnotationValue<CdiSyntheticParameter> parameter) {
+        return invokers.computeIfAbsent(parameter.stringValue("name").orElseThrow(), name -> {
+            List<AnnotationValue<Annotation>> records = parameter.getAnnotations("invokers");
+            RecordedInvoker[] read = new RecordedInvoker[records.size()];
+            for (int i = 0; i < read.length; i++) {
+                read[i] = RecordedInvoker.of(records.get(i));
+            }
+            return read;
+        });
     }
 
     @Override
@@ -89,7 +105,7 @@ public final class CdiParameters implements Parameters {
         return value == null ? defaultValue : value;
     }
 
-    private static Object valueOf(AnnotationValue<CdiSyntheticParameter> parameter, Class<?> type) {
+    private Object valueOf(AnnotationValue<CdiSyntheticParameter> parameter, Class<?> type) {
         boolean array = parameter.booleanValue("array").orElse(false);
         String kind = parameter.stringValue("kind").orElseThrow();
         return switch (kind) {
@@ -120,12 +136,9 @@ public final class CdiParameters implements Parameters {
             }
             case "ANNOTATION" -> annotationsOf(parameter, array, type);
             case "INVOKER" -> {
-                List<AnnotationValue<Annotation>> records = parameter.getAnnotations("invokers");
-                RecordedInvoker[] invokers = new RecordedInvoker[records.size()];
-                for (int i = 0; i < invokers.length; i++) {
-                    invokers[i] = RecordedInvoker.of(records.get(i));
-                }
-                yield array ? invokers : invokers[0];
+                RecordedInvoker[] read = invokersOf(parameter);
+                // an array handed out is the caller's to change
+                yield array ? read.clone() : read[0];
             }
             default -> throw new IllegalStateException("The parameter " + parameter.stringValue("name").orElse("")
                 + " was recorded as a " + kind + ", which is not a kind of parameter");

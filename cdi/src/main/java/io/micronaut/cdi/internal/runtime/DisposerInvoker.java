@@ -51,6 +51,13 @@ import java.util.Optional;
 public final class DisposerInvoker implements BeanPreDestroyEventListener<Object> {
 
     private final BeanContext beanContext;
+    /**
+     * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
+     * makes is disposed of by the same method.
+     */
+    private final java.util.concurrent.ConcurrentHashMap<ProducerKey, Disposer> disposers =
+        new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile @Nullable CdiBeanContainer container;
 
     public DisposerInvoker(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -60,35 +67,51 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     public Object onPreDestroy(BeanPreDestroyEvent<Object> event) {
         Object bean = event.getBean();
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
-        if (disposer == null) {
-            return bean;
+        Disposer found = disposers.get(new ProducerKey(definition));
+        if (found == null) {
+            AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
+            if (disposer == null) {
+                // every bean of the context is destroyed through here, and few of them were produced
+                return bean;
+            }
+            found = disposerOf(disposer);
+            if (found == null) {
+                return bean;
+            }
+            disposers.putIfAbsent(new ProducerKey(definition), found);
         }
-        Optional<Class<?>> declaringType = disposer.classValue("declaringType");
-        String methodName = disposer.stringValue("method").orElse(null);
-        int disposedParameter = disposer.intValue("disposedParameter").orElse(-1);
-        if (declaringType.isEmpty() || methodName == null || disposedParameter < 0) {
-            return bean;
-        }
-        String[] parameterTypes = disposer.stringValues("parameterTypes");
+        Disposer disposer = found;
         return event.withDependencies(dependencies -> {
-            if (disposer.booleanValue("staticMethod").orElse(false)) {
-                invokeStatic(declaringType.get(), methodName, parameterTypes, disposedParameter, bean, dependencies);
+            if (disposer.staticMethod()) {
+                invokeStatic(disposer, bean, dependencies);
             } else {
-                invoke(declaringType.get(), methodName, parameterTypes, disposedParameter, bean,
-                    disposer.booleanValue("publicMethod").orElse(false), dependencies);
+                invoke(disposer, bean, dependencies);
             }
             return bean;
         });
     }
 
-    private void invokeStatic(Class<?> declaringType, String methodName, String[] parameterTypes,
-                              int disposedParameter, Object bean, BeanDependencyGroup dependencies) {
-        BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
-        ExecutableMethod<?, ?> method = findMethod(declaring, methodName, parameterTypes)
-            .orElseThrow(() -> new IllegalStateException("The static disposer method " + methodName + " of "
-                + declaringType.getName() + " has no executable method. It was resolved while the producer it "
-                + "disposes of was compiled, so the two were compiled apart from one another"));
+    private @Nullable Disposer disposerOf(AnnotationValue<CdiDisposer> disposer) {
+        Optional<Class<?>> declaringType = disposer.classValue("declaringType");
+        String methodName = disposer.stringValue("method").orElse(null);
+        int disposedParameter = disposer.intValue("disposedParameter").orElse(-1);
+        if (declaringType.isEmpty() || methodName == null || disposedParameter < 0) {
+            return null;
+        }
+        boolean staticMethod = disposer.booleanValue("staticMethod").orElse(false);
+        BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType.get());
+        ExecutableMethod<?, ?> method = findMethod(declaring, methodName, disposer.stringValues("parameterTypes"))
+            .orElseThrow(() -> new IllegalStateException("The " + (staticMethod ? "static " : "")
+                + "disposer method " + methodName + " of " + declaringType.get().getName() + " has no executable "
+                + "method. It was resolved while the producer it disposes of was compiled, so the two were "
+                + "compiled apart from one another"));
+        return new Disposer(declaring, method, disposedParameter, staticMethod,
+            disposer.booleanValue("publicMethod").orElse(false));
+    }
+
+    private void invokeStatic(Disposer disposer, Object bean, BeanDependencyGroup dependencies) {
+        ExecutableMethod<?, ?> method = disposer.method();
+        int disposedParameter = disposer.disposedParameter();
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
@@ -97,20 +120,16 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         invoke(method, null, parameters);
     }
 
-    private void invoke(Class<?> declaringType, String methodName, String[] parameterTypes,
-                        int disposedParameter, Object bean, boolean publicMethod, BeanDependencyGroup dependencies) {
-        BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
-        ExecutableMethod<?, ?> method = findMethod(declaring, methodName, parameterTypes)
-            .orElseThrow(() -> new IllegalStateException("The disposer method " + methodName + " of "
-                + declaringType.getName() + " has no executable method. It was resolved while the producer it "
-                + "disposes of was compiled, so the two were compiled apart from one another"));
+    private void invoke(Disposer disposer, Object bean, BeanDependencyGroup dependencies) {
+        ExecutableMethod<?, ?> method = disposer.method();
+        int disposedParameter = disposer.disposedParameter();
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
             parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
-        Object host = resolveDefinition(declaring, dependencies);
-        if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !publicMethod) {
+        Object host = resolveDefinition(disposer.declaring(), dependencies);
+        if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !disposer.publicMethod()) {
             // A non-public disposer is invoked on the contextual target; public methods retain interception.
             host = proxy.interceptedTarget();
         }
@@ -168,7 +187,11 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (!argument.getAnnotationMetadata().hasStereotype(ResolveWith.class)) {
             return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
         }
-        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
+        CdiBeanContainer container = this.container;
+        if (container == null) {
+            container = beanContext.getBean(CdiBeanContainer.class);
+            this.container = container;
+        }
         jakarta.enterprise.inject.spi.Bean<?> selected = container.resolve(container.beansOf(argument,
             CdiQualifier.declared(argument.getAnnotationMetadata())));
         if (selected == null) {
@@ -179,5 +202,36 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
         BeanDefinition<Object> definition = (BeanDefinition<Object>) ((CdiBean<?>) selected).definition();
         return dependencies.getBean((Argument<Object>) argument, CdiInstance.only(definition));
+    }
+
+    /**
+     * The disposer method of a producer, and the bean that declares it.
+     *
+     * @param declaring         The definition of the bean that declares the disposer
+     * @param method            The disposer
+     * @param disposedParameter The index of its {@code Disposes} parameter
+     * @param staticMethod      Whether it is static, and invoked on no instance
+     * @param publicMethod      Whether it is public, and invoked through a client proxy's interceptors
+     */
+    private record Disposer(BeanDefinition<?> declaring, ExecutableMethod<?, ?> method, int disposedParameter,
+                            boolean staticMethod, boolean publicMethod) {
+    }
+
+    /**
+     * A producer's definition compared by identity: two runtime definitions of one class are equal and are not
+     * the same producer.
+     *
+     * @param definition The definition
+     */
+    private record ProducerKey(BeanDefinition<?> definition) {
+        @Override
+        public boolean equals(@Nullable Object other) {
+            return other instanceof ProducerKey key && key.definition == definition;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(definition);
+        }
     }
 }

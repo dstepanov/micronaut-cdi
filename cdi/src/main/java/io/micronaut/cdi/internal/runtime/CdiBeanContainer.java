@@ -98,6 +98,19 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private volatile Map<Class<?>, List<CdiBean<?>>> byClass = new java.util.concurrent.ConcurrentHashMap<>();
     private boolean validated;
     private final ObserverRegistry observers;
+    /**
+     * The contexts of the built-in scopes, which hold no state of their own beyond the scope they read: made once
+     * rather than for each event an observer of a bean in one of them is notified of.
+     */
+    private final List<Context> requestContexts;
+    private final List<Context> applicationContexts;
+    private final List<Context> singletonContexts;
+    private final List<Context> dependentContexts;
+    /**
+     * The contexts extensions registered, a bean of the context created as it starts: looked up once.
+     */
+    private volatile java.util.@Nullable Optional<io.micronaut.cdi.internal.extension.ExtensionContexts>
+        extensionContexts;
 
     @jakarta.inject.Inject
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
@@ -106,6 +119,12 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         this.requestScope = requestScope;
         this.applicationScope = applicationScope;
         this.observers = observers;
+        this.requestContexts = List.of(
+            CdiContext.ofRequest(jakarta.enterprise.context.RequestScoped.class, requestScope));
+        this.applicationContexts = List.of(
+            CdiContext.ofApplication(jakarta.enterprise.context.ApplicationScoped.class, applicationScope));
+        this.singletonContexts = List.of(CdiContext.ofSingleton(Singleton.class, beanContext));
+        this.dependentContexts = List.of(CdiContext.holdingNothing(Dependent.class));
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
@@ -651,6 +670,24 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Context getContext(Class<? extends Annotation> scopeType) {
+        Context active = activeContext(scopeType);
+        if (active != null) {
+            return active;
+        }
+        throw new jakarta.enterprise.context.ContextNotActiveException("No context of "
+            + scopeType.getName() + " is active on the current thread");
+    }
+
+    /**
+     * The active context of the scope, as {@link #getContext(Class)} finds it, or {@code null} where none is
+     * active: for a check made on every event an observer of a bean in a normal scope is notified of, which an
+     * exception would make the cost of.
+     *
+     * @param scopeType The scope
+     * @return The active context, or {@code null}
+     * @throws IllegalArgumentException where no context of the scope is registered
+     */
+    @Nullable Context activeContext(Class<? extends Annotation> scopeType) {
         Collection<Context> contexts = getContexts(scopeType);
         if (contexts.isEmpty()) {
             throw new IllegalArgumentException("There is no context for the scope " + scopeType.getName());
@@ -665,38 +702,36 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 active = context;
             }
         }
-        if (active != null) {
-            return active;
-        }
-        throw new jakarta.enterprise.context.ContextNotActiveException("No context of "
-            + scopeType.getName() + " is active on the current thread");
+        return active;
     }
 
     @Override
     public Collection<Context> getContexts(Class<? extends Annotation> scopeType) {
         if (scopeType == Singleton.class) {
-            return List.of(CdiContext.ofSingleton(scopeType, beanContext));
+            return singletonContexts;
         }
         if (scopeType == Dependent.class) {
-            return List.of(CdiContext.holdingNothing(scopeType));
+            return dependentContexts;
         }
         // a scope an extension registered a context for (section 2.10.1). A context a portable extension added
         // for the request or the application scope takes the place of the container's own: the beans of the
         // scope are held by it, so it is the context of the scope
-        java.util.Optional<io.micronaut.cdi.internal.extension.ExtensionContexts> extensionContexts =
-            beanContext.findBean(io.micronaut.cdi.internal.extension.ExtensionContexts.class);
-        if (extensionContexts.isPresent()) {
-            List<Context> registered = new java.util.ArrayList<>(
-                extensionContexts.get().contextsFor(scopeType));
+        java.util.Optional<io.micronaut.cdi.internal.extension.ExtensionContexts> extensions = extensionContexts;
+        if (extensions == null) {
+            extensions = beanContext.findBean(io.micronaut.cdi.internal.extension.ExtensionContexts.class);
+            extensionContexts = extensions;
+        }
+        if (extensions.isPresent()) {
+            List<jakarta.enterprise.context.spi.AlterableContext> registered = extensions.get().contextsFor(scopeType);
             if (!registered.isEmpty()) {
-                return registered;
+                return new java.util.ArrayList<>(registered);
             }
         }
         if (scopeType == jakarta.enterprise.context.RequestScoped.class) {
-            return List.of(CdiContext.ofRequest(scopeType, requestScope));
+            return requestContexts;
         }
         if (scopeType == jakarta.enterprise.context.ApplicationScoped.class) {
-            return List.of(CdiContext.ofApplication(scopeType, applicationScope));
+            return applicationContexts;
         }
         return List.of();
     }
