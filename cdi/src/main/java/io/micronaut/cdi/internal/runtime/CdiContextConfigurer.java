@@ -30,6 +30,14 @@ public final class CdiContextConfigurer implements ApplicationContextConfigurer 
 
     @Override
     public void configure(ApplicationContextBuilder builder) {
-        builder.beanResolutionCustomizer(new CdiResolutionCustomizer());
+        io.micronaut.context.BeanResolutionCustomizer installed =
+            builder instanceof io.micronaut.context.BeanContextConfiguration configuration
+                ? configuration.beanResolutionCustomizer()
+                : io.micronaut.context.BeanResolutionCustomizer.DEFAULT;
+        if (installed instanceof CdiResolutionCustomizer) {
+            return;
+        }
+        // what was installed before resolves whatever is not a bean of the specification
+        builder.beanResolutionCustomizer(new CdiResolutionCustomizer(installed));
     }
 }

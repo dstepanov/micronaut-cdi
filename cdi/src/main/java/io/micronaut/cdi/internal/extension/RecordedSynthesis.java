@@ -282,13 +282,11 @@ public final class RecordedSynthesis {
                 Map.of(AnnotationMetadata.VALUE_MEMBER, -priority[0]));
             metadata.addDeclaredAnnotation("io.micronaut.context.annotation.Primary", Map.of());
         }
-        if (scope != null) {
-            // the effective scope, a stereotype-carried one included: the runtime reads this to know the bean
-            // is not dependent
-            metadata.addDeclaredAnnotation(CdiScope.class.getName(), Map.of(
-                AnnotationMetadata.VALUE_MEMBER, scope.getName(),
-                "normal", record.booleanValue("normal").orElse(false)));
-        }
+        // the effective scope, a stereotype-carried one included: the runtime reads this to know whether the bean
+        // is dependent, and that it is a bean of the specification at all, which a dependent one is as much as any
+        metadata.addDeclaredAnnotation(CdiScope.class.getName(), Map.of(
+            AnnotationMetadata.VALUE_MEMBER, scope != null ? scope.getName() : "jakarta.enterprise.context.Dependent",
+            "normal", record.booleanValue("normal").orElse(false)));
         if (record.booleanValue("alternative").orElse(false)) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }

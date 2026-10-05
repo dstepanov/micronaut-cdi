@@ -69,6 +69,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             // recording the unresolved form here would shadow that resolution
             return;
         }
+        if (!SpecificationBeans.isBeanOfTheSpecification(element)) {
+            // a plain Micronaut class compiled alongside keeps Micronaut's rules: a named parameter without a
+            // value, a qualified field without Inject, which Micronaut injects
+            return;
+        }
         leaveUninjected(element);
         boolean normalScoped = isNormalScoped(element);
         // a type variable of a generic class is resolved by whoever extends it, where the class is no bean of
