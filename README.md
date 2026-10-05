@@ -242,3 +242,7 @@ shadow the published one.
 
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.
+
+For integration testing against a Core source checkout, pass `-PmicronautCoreDir=/path/to/micronaut-core`.
+Use the merged `5.3.x` branch; the container provider retains Core's four-argument API.
+Generate the Core BOM catalog first with `./gradlew -q :micronaut-core-bom:generateCatalogAsToml` in that checkout.

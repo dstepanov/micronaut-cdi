@@ -169,6 +169,11 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     static java.util.List<Argument<?>> typesOf(BeanDefinition<?> definition, Class<?> beanClass) {
+        if (definition instanceof io.micronaut.inject.provider.AbstractProviderDefinition<?>) {
+            // Core's infrastructure providers implement Iterable as a lookup convenience. Their helper
+            // interfaces are not application beans satisfying an ordinary CDI collection injection.
+            return java.util.List.of(definition.asArgument(), Argument.OBJECT_ARGUMENT);
+        }
         java.util.List<Argument<?>> types = new java.util.ArrayList<>();
         // the types a bean narrowed itself to are the ones it named with Typed, which is asked for rather than
         // Micronaut's own set of exposed types: those are what Micronaut resolves the bean by, and it exposes an
@@ -411,54 +416,16 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
-     * Creates an instance of a bean that has a scope, without the scope holding it.
+     * Creates a fresh scoped instance and retains the complete dependency tree for its owner.
      *
-     * <p>A bean of a normal scope is created by its scope, asked for a new instance, with everything a creation
-     * is and the dependents it was created with. A singleton is created by Micronaut from its definition, again
-     * with everything a creation is; what was created along with it is not reported, so that instance is destroyed
-     * without its dependent objects.</p>
-     *
-     * @return What was created, or {@code null} for a bean of a scope that offers no such creation
+     * @return The fresh instance and its lifecycle, or {@code null} for a dependent bean
      */
     private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CreatedBean<T> createOutsideOfScope() {
-        if (isNormalScoped()) {
-            io.micronaut.context.scope.CustomScope<?> scope = declaredScope();
-            if (scope == null) {
-                return null;
-            }
-            return io.micronaut.cdi.internal.context.FreshInstance.create(scope,
-                () -> beanContext.getProxyTargetBean(targetArgument(), definition.getDeclaredQualifier()));
-        }
-        if (definition.isSingleton() && !isRuntimeDefinition()) {
-            T instance = beanContext.createBean(definition.getBeanType(), onlyThisDefinition());
-            return io.micronaut.context.BeanRegistration.of(beanContext,
-                io.micronaut.inject.BeanIdentifier.of(definition.getName()), definition, instance);
+        if (isNormalScoped() || definition.isSingleton()) {
+            return beanContext.getBean(io.micronaut.cdi.internal.context.RequestScope.class)
+                .duringCreation(() -> beanContext.createBeanRegistration(targetDefinition()));
         }
         return null;
-    }
-
-    /**
-     * The scope Micronaut holds the instances of this bean in: the one whose annotation the bean declares.
-     */
-    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CustomScope<?> declaredScope() {
-        AnnotationMetadata metadata = targetDefinition().getAnnotationMetadata();
-        for (io.micronaut.context.scope.CustomScope<?> scope
-            : beanContext.getBeansOfType(io.micronaut.context.scope.CustomScope.class)) {
-            if (metadata.hasStereotype(scope.annotationType())) {
-                return scope;
-            }
-        }
-        return null;
-    }
-
-    private io.micronaut.context.Qualifier<T> onlyThisDefinition() {
-        return new io.micronaut.context.Qualifier<T>() {
-            @Override
-            public <B extends io.micronaut.inject.BeanType<T>> java.util.stream.Stream<B> reduce(
-                Class<T> beanType, java.util.stream.Stream<B> candidates) {
-                return candidates.filter(candidate -> candidate.equals(definition));
-            }
-        };
     }
 
     /**

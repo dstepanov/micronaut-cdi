@@ -17,7 +17,8 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.Qualifier;
+import io.micronaut.context.BeanDependencyGroup;
+import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -70,19 +71,19 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             return bean;
         }
         String[] parameterTypes = disposer.stringValues("parameterTypes");
-        if (disposer.booleanValue("staticMethod").orElse(false)) {
-            // a static disposer is invoked without an instance of the class that declares it: no bean of that
-            // class is created for the disposal, which is the whole point of writing one static
-            invokeStatic(declaringType.get(), methodName, parameterTypes, disposedParameter, bean);
+        return event.withDependencies(dependencies -> {
+            if (disposer.booleanValue("staticMethod").orElse(false)) {
+                invokeStatic(declaringType.get(), methodName, parameterTypes, disposedParameter, bean, dependencies);
+            } else {
+                invoke(declaringType.get(), methodName, parameterTypes, disposedParameter, bean,
+                    disposer.booleanValue("publicMethod").orElse(false), dependencies);
+            }
             return bean;
-        }
-        invoke(declaringType.get(), methodName, parameterTypes, disposedParameter, bean,
-            disposer.booleanValue("publicMethod").orElse(false));
-        return bean;
+        });
     }
 
     private void invokeStatic(Class<?> declaringType, String methodName, String[] parameterTypes,
-                              int disposedParameter, Object bean) {
+                              int disposedParameter, Object bean, BeanDependencyGroup dependencies) {
         BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
         ExecutableMethod<?, ?> method = findMethod(declaring, methodName, parameterTypes)
             .orElseThrow(() -> new IllegalStateException("The static disposer method " + methodName + " of "
@@ -90,20 +91,14 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
                 + "disposes of was compiled, so the two were compiled apart from one another"));
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
-        java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
-        try {
-            for (int i = 0; i < arguments.length; i++) {
-                parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], transientArguments);
-            }
-            // the executable method of a static method ignores the instance it is given
-            invoke(method, null, parameters);
-        } finally {
-            close(transientArguments);
+        for (int i = 0; i < arguments.length; i++) {
+            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
+        invoke(method, null, parameters);
     }
 
     private void invoke(Class<?> declaringType, String methodName, String[] parameterTypes,
-                        int disposedParameter, Object bean, boolean publicMethod) {
+                        int disposedParameter, Object bean, boolean publicMethod, BeanDependencyGroup dependencies) {
         BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType);
         ExecutableMethod<?, ?> method = findMethod(declaring, methodName, parameterTypes)
             .orElseThrow(() -> new IllegalStateException("The disposer method " + methodName + " of "
@@ -111,33 +106,15 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
                 + "disposes of was compiled, so the two were compiled apart from one another"));
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
-        java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
-        try {
-            // resolved inside the try, so that the arguments resolved before one that fails are destroyed too
-            for (int i = 0; i < arguments.length; i++) {
-                parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], transientArguments);
-            }
-            if (CdiResolution.isDependent(declaring)) {
-                // a dependent declaring bean exists for the one disposal: created for it, destroyed with its own
-                // dependents when the disposer has run
-                io.micronaut.context.BeanRegistration<?> registration = registrationOf(declaring);
-                try {
-                    invoke(method, registration.bean(), parameters);
-                } finally {
-                    registration.close();
-                }
-                return;
-            }
-            Object host = beanContext.getBean(declaring);
-            if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !publicMethod) {
-                // a disposer may be protected, which a client proxy does not delegate — but a public one is
-                // invoked through the proxy, so that the interceptors bound to it interpose (section 2.7)
-                host = proxy.interceptedTarget();
-            }
-            invoke(method, host, parameters);
-        } finally {
-            close(transientArguments);
+        for (int i = 0; i < arguments.length; i++) {
+            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
+        Object host = resolveDefinition(declaring, dependencies);
+        if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !publicMethod) {
+            // A non-public disposer is invoked on the contextual target; public methods retain interception.
+            host = proxy.interceptedTarget();
+        }
+        invoke(method, host, parameters);
     }
 
     /**
@@ -175,11 +152,6 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         return true;
     }
 
-    private io.micronaut.context.BeanRegistration<?> registrationOf(BeanDefinition<?> declaring) {
-        // the registration of this very definition, rather than of whatever re-resolving its type would pick
-        return beanContext.getBeanRegistration(declaring);
-    }
-
     @SuppressWarnings({"unchecked", "NullAway"})
     private static void invoke(ExecutableMethod<?, ?> method, @Nullable Object target, Object[] parameters) {
         // the executable method of a static disposer is dispatched without reading the target at all, so
@@ -187,22 +159,25 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         ((ExecutableMethod<Object, ?>) method).invoke(target, parameters);
     }
 
-    @SuppressWarnings("unchecked")
-    private Object resolve(Argument<?> argument,
-                           java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments) {
-        Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
-        io.micronaut.context.BeanRegistration<Object> registration =
-            beanContext.getBeanRegistration((Argument<Object>) argument, qualifier);
-        if (CdiResolution.isDependent(registration.getBeanDefinition())) {
-            // a dependent argument exists for the one disposal, and is destroyed when it completes
-            transientArguments.add(registration);
-        }
-        return registration.bean();
+    private static <T> T resolveDefinition(BeanDefinition<T> definition, BeanDependencyGroup dependencies) {
+        return dependencies.getBean(definition.asArgument(), CdiInstance.only(definition));
     }
 
-    private static void close(java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments) {
-        for (io.micronaut.context.BeanRegistration<?> registration : transientArguments) {
-            registration.close();
+    @SuppressWarnings("unchecked")
+    private @Nullable Object resolve(Argument<?> argument, BeanDependencyGroup dependencies) {
+        if (!argument.getAnnotationMetadata().hasStereotype(ResolveWith.class)) {
+            return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
         }
+        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
+        jakarta.enterprise.inject.spi.Bean<?> selected = container.resolve(container.beansOf(argument,
+            CdiQualifier.declared(argument.getAnnotationMetadata())));
+        if (selected == null) {
+            if (argument.isNullable()) {
+                return null;
+            }
+            throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
+        }
+        BeanDefinition<Object> definition = (BeanDefinition<Object>) ((CdiBean<?>) selected).definition();
+        return dependencies.getBean((Argument<Object>) argument, CdiInstance.only(definition));
     }
 }

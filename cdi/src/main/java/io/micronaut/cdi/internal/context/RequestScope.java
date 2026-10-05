@@ -155,14 +155,6 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     @Override
     protected @Nullable Map<BeanIdentifier, CreatedBean<?>> getScopeMap(boolean forCreation) {
-        if (forCreation) {
-            // Contextual.create() asked for a new instance, which the scope creates and does not hold: no
-            // request has to be active for it
-            Map<BeanIdentifier, CreatedBean<?>> fresh = FreshInstance.take(this);
-            if (fresh != null) {
-                return fresh;
-            }
-        }
         Instances instances = currentInstances();
         if (instances == null) {
             if (forCreation) {

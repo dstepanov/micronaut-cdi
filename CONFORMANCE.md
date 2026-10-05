@@ -100,12 +100,9 @@ that cannot be told apart, or to a bean in a normal scope that cannot be proxied
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
-by Micronaut's rules. So is an injection point Micronaut resolves its own way: a field, constructor or
-initializer parameter of a collection, a stream or a map, which is the beans of its element type and is empty
-rather than unsatisfied where there are none (see below), and one marked nullable. The parameter of an observer or
-a disposer method is resolved by the container as a bean of its type, a collection included, and is validated as
-one. An injection point of `Instance`, `Provider`, `Event`, `Optional` or `InjectionPoint`
-resolves late by design and is not validated.
+by Micronaut's rules. Collections, arrays, streams, maps and `Optional` injection require a bean of the full
+declared type. Explicitly nullable injection may be unsatisfied. An injection point of `Instance`, `Provider`,
+`Event` or `InjectionPoint` resolves late by design and is not validated.
 
 A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
 classpath narrows each container to its own: the SE bootstrap's synthetic archive, a beans predicate, or a
@@ -192,21 +189,13 @@ observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as 
 instance created for that, and is destroyed when the context has stopped. What an observer of these events
 throws is logged and stops neither the events after it nor the context from stopping.
 
-### An injection point of a collection type collects the beans of its element type
+### Container injection resolves the full declared bean type
 
-*Section 5.2.* The specification has no collection injection: `List<Foo>` is a bean type like any other, an
-injection point of it is satisfied by a bean that has it among its types - a producer of `List<Foo>`, typically -
-and is unsatisfied where there is none; every bean of `Foo` is what `Instance<Foo>` is for. Micronaut decides
-while a bean compiles that an injection point of `Collection`, `List`, `Set` or another collection type is
-injected with all the beans of the element type, and that is what happens here: `@Inject List<Foo>` is the beans
-of `Foo` - the elements of a produced `List<Foo>` among them - rather than the produced list, and is empty
-rather than unsatisfied where there are none. An array is resolved as the specification has it, and a
-programmatic lookup of the collection type - `Instance<List<Foo>>`, `BeanContainer.getBeans` - resolves the bean
-of that type. The hook Micronaut gives for the array, `BeanResolutionCustomizer.shouldResolveArrayAsBean`, is
-asked for an array only, so the collection cannot be decided the same way here.
-
-Such an injection point is also not an unsatisfied dependency when there are no beans of the element type: the
-container does not report it as it validates the deployment.
+*Section 5.2.* `List<Foo>` and `Optional<Foo>` are bean types like any other. `ContainerInjectionVisitor` selects
+Core's `@ResolveWith` provider hook for container injection points, and `CdiBeanInjectionProvider` resolves the
+full declared type with the final qualifier binding records. Core's active resolution context creates the
+selected definition and retains its dependent ownership. Missing required producers are deployment errors;
+ordinary Micronaut beans retain Micronaut's aggregation behavior.
 
 ### A primitive is boxed by the lookup rather than by the bean
 
@@ -339,12 +328,14 @@ interceptor classes it names to the enabled ones without a priority. An intercep
 association of CDI Full only, and it works here all the same.
 
 `Bean.create()` creates a new contextual instance each time it is called (section 6.1); the instance a scope
-holds is what its context hands out and what a contextual reference resolves to. A bean of a normal scope is
-created by its scope, with what it was created with, and destroying it through the creational context destroys its
-dependent objects. An instance `Bean.create()` makes of a `@Singleton` is created by Micronaut's
-`BeanContext.createBean`, which hands back the bean and not the objects created along with it, so it is destroyed
-without its dependent objects: Micronaut Core has no public way to create the registration of a definition outside
-its scope.
+holds is what its context hands out and what a contextual reference resolves to. Normal-scoped and singleton
+instances are created with Core's `BeanContext.createBeanRegistration`, bypassing their scope while retaining
+the complete dependent tree. Their creational context closes that registration, so dependent objects are
+released exactly once and the shared scoped instance remains alive.
+
+Disposer invocations acquire their temporary dependencies through `BeanPreDestroyEvent.withDependencies`.
+Core permits these lookups during the destruction callback, including shutdown, and releases every owned
+dependent afterwards while preserving the primary invocation failure. Shared scoped beans keep their scope.
 
 A dependent instance obtained through the `Instance` of `BeanContainer.createInstance()` or of `CDI.current()` is
 released by whoever obtained it, with `Instance.destroy()` (section 11.1.13). The SE container is a lookup of its
@@ -486,34 +477,33 @@ read the way the specification's model reads it — a repeatable annotation Micr
 although it was written once is reported as itself, an annotation interface reports the retention it declares —
 and a deployment narrows what an extension sees by registering a `LanguageModelAnnotationFilter`; the kit
 module's filter leaves out what Micronaut's mappers write into its own packages and the non-null marker it adds
-in null-marked code, since the kit asserts on the source alone. Sixteen of the kit's eighteen sections pass, on Micronaut Core 5.3 (the accessors the model uses — an annotation
-interface's targets, container and retention, and the annotations on a primitive type use — landed there); the
-two that do not are run as skipped tests that name what each waits on, and both are accepted deviations: one
-case of `AnnotatedTypes`, the annotation on one dimension of an array, which Micronaut's model keeps one set of
-for the whole array type, and one case of `RepeatableAnnotations`, a repetition written beside a hand-written
-container, which Micronaut folds into one container (both under
-[Open points in Micronaut Core](#open-points-in-micronaut-core)). Because the model is built on the AST alone, `test-suite-kotlin`
+in null-marked code, since the kit asserts on the source alone. Sixteen of the kit's eighteen sections pass on
+Micronaut Core 5.3. `AnnotatedTypes` now passes its array-dimension
+assertions and stops later at the annotation on an unresolved type-variable field. The regression checks that
+it reached this later assertion, so an array regression cannot be hidden by the remaining skip.
+`RepeatableAnnotations` remains pending for a repetition written beside a hand-written container, which Core
+folds into one container (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
+Because the model is built on the AST alone, `test-suite-kotlin`
 runs a build compatible extension against a Kotlin class as KSP compiles it, and `test-suite-groovy` against a
 Groovy class.
 
 ## Open points in Micronaut Core
 
-What this module works around in Micronaut Core, or accepts from it, as of Micronaut Core 5.3. None is filed
-upstream as a defect; each is a difference of design or a gap with a workaround here.
+What this module works around in Micronaut Core, or accepts from it, as of Micronaut Core 5.3.
+The provider hook, fresh registrations, dependency groups, destruction ownership and type-annotation fixes
+are merged upstream; the remaining differences below still require adaptation or are accepted limitations.
 
-- **One set of annotations for an array type.** A type annotation written on one dimension of an array
-  (`String[] @A [] f`) is not kept per dimension: the element model has one set for the array type, standing for
-  the component's. The `AnnotatedTypes` section of the language model kit stops at that assertion and runs as a
-  skipped test; accepted, as other implementations skip it.
 - **Annotations as the source wrote them are derived, not recorded.** A repeatable annotation is folded into its
   container, and what Micronaut's mappers add is not told apart from what the source wrote. The language model
   unfolds a container of one repetition and filters Micronaut's own annotations
   (`LanguageModelAnnotationFilter`); a repetition written beside a hand-written container is reported as one
   container of all of them, which is where the `RepeatableAnnotations` section stops and runs as a skipped test.
   A remapped annotation's original name is not recovered either.
-- **An unannotated use of a type variable reports its declaration's annotations.** For `class C<@X T> { T f; }`
-  the type of `f` carries `@X`, where the specification's model has a use report only its own. The kit accepts
-  either on the one bound it checks; nothing here is skipped for it.
+- **An annotation on an unresolved type-variable field is not retained.** The kit's `AnnotatedTypes` section
+  reaches `verifyTypeVariableField` and fails on the field's type-use annotation after its array assertions pass.
+  Core's resolved generic occurrence fixes are merged, but this unresolved placeholder case remains pending.
+  An unannotated unresolved type-variable use may also inherit its declaration's annotations; the kit accepts
+  either representation on the bound it checks.
 - **`MethodElement.getReceiverType()` is empty unless the source wrote the receiver.** Its documentation says an
   instance method has one derived from the declaring type; the Java implementation answers only a written `this`
   parameter, and the Kotlin and Groovy ones never do. `ElementMethodInfo.receiverType()` supplies the declaring

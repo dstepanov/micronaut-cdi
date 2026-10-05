@@ -33,12 +33,11 @@ import java.util.List;
  * What the language model reads of a declaration beyond what one Micronaut element answers on its own.
  *
  * <p>The AST answers nearly every question the language model of the specification asks, and
- * {@link AstSourceModel} answers them from it, in whichever language the compilation is in. Two questions it
- * cannot answer: the annotations of a declaration exactly as the source wrote them (a repeatable annotation
- * written once is folded into its container, and what Micronaut itself adds is not told apart), and the
- * annotation written on one dimension of an array. Both are how Micronaut's element model is shaped, described
- * under "Open points in Micronaut Core" in {@code CONFORMANCE.md}, and the two sections of the kit that turn on
- * them are pending. The annotation on a primitive type use, and the targets, the container and the retention
+ * {@link AstSourceModel} answers them from it, in whichever language the compilation is in. One question it
+ * cannot answer completely is the annotations of a declaration exactly as the source wrote them: a repeatable
+ * annotation written beside an explicit container is folded into that container. This remaining limitation is
+ * described under "Open points in Micronaut Core" in {@code CONFORMANCE.md}.
+ * The annotation on a primitive type use, and the targets, the container and the retention
  * of an annotation interface, are answered by Micronaut Core 5.3.</p>
  *
  * @author Denis Stepanov
