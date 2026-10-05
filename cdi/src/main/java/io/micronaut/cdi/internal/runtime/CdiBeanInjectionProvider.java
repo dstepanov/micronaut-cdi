@@ -56,6 +56,7 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
             throw new NoSuchBeanException(argument, qualifier);
         }
         BeanDefinition<T> definition = (BeanDefinition<T>) ((CdiBean<?>) selected).definition();
-        return resolutionContext.getBean(CdiInstance.askedAs(argument, definition), CdiInstance.only(definition));
+        // the definition the container's rules selected, resolved as it is, with no candidate lookup of its own
+        return resolutionContext.getBean(definition, CdiInstance.askedAs(argument, definition));
     }
 }

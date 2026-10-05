@@ -381,31 +381,31 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private @Nullable Instances currentInstances() {
-        PropagatedContext context = PropagatedContext.getOrEmpty();
-        // asked on every call through a client proxy of a request scoped bean: the most recent request is
-        // nearly always this container's live one, and is found without walking the context
-        Instances top = context.findOrNull(Instances.class);
-        if (top == null) {
-            return null;
-        }
-        if (top.owner() == this && !top.ended().get()) {
-            return top;
-        }
-        // walked rather than peeked: a request of another container — one running alongside, or one already
+        // asked on every call through a client proxy of a request scoped bean, so found without allocating.
+        // Walked rather than peeked: a request of another container — one running alongside, or one already
         // shut down whose request was never ended — may sit above this container's on the same thread, and is
-        // not a request of this one
-        return context.findAll(Instances.class)
-            // a request that has ended stays in every propagated context captured while it was under way - the
-            // context of a task handed to an executor, say - and is not a request to put new beans into
-            .filter(instances -> instances.owner() == this && !instances.ended().get())
-            .findFirst().orElse(null);
+        // not a request of this one. And a request that has ended stays in every propagated context captured
+        // while it was under way - the context of a task handed to an executor, say - and is not a request to
+        // put new beans into
+        return PropagatedContext.getOrEmpty().findOrNull(Instances.class,
+            instances -> instances.owner() == this && !instances.ended().get());
     }
 
     private Instances newInstances() {
-        Instances instances = new Instances(this, new ConcurrentHashMap<>(8),
+        Instances instances = new Instances(this, new RequestBeans(),
             new java.util.concurrent.atomic.AtomicBoolean());
         live.add(instances);
         return instances;
+    }
+
+    @Override
+    protected Object getCreationLock(Map<BeanIdentifier, CreatedBean<?>> scopeMap, BeanIdentifier identifier) {
+        if (scopeMap instanceof RequestBeans beans) {
+            // the requests are independent of each other: the first creation of a bean in one request does not
+            // wait for a creation of the same bean in another
+            return beans.locks.computeIfAbsent(identifier, key -> new Object());
+        }
+        return super.getCreationLock(scopeMap, identifier);
     }
 
     /**
@@ -471,6 +471,19 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param scope     The handle that ends the propagation
      */
     private record Activation(Instances instances, PropagatedContext.Scope scope) {
+    }
+
+    /**
+     * The beans of one request, and the locks their creation is serialized under, which belong to the request
+     * and go with it.
+     */
+    private static final class RequestBeans extends ConcurrentHashMap<BeanIdentifier, CreatedBean<?>> {
+
+        private final ConcurrentHashMap<BeanIdentifier, Object> locks = new ConcurrentHashMap<>(8);
+
+        RequestBeans() {
+            super(8);
+        }
     }
 
 }
