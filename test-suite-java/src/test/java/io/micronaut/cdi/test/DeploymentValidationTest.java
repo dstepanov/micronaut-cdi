@@ -39,6 +39,27 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void anInjectionPointThatResolvesToASealedNormalScopedBeanIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                Sealed injected;
+
+                @jakarta.enterprise.context.ApplicationScoped
+                public static sealed class Sealed permits Permitted {
+                }
+
+                @jakarta.enterprise.inject.Vetoed
+                public static final class Permitted extends Sealed {
+                }
+            }
+            """, "resolves to a bean that cannot be proxied");
+    }
+
+    @Test
     void anUnsatisfiedInjectionPointIsADeploymentProblem() {
         assertRejected("""
             package invalid;

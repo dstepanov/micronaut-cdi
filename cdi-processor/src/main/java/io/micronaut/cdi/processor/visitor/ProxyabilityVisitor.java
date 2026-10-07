@@ -124,6 +124,10 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
         if (element.isFinal()) {
             return "the class is final and a proxy extends it";
         }
+        if (element.isSealed()) {
+            // a sealed class permits only the subclasses it names, and the proxy is none of them
+            return "the class is sealed and a proxy extends it";
+        }
         ConstructorElement noArguments = null;
         boolean injectConstructor = false;
         for (ConstructorElement constructor : element.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {

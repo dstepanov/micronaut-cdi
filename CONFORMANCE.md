@@ -80,7 +80,8 @@ worse of the two.
 ### An unproxyable normal scoped bean is detected as it is compiled
 
 *Section 3.10.* A bean in a normal scope has to be proxyable, and the specification has the container detect a
-bean that is not: a final class, a class with a final method, a primitive, an array. This module detects them as
+bean that is not: a final class, a class with a final method, a primitive, an array. A sealed class is detected
+too: a proxy is a subclass it does not permit. This module detects them as
 the class compiles. An intercepted bean that cannot be proxied is refused by the compiler. A bean in a normal
 scope deploys, as the specification has it, and what is wrong with it is recorded: an injection point that
 resolves to it is a `DeploymentException` the container reports as it starts, whichever way it was started
