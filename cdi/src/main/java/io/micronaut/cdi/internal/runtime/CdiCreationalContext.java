@@ -73,7 +73,9 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
         tracked.clear();
         // one throwing @PreDestroy must not leave the rest undestroyed
         RuntimeException failure = null;
-        for (io.micronaut.context.scope.CreatedBean<?> registration : toClose) {
+        // in the reverse of the order they were created in, as Micronaut destroys the dependents of a bean: one
+        // created later may use one created before it as it is destroyed
+        for (io.micronaut.context.scope.CreatedBean<?> registration : toClose.reversed()) {
             try {
                 // closing a registration the context created destroys through the context, so the pre-destroy
                 // listeners — the disposer methods of section 3.3.4 — are notified
