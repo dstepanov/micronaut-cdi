@@ -172,7 +172,9 @@ methods of the specification that return a reflection object, or that can only b
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
 module: `InjectionPoint.getMember()`, `getAnnotated()` and `isTransient()`; the qualifiers and interceptor
 bindings of a bean, an injection point, an observer or an event reported as annotation instances, for an
-annotation that is not one of the specification's; an annotation literal with binding members handed to a
+annotation that is not one of the specification's and whose type the application did not list in
+`@RegisterAnnotations` (Micronaut Core generates a builder for a type listed there, which makes the instance
+without reflection); an annotation literal with binding members handed to a
 lookup; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an annotation the
 build recorded nothing of; `getStereotypeDefinition` and `getInterceptorBindingDefinition`; and the generic
 hierarchy of a class no compilation with this processor has seen. Everything else - resolution, injection,

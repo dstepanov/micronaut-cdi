@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.spi.CdiReflection;
+import io.micronaut.core.annotation.AnnotationBuilder;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -27,8 +28,9 @@ import java.lang.annotation.Annotation;
  * The places an annotation instance crosses the boundary between the specification's interfaces, which speak
  * of instances, and Micronaut, which records an annotation as the values it was written with.
  *
- * <p>Nothing is read or made here. An instance is made, and the members of one a program hands over are read,
- * by {@link CdiReflection}; two annotations are compared as the {@link CdiQualifier} each is.</p>
+ * <p>Nothing is read here. An instance is made by the builder generated for its type where the application
+ * registered one, and otherwise, like the members of one a program hands over, by {@link CdiReflection}; two
+ * annotations are compared as the {@link CdiQualifier} each is.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -42,17 +44,23 @@ public final class CdiAnnotations {
     /**
      * The annotation the given values describe.
      *
-     * <p>An annotation instance is a reflection object: it is made by the module that answers the reflective
-     * parts of the specification's API, and asking for one without that module fails with a message that names
-     * it.</p>
+     * <p>An annotation type the application listed in {@link io.micronaut.core.annotation.RegisterAnnotations}
+     * has a builder generated for it, which makes the instance without reflection. Any other annotation instance
+     * is a reflection object: it is made by the module that answers the reflective parts of the specification's
+     * API, and asking for one without that module fails with a message that names it.</p>
      *
      * @param type  The annotation type
      * @param value The values it was written with, if any were recorded
      * @param <A>   The annotation type
      * @return The annotation
-     * @throws UnsupportedOperationException Where the reflection module is not on the classpath
+     * @throws UnsupportedOperationException Where the type has no builder and the reflection module is not on the
+     *                                       classpath
      */
     public static <A extends Annotation> A annotationOf(Class<A> type, @Nullable AnnotationValue<?> value) {
+        AnnotationBuilder<A> builder = AnnotationBuilder.find(type).orElse(null);
+        if (builder != null) {
+            return value == null ? builder.build(java.util.Map.of()) : builder.build(value);
+        }
         return CdiReflection.current("An instance of the annotation " + type.getName()).annotation(type, value);
     }
 

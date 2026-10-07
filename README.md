@@ -105,7 +105,9 @@ reads classes back if it asks to:
 - an annotation instance of a type the specification has no literal for: what `Bean.getQualifiers()`,
   `InjectionPoint.getQualifiers()`, `ObserverMethod.getObservedQualifiers()`, `EventMetadata.getQualifiers()` and
   `Interceptor.getInterceptorBindings()` report for an annotation of the application's own, and an annotation
-  parameter of a synthetic component asked for as an annotation;
+  parameter of a synthetic component asked for as an annotation - unless the application lists the annotation
+  type in Micronaut's `@RegisterAnnotations`, which has a builder generated that makes the instance without
+  reflection;
 - an annotation literal with members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)` or
   `resolveInterceptors(...)`: its members can only be read reflectively;
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
