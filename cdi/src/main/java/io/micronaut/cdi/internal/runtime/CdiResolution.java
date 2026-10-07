@@ -75,12 +75,6 @@ public final class CdiResolution {
     }
 
     /**
-     * The priority a bean was selected with, read back from the order it was recorded as.
-     *
-     * @param definition The definition
-     * @return The priority
-     */
-    /**
      * Whether the bean of the definition is in the dependent pseudo-scope, which is what makes an instance of
      * it belong to whoever asked for it.
      *
@@ -98,12 +92,24 @@ public final class CdiResolution {
         if (declared != null) {
             return "jakarta.enterprise.context.Dependent".equals(declared);
         }
+        // a bean of Micronaut's own held by a scope of Micronaut's - a custom scope - is shared by whoever looks it
+        // up, and closing what a lookup of it returned would destroy the instance its scope holds
+        Class<? extends java.lang.annotation.Annotation> scope = definition.getScope().orElse(null);
+        if (scope != null && scope != io.micronaut.context.annotation.Prototype.class) {
+            return false;
+        }
         return !definition.getAnnotationMetadata()
             .hasStereotype("io.micronaut.cdi.internal.metadata.CdiApplicationScope")
             && !definition.getAnnotationMetadata()
             .hasStereotype("io.micronaut.cdi.internal.metadata.CdiRequestScope");
     }
 
+    /**
+     * The priority a bean was selected with, read back from the order it was recorded as.
+     *
+     * @param definition The definition
+     * @return The priority
+     */
     public static int priorityOf(BeanDefinition<?> definition) {
         // the priority itself where the metadata kept it — zero is a legal priority, which the order encoding
         // alone cannot say apart from none
