@@ -81,6 +81,16 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      */
     private final java.util.Set<Instances> live = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
+    /**
+     * Whether a request of the propagated context is a live one of this scope. A request of another container -
+     * one running alongside, or one already shut down whose request was never ended - may sit above this
+     * container's on the same thread; and a request that has ended stays in every propagated context captured
+     * while it was under way - the context of a task handed to an executor, say - and is not a request to put new
+     * beans into.
+     */
+    private final java.util.function.Predicate<Instances> liveRequestOfThisScope =
+        instances -> instances.owner() == this && !instances.ended().get();
+
     public RequestScope(io.micronaut.context.BeanContext beanContext) {
         // each bean is created under a lock of its own, so that a creation may wait for another thread creating
         // another bean of the scope
@@ -381,28 +391,23 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private @Nullable Instances currentInstances() {
-        PropagatedContext context = PropagatedContext.getOrEmpty();
-        // asked on every call through a client proxy of a request scoped bean: the most recent request is
-        // nearly always this container's live one, and is found without walking the context
-        Instances top = context.findOrNull(Instances.class);
-        if (top == null) {
-            return null;
+        // asked on every call through a client proxy of a request scoped bean, and found by one walk of the
+        // context that allocates nothing: the most recent request is nearly always this container's live one
+        return PropagatedContext.getOrEmpty().findOrNull(Instances.class, liveRequestOfThisScope);
+    }
+
+    @Override
+    protected Object getCreationLock(Map<BeanIdentifier, CreatedBean<?>> scopeMap, BeanIdentifier identifier) {
+        // the requests are independent of each other: the first creation of a bean in one request does not wait
+        // for a creation of the same bean in another, which a lock per identifier shared by every request would
+        if (scopeMap instanceof RequestBeans beans) {
+            return beans.creationLocks.computeIfAbsent(identifier, key -> new Object());
         }
-        if (top.owner() == this && !top.ended().get()) {
-            return top;
-        }
-        // walked rather than peeked: a request of another container — one running alongside, or one already
-        // shut down whose request was never ended — may sit above this container's on the same thread, and is
-        // not a request of this one
-        return context.findAll(Instances.class)
-            // a request that has ended stays in every propagated context captured while it was under way - the
-            // context of a task handed to an executor, say - and is not a request to put new beans into
-            .filter(instances -> instances.owner() == this && !instances.ended().get())
-            .findFirst().orElse(null);
+        return super.getCreationLock(scopeMap, identifier);
     }
 
     private Instances newInstances() {
-        Instances instances = new Instances(this, new ConcurrentHashMap<>(8),
+        Instances instances = new Instances(this, new RequestBeans(),
             new java.util.concurrent.atomic.AtomicBoolean());
         live.add(instances);
         return instances;
@@ -447,6 +452,20 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param beans The beans of the request
      * @param ended Whether the request has ended, its beans destroyed
      */
+    /**
+     * The beans of one request, and the locks their creations in it take. The locks are held beside the beans
+     * rather than in the same map: a creation that resolves another bean of the request would otherwise update the
+     * map recursively.
+     */
+    @SuppressWarnings("serial")
+    private static final class RequestBeans extends ConcurrentHashMap<BeanIdentifier, CreatedBean<?>> {
+        private final transient ConcurrentHashMap<BeanIdentifier, Object> creationLocks = new ConcurrentHashMap<>(8);
+
+        RequestBeans() {
+            super(8);
+        }
+    }
+
     private record Instances(RequestScope owner, Map<BeanIdentifier, CreatedBean<?>> beans,
                              java.util.concurrent.atomic.AtomicBoolean ended)
         implements PropagatedContextElement {
