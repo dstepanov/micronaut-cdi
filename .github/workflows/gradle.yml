@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
+  # every pull request, a stacked one into another branch included
   pull_request:
-    branches:
-      - main
   schedule:
     # Micronaut Core is a snapshot and Jakarta Interceptors is the head of its branch, so a build that passed
     # can start failing with no change here: a nightly build says so before the next change runs into it
