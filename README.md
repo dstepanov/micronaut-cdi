@@ -248,3 +248,11 @@ repository.
 For integration testing against a Core source checkout, pass `-PmicronautCoreDir=/path/to/micronaut-core`.
 Use the merged `5.3.x` branch; the container provider retains Core's four-argument API.
 Generate the Core BOM catalog first with `./gradlew -q :micronaut-core-bom:generateCatalogAsToml` in that checkout.
+
+## Asking Claude
+
+Mention `@claude` in an issue, a pull request, a review or a comment on either, and
+[Claude Code](https://github.com/anthropics/claude-code-action) answers in the thread: it can read the code,
+build it with `./gradlew` and push a change to the branch of a pull request. Only an owner, a member or a
+collaborator of the repository can start it. The workflow is `.github/workflows/claude.yml`, and it needs the
+`ANTHROPIC_API_KEY` secret of the repository.
