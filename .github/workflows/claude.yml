@@ -50,6 +50,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Prints what Claude says and the errors of the API in the log of the run
+          show_full_output: true
           additional_permissions: |
             actions: read
           claude_args: |
