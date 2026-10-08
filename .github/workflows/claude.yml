@@ -1,0 +1,61 @@
+name: Claude
+
+# Runs Claude Code when someone mentions @claude in an issue, a pull request, a review or a comment on either
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+  issues:
+    types: [opened, assigned]
+
+jobs:
+  claude:
+    # Only a mention by someone with write access to the repository starts a run
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # The same JDK and Gradle as the build, so Claude can compile and run the tests it touches
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        env:
+          # The key is not scoped to a workspace, so every request names the workspace it is billed to
+          ANTHROPIC_CUSTOM_HEADERS: "anthropic-workspace-id: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}"
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Prints what Claude says and the errors of the API in the log of the run
+          show_full_output: true
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --allowedTools "Bash(./gradlew:*),Bash(git:*),Bash(gh:*)"
