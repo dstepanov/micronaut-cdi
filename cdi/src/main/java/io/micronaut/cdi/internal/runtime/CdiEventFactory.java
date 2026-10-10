@@ -40,8 +40,8 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
     }
 
     @Override
-    protected java.util.List<Class<?>> specificationTypes() {
-        return java.util.List.of(Event.class);
+    public java.util.Set<Class<?>> getExposedTypes() {
+        return java.util.Set.of(io.micronaut.cdi.MicronautEvent.class, Event.class);
     }
 
     @SuppressWarnings("unchecked")

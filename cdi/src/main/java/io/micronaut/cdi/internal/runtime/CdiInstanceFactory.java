@@ -40,9 +40,10 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
     }
 
     @Override
-    protected java.util.List<Class<?>> specificationTypes() {
+    public java.util.Set<Class<?>> getExposedTypes() {
         // the built-in lookup has Provider among its bean types: Instance extends it
-        return java.util.List.of(Instance.class, jakarta.inject.Provider.class);
+        return java.util.Set.of(
+            io.micronaut.cdi.MicronautInstance.class, Instance.class, jakarta.inject.Provider.class);
     }
 
     @SuppressWarnings("unchecked")

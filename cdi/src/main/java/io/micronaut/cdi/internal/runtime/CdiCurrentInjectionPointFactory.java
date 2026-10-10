@@ -48,8 +48,9 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
     }
 
     @Override
-    protected boolean isParameterized() {
-        return false;
+    public java.util.List<Argument<?>> getTypeArguments() {
+        // unlike the event and the lookup, the injection point metadata is not parameterized at all
+        return java.util.List.of();
     }
 
     @Override
