@@ -480,10 +480,9 @@ read the way the specification's model reads it — a repeatable annotation Micr
 although it was written once is reported as itself, an annotation interface reports the retention it declares —
 and a deployment narrows what an extension sees by registering a `LanguageModelAnnotationFilter`; the kit
 module's filter leaves out what Micronaut's mappers write into its own packages and the non-null marker it adds
-in null-marked code, since the kit asserts on the source alone. Sixteen of the kit's eighteen sections pass on
-Micronaut Core 5.3. `AnnotatedTypes` now passes its array-dimension
-assertions and stops later at the annotation on an unresolved type-variable field. The regression checks that
-it reached this later assertion, so an array regression cannot be hidden by the remaining skip.
+in null-marked code, since the kit asserts on the source alone. Seventeen of the kit's eighteen sections pass on
+Micronaut Core 5.3, `AnnotatedTypes` among them: Core reports the annotations written on each array dimension, and
+the annotations of a type variable's use rather than of its declaration, in Java, Kotlin and Groovy alike.
 `RepeatableAnnotations` remains pending for a repetition written beside a hand-written container, which Core
 folds into one container (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
 Because the model is built on the AST alone, `test-suite-kotlin`
@@ -502,11 +501,6 @@ are merged upstream; the remaining differences below still require adaptation or
   (`LanguageModelAnnotationFilter`); a repetition written beside a hand-written container is reported as one
   container of all of them, which is where the `RepeatableAnnotations` section stops and runs as a skipped test.
   A remapped annotation's original name is not recovered either.
-- **An annotation on an unresolved type-variable field is not retained.** The kit's `AnnotatedTypes` section
-  reaches `verifyTypeVariableField` and fails on the field's type-use annotation after its array assertions pass.
-  Core's resolved generic occurrence fixes are merged, but this unresolved placeholder case remains pending.
-  An unannotated unresolved type-variable use may also inherit its declaration's annotations; the kit accepts
-  either representation on the bound it checks.
 - **`MethodElement.getReceiverType()` is empty unless the source wrote the receiver.** Its documentation says an
   instance method has one derived from the declaring type; the Java implementation answers only a written `this`
   parameter, and the Kotlin and Groovy ones never do. `ElementMethodInfo.receiverType()` supplies the declaring
