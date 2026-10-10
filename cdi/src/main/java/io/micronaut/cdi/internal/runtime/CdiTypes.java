@@ -258,7 +258,9 @@ public final class CdiTypes {
         }
         if (isParameterized(type)) {
             Argument<?>[] substituted = substitute(List.of(type.getTypeParameters()), arguments, intoWildcards);
-            return substituted == null ? type : Argument.of(type.getType(), (String) null, substituted);
+            // written the way the type was: a variable resolved to a parameterized type stays a resolved
+            // variable, and the annotations of the use are kept
+            return substituted == null ? type : type.withTypeParameters(substituted);
         }
         if (intoWildcards && type instanceof WildcardArgument<?> wildcard) {
             Argument<?>[] upper = substitute(wildcard.getUpperBounds(), arguments, true);
