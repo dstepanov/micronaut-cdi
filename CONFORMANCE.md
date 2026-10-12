@@ -449,6 +449,11 @@ than pretended here: `BootstrapSEContainerTest`'s `testAddDecorator` (decorators
 deployments share one class path here, so the extensions its SE archives declare as service providers are
 listed in one service file of the module, and a bootstrap admits the ones whose class is in its deployment.
 
+The Jakarta Interceptors kit runs here against this container. Micronaut Jakarta Interceptors runs the same kit
+in its own build against a stand-in for CDI of four classes (its `cdi-tck-support`), which repeats this module's
+mappers of the dependent, request and application scopes and its reading of producers: that build cannot use
+this module's processor, which depends on it, so the two are kept in step by hand.
+
 The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
 and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The
 kit has 816 test methods outside `tests/full`, and 811 of them run, all passing, as part of `check`. The five
