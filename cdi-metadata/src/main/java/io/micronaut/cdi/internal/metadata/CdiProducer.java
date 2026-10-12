@@ -31,6 +31,10 @@ import java.lang.annotation.Target;
  * is told whether it was produced by a method or by a field, and which one. That is known while the producer is
  * compiled and is recorded here, so that it can be reported without having to work it out again.</p>
  *
+ * <p>Micronaut's own metadata does not carry it: a producer field has no executable method to read a name from,
+ * and the definition of a client proxy of a produced bean in a normal scope does not name the class that declares
+ * its producer.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
