@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.se;
 
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
@@ -333,7 +334,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             return null;
         }
         return definition.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
+            .stringValue(CdiProducer.class, "declaringType").orElse(null);
     }
 
     /**

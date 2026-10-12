@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiProducer;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.BeanResolutionCustomizer;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -146,8 +148,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             return java.util.Optional.of(primitiveDefault);
         }
         io.micronaut.core.annotation.AnnotationMetadata metadata = beanDefinition.getAnnotationMetadata();
-        if (metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")
-            && (metadata.booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)
+        if (metadata.hasAnnotation(CdiProducer.class)
+            && (CdiResolution.isNormalScoped(metadata)
                 || beanDefinition.isSingleton())) {
             // section 3.2.2: an instance in any scope but dependent is shared, and a null cannot be
             throw new jakarta.enterprise.inject.IllegalProductException(
@@ -164,8 +166,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         // fields would chase the dependencies the proxy exists to defer, which is how a circular chain of
         // normal-scoped beans deadlocks — and section 4.3 has the proxy break exactly that circle
         if (beanDefinition instanceof ProxyBeanDefinition<?>
-            && beanDefinition.getAnnotationMetadata()
-                .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
+            && CdiResolution.isNormalScoped(beanDefinition.getAnnotationMetadata())) {
             return false;
         }
         return delegate.shouldInitializeBean(resolutionContext, beanDefinition, bean);
@@ -177,8 +178,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         // when a client proxy finally resolves the instance its context holds, that resolution starts a fresh
         // dependency chain: carrying the path the proxy was injected on would read a legal circular chain of
         // normal-scoped beans — the one section 4.3 has the proxy break — as a circular dependency
-        if (proxyBeanDefinition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
+        if (CdiResolution.isNormalScoped(proxyBeanDefinition.getAnnotationMetadata())) {
             return false;
         }
         return delegate.shouldPreserveLazyProxyTargetResolutionPath(resolutionContext, proxyBeanDefinition);
@@ -211,8 +211,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      * Whether the definition was compiled as a bean of the specification, which is what its scope marker says.
      */
     private static boolean isBeanOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")
-            || definition.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope");
+        return definition.getAnnotationMetadata().hasAnnotation(CdiScope.class)
+            || definition.getAnnotationMetadata().hasStereotype(CdiScope.class);
     }
 
     /**

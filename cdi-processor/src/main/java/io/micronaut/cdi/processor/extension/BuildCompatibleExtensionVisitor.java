@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
+import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -341,7 +343,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         contextRecordWritten = true;
         GeneratedSource source = new GeneratedSource(context.getLanguage())
             .annotation("jakarta.inject.Singleton", null)
-            .annotation("io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers",
+            .annotation(CdiExtensionQualifiers.class.getName(),
                 new GeneratedSource(context.getLanguage()).strings(discovered.registeredQualifiers()));
         write(context, "ExtensionContextRecordHolder", source, "The extension qualifier record");
     }
@@ -361,7 +363,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 try {
                     contexts.add(new SynthesisPhase.Component(
                         SyntheticRecords.classElement(context, contextClass, "context"),
-                        AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiRegisteredContext")
+                        AnnotationValue.builder(CdiRegisteredContext.class)
                             .member("scope", new io.micronaut.core.annotation.AnnotationClassValue<>(scopeName))
                             .member("normal", discovered.isNormalContext(scopeName))
                             .build()));
@@ -837,7 +839,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         if (discovered.isScanned(element.getName())
             && !element.getAnnotationMetadata().hasStereotype("jakarta.inject.Scope")
-            && !element.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope")) {
+            && !element.getAnnotationMetadata().hasStereotype(CdiScope.class)) {
             // added to the scanned classes during discovery: a bean as though it declared the dependent
             // scope. Only the prototype pseudo-scope is written — a scope a stereotype gives the class must
             // win, and a bean with nothing else reports the dependent scope anyway

@@ -15,6 +15,9 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiRequestScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 
@@ -95,6 +98,17 @@ public final class CdiResolution {
     }
 
     /**
+     * Whether a bean, or a producer, was compiled into a normal scope of the specification, which is what makes
+     * it reached through a client proxy.
+     *
+     * @param metadata The annotation metadata of its definition
+     * @return Whether its scope is normal
+     */
+    public static boolean isNormalScoped(io.micronaut.core.annotation.AnnotationMetadata metadata) {
+        return metadata.booleanValue(CdiScope.class, "normal").orElse(false);
+    }
+
+    /**
      * Whether the bean of the definition is in the dependent pseudo-scope, which is what makes an instance of
      * it belong to whoever asked for it.
      *
@@ -108,7 +122,7 @@ public final class CdiResolution {
         // the scope the bean was described with, where one was recorded — a synthetic bean's metadata names
         // it without carrying the compiled stereotypes
         String declared = definition.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.internal.metadata.CdiScope").orElse(null);
+            .stringValue(CdiScope.class).orElse(null);
         if (declared != null) {
             return "jakarta.enterprise.context.Dependent".equals(declared);
         }
@@ -119,9 +133,9 @@ public final class CdiResolution {
             return false;
         }
         return !definition.getAnnotationMetadata()
-            .hasStereotype("io.micronaut.cdi.internal.metadata.CdiApplicationScope")
+            .hasStereotype(CdiApplicationScope.class)
             && !definition.getAnnotationMetadata()
-            .hasStereotype("io.micronaut.cdi.internal.metadata.CdiRequestScope");
+            .hasStereotype(CdiRequestScope.class);
     }
 
     /**

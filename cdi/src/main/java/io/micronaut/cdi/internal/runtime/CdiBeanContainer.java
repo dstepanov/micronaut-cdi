@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
@@ -168,7 +169,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         if (bean instanceof CdiBean<?> cdiBean) {
             String unproxyable = cdiBean.definition().getAnnotationMetadata()
-                .stringValue("io.micronaut.cdi.internal.metadata.CdiUnproxyable").orElse(null);
+                .stringValue(CdiUnproxyable.class).orElse(null);
             if (unproxyable != null) {
                 // section 3.11: a contextual reference to a bean in a normal scope is its client proxy, and
                 // this bean cannot have one

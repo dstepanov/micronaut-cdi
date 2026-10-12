@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
+import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.cdi.processor.Cdi;
@@ -159,7 +160,7 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
                 .member("condition", new AnnotationClassValue<>(
                     "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
             String className = element.getName();
-            element.annotate("io.micronaut.cdi.internal.metadata.CdiSelectableAlternative", builder -> {
+            element.annotate(CdiSelectableAlternative.class, builder -> {
                 builder.value(className);
                 if (!stereotypes.isEmpty()) {
                     builder.member("stereotypes", stereotypes.toArray(new String[0]));

@@ -418,7 +418,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * what was handed out is a client proxy — and any other through its definition.
      */
     static <T> void destroyResolved(BeanContext beanContext, BeanDefinition<T> definition, T instance) {
-        if (isNormalScoped(definition)) {
+        if (CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
             CdiBean<T> bean = new CdiBean<>(beanContext, definition);
             jakarta.enterprise.context.spi.Context context = beanContext
                 .getBean(CdiBeanContainer.class).getContext(bean.getScope());
@@ -428,12 +428,6 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             }
         }
         destroy(beanContext, definition, instance);
-    }
-
-    private static boolean isNormalScoped(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal")
-            .orElse(false);
     }
 
     /**

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
@@ -461,7 +462,7 @@ public final class CdiQualifier {
             if (isMicronautOwn(name)) {
                 continue;
             }
-            if (NAMED_NAME.equals(name) && metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiName")) {
+            if (NAMED_NAME.equals(name) && metadata.hasAnnotation(CdiName.class)) {
                 // the name came through a stereotype — recorded as CdiName — so the bean has the name, but
                 // Named is not among its qualifiers (section 2.6.1). The jakarta annotation beside it is the
                 // default Micronaut materialized from the stereotype, not something the author wrote

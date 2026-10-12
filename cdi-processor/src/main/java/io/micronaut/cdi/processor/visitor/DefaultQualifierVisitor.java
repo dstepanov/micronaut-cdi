@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
+import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Primary;
@@ -58,7 +59,7 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
     private static final Set<String> NOT_A_DECLARED_QUALIFIER = Set.of(
         "jakarta.inject.Named",
         Cdi.ANY,
-        "io.micronaut.cdi.internal.metadata.CdiAny",
+        CdiAny.class.getName(),
         Cdi.DEFAULT,
         // what this module's own visitors write on a selected alternative: Micronaut's primary is a
         // qualifier, but it is not the bean declaring one

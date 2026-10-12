@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.cdi.processor.Cdi;
@@ -166,13 +167,13 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
             return true;
         }
         String scope = element.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.internal.metadata.CdiScope").orElse(null);
+            .stringValue(CdiScope.class).orElse(null);
         if (scope != null) {
             return Cdi.DEPENDENT.equals(scope);
         }
         // a bean with no scope at all is dependent by default
         return !element.hasStereotype("jakarta.enterprise.context.NormalScope")
-            && !element.hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope");
+            && !element.hasStereotype(CdiScope.class);
     }
 
     /**

@@ -15,6 +15,11 @@
  */
 package io.micronaut.cdi.internal.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
+import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 
@@ -42,10 +47,10 @@ public final class ExtensionComponents {
      * @return Whether it is one of the container's own
      */
     public static boolean isComponent(AnnotationMetadata metadata) {
-        return metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiExtensionComponents")
-            || metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiSyntheticBean")
-            || metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer")
-            || metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiSyntheticObserver")
-            || metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiRegisteredContext");
+        return metadata.hasAnnotation(CdiExtensionComponents.class)
+            || metadata.hasAnnotation(CdiSyntheticBean.class)
+            || metadata.hasAnnotation(CdiSyntheticDisposer.class)
+            || metadata.hasAnnotation(CdiSyntheticObserver.class)
+            || metadata.hasAnnotation(CdiRegisteredContext.class);
     }
 }
