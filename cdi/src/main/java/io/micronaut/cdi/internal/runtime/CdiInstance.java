@@ -477,7 +477,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         // a lookup that was injected nowhere - the bean container's, CDI.current(), the SE container - stands
         // for itself, and requires what it selected: the type, and every qualifier of every select, with the
         // members each was handed over with (section 2.4.5.7)
-        return new CdiInjectionPoint(null, type, null).viewedAs(type, required());
+        return new CdiInjectionPoint(beanContext, null, type, null).viewedAs(type, required());
     }
 
     private Collection<BeanDefinition<T>> definitions() {

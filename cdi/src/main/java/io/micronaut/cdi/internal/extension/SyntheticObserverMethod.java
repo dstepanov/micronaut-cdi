@@ -63,7 +63,8 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         this.record = record;
         this.eventArgument = RecordedTypes.typeOf(record.getAnnotation(CdiSyntheticObserver.EVENT_TYPE).orElseThrow());
         this.eventType = io.micronaut.cdi.internal.runtime.CdiTypes.typeOf(eventArgument);
-        this.parameters = new CdiParameters(record.getAnnotations("params", CdiSyntheticParameter.class));
+        this.parameters = new CdiParameters(beanContext,
+            record.getAnnotations("params", CdiSyntheticParameter.class));
     }
 
     @Override
@@ -83,7 +84,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public Set<Annotation> getObservedQualifiers() {
-        return CdiQualifier.instances(observedQualifiers());
+        return CdiQualifier.instances(beanContext, observedQualifiers());
     }
 
     @Override

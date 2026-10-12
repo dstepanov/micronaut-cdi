@@ -45,6 +45,9 @@ import java.util.Map;
 @Internal
 public final class CdiParameters implements Parameters {
 
+    // the container the component was handed these by: its invokers invoke its beans, and an annotation asked
+    // for as an instance is made by its reflection module
+    private final io.micronaut.context.BeanContext beanContext;
     private final Map<String, AnnotationValue<CdiSyntheticParameter>> parameters;
     /**
      * The invokers of each parameter that holds them, read once: an invoker finds the method it invokes the first
@@ -52,7 +55,9 @@ public final class CdiParameters implements Parameters {
      */
     private final Map<String, RecordedInvoker[]> invokers = new java.util.concurrent.ConcurrentHashMap<>();
 
-    CdiParameters(List<AnnotationValue<CdiSyntheticParameter>> recorded) {
+    CdiParameters(io.micronaut.context.BeanContext beanContext,
+                  List<AnnotationValue<CdiSyntheticParameter>> recorded) {
+        this.beanContext = beanContext;
         Map<String, AnnotationValue<CdiSyntheticParameter>> byName = new LinkedHashMap<>();
         for (AnnotationValue<CdiSyntheticParameter> parameter : recorded) {
             byName.put(parameter.stringValue("name").orElseThrow(), parameter);
@@ -80,7 +85,7 @@ public final class CdiParameters implements Parameters {
             List<AnnotationValue<Annotation>> records = parameter.getAnnotations(CdiSyntheticParameter.INVOKERS);
             RecordedInvoker[] read = new RecordedInvoker[records.size()];
             for (int i = 0; i < read.length; i++) {
-                read[i] = RecordedInvoker.of(records.get(i));
+                read[i] = RecordedInvoker.of(beanContext, records.get(i));
             }
             return read;
         });
@@ -172,8 +177,7 @@ public final class CdiParameters implements Parameters {
      * An annotation is recorded as the values it was written with. Asked for as those values it is handed
      * over as they are; asked for as an annotation it is made an instance of its annotation type.
      */
-    private static Object annotationsOf(AnnotationValue<CdiSyntheticParameter> parameter, boolean array,
-                                        Class<?> type) {
+    private Object annotationsOf(AnnotationValue<CdiSyntheticParameter> parameter, boolean array, Class<?> type) {
         List<AnnotationValue<Annotation>> values = parameter.getAnnotations(CdiSyntheticParameter.ANNOTATIONS);
         Class<?> requested = array && type.isArray() ? type.getComponentType() : type;
         if (requested == AnnotationValue.class) {
@@ -182,7 +186,7 @@ public final class CdiParameters implements Parameters {
         Class<?>[] types = parameter.classValues("classes");
         Annotation[] annotations = new Annotation[values.size()];
         for (int i = 0; i < annotations.length; i++) {
-            annotations[i] = CdiAnnotations.annotationOf(annotationType(types[i]), values.get(i));
+            annotations[i] = CdiAnnotations.annotationOf(beanContext, annotationType(types[i]), values.get(i));
         }
         return array ? annotations : annotations[0];
     }

@@ -58,7 +58,7 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-            injectedAt = CdiInjectionPoint.of(container.canonicalBean(segment.getDeclaringType()), segment);
+            injectedAt = CdiInjectionPoint.of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()), segment);
         }
         // an Argument is itself a Type, so the conversion is spelled out rather than left to overloading
         return new CdiEvent<>(context.getBean(ObserverRegistry.class),

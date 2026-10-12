@@ -209,7 +209,7 @@ public final class ObserverRegistry {
                                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
                                     InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
-            new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
+            new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         for (ObserverMethod<?> observer : resolve(eventType, eventQualifiers, async)) {
             ((CdiNotifiable) observer).notifyWith(event, metadata);
         }
@@ -230,7 +230,7 @@ public final class ObserverRegistry {
         Object event, Argument<?> eventType, List<CdiQualifier> eventQualifiers,
         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
-            new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
+            new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         java.util.List<Throwable> thrown = new java.util.ArrayList<>(0);
         io.micronaut.cdi.internal.context.RequestScope requestScope =
             beanContext.findBean(io.micronaut.cdi.internal.context.RequestScope.class).orElse(null);

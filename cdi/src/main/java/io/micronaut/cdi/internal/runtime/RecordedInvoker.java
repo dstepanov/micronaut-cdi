@@ -34,8 +34,8 @@ import org.jspecify.annotations.Nullable;
  * {@link ExecutableMethod} rather than reflecting. What is recorded here is only what names it: the bean
  * class, the method, its parameter types, and what the builder asked to be looked up.</p>
  *
- * <p>The container the invocation goes to is the one running when it is made, which is what an invoker handed
- * from build time to runtime can mean by "the container".</p>
+ * <p>The container the invocation goes to is the one whose synthetic component was handed the invoker as a
+ * parameter: the invoker is read from the record by that container, and invokes the beans of its context.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -43,6 +43,7 @@ import org.jspecify.annotations.Nullable;
 @Internal
 public final class RecordedInvoker implements Invoker<Object, Object> {
 
+    private final BeanContext beanContext;
     private final String beanClassName;
     private final String methodName;
     private final String[] parameterTypeNames;
@@ -51,8 +52,10 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     private final boolean[] argumentLookups;
     private volatile @Nullable Target cachedTarget;
 
-    public RecordedInvoker(String beanClassName, String methodName, String[] parameterTypeNames,
+    public RecordedInvoker(BeanContext beanContext, String beanClassName, String methodName,
+                           String[] parameterTypeNames,
                            boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups) {
+        this.beanContext = beanContext;
         this.beanClassName = beanClassName;
         this.methodName = methodName;
         this.parameterTypeNames = parameterTypeNames;
@@ -64,10 +67,11 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     /**
      * The invoker a record describes.
      *
-     * @param record The record
+     * @param beanContext The context of the container the invoker invokes the beans of
+     * @param record      The record
      * @return The invoker
      */
-    public static RecordedInvoker of(AnnotationValue<?> record) {
+    public static RecordedInvoker of(BeanContext beanContext, AnnotationValue<?> record) {
         String[] parameterTypes = record.stringValues("parameterTypes");
         boolean[] lookups = record.booleanValues("argumentLookups");
         if (lookups.length != parameterTypes.length) {
@@ -75,6 +79,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             lookups = java.util.Arrays.copyOf(lookups, parameterTypes.length);
         }
         return new RecordedInvoker(
+            beanContext,
             record.stringValue("beanClass").orElseThrow(),
             record.stringValue("method").orElseThrow(),
             parameterTypes,
@@ -92,17 +97,11 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
 
     @Override
     public @Nullable Object invoke(@Nullable Object instance, Object @Nullable [] arguments) throws Exception {
-        CdiBeanContainer container = CdiRunning.current();
-        if (container == null) {
-            throw new IllegalStateException("No container is running to invoke "
-                + beanClassName + "#" + methodName + " in");
-        }
-        BeanContext beanContext = container.beanContext();
         Target resolved = cachedTarget;
-        if (resolved == null || resolved.beanContext() != beanContext) {
-            // found once for the container that invokes it: an invoker is meant to be called again and again
+        if (resolved == null) {
+            // found once: an invoker is meant to be called again and again
             BeanDefinition<?> named = definitionOf(beanContext);
-            resolved = new Target(beanContext, named, executable(named));
+            resolved = new Target(named, executable(named));
             cachedTarget = resolved;
         }
         BeanDefinition<?> definition = resolved.definition();
@@ -163,11 +162,9 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
 
     /**
      * Checks that every lookup the invoker names resolves to exactly one bean, which is what CDI 4.1 asks of
-     * the deployment rather than of the first invocation.
-     *
-     * @param beanContext The started context
+     * the deployment rather than of the first invocation. It is asked as the container starts.
      */
-    public void validateLookups(BeanContext beanContext) {
+    public void validateLookups() {
         boolean anyLookup = instanceLookup;
         for (boolean lookup : argumentLookups) {
             anyLookup = anyLookup || lookup;
@@ -353,13 +350,11 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     }
 
     /**
-     * The definition and the method an invoker invokes, in the container it found them in.
+     * The definition and the method an invoker invokes.
      *
-     * @param beanContext The context of the container
-     * @param definition  The definition of the bean
-     * @param method      The method
+     * @param definition The definition of the bean
+     * @param method     The method
      */
-    private record Target(BeanContext beanContext, BeanDefinition<?> definition,
-                          ExecutableMethod<Object, Object> method) {
+    private record Target(BeanDefinition<?> definition, ExecutableMethod<Object, Object> method) {
     }
 }

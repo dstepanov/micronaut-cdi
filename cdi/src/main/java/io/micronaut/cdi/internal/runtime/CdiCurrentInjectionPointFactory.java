@@ -68,7 +68,7 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
                 BeanResolutionContext.Segment<?, ?> outer = segments.next();
                 if (!outer.getDeclaringType().equals(self.getDeclaringType())) {
                     CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-                    return CdiInjectionPoint.of(container.canonicalBean(outer.getDeclaringType()), outer);
+                    return CdiInjectionPoint.of(container.beanContext(), container.canonicalBean(outer.getDeclaringType()), outer);
                 }
             }
         }

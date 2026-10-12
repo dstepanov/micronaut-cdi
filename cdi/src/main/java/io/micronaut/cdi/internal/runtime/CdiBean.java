@@ -217,7 +217,7 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return CdiQualifier.instances(qualifiers());
+        return CdiQualifier.instances(beanContext, qualifiers());
     }
 
     /**
@@ -323,7 +323,7 @@ public class CdiBean<T> implements Bean<T> {
                     // what the container itself passes a generated constructor is not an injection point
                     continue;
                 }
-                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(declaring,
+                points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
                     InjectionSite.CONSTRUCTOR, arguments, argument)));
             }
         } else if (!producer.booleanValue("field").orElse(false)) {
@@ -333,12 +333,12 @@ public class CdiBean<T> implements Bean<T> {
             String member = producer.stringValue("member").orElse(InjectionSite.CONSTRUCTOR);
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(getBeanClass(),
+                points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(getBeanClass(),
                     member, arguments, argument)));
             }
         }
         for (io.micronaut.inject.FieldInjectionPoint<T, ?> field : described.getInjectedFields()) {
-            points.add(new CdiInjectionPoint(this, field.asArgument(), InjectionSite.ofField(declaring,
+            points.add(new CdiInjectionPoint(beanContext, this, field.asArgument(), InjectionSite.ofField(declaring,
                 field.getName())));
         }
         for (io.micronaut.inject.MethodInjectionPoint<T, ?> method : described.getInjectedMethods()) {
@@ -347,7 +347,7 @@ public class CdiBean<T> implements Bean<T> {
             }
             io.micronaut.core.type.Argument<?>[] arguments = method.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(declaring,
+                points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
                     method.getName(), arguments, argument)));
             }
         }

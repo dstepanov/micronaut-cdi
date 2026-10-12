@@ -37,14 +37,17 @@ import java.util.Set;
 @Internal
 final class CdiEventMetadata implements EventMetadata {
 
+    // the container the event was fired in, which makes the qualifiers it was fired with annotation instances
+    private final io.micronaut.context.BeanContext beanContext;
     private final java.util.List<CdiQualifier> firedWith;
     private final @Nullable InjectionPoint injectionPoint;
     private final io.micronaut.core.type.Argument<?> eventType;
     private volatile @Nullable Type type;
     private volatile @Nullable Set<Annotation> qualifiers;
 
-    CdiEventMetadata(java.util.List<CdiQualifier> firedWith, @Nullable InjectionPoint injectionPoint,
-                     io.micronaut.core.type.Argument<?> eventType) {
+    CdiEventMetadata(io.micronaut.context.BeanContext beanContext, java.util.List<CdiQualifier> firedWith,
+                     @Nullable InjectionPoint injectionPoint, io.micronaut.core.type.Argument<?> eventType) {
+        this.beanContext = beanContext;
         this.firedWith = firedWith;
         this.injectionPoint = injectionPoint;
         this.eventType = eventType;
@@ -57,7 +60,7 @@ final class CdiEventMetadata implements EventMetadata {
         if (resolved == null) {
             Set<Annotation> all = new LinkedHashSet<>();
             all.add(Any.Literal.INSTANCE);
-            all.addAll(CdiQualifier.instances(firedWith));
+            all.addAll(CdiQualifier.instances(beanContext, firedWith));
             resolved = Set.copyOf(all);
             qualifiers = resolved;
         }

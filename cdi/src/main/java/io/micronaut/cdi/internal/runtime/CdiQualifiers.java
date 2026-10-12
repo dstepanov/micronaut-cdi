@@ -20,12 +20,10 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.qualifiers.Qualifiers;
-import jakarta.enterprise.inject.Any;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -83,22 +81,6 @@ public final class CdiQualifiers {
     }
 
     /**
-     * The qualifiers of a bean, as the annotation instances the specification reports them as.
-     *
-     * <p>Every bean has {@code Any}, which the specification says rather than the bean declaring it, so it is
-     * added here rather than being looked for.</p>
-     *
-     * @param annotationMetadata The metadata of the bean
-     * @return The qualifiers
-     */
-    public static Set<Annotation> of(AnnotationMetadata annotationMetadata) {
-        Set<Annotation> qualifiers = new LinkedHashSet<>();
-        qualifiers.add(Any.Literal.INSTANCE);
-        qualifiers.addAll(declared(annotationMetadata));
-        return qualifiers;
-    }
-
-    /**
      * The qualifiers an element was annotated with, and only those.
      *
      * <p>It is what a bean's qualifiers are read from, and it is also what an observer method observes and what
@@ -108,10 +90,12 @@ public final class CdiQualifiers {
      * something else. {@code Any} itself is kept where it was written, because at an injection point it is the
      * difference between asking for every bean of the type and asking for the default one.</p>
      *
+     * @param beanContext        The context of the container asking, whose reflection module makes an instance
      * @param annotationMetadata The metadata of the element
      * @return The qualifiers
      */
-    public static Set<Annotation> declared(AnnotationMetadata annotationMetadata) {
-        return CdiQualifier.instances(CdiQualifier.declared(annotationMetadata));
+    public static Set<Annotation> declared(io.micronaut.context.BeanContext beanContext,
+                                           AnnotationMetadata annotationMetadata) {
+        return CdiQualifier.instances(beanContext, CdiQualifier.declared(annotationMetadata));
     }
 }
