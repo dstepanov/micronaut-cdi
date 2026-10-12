@@ -55,7 +55,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
      * makes is disposed of by the same method.
      */
-    private final java.util.concurrent.ConcurrentHashMap<ProducerKey, Disposer> disposers =
+    private final java.util.concurrent.ConcurrentHashMap<DefinitionIdentity, Disposer> disposers =
         new java.util.concurrent.ConcurrentHashMap<>();
     private volatile @Nullable CdiBeanContainer container;
 
@@ -67,7 +67,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     public Object onPreDestroy(BeanPreDestroyEvent<Object> event) {
         Object bean = event.getBean();
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        Disposer found = disposers.get(new ProducerKey(definition));
+        Disposer found = disposers.get(new DefinitionIdentity(definition));
         if (found == null) {
             AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
             if (disposer == null) {
@@ -78,7 +78,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             if (found == null) {
                 return bean;
             }
-            disposers.putIfAbsent(new ProducerKey(definition), found);
+            disposers.putIfAbsent(new DefinitionIdentity(definition), found);
         }
         Disposer disposer = found;
         return event.withDependencies(dependencies -> {
@@ -158,13 +158,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             return false;
         }
         for (int i = 0; i < types.length; i++) {
-            Class<?> component = types[i];
-            int dimensions = 0;
-            while (component.isArray()) {
-                component = component.getComponentType();
-                dimensions++;
-            }
-            if (!parameterTypes[i].equals(component.getName() + "[]".repeat(dimensions))) {
+            if (!parameterTypes[i].equals(CdiTypes.erasedName(types[i]))) {
                 return false;
             }
         }
@@ -192,15 +186,13 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             container = beanContext.getBean(CdiBeanContainer.class);
             this.container = container;
         }
-        jakarta.enterprise.inject.spi.Bean<?> selected = container.resolve(container.beansOf(argument,
-            CdiQualifier.declared(argument.getAnnotationMetadata())));
-        if (selected == null) {
+        BeanDefinition<Object> definition = (BeanDefinition<Object>) container.resolveContainerInjection(argument);
+        if (definition == null) {
             if (argument.isNullable()) {
                 return null;
             }
             throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
         }
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) ((CdiBean<?>) selected).definition();
         return dependencies.getBean(definition, CdiInstance.askedAs((Argument<Object>) argument, definition));
     }
 
@@ -215,23 +207,5 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      */
     private record Disposer(BeanDefinition<?> declaring, ExecutableMethod<?, ?> method, int disposedParameter,
                             boolean staticMethod, boolean publicMethod) {
-    }
-
-    /**
-     * A producer's definition compared by identity: two runtime definitions of one class are equal and are not
-     * the same producer.
-     *
-     * @param definition The definition
-     */
-    private record ProducerKey(BeanDefinition<?> definition) {
-        @Override
-        public boolean equals(@Nullable Object other) {
-            return other instanceof ProducerKey key && key.definition == definition;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(definition);
-        }
     }
 }

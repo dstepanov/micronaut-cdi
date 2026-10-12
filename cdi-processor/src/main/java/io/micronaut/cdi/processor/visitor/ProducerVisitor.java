@@ -15,6 +15,11 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
+import io.micronaut.cdi.internal.metadata.CdiAny;
+import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiRequestScope;
+import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.processor.Cdi;
@@ -28,7 +33,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
@@ -81,9 +85,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      */
     private static final Set<String> SCOPES = Set.of(
         "io.micronaut.context.annotation.Prototype",
-        "io.micronaut.cdi.internal.metadata.CdiScope",
-        "io.micronaut.cdi.internal.metadata.CdiApplicationScope",
-        "io.micronaut.cdi.internal.metadata.CdiRequestScope",
+        CdiScope.class.getName(),
+        CdiApplicationScope.class.getName(),
+        CdiRequestScope.class.getName(),
         "jakarta.inject.Singleton",
         "io.micronaut.context.annotation.Context"
     );
@@ -188,16 +192,16 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // which the produced bean's metadata carries as well
                 producer.annotate(io.micronaut.cdi.internal.metadata.CdiScope.class,
                     builder -> builder.value(Cdi.DEPENDENT));
-            } else if (!producer.hasDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")) {
+            } else if (!producer.hasDeclaredAnnotation(CdiScope.class)) {
                 // the scope came through a stereotype the producer declares: written onto the member itself so
                 // that it shadows the scope of the class that declares the producer (section 2.6.1)
                 io.micronaut.core.annotation.AnnotationMetadata metadata = producer.getAnnotationMetadata();
                 String stereotypeScope = null;
                 boolean normal = false;
-                if (metadata.hasDeclaredStereotype("io.micronaut.cdi.internal.metadata.CdiRequestScope")) {
+                if (metadata.hasDeclaredStereotype(CdiRequestScope.class)) {
                     stereotypeScope = Cdi.REQUEST_SCOPED;
                     normal = true;
-                } else if (metadata.hasDeclaredStereotype("io.micronaut.cdi.internal.metadata.CdiApplicationScope")) {
+                } else if (metadata.hasDeclaredStereotype(CdiApplicationScope.class)) {
                     stereotypeScope = Cdi.APPLICATION_SCOPED;
                     normal = true;
                 } else if (metadata.hasDeclaredStereotype("jakarta.inject.Singleton")) {
@@ -206,7 +210,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 if (stereotypeScope != null) {
                     String value = stereotypeScope;
                     boolean isNormal = normal;
-                    producer.annotate("io.micronaut.cdi.internal.metadata.CdiScope",
+                    producer.annotate(CdiScope.class,
                         builder -> builder.value(value).member("normal", isNormal));
                 }
             }
@@ -356,7 +360,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     .member("condition", new AnnotationClassValue<>(
                         "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
                 String className = element.getName();
-                producer.annotate("io.micronaut.cdi.internal.metadata.CdiSelectableAlternative", builder -> {
+                producer.annotate(CdiSelectableAlternative.class, builder -> {
                     builder.value(className);
                     builder.member("producer", true);
                     if (!stereotypes.isEmpty()) {
@@ -385,30 +389,19 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // deliberately more lenient than Lite's annotated discovery: a producer compiles wherever it is
         // declared, because whether its class is a bean of a given deployment is decided per deployment — the
         // SE bootstrap's addBeanClasses makes a class with no bean defining annotation a bean by fiat
-        List<ConstructorElement> constructors = element.getEnclosedElements(ElementQuery.CONSTRUCTORS);
-        if (constructors.isEmpty()) {
-            // the implicit constructor takes no parameters
-            return true;
-        }
-        for (ConstructorElement constructor : constructors) {
-            if (constructor.getParameters().length == 0
-                || constructor.hasDeclaredAnnotation("jakarta.inject.Inject")) {
-                return true;
-            }
-        }
-        return false;
+        return SpecificationBeans.hasABeanConstructor(element);
     }
 
     /**
      * Whether the producer declares a scope of its own, which is the scope the bean it produces belongs to.
      */
     private static boolean declaresANormalScope(MemberElement producer) {
-        return producer.hasDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiRequestScope")
-            || producer.hasDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiApplicationScope")
+        return producer.hasDeclaredAnnotation(CdiRequestScope.class)
+            || producer.hasDeclaredAnnotation(CdiApplicationScope.class)
             || producer.getAnnotationMetadata()
-                .hasDeclaredStereotype("io.micronaut.cdi.internal.metadata.CdiRequestScope")
+                .hasDeclaredStereotype(CdiRequestScope.class)
             || producer.getAnnotationMetadata()
-                .hasDeclaredStereotype("io.micronaut.cdi.internal.metadata.CdiApplicationScope");
+                .hasDeclaredStereotype(CdiApplicationScope.class);
     }
 
     /**
@@ -418,7 +411,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      */
     private static boolean declaresAScopeOtherThanDependent(MemberElement producer) {
         if (Cdi.DEPENDENT.equals(producer.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.internal.metadata.CdiScope").orElse(null))) {
+            .stringValue(CdiScope.class).orElse(null))) {
             return false;
         }
         return declaresAScope(producer);
@@ -469,12 +462,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         ParameterElement[] parameters = disposer.getParameters();
         String[] types = new String[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
-            ClassElement type = parameters[i].getType();
-            String name = type.getName();
-            while (name.endsWith("[]")) {
-                name = name.substring(0, name.length() - 2);
-            }
-            types[i] = name + "[]".repeat(type.getArrayDimensions());
+            types[i] = RecordedTypeValues.erasedName(parameters[i].getType());
         }
         return types;
     }
@@ -544,7 +532,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // a disposed parameter qualified Any disposes of what every producer of the type produced, however
             // those producers are qualified; anything else has to be qualified the same way the producer is
             if (!disposed.hasDeclaredAnnotation(Cdi.ANY)
-                && !disposed.hasDeclaredAnnotation("io.micronaut.cdi.internal.metadata.CdiAny")
+                && !disposed.hasDeclaredAnnotation(CdiAny.class)
                 && !qualifiers(disposed).equals(qualifiers(producer))) {
                 continue;
             }

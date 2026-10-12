@@ -91,6 +91,23 @@ public final class RecordedTypeValues {
             .build();
     }
 
+    /**
+     * The name the erasure of a type is recorded by, where a method is to be found again among the executable
+     * methods of a definition without loading a class by name: the binary name of its class, followed by a pair
+     * of brackets for each dimension of an array. The container compares it with {@code CdiTypes.erasedName}.
+     *
+     * @param type The type
+     * @return The recorded name
+     */
+    public static String erasedName(ClassElement type) {
+        String name = type.getName();
+        // the brackets are written from the dimensions, whatever brackets the name itself carries
+        while (name.endsWith("[]")) {
+            name = name.substring(0, name.length() - 2);
+        }
+        return name + "[]".repeat(type.getArrayDimensions());
+    }
+
     private static AnnotationValue<CdiRecordedType> of(ClassElement type, Map<String, ClassElement> bindings,
                                                        Set<String> variables) {
         return of(type, bindings, variables, false);

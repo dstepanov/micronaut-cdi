@@ -217,7 +217,9 @@ throws is logged and stops neither the events after it nor the context from stop
 Core's `@ResolveWith` provider hook for container injection points, and `CdiBeanInjectionProvider` resolves the
 full declared type with the final qualifier binding records. Core's active resolution context creates the
 selected definition and retains its dependent ownership. Missing required producers are deployment errors;
-ordinary Micronaut beans retain Micronaut's aggregation behavior.
+ordinary Micronaut beans retain Micronaut's aggregation behavior. The parameters of an observer method and of a
+disposer method are marked the same way and resolved by the same rule (`CdiBeanContainer.resolveContainerInjection`):
+the container, not Core, invokes those methods, and resolves what they take as a bean's own injection points are.
 
 ### A primitive is boxed by the lookup rather than by the bean
 
@@ -335,9 +337,12 @@ can inject it.
 
 `BeanContainer.resolveInterceptors` (section 11.1.9) resolves the interceptor classes the Jakarta Interceptors
 processor compiled: an interceptor is enabled by the priority it declares, bound when every binding it declares
-is among the given ones, and the resolved list is ordered lowest priority first. The interception of a bean
-still happens where it was compiled; what the manager adds is the description of it the specification asks for,
-including invoking an interceptor directly through `Interceptor.intercept`.
+is among the given ones, and the resolved list is ordered lowest priority first. The bindings are compared by
+Jakarta Interceptors' own `InterceptorBindings`, on the bindings its processor recorded for the interceptor class
+and the values of the ones given, which is the comparison that resolves the interceptor chains: what the manager
+reports bound is what runs. The interception of a bean still happens where it was compiled; what the manager adds
+is the description of it the specification asks for, including invoking an interceptor directly through
+`Interceptor.intercept`.
 
 The interceptors that run are the ones the manager reports. Section 8 has CDI Lite enable and order
 interceptors with `@Priority`, the way section 5.2.1 of Jakarta Interceptors enables an interceptor bound by an
@@ -447,6 +452,11 @@ than pretended here: `BootstrapSEContainerTest`'s `testAddDecorator` (decorators
 deployments share one class path here, so the extensions its SE archives declare as service providers are
 listed in one service file of the module, and a bootstrap admits the ones whose class is in its deployment.
 
+The Jakarta Interceptors kit runs here against this container. Micronaut Jakarta Interceptors runs the same kit
+in its own build against a stand-in for CDI of four classes (its `cdi-tck-support`), which repeats this module's
+mappers of the dependent, request and application scopes and its reading of producers: that build cannot use
+this module's processor, which depends on it, so the two are kept in step by hand.
+
 The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
 and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The
 kit has 816 test methods outside `tests/full`, and 811 of them run, all passing, as part of `check`. The five
@@ -553,6 +563,16 @@ are merged upstream; the remaining differences below still require adaptation or
   container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
   the reflection module answers the type closure, the declared type and the event type of a class itself
   (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
+- **A resolution customizer is handed no context.** Micronaut builds a `BeanResolutionCustomizer` from the builder
+  of a context, before the context exists, and calls it without one. The rules of section 2.4.2.1 that
+  `CdiResolutionCustomizer` applies to a parameterized lookup need the type closures the processor recorded, which
+  are beans of the context, so the closures are read from the running container (`CdiRunning`), the way
+  `CDI.current()` finds one; where two containers run at once, the one started last is asked. The other static
+  state is the specification's or the resolution path's: `CDI.current()` and the `BuildServices` of the build
+  compatible extensions are static entry points; the injection point of a bean obtained through `Instance` is
+  left on a thread local around its creation (`CurrentInjectionPoint`), the resolution of a lookup carrying no
+  injection point of its own; and the processor's mappers and remappers, which Micronaut instantiates apart from
+  the visitors, reach what the extension phase recorded through the visitor that ran it.
 
 ## What other implementations' tests found
 

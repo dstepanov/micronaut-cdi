@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.context.BeanResolutionCustomizer;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -52,21 +53,11 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         double.class, 0d,
         char.class, '\u0000');
 
-    private static final java.util.Map<Class<?>, Class<?>> BOXED = java.util.Map.of(
-        boolean.class, Boolean.class,
-        byte.class, Byte.class,
-        short.class, Short.class,
-        int.class, Integer.class,
-        long.class, Long.class,
-        float.class, Float.class,
-        double.class, Double.class,
-        char.class, Character.class);
-
     // the bean types of a definition, worked out once: every parameterized lookup asks them of every candidate,
     // and working them out walks the class's supertypes. Definitions are compared by identity here — two runtime
     // definitions of one class are equal to each other, and are not the same bean — and the map lives as long
     // as the context this customizer was built for
-    private final java.util.concurrent.ConcurrentHashMap<DefinitionKey, java.util.List<Argument<?>>> beanTypes =
+    private final java.util.concurrent.ConcurrentHashMap<DefinitionIdentity, java.util.List<Argument<?>>> beanTypes =
         new java.util.concurrent.ConcurrentHashMap<>();
 
     private final BeanResolutionCustomizer delegate;
@@ -82,8 +73,9 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     public Argument<?> resolveBeanLookupArgument(Argument<?> beanType) {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type; Micronaut keeps them
         // apart, so a primitive lookup is made as the boxed one
-        Class<?> boxed = BOXED.get(beanType.getType());
-        if (boxed != null) {
+        Class<?> raw = beanType.getType();
+        if (raw.isPrimitive() && raw != void.class) {
+            Class<?> boxed = CdiTypes.boxedOf(raw);
             return Argument.of(boxed, beanType.getAnnotationMetadata(), (Class<?>[]) null);
         }
         return delegate.resolveBeanLookupArgument(beanType);
@@ -114,7 +106,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 }
             }
         }
-        if (qualifier != null || !candidates.stream().allMatch(CdiResolutionCustomizer::isBeanOfTheSpecification)) {
+        if (qualifier != null || !candidates.stream().allMatch(CdiResolution::isBeanOfTheSpecification)) {
             // a lookup that names its qualifiers, or one among beans of Micronaut's own - which are not given
             // the default qualifier - is resolved by Micronaut's rules: a primary bean, a secondary one, order
             return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
@@ -146,8 +138,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             return java.util.Optional.of(primitiveDefault);
         }
         io.micronaut.core.annotation.AnnotationMetadata metadata = beanDefinition.getAnnotationMetadata();
-        if (metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")
-            && (metadata.booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)
+        if (metadata.hasAnnotation(CdiProducer.class)
+            && (CdiResolution.isNormalScoped(metadata)
                 || beanDefinition.isSingleton())) {
             // section 3.2.2: an instance in any scope but dependent is shared, and a null cannot be
             throw new jakarta.enterprise.inject.IllegalProductException(
@@ -164,8 +156,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         // fields would chase the dependencies the proxy exists to defer, which is how a circular chain of
         // normal-scoped beans deadlocks — and section 4.3 has the proxy break exactly that circle
         if (beanDefinition instanceof ProxyBeanDefinition<?>
-            && beanDefinition.getAnnotationMetadata()
-                .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
+            && CdiResolution.isNormalScoped(beanDefinition.getAnnotationMetadata())) {
             return false;
         }
         return delegate.shouldInitializeBean(resolutionContext, beanDefinition, bean);
@@ -177,8 +168,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         // when a client proxy finally resolves the instance its context holds, that resolution starts a fresh
         // dependency chain: carrying the path the proxy was injected on would read a legal circular chain of
         // normal-scoped beans — the one section 4.3 has the proxy break — as a circular dependency
-        if (proxyBeanDefinition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false)) {
+        if (CdiResolution.isNormalScoped(proxyBeanDefinition.getAnnotationMetadata())) {
             return false;
         }
         return delegate.shouldPreserveLazyProxyTargetResolutionPath(resolutionContext, proxyBeanDefinition);
@@ -188,47 +178,24 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
         if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
             && candidate instanceof BeanDefinition<?> definition
-            && isBeanOfTheSpecification(definition)) {
+            && CdiResolution.isBeanOfTheSpecification(definition)) {
             // a parameterized lookup of a bean of the specification is answered by the rules of section
             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
             // the required argument does not satisfy
             try {
-                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionKey(definition), key -> {
+                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionIdentity(definition), key -> {
                     Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
                         ? proxy.getTargetType() : definition.getBeanType();
                     return CdiBean.typesOf(definition, beanClass);
                 });
                 return CdiAssignability.isTypeMatching(types, beanType);
-            } catch (RuntimeException | LinkageError e) {
+            } catch (NoClassDefFoundError | TypeNotPresentException e) {
+                // a type the bean recorded is of a class absent from the classpath: what Micronaut matches it by
+                // is all there is to go on
                 return delegate.isCandidateBean(beanType, candidate);
             }
         }
         return delegate.isCandidateBean(beanType, candidate);
-    }
-
-    /**
-     * Whether the definition was compiled as a bean of the specification, which is what its scope marker says.
-     */
-    private static boolean isBeanOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")
-            || definition.getAnnotationMetadata().hasStereotype("io.micronaut.cdi.internal.metadata.CdiScope");
-    }
-
-    /**
-     * A definition as a key compared by identity rather than by its own equality.
-     *
-     * @param definition The definition
-     */
-    private record DefinitionKey(BeanDefinition<?> definition) {
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof DefinitionKey key && key.definition == definition;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(definition);
-        }
     }
 }

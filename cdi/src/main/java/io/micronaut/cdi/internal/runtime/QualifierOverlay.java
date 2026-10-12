@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
@@ -75,7 +76,7 @@ public final class QualifierOverlay {
      * @return The qualifiers
      */
     List<CdiQualifier> apply(BeanDefinition<?> definition, List<CdiQualifier> declared) {
-        if (added.isEmpty() || definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")) {
+        if (added.isEmpty() || definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
             // what a producer of the class produces is a bean of its own, which the class's annotations do
             // not qualify
             return declared;

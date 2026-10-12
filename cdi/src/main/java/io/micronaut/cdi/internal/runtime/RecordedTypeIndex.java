@@ -53,7 +53,8 @@ public final class RecordedTypeIndex {
     }
 
     /**
-     * The index of the container that is current.
+     * The index of the container that is current, for the type closures that are asked from static code: see
+     * {@code CdiTypes}, whose main caller, the resolution customizer, Micronaut hands no context.
      *
      * @return The index, or {@code null} where no container is running
      */

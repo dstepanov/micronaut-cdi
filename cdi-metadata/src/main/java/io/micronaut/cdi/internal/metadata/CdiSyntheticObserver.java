@@ -65,7 +65,9 @@ public @interface CdiSyntheticObserver {
     Class<?>[] qualifierTypes() default {};
 
     /**
-     * The order of the observer among the observers of an event.
+     * The order of the observer among the observers of an event: the priority the extension gave it, which a
+     * synthetic observer has no annotation to carry it on, and which is no bean order Micronaut's {@code Order}
+     * could stand for.
      *
      * @return The priority
      */

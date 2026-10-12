@@ -261,7 +261,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             }
             boolean same = true;
             for (int i = 0; i < types.length && same; i++) {
-                same = nameOf(types[i]).equals(parameterTypeNames[i]);
+                same = CdiTypes.erasedName(types[i]).equals(parameterTypeNames[i]);
             }
             if (same) {
                 return (ExecutableMethod<Object, Object>) candidate;
@@ -269,20 +269,6 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         }
         throw new IllegalStateException("The method " + beanClassName + "#" + methodName
             + " was not compiled as an executable method");
-    }
-
-    /**
-     * The name a parameter type is recorded by: the binary name of the class, followed by a pair of brackets
-     * for each dimension of an array.
-     */
-    private static String nameOf(Class<?> type) {
-        StringBuilder brackets = new StringBuilder();
-        Class<?> component = type;
-        while (component.isArray()) {
-            brackets.append("[]");
-            component = component.getComponentType();
-        }
-        return component.getName() + brackets;
     }
 
     /**

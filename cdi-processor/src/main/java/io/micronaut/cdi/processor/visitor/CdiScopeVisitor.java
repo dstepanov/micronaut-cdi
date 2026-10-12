@@ -88,9 +88,9 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                         member.removeAnnotation(name);
                     }
                 }
-                member.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiScope");
-                member.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiApplicationScope");
-                member.removeAnnotation("io.micronaut.cdi.internal.metadata.CdiRequestScope");
+                member.removeAnnotation(CdiScope.class);
+                member.removeAnnotation(CdiApplicationScope.class);
+                member.removeAnnotation(CdiRequestScope.class);
                 member.removeAnnotation("io.micronaut.runtime.context.scope.ScopedProxy");
             }
         }

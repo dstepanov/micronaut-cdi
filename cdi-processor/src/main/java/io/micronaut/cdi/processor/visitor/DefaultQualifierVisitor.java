@@ -15,10 +15,9 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Primary;
-import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -58,28 +57,12 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
     private static final Set<String> NOT_A_DECLARED_QUALIFIER = Set.of(
         "jakarta.inject.Named",
         Cdi.ANY,
-        "io.micronaut.cdi.internal.metadata.CdiAny",
+        CdiAny.class.getName(),
         Cdi.DEFAULT,
         // what this module's own visitors write on a selected alternative: Micronaut's primary is a
         // qualifier, but it is not the bean declaring one
         "io.micronaut.context.annotation.Primary",
         "io.micronaut.context.annotation.Order"
-    );
-
-    /**
-     * The scopes of the specification. A class annotated with one of them, directly or through a stereotype, is a
-     * bean of the specification and so is subject to its rule about qualifiers.
-     */
-    private static final Set<String> SCOPES = Set.of(
-        Cdi.APPLICATION_SCOPED,
-        Cdi.REQUEST_SCOPED,
-        Cdi.SESSION_SCOPED,
-        Cdi.CONVERSATION_SCOPED,
-        Cdi.DEPENDENT,
-        // the singleton pseudo-scope is a scope of the specification as much as the others, and a bean-defining
-        // annotation in its own right (section 2.5.1): a bean written with it and nothing else is still a bean
-        // that an injection point naming no qualifier has to resolve to
-        "jakarta.inject.Singleton"
     );
 
     @Override
@@ -127,14 +110,12 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
      * subject to the rule. A class that produces beans is one even when it declares no scope itself.
      */
     private static boolean isBeanOfTheSpecification(ClassElement element) {
-        AnnotationMetadata metadata = element.getAnnotationMetadata();
-        if (metadata.hasStereotype(CdiScope.class)) {
+        // the singleton pseudo-scope is a scope of the specification as much as the others, and a bean-defining
+        // annotation in its own right (section 2.5.1): a bean written with it and nothing else is still a bean
+        // that an injection point naming no qualifier has to resolve to
+        if (SpecificationBeans.hasScopeOfTheSpecification(element)
+            || element.hasStereotype("jakarta.inject.Singleton")) {
             return true;
-        }
-        for (String scope : SCOPES) {
-            if (metadata.hasStereotype(scope)) {
-                return true;
-            }
         }
         return element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
             .anyMatch(m -> m.hasDeclaredAnnotation(Cdi.PRODUCES))

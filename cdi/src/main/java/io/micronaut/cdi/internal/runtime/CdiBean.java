@@ -15,6 +15,9 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
+import io.micronaut.cdi.internal.metadata.CdiName;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.core.type.Argument;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.InjectionSite;
@@ -78,7 +81,7 @@ public class CdiBean<T> implements Bean<T> {
         // the bean class of a produced bean is the class that declares its producer (the specification's
         // Bean.getBeanClass), not the class of what it produces
         Class<?> declaring = definition.getAnnotationMetadata()
-            .classValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
+            .classValue(CdiProducer.class, "declaringType").orElse(null);
         return declaring != null ? declaring : beanClass();
     }
 
@@ -136,7 +139,7 @@ public class CdiBean<T> implements Bean<T> {
      */
     private static java.util.@Nullable List<Argument<?>> recordedClosureOf(BeanDefinition<?> definition) {
         java.util.List<io.micronaut.core.annotation.AnnotationValue<Annotation>> records = definition
-            .getAnnotationMetadata().findAnnotation("io.micronaut.cdi.internal.metadata.CdiBeanTypes")
+            .getAnnotationMetadata().findAnnotation(CdiBeanTypes.class)
             .map(types -> types.getAnnotations("value")).orElse(java.util.List.of());
         if (records.isEmpty()) {
             return null;
@@ -169,7 +172,7 @@ public class CdiBean<T> implements Bean<T> {
         if (recorded != null) {
             // what the processor recorded of the bean as it compiled it
             closure.addAll(recorded);
-        } else if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer")) {
+        } else if (definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
             // a produced bean is a bean of the type the producer declared — with the arguments it was written
             // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
             // class's own declaration
@@ -279,7 +282,7 @@ public class CdiBean<T> implements Bean<T> {
     public @Nullable String getName() {
         // the stereotype-given name first: where one was recorded, the jakarta annotation beside it is only
         // the default Micronaut materialized, spelled by Micronaut's rules rather than the specification's
-        return definition.getAnnotationMetadata().stringValue("io.micronaut.cdi.internal.metadata.CdiName")
+        return definition.getAnnotationMetadata().stringValue(CdiName.class)
             .or(() -> definition.getAnnotationMetadata().stringValue("jakarta.inject.Named"))
             .orElse(null);
     }
@@ -311,8 +314,8 @@ public class CdiBean<T> implements Bean<T> {
         // proxy's; the injection points the specification describes are the class's own
         BeanDefinition<T> described = targetDefinition();
         io.micronaut.inject.ConstructorInjectionPoint<T> constructor = described.getConstructor();
-        io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation> producer =
-            described.getAnnotationMetadata().getAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer");
+        io.micronaut.core.annotation.AnnotationValue<CdiProducer> producer =
+            described.getAnnotationMetadata().getAnnotation(CdiProducer.class);
         if (producer == null) {
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
@@ -472,8 +475,7 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     final boolean isNormalScoped() {
-        return definition.getAnnotationMetadata()
-            .booleanValue("io.micronaut.cdi.internal.metadata.CdiScope", "normal").orElse(false);
+        return CdiResolution.isNormalScoped(definition.getAnnotationMetadata());
     }
 
     final boolean isDependent() {

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.se;
 
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
@@ -281,8 +282,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             // a bean produced by a member of an application class belongs to the archive its producer is in,
             // whatever type it produces
             // the client proxy of a bean declares itself; it is in the archive its bean class is in
-            Class<?> declaring = definition instanceof ProxyBeanDefinition<?> proxied
-                ? proxied.getTargetType() : definition.getDeclaringType().orElse(null);
+            Class<?> declaring = declaringClassOf(definition);
             if (declaring != null) {
                 boolean selected = isSelected(declaring.getName());
                 if (selected && isProduced(definition, declaring)) {
@@ -294,8 +294,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 }
             }
         }
-        Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
-        String name = type.getName();
+        String name = classOf(bean).getName();
         return isInfrastructure(name) || isSelected(name);
     }
 
@@ -307,8 +306,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         }
         if (bean instanceof BeanDefinition<?> definition) {
             // the client proxy of a bean declares itself; it is in the archive its bean class is in
-            Class<?> declaring = definition instanceof ProxyBeanDefinition<?> proxied
-                ? proxied.getTargetType() : definition.getDeclaringType().orElse(null);
+            Class<?> declaring = declaringClassOf(definition);
             if (declaring != null) {
                 boolean listed = classpath.contains(outerClassOf(declaring.getName()));
                 if (listed && isProduced(definition, declaring)) {
@@ -319,9 +317,24 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 }
             }
         }
-        Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
-        String name = type.getName();
+        String name = classOf(bean).getName();
         return isInfrastructure(name) || classpath.contains(outerClassOf(name));
+    }
+
+    /**
+     * The class a definition is declared by, as far as the archive it is in goes: the client proxy of a bean
+     * declares itself, and is in the archive its bean class is in.
+     */
+    private static @org.jspecify.annotations.Nullable Class<?> declaringClassOf(BeanDefinition<?> definition) {
+        return definition instanceof ProxyBeanDefinition<?> proxied
+            ? proxied.getTargetType() : definition.getDeclaringType().orElse(null);
+    }
+
+    /**
+     * The class of a bean, the class a client proxy stands in front of for a proxy.
+     */
+    private static Class<?> classOf(io.micronaut.inject.BeanType<?> bean) {
+        return bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
     }
 
     /**
@@ -333,7 +346,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             return null;
         }
         return definition.getAnnotationMetadata()
-            .stringValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
+            .stringValue(CdiProducer.class, "declaringType").orElse(null);
     }
 
     /**

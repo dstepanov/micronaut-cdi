@@ -15,11 +15,13 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
@@ -168,7 +170,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         if (bean instanceof CdiBean<?> cdiBean) {
             String unproxyable = cdiBean.definition().getAnnotationMetadata()
-                .stringValue("io.micronaut.cdi.internal.metadata.CdiUnproxyable").orElse(null);
+                .stringValue(CdiUnproxyable.class).orElse(null);
             if (unproxyable != null) {
                 // section 3.11: a contextual reference to a bean in a normal scope is its client proxy, and
                 // this bean cannot have one
@@ -200,7 +202,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return getBeans(beanType, wellFormed(CdiQualifier.ofInstances(types(), qualifiers)));
+        return beansOf(beanType, wellFormed(CdiQualifier.ofInstances(types(), qualifiers)));
     }
 
     @Override
@@ -209,7 +211,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
         all.add(CdiQualifier.ofValue(qualifier));
         all.addAll(qualifiersOf(qualifiers));
-        return getBeans((Type) beanType, wellFormed(all));
+        return beansOf((Type) beanType, wellFormed(all));
     }
 
     @Override
@@ -225,9 +227,33 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return beans;
     }
 
-    private Set<Bean<?>> getBeans(Type required, List<CdiQualifier> requiredQualifiers) {
+    /**
+     * The beans of a type as the specification's API hands it over, read into Micronaut's form of it first.
+     *
+     * @param required           The required type
+     * @param requiredQualifiers The required qualifiers
+     * @return The beans
+     * @throws IllegalArgumentException For a type that is not a class, a parameterized type, a wildcard, a type
+     *                                  variable or an array of one
+     */
+    Set<Bean<?>> beansOf(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
         return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
+    }
+
+    /**
+     * The definition a container injection point resolves to: a field or a parameter of a collection, an
+     * {@code Optional}, an array or a stream, which the processor marks for this container to resolve
+     * ({@code ResolveWith}), resolved as section 5.2 has it - the one bean of its full declared type and the
+     * qualifiers it declares - wherever the point is: a bean's own, an observer's or a disposer's.
+     *
+     * @param argument The injection point
+     * @return The definition, or {@code null} where no bean qualifies
+     * @throws jakarta.enterprise.inject.AmbiguousResolutionException Where more than one does
+     */
+    @Nullable BeanDefinition<?> resolveContainerInjection(Argument<?> argument) {
+        Bean<?> selected = resolve(beansOf(argument, CdiQualifier.declared(argument.getAnnotationMetadata())));
+        return selected == null ? null : ((CdiBean<?>) selected).definition();
     }
 
     Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
@@ -426,29 +452,42 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
     }
 
+    /**
+     * The definition of a reference where it is a bean here: one whose condition does not hold is not, as Micronaut
+     * has it, and neither is one that names a class absent from the classpath - an optional dependency the
+     * application does not have - which Micronaut reports as a definition that failed to initialize. Anything else
+     * that goes wrong reading a definition, a condition that throws among it, is a broken deployment, and is
+     * reported rather than taken for there being no bean.
+     */
+    private @Nullable BeanDefinition<?> enabledDefinitionOf(io.micronaut.inject.BeanDefinitionReference<Object> reference) {
+        try {
+            BeanDefinition<?> definition = reference.load(beanContext);
+            return definition.isEnabled(beanContext) ? definition : null;
+        } catch (NoClassDefFoundError | TypeNotPresentException e) {
+            return null;
+        } catch (io.micronaut.context.exceptions.BeanInstantiationException e) {
+            if (CdiResolution.isAbsentClass(e)) {
+                return null;
+            }
+            throw e;
+        }
+    }
+
     private List<CdiBean<?>> loadCandidates() {
         // the references are the ones the beans predicate of the context admits, so an environment that
         // narrowed the context reports exactly the beans it narrowed it to
         Map<String, BeanDefinition<?>> byName = new java.util.LinkedHashMap<>();
         for (io.micronaut.inject.BeanDefinitionReference<Object> reference
             : beanContext.getBeanDefinitionReferences()) {
-            try {
-                BeanDefinition<?> definition = reference.load(beanContext);
-                if (definition.isEnabled(beanContext) && !definition.isAbstract()) {
-                    // an abstract class is not a bean of the specification, however it is annotated
-                    byName.put(definition.getClass().getName(), definition);
-                }
-            } catch (RuntimeException | LinkageError e) {
-                // a definition that cannot be loaded here is not a bean of this container
+            BeanDefinition<?> definition = enabledDefinitionOf(reference);
+            if (definition != null) {
+                byName.put(definition.getClass().getName(), definition);
             }
         }
         // a bean the container was handed at runtime — a synthetic bean an extension described — has a
         // definition without a compiled reference. Such definitions share a class, so the instance tells
         // them apart
         for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            if (definition.isAbstract()) {
-                continue;
-            }
             String key = definition.getClass().getName();
             BeanDefinition<?> existing = byName.get(key);
             if (existing != null && existing != definition && !existing.equals(definition)) {
@@ -456,18 +495,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
             byName.putIfAbsent(key, definition);
         }
-        // a bean in a normal scope is two definitions, the proxy and its target; the proxy is the bean
-        Set<String> proxied = new LinkedHashSet<>();
-        for (BeanDefinition<?> definition : byName.values()) {
-            if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy) {
-                proxied.add(proxy.getTargetDefinitionType().getName());
-            }
-        }
         List<CdiBean<?>> loaded = new java.util.ArrayList<>();
-        for (BeanDefinition<?> definition : byName.values()) {
-            if (proxied.contains(definition.getClass().getName())) {
-                continue;
-            }
+        // an abstract class is not a bean of the specification, however it is annotated, and a bean in a normal
+        // scope is two definitions, the proxy and its target, of which the proxy is the bean
+        for (BeanDefinition<?> definition : CdiResolution.beansAmong(byName.values())) {
             if (io.micronaut.cdi.internal.extension.ExtensionComponents.isComponent(definition.getAnnotationMetadata())) {
                 // the definition of a creator, a disposer, a synthetic observer or a context an extension
                 // named: what the container instantiates the class through, and not a bean of the application
@@ -499,31 +530,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         // more than one bean qualifies: the alternatives outrank everything else, and among them the one of
         // the highest priority wins. Anything short of a single winner is the ambiguity of section 2.4.2
-        List<Bean<? extends X>> alternatives = new ArrayList<>();
-        for (Bean<? extends X> bean : beans) {
-            if (bean.isAlternative()) {
-                alternatives.add(bean);
-            }
-        }
-        if (alternatives.size() == 1) {
-            return alternatives.get(0);
-        }
-        if (alternatives.size() > 1) {
-            List<Bean<? extends X>> best = new ArrayList<>();
-            int bestPriority = Integer.MIN_VALUE;
-            for (Bean<? extends X> alternative : alternatives) {
-                int priority = priorityOf(alternative);
-                if (priority > bestPriority) {
-                    bestPriority = priority;
-                    best.clear();
-                }
-                if (priority == bestPriority) {
-                    best.add(alternative);
-                }
-            }
-            if (best.size() == 1) {
-                return best.get(0);
-            }
+        List<Bean<? extends X>> narrowed = CdiResolution.narrow(beans, Bean::isAlternative,
+            CdiBeanContainer::priorityOf);
+        if (narrowed.size() == 1) {
+            return narrowed.get(0);
         }
         throw new AmbiguousResolutionException("More than one bean qualifies: " + beans);
     }
@@ -582,6 +592,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                     + " was given twice");
             }
         }
+        // compared as the interceptor chains compare them, so that what is reported here is what runs
+        io.micronaut.interceptor.spi.InterceptorBindings given = io.micronaut.interceptor.spi.InterceptorBindings
+            .ofValues(bindingValuesOf(CdiQualifier.ofInstances(types(), interceptorBindings)));
         List<CdiInterceptor<?>> resolved = new java.util.ArrayList<>();
         for (CdiBean<?> candidate : candidates()) {
             BeanDefinition<?> definition = candidate.definition();
@@ -592,7 +605,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             if (!interceptor.isEnabled() || !interceptor.intercepts(type)) {
                 continue;
             }
-            if (isBoundBy(interceptor, interceptorBindings)) {
+            if (interceptor.recordedBindings().isBoundBy(given)) {
                 resolved.add(interceptor);
             }
         }
@@ -609,21 +622,53 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * Whether an interceptor is bound by the given bindings: every binding the interceptor declares has an
-     * equivalent among them.
+     * The values of interceptor bindings handed over as annotation instances, in the form the Jakarta Interceptors
+     * implementation compares bindings in: an annotation held by a member is its value too, as compiled metadata
+     * records it, rather than an instance.
      */
-    private boolean isBoundBy(CdiInterceptor<?> interceptor, Annotation[] interceptorBindings) {
-        List<CdiQualifier> declared = interceptor.bindings();
-        if (declared.isEmpty()) {
-            return false;
+    private static List<AnnotationValue<?>> bindingValuesOf(List<CdiQualifier> bindings) {
+        List<AnnotationValue<?>> values = new java.util.ArrayList<>(bindings.size());
+        for (CdiQualifier binding : bindings) {
+            values.add(asValues(binding.written()));
         }
-        List<CdiQualifier> given = CdiQualifier.ofInstances(types(), interceptorBindings);
-        for (CdiQualifier binding : declared) {
-            if (!binding.isAmong(given)) {
-                return false;
+        return values;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static AnnotationValue<?> asValues(AnnotationValue<?> value) {
+        Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
+        boolean converted = false;
+        for (Map.Entry<CharSequence, Object> member : value.getValues().entrySet()) {
+            Object converting = asValue(member.getValue());
+            converted |= converting != member.getValue();
+            members.put(member.getKey(), converting);
+        }
+        return converted ? new AnnotationValue(value.getAnnotationName(), members, value.getDefaultValues())
+            : value;
+    }
+
+    private static Object asValue(Object member) {
+        if (member instanceof Annotation annotation) {
+            return asValues(AnnotationValue.of(annotation));
+        }
+        if (member instanceof AnnotationValue<?> nested) {
+            return asValues(nested);
+        }
+        if (member instanceof Object[] array) {
+            Object[] converted = null;
+            for (int i = 0; i < array.length; i++) {
+                Object element = asValue(array[i]);
+                if (element != array[i]) {
+                    if (converted == null) {
+                        converted = new Object[array.length];
+                        System.arraycopy(array, 0, converted, 0, array.length);
+                    }
+                    converted[i] = element;
+                }
             }
+            return converted == null ? member : converted;
         }
-        return true;
+        return member;
     }
 
     /**

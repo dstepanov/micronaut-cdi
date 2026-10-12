@@ -358,11 +358,27 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     @SuppressWarnings("unchecked")
-    private Object resolve(Argument<?> argument,
-                           java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments) {
-        Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
-        io.micronaut.context.BeanRegistration<Object> registration =
-            beanContext.getBeanRegistration((Argument<Object>) argument, qualifier);
+    private @Nullable Object resolve(Argument<?> argument,
+                                     java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments) {
+        io.micronaut.context.BeanRegistration<Object> registration;
+        if (argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)) {
+            // a container parameter - a list, an optional, an array - is the bean of its full declared type, as
+            // the processor marked it to be resolved and as a bean's own and a disposer's are
+            BeanDefinition<Object> definition = (BeanDefinition<Object>) beanContext.getBean(CdiBeanContainer.class)
+                .resolveContainerInjection(argument);
+            if (definition == null) {
+                if (argument.isNullable()) {
+                    return null;
+                }
+                throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for observer parameter "
+                    + argument);
+            }
+            registration = beanContext.getBeanRegistration(definition,
+                CdiInstance.askedAs((Argument<Object>) argument, definition));
+        } else {
+            Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
+            registration = beanContext.getBeanRegistration((Argument<Object>) argument, qualifier);
+        }
         if (CdiResolution.isDependent(registration.getBeanDefinition())) {
             // a dependent argument exists for the one notification, and is destroyed when it completes
             transientArguments.add(registration);

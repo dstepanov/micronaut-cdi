@@ -82,6 +82,11 @@ public @interface CdiDisposer {
      * The erased parameter types of the disposer method, which tell it from an overload of the same name: the
      * binary name of each, followed by {@code []} for each dimension of an array.
      *
+     * <p>The producer names its disposer, so it has to say which overload it means; the disposer is then found
+     * among the executable methods of the declaring definition by these names, without a class being loaded by
+     * name. Nothing else records it: the site of an injection point is read from the arguments compiled for the
+     * point, and a disposer is no injection point of the produced bean.</p>
+     *
      * @return The erased parameter type names
      */
     String[] parameterTypes() default {};

@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
-import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.cdi.internal.metadata.CdiDisposer;
+import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -117,7 +119,7 @@ final class DeploymentValidation {
      */
     private void validateDisposer(BeanDefinition<?> definition, List<CdiBean<?>> beans) {
         AnnotationValue<?> disposer = definition.getAnnotationMetadata()
-            .getAnnotation("io.micronaut.cdi.internal.metadata.CdiDisposer");
+            .getAnnotation(CdiDisposer.class);
         if (disposer == null) {
             return;
         }
@@ -153,7 +155,7 @@ final class DeploymentValidation {
     private void validateObservers(BeanDefinition<?> definition) {
         for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
             AnnotationValue<?> observer = method.getAnnotationMetadata()
-                .getAnnotation("io.micronaut.cdi.internal.metadata.CdiObserver");
+                .getAnnotation(CdiObserver.class);
             if (observer == null) {
                 continue;
             }
@@ -172,7 +174,7 @@ final class DeploymentValidation {
      * given one by default, rather than a bean of Micronaut's own that only shares the context.
      */
     private static boolean isOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiScope")
+        return CdiResolution.isBeanOfTheSpecification(definition)
             && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
     }
 
@@ -237,7 +239,7 @@ final class DeploymentValidation {
         List<CdiQualifier> qualifiers = CdiQualifier.declared(argument.getAnnotationMetadata());
         Set<Bean<?>> beans;
         try {
-            beans = container.beansOf(SpecificationTypes.argumentOf(CdiTypes.requiredTypeOf(argument)), qualifiers);
+            beans = container.beansOf(CdiTypes.requiredTypeOf(argument), qualifiers);
         } catch (IllegalArgumentException e) {
             // a type with a variable the declaring class gives a value the definition does not carry: resolved
             // as the bean is created
@@ -263,7 +265,7 @@ final class DeploymentValidation {
         }
         if (resolved instanceof CdiBean<?> bean) {
             String unproxyable = bean.definition().getAnnotationMetadata()
-                .stringValue("io.micronaut.cdi.internal.metadata.CdiUnproxyable").orElse(null);
+                .stringValue(CdiUnproxyable.class).orElse(null);
             if (unproxyable != null) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "

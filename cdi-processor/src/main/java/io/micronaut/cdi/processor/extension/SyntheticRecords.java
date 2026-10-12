@@ -30,7 +30,6 @@ import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -286,6 +285,6 @@ final class SyntheticRecords {
             }
             records[i] = invoker.toRecord();
         }
-        return parameter(key, "INVOKER", array).member("invokers", records).build();
+        return parameter(key, "INVOKER", array).member(CdiSyntheticParameter.INVOKERS, records).build();
     }
 }
