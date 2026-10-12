@@ -286,6 +286,6 @@ final class SyntheticRecords {
             }
             records[i] = invoker.toRecord();
         }
-        return parameter(key, "INVOKER", array).member("invokers", records).build();
+        return parameter(key, "INVOKER", array).member(CdiSyntheticParameter.INVOKERS, records).build();
     }
 }

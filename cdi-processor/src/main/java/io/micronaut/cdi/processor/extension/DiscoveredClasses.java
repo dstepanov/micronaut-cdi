@@ -202,7 +202,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         List<String> contextsOfScope = contexts.computeIfAbsent(scopeName, name -> new ArrayList<>());
         contextsOfScope.add(contextClass.getName());
         if (contextsOfScope.size() > 1) {
-            // a second context of the same scope: the recording already exists, and annotationsFor rebuilds it
+            // a second context of the same scope: the scope annotation is already recorded
             return;
         }
         List<AnnotationValue<?>> annotations = metaAnnotations
@@ -225,18 +225,9 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      * @return The annotations, which may be empty
      */
     public List<AnnotationValue<?>> annotationsFor(String className) {
-        List<AnnotationValue<?>> annotations = metaAnnotations.getOrDefault(className, List.of());
-        List<String> contextsOfScope = contexts.get(className);
-        if (contextsOfScope == null) {
-            return annotations;
-        }
-        List<AnnotationValue<?>> all = new ArrayList<>(annotations);
-        all.add(AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiExtensionContext")
-            .values(contextsOfScope.toArray(new String[0]))
-            .member("scopeAnnotation", className)
-            .member("normal", normalContexts.getOrDefault(className, false))
-            .build());
-        return all;
+        // the contexts themselves are recorded on the definitions generated for them (CdiRegisteredContext),
+        // which is where the container reads them from
+        return metaAnnotations.getOrDefault(className, List.of());
     }
 
     /**

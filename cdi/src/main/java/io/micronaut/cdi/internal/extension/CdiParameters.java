@@ -77,7 +77,7 @@ public final class CdiParameters implements Parameters {
 
     private RecordedInvoker[] invokersOf(AnnotationValue<CdiSyntheticParameter> parameter) {
         return invokers.computeIfAbsent(parameter.stringValue("name").orElseThrow(), name -> {
-            List<AnnotationValue<Annotation>> records = parameter.getAnnotations("invokers");
+            List<AnnotationValue<Annotation>> records = parameter.getAnnotations(CdiSyntheticParameter.INVOKERS);
             RecordedInvoker[] read = new RecordedInvoker[records.size()];
             for (int i = 0; i < read.length; i++) {
                 read[i] = RecordedInvoker.of(records.get(i));

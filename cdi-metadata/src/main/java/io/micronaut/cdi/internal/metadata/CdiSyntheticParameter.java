@@ -48,6 +48,12 @@ public @interface CdiSyntheticParameter {
     String ANNOTATIONS = "annotations";
 
     /**
+     * The name of the undeclared member that holds the invokers of an invoker parameter, each a
+     * {@link CdiRecordedInvoker}.
+     */
+    String INVOKERS = "invokers";
+
+    /**
      * The key of the parameter.
      *
      * @return The key
