@@ -22,6 +22,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -49,13 +50,15 @@ final class ElementObserverInfo implements ObserverInfo {
     private final MethodElement method;
     private final ParameterElement observed;
     private final boolean async;
+    private final VisitorContext context;
 
     ElementObserverInfo(ClassElement declaringClass, MethodElement method, ParameterElement observed,
-                        boolean async) {
+                        boolean async, VisitorContext context) {
         this.declaringClass = declaringClass;
         this.method = method;
         this.observed = observed;
         this.async = async;
+        this.context = context;
     }
 
     /**
@@ -69,13 +72,13 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public Type eventType() {
-        return ElementTypes.of(observed.getGenericType());
+        return ElementTypes.of(observed.getGenericType(), context);
     }
 
     @Override
     public Collection<AnnotationInfo> qualifiers() {
-        ClassInfo declaring = new ElementClassInfo(declaringClass);
-        return new ElementMethodInfo(method, declaring).parameters().stream()
+        ClassInfo declaring = new ElementClassInfo(declaringClass, context);
+        return new ElementMethodInfo(method, declaring, context).parameters().stream()
             .filter(parameter -> parameter.name().equals(observed.getName()))
             .findFirst()
             .map(parameter -> parameter.annotations(annotation ->
@@ -85,12 +88,12 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public ClassInfo declaringClass() {
-        return new ElementClassInfo(declaringClass);
+        return new ElementClassInfo(declaringClass, context);
     }
 
     @Override
     public MethodInfo observerMethod() {
-        return new ElementMethodInfo(method, new ElementClassInfo(declaringClass));
+        return new ElementMethodInfo(method, new ElementClassInfo(declaringClass, context), context);
     }
 
     @Override
@@ -103,7 +106,7 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public BeanInfo bean() {
-        return new ElementBeanInfo(declaringClass, null);
+        return new ElementBeanInfo(declaringClass, null, context);
     }
 
     @Override

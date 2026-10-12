@@ -41,10 +41,33 @@ import java.util.Map;
 public final class ElementAnnotationInfo implements AnnotationInfo {
 
     private final AnnotationValue<?> annotation;
+    private final @Nullable VisitorContext context;
     private @Nullable Map<CharSequence, Object> resolvedMembers;
 
-    public ElementAnnotationInfo(AnnotationValue<?> annotation) {
+    /**
+     * @param annotation The values Micronaut recorded for the annotation
+     * @param context    The compilation the annotation is read in, which is asked for its interface and the
+     *                   defaults of its members
+     */
+    public ElementAnnotationInfo(AnnotationValue<?> annotation, VisitorContext context) {
+        this(context, annotation);
+    }
+
+    private ElementAnnotationInfo(@Nullable VisitorContext context, AnnotationValue<?> annotation) {
         this.annotation = annotation;
+        this.context = context;
+    }
+
+    /**
+     * An annotation an extension composed with no compilation under way, which is the one place an annotation
+     * of this model is made without one: its members are the ones it was given, and nothing that only the
+     * compiler knows - its interface, the defaults it declares, the classes its members name - can be read of it.
+     *
+     * @param annotation The values the annotation was composed with
+     * @return The annotation
+     */
+    public static ElementAnnotationInfo composedWithoutCompilation(AnnotationValue<?> annotation) {
+        return new ElementAnnotationInfo(null, annotation);
     }
 
     /**
@@ -60,12 +83,14 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
     public ClassInfo declaration() {
         // an annotation is recorded by name and by the values written for it, so the interface it names is asked
         // of the compiler rather than read off the record
-        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation.getAnnotationName());
-        if (declaration == null) {
+        VisitorContext compilation = context;
+        ClassElement declaration = compilation == null ? null
+            : ExtensionAnnotationTypes.declarationOf(annotation.getAnnotationName(), compilation);
+        if (compilation == null || declaration == null) {
             throw new IllegalStateException("The annotation interface " + annotation.getAnnotationName()
                 + " is not on the compilation's classpath");
         }
-        return new ElementClassInfo(declaration);
+        return new ElementClassInfo(declaration, compilation);
     }
 
     @Override
@@ -82,7 +107,7 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
     public @Nullable AnnotationMember member(String name) {
         for (Map.Entry<CharSequence, Object> member : values().entrySet()) {
             if (name.contentEquals(member.getKey())) {
-                return new ElementAnnotationMember(member.getValue(), name(), name);
+                return new ElementAnnotationMember(member.getValue(), name(), name, context);
             }
         }
         return null;
@@ -92,7 +117,7 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
     public Map<String, AnnotationMember> members() {
         Map<String, AnnotationMember> members = new LinkedHashMap<>();
         values().forEach((name, value) ->
-            members.put(name.toString(), new ElementAnnotationMember(value, name(), name.toString())));
+            members.put(name.toString(), new ElementAnnotationMember(value, name(), name.toString(), context)));
         return members;
     }
 
@@ -103,7 +128,6 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
             if (recorded != null) {
                 recorded.forEach(values::putIfAbsent);
             }
-            VisitorContext context = AstLanguageModel.activeContext();
             if (context != null) {
                 context.getAnnotationDefaultValues(annotation.getAnnotationName()).forEach(values::putIfAbsent);
             }

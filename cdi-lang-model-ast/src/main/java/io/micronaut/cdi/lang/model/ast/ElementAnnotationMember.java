@@ -21,6 +21,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -47,15 +48,20 @@ public final class ElementAnnotationMember implements AnnotationMember {
     private final Object value;
     private final @Nullable String annotation;
     private final @Nullable String member;
+    // null for a member of an annotation an extension composed with no compilation under way, which only
+    // answers what it was given
+    private final @Nullable VisitorContext context;
 
-    ElementAnnotationMember(Object value) {
-        this(value, null, null);
+    ElementAnnotationMember(Object value, VisitorContext context) {
+        this(value, null, null, context);
     }
 
-    ElementAnnotationMember(Object value, @Nullable String annotation, @Nullable String member) {
+    ElementAnnotationMember(Object value, @Nullable String annotation, @Nullable String member,
+                            @Nullable VisitorContext context) {
         this.value = value;
         this.annotation = annotation;
         this.member = member;
+        this.context = context;
     }
 
     /**
@@ -167,14 +173,14 @@ public final class ElementAnnotationMember implements AnnotationMember {
     @Override
     public ClassInfo asEnumClass() {
         if (value instanceof Enum<?> constant) {
-            return ElementTypes.ofName(constant.getDeclaringClass().getName()).asClass().declaration();
+            return ElementTypes.ofName(constant.getDeclaringClass().getName(), compilation()).asClass().declaration();
         }
         ClassElement declared = memberType();
         if (declared == null) {
             throw new IllegalStateException("The enum the member " + member + " of " + annotation
                 + " belongs to cannot be resolved in this compilation");
         }
-        return ElementClassInfo.declarationOf(declared);
+        return ElementClassInfo.declarationOf(declared, compilation());
     }
 
     @Override
@@ -185,26 +191,29 @@ public final class ElementAnnotationMember implements AnnotationMember {
     @Override
     public Type asType() {
         if (value instanceof AnnotationClassValue<?> classValue) {
-            return ElementTypes.ofName(classValue.getName());
+            return ElementTypes.ofName(classValue.getName(), compilation());
         }
-        return ElementTypes.ofName(value.toString());
+        return ElementTypes.ofName(value.toString(), compilation());
     }
 
     @Override
     public AnnotationInfo asNestedAnnotation() {
-        return new ElementAnnotationInfo((AnnotationValue<?>) value);
+        AnnotationValue<?> nested = (AnnotationValue<?>) value;
+        return context == null ? ElementAnnotationInfo.composedWithoutCompilation(nested)
+            : new ElementAnnotationInfo(nested, context);
     }
 
     @Override
     public List<AnnotationMember> asArray() {
         List<AnnotationMember> members = new ArrayList<>();
         if (value instanceof Iterable<?> values) {
-            values.forEach(element -> members.add(new ElementAnnotationMember(element, annotation, member)));
+            values.forEach(element ->
+                members.add(new ElementAnnotationMember(element, annotation, member, context)));
             return members;
         }
         int length = Array.getLength(value);
         for (int i = 0; i < length; i++) {
-            members.add(new ElementAnnotationMember(Array.get(value, i), annotation, member));
+            members.add(new ElementAnnotationMember(Array.get(value, i), annotation, member, context));
         }
         return members;
     }
@@ -214,10 +223,10 @@ public final class ElementAnnotationMember implements AnnotationMember {
      * member, or {@code null} where the declaration cannot be resolved.
      */
     private @Nullable ClassElement memberType() {
-        if (annotation == null || member == null) {
+        if (annotation == null || member == null || context == null) {
             return null;
         }
-        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation);
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation, context);
         if (declaration == null) {
             return null;
         }
@@ -229,6 +238,18 @@ public final class ElementAnnotationMember implements AnnotationMember {
         }
         ClassElement type = declared.getReturnType();
         return type.isArray() ? type.fromArray() : type;
+    }
+
+    /**
+     * The compilation the classes a member names are resolved in, which an annotation composed with none
+     * cannot name a class through.
+     */
+    private VisitorContext compilation() {
+        if (context == null) {
+            throw new IllegalStateException("The member " + member + " of " + annotation
+                + " was composed with no compilation under way to resolve what it names in");
+        }
+        return context;
     }
 
     @Override

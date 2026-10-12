@@ -20,6 +20,7 @@ import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.EnumElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -52,8 +53,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     private final ClassElement element;
     private @Nullable ClassElement declaration;
 
-    public ElementClassInfo(ClassElement element) {
-        super(element);
+    /**
+     * @param element The class
+     * @param context The compilation the class is read in
+     */
+    public ElementClassInfo(ClassElement element, VisitorContext context) {
+        super(element, context);
         this.element = element;
     }
 
@@ -63,11 +68,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      * compilation can see it.
      *
      * @param element The class, as used somewhere or as declared
+     * @param context The compilation to resolve the name in
      * @return The class
      */
-    static ElementClassInfo declarationOf(ClassElement element) {
-        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(element.getName());
-        return new ElementClassInfo(declaration != null ? declaration : element);
+    static ElementClassInfo declarationOf(ClassElement element, VisitorContext context) {
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(element.getName(), context);
+        return new ElementClassInfo(declaration != null ? declaration : element, context);
     }
 
     /**
@@ -89,7 +95,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
             if (element instanceof AnnotationElement || element instanceof EnumElement) {
                 declaration = element;
             } else {
-                ClassElement resolved = ExtensionAnnotationTypes.declarationOf(element.getName());
+                ClassElement resolved = ExtensionAnnotationTypes.declarationOf(element.getName(), context());
                 declaration = resolved != null ? resolved : element;
             }
         }
@@ -108,8 +114,8 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         found.forEach(annotation -> present.add(annotation.name()));
         ClassElement superClass = element.getSuperType().orElse(null);
         while (superClass != null) {
-            for (AnnotationInfo annotation : ExtensionAnnotations.declaredOn(superClass)) {
-                if (ExtensionAnnotations.isInherited(annotation.name()) && present.add(annotation.name())) {
+            for (AnnotationInfo annotation : ExtensionAnnotations.declaredOn(superClass, context())) {
+                if (ExtensionAnnotations.isInherited(annotation.name(), context()) && present.add(annotation.name())) {
                     found.add(annotation);
                 }
             }
@@ -128,11 +134,11 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         Class<T> annotationType) {
         ClassElement type = element;
         while (type != null) {
-            List<AnnotationInfo> found = ExtensionAnnotations.repeatableOn(type, annotationType.getName());
+            List<AnnotationInfo> found = ExtensionAnnotations.repeatableOn(type, annotationType.getName(), context());
             if (!found.isEmpty()) {
                 return found;
             }
-            if (!ExtensionAnnotations.isInherited(annotationType.getName())) {
+            if (!ExtensionAnnotations.isInherited(annotationType.getName(), context())) {
                 break;
             }
             type = type.getSuperType().orElse(null);
@@ -156,39 +162,39 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public PackageInfo packageInfo() {
-        return new ElementPackageInfo(element.getPackage());
+        return new ElementPackageInfo(element.getPackage(), context());
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
-        return SourceModel.active().typeParametersOf(element);
+        return SourceModel.of(context()).typeParametersOf(element);
     }
 
     @Override
     public @Nullable Type superClass() {
-        return SourceModel.active().superClassOf(element);
+        return SourceModel.of(context()).superClassOf(element);
     }
 
     @Override
     public @Nullable ClassInfo superClassDeclaration() {
-        return element.getSuperType().map(ElementClassInfo::declarationOf).orElseGet(() -> {
+        return element.getSuperType().map(type -> declarationOf(type, context())).orElseGet(() -> {
             // a class whose superclass is Object still has one, though Micronaut's model leaves it implicit
             if (element.isInterface() || "java.lang.Object".equals(element.getName())) {
                 return null;
             }
-            ClassElement object = ExtensionAnnotationTypes.declarationOf("java.lang.Object");
-            return object == null ? null : new ElementClassInfo(object);
+            ClassElement object = ExtensionAnnotationTypes.declarationOf("java.lang.Object", context());
+            return object == null ? null : new ElementClassInfo(object, context());
         });
     }
 
     @Override
     public List<Type> superInterfaces() {
-        return SourceModel.active().superInterfacesOf(element);
+        return SourceModel.of(context()).superInterfacesOf(element);
     }
 
     @Override
     public List<ClassInfo> superInterfacesDeclarations() {
-        return element.getInterfaces().stream().map(i -> (ClassInfo) declarationOf(i)).toList();
+        return element.getInterfaces().stream().map(i -> (ClassInfo) declarationOf(i, context())).toList();
     }
 
     @Override
@@ -243,7 +249,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     public Collection<MethodInfo> constructors() {
         List<MethodInfo> constructors = new ArrayList<>();
         element.getEnclosedElements(ElementQuery.CONSTRUCTORS)
-            .forEach(constructor -> constructors.add(new ElementMethodInfo(constructor, this)));
+            .forEach(constructor -> constructors.add(new ElementMethodInfo(constructor, this, context())));
         return constructors;
     }
 
@@ -252,7 +258,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         List<MethodInfo> methods = new ArrayList<>();
         for (io.micronaut.inject.ast.MethodElement method : ElementMembers.methodsOf(element)) {
             // the class the method was declared by, which an inherited method's is not this one
-            methods.add(new ElementMethodInfo(method, declarationOf(method.getDeclaringType())));
+            methods.add(new ElementMethodInfo(method, declarationOf(method.getDeclaringType(), context()), context()));
         }
         return methods;
     }
@@ -261,7 +267,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     public Collection<FieldInfo> fields() {
         List<FieldInfo> fields = new ArrayList<>();
         for (io.micronaut.inject.ast.FieldElement field : ElementMembers.fieldsOf(element)) {
-            fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType())));
+            fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType(), context()), context()));
         }
         return fields;
     }

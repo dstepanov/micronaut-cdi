@@ -17,6 +17,7 @@ package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.ParameterInfo;
@@ -40,8 +41,13 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     private final MethodElement element;
     private final ClassInfo declaringClass;
 
-    public ElementMethodInfo(MethodElement element, ClassInfo declaringClass) {
-        super(element);
+    /**
+     * @param element        The method or the constructor
+     * @param declaringClass The class that declares it
+     * @param context        The compilation the method is read in
+     */
+    public ElementMethodInfo(MethodElement element, ClassInfo declaringClass, VisitorContext context) {
+        super(element, context);
         this.element = element;
         this.declaringClass = declaringClass;
     }
@@ -66,7 +72,7 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     public List<ParameterInfo> parameters() {
         List<ParameterInfo> parameters = new ArrayList<>();
         for (io.micronaut.inject.ast.ParameterElement parameter : element.getParameters()) {
-            parameters.add(new ElementParameterInfo(parameter, this));
+            parameters.add(new ElementParameterInfo(parameter, this, context()));
         }
         return parameters;
     }
@@ -75,23 +81,23 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     public Type returnType() {
         // a constructor returns the class it constructs, where both Micronaut and the compiler report the void a
         // class file declares; the annotations of the use are the ones written on the constructor
-        return isConstructor() ? SourceModel.active().constructorReturnTypeOf(element)
-            : SourceModel.active().returnTypeOf(element);
+        return isConstructor() ? SourceModel.of(context()).constructorReturnTypeOf(element)
+            : SourceModel.of(context()).returnTypeOf(element);
     }
 
     @Override
     public @Nullable Type receiverType() {
-        return SourceModel.active().receiverTypeOf(element);
+        return SourceModel.of(context()).receiverTypeOf(element);
     }
 
     @Override
     public List<Type> throwsTypes() {
-        return SourceModel.active().throwsTypesOf(element);
+        return SourceModel.of(context()).throwsTypesOf(element);
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
-        return SourceModel.active().typeParametersOf(element);
+        return SourceModel.of(context()).typeParametersOf(element);
     }
 
     @Override

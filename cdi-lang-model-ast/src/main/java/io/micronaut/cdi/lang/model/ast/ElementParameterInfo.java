@@ -17,6 +17,7 @@ package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.ParameterInfo;
 import jakarta.enterprise.lang.model.types.Type;
@@ -33,8 +34,13 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
     private final ParameterElement element;
     private final MethodInfo declaringMethod;
 
-    public ElementParameterInfo(ParameterElement element, MethodInfo declaringMethod) {
-        super(element);
+    /**
+     * @param element         The parameter
+     * @param declaringMethod The method or the constructor that declares it
+     * @param context         The compilation the parameter is read in
+     */
+    public ElementParameterInfo(ParameterElement element, MethodInfo declaringMethod, VisitorContext context) {
+        super(element, context);
         this.element = element;
         this.declaringMethod = declaringMethod;
     }
@@ -55,7 +61,7 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
 
     @Override
     public Type type() {
-        return SourceModel.active().typeOf(element);
+        return SourceModel.of(context()).typeOf(element);
     }
 
     @Override

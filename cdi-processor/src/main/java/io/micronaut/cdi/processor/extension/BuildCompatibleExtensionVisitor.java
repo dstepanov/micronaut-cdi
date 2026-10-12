@@ -532,7 +532,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // which looks through the loader of the API and does not always see the service entry of this module
         jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver.setBuildServices(
             new ElementBuildServices(context));
-        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts
         CompilationState.keep(context, VISITOR, this);
@@ -557,7 +556,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // written as the first class is visited, so that the compiler still has rounds ahead of it to process
         // the generated import in
         String name = element.getName();
@@ -683,7 +681,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * validation of section 2.10.6.
      */
     private void synthesise(VisitorContext context) {
-        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         synthesized = true;
         if (synthesizers.isEmpty() && validators.isEmpty() && registrars.isEmpty()) {
             return;
@@ -721,7 +718,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             }
         }
         for (RecordingObserverBuilder<?> observer : synthesis.observers()) {
-            SyntheticObserverInfo info = new SyntheticObserverInfo(observer);
+            SyntheticObserverInfo info = new SyntheticObserverInfo(observer, context);
             ClassElement eventType = ElementTypes.elementOf(observer.eventType());
             for (Registrar registrar : registrars) {
                 if (registrar.asksForObservers() && registrar.matches(eventType)) {
@@ -732,7 +729,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // the built-in beans are beans of the application too (section 2.10.3): no class of the compilation
         // declares them, so the phase is told about them here
         context.getClassElement("io.micronaut.cdi.internal.runtime.CdiBeanContainer").ifPresent(container -> {
-            ElementBeanInfo builtIn = new ElementBeanInfo(container, null);
+            ElementBeanInfo builtIn = new ElementBeanInfo(container, null, context);
             for (Registrar registrar : registrars) {
                 if (registrar.matches(builtIn)) {
                     registrar.describe(builtIn, messages, context);
@@ -786,21 +783,20 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * else has left it.</p>
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
-        io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         if (registrars.isEmpty()) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (element.hasStereotype(CdiScope.class)
             || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")) {
-            beans.add(new ElementBeanInfo(element, null));
+            beans.add(new ElementBeanInfo(element, null, context));
         }
         element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
             .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(method -> beans.add(new ElementBeanInfo(element, method)));
+            .forEach(method -> beans.add(new ElementBeanInfo(element, method, context)));
         element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
             .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(field -> beans.add(new ElementBeanInfo(element, field)));
+            .forEach(field -> beans.add(new ElementBeanInfo(element, field, context)));
         for (ElementBeanInfo bean : beans) {
             for (Registrar registrar : registrars) {
                 if (registrar.matches(bean)) {
@@ -825,7 +821,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             if (observed == null) {
                 continue;
             }
-            ElementObserverInfo observer = new ElementObserverInfo(element, method, observed, async);
+            ElementObserverInfo observer = new ElementObserverInfo(element, method, observed, async, context);
             for (Registrar registrar : registrars) {
                 if (registrar.matchesObserver(observer)) {
                     registrar.describeObserver(observer, messages, context);
@@ -1089,7 +1085,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
 
         private void enhance(ClassElement element, Messages messages, VisitorContext context) {
-            ElementClassConfig classConfig = new ElementClassConfig(element);
+            ElementClassConfig classConfig = new ElementClassConfig(element, context);
             Class<?>[] parameterTypes = method.getParameterTypes();
             // a method taking a configuration of a member is invoked once for each of those members, and one
             // taking a configuration of the class once for the class

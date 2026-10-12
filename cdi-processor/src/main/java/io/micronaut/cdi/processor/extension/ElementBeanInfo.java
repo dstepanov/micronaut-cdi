@@ -29,6 +29,7 @@ import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
@@ -64,10 +65,12 @@ public final class ElementBeanInfo implements InterceptorInfo {
 
     private final ClassElement declaringClass;
     private final @Nullable MemberElement producer;
+    private final VisitorContext context;
 
-    ElementBeanInfo(ClassElement declaringClass, @Nullable MemberElement producer) {
+    ElementBeanInfo(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
         this.declaringClass = declaringClass;
         this.producer = producer;
+        this.context = context;
     }
 
     @Override
@@ -83,7 +86,7 @@ public final class ElementBeanInfo implements InterceptorInfo {
             io.micronaut.core.annotation.AnnotationValue<?> value =
                 declaringClass.getAnnotationMetadata().getAnnotation(name);
             if (value != null) {
-                bindings.add(new ElementAnnotationInfo(value));
+                bindings.add(new ElementAnnotationInfo(value, context));
             }
         }
         return bindings;
@@ -142,20 +145,20 @@ public final class ElementBeanInfo implements InterceptorInfo {
     @Override
     public Collection<Type> types() {
         List<Type> types = new ArrayList<>();
-        collect(beanType(), types);
+        collect(beanType(), types, context);
         return types;
     }
 
-    private static void collect(@Nullable ClassElement type, List<Type> types) {
+    private static void collect(@Nullable ClassElement type, List<Type> types, VisitorContext context) {
         if (type == null) {
             return;
         }
-        types.add(ElementTypes.of(type));
+        types.add(ElementTypes.of(type, context));
         if (type.isArray() || type.isPrimitive()) {
             return;
         }
-        type.getInterfaces().forEach(each -> collect(each, types));
-        type.getSuperType().ifPresent(each -> collect(each, types));
+        type.getInterfaces().forEach(each -> collect(each, types, context));
+        type.getSuperType().ifPresent(each -> collect(each, types, context));
     }
 
     @Override
@@ -165,7 +168,7 @@ public final class ElementBeanInfo implements InterceptorInfo {
             .getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
             io.micronaut.core.annotation.AnnotationValue<?> annotation = declaration().getAnnotation(name);
             if (annotation != null) {
-                qualifiers.add(new ElementAnnotationInfo(annotation));
+                qualifiers.add(new ElementAnnotationInfo(annotation, context));
             }
         }
         return qualifiers;
@@ -173,7 +176,7 @@ public final class ElementBeanInfo implements InterceptorInfo {
 
     @Override
     public ClassInfo declaringClass() {
-        return new ElementClassInfo(declaringClass);
+        return new ElementClassInfo(declaringClass, context);
     }
 
     @Override
@@ -200,13 +203,13 @@ public final class ElementBeanInfo implements InterceptorInfo {
     @Override
     public @Nullable MethodInfo producerMethod() {
         return producer instanceof MethodElement method
-            ? new ElementMethodInfo(method, declaringClass()) : null;
+            ? new ElementMethodInfo(method, declaringClass(), context) : null;
     }
 
     @Override
     public @Nullable FieldInfo producerField() {
         return producer instanceof FieldElement field
-            ? new ElementFieldInfo(field, declaringClass()) : null;
+            ? new ElementFieldInfo(field, declaringClass(), context) : null;
     }
 
     @Override

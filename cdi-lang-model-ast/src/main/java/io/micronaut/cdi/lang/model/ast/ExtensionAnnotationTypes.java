@@ -48,23 +48,23 @@ final class ExtensionAnnotationTypes {
      * is written on a declaration is the more reliable of the two, and an unresolvable name is a broken
      * compilation of its own.</p>
      *
-     * @param name The annotation name
+     * @param name    The annotation name
+     * @param context The compilation the annotation is read in
      * @return Whether it is retained until runtime
      */
-    static boolean isRuntimeRetained(String name) {
-        VisitorContext context = AstLanguageModel.activeContext();
+    static boolean isRuntimeRetained(String name, VisitorContext context) {
         // the compiler's own answer, which is RUNTIME for a name it cannot resolve
-        return context == null || context.getAnnotationRetentionPolicy(name) == RetentionPolicy.RUNTIME;
+        return context.getAnnotationRetentionPolicy(name) == RetentionPolicy.RUNTIME;
     }
 
     /**
      * The class of an annotation of the given name, as the compilation sees it.
      *
-     * @param name The annotation name
+     * @param name    The annotation name
+     * @param context The compilation to look the class up in
      * @return The class, or {@code null} when the compilation cannot see it
      */
-    static @Nullable ClassElement declarationOf(String name) {
-        VisitorContext context = AstLanguageModel.activeContext();
-        return context == null ? null : context.getClassElement(name).orElse(null);
+    static @Nullable ClassElement declarationOf(String name, VisitorContext context) {
+        return context.getClassElement(name).orElse(null);
     }
 }

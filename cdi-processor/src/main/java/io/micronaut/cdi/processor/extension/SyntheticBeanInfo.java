@@ -21,6 +21,7 @@ import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
@@ -51,11 +52,14 @@ final class SyntheticBeanInfo implements BeanInfo {
     private final RecordingBeanBuilder<?> bean;
     private final SynthesisPhase.Scope scope;
     private final boolean alternative;
+    private final VisitorContext context;
 
-    SyntheticBeanInfo(RecordingBeanBuilder<?> bean, SynthesisPhase.Scope scope, boolean alternative) {
+    SyntheticBeanInfo(RecordingBeanBuilder<?> bean, SynthesisPhase.Scope scope, boolean alternative,
+                      VisitorContext context) {
         this.bean = bean;
         this.scope = scope;
         this.alternative = alternative;
+        this.context = context;
     }
 
     /**
@@ -76,11 +80,11 @@ final class SyntheticBeanInfo implements BeanInfo {
         boolean object = false;
         for (ClassElement type : bean.types()) {
             object = object || "java.lang.Object".equals(type.getName());
-            types.add(ElementTypes.of(type));
+            types.add(ElementTypes.of(type, context));
         }
         if (!object) {
             // every bean has Object among its types (section 2.2)
-            types.add(ElementTypes.objectType());
+            types.add(ElementTypes.objectType(context));
         }
         return types;
     }
@@ -88,20 +92,21 @@ final class SyntheticBeanInfo implements BeanInfo {
     @Override
     public Collection<AnnotationInfo> qualifiers() {
         List<AnnotationInfo> qualifiers = new ArrayList<>();
-        qualifiers.add(new ElementAnnotationInfo(AnnotationValue.builder("jakarta.enterprise.inject.Any").build()));
+        qualifiers.add(new ElementAnnotationInfo(
+            AnnotationValue.builder("jakarta.enterprise.inject.Any").build(), context));
         if (bean.qualifiers().isEmpty()) {
             qualifiers.add(new ElementAnnotationInfo(
-                AnnotationValue.builder("jakarta.enterprise.inject.Default").build()));
+                AnnotationValue.builder("jakarta.enterprise.inject.Default").build(), context));
         }
         for (AnnotationValue<?> qualifier : bean.qualifiers()) {
-            qualifiers.add(new ElementAnnotationInfo(qualifier));
+            qualifiers.add(new ElementAnnotationInfo(qualifier, context));
         }
         return qualifiers;
     }
 
     @Override
     public ClassInfo declaringClass() {
-        return new ElementClassInfo(bean.implementation());
+        return new ElementClassInfo(bean.implementation(), context);
     }
 
     @Override

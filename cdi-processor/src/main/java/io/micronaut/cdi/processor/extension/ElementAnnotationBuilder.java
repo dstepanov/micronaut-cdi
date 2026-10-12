@@ -69,22 +69,24 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
     public AnnotationInfo build() {
         Map<CharSequence, Object> values = new LinkedHashMap<>(members);
         VisitorContext compilation = context;
-        if (compilation != null) {
-            // a member that was not given is the default its interface declares, and one without a default
-            // has to be given (section 2.10)
-            compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
-            ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
-            if (declaration != null) {
-                for (MethodElement member
-                    : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-                    if (!values.containsKey(member.getName())) {
-                        throw new IllegalStateException("The member " + member.getName() + " of " + annotation
-                            + " was not composed and has no default");
-                    }
+        if (compilation == null) {
+            // composed through the services the service loader found, with no compilation to read the
+            // interface through: the annotation is what it was given
+            return ElementAnnotationInfo.composedWithoutCompilation(new AnnotationValue<>(annotation, values));
+        }
+        // a member that was not given is the default its interface declares, and one without a default
+        // has to be given (section 2.10)
+        compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
+        ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
+        if (declaration != null) {
+            for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+                if (!values.containsKey(member.getName())) {
+                    throw new IllegalStateException("The member " + member.getName() + " of " + annotation
+                        + " was not composed and has no default");
                 }
             }
         }
-        return new ElementAnnotationInfo(new AnnotationValue<>(annotation, values));
+        return new ElementAnnotationInfo(new AnnotationValue<>(annotation, values), compilation);
     }
 
     private AnnotationBuilder put(String name, Object value) {
