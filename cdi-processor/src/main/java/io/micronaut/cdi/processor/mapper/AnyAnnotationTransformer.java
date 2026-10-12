@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.mapper;
 
+import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -42,6 +43,6 @@ public final class AnyAnnotationTransformer implements NamedAnnotationTransforme
     @Override
     public List<AnnotationValue<?>> transform(AnnotationValue<Annotation> annotation,
                                               VisitorContext visitorContext) {
-        return List.of(AnnotationValue.builder("io.micronaut.cdi.internal.metadata.CdiAny").build());
+        return List.of(AnnotationValue.builder(CdiAny.class).build());
     }
 }

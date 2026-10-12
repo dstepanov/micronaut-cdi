@@ -448,7 +448,7 @@ public final class CdiQualifier {
      */
     public static List<CdiQualifier> declared(AnnotationMetadata metadata) {
         List<CdiQualifier> qualifiers = new ArrayList<>(2);
-        if (metadata.hasAnnotation("io.micronaut.cdi.internal.metadata.CdiAny")) {
+        if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiAny.class)) {
             // Any was written here; it is carried as the marker so that Micronaut does not narrow by it
             qualifiers.add(ANY);
         }
