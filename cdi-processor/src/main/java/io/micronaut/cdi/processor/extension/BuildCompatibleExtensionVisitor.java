@@ -84,14 +84,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
-     * What is kept from the moment a source is generated until the compiler comes to it: the visitor whose
-     * phases a marker resumes, and the records of a factory's methods. A compiler is free to visit a generated
-     * source with another instance of this visitor, so neither is kept on one.
+     * What is kept from the moment a source is generated until the compiler comes to it, under the name of the
+     * generated class: the visitor whose phases a marker resumes, and the records of a factory's methods. A
+     * compiler is free to visit a generated source with another instance of this visitor, so neither is kept on
+     * one; they are kept on the compilation (see {@link CompilationState}).
      */
-    private static final Map<String, BuildCompatibleExtensionVisitor> TRIGGERS =
-        new java.util.concurrent.ConcurrentHashMap<>();
-    private static final Map<String, Map<String, AnnotationValue<?>>> FACTORY_RECORDS =
-        new java.util.concurrent.ConcurrentHashMap<>();
+    private static final String TRIGGERED = "trigger.";
+    private static final String FACTORY_RECORDS = "factory.";
 
     private final List<Enhancer> enhancers = new ArrayList<>();
     private final List<Registrar> registrars = new ArrayList<>();
@@ -106,6 +105,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean importedClassesPending;
     private boolean synthesized;
     private boolean triggerWritten;
+    private @org.jspecify.annotations.Nullable String pendingTrigger;
     private final TypeIndexCollector typeIndex = new TypeIndexCollector();
     private final List<ClassElement> contributors = new ArrayList<>();
     private @org.jspecify.annotations.Nullable String suffix;
@@ -409,7 +409,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             }
         }
         source.append("}\n");
-        FACTORY_RECORDS.put(GENERATED + "." + className, records);
+        CompilationState.keep(context, FACTORY_RECORDS + GENERATED + "." + className, records);
         writeSource(context, className, source.toString(), "The factory of the classes the extensions named");
     }
 
@@ -417,7 +417,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * Puts on the methods of a generated factory what their beans are to record.
      */
     private static boolean recordOn(ClassElement element, VisitorContext context) {
-        Map<String, AnnotationValue<?>> records = FACTORY_RECORDS.remove(element.getName());
+        @SuppressWarnings("unchecked")
+        Map<String, AnnotationValue<?>> records =
+            CompilationState.take(context, FACTORY_RECORDS + element.getName(), Map.class);
         if (records == null) {
             if (element.getName().startsWith(GENERATED + "." + CONTEXTS)
                 || element.getName().startsWith(GENERATED + "." + COMPONENTS)) {
@@ -566,7 +568,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             if (recordOn(element, context)) {
                 return;
             }
-        } else if (TypeIndexCollector.recordOn(element)) {
+        } else if (TypeIndexCollector.recordOn(element, context)) {
             return;
         } else {
             if (suffix == null) {
@@ -578,7 +580,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 || !synthesizers.isEmpty() || !validators.isEmpty() || !registrars.isEmpty())) {
                 // something waits for every class to have come past
                 triggerWritten = true;
-                TRIGGERS.put(GENERATED + "." + TRIGGER + suffix, this);
+                pendingTrigger = GENERATED + "." + TRIGGER + suffix;
+                CompilationState.keep(context, TRIGGERED + pendingTrigger, this);
                 writeTrigger(context, TRIGGER + suffix);
             }
         }
@@ -634,7 +637,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * written and the phases wait for it.
      */
     private static void endOfRegistration(String trigger, VisitorContext context) {
-        BuildCompatibleExtensionVisitor visitor = TRIGGERS.remove(trigger);
+        BuildCompatibleExtensionVisitor visitor =
+            CompilationState.take(context, TRIGGERED + trigger, BuildCompatibleExtensionVisitor.class);
         if (visitor == null) {
             context.fail("The compilation did not keep the build compatible extensions until the classes of the "
                 + "application had been registered: the synthesis and validation phases cannot run", null);
@@ -643,7 +647,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (visitor.importedClassesPending) {
             visitor.importedClassesPending = false;
             String next = TRIGGER + "Again" + visitor.suffix;
-            TRIGGERS.put(GENERATED + "." + next, visitor);
+            visitor.pendingTrigger = GENERATED + "." + next;
+            CompilationState.keep(context, TRIGGERED + visitor.pendingTrigger, visitor);
             visitor.writeTrigger(context, next);
             return;
         }
@@ -661,8 +666,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     public void finish(VisitorContext context) {
         // a Java compilation finishes every round, and always compiles a source a round generated
         if (context.getLanguage() != VisitorContext.Language.JAVA
-            && triggerWritten && !synthesized && TRIGGERS.containsValue(this)) {
-            TRIGGERS.values().remove(this);
+            && triggerWritten && !synthesized && pendingTrigger != null
+            && CompilationState.get(context, TRIGGERED + pendingTrigger, BuildCompatibleExtensionVisitor.class)
+                == this) {
+            CompilationState.take(context, TRIGGERED + pendingTrigger, BuildCompatibleExtensionVisitor.class);
             context.fail("The generic hierarchies of the compiled classes were not recorded, and the synthesis and "
                 + "validation phases of the build compatible extensions did not run: the compilation never "
                 + "compiled the source generated to mark the end of registration", null);
