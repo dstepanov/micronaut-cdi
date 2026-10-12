@@ -21,6 +21,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
@@ -54,67 +55,105 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     private final List<CdiQualifier> qualifiers;
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
     private final java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated;
+    /**
+     * The Micronaut qualifier a program narrowed the lookup by, beside the qualifiers of the specification: a
+     * predicate over definitions, which has no annotation to report.
+     */
+    private final io.micronaut.context.@Nullable Qualifier<?> narrowedBy;
 
     public CdiInstance(BeanContext beanContext, Argument<T> type, Annotation... qualifiers) {
-        this(beanContext, null, type, CdiQualifier.ofInstances(qualifiers));
+        this(beanContext, null, type, CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers));
     }
 
     CdiInstance(BeanContext beanContext,
                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
                 Argument<T> type, List<CdiQualifier> qualifiers) {
         this(beanContext, injectedAt,
-            java.util.Collections.synchronizedList(new java.util.ArrayList<>(2)), type, qualifiers);
+            java.util.Collections.synchronizedList(new java.util.ArrayList<>(2)), null, type, qualifiers);
     }
 
     private CdiInstance(BeanContext beanContext,
                         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
                         java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated,
+                        io.micronaut.context.@Nullable Qualifier<?> narrowedBy,
                         Argument<T> type, List<CdiQualifier> qualifiers) {
         this.beanContext = beanContext;
         this.injectedAt = injectedAt;
         this.transientlyCreated = transientlyCreated;
+        this.narrowedBy = narrowedBy;
         this.type = type;
         this.qualifiers = qualifiers;
     }
 
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, type,
-            and(CdiQualifier.ofInstances(qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, type,
+            and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, Argument.of(subtype),
-            and(CdiQualifier.ofInstances(qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, Argument.of(subtype),
+            and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype,
                                                                       Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated,
-            CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy,
+            CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, type, and(valuesOf(qualifier, qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, type, and(valuesOf(qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, Argument.of(subtype),
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, Argument.of(subtype),
             and(valuesOf(qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, subtype,
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, subtype,
             and(valuesOf(null, qualifiers)));
+    }
+
+    @Override
+    public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Argument<U> subtype,
+                                                                      io.micronaut.context.Qualifier<U> qualifier) {
+        // a predicate over definitions rather than an annotation: none of the rules of the specification for a
+        // qualifier given to select applies to it
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy(qualifier), subtype,
+            qualifiers);
+    }
+
+    @Override
+    public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype,
+                                                                      io.micronaut.context.Qualifier<U> qualifier) {
+        return select(Argument.of(subtype), qualifier);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private io.micronaut.context.Qualifier<?> narrowedBy(io.micronaut.context.Qualifier<?> qualifier) {
+        io.micronaut.context.Qualifier<?> already = narrowedBy;
+        return already == null ? qualifier : Qualifiers.byQualifiers((io.micronaut.context.Qualifier) already,
+            (io.micronaut.context.Qualifier) qualifier);
+    }
+
+    /**
+     * The qualifiers of the specification the lookup requires: the ones selected, or {@code Any} where none was
+     * and a Micronaut qualifier narrows the lookup, which is a qualifier selected and so no longer leaves the
+     * lookup requiring the default one.
+     */
+    private List<CdiQualifier> required() {
+        return qualifiers.isEmpty() && narrowedBy != null ? List.of(CdiQualifier.ANY) : qualifiers;
     }
 
     static List<CdiQualifier> valuesOf(io.micronaut.core.annotation.@Nullable AnnotationValue<?> first,
@@ -139,11 +178,11 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @return The lookup
      */
     <U> CdiInstance<U> selectArgument(Argument<U> argument, List<CdiQualifier> qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, argument, qualifiers);
+        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, argument, qualifiers);
     }
 
     private List<CdiQualifier> and(List<CdiQualifier> more) {
-        CdiQualifier.requireWellFormed(qualifiers, more);
+        CdiQualifier.requireWellFormed(CompiledAnnotationTypes.of(beanContext), qualifiers, more);
         List<CdiQualifier> all = new ArrayList<>(qualifiers.size() + more.size());
         all.addAll(qualifiers);
         all.addAll(more);
@@ -433,7 +472,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     private jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookupPoint() {
         if (injectedAt != null) {
             return injectedAt instanceof CdiInjectionPoint described
-                ? described.viewedAs(type, qualifiers)
+                ? described.viewedAs(type, required())
                 : injectedAt;
         }
         if (jakarta.enterprise.inject.spi.InjectionPoint.class.isAssignableFrom(type.getType())) {
@@ -444,7 +483,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         // a lookup that was injected nowhere - the bean container's, CDI.current(), the SE container - stands
         // for itself, and requires what it selected: the type, and every qualifier of every select, with the
         // members each was handed over with (section 2.4.5.7)
-        return new CdiInjectionPoint(null, type, null, null, false).viewedAs(type, qualifiers);
+        return new CdiInjectionPoint(null, type, null, null, false).viewedAs(type, required());
     }
 
     private Collection<BeanDefinition<T>> definitions() {
@@ -464,21 +503,18 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     }
 
     private Collection<BeanDefinition<T>> definitionsOf(Argument<T> asked) {
-        QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
-        if (overlay == null || overlay.isEmpty()) {
-            return beansAmong(beanContext.getBeanDefinitions(asked, CdiQualifiers.of(qualifiers)));
-        }
-        // a portable extension qualified a bean beyond what its definition says, which Micronaut's own
-        // comparison of qualifiers does not see: the beans of the type are compared by the qualifiers each
-        // has, as section 2.4.2 compares them
+        // the beans of the type are compared by the qualifiers each has, as section 2.4.2 compares them - a
+        // qualifier a portable extension added to the bean class among them
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        List<BeanDefinition<T>> matching = new ArrayList<>();
-        for (BeanDefinition<T> candidate : beansAmong(beanContext.getBeanDefinitions(asked))) {
-            if (CdiAssignability.areQualifiersMatching(container.canonicalBean(candidate).qualifiers(), qualifiers)) {
-                matching.add(candidate);
-            }
+        io.micronaut.context.Qualifier<T> qualifier = container.qualifierFor(required());
+        io.micronaut.context.Qualifier<?> narrowing = narrowedBy;
+        if (narrowing != null) {
+            // and the Micronaut qualifier a program narrowed the lookup by keeps the definition
+            @SuppressWarnings("unchecked")
+            io.micronaut.context.Qualifier<T> micronaut = (io.micronaut.context.Qualifier<T>) narrowing;
+            qualifier = Qualifiers.byQualifiers(qualifier, micronaut);
         }
-        return matching;
+        return beansAmong(beanContext.getBeanDefinitions(asked, qualifier));
     }
 
     /**

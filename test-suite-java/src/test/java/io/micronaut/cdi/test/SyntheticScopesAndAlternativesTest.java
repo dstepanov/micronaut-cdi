@@ -115,6 +115,12 @@ class SyntheticScopesAndAlternativesTest {
                 .select(Zest.class, new Flavor.Literal("sweet")).get().flavour());
             assertEquals("sour", container.createInstance()
                 .select(Zest.class, new Flavor.Literal("sour")).get().flavour());
+            // the note takes no part in resolution, which the record of the synthetic bean says
+            assertEquals("sour", container.createInstance()
+                .select(Zest.class, new Flavor.Literal("sour", "a note")).get().flavour());
+            assertEquals("sweet", container.createInstance()
+                .select(Zest.class, io.micronaut.core.annotation.AnnotationValue.builder(Flavor.class)
+                    .value("sweet").member("note", "a note").build()).get().flavour());
             Set<Bean<?>> sweet = container.getBeans(Zest.class, new Flavor.Literal("sweet"));
             assertEquals(1, sweet.size());
             // the bean reports the member it was described with, not the annotation's defaults

@@ -125,11 +125,15 @@ the call throws an `UnsupportedOperationException` that names it.
 Resolution itself makes no annotation instance and reads none. A qualifier or an interceptor binding is compared
 as the values it was compiled with, less the members marked `@Nonbinding`; injecting a bean, an `Event`, an
 `Instance` or an `InjectionPoint`, firing an event and resolving its observers, and binding an interceptor need
-nothing but `micronaut-cdi`, whatever qualifiers the application declares. What the container has to know of a
-qualifier or binding type - its members, which are non-binding, whether it is repeatable - is recorded by the
-processor under `META-INF/micronaut-cdi/bindings`, for every such type a compilation declares or uses. The
-qualifiers of the specification - `@Default`, `@Any`, `@Named` - and a literal of a qualifier that has no binding
-member are taken as they are, with nothing read.
+nothing but `micronaut-cdi`, whatever qualifiers the application declares. The processor lists the members that
+do not bind under `$nonBinding` on every occurrence of a qualifier or binding it compiles, the way Micronaut lists
+its own `@NonBinding` members - one that leaves such a member at its default, and one an extension marked, among
+them - and a lookup resolves by one Micronaut `Qualifier` that compares the qualifiers of the specification and
+nothing else. What the container has to know of a qualifier or binding type - whether it is one, its members,
+which are non-binding, whether it is repeatable, its retention - is read from the compiled metadata of the beans
+that use it, for every such type the application was compiled with. The qualifiers of the specification -
+`@Default`, `@Any`, `@Named` - and a literal of a qualifier that has no binding member are taken as they are, with
+nothing read.
 
 ### Selecting without reflection
 
@@ -138,9 +142,9 @@ by Micronaut's own forms of an annotation and of a type:
 
 | Specification | Micronaut | Adds |
 | --- | --- | --- |
-| `Instance<T>` | `io.micronaut.cdi.MicronautInstance<T>` | `select(AnnotationValue, AnnotationValue...)`, `select(Class, AnnotationValue, AnnotationValue...)`, `select(Argument, AnnotationValue...)` |
+| `Instance<T>` | `io.micronaut.cdi.MicronautInstance<T>` | `select(AnnotationValue, AnnotationValue...)`, `select(Class, AnnotationValue, AnnotationValue...)`, `select(Argument, AnnotationValue...)`, and `select(Class, Qualifier)` / `select(Argument, Qualifier)` narrowing by a Micronaut `Qualifier` |
 | `Event<T>` | `io.micronaut.cdi.MicronautEvent<T>` | the same three selections |
-| `BeanContainer` | `io.micronaut.cdi.MicronautBeanContainer` | `getBeans(Argument, AnnotationValue, AnnotationValue...)` - and `getBeans(Type, Annotation...)` takes an `Argument` as the type - `resolveObserverMethods(event, AnnotationValue, AnnotationValue...)`, and `createInstance()` / `getEvent()` returning the Micronaut types |
+| `BeanContainer` | `io.micronaut.cdi.MicronautBeanContainer` | `getBeans(Argument, AnnotationValue, AnnotationValue...)`, `getBeans(Argument, Qualifier)` - and `getBeans(Type, Annotation...)` takes an `Argument` as the type - `resolveObserverMethods(event, AnnotationValue, AnnotationValue...)`, and `createInstance()` / `getEvent()` returning the Micronaut types |
 | `InjectionPoint` | `io.micronaut.cdi.MicronautInjectionPoint` | `getQualifierValues()`: the required qualifiers as `AnnotationValue`s with every member, a non-binding one included - for a bean obtained by a lookup, the ones the lookup selected |
 
 ```java
@@ -157,6 +161,14 @@ held to the rules of the specification's own - the annotation has to be a qualif
 repeatable is given once - checked from what was recorded. It selects the same beans and notifies the same
 observers as the literal does where the reflection module is there to read the literal. `select(Argument, ...)`
 is the counterpart of `select(TypeLiteral, ...)`.
+
+A lookup may also be narrowed by a Micronaut `Qualifier` - `Qualifiers.byName`, `byStereotype`, `byType` and the
+like - beside the qualifiers of the specification it requires: a bean is selected when it has those and the
+Micronaut qualifier keeps its definition, and a lookup narrowed that way no longer requires the default qualifier,
+as one narrowed by `select(Annotation...)` does not. The Micronaut qualifier is a predicate rather than an
+annotation, so the injection point of a bean the lookup creates reports the qualifiers of the specification alone.
+`MicronautBeanContainer.getBeans(Argument, Qualifier)` answers the beans of a type the qualifier keeps, whatever
+qualifiers of the specification they have.
 
 ### Types without reflection
 

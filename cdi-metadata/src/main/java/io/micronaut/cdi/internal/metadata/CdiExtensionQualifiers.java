@@ -25,7 +25,8 @@ import java.lang.annotation.Target;
 
 /**
  * The annotations the build compatible extensions of one compilation made qualifiers of, written onto a
- * generated class so the runtime checks — which read the annotation classes reflectively — know them too.
+ * generated class: an annotation an extension registered says nothing about it on its own class, and no bean may
+ * use it, so this is the one witness of it the container reads its qualifier types from.
  *
  * @author Denis Stepanov
  * @since 1.0

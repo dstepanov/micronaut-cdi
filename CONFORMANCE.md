@@ -41,8 +41,8 @@ visible in a test report as what passes.
 | 2.2 | The bean types of a bean, including a produced array, interface and primitive, and narrowing with `@Typed` | `CdiBean` |
 | 2.2 | A primitive and the class that boxes it as one bean type | `CdiTypes`, `CdiInstance`, `CdiBeanContainer` |
 | 3.5 | A managed bean has a constructor taking no parameters or one annotated `@Inject` | `BeanDiscoveryVisitor` |
-| 5.2 | Resolution by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with | `CdiQualifier`, `CdiQualifiers`, `BindingTypes`, `BindingTypeVisitor` |
-| 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
+| 5.2 | Resolution by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with, through one Micronaut qualifier that compares nothing but the qualifiers of the bean | `CdiQualifier`, `CdiBeanQualifier`, `NonbindingMembersRemapper`, `CompiledAnnotationTypes` |
+| 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, and `Instance` and `BeanContainer.getBeans` narrowed by a Micronaut `Qualifier`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 12.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
 | 12.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each written as a generated bean definition | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
@@ -133,15 +133,31 @@ written down. Nothing is materialized to resolve a bean, inject an `Event` or an
 observer. An instance is made only when a program asks for one - `Bean.getQualifiers()` and its like - and that
 is the reflection module's.
 
+The members that do not bind are recorded once, the way Micronaut records its own `@NonBinding` members: listed
+under `$nonBinding` in the values of the qualifier. Micronaut lists a member only on an occurrence that writes it,
+and only where the member's declaration marks it, so the processor completes the list (`NonbindingMembersRemapper`)
+on every occurrence of a qualifier or binding it compiles - one that leaves a non-binding member at its default,
+and a member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes,
+among them - and on the qualifiers it records for a synthetic component. A qualifier the program composes as an
+`AnnotationValue` lists nothing, and one read from an annotation instance lists what its type marks, so a member
+is left out of a comparison when either side lists it. A programmatic lookup is resolved by one Micronaut
+`Qualifier`, `CdiBeanQualifier`, which compares these and nothing else: Micronaut's own annotation qualifiers fall
+back to matching the simple name of the annotation against the name of the bean class, which a qualifier of the
+specification does not.
+
 An annotation literal a program hands to `select`, `getBeans` and their like is a reflection object. The
 literals of the specification and a literal of a qualifier with no binding member are taken as they are; any
 other has to be read member by member, which needs `micronaut-cdi-reflection` and says so. The reflection-free
 form of the same selection is an `AnnotationValue`, through `MicronautInstance`, `MicronautEvent` and
 `MicronautBeanContainer`.
 
-What the container has to know of a qualifier or interceptor binding type is recorded by the processor as a
-resource under `META-INF/micronaut-cdi/bindings`, for every such type a compilation declares or uses. A type no
-compilation with this processor has seen has no record, and is asked of its class by the reflection module.
+What the container has to know of a qualifier or interceptor binding type - whether it is one, its members and
+which of them bind, whether it is repeatable, its retention - is read from the compiled metadata of the beans
+(`CompiledAnnotationTypes`): the class level metadata of every definition, the records of the synthetic components
+and of the qualifiers an extension registered, and, for a type no bean class carries, the injection points and
+executable methods of the definitions. An annotation `BeforeBeanDiscovery.addQualifier` makes a qualifier is one
+for that container. A type the application was not compiled with has no record, and is asked of its class by the
+reflection module.
 
 ### Bean types, observed types and event types are what the compiler recorded
 
@@ -510,7 +526,23 @@ are merged upstream; the remaining differences below still require adaptation or
   (`ProducerVisitor.selectIfAlternative`).
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
-  language model answers less in a Kotlin compilation in those places.
+  language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
+  annotation interface as its properties rather than its methods, which is where the processor reads them from
+  there (`NonbindingMembersRemapper.membersOf`).
+- **Micronaut's annotation qualifiers match by the name of the bean.** `AnnotationMetadataQualifier` and
+  `AnnotationQualifier` fall back to matching the simple name of the annotation against the simple name of the
+  candidate's class where the candidate does not carry the annotation, so `Qualifiers.byAnnotation` for a
+  `@Default` lookup selects a `@Special class DefaultGreeter`. A lookup here resolves by `CdiBeanQualifier`, which
+  implements `Qualifier` directly: `FilteringQualifier` is `@Internal`, and
+  `AnnotationMetadataQualifier.fromAnnotation` is package-private.
+- **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
+  is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
+  marker of its own (`CdiAny`) rather than into Micronaut's.
+- **`$nonBinding` is recorded only where a member is written, and only as the source marks it.** Micronaut lists a
+  `@NonBinding` member on an occurrence that writes it, reading the mark from the member's declaration, so neither
+  an occurrence that leaves the member at its default nor a member a build compatible extension marked carries it.
+  The processor completes the list (`NonbindingMembersRemapper`), and the comparison leaves out a member either
+  side lists.
 
 ## What other implementations' tests found
 

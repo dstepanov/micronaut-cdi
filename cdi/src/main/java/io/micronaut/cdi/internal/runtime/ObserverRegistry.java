@@ -71,6 +71,16 @@ public final class ObserverRegistry {
         CdiRunning.starting(beanContext);
     }
 
+    /**
+     * What the application was compiled with of each qualifier type, which the qualifiers of an event are
+     * checked and read against.
+     *
+     * @return The record
+     */
+    CompiledAnnotationTypes types() {
+        return CompiledAnnotationTypes.of(beanContext);
+    }
+
     @jakarta.annotation.PreDestroy
     void stopped() {
         CdiRunning.stopped(beanContext);
@@ -102,7 +112,7 @@ public final class ObserverRegistry {
      */
     public synchronized void registerSynthetic(ObserverMethod<?> observer) {
         // one a program implemented itself says what it observes through the specification's interface alone
-        synthetic.add(observer instanceof CdiNotifiable ? observer : new ForeignObserverMethod<>(observer));
+        synthetic.add(observer instanceof CdiNotifiable ? observer : new ForeignObserverMethod<>(observer, types()));
         observers = null;
         resolved = new java.util.concurrent.ConcurrentHashMap<>();
     }
@@ -179,7 +189,7 @@ public final class ObserverRegistry {
                                 Set<Annotation> eventQualifiers,
                                 boolean async) {
         notifyObservers(event, CdiTypes.eventTypeOf(event.getClass(), declaredType),
-            CdiQualifier.ofInstances(eventQualifiers), async, null);
+            CdiQualifier.ofInstances(types(), eventQualifiers), async, null);
     }
 
     /**

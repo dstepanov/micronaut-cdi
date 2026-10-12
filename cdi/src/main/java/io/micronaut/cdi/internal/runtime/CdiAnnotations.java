@@ -69,26 +69,28 @@ public final class CdiAnnotations {
      * container is asked when it compares two qualifiers or two interceptor bindings: they are of the same
      * type, and every member that takes part in the comparison is equal.
      *
+     * @param types What the application was compiled with
      * @param one   The one annotation
      * @param other The other
      * @return Whether they are the same for the purposes of binding
      */
-    public static boolean areEquivalent(Annotation one, Annotation other) {
+    public static boolean areEquivalent(CompiledAnnotationTypes types, Annotation one, Annotation other) {
         if (!one.annotationType().equals(other.annotationType())) {
             return false;
         }
-        return CdiQualifier.ofInstance(one).matches(CdiQualifier.ofInstance(other));
+        return CdiQualifier.ofInstance(types, one).matches(CdiQualifier.ofInstance(types, other));
     }
 
     /**
      * The hash code of an annotation over the members that take part in the comparison, so that two annotations
      * the container calls the same hash the same.
      *
+     * @param types      What the application was compiled with
      * @param annotation The annotation
      * @return The hash code
      */
-    public static int bindingHashCode(Annotation annotation) {
+    public static int bindingHashCode(CompiledAnnotationTypes types, Annotation annotation) {
         return annotation.annotationType().getName().hashCode()
-            + AnnotationUtil.calculateHashCode(CdiQualifier.ofInstance(annotation).binding().getValues());
+            + AnnotationUtil.calculateHashCode(CdiQualifier.ofInstance(types, annotation).binding().getValues());
     }
 }

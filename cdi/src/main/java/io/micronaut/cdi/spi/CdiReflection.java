@@ -61,21 +61,13 @@ public interface CdiReflection {
 
     /**
      * The values an annotation instance holds, every member among them, in the form compiled metadata records
-     * an annotation in.
+     * an annotation in: the members its type marks {@code Nonbinding} are listed under {@code $nonBinding}, as
+     * the processor lists them on a compiled qualifier.
      *
      * @param annotation The annotation instance
      * @return Its values
      */
     AnnotationValue<?> valuesOf(Annotation annotation);
-
-    /**
-     * The members of an annotation type that are excluded from the comparison of two annotations of the type,
-     * which the specification says with {@code jakarta.enterprise.util.Nonbinding}.
-     *
-     * @param annotationType The annotation type
-     * @return The names of the members
-     */
-    Set<String> nonbindingMembersOf(Class<? extends Annotation> annotationType);
 
     /**
      * Whether an annotation type is retained at runtime.

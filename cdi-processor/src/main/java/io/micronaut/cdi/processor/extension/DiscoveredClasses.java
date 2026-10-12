@@ -16,11 +16,10 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
+import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
@@ -59,6 +58,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         new java.util.LinkedHashMap<>();
     private final java.util.Set<String> scanned = new java.util.LinkedHashSet<>();
     private final java.util.Set<String> registeredQualifiers = new java.util.LinkedHashSet<>();
+    private final java.util.Set<String> registeredBindings = new java.util.LinkedHashSet<>();
     private final Map<String, List<String>> contexts = new java.util.LinkedHashMap<>();
     private final Map<String, Boolean> normalContexts = new java.util.LinkedHashMap<>();
     private final Map<String, List<AnnotationValue<?>>> metaAnnotations = new LinkedHashMap<>();
@@ -70,20 +70,36 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      * @return The annotation names
      */
     public java.util.Set<String> registeredQualifiers() {
-        java.util.Set<String> entries = new java.util.LinkedHashSet<>();
-        for (String qualifier : registeredQualifiers) {
-            java.util.List<String> nonbinding = new ArrayList<>();
-            for (Map.Entry<String, List<AnnotationValue<?>>> member
-                : memberAnnotationsFor(qualifier).entrySet()) {
-                for (AnnotationValue<?> annotation : member.getValue()) {
-                    if ("jakarta.enterprise.util.Nonbinding".equals(annotation.getAnnotationName())) {
-                        nonbinding.add(member.getKey());
-                    }
+        return registeredQualifiers;
+    }
+
+    /**
+     * Whether an extension made the annotation of the given name a qualifier or an interceptor binding.
+     *
+     * @param annotation The annotation name
+     * @return Whether it did
+     */
+    public boolean isRegisteredBindingType(String annotation) {
+        return registeredQualifiers.contains(annotation) || registeredBindings.contains(annotation);
+    }
+
+    /**
+     * The members of the annotation of the given name an extension marked {@code Nonbinding}, which leaves them
+     * out of the comparison of two annotations of the type as though the annotation interface marked them.
+     *
+     * @param annotation The annotation name
+     * @return The member names
+     */
+    public java.util.Set<String> nonbindingMembersOf(String annotation) {
+        java.util.Set<String> nonbinding = new java.util.LinkedHashSet<>();
+        for (Map.Entry<String, List<AnnotationValue<?>>> member : memberAnnotationsFor(annotation).entrySet()) {
+            for (AnnotationValue<?> added : member.getValue()) {
+                if ("jakarta.enterprise.util.Nonbinding".equals(added.getAnnotationName())) {
+                    nonbinding.add(member.getKey());
                 }
             }
-            entries.add(qualifier + "|" + String.join(";", nonbinding));
         }
-        return entries;
+        return nonbinding;
     }
 
     /**
@@ -240,6 +256,8 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private ClassConfig register(Class<? extends Annotation> annotation, String metaAnnotation) {
         if ("jakarta.inject.Qualifier".equals(metaAnnotation)) {
             registeredQualifiers.add(annotation.getName());
+        } else if ("jakarta.interceptor.InterceptorBinding".equals(metaAnnotation)) {
+            registeredBindings.add(annotation.getName());
         }
         List<AnnotationValue<?>> annotations = metaAnnotations
             .computeIfAbsent(annotation.getName(), name -> new ArrayList<>());
@@ -249,15 +267,14 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
-     * The names of the members an annotation interface declares, as the compilation sees the interface.
+     * The names of the members an annotation interface declares, as the compilation sees the interface: KSP
+     * answers them as properties, which {@link NonbindingMembersRemapper#membersOf} reads where there are no
+     * methods.
      */
     private List<String> memberNamesOf(String annotation) {
         List<String> names = new ArrayList<>();
-        declarationOf(annotation).ifPresent(declaration -> {
-            for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-                names.add(member.getName());
-            }
-        });
+        declarationOf(annotation).ifPresent(declaration ->
+            names.addAll(NonbindingMembersRemapper.membersOf(declaration).keySet()));
         return names;
     }
 

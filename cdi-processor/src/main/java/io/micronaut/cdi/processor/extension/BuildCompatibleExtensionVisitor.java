@@ -197,6 +197,18 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
+     * What the discovery phase of the compilation under way said, for the annotation remapping that records the
+     * non-binding members of a qualifier or binding an extension configured: it runs as the metadata of each
+     * element is built, outside any visitor.
+     *
+     * @return What was discovered, or {@code null} outside a compilation
+     */
+    public static @org.jspecify.annotations.Nullable DiscoveredClasses currentDiscovery() {
+        BuildCompatibleExtensionVisitor visitor = current;
+        return visitor == null ? null : visitor.discovered;
+    }
+
+    /**
      * The visitor context of the compilation under way, for the model classes that need the compiler's view of
      * a class the element at hand does not name — the implicit {@code java.lang.Object} superclass, say.
      *

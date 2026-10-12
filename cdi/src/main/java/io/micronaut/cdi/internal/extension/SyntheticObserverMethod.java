@@ -93,10 +93,9 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
             // a qualifier is recorded as the values it was written with, which is what resolution compares
             List<AnnotationValue<Annotation>> recorded = record.getAnnotations(CdiSyntheticObserver.QUALIFIERS);
             Class<?>[] types = record.classValues("qualifierTypes");
-            Set<String> nonbinding = Set.of(record.stringValues("nonbinding"));
             List<CdiQualifier> all = new java.util.ArrayList<>(recorded.size());
             for (int i = 0; i < recorded.size(); i++) {
-                all.add(CdiQualifier.ofRecorded(recorded.get(i), nonbinding,
+                all.add(CdiQualifier.ofRecorded(recorded.get(i),
                     i < types.length ? annotationType(types[i]) : null));
             }
             resolved = List.copyOf(all);

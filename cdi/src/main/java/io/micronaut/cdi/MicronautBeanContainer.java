@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi;
 
+import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.Bean;
@@ -51,6 +52,17 @@ public interface MicronautBeanContainer extends BeanContainer {
      * @throws IllegalArgumentException Where an annotation is not a qualifier, or is given twice
      */
     Set<Bean<?>> getBeans(Argument<?> beanType, AnnotationValue<?> qualifier, AnnotationValue<?>... qualifiers);
+
+    /**
+     * The beans that have the given required type and whose definitions the given Micronaut {@link Qualifier}
+     * keeps, whatever qualifiers of the specification they have: as {@code getBeans} with {@code @Any}, narrowed by
+     * the Micronaut qualifier.
+     *
+     * @param beanType  The required type
+     * @param qualifier The Micronaut qualifier
+     * @return The beans that qualify
+     */
+    Set<Bean<?>> getBeans(Argument<?> beanType, Qualifier<?> qualifier);
 
     /**
      * The observer methods an event fired with the given qualifiers notifies, each qualifier given as the

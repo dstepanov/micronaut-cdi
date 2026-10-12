@@ -5,3 +5,4 @@ io.micronaut.cdi.processor.mapper.TypedAnnotationMapper
 io.micronaut.cdi.processor.mapper.NormalScopeAnnotationMapper
 io.micronaut.cdi.processor.mapper.StereotypeAnnotationMapper
 io.micronaut.cdi.processor.mapper.TransientReferenceAnnotationMapper
+io.micronaut.cdi.processor.mapper.NonbindingAnnotationMapper
