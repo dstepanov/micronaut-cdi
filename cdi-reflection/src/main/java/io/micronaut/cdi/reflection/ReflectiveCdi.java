@@ -21,40 +21,35 @@ import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.convert.ConversionService;
+import io.micronaut.reflection.ReflectionAnnotations;
 import jakarta.enterprise.inject.spi.Annotated;
+import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.StringJoiner;
 
 /**
  * Answers the parts of the specification's API that hand out reflection objects, by reflection.
  *
- * <p>An annotation materialized here implements {@link Object#equals} and {@link Object#hashCode} exactly as
- * {@code java.lang.annotation.Annotation} specifies them, which is what makes it comparable with the annotation
- * literals the specification's own API is full of: a program that asks whether a bean's qualifiers contain
- * {@code new HairyQualifier(false)} is comparing a literal of its own with one of these.</p>
+ * <p>An annotation materialized here is synthesised by Micronaut's {@link ReflectionAnnotations}, which
+ * implements {@link Object#equals} and {@link Object#hashCode} as {@code java.lang.annotation.Annotation}
+ * specifies them: that is what makes it comparable with the annotation literals the specification's own API is
+ * full of - a program that asks whether a bean's qualifiers contain {@code new HairyQualifier(false)} is comparing
+ * a literal of its own with one of these. The values of an annotation instance are read by the same class.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -66,60 +61,10 @@ public final class ReflectiveCdi implements CdiReflection {
     @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A annotation(Class<A> type, @Nullable AnnotationValue<?> value) {
-        Map<String, Object> members = new LinkedHashMap<>();
-        for (Method member : type.getDeclaredMethods()) {
-            if (member.getParameterCount() != 0 || member.isSynthetic()) {
-                continue;
-            }
-            Object resolved = value == null ? null : memberValue(value, member.getName());
-            if (resolved == null) {
-                resolved = member.getDefaultValue();
-            } else {
-                resolved = resolve(resolved, member.getReturnType());
-            }
-            if (resolved == null) {
-                throw new IllegalArgumentException("The member " + member.getName() + " of " + type.getName()
-                    + " has neither a value nor a default");
-            }
-            members.put(member.getName(), resolved);
-        }
-        return (A) Proxy.newProxyInstance(
-            type.getClassLoader(),
-            new Class<?>[]{type},
-            new Literal(type, members)
-        );
-    }
-
-    /**
-     * A member as the type its annotation interface declares: a nested annotation, recorded as its values, is
-     * an instance of its own annotation type, and everything else is converted the way the values of compiled
-     * metadata are.
-     */
-    @SuppressWarnings("unchecked")
-    private Object resolve(Object recorded, Class<?> memberType) {
-        if (recorded instanceof AnnotationValue<?> nested && memberType.isAnnotation()) {
-            return annotation((Class<? extends Annotation>) memberType, nested);
-        }
-        if (memberType.isArray() && memberType.getComponentType().isAnnotation()
-            && recorded instanceof Object[] nested) {
-            Class<? extends Annotation> componentType = (Class<? extends Annotation>) memberType.getComponentType();
-            Object annotations = Array.newInstance(componentType, nested.length);
-            for (int i = 0; i < nested.length; i++) {
-                Array.set(annotations, i, nested[i] instanceof AnnotationValue<?> value
-                    ? annotation(componentType, value) : nested[i]);
-            }
-            return annotations;
-        }
-        return ConversionService.SHARED.convertRequired(recorded, memberType);
-    }
-
-    private static @Nullable Object memberValue(AnnotationValue<?> value, String name) {
-        for (Map.Entry<CharSequence, Object> member : value.getValues().entrySet()) {
-            if (name.contentEquals(member.getKey())) {
-                return member.getValue();
-            }
-        }
-        return null;
+        // Micronaut's synthesiser serves the members the value leaves out from the defaults of the type, and
+        // compares and hashes the instance as java.lang.annotation.Annotation specifies
+        AnnotationValue<A> values = value == null ? AnnotationValue.builder(type).build() : (AnnotationValue<A>) value;
+        return ReflectionAnnotations.synthesize(type, values);
     }
 
     @Override
@@ -258,33 +203,32 @@ public final class ReflectiveCdi implements CdiReflection {
 
     @Override
     public AnnotationValue<?> valuesOf(Annotation annotation) {
-        AnnotationValue<?> values = AnnotationValue.of(annotation);
-        Set<String> nonbinding = nonbindingMembersOf(annotation.annotationType());
-        if (nonbinding.isEmpty()) {
-            return values;
-        }
-        // listed the way the processor lists them on a compiled qualifier, the attribute naming itself
-        List<String> listed = new ArrayList<>(nonbinding);
-        listed.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
-        return values.mutate().member(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(new String[0])).build();
+        Class<? extends Annotation> type = annotation.annotationType();
+        return ReflectionAnnotations.valueOf(annotation, values -> listNonbinding(type, values));
     }
 
     /**
-     * The members of an annotation type excluded from the comparison of two annotations of the type, which the
-     * specification says with {@code jakarta.enterprise.util.Nonbinding} and Micronaut with {@code NonBinding}.
+     * Lists the members the specification marks {@code jakarta.enterprise.util.Nonbinding} beside the ones
+     * Micronaut lists for its own {@code NonBinding}, which is how the processor records both on a compiled
+     * qualifier: under {@code $nonBinding}, the attribute naming itself.
      */
-    private static Set<String> nonbindingMembersOf(Class<? extends Annotation> annotationType) {
-        Set<String> members = new LinkedHashSet<>();
-        for (Method member : annotationType.getDeclaredMethods()) {
-            for (Annotation annotation : member.getAnnotations()) {
-                String name = annotation.annotationType().getName();
-                if ("jakarta.enterprise.util.Nonbinding".equals(name)
-                    || "io.micronaut.context.annotation.NonBinding".equals(name)) {
-                    members.add(member.getName());
-                }
+    private static void listNonbinding(Class<? extends Annotation> annotationType, Map<CharSequence, Object> values) {
+        Set<String> listed = new LinkedHashSet<>();
+        for (Map.Entry<CharSequence, Object> value : values.entrySet()) {
+            if (AnnotationUtil.NON_BINDING_ATTRIBUTE.contentEquals(value.getKey())
+                && value.getValue() instanceof String[] micronauts) {
+                listed.addAll(List.of(micronauts));
             }
         }
-        return members;
+        for (Method member : annotationType.getDeclaredMethods()) {
+            if (member.isAnnotationPresent(Nonbinding.class)) {
+                listed.add(member.getName());
+            }
+        }
+        if (!listed.isEmpty()) {
+            listed.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+            values.put(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(String[]::new));
+        }
     }
 
     @Override
@@ -387,11 +331,16 @@ public final class ReflectiveCdi implements CdiReflection {
     @Override
     public boolean isAnnotated(Class<? extends Annotation> annotationType,
                                Class<? extends Annotation> metaAnnotation) {
+        // the specification asks what is written on the annotation type itself. Micronaut's reflective metadata
+        // answers a different question: it adds the stereotypes below each meta-annotation, folds a repeatable
+        // one into its container and leaves out java.lang.annotation, whose Repeatable is asked here
         return annotationType.isAnnotationPresent(metaAnnotation);
     }
 
     @Override
     public Set<Annotation> metaAnnotationsOf(Class<? extends Annotation> annotationType) {
+        // the instances the class holds, as the definition of a stereotype or a binding reports them, rather
+        // than instances synthesised back from Micronaut's metadata of them
         Set<Annotation> annotations = new LinkedHashSet<>();
         for (Annotation annotation : annotationType.getAnnotations()) {
             if (!annotation.annotationType().getName().startsWith("java.lang.annotation.")) {
@@ -399,103 +348,5 @@ public final class ReflectiveCdi implements CdiReflection {
             }
         }
         return annotations;
-    }
-
-    /**
-     * An annotation that behaves as the language specification says an annotation instance does.
-     *
-     * @param type    The annotation type
-     * @param members The members it was written with, every one of them resolved to a value
-     */
-    private record Literal(Class<? extends Annotation> type, Map<String, Object> members)
-        implements InvocationHandler {
-
-        @Override
-        public @Nullable Object invoke(Object proxy, Method method, Object @Nullable [] args) {
-            String name = method.getName();
-            if (members.containsKey(name) && method.getParameterCount() == 0) {
-                return members.get(name);
-            }
-            return switch (name) {
-                case "annotationType" -> type;
-                case "hashCode" -> annotationHashCode();
-                case "toString" -> annotationToString();
-                case "equals" -> args != null && args.length == 1 && isEqualTo(args[0]);
-                default -> throw new UnsupportedOperationException(name);
-            };
-        }
-
-        /**
-         * The hash code of an annotation is the sum, over its members, of the member's name hashed and the
-         * member's value hashed, which is what {@code java.lang.annotation.Annotation} specifies.
-         */
-        private int annotationHashCode() {
-            int hash = 0;
-            for (Map.Entry<String, Object> member : members.entrySet()) {
-                hash += (127 * member.getKey().hashCode()) ^ valueHashCode(member.getValue());
-            }
-            return hash;
-        }
-
-        /**
-         * Two annotations are equal when they are of the same type and every member is equal, comparing the
-         * members of an array member one by one.
-         */
-        private boolean isEqualTo(@Nullable Object other) {
-            if (!(other instanceof Annotation annotation) || !type.equals(annotation.annotationType())) {
-                return false;
-            }
-            for (Map.Entry<String, Object> member : members.entrySet()) {
-                Object otherValue;
-                try {
-                    otherValue = annotation.annotationType()
-                        .getDeclaredMethod(member.getKey())
-                        .invoke(annotation);
-                } catch (ReflectiveOperationException e) {
-                    return false;
-                }
-                if (!valueEquals(member.getValue(), otherValue)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        private String annotationToString() {
-            StringJoiner joiner = new StringJoiner(", ", "@" + type.getName() + "(", ")");
-            members.forEach((name, value) -> joiner.add(name + "=" + value));
-            return members.isEmpty() ? "@" + type.getName() : joiner.toString();
-        }
-
-        private static int valueHashCode(Object value) {
-            if (value.getClass().isArray()) {
-                int hash = 1;
-                int length = Array.getLength(value);
-                for (int i = 0; i < length; i++) {
-                    hash = 31 * hash + valueHashCode(Objects.requireNonNull(Array.get(value, i)));
-                }
-                return hash;
-            }
-            return value.hashCode();
-        }
-
-        private static boolean valueEquals(Object one, @Nullable Object other) {
-            if (other == null) {
-                return false;
-            }
-            if (one.getClass().isArray() && other.getClass().isArray()) {
-                int length = Array.getLength(one);
-                if (length != Array.getLength(other)) {
-                    return false;
-                }
-                for (int i = 0; i < length; i++) {
-                    if (!valueEquals(Objects.requireNonNull(Array.get(one, i)), Array.get(other, i))) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return one.equals(other);
-        }
     }
 }
