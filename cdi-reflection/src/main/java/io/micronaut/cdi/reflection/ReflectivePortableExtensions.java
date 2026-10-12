@@ -29,6 +29,12 @@ import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.io.service.ServiceDefinition;
+import io.micronaut.core.io.service.SoftServiceLoader;
+import io.micronaut.core.reflect.InstantiationUtils;
+import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.reflect.exception.InstantiationException;
+import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.type.Argument;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.event.Observes;
@@ -55,14 +61,12 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 /**
@@ -159,32 +163,32 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
      * it named, and what the service loader finds through the class loader it was given.
      */
     private static List<Extension> extensionsOf(Request request) {
-        Map<Class<?>, Extension> extensions = new LinkedHashMap<>();
+        Map<String, Extension> extensions = new LinkedHashMap<>();
         for (Extension instance : request.instances()) {
-            extensions.putIfAbsent(instance.getClass(), instance);
+            extensions.putIfAbsent(instance.getClass().getName(), instance);
         }
         for (Class<? extends Extension> type : request.classes()) {
-            if (!extensions.containsKey(type)) {
-                extensions.put(type, instantiate(type));
+            if (!extensions.containsKey(type.getName())) {
+                extensions.put(type.getName(), instantiate(type));
             }
         }
-        ServiceLoader.load(Extension.class, request.classLoader()).stream()
-            .filter(provider -> request.admitted().test(provider.type().getName()))
-            .filter(provider -> !extensions.containsKey(provider.type()))
-            .forEach(provider -> extensions.put(provider.type(), provider.get()));
+        // the entries are read in the order the service files list them, not forked, so that the extensions are
+        // notified in the same order on every start
+        SoftServiceLoader<Extension> loader = SoftServiceLoader.load(Extension.class, request.classLoader(),
+            request.admitted()).disableFork();
+        for (ServiceDefinition<Extension> provider : loader) {
+            if (provider.isPresent() && !extensions.containsKey(provider.getName())) {
+                extensions.put(provider.getName(), provider.load());
+            }
+        }
         return new ArrayList<>(extensions.values());
     }
 
     private static Extension instantiate(Class<? extends Extension> type) {
         try {
-            var constructor = type.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor.newInstance();
-        } catch (InvocationTargetException e) {
-            throw new DeploymentException("The extension " + type.getName() + " could not be created", e.getCause());
-        } catch (ReflectiveOperationException e) {
-            throw new DeploymentException("The extension " + type.getName() + " has no constructor without "
-                + "parameters to create it with", e);
+            return InstantiationUtils.instantiate(type);
+        } catch (InstantiationException e) {
+            throw new DeploymentException("The extension " + type.getName() + " could not be created", e);
         }
     }
 
@@ -268,14 +272,9 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         if (!field) {
             return null;
         }
-        for (Class<?> type = bean.getBeanClass(); type != null; type = type.getSuperclass()) {
-            for (java.lang.reflect.Field candidate : type.getDeclaredFields()) {
-                if (candidate.getName().equals(member)) {
-                    return new ReflectiveAnnotatedField<>(candidate);
-                }
-            }
-        }
-        return null;
+        return ReflectionUtils.findField(bean.getBeanClass(), member)
+            .map(ReflectiveAnnotatedField::new)
+            .orElse(null);
     }
 
     /**
@@ -393,14 +392,18 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                 arguments[i] = i == eventIndex ? event : container;
             }
             try {
-                method.invoke(Modifier.isStatic(method.getModifiers()) ? null : extension, arguments);
-            } catch (InvocationTargetException e) {
-                if (e.getCause() instanceof RuntimeException thrown) {
-                    throw thrown;
+                // the instance is ignored where the observer is static
+                ReflectionUtils.invokeMethod(extension, method, arguments);
+            } catch (InvocationException e) {
+                // what the observer itself threw is what the bootstrap reports, a refusal of this container's
+                // among it; a failure to invoke it at all is a problem of the deployment
+                if (e.getCause() instanceof InvocationTargetException invoked) {
+                    if (invoked.getCause() instanceof RuntimeException thrown) {
+                        throw thrown;
+                    }
+                    throw new DefinitionException("The observer method " + method + " of the extension failed",
+                        invoked.getCause());
                 }
-                throw new DefinitionException("The observer method " + method + " of the extension failed",
-                    e.getCause());
-            } catch (IllegalAccessException e) {
                 throw new DefinitionException("The observer method " + method + " of the extension cannot be "
                     + "invoked", e);
             }
