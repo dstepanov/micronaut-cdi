@@ -508,40 +508,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             io.micronaut.context.Qualifier<T> micronaut = (io.micronaut.context.Qualifier<T>) narrowing;
             qualifier = Qualifiers.byQualifiers(qualifier, micronaut);
         }
-        return beansAmong(beanContext.getBeanDefinitions(asked, qualifier));
-    }
-
-    /**
-     * The beans among the definitions a lookup resolved, one entry per bean.
-     *
-     * <p>The definition Micronaut compiles for an abstract class is not a bean: section 3.1.1 requires the class
-     * of a managed bean to be concrete, however it is annotated. And the definition a proxy stands in front of
-     * describes the same bean as the proxy, so it is dropped in favour of the proxy.</p>
-     */
-    private Collection<BeanDefinition<T>> beansAmong(Collection<BeanDefinition<T>> resolved) {
-        java.util.Set<String> proxied = new java.util.HashSet<>();
-        boolean abstractClasses = false;
-        for (BeanDefinition<T> definition : resolved) {
-            if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy) {
-                proxied.add(proxy.getTargetDefinitionType().getName());
-            }
-            abstractClasses |= definition.isAbstract();
-        }
-        if (proxied.isEmpty() && !abstractClasses) {
-            return resolved;
-        }
-        List<BeanDefinition<T>> beans = new ArrayList<>(resolved.size());
-        for (BeanDefinition<T> definition : resolved) {
-            if (definition.isAbstract()) {
-                continue;
-            }
-            if (!(definition instanceof io.micronaut.inject.ProxyBeanDefinition<?>)
-                && proxied.contains(definition.getClass().getName())) {
-                continue;
-            }
-            beans.add(definition);
-        }
-        return beans;
+        return CdiResolution.beansAmong(beanContext.getBeanDefinitions(asked, qualifier));
     }
 
     /**

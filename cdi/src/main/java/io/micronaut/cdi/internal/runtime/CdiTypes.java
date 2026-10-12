@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.WildcardArgument;
@@ -45,20 +46,6 @@ import java.util.Map;
 @Internal
 public final class CdiTypes {
 
-    /**
-     * The primitive types and the classes that box them, each mapped to the other.
-     */
-    private static final Map<Class<?>, Class<?>> COUNTERPART = Map.ofEntries(
-        Map.entry(boolean.class, Boolean.class), Map.entry(Boolean.class, boolean.class),
-        Map.entry(byte.class, Byte.class), Map.entry(Byte.class, byte.class),
-        Map.entry(char.class, Character.class), Map.entry(Character.class, char.class),
-        Map.entry(short.class, Short.class), Map.entry(Short.class, short.class),
-        Map.entry(int.class, Integer.class), Map.entry(Integer.class, int.class),
-        Map.entry(long.class, Long.class), Map.entry(Long.class, long.class),
-        Map.entry(float.class, Float.class), Map.entry(Float.class, float.class),
-        Map.entry(double.class, Double.class), Map.entry(Double.class, double.class)
-    );
-
     private CdiTypes() {
     }
 
@@ -78,8 +65,14 @@ public final class CdiTypes {
         if (type.getTypeParameters().length > 0) {
             return null;
         }
-        Class<?> counterpart = COUNTERPART.get(type.getType());
-        return counterpart == null ? null : (Argument<T>) Argument.of(counterpart);
+        Class<?> raw = type.getType();
+        if (raw == void.class || raw == Void.class) {
+            // void is no bean type, and the class that boxes it none either
+            return null;
+        }
+        Class<?> counterpart = raw.isPrimitive()
+            ? ReflectionUtils.getWrapperType(raw) : ReflectionUtils.getPrimitiveType(raw);
+        return counterpart == raw ? null : (Argument<T>) Argument.of(counterpart);
     }
 
     /**
@@ -110,11 +103,25 @@ public final class CdiTypes {
      * @return The boxed form
      */
     public static Class<?> boxedOf(Class<?> type) {
-        if (!type.isPrimitive()) {
-            return type;
+        return ReflectionUtils.getWrapperType(type);
+    }
+
+    /**
+     * The name a type is recorded by where only its erasure is: the binary name of its class, followed by a pair
+     * of brackets for each dimension of an array - what the processor writes for the parameter types of a method
+     * it records, so that the method is found without loading a class by name.
+     *
+     * @param type The class
+     * @return The recorded name
+     */
+    public static String erasedName(Class<?> type) {
+        StringBuilder brackets = new StringBuilder();
+        Class<?> component = type;
+        while (component.isArray()) {
+            brackets.append("[]");
+            component = component.getComponentType();
         }
-        Class<?> boxed = COUNTERPART.get(type);
-        return boxed == null ? type : boxed;
+        return component.getName() + brackets;
     }
 
     /**

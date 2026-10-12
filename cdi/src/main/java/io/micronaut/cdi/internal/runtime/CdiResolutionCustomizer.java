@@ -53,21 +53,11 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         double.class, 0d,
         char.class, '\u0000');
 
-    private static final java.util.Map<Class<?>, Class<?>> BOXED = java.util.Map.of(
-        boolean.class, Boolean.class,
-        byte.class, Byte.class,
-        short.class, Short.class,
-        int.class, Integer.class,
-        long.class, Long.class,
-        float.class, Float.class,
-        double.class, Double.class,
-        char.class, Character.class);
-
     // the bean types of a definition, worked out once: every parameterized lookup asks them of every candidate,
     // and working them out walks the class's supertypes. Definitions are compared by identity here — two runtime
     // definitions of one class are equal to each other, and are not the same bean — and the map lives as long
     // as the context this customizer was built for
-    private final java.util.concurrent.ConcurrentHashMap<DefinitionKey, java.util.List<Argument<?>>> beanTypes =
+    private final java.util.concurrent.ConcurrentHashMap<DefinitionIdentity, java.util.List<Argument<?>>> beanTypes =
         new java.util.concurrent.ConcurrentHashMap<>();
 
     private final BeanResolutionCustomizer delegate;
@@ -83,8 +73,9 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     public Argument<?> resolveBeanLookupArgument(Argument<?> beanType) {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type; Micronaut keeps them
         // apart, so a primitive lookup is made as the boxed one
-        Class<?> boxed = BOXED.get(beanType.getType());
-        if (boxed != null) {
+        Class<?> raw = beanType.getType();
+        if (raw.isPrimitive() && raw != void.class) {
+            Class<?> boxed = CdiTypes.boxedOf(raw);
             return Argument.of(boxed, beanType.getAnnotationMetadata(), (Class<?>[]) null);
         }
         return delegate.resolveBeanLookupArgument(beanType);
@@ -193,7 +184,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
             // the required argument does not satisfy
             try {
-                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionKey(definition), key -> {
+                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionIdentity(definition), key -> {
                     Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
                         ? proxy.getTargetType() : definition.getBeanType();
                     return CdiBean.typesOf(definition, beanClass);
@@ -206,22 +197,5 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             }
         }
         return delegate.isCandidateBean(beanType, candidate);
-    }
-
-    /**
-     * A definition as a key compared by identity rather than by its own equality.
-     *
-     * @param definition The definition
-     */
-    private record DefinitionKey(BeanDefinition<?> definition) {
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof DefinitionKey key && key.definition == definition;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(definition);
-        }
     }
 }

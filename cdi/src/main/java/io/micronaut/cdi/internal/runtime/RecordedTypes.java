@@ -126,16 +126,6 @@ public final class RecordedTypes {
     }
 
     private static @Nullable Class<?> primitive(String name) {
-        return switch (name) {
-            case "boolean" -> boolean.class;
-            case "byte" -> byte.class;
-            case "short" -> short.class;
-            case "char" -> char.class;
-            case "int" -> int.class;
-            case "long" -> long.class;
-            case "float" -> float.class;
-            case "double" -> double.class;
-            default -> null;
-        };
+        return io.micronaut.core.reflect.ClassUtils.getPrimitiveType(name).orElse(null);
     }
 }

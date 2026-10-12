@@ -462,12 +462,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         ParameterElement[] parameters = disposer.getParameters();
         String[] types = new String[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
-            ClassElement type = parameters[i].getType();
-            String name = type.getName();
-            while (name.endsWith("[]")) {
-                name = name.substring(0, name.length() - 2);
-            }
-            types[i] = name + "[]".repeat(type.getArrayDimensions());
+            types[i] = RecordedTypeValues.erasedName(parameters[i].getType());
         }
         return types;
     }

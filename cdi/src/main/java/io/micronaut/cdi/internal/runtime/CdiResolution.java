@@ -20,10 +20,15 @@ import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ProxyBeanDefinition;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 
 /**
  * The one rule of section 2.4.2 that picks a bean from several candidates: the alternatives outrank everything
@@ -67,13 +72,30 @@ public final class CdiResolution {
      * @return The narrowed candidates
      */
     public static <T extends BeanDefinition<?>> List<T> narrow(Collection<T> candidates) {
+        // the priority a selected alternative was written with is carried as its order, negated: an order
+        // prefers the lowest where a priority prefers the highest
+        return narrow(candidates, CdiResolution::isAlternative, CdiResolution::priorityOf);
+    }
+
+    /**
+     * Narrows the candidates the way resolution does, whatever they are: the beans the bean container is handed
+     * as well as the definitions the container reads. The result has one element where resolution succeeds, and
+     * more where it is ambiguous.
+     *
+     * @param candidates  The candidates
+     * @param alternative Whether a candidate is an alternative
+     * @param priority    The priority of an alternative
+     * @param <T>         The candidate type
+     * @return The narrowed candidates
+     */
+    public static <T> List<T> narrow(Collection<T> candidates, Predicate<? super T> alternative,
+                                     ToIntFunction<? super T> priority) {
         if (candidates.size() <= 1) {
             return List.copyOf(candidates);
         }
         List<T> alternatives = new ArrayList<>();
         for (T candidate : candidates) {
-            if (candidate.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Alternative")
-                || candidate.getAnnotationMetadata().hasStereotype("jakarta.enterprise.inject.Alternative")) {
+            if (alternative.test(candidate)) {
                 alternatives.add(candidate);
             }
         }
@@ -82,19 +104,62 @@ public final class CdiResolution {
         }
         List<T> best = new ArrayList<>();
         int bestPriority = Integer.MIN_VALUE;
-        for (T alternative : alternatives) {
-            // the priority a selected alternative was written with is carried as its order, negated: an order
-            // prefers the lowest where a priority prefers the highest
-            int priority = priorityOf(alternative);
-            if (priority > bestPriority) {
-                bestPriority = priority;
+        for (T candidate : alternatives) {
+            int candidatePriority = priority.applyAsInt(candidate);
+            if (candidatePriority > bestPriority) {
+                bestPriority = candidatePriority;
                 best.clear();
             }
-            if (priority == bestPriority) {
-                best.add(alternative);
+            if (candidatePriority == bestPriority) {
+                best.add(candidate);
             }
         }
         return List.copyOf(best);
+    }
+
+    /**
+     * Whether the definition is an alternative, written as one or through a stereotype.
+     *
+     * @param definition The definition
+     * @return Whether it is an alternative
+     */
+    public static boolean isAlternative(BeanDefinition<?> definition) {
+        return definition.getAnnotationMetadata().hasStereotype("jakarta.enterprise.inject.Alternative");
+    }
+
+    /**
+     * The beans among the definitions a lookup resolved, one entry per bean.
+     *
+     * <p>The definition Micronaut compiles for an abstract class is not a bean: section 3.1.1 requires the class
+     * of a managed bean to be concrete, however it is annotated. And the definition a proxy stands in front of
+     * describes the same bean as the proxy, so it is dropped in favour of the proxy.</p>
+     *
+     * @param definitions The definitions
+     * @param <D>         The definition type
+     * @return The beans, the given collection itself where it has nothing to drop
+     */
+    public static <D extends BeanDefinition<?>> Collection<D> beansAmong(Collection<D> definitions) {
+        Set<String> proxied = new HashSet<>();
+        boolean abstractClasses = false;
+        for (D definition : definitions) {
+            if (definition instanceof ProxyBeanDefinition<?> proxy) {
+                proxied.add(proxy.getTargetDefinitionType().getName());
+            }
+            abstractClasses |= definition.isAbstract();
+        }
+        if (proxied.isEmpty() && !abstractClasses) {
+            return definitions;
+        }
+        List<D> beans = new ArrayList<>(definitions.size());
+        for (D definition : definitions) {
+            boolean target = !(definition instanceof ProxyBeanDefinition<?>)
+                && proxied.contains(definition.getClass().getName());
+            if (definition.isAbstract() || target) {
+                continue;
+            }
+            beans.add(definition);
+        }
+        return beans;
     }
 
     /**

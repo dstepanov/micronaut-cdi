@@ -455,8 +455,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         for (io.micronaut.inject.BeanDefinitionReference<Object> reference
             : beanContext.getBeanDefinitionReferences()) {
             BeanDefinition<?> definition = enabledDefinitionOf(reference);
-            if (definition != null && !definition.isAbstract()) {
-                // an abstract class is not a bean of the specification, however it is annotated
+            if (definition != null) {
                 byName.put(definition.getClass().getName(), definition);
             }
         }
@@ -464,9 +463,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         // definition without a compiled reference. Such definitions share a class, so the instance tells
         // them apart
         for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            if (definition.isAbstract()) {
-                continue;
-            }
             String key = definition.getClass().getName();
             BeanDefinition<?> existing = byName.get(key);
             if (existing != null && existing != definition && !existing.equals(definition)) {
@@ -474,18 +470,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
             byName.putIfAbsent(key, definition);
         }
-        // a bean in a normal scope is two definitions, the proxy and its target; the proxy is the bean
-        Set<String> proxied = new LinkedHashSet<>();
-        for (BeanDefinition<?> definition : byName.values()) {
-            if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy) {
-                proxied.add(proxy.getTargetDefinitionType().getName());
-            }
-        }
         List<CdiBean<?>> loaded = new java.util.ArrayList<>();
-        for (BeanDefinition<?> definition : byName.values()) {
-            if (proxied.contains(definition.getClass().getName())) {
-                continue;
-            }
+        // an abstract class is not a bean of the specification, however it is annotated, and a bean in a normal
+        // scope is two definitions, the proxy and its target, of which the proxy is the bean
+        for (BeanDefinition<?> definition : CdiResolution.beansAmong(byName.values())) {
             if (io.micronaut.cdi.internal.extension.ExtensionComponents.isComponent(definition.getAnnotationMetadata())) {
                 // the definition of a creator, a disposer, a synthetic observer or a context an extension
                 // named: what the container instantiates the class through, and not a bean of the application
@@ -517,31 +505,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         // more than one bean qualifies: the alternatives outrank everything else, and among them the one of
         // the highest priority wins. Anything short of a single winner is the ambiguity of section 2.4.2
-        List<Bean<? extends X>> alternatives = new ArrayList<>();
-        for (Bean<? extends X> bean : beans) {
-            if (bean.isAlternative()) {
-                alternatives.add(bean);
-            }
-        }
-        if (alternatives.size() == 1) {
-            return alternatives.get(0);
-        }
-        if (alternatives.size() > 1) {
-            List<Bean<? extends X>> best = new ArrayList<>();
-            int bestPriority = Integer.MIN_VALUE;
-            for (Bean<? extends X> alternative : alternatives) {
-                int priority = priorityOf(alternative);
-                if (priority > bestPriority) {
-                    bestPriority = priority;
-                    best.clear();
-                }
-                if (priority == bestPriority) {
-                    best.add(alternative);
-                }
-            }
-            if (best.size() == 1) {
-                return best.get(0);
-            }
+        List<Bean<? extends X>> narrowed = CdiResolution.narrow(beans, Bean::isAlternative,
+            CdiBeanContainer::priorityOf);
+        if (narrowed.size() == 1) {
+            return narrowed.get(0);
         }
         throw new AmbiguousResolutionException("More than one bean qualifies: " + beans);
     }

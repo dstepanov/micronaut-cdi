@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
+import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -123,13 +124,7 @@ final class ElementInvokerFactory implements InvokerFactory {
             String[] parameterTypeNames = new String[parameters.length];
             boolean[] lookups = new boolean[parameters.length];
             for (int i = 0; i < parameters.length; i++) {
-                io.micronaut.inject.ast.ClassElement parameterType = parameters[i].getType();
-                StringBuilder name = new StringBuilder(parameterType.getName());
-                for (io.micronaut.inject.ast.ClassElement component = parameterType;
-                     component.isArray(); component = component.fromArray()) {
-                    name.append("[]");
-                }
-                parameterTypeNames[i] = name.toString();
+                parameterTypeNames[i] = RecordedTypeValues.erasedName(parameters[i].getType());
                 lookups[i] = argumentLookups.contains(i);
             }
             return new ElementInvokerInfo(beanClass.getName(), method.getName(), parameterTypeNames,
