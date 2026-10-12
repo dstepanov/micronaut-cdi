@@ -118,6 +118,17 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         return bindings;
     }
 
+    /**
+     * The interceptor bindings of the interceptor as the Jakarta Interceptors processor recorded them on its
+     * definition, which is what the interceptor chains are resolved by: comparing a set of bindings with these
+     * gives the answer the chains give.
+     *
+     * @return The recorded bindings
+     */
+    io.micronaut.interceptor.spi.InterceptorBindings recordedBindings() {
+        return io.micronaut.interceptor.spi.InterceptorBindings.of(definition);
+    }
+
     private static boolean isBindingType(CompiledAnnotationTypes types, AnnotationMetadata metadata, String name) {
         Boolean recorded = types.isInterceptorBinding(name);
         if (recorded != null) {

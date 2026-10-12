@@ -21,6 +21,7 @@ import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
@@ -591,6 +592,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                     + " was given twice");
             }
         }
+        // compared as the interceptor chains compare them, so that what is reported here is what runs
+        io.micronaut.interceptor.spi.InterceptorBindings given = io.micronaut.interceptor.spi.InterceptorBindings
+            .ofValues(bindingValuesOf(CdiQualifier.ofInstances(types(), interceptorBindings)));
         List<CdiInterceptor<?>> resolved = new java.util.ArrayList<>();
         for (CdiBean<?> candidate : candidates()) {
             BeanDefinition<?> definition = candidate.definition();
@@ -601,7 +605,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             if (!interceptor.isEnabled() || !interceptor.intercepts(type)) {
                 continue;
             }
-            if (isBoundBy(interceptor, interceptorBindings)) {
+            if (interceptor.recordedBindings().isBoundBy(given)) {
                 resolved.add(interceptor);
             }
         }
@@ -618,21 +622,53 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * Whether an interceptor is bound by the given bindings: every binding the interceptor declares has an
-     * equivalent among them.
+     * The values of interceptor bindings handed over as annotation instances, in the form the Jakarta Interceptors
+     * implementation compares bindings in: an annotation held by a member is its value too, as compiled metadata
+     * records it, rather than an instance.
      */
-    private boolean isBoundBy(CdiInterceptor<?> interceptor, Annotation[] interceptorBindings) {
-        List<CdiQualifier> declared = interceptor.bindings();
-        if (declared.isEmpty()) {
-            return false;
+    private static List<AnnotationValue<?>> bindingValuesOf(List<CdiQualifier> bindings) {
+        List<AnnotationValue<?>> values = new java.util.ArrayList<>(bindings.size());
+        for (CdiQualifier binding : bindings) {
+            values.add(asValues(binding.written()));
         }
-        List<CdiQualifier> given = CdiQualifier.ofInstances(types(), interceptorBindings);
-        for (CdiQualifier binding : declared) {
-            if (!binding.isAmong(given)) {
-                return false;
+        return values;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static AnnotationValue<?> asValues(AnnotationValue<?> value) {
+        Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
+        boolean converted = false;
+        for (Map.Entry<CharSequence, Object> member : value.getValues().entrySet()) {
+            Object converting = asValue(member.getValue());
+            converted |= converting != member.getValue();
+            members.put(member.getKey(), converting);
+        }
+        return converted ? new AnnotationValue(value.getAnnotationName(), members, value.getDefaultValues())
+            : value;
+    }
+
+    private static Object asValue(Object member) {
+        if (member instanceof Annotation annotation) {
+            return asValues(AnnotationValue.of(annotation));
+        }
+        if (member instanceof AnnotationValue<?> nested) {
+            return asValues(nested);
+        }
+        if (member instanceof Object[] array) {
+            Object[] converted = null;
+            for (int i = 0; i < array.length; i++) {
+                Object element = asValue(array[i]);
+                if (element != array[i]) {
+                    if (converted == null) {
+                        converted = new Object[array.length];
+                        System.arraycopy(array, 0, converted, 0, array.length);
+                    }
+                    converted[i] = element;
+                }
             }
+            return converted == null ? member : converted;
         }
-        return true;
+        return member;
     }
 
     /**

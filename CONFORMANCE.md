@@ -337,9 +337,12 @@ can inject it.
 
 `BeanContainer.resolveInterceptors` (section 11.1.9) resolves the interceptor classes the Jakarta Interceptors
 processor compiled: an interceptor is enabled by the priority it declares, bound when every binding it declares
-is among the given ones, and the resolved list is ordered lowest priority first. The interception of a bean
-still happens where it was compiled; what the manager adds is the description of it the specification asks for,
-including invoking an interceptor directly through `Interceptor.intercept`.
+is among the given ones, and the resolved list is ordered lowest priority first. The bindings are compared by
+Jakarta Interceptors' own `InterceptorBindings`, on the bindings its processor recorded for the interceptor class
+and the values of the ones given, which is the comparison that resolves the interceptor chains: what the manager
+reports bound is what runs. The interception of a bean still happens where it was compiled; what the manager adds
+is the description of it the specification asks for, including invoking an interceptor directly through
+`Interceptor.intercept`.
 
 The interceptors that run are the ones the manager reports. Section 8 has CDI Lite enable and order
 interceptors with `@Priority`, the way section 5.2.1 of Jakarta Interceptors enables an interceptor bound by an
