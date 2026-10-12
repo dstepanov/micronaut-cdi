@@ -172,7 +172,7 @@ public final class RecordedSynthesis {
                 create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
                     creationContext));
         List<AnnotationValue<Annotation>> qualifiers = record.getAnnotations(CdiSyntheticBean.QUALIFIERS);
-        Qualifier<T> qualifier = CdiQualifiers.ofValues(qualifiers, Set.of(record.stringValues("nonbinding")));
+        Qualifier<T> qualifier = CdiQualifiers.declaredQualifierOf(qualifiers, Set.of(record.stringValues("nonbinding")));
         String name = record.stringValue("name").filter(given -> !given.isEmpty()).orElse(null);
         if (name != null) {
             // the name is a qualifier beside the others, not in their place: naming the builder would replace

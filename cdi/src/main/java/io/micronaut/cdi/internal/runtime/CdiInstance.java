@@ -464,21 +464,10 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     }
 
     private Collection<BeanDefinition<T>> definitionsOf(Argument<T> asked) {
-        QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
-        if (overlay == null || overlay.isEmpty()) {
-            return beansAmong(beanContext.getBeanDefinitions(asked, CdiQualifiers.of(qualifiers)));
-        }
-        // a portable extension qualified a bean beyond what its definition says, which Micronaut's own
-        // comparison of qualifiers does not see: the beans of the type are compared by the qualifiers each
-        // has, as section 2.4.2 compares them
+        // the beans of the type are compared by the qualifiers each has, as section 2.4.2 compares them - a
+        // qualifier a portable extension added to the bean class among them
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        List<BeanDefinition<T>> matching = new ArrayList<>();
-        for (BeanDefinition<T> candidate : beansAmong(beanContext.getBeanDefinitions(asked))) {
-            if (CdiAssignability.areQualifiersMatching(container.canonicalBean(candidate).qualifiers(), qualifiers)) {
-                matching.add(candidate);
-            }
-        }
-        return matching;
+        return beansAmong(beanContext.getBeanDefinitions(asked, container.qualifierFor(qualifiers)));
     }
 
     /**
