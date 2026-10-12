@@ -33,7 +33,8 @@ import java.lang.annotation.Target;
  * instance is needed: nothing is looked up by name, and no class is instantiated reflectively.</p>
  *
  * <p>One member is not declared here, because the language cannot declare it: {@code qualifiers} holds the
- * qualifier annotations of the bean, each of its own annotation type, as nested annotation values.</p>
+ * qualifier annotations of the bean, each of its own annotation type, as nested annotation values, each listing
+ * the members that take no part in resolution under {@code $nonBinding} as the compiler lists them.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -69,14 +70,6 @@ public @interface CdiSyntheticBean {
      * @return The annotation types
      */
     Class<?>[] qualifierTypes() default {};
-
-    /**
-     * The members of the qualifiers that take no part in resolution, each as
-     * {@code annotationName#memberName}.
-     *
-     * @return The non-binding members
-     */
-    String[] nonbinding() default {};
 
     /**
      * The scope annotation of the bean: the one the extension set, or the one a stereotype it named carries.

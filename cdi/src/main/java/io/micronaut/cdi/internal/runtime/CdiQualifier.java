@@ -63,13 +63,13 @@ public final class CdiQualifier {
      * The {@code Any} qualifier.
      */
     public static final CdiQualifier ANY =
-        new CdiQualifier(AnnotationValue.builder(Any.class).build(), null, null, Any.Literal.INSTANCE);
+        new CdiQualifier(AnnotationValue.builder(Any.class).build(), null, Set.of(), null, Any.Literal.INSTANCE);
 
     /**
      * The {@code Default} qualifier.
      */
     public static final CdiQualifier DEFAULT =
-        new CdiQualifier(AnnotationValue.builder(Default.class).build(), null, null, Default.Literal.INSTANCE);
+        new CdiQualifier(AnnotationValue.builder(Default.class).build(), null, Set.of(), null, Default.Literal.INSTANCE);
 
     private static final String ANY_NAME = "jakarta.enterprise.inject.Any";
     private static final String DEFAULT_NAME = "jakarta.enterprise.inject.Default";
@@ -77,13 +77,15 @@ public final class CdiQualifier {
 
     private final AnnotationValue<?> binding;
     private final @Nullable AnnotationValue<?> written;
+    private final Set<String> nonbinding;
     private final @Nullable AnnotationMetadata source;
     private volatile @Nullable Annotation instance;
 
-    private CdiQualifier(AnnotationValue<?> binding, @Nullable AnnotationValue<?> written,
+    private CdiQualifier(AnnotationValue<?> binding, @Nullable AnnotationValue<?> written, Set<String> nonbinding,
                          @Nullable AnnotationMetadata source, @Nullable Annotation instance) {
         this.binding = binding;
         this.written = written;
+        this.nonbinding = nonbinding;
         this.source = source;
         this.instance = instance;
     }
@@ -111,12 +113,24 @@ public final class CdiQualifier {
     }
 
     /**
-     * The members that take part in resolution, with their values.
+     * The members that take part in resolution, with their values: the written ones less the members this
+     * qualifier lists as non-binding.
      *
      * @return The binding values
      */
     public AnnotationValue<?> binding() {
         return binding;
+    }
+
+    /**
+     * The members this qualifier lists as taking no part in resolution: what it was written with under
+     * {@code $nonBinding}, which the processor records on every qualifier it compiles. A qualifier a program
+     * composed, or read from an instance of a type an extension configured, may list fewer than its type has.
+     *
+     * @return The member names
+     */
+    public Set<String> nonbinding() {
+        return nonbinding;
     }
 
     /**
@@ -150,6 +164,11 @@ public final class CdiQualifier {
      * Whether the other qualifier is the same one as far as resolution goes: of the same type, with every
      * binding member equal, a member left at its default being equal to the default written down.
      *
+     * <p>A member either side lists as non-binding is left out of both. The two lists are of one annotation
+     * type and differ only where one side lacked the information - a qualifier a program composed as an
+     * {@code AnnotationValue}, or an instance of a type whose member an extension marked - never because the
+     * type says two things, so a member is non-binding when either side says it is.</p>
+     *
      * @param other The other qualifier
      * @return Whether they are equivalent
      */
@@ -158,12 +177,34 @@ public final class CdiQualifier {
         if (!name.equals(other.name())) {
             return false;
         }
-        if (binding.getValues().isEmpty() && other.binding.getValues().isEmpty()) {
+        Map<CharSequence, Object> values = binding.getValues();
+        Map<CharSequence, Object> others = other.binding.getValues();
+        if (!nonbinding.equals(other.nonbinding)) {
+            values = without(values, other.nonbinding);
+            others = without(others, nonbinding);
+        }
+        if (values.isEmpty() && others.isEmpty()) {
             return true;
         }
         Map<CharSequence, Object> defaults = AnnotationMetadataSupport.getDefaultValues(name);
-        return new AnnotationValue<>(name, written(binding.getValues(), defaults), defaults)
-            .matches(new AnnotationValue<>(name, written(other.binding.getValues(), defaults), defaults));
+        return new AnnotationValue<>(name, written(values, defaults), defaults)
+            .matches(new AnnotationValue<>(name, written(others, defaults), defaults));
+    }
+
+    private static Map<CharSequence, Object> without(Map<CharSequence, Object> values, Set<String> members) {
+        if (values.isEmpty() || members.isEmpty()) {
+            return values;
+        }
+        Map<CharSequence, Object> kept = null;
+        for (CharSequence member : values.keySet()) {
+            if (members.contains(member.toString())) {
+                if (kept == null) {
+                    kept = new LinkedHashMap<>(values);
+                }
+                kept.remove(member);
+            }
+        }
+        return kept == null ? values : kept;
     }
 
     /**
@@ -257,7 +298,7 @@ public final class CdiQualifier {
      * @return The qualifier
      */
     public static CdiQualifier named(String name) {
-        return new CdiQualifier(AnnotationValue.builder(Named.class).value(name).build(), null, null, null);
+        return new CdiQualifier(AnnotationValue.builder(Named.class).value(name).build(), null, Set.of(), null, null);
     }
 
     /**
@@ -275,21 +316,18 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        return new CdiQualifier(bindingOf(name, written.getValues(), nonbindingOf(name, metadata, null)),
-            written, metadata, null);
+        return of(written, metadata, null);
     }
 
     /**
-     * A qualifier as it was recorded for a synthetic component, with the members that take no part in
-     * resolution named beside it.
+     * A qualifier as it was recorded for a synthetic component, its non-binding members listed under
+     * {@code $nonBinding} as on a compiled one.
      *
-     * @param written    The annotation, every member among its values
-     * @param nonbinding The members that take no part, each as {@code annotationName#memberName}
-     * @param type       The annotation class, where the record refers to it
+     * @param written The annotation, every member among its values
+     * @param type    The annotation class, where the record refers to it
      * @return The qualifier
      */
-    public static CdiQualifier ofRecorded(AnnotationValue<?> written, Set<String> nonbinding,
-                                          @Nullable Class<? extends Annotation> type) {
+    public static CdiQualifier ofRecorded(AnnotationValue<?> written, @Nullable Class<? extends Annotation> type) {
         String name = written.getAnnotationName();
         if (DEFAULT_NAME.equals(name)) {
             return DEFAULT;
@@ -297,14 +335,7 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        Set<String> members = new LinkedHashSet<>(nonbindingOf(name, null, type));
-        for (String entry : nonbinding) {
-            if (entry.startsWith(name + "#")) {
-                members.add(entry.substring(name.length() + 1));
-            }
-        }
-        AnnotationMetadata source = type == null ? null : new KnownType(type);
-        return new CdiQualifier(bindingOf(name, written.getValues(), members), written, source, null);
+        return of(written, type == null ? null : new KnownType(type), null);
     }
 
     /**
@@ -321,7 +352,7 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        return new CdiQualifier(bindingOf(name, value.getValues(), nonbindingOf(name, null, null)), value, null, null);
+        return of(value, null, null);
     }
 
     /**
@@ -346,7 +377,7 @@ public final class CdiQualifier {
         }
         if (annotation instanceof Named named) {
             return new CdiQualifier(AnnotationValue.builder(Named.class).value(named.value()).build(),
-                null, null, annotation);
+                null, Set.of(), null, annotation);
         }
         // the qualifiers the container itself fires its lifecycle events with, read through their own interface
         if (annotation instanceof jakarta.enterprise.context.Initialized initialized) {
@@ -362,19 +393,17 @@ public final class CdiQualifier {
         String name = type.getName();
         BindingTypes.BindingType recorded = BindingTypes.of(name);
         if (recorded != null && recorded.isMarker()) {
-            return new CdiQualifier(new AnnotationValue<>(name), null, null, annotation);
+            return new CdiQualifier(new AnnotationValue<>(name), null, Set.of(), null, annotation);
         }
         CdiReflection reflection = CdiReflection.current("Reading the members of the annotation instance "
             + annotation + " (" + SELECT_BY_VALUE + ")");
-        AnnotationValue<?> values = reflection.valuesOf(annotation);
-        return new CdiQualifier(bindingOf(name, values.getValues(), nonbindingOf(name, null, type)),
-            values, null, annotation);
+        return of(reflection.valuesOf(annotation), null, annotation);
     }
 
     private static CdiQualifier scoped(Class<? extends Annotation> type, Class<? extends Annotation> scope,
                                        Annotation annotation) {
         return new CdiQualifier(AnnotationValue.builder(type)
-            .member("value", scope).build(), null, null, annotation);
+            .member("value", scope).build(), null, Set.of(), null, annotation);
     }
 
     /**
@@ -557,39 +586,31 @@ public final class CdiQualifier {
     }
 
     /**
-     * The members of an annotation type that take no part in resolution: the ones recorded while the
-     * application compiled, the ones an extension excluded, and - for a type nothing was recorded of - the
-     * ones the annotation class marks, where the module that reads classes is there to say.
+     * A qualifier of the values it was written with, the members it lists under {@code $nonBinding} taking no
+     * part in resolution.
      */
-    private static Set<String> nonbindingOf(String name, @Nullable AnnotationMetadata metadata,
-                                            @Nullable Class<? extends Annotation> type) {
-        BindingTypes.BindingType recorded = BindingTypes.of(name);
-        if (recorded != null) {
-            return recorded.nonbinding();
-        }
-        Class<? extends Annotation> resolved = type;
-        if (resolved == null && metadata != null) {
-            resolved = metadata.getAnnotationType(name).orElse(null);
-        }
-        if (resolved == null) {
-            return Set.of();
-        }
-        io.micronaut.context.BeanContext context = CdiRunning.currentContext();
-        CdiReflection reflection = context == null ? null : context.findBean(CdiReflection.class).orElse(null);
-        return reflection == null ? Set.of() : reflection.nonbindingMembersOf(resolved);
-    }
-
-    private static AnnotationValue<?> bindingOf(String name, Map<CharSequence, Object> values, Set<String> nonbinding) {
+    private static CdiQualifier of(AnnotationValue<?> written, @Nullable AnnotationMetadata source,
+                                   @Nullable Annotation instance) {
+        String name = written.getAnnotationName();
+        Map<CharSequence, Object> values = written.getValues();
         if (values.isEmpty()) {
-            return new AnnotationValue<>(name);
+            return new CdiQualifier(new AnnotationValue<>(name), written, Set.of(), source, instance);
+        }
+        Set<String> nonbinding = new LinkedHashSet<>();
+        for (String member : written.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
+            if (!member.startsWith("$")) {
+                nonbinding.add(member);
+            }
         }
         Map<CharSequence, Object> binding = new LinkedHashMap<>(values);
         binding.keySet().removeIf(member -> {
             String memberName = member.toString();
-            return memberName.startsWith("$") || nonbinding.contains(memberName)
-                || ExtensionQualifiers.isNonbindingMember(name, memberName);
+            // a member Micronaut keeps for itself, the list of non-binding members among them, is not one of the
+            // annotation's
+            return memberName.startsWith("$") || nonbinding.contains(memberName);
         });
-        return new AnnotationValue<>(name, binding);
+        return new CdiQualifier(new AnnotationValue<>(name, binding), written, Set.copyOf(nonbinding), source,
+            instance);
     }
 
     @Override

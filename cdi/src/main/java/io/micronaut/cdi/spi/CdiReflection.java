@@ -61,7 +61,8 @@ public interface CdiReflection {
 
     /**
      * The values an annotation instance holds, every member among them, in the form compiled metadata records
-     * an annotation in.
+     * an annotation in: the members its type marks {@code Nonbinding} are listed under {@code $nonBinding}, as
+     * the processor lists them on a compiled qualifier.
      *
      * @param annotation The annotation instance
      * @return Its values

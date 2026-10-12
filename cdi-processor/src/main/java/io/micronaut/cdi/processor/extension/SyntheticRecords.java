@@ -23,8 +23,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerInfo;
 import jakarta.enterprise.lang.model.AnnotationInfo;
@@ -51,8 +49,6 @@ import java.util.Map;
  */
 @Internal
 final class SyntheticRecords {
-
-    private static final String NONBINDING = "jakarta.enterprise.util.Nonbinding";
 
     private SyntheticRecords() {
     }
@@ -129,36 +125,6 @@ final class SyntheticRecords {
         Map<CharSequence, Object> values = new LinkedHashMap<>(annotation.getValues());
         context.getAnnotationDefaultValues(annotation.getAnnotationName()).forEach(values::putIfAbsent);
         return new AnnotationValue<>(annotation.getAnnotationName(), values);
-    }
-
-    /**
-     * The members of an annotation that take no part in resolution (section 2.2.3), each as
-     * {@code annotationName#memberName}: the ones the annotation interface marks, and the ones an extension
-     * marked during discovery.
-     *
-     * @param context    The compilation
-     * @param discovered What the discovery phase said
-     * @param annotation The annotation name
-     * @return The non-binding members
-     */
-    static List<String> nonbindingMembersOf(VisitorContext context, DiscoveredClasses discovered, String annotation) {
-        List<String> members = new ArrayList<>();
-        ClassElement declaration = context.getClassElement(annotation).orElse(null);
-        if (declaration != null) {
-            for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-                if (member.hasAnnotation(NONBINDING)) {
-                    members.add(annotation + "#" + member.getName());
-                }
-            }
-        }
-        discovered.memberAnnotationsFor(annotation).forEach((member, annotations) -> {
-            for (AnnotationValue<?> added : annotations) {
-                if (NONBINDING.equals(added.getAnnotationName()) && !members.contains(annotation + "#" + member)) {
-                    members.add(annotation + "#" + member);
-                }
-            }
-        });
-        return members;
     }
 
     /**

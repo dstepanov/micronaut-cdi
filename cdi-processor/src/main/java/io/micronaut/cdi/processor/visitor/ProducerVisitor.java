@@ -23,6 +23,7 @@ import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.ReflectiveAccess;
@@ -583,7 +584,18 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             }
             AnnotationValue<?> annotation = element.getAnnotation(name);
             if (annotation != null) {
-                qualifiers.put(name, annotation.getValues());
+                // a member that takes no part in resolution binds a disposer no more than it does a bean, and the
+                // list of them is not a member of the annotation
+                java.util.List<String> nonbinding =
+                    java.util.Arrays.asList(annotation.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE));
+                Map<CharSequence, Object> binding = new TreeMap<>(java.util.Comparator.comparing(CharSequence::toString));
+                annotation.getValues().forEach((member, value) -> {
+                    String memberName = member.toString();
+                    if (!memberName.startsWith("$") && !nonbinding.contains(memberName)) {
+                        binding.put(memberName, value);
+                    }
+                });
+                qualifiers.put(name, binding);
             }
         }
         return qualifiers;

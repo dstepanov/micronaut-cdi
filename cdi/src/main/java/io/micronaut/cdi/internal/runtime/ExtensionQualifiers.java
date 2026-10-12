@@ -31,31 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ExtensionQualifiers {
 
     private static final java.util.Map<String, Integer> NAMES = new ConcurrentHashMap<>();
-    private static final java.util.Map<String, Integer> NONBINDING_MEMBERS = new ConcurrentHashMap<>();
 
     private ExtensionQualifiers() {
-    }
-
-    /**
-     * Whether an extension excluded the member from the comparison of the annotation, the way
-     * {@code jakarta.enterprise.util.Nonbinding} does.
-     *
-     * @param annotationName The annotation's name
-     * @param memberName     The member's name
-     * @return Whether the member is excluded
-     */
-    public static boolean isNonbindingMember(String annotationName, String memberName) {
-        return NONBINDING_MEMBERS.containsKey(annotationName + "#" + memberName);
-    }
-
-    /**
-     * Remembers a member an extension excluded from comparison.
-     *
-     * @param annotationName The annotation's name
-     * @param memberName     The member's name
-     */
-    public static void registerNonbindingMember(String annotationName, String memberName) {
-        NONBINDING_MEMBERS.merge(annotationName + "#" + memberName, 1, Integer::sum);
     }
 
     /**
@@ -66,17 +43,6 @@ public final class ExtensionQualifiers {
      */
     public static void deregister(String name) {
         NAMES.computeIfPresent(name, (key, count) -> count > 1 ? count - 1 : null);
-    }
-
-    /**
-     * Forgets one container's nonbinding-member registration.
-     *
-     * @param annotationName The qualifier annotation's name
-     * @param memberName     The member's name
-     */
-    public static void deregisterNonbindingMember(String annotationName, String memberName) {
-        NONBINDING_MEMBERS.computeIfPresent(annotationName + "#" + memberName,
-            (key, count) -> count > 1 ? count - 1 : null);
     }
 
     /**

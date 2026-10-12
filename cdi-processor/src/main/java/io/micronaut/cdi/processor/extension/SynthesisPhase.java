@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -218,7 +219,7 @@ final class SynthesisPhase {
     }
 
     private AnnotationValue<CdiSyntheticBean> recordOf(RecordingBeanBuilder<?> bean) {
-        List<AnnotationValue<?>> qualifiers = new ArrayList<>(bean.qualifiers());
+        List<AnnotationValue<?>> qualifiers = completed(bean.qualifiers());
         if (qualifiers.isEmpty()) {
             // a bean that names no qualifier has the default one, which the rule of section 2.1.3 says of a
             // bean an extension describes as much as of one a class declares
@@ -229,8 +230,7 @@ final class SynthesisPhase {
             .member("implementation", new AnnotationClassValue<>(bean.implementation().getName()))
             .member("types", classValues(bean.types()))
             .member(CdiSyntheticBean.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]))
-            .member("qualifierTypes", typesOf(qualifiers))
-            .member("nonbinding", nonbindingOf(qualifiers));
+            .member("qualifierTypes", typesOf(qualifiers));
         Scope scope = scopeOf(bean);
         if (scope.annotation() != null) {
             record.member("scope", new AnnotationClassValue<>(scope.name())).member("normal", scope.normal());
@@ -265,9 +265,9 @@ final class SynthesisPhase {
             .member(CdiSyntheticObserver.EVENT_TYPE, observer.recordedEventType())
             .member("priority", observer.priority());
         if (!observer.qualifiers().isEmpty()) {
-            record.member(CdiSyntheticObserver.QUALIFIERS, observer.qualifiers().toArray(new AnnotationValue<?>[0]));
-            record.member("qualifierTypes", typesOf(observer.qualifiers()));
-            record.member("nonbinding", nonbindingOf(observer.qualifiers()));
+            List<AnnotationValue<?>> qualifiers = completed(observer.qualifiers());
+            record.member(CdiSyntheticObserver.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]));
+            record.member("qualifierTypes", typesOf(qualifiers));
         }
         if (observer.async()) {
             record.member("async", true);
@@ -279,12 +279,17 @@ final class SynthesisPhase {
         return record.build();
     }
 
-    private String[] nonbindingOf(List<AnnotationValue<?>> qualifiers) {
-        List<String> nonbinding = new ArrayList<>();
+    /**
+     * The qualifiers an extension gave a component, each with the members that take no part in resolution listed
+     * under {@code $nonBinding}, as the compiler lists them on a qualifier it reads: the members the annotation
+     * interface marks, and the ones an extension marked during discovery.
+     */
+    private List<AnnotationValue<?>> completed(List<AnnotationValue<?>> qualifiers) {
+        List<AnnotationValue<?>> completed = new ArrayList<>(qualifiers.size());
         for (AnnotationValue<?> qualifier : qualifiers) {
-            nonbinding.addAll(SyntheticRecords.nonbindingMembersOf(context, discovered, qualifier.getAnnotationName()));
+            completed.add(NonbindingMembersRemapper.complete(qualifier, context, discovered));
         }
-        return nonbinding.toArray(new String[0]);
+        return completed;
     }
 
     private static AnnotationClassValue<?>[] typesOf(List<AnnotationValue<?>> annotations) {

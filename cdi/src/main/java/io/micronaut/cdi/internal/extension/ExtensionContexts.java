@@ -59,7 +59,6 @@ public final class ExtensionContexts {
     private final Set<String> normalScopes = new LinkedHashSet<>();
 
     private final List<String> registeredQualifiers = new ArrayList<>();
-    private final List<String[]> registeredNonbindingMembers = new ArrayList<>();
 
     public ExtensionContexts(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -70,9 +69,6 @@ public final class ExtensionContexts {
         // this container's say is withdrawn: another container that registered the same names keeps its own
         for (String name : registeredQualifiers) {
             io.micronaut.cdi.internal.runtime.ExtensionQualifiers.deregister(name);
-        }
-        for (String[] member : registeredNonbindingMembers) {
-            io.micronaut.cdi.internal.runtime.ExtensionQualifiers.deregisterNonbindingMember(member[0], member[1]);
         }
     }
 
@@ -94,17 +90,11 @@ public final class ExtensionContexts {
                 definition.getAnnotationMetadata()
                     .getAnnotation(io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.class);
             if (qualifiers != null) {
-                for (String entry : qualifiers.stringValues()) {
-                    String[] parts = entry.split("\\|", -1);
-                    io.micronaut.cdi.internal.runtime.ExtensionQualifiers.register(parts[0]);
-                    registeredQualifiers.add(parts[0]);
-                    if (parts.length > 1 && !parts[1].isEmpty()) {
-                        for (String member : parts[1].split(";")) {
-                            io.micronaut.cdi.internal.runtime.ExtensionQualifiers
-                                .registerNonbindingMember(parts[0], member);
-                            registeredNonbindingMembers.add(new String[] {parts[0], member});
-                        }
-                    }
+                // the members an extension marked non-binding are listed on every occurrence of the qualifier
+                // the processor compiled: the record says which annotations are qualifiers, and nothing more
+                for (String qualifierName : qualifiers.stringValues()) {
+                    io.micronaut.cdi.internal.runtime.ExtensionQualifiers.register(qualifierName);
+                    registeredQualifiers.add(qualifierName);
                 }
             }
             if (definition.getAnnotationMetadata()

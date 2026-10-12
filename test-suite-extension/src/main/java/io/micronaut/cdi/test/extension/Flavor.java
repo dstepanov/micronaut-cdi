@@ -15,13 +15,15 @@
  */
 package io.micronaut.cdi.test.extension;
 
+import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Qualifier;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * A qualifier with a member that takes part in resolution, for the tests that read member values back.
+ * A qualifier with a member that takes part in resolution, for the tests that read member values back, and one that
+ * does not.
  */
 @Qualifier
 @Retention(RetentionPolicy.RUNTIME)
@@ -35,19 +37,44 @@ public @interface Flavor {
     String value();
 
     /**
+     * A note that takes no part in resolution.
+     *
+     * @return The note
+     */
+    @Nonbinding String note() default "";
+
+    /**
      * The literal, for building instances at runtime.
      */
     final class Literal extends jakarta.enterprise.util.AnnotationLiteral<Flavor> implements Flavor {
 
         private final String value;
+        private final String note;
 
+        /**
+         * @param value The flavour
+         */
         public Literal(String value) {
+            this(value, "");
+        }
+
+        /**
+         * @param value The flavour
+         * @param note  The note
+         */
+        public Literal(String value, String note) {
             this.value = value;
+            this.note = note;
         }
 
         @Override
         public String value() {
             return value;
+        }
+
+        @Override
+        public String note() {
+            return note;
         }
     }
 }

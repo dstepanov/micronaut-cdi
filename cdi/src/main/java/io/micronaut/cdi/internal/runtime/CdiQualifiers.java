@@ -25,10 +25,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,13 +50,12 @@ public final class CdiQualifiers {
      * values its qualifiers were recorded with while the application compiled. It describes the bean, the way
      * Micronaut keys a registration by it; a lookup of the bean resolves by {@link CdiBeanQualifier}.
      *
-     * @param qualifiers The qualifiers, each as the values it was written with
-     * @param nonbinding The members that take no part in resolution, each as {@code annotationName#memberName}
+     * @param qualifiers The qualifiers, each as the values it was written with, the members that take no part in
+     *                   resolution listed under {@code $nonBinding}
      * @param <T>        The bean type
      * @return The qualifier, or {@code null} when every bean of the type qualifies
      */
-    public static <T> @Nullable Qualifier<T> declaredQualifierOf(List<? extends AnnotationValue<?>> qualifiers,
-                                                                 Set<String> nonbinding) {
+    public static <T> @Nullable Qualifier<T> declaredQualifierOf(List<? extends AnnotationValue<?>> qualifiers) {
         List<Qualifier<T>> resolved = new ArrayList<>(qualifiers.size());
         for (AnnotationValue<?> qualifier : qualifiers) {
             String name = qualifier.getAnnotationName();
@@ -69,12 +66,9 @@ public final class CdiQualifiers {
                 resolved.add(Qualifiers.byName(qualifier.stringValue().orElse("")));
                 continue;
             }
-            Map<CharSequence, Object> binding = new LinkedHashMap<>(qualifier.getValues());
-            binding.keySet().removeIf(member -> nonbinding.contains(name + "#" + member)
-                || ExtensionQualifiers.isNonbindingMember(name, member.toString()));
             @SuppressWarnings("unchecked")
             Qualifier<T> byValues = (Qualifier<T>) Qualifiers.byAnnotation(
-                AnnotationMetadata.EMPTY_METADATA, new AnnotationValue<>(name, binding));
+                AnnotationMetadata.EMPTY_METADATA, CdiQualifier.ofValue(qualifier).binding());
             resolved.add(byValues);
         }
         if (resolved.isEmpty()) {

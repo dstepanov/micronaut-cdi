@@ -18,6 +18,7 @@ package io.micronaut.cdi.reflection;
 import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;
@@ -38,8 +39,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -255,7 +258,15 @@ public final class ReflectiveCdi implements CdiReflection {
 
     @Override
     public AnnotationValue<?> valuesOf(Annotation annotation) {
-        return AnnotationValue.of(annotation);
+        AnnotationValue<?> values = AnnotationValue.of(annotation);
+        Set<String> nonbinding = nonbindingMembersOf(annotation.annotationType());
+        if (nonbinding.isEmpty()) {
+            return values;
+        }
+        // listed the way the processor lists them on a compiled qualifier, the attribute naming itself
+        List<String> listed = new ArrayList<>(nonbinding);
+        listed.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+        return values.mutate().member(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(new String[0])).build();
     }
 
     @Override

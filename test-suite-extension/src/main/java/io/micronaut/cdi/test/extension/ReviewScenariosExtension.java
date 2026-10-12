@@ -25,6 +25,7 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.util.Nonbinding;
 
 /**
  * The synthetic beans the review scenarios read back: a request scoped one, a selected and an unselected
@@ -33,7 +34,8 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 public final class ReviewScenariosExtension implements BuildCompatibleExtension {
 
     /**
-     * Makes {@link Zesty} a qualifier, though nothing on the annotation says so.
+     * Makes {@link Zesty} and {@link Ripe} qualifiers, though nothing on the annotations says so, and leaves the note
+     * of a {@link Ripe} out of its comparison.
      *
      * @param meta What the discovery phase may register
      */
@@ -41,6 +43,9 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
     public void zestyIsAQualifier(MetaAnnotations meta) {
         meta.addQualifier(Zesty.class);
         meta.addQualifier(Zesty.Nested.class);
+        meta.addQualifier(Ripe.class).methods().stream()
+            .filter(member -> member.info().name().equals("note"))
+            .forEach(member -> member.addAnnotation(Nonbinding.class));
     }
 
     /**
