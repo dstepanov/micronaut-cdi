@@ -55,13 +55,15 @@ public final class CdiAssignability {
      * Whether a bean with the given types and qualifiers is eligible for an injection point of the given required
      * type and qualifiers.
      *
+     * @param types              What the application was compiled with
      * @param beanTypes          The bean types of the bean
      * @param beanQualifiers     The qualifiers of the bean
      * @param requiredType       The required type of the injection point
      * @param requiredQualifiers The required qualifiers of the injection point
      * @return Whether the bean is eligible
      */
-    public static boolean isMatchingBean(Set<Type> beanTypes,
+    public static boolean isMatchingBean(CompiledAnnotationTypes types,
+                                         Set<Type> beanTypes,
                                          Set<Annotation> beanQualifiers,
                                          Type requiredType,
                                          Set<Annotation> requiredQualifiers) {
@@ -69,8 +71,8 @@ public final class CdiAssignability {
         requireNonNull(beanQualifiers, "The bean qualifiers");
         requireNonNull(requiredType, "The required type");
         requireNonNull(requiredQualifiers, "The required qualifiers");
-        requireQualifiers(beanQualifiers);
-        requireQualifiers(requiredQualifiers);
+        requireQualifiers(types, beanQualifiers);
+        requireQualifiers(types, requiredQualifiers);
         Argument<?> required = SpecificationTypes.argumentOf(requiredType);
         requireNoTypeVariable(required);
         // a type that is not a legal bean type — one with a wildcard in it — is passed over rather than
@@ -81,8 +83,8 @@ public final class CdiAssignability {
         // the rule of section 2.1.3, applied to the given sets: every bean has Any, and one that names nothing
         // beyond Any and a name has the default qualifier; an injection point that names no qualifier is
         // looking for the default one
-        return areQualifiersMatching(CdiQualifier.ofInstances(beanQualifiers),
-            CdiQualifier.ofInstances(requiredQualifiers));
+        return areQualifiersMatching(CdiQualifier.ofInstances(types, beanQualifiers),
+            CdiQualifier.ofInstances(types, requiredQualifiers));
     }
 
     /**
@@ -142,9 +144,9 @@ public final class CdiAssignability {
         }
     }
 
-    private static void requireQualifiers(Set<Annotation> qualifiers) {
+    private static void requireQualifiers(CompiledAnnotationTypes types, Set<Annotation> qualifiers) {
         for (Annotation qualifier : qualifiers) {
-            if (!CdiQualifier.isQualifierType(qualifier.annotationType())) {
+            if (!CdiQualifier.isQualifierType(types, qualifier.annotationType())) {
                 throw new IllegalArgumentException(qualifier.annotationType().getName() + " is not a qualifier");
             }
         }
@@ -158,13 +160,15 @@ public final class CdiAssignability {
      * qualifiers: the observer is notified when the qualifiers it observes are among the ones the event was fired
      * with, rather than the other way round.</p>
      *
+     * @param types                   What the application was compiled with
      * @param specifiedType           The type of the event
      * @param specifiedQualifiers     The qualifiers of the event
      * @param observedEventType       The type the observer observes
      * @param observedEventQualifiers The qualifiers the observer observes
      * @return Whether the observer is notified
      */
-    public static boolean isMatchingEvent(Type specifiedType,
+    public static boolean isMatchingEvent(CompiledAnnotationTypes types,
+                                          Type specifiedType,
                                           Set<Annotation> specifiedQualifiers,
                                           Type observedEventType,
                                           Set<Annotation> observedEventQualifiers) {
@@ -172,8 +176,8 @@ public final class CdiAssignability {
         requireNonNull(specifiedQualifiers, "The event qualifiers");
         requireNonNull(observedEventType, "The observed type");
         requireNonNull(observedEventQualifiers, "The observed qualifiers");
-        requireQualifiers(specifiedQualifiers);
-        requireQualifiers(observedEventQualifiers);
+        requireQualifiers(types, specifiedQualifiers);
+        requireQualifiers(types, observedEventQualifiers);
         Argument<?> specified = SpecificationTypes.argumentOf(specifiedType);
         requireNoTypeVariable(specified);
         if (CdiTypes.isParameterized(specified)) {
@@ -190,8 +194,8 @@ public final class CdiAssignability {
             return false;
         }
         // the qualifiers an event was fired with always include Any
-        return areEventQualifiersMatching(CdiQualifier.ofInstances(specifiedQualifiers),
-            CdiQualifier.ofInstances(observedEventQualifiers));
+        return areEventQualifiersMatching(CdiQualifier.ofInstances(types, specifiedQualifiers),
+            CdiQualifier.ofInstances(types, observedEventQualifiers));
     }
 
     /**

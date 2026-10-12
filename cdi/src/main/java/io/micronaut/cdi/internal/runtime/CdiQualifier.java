@@ -363,12 +363,13 @@ public final class CdiQualifier {
      * Anything else is read member by member, which is reflection, and is asked of the module that does
      * it.</p>
      *
+     * @param types      What the application was compiled with
      * @param annotation The annotation
      * @return The qualifier
      * @throws UnsupportedOperationException Where the annotation has to be read and the reflection module is
      *                                       absent
      */
-    public static CdiQualifier ofInstance(Annotation annotation) {
+    public static CdiQualifier ofInstance(CompiledAnnotationTypes types, Annotation annotation) {
         if (annotation instanceof Any) {
             return ANY;
         }
@@ -389,10 +390,8 @@ public final class CdiQualifier {
         if (annotation instanceof jakarta.enterprise.context.Destroyed destroyed) {
             return scoped(jakarta.enterprise.context.Destroyed.class, destroyed.value(), annotation);
         }
-        Class<? extends Annotation> type = annotation.annotationType();
-        String name = type.getName();
-        BindingTypes.BindingType recorded = BindingTypes.of(name);
-        if (recorded != null && recorded.isMarker()) {
+        String name = annotation.annotationType().getName();
+        if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, Set.of(), null, annotation);
         }
         CdiReflection reflection = CdiReflection.current("Reading the members of the annotation instance "
@@ -409,13 +408,14 @@ public final class CdiQualifier {
     /**
      * The qualifiers a program handed over as annotation instances.
      *
+     * @param types       What the application was compiled with
      * @param annotations The annotations
      * @return The qualifiers
      */
-    public static List<CdiQualifier> ofInstances(Annotation... annotations) {
+    public static List<CdiQualifier> ofInstances(CompiledAnnotationTypes types, Annotation... annotations) {
         List<CdiQualifier> qualifiers = new ArrayList<>(annotations.length);
         for (Annotation annotation : annotations) {
-            qualifiers.add(ofInstance(annotation));
+            qualifiers.add(ofInstance(types, annotation));
         }
         return qualifiers;
     }
@@ -423,13 +423,14 @@ public final class CdiQualifier {
     /**
      * The qualifiers a program handed over as annotation instances.
      *
+     * @param types       What the application was compiled with
      * @param annotations The annotations
      * @return The qualifiers
      */
-    public static List<CdiQualifier> ofInstances(Collection<Annotation> annotations) {
+    public static List<CdiQualifier> ofInstances(CompiledAnnotationTypes types, Collection<Annotation> annotations) {
         List<CdiQualifier> qualifiers = new ArrayList<>(annotations.size());
         for (Annotation annotation : annotations) {
-            qualifiers.add(ofInstance(annotation));
+            qualifiers.add(ofInstance(types, annotation));
         }
         return qualifiers;
     }
@@ -492,11 +493,12 @@ public final class CdiQualifier {
      * Whether the annotation type is a qualifier, from what the application was compiled with where that
      * answers, and from the annotation class otherwise.
      *
-     * @param type The annotation type
+     * @param types What the application was compiled with
+     * @param type  The annotation type
      * @return Whether it is a qualifier
      */
-    public static boolean isQualifierType(Class<? extends Annotation> type) {
-        Boolean known = isKnownQualifier(type.getName());
+    public static boolean isQualifierType(CompiledAnnotationTypes types, Class<? extends Annotation> type) {
+        Boolean known = isKnownQualifier(types, type.getName());
         if (known != null) {
             return known;
         }
@@ -508,27 +510,28 @@ public final class CdiQualifier {
      * Whether the annotation type of the given name is a qualifier, as far as what the application was compiled
      * with says.
      *
-     * @param name The annotation type name
-     * @return Whether it is, or {@code null} where nothing was recorded of the type
+     * @param types What the application was compiled with
+     * @param name  The annotation type name
+     * @return Whether it is, or {@code null} where nothing was compiled of the type
      */
-    public static @Nullable Boolean isKnownQualifier(String name) {
-        if (DEFAULT_NAME.equals(name) || ANY_NAME.equals(name) || NAMED_NAME.equals(name)
-            || ExtensionQualifiers.isKnownQualifier(name)) {
+    public static @Nullable Boolean isKnownQualifier(CompiledAnnotationTypes types, String name) {
+        if (DEFAULT_NAME.equals(name) || ANY_NAME.equals(name) || NAMED_NAME.equals(name)) {
             return true;
         }
-        BindingTypes.BindingType recorded = BindingTypes.of(name);
-        return recorded == null ? null : recorded.qualifier();
+        return types.isQualifier(name);
     }
 
     /**
      * Checks what the specification requires of the qualifiers a lookup or a selection names: each is a
      * qualifier, and no qualifier type is named twice unless it is repeatable.
      *
+     * @param types   What the application was compiled with
      * @param already The qualifiers named before
      * @param given   The qualifiers named now
      * @throws IllegalArgumentException Where one is not a qualifier, or is given twice
      */
-    public static void requireWellFormed(Collection<CdiQualifier> already, Collection<CdiQualifier> given) {
+    public static void requireWellFormed(CompiledAnnotationTypes types, Collection<CdiQualifier> already,
+                                         Collection<CdiQualifier> given) {
         Set<String> seen = new LinkedHashSet<>();
         for (CdiQualifier qualifier : already) {
             seen.add(qualifier.name());
@@ -536,26 +539,29 @@ public final class CdiQualifier {
         for (CdiQualifier qualifier : given) {
             String name = qualifier.name();
             Annotation supplied = qualifier.instance;
-            Boolean known = isKnownQualifier(name);
+            Boolean known = isKnownQualifier(types, name);
             if (known == null && supplied != null) {
-                known = isQualifierType(supplied.annotationType());
+                known = isQualifierType(types, supplied.annotationType());
             }
             if (known == null || !known) {
                 throw new IllegalArgumentException(name + " is not a qualifier"
                     + (known == null ? ": the application was not compiled with it as one" : ""));
             }
-            if (!seen.add(name) && !isRepeatable(name, supplied)) {
+            if (!seen.add(name) && !isRepeatable(types, name, supplied)) {
                 throw new IllegalArgumentException("The qualifier " + name + " is given twice");
             }
         }
     }
 
-    private static boolean isRepeatable(String name, @Nullable Annotation supplied) {
-        BindingTypes.BindingType recorded = BindingTypes.of(name);
-        if (recorded != null) {
-            return recorded.repeatable();
+    private static boolean isRepeatable(CompiledAnnotationTypes types, String name, @Nullable Annotation supplied) {
+        if (DEFAULT_NAME.equals(name) || ANY_NAME.equals(name) || NAMED_NAME.equals(name)) {
+            return false;
         }
-        if (DEFAULT_NAME.equals(name) || ANY_NAME.equals(name) || NAMED_NAME.equals(name) || supplied == null) {
+        Boolean recorded = types.isRepeatable(name);
+        if (recorded != null) {
+            return recorded;
+        }
+        if (supplied == null) {
             return false;
         }
         return CdiReflection.current("Whether the qualifier " + name + ", which the application was not compiled "
@@ -565,17 +571,18 @@ public final class CdiQualifier {
     /**
      * Whether a qualifier type is retained at runtime, which one that qualifies an event has to be.
      *
+     * @param types     What the application was compiled with
      * @param qualifier The qualifier
      * @return Whether it is retained
      */
-    public static boolean isRetainedAtRuntime(CdiQualifier qualifier) {
+    public static boolean isRetainedAtRuntime(CompiledAnnotationTypes types, CdiQualifier qualifier) {
         String name = qualifier.name();
         if (DEFAULT_NAME.equals(name) || ANY_NAME.equals(name) || NAMED_NAME.equals(name)) {
             return true;
         }
-        BindingTypes.BindingType recorded = BindingTypes.of(name);
+        Boolean recorded = types.isRetainedAtRuntime(name);
         if (recorded != null) {
-            return recorded.runtime();
+            return recorded;
         }
         Annotation supplied = qualifier.instance;
         if (supplied == null) {

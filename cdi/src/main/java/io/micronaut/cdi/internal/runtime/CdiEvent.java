@@ -52,13 +52,13 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
 
     public CdiEvent(ObserverRegistry registry, Argument<T> type, Set<Annotation> qualifiers) {
-        this(registry, type, CdiQualifier.ofInstances(qualifiers), null);
+        this(registry, type, CdiQualifier.ofInstances(registry.types(), qualifiers), null);
     }
 
     public CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, Set<Annotation> qualifiers,
                     jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
         this(registry, io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(type),
-            CdiQualifier.ofInstances(qualifiers), injectedAt);
+            CdiQualifier.ofInstances(registry.types(), qualifiers), injectedAt);
     }
 
     CdiEvent(ObserverRegistry registry, Argument<?> type, java.util.List<CdiQualifier> qualifiers,
@@ -122,19 +122,19 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     @Override
     public io.micronaut.cdi.MicronautEvent<T> select(Annotation... qualifiers) {
         // the type stays what it was selected as: a selection of qualifiers says nothing of the type
-        return new CdiEvent<>(registry, type, and(CdiQualifier.ofInstances(qualifiers)), injectedAt, exact);
+        return new CdiEvent<>(registry, type, and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt, exact);
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiEvent<>(registry, Argument.of(subtype), and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
+        return new CdiEvent<>(registry, Argument.of(subtype), and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt);
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
         Argument<?> selected = io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(subtype.getType());
         requireNoTypeVariable(selected);
-        return new CdiEvent<>(registry, selected, and(CdiQualifier.ofInstances(qualifiers)), injectedAt);
+        return new CdiEvent<>(registry, selected, and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt);
     }
 
     @Override
@@ -170,10 +170,10 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     }
 
     private java.util.List<CdiQualifier> and(java.util.List<CdiQualifier> more) {
-        CdiQualifier.requireWellFormed(qualifiers, more);
+        CdiQualifier.requireWellFormed(registry.types(), qualifiers, more);
         java.util.List<CdiQualifier> all = new java.util.ArrayList<>(qualifiers);
         for (CdiQualifier qualifier : more) {
-            if (!CdiQualifier.isRetainedAtRuntime(qualifier)) {
+            if (!CdiQualifier.isRetainedAtRuntime(registry.types(), qualifier)) {
                 throw new IllegalArgumentException("The qualifier " + qualifier.name()
                     + " is not retained at runtime, and cannot qualify an event");
             }

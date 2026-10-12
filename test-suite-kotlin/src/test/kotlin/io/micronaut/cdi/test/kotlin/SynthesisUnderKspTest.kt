@@ -1,7 +1,6 @@
 package io.micronaut.cdi.test.kotlin
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer
-import io.micronaut.cdi.internal.runtime.ExtensionQualifiers
 import io.micronaut.cdi.test.PlainScannedBean
 import io.micronaut.cdi.test.extension.Zesty
 import io.micronaut.cdi.spi.CdiReflection
@@ -50,7 +49,7 @@ class SynthesisUnderKspTest {
         ApplicationContext.run().use { context ->
             val container = context.getBean(CdiBeanContainer::class.java)
             assertEquals(1, container.getBeans(PlainScannedBean.Nested::class.java).size)
-            assertTrue(ExtensionQualifiers.isKnownQualifier(Zesty.Nested::class.java.name))
+            assertTrue(container.isQualifier(Zesty.Nested::class.java))
         }
     }
 

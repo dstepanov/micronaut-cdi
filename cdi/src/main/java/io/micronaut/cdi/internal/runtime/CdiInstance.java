@@ -62,7 +62,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     private final io.micronaut.context.@Nullable Qualifier<?> narrowedBy;
 
     public CdiInstance(BeanContext beanContext, Argument<T> type, Annotation... qualifiers) {
-        this(beanContext, null, type, CdiQualifier.ofInstances(qualifiers));
+        this(beanContext, null, type, CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers));
     }
 
     CdiInstance(BeanContext beanContext,
@@ -88,20 +88,20 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(Annotation... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, type,
-            and(CdiQualifier.ofInstances(qualifiers)));
+            and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, Argument.of(subtype),
-            and(CdiQualifier.ofInstances(qualifiers)));
+            and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype,
                                                                       Annotation... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy,
-            CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(qualifiers)));
+            CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
@@ -182,7 +182,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     }
 
     private List<CdiQualifier> and(List<CdiQualifier> more) {
-        CdiQualifier.requireWellFormed(qualifiers, more);
+        CdiQualifier.requireWellFormed(CompiledAnnotationTypes.of(beanContext), qualifiers, more);
         List<CdiQualifier> all = new ArrayList<>(qualifiers.size() + more.size());
         all.addAll(qualifiers);
         all.addAll(more);

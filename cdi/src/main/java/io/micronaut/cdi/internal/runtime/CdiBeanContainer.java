@@ -200,7 +200,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return getBeans(beanType, wellFormed(CdiQualifier.ofInstances(qualifiers)));
+        return getBeans(beanType, wellFormed(CdiQualifier.ofInstances(types(), qualifiers)));
     }
 
     @Override
@@ -311,9 +311,16 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * What the specification requires of the qualifiers a lookup names: each is a qualifier, and no qualifier
      * type is named twice unless it is repeatable.
      */
-    private static List<CdiQualifier> wellFormed(List<CdiQualifier> qualifiers) {
-        CdiQualifier.requireWellFormed(List.of(), qualifiers);
+    private List<CdiQualifier> wellFormed(List<CdiQualifier> qualifiers) {
+        CdiQualifier.requireWellFormed(types(), List.of(), qualifiers);
         return qualifiers;
+    }
+
+    /**
+     * What the application was compiled with of each qualifier and interceptor binding type.
+     */
+    private CompiledAnnotationTypes types() {
+        return CompiledAnnotationTypes.of(beanContext);
     }
 
     /**
@@ -530,7 +537,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, Annotation... qualifiers) {
-        return resolveObserverMethods(event, wellFormed(CdiQualifier.ofInstances(qualifiers)));
+        return resolveObserverMethods(event, wellFormed(CdiQualifier.ofInstances(types(), qualifiers)));
     }
 
     @Override
@@ -605,12 +612,12 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * Whether an interceptor is bound by the given bindings: every binding the interceptor declares has an
      * equivalent among them.
      */
-    private static boolean isBoundBy(CdiInterceptor<?> interceptor, Annotation[] interceptorBindings) {
+    private boolean isBoundBy(CdiInterceptor<?> interceptor, Annotation[] interceptorBindings) {
         List<CdiQualifier> declared = interceptor.bindings();
         if (declared.isEmpty()) {
             return false;
         }
-        List<CdiQualifier> given = CdiQualifier.ofInstances(interceptorBindings);
+        List<CdiQualifier> given = CdiQualifier.ofInstances(types(), interceptorBindings);
         for (CdiQualifier binding : declared) {
             if (!binding.isAmong(given)) {
                 return false;
@@ -667,7 +674,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     public boolean isQualifier(Class<? extends Annotation> annotationType) {
         // the qualifiers of the specification, and the ones the beans of the application were compiled with —
         // an annotation the discovery phase registered as a qualifier among them, though nothing on it says so
-        Boolean known = CdiQualifier.isKnownQualifier(annotationType.getName());
+        Boolean known = CdiQualifier.isKnownQualifier(types(), annotationType.getName());
         if (known != null) {
             return known;
         }
@@ -686,9 +693,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
-        BindingTypes.BindingType recorded = BindingTypes.of(annotationType.getName());
+        Boolean recorded = types().isInterceptorBinding(annotationType.getName());
         if (recorded != null) {
-            return recorded.binding();
+            return recorded;
         }
         return reflection("BeanContainer.isInterceptorBinding", annotationType)
             .isAnnotated(annotationType, jakarta.interceptor.InterceptorBinding.class);
@@ -767,7 +774,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                                   Set<Annotation> beanQualifiers,
                                   Type requiredType,
                                   Set<Annotation> requiredQualifiers) {
-        return CdiAssignability.isMatchingBean(beanTypes, beanQualifiers, requiredType, requiredQualifiers);
+        return CdiAssignability.isMatchingBean(types(), beanTypes, beanQualifiers, requiredType, requiredQualifiers);
     }
 
     @Override
@@ -775,7 +782,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                                    Set<Annotation> specifiedQualifiers,
                                    Type observedEventType,
                                    Set<Annotation> observedEventQualifiers) {
-        return CdiAssignability.isMatchingEvent(specifiedType, specifiedQualifiers, observedEventType,
+        return CdiAssignability.isMatchingEvent(types(), specifiedType, specifiedQualifiers, observedEventType,
             observedEventQualifiers);
     }
 
@@ -846,22 +853,22 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public boolean areQualifiersEquivalent(Annotation one, Annotation other) {
-        return CdiAnnotations.areEquivalent(one, other);
+        return CdiAnnotations.areEquivalent(types(), one, other);
     }
 
     @Override
     public boolean areInterceptorBindingsEquivalent(Annotation one, Annotation other) {
-        return CdiAnnotations.areEquivalent(one, other);
+        return CdiAnnotations.areEquivalent(types(), one, other);
     }
 
     @Override
     public int getQualifierHashCode(Annotation qualifier) {
-        return CdiAnnotations.bindingHashCode(qualifier);
+        return CdiAnnotations.bindingHashCode(types(), qualifier);
     }
 
     @Override
     public int getInterceptorBindingHashCode(Annotation interceptorBinding) {
-        return CdiAnnotations.bindingHashCode(interceptorBinding);
+        return CdiAnnotations.bindingHashCode(types(), interceptorBinding);
     }
 
     @Override

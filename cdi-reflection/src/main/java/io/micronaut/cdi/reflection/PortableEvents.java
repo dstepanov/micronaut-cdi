@@ -16,6 +16,7 @@
 package io.micronaut.cdi.reflection;
 
 import io.micronaut.cdi.internal.runtime.CdiQualifier;
+import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import jakarta.enterprise.context.spi.AlterableContext;
@@ -140,10 +141,12 @@ final class PortableEvents {
 
         private final AnnotatedType<X> type;
         private final List<Annotation> added = new ArrayList<>();
+        private final CompiledAnnotationTypes types;
 
-        AnnotatedTypeEvent(Class<X> type) {
+        AnnotatedTypeEvent(Class<X> type, CompiledAnnotationTypes types) {
             super("ProcessAnnotatedType");
             this.type = new ReflectiveAnnotatedType<>(type);
+            this.types = types;
         }
 
         /**
@@ -167,7 +170,7 @@ final class PortableEvents {
         @Override
         public AnnotatedTypeConfigurator<X> configureAnnotatedType() {
             whileNotifying();
-            return new TypeConfigurator<>(type, added);
+            return new TypeConfigurator<>(type, added, types);
         }
 
         @Override
@@ -187,10 +190,12 @@ final class PortableEvents {
 
         private final AnnotatedType<T> type;
         private final List<Annotation> added;
+        private final CompiledAnnotationTypes types;
 
-        TypeConfigurator(AnnotatedType<T> type, List<Annotation> added) {
+        TypeConfigurator(AnnotatedType<T> type, List<Annotation> added, CompiledAnnotationTypes types) {
             this.type = type;
             this.added = added;
+            this.types = types;
         }
 
         @Override
@@ -200,7 +205,7 @@ final class PortableEvents {
 
         @Override
         public AnnotatedTypeConfigurator<T> add(Annotation annotation) {
-            if (!CdiQualifier.isQualifierType(annotation.annotationType())) {
+            if (!CdiQualifier.isQualifierType(types, annotation.annotationType())) {
                 throw new UnsupportedOperationException("AnnotatedTypeConfigurator.add(@"
                     + annotation.annotationType().getName() + ") is not supported by a compile-time container: "
                     + "only a qualifier can be added to a bean class that was compiled. A build compatible "

@@ -58,53 +58,19 @@ public final class ExtensionContexts {
     private final Map<String, List<AlterableContext>> contextsByScope = new LinkedHashMap<>();
     private final Set<String> normalScopes = new LinkedHashSet<>();
 
-    private final List<String> registeredQualifiers = new ArrayList<>();
-
     public ExtensionContexts(BeanContext beanContext) {
         this.beanContext = beanContext;
     }
 
-    @jakarta.annotation.PreDestroy
-    void standDown() {
-        // this container's say is withdrawn: another container that registered the same names keeps its own
-        for (String name : registeredQualifiers) {
-            io.micronaut.cdi.internal.runtime.ExtensionQualifiers.deregister(name);
-        }
-    }
-
     @PostConstruct
     void standUp() {
-        List<BeanDefinition<?>> contextDefinitions = new ArrayList<>();
-        for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            List<String> qualifierNames = new ArrayList<>(definition.getAnnotationMetadata()
-                .getAnnotationNamesByStereotype(io.micronaut.core.annotation.AnnotationUtil.QUALIFIER));
-            qualifierNames.addAll(definition.getAnnotationMetadata()
-                .getAnnotationNamesByStereotype("jakarta.inject.Qualifier"));
-            for (String qualifierName : qualifierNames) {
-                // an annotation an extension made a qualifier of does not say so on its own class: what the
-                // compiled metadata knows, the runtime checks are told
-                io.micronaut.cdi.internal.runtime.ExtensionQualifiers.register(qualifierName);
-                registeredQualifiers.add(qualifierName);
-            }
-            AnnotationValue<io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers> qualifiers =
-                definition.getAnnotationMetadata()
-                    .getAnnotation(io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.class);
-            if (qualifiers != null) {
-                // the members an extension marked non-binding are listed on every occurrence of the qualifier
-                // the processor compiled: the record says which annotations are qualifiers, and nothing more
-                for (String qualifierName : qualifiers.stringValues()) {
-                    io.micronaut.cdi.internal.runtime.ExtensionQualifiers.register(qualifierName);
-                    registeredQualifiers.add(qualifierName);
-                }
-            }
-            if (definition.getAnnotationMetadata()
-                .hasAnnotation(io.micronaut.cdi.internal.metadata.CdiRegisteredContext.class)) {
-                contextDefinitions.add(definition);
-            }
-        }
+        // the definition the discovery phase generated for each context class an extension registered
+        java.util.Collection<BeanDefinition<Object>> contextDefinitions = beanContext.getBeanDefinitions(
+            io.micronaut.inject.qualifiers.Qualifiers.byStereotype(
+                io.micronaut.cdi.internal.metadata.CdiRegisteredContext.class));
         // one instance of every context class, whichever compilations of the application registered it
         Set<String> seenContexts = new LinkedHashSet<>();
-        for (BeanDefinition<?> definition : contextDefinitions) {
+        for (BeanDefinition<Object> definition : contextDefinitions) {
             AnnotationValue<io.micronaut.cdi.internal.metadata.CdiRegisteredContext> registered =
                 definition.getAnnotationMetadata()
                     .getAnnotation(io.micronaut.cdi.internal.metadata.CdiRegisteredContext.class);
@@ -189,8 +155,7 @@ public final class ExtensionContexts {
      * @param annotationName The name of the annotation
      */
     public void registerQualifier(String annotationName) {
-        io.micronaut.cdi.internal.runtime.ExtensionQualifiers.register(annotationName);
-        registeredQualifiers.add(annotationName);
+        io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes.of(beanContext).addQualifier(annotationName);
     }
 
     /**

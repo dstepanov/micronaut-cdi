@@ -1,7 +1,6 @@
 package io.micronaut.cdi.test.groovy
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer
-import io.micronaut.cdi.internal.runtime.ExtensionQualifiers
 import io.micronaut.cdi.test.PlainScannedBean
 import io.micronaut.cdi.test.extension.Zesty
 import io.micronaut.cdi.spi.CdiReflection
@@ -45,7 +44,7 @@ class SynthesisUnderGroovyTest {
         try {
             CdiBeanContainer container = context.getBean(CdiBeanContainer)
             assertEquals(1, container.getBeans(PlainScannedBean.Nested).size())
-            assertTrue(ExtensionQualifiers.isKnownQualifier(Zesty.Nested.name))
+            assertTrue(container.isQualifier(Zesty.Nested))
         } finally {
             context.close()
         }

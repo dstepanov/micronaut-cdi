@@ -44,10 +44,10 @@ final class ForeignObserverMethod<T> implements ObserverMethod<T>, CdiNotifiable
     private final Argument<?> observed;
     private final List<CdiQualifier> qualifiers;
 
-    ForeignObserverMethod(ObserverMethod<T> delegate) {
+    ForeignObserverMethod(ObserverMethod<T> delegate, CompiledAnnotationTypes types) {
         this.delegate = delegate;
         this.observed = SpecificationTypes.argumentOf(delegate.getObservedType());
-        this.qualifiers = CdiQualifier.ofInstances(delegate.getObservedQualifiers());
+        this.qualifiers = CdiQualifier.ofInstances(types, delegate.getObservedQualifiers());
     }
 
     @Override

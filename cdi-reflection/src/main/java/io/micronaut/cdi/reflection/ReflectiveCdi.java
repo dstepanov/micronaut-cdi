@@ -269,8 +269,11 @@ public final class ReflectiveCdi implements CdiReflection {
         return values.mutate().member(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(new String[0])).build();
     }
 
-    @Override
-    public Set<String> nonbindingMembersOf(Class<? extends Annotation> annotationType) {
+    /**
+     * The members of an annotation type excluded from the comparison of two annotations of the type, which the
+     * specification says with {@code jakarta.enterprise.util.Nonbinding} and Micronaut with {@code NonBinding}.
+     */
+    private static Set<String> nonbindingMembersOf(Class<? extends Annotation> annotationType) {
         Set<String> members = new LinkedHashSet<>();
         for (Method member : annotationType.getDeclaredMethods()) {
             for (Annotation annotation : member.getAnnotations()) {

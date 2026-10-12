@@ -111,7 +111,7 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         java.util.List<CdiQualifier> bindings = new java.util.ArrayList<>(2);
         for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
             AnnotationValue<?> value = metadata.getAnnotation(name);
-            if (isBindingType(metadata, name)) {
+            if (isBindingType(CompiledAnnotationTypes.of(beanContext), metadata, name)) {
                 // a binding a binding carries is recorded by name, with no member written
                 bindings.add(CdiQualifier.ofCompiled(metadata, value != null ? value : new AnnotationValue<>(name)));
             }
@@ -119,10 +119,10 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         return bindings;
     }
 
-    private static boolean isBindingType(AnnotationMetadata metadata, String name) {
-        BindingTypes.BindingType recorded = BindingTypes.of(name);
+    private static boolean isBindingType(CompiledAnnotationTypes types, AnnotationMetadata metadata, String name) {
+        Boolean recorded = types.isInterceptorBinding(name);
         if (recorded != null) {
-            return recorded.binding();
+            return recorded;
         }
         Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
         return type != null && CdiReflection.current("Whether " + name + ", an annotation the application was "

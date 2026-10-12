@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.runtime.CdiAssignability;
 import io.micronaut.cdi.internal.runtime.CdiBean;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiQualifier;
+import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.runtime.QualifierOverlay;
 import io.micronaut.cdi.internal.extension.ExtensionContexts;
@@ -106,11 +107,12 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
             problems);
 
         QualifierOverlay overlay = context.getBean(QualifierOverlay.class);
+        CompiledAnnotationTypes types = CompiledAnnotationTypes.of(context);
         for (Class<?> type : beanClassesOf(applicationBeans(container, extensions))) {
-            PortableEvents.AnnotatedTypeEvent<?> event = new PortableEvents.AnnotatedTypeEvent<>(type);
+            PortableEvents.AnnotatedTypeEvent<?> event = new PortableEvents.AnnotatedTypeEvent<>(type, types);
             fire(observers, event, Argument.of(ProcessAnnotatedType.class, Argument.of(type)), problems);
             for (Annotation added : event.added()) {
-                overlay.add(type.getName(), CdiQualifier.ofInstance(added));
+                overlay.add(type.getName(), CdiQualifier.ofInstance(types, added));
             }
         }
         // a bean reads its qualifiers once: the beans are read again, with what was added
