@@ -378,12 +378,15 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
 
         boolean observes(Argument<?> eventType) {
-            if (CdiAssignability.isEventTypeMatching(observed, eventType)) {
+            io.micronaut.cdi.internal.runtime.RecordedTypeIndex index =
+                io.micronaut.cdi.internal.runtime.RecordedTypeIndex.of(container.beanContext());
+            if (CdiAssignability.isEventTypeMatching(index, observed, eventType)) {
                 return true;
             }
             // a managed bean's event is a ProcessBean as well, of the same class
-            return eventType.getType() == ProcessManagedBean.class && CdiAssignability.isEventTypeMatching(observed,
-                Argument.of(ProcessBean.class, (String) null, eventType.getTypeParameters()));
+            return eventType.getType() == ProcessManagedBean.class
+                && CdiAssignability.isEventTypeMatching(index, observed,
+                    Argument.of(ProcessBean.class, (String) null, eventType.getTypeParameters()));
         }
 
         void notify(Object event) {

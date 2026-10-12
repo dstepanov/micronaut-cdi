@@ -22,6 +22,7 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.PrimitiveElement;
 import io.micronaut.inject.ast.WildcardElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.ArrayType;
@@ -68,10 +69,11 @@ public final class ElementTypes {
      * use of it that Micronaut recorded.
      *
      * @param element The Micronaut type
+     * @param context The compilation the type is read in
      * @return The type
      */
-    public static Type of(ClassElement element) {
-        return of(element, null);
+    public static Type of(ClassElement element, VisitorContext context) {
+        return of(element, null, context);
     }
 
     /**
@@ -81,25 +83,27 @@ public final class ElementTypes {
      *
      * @param element    The Micronaut type
      * @param declaringType Whether the declaration the type belongs to is in a {@code NullMarked} class or package
+     * @param context    The compilation the type is read in
      * @return The type
      */
-    static Type of(ClassElement element, @Nullable ClassElement declaringType) {
+    static Type of(ClassElement element, @Nullable ClassElement declaringType, VisitorContext context) {
         if (element.isVoid()) {
-            return new Void();
+            return new Void(context);
         }
         if (element.isArray()) {
-            return new Array(of(element.fromArray(), declaringType), typeAnnotationsOf(element, declaringType));
+            return new Array(of(element.fromArray(), declaringType, context),
+                typeAnnotationsOf(element, declaringType, context), context);
         }
         if (element.isPrimitive()) {
-            return new Primitive(element.getName(), typeAnnotationsOf(element, declaringType));
+            return new Primitive(element.getName(), typeAnnotationsOf(element, declaringType, context), context);
         }
         if (element instanceof WildcardElement wildcard) {
-            return wildcardOf(wildcard, declaringType);
+            return wildcardOf(wildcard, declaringType, context);
         }
         if (element instanceof GenericPlaceholderElement placeholder) {
-            return variableOf(placeholder, declaringType);
+            return variableOf(placeholder, declaringType, context);
         }
-        return classOf(element, typeAnnotationsOf(element, declaringType), declaringType);
+        return classOf(element, typeAnnotationsOf(element, declaringType, context), declaringType, context);
     }
 
     /**
@@ -107,14 +111,16 @@ public final class ElementTypes {
      *
      * @param element     The class
      * @param annotations The annotations of the use
+     * @param context     The compilation the type is read in
      * @return The type
      */
-    static Type classOf(ClassElement element, List<AnnotationInfo> annotations) {
-        return classOf(element, annotations, null);
+    static Type classOf(ClassElement element, List<AnnotationInfo> annotations, VisitorContext context) {
+        return classOf(element, annotations, null, context);
     }
 
-    private static Type classOf(ClassElement element, List<AnnotationInfo> annotations, @Nullable ClassElement declaringType) {
-        Class raw = new Class(element, annotations);
+    private static Type classOf(ClassElement element, List<AnnotationInfo> annotations,
+                                @Nullable ClassElement declaringType, VisitorContext context) {
+        Class raw = new Class(element, annotations, context);
         // a generic class named without its arguments is a class type, not a parameterized one; Micronaut fills
         // the arguments of a raw use in from the declaration's bounds, so the raw use has to be asked about
         if (element.isRawType() || element.getTypeArguments().isEmpty()) {
@@ -122,9 +128,9 @@ public final class ElementTypes {
         }
         List<Type> arguments = new ArrayList<>(element.getTypeArguments().size());
         for (Map.Entry<String, ClassElement> argument : element.getTypeArguments().entrySet()) {
-            arguments.add(of(argument.getValue(), declaringType));
+            arguments.add(of(argument.getValue(), declaringType, context));
         }
-        return new Parameterized(raw, List.copyOf(arguments), annotations);
+        return new Parameterized(raw, List.copyOf(arguments), annotations, context);
     }
 
     /**
@@ -132,99 +138,111 @@ public final class ElementTypes {
      *
      * @param element     The class
      * @param annotations The annotations of the use
+     * @param context     The compilation the type is read in
      * @return The type
      */
-    public static ClassType rawClassOf(ClassElement element, List<AnnotationInfo> annotations) {
-        return new Class(element, annotations);
+    public static ClassType rawClassOf(ClassElement element, List<AnnotationInfo> annotations,
+                                       VisitorContext context) {
+        return new Class(element, annotations, context);
     }
 
     /**
      * The type variable a Micronaut placeholder stands for, where it is declared or where a type names it.
      *
      * @param placeholder The placeholder
+     * @param context     The compilation the variable is read in
      * @return The variable
      */
-    static TypeVariable variableOf(GenericPlaceholderElement placeholder) {
-        return variableOf(placeholder, null);
+    static TypeVariable variableOf(GenericPlaceholderElement placeholder, VisitorContext context) {
+        return variableOf(placeholder, null, context);
     }
 
-    private static TypeVariable variableOf(GenericPlaceholderElement placeholder, @Nullable ClassElement declaringType) {
+    private static TypeVariable variableOf(GenericPlaceholderElement placeholder, @Nullable ClassElement declaringType,
+                                           VisitorContext context) {
         List<Type> bounds = new ArrayList<>(placeholder.getBounds().size());
         for (ClassElement bound : placeholder.getBounds()) {
-            bounds.add(of(bound, declaringType));
+            bounds.add(of(bound, declaringType, context));
         }
         return new Variable(placeholder, List.copyOf(bounds),
-            annotationsIn(placeholder.getGenericTypeAnnotationMetadata(), declaringType));
+            annotationsIn(placeholder.getGenericTypeAnnotationMetadata(), declaringType, context), context);
     }
 
-    private static WildcardType wildcardOf(WildcardElement wildcard, @Nullable ClassElement declaringType) {
-        List<AnnotationInfo> annotations = annotationsIn(wildcard.getGenericTypeAnnotationMetadata(), declaringType);
+    private static WildcardType wildcardOf(WildcardElement wildcard, @Nullable ClassElement declaringType,
+                                           VisitorContext context) {
+        List<AnnotationInfo> annotations =
+            annotationsIn(wildcard.getGenericTypeAnnotationMetadata(), declaringType, context);
         if (wildcard.hasExplicitLowerBound()) {
-            return new Wildcard(null, of(wildcard.getLowerBounds().get(0), declaringType), annotations);
+            return new Wildcard(null, of(wildcard.getLowerBounds().get(0), declaringType, context), annotations,
+                context);
         }
         if (wildcard.hasExplicitUpperBound()) {
-            return new Wildcard(of(wildcard.getUpperBounds().get(0), declaringType), null, annotations);
+            return new Wildcard(of(wildcard.getUpperBounds().get(0), declaringType, context), null, annotations,
+                context);
         }
         // the unbounded wildcard is the one bounded above by java.lang.Object, which is what it means and how
         // the language model reports it; Micronaut substitutes the declared bound of the type parameter, which
         // the source did not write
-        return new Wildcard(objectType(), null, annotations);
+        return new Wildcard(objectType(context), null, annotations, context);
     }
 
     /**
      * Composes a wildcard with an upper bound, including Object for an unbounded wildcard.
      *
-     * @param bound The upper bound
+     * @param bound   The upper bound
+     * @param context The compilation the wildcard is composed in
      * @return The wildcard
      */
-    public static WildcardType wildcardWithUpperBound(Type bound) {
-        return new Wildcard(Objects.requireNonNull(bound), null, List.of());
+    public static WildcardType wildcardWithUpperBound(Type bound, VisitorContext context) {
+        return new Wildcard(Objects.requireNonNull(bound), null, List.of(), context);
     }
 
     /**
      * Composes a wildcard with a lower bound.
      *
-     * @param bound The lower bound
+     * @param bound   The lower bound
+     * @param context The compilation the wildcard is composed in
      * @return The wildcard
      */
-    public static WildcardType wildcardWithLowerBound(Type bound) {
-        return new Wildcard(null, Objects.requireNonNull(bound), List.of());
+    public static WildcardType wildcardWithLowerBound(Type bound, VisitorContext context) {
+        return new Wildcard(null, Objects.requireNonNull(bound), List.of(), context);
     }
 
     /**
      * The class type {@code java.lang.Object} with nothing written on it.
      *
+     * @param context The compilation to look {@code java.lang.Object} up in
      * @return The type
      */
-    public static ClassType objectType() {
-        ClassElement object = ExtensionAnnotationTypes.declarationOf(OBJECT);
-        return new Class(object != null ? object : ClassElement.of(Object.class), List.of());
+    public static ClassType objectType(VisitorContext context) {
+        ClassElement object = ExtensionAnnotationTypes.declarationOf(OBJECT, context);
+        return new Class(object != null ? object : ClassElement.of(Object.class), List.of(), context);
     }
 
     /**
      * The type of the language model for a class the compilation names, which is what an annotation member
      * naming a class is read as.
      *
-     * @param name The binary name, or the name of a primitive type
+     * @param name    The binary name, or the name of a primitive type
+     * @param context The compilation to look the class up in
      * @return The type
      */
-    static Type ofName(String name) {
+    static Type ofName(String name, VisitorContext context) {
         if ("void".equals(name)) {
-            return new Void();
+            return new Void(context);
         }
         if (io.micronaut.core.reflect.ClassUtils.getPrimitiveType(name).isPresent()) {
-            return new Primitive(name, List.of());
+            return new Primitive(name, List.of(), context);
         }
-        ClassElement element = ExtensionAnnotationTypes.declarationOf(name);
+        ClassElement element = ExtensionAnnotationTypes.declarationOf(name, context);
         if (element == null) {
             throw new IllegalStateException("The type " + name + " is not on the compilation's classpath");
         }
-        return of(element);
+        return of(element, context);
     }
 
     /**
-     * The Micronaut element a type of this model stands for: what {@link #of(ClassElement)} was given, so that
-     * a type handed back by a builder can be composed with rather than only read.
+     * The Micronaut element a type of this model stands for: what {@link #of(ClassElement, VisitorContext)} was
+     * given, so that a type handed back by a builder can be composed with rather than only read.
      *
      * @param type The type
      * @return The element
@@ -248,7 +266,7 @@ public final class ElementTypes {
         if (type instanceof Wildcard wildcard) {
             Type upper = wildcard.upperBound();
             Type lower = wildcard.lowerBound();
-            return new ComposedWildcard(elementOf(upper == null ? objectType() : upper),
+            return new ComposedWildcard(elementOf(upper == null ? objectType(wildcard.context) : upper),
                 lower == null ? List.of() : List.of(elementOf(lower)));
         }
         if (type instanceof Variable variable) {
@@ -264,21 +282,24 @@ public final class ElementTypes {
      *
      * @param use        The type, as used somewhere
      * @param declaringType Whether the declaration the type belongs to is in a {@code NullMarked} class or package
+     * @param context    The compilation the use is read in
      * @return The annotations
      */
-    static List<AnnotationInfo> typeAnnotationsOf(ClassElement use, @Nullable ClassElement declaringType) {
-        return annotationsIn(use.getTypeAnnotationMetadata(), declaringType);
+    static List<AnnotationInfo> typeAnnotationsOf(ClassElement use, @Nullable ClassElement declaringType,
+                                                 VisitorContext context) {
+        return annotationsIn(use.getTypeAnnotationMetadata(), declaringType, context);
     }
 
-    private static List<AnnotationInfo> annotationsIn(AnnotationMetadata metadata, @Nullable ClassElement declaringType) {
+    private static List<AnnotationInfo> annotationsIn(AnnotationMetadata metadata, @Nullable ClassElement declaringType,
+                                                      VisitorContext context) {
         List<AnnotationInfo> found = new ArrayList<>();
         for (String name : metadata.getDeclaredAnnotationNames()) {
-            if (!ExtensionAnnotations.isReportedOnType(name, declaringType)) {
+            if (!ExtensionAnnotations.isReportedOnType(name, declaringType, context)) {
                 continue;
             }
             AnnotationValue<Annotation> annotation = metadata.getDeclaredAnnotation(name);
             if (annotation != null) {
-                found.add(new ElementAnnotationInfo(annotation));
+                found.add(new ElementAnnotationInfo(annotation, context));
             }
         }
         return ExtensionAnnotations.unfoldSingleRepetitions(found, metadata);
@@ -289,10 +310,12 @@ public final class ElementTypes {
      */
     private abstract static class Annotated implements Type {
 
+        final VisitorContext context;
         private final List<AnnotationInfo> annotations;
 
-        Annotated(List<AnnotationInfo> annotations) {
+        Annotated(List<AnnotationInfo> annotations, VisitorContext context) {
             this.annotations = annotations;
+            this.context = context;
         }
 
         @Override
@@ -319,7 +342,7 @@ public final class ElementTypes {
         @Override
         public final <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(
             java.lang.Class<T> annotationType) {
-            return ExtensionAnnotations.repeatableIn(annotations, annotationType.getName());
+            return ExtensionAnnotations.repeatableIn(annotations, annotationType.getName(), context);
         }
 
         @Override
@@ -339,8 +362,8 @@ public final class ElementTypes {
      */
     private static final class Void extends Annotated implements VoidType {
 
-        private Void() {
-            super(List.of());
+        private Void(VisitorContext context) {
+            super(List.of(), context);
         }
 
         @Override
@@ -372,8 +395,8 @@ public final class ElementTypes {
 
         private final String name;
 
-        private Primitive(String name, List<AnnotationInfo> annotations) {
-            super(annotations);
+        private Primitive(String name, List<AnnotationInfo> annotations, VisitorContext context) {
+            super(annotations, context);
             this.name = name;
         }
 
@@ -420,8 +443,8 @@ public final class ElementTypes {
 
         private final Type componentType;
 
-        private Array(Type componentType, List<AnnotationInfo> annotations) {
-            super(annotations);
+        private Array(Type componentType, List<AnnotationInfo> annotations, VisitorContext context) {
+            super(annotations, context);
             this.componentType = componentType;
         }
 
@@ -454,14 +477,14 @@ public final class ElementTypes {
 
         private final ClassElement element;
 
-        private Class(ClassElement element, List<AnnotationInfo> annotations) {
-            super(annotations);
+        private Class(ClassElement element, List<AnnotationInfo> annotations, VisitorContext context) {
+            super(annotations, context);
             this.element = element;
         }
 
         @Override
         public ClassInfo declaration() {
-            return ElementClassInfo.declarationOf(element);
+            return ElementClassInfo.declarationOf(element, context);
         }
 
         @Override
@@ -488,8 +511,9 @@ public final class ElementTypes {
         private final ClassType genericClass;
         private final List<Type> typeArguments;
 
-        private Parameterized(ClassType genericClass, List<Type> typeArguments, List<AnnotationInfo> annotations) {
-            super(annotations);
+        private Parameterized(ClassType genericClass, List<Type> typeArguments, List<AnnotationInfo> annotations,
+                              VisitorContext context) {
+            super(annotations, context);
             this.genericClass = genericClass;
             this.typeArguments = typeArguments;
         }
@@ -530,8 +554,9 @@ public final class ElementTypes {
         private final String name;
         private final List<Type> bounds;
 
-        private Variable(GenericPlaceholderElement element, List<Type> bounds, List<AnnotationInfo> annotations) {
-            super(annotations);
+        private Variable(GenericPlaceholderElement element, List<Type> bounds, List<AnnotationInfo> annotations,
+                         VisitorContext context) {
+            super(annotations, context);
             this.element = element;
             this.name = element.getVariableName();
             this.bounds = bounds;
@@ -634,8 +659,9 @@ public final class ElementTypes {
         private final @Nullable Type upperBound;
         private final @Nullable Type lowerBound;
 
-        private Wildcard(@Nullable Type upperBound, @Nullable Type lowerBound, List<AnnotationInfo> annotations) {
-            super(annotations);
+        private Wildcard(@Nullable Type upperBound, @Nullable Type lowerBound, List<AnnotationInfo> annotations,
+                         VisitorContext context) {
+            super(annotations, context);
             this.upperBound = upperBound;
             this.lowerBound = lowerBound;
         }

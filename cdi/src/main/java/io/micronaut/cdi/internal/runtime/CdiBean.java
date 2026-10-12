@@ -120,7 +120,7 @@ public class CdiBean<T> implements Bean<T> {
         // read once: resolution compares them for every lookup, and what the processor recorded does not change
         java.util.List<Argument<?>> resolved = types;
         if (resolved == null) {
-            resolved = java.util.List.copyOf(typesOf(definition, beanClass()));
+            resolved = java.util.List.copyOf(typesOf(RecordedTypeIndex.of(beanContext), definition, beanClass()));
             types = resolved;
         }
         return resolved;
@@ -155,7 +155,8 @@ public class CdiBean<T> implements Bean<T> {
         return closure;
     }
 
-    static java.util.List<Argument<?>> typesOf(BeanDefinition<?> definition, Class<?> beanClass) {
+    static java.util.List<Argument<?>> typesOf(@Nullable RecordedTypeIndex index, BeanDefinition<?> definition,
+                                               Class<?> beanClass) {
         if (definition instanceof io.micronaut.inject.provider.AbstractProviderDefinition<?>) {
             // Core's infrastructure providers implement Iterable as a lookup convenience. Their helper
             // interfaces are not application beans satisfying an ordinary CDI collection injection.
@@ -176,13 +177,13 @@ public class CdiBean<T> implements Bean<T> {
             // a produced bean is a bean of the type the producer declared — with the arguments it was written
             // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
             // class's own declaration
-            closure.addAll(CdiTypes.beanTypeClosureOf(definition.getDeclaredBeanType()));
+            closure.addAll(CdiTypes.beanTypeClosureOf(index, definition.getDeclaredBeanType()));
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
             // rather than of its erasure
-            if (CdiTypes.knowsClosureOf(beanClass)) {
-                closure.addAll(CdiTypes.beanTypeClosureOf(beanClass));
+            if (CdiTypes.knowsClosureOf(index, beanClass)) {
+                closure.addAll(CdiTypes.beanTypeClosureOf(index, beanClass));
             } else {
                 // a bean compiled without this processor, of which nothing was recorded: it is resolvable by
                 // its class and by the raw types Micronaut exposes it as
@@ -217,7 +218,7 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return CdiQualifier.instances(qualifiers());
+        return CdiQualifier.instances(beanContext, qualifiers());
     }
 
     /**
@@ -323,7 +324,7 @@ public class CdiBean<T> implements Bean<T> {
                     // what the container itself passes a generated constructor is not an injection point
                     continue;
                 }
-                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(declaring,
+                points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
                     InjectionSite.CONSTRUCTOR, arguments, argument)));
             }
         } else if (!producer.booleanValue("field").orElse(false)) {
@@ -333,12 +334,12 @@ public class CdiBean<T> implements Bean<T> {
             String member = producer.stringValue("member").orElse(InjectionSite.CONSTRUCTOR);
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(getBeanClass(),
-                    member, arguments, argument)));
+                points.add(new CdiInjectionPoint(beanContext, this, argument,
+                    CdiInjectionPoint.parameterSite(getBeanClass(), member, arguments, argument)));
             }
         }
         for (io.micronaut.inject.FieldInjectionPoint<T, ?> field : described.getInjectedFields()) {
-            points.add(new CdiInjectionPoint(this, field.asArgument(), InjectionSite.ofField(declaring,
+            points.add(new CdiInjectionPoint(beanContext, this, field.asArgument(), InjectionSite.ofField(declaring,
                 field.getName())));
         }
         for (io.micronaut.inject.MethodInjectionPoint<T, ?> method : described.getInjectedMethods()) {
@@ -347,7 +348,7 @@ public class CdiBean<T> implements Bean<T> {
             }
             io.micronaut.core.type.Argument<?>[] arguments = method.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(declaring,
+                points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
                     method.getName(), arguments, argument)));
             }
         }

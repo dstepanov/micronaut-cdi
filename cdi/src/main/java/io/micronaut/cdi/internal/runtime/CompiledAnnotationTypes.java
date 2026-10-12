@@ -81,6 +81,16 @@ public final class CompiledAnnotationTypes {
     }
 
     /**
+     * The context whose beans are read, which is also the container that answers for this record where the
+     * application was not compiled with a type: the module that reads classes is one of its beans.
+     *
+     * @return The bean context
+     */
+    public BeanContext beanContext() {
+        return beanContext;
+    }
+
+    /**
      * The record of the given context.
      *
      * @param beanContext The context

@@ -128,7 +128,8 @@ public final class RecordedSynthesis {
             if (record == null) {
                 continue;
             }
-            CdiParameters parameters = new CdiParameters(record.getAnnotations("params", CdiSyntheticParameter.class));
+            CdiParameters parameters = new CdiParameters(beanContext,
+                record.getAnnotations("params", CdiSyntheticParameter.class));
             invokers.addAll(parameters.invokers());
             BeanDefinition<?> disposer = disposers.get(bean.getKey());
             if (disposer == null && record.booleanValue("disposer").orElse(false)) {
@@ -154,7 +155,7 @@ public final class RecordedSynthesis {
         // resolve is a property of the deployment, and is checked as it comes up rather than at the first
         // invocation (CDI 4.1, chapter 7)
         for (RecordedInvoker invoker : invokers) {
-            invoker.validateLookups(beanContext);
+            invoker.validateLookups();
         }
     }
 
@@ -362,6 +363,7 @@ public final class RecordedSynthesis {
             return null;
         }
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        return CdiInjectionPoint.of(container.canonicalBean(segment.getDeclaringType()), segment);
+        return CdiInjectionPoint.of(container.beanContext(),
+            container.canonicalBean(segment.getDeclaringType()), segment);
     }
 }

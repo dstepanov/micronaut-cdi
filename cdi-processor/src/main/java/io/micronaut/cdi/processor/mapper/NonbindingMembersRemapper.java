@@ -81,7 +81,7 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
         if (visitorContext == null || isNeverABindingType(name)) {
             return List.of(annotation);
         }
-        DiscoveredClasses discovered = BuildCompatibleExtensionVisitor.currentDiscovery();
+        DiscoveredClasses discovered = BuildCompatibleExtensionVisitor.discoveryOf(visitorContext);
         Boolean bindingType = isBindingType(annotation, discovered);
         if (Boolean.FALSE.equals(bindingType)) {
             return List.of(annotation);

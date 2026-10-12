@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.InjectionSite;
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.Annotated;
@@ -46,17 +47,21 @@ import java.util.Set;
 @Internal
 public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInjectionPoint {
 
+    // the container the point belongs to, which reads its member and makes its qualifiers annotation instances
+    private final BeanContext beanContext;
     private final @Nullable Bean<?> bean;
     private final Argument<?> argument;
     private final @Nullable InjectionSite site;
     private final java.util.List<CdiQualifier> selectedQualifiers;
 
-    CdiInjectionPoint(@Nullable Bean<?> bean, Argument<?> argument, @Nullable InjectionSite site) {
-        this(bean, argument, site, java.util.List.of());
+    CdiInjectionPoint(BeanContext beanContext, @Nullable Bean<?> bean, Argument<?> argument,
+                      @Nullable InjectionSite site) {
+        this(beanContext, bean, argument, site, java.util.List.of());
     }
 
-    private CdiInjectionPoint(@Nullable Bean<?> bean, Argument<?> argument, @Nullable InjectionSite site,
-                              java.util.List<CdiQualifier> selectedQualifiers) {
+    private CdiInjectionPoint(BeanContext beanContext, @Nullable Bean<?> bean, Argument<?> argument,
+                              @Nullable InjectionSite site, java.util.List<CdiQualifier> selectedQualifiers) {
+        this.beanContext = beanContext;
         this.selectedQualifiers = selectedQualifiers;
         this.bean = bean;
         this.argument = argument;
@@ -100,11 +105,11 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
     public Set<Annotation> getQualifiers() {
         // the qualifiers of an injection point are the ones written on it, and a point that writes none has
         // the default qualifier — with nothing else added
-        Set<Annotation> declared = CdiQualifiers.declared(argument.getAnnotationMetadata());
+        Set<Annotation> declared = CdiQualifiers.declared(beanContext, argument.getAnnotationMetadata());
         if (!selectedQualifiers.isEmpty()) {
             // an Instance narrowed with select has the qualifiers it was selected with as well (section 5.6.1)
             Set<Annotation> all = new java.util.LinkedHashSet<>(declared);
-            all.addAll(CdiQualifier.instances(selectedQualifiers));
+            all.addAll(CdiQualifier.instances(beanContext, selectedQualifiers));
             return java.util.Collections.unmodifiableSet(all);
         }
         return declared.isEmpty()
@@ -161,7 +166,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             // an injection point that stands for a programmatic lookup has no member
             return null;
         }
-        return CdiReflections.current("InjectionPoint.getMember()").member(site);
+        return CdiReflection.require(beanContext, "InjectionPoint.getMember()").member(site);
     }
 
     /**
@@ -176,18 +181,20 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
         Argument<?> viewed = Argument.of(selected.getType(), argument.getAnnotationMetadata(),
             selected.getTypeParameters());
         // the member is still the one that was written, whatever the lookup was selected as
-        return new CdiInjectionPoint(bean, viewed, site, qualifiers);
+        return new CdiInjectionPoint(beanContext, bean, viewed, site, qualifiers);
     }
 
     /**
      * Describes the injection point a resolution segment stands for: the argument being injected, into the
      * member of the bean the segment declares.
      *
-     * @param bean    The bean declaring the injection point
-     * @param segment The segment
+     * @param beanContext The context of the container resolving it
+     * @param bean        The bean declaring the injection point
+     * @param segment     The segment
      * @return The injection point
      */
-    public static CdiInjectionPoint of(Bean<?> bean, io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
+    public static CdiInjectionPoint of(BeanContext beanContext, Bean<?> bean,
+                                       io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
         Class<?> declaring = bean.getBeanClass();
         Argument<?> argument = segment.getArgument();
         InjectionSite site;
@@ -203,7 +210,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
         } else {
             site = InjectionSite.ofParameter(declaring, segment.getName(), List.of(), -1);
         }
-        return new CdiInjectionPoint(bean, argument, site);
+        return new CdiInjectionPoint(beanContext, bean, argument, site);
     }
 
     @Override
@@ -213,7 +220,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             throw new UnsupportedOperationException("An injection point that stands for a programmatic lookup "
                 + "has no annotated model");
         }
-        return CdiReflections.current("InjectionPoint.getAnnotated()").annotated(site);
+        return CdiReflection.require(beanContext, "InjectionPoint.getAnnotated()").annotated(site);
     }
 
     @Override

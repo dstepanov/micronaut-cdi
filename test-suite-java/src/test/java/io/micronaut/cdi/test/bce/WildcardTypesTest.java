@@ -1,6 +1,7 @@
 package io.micronaut.cdi.test.bce;
 
 import io.micronaut.annotation.processing.test.JavaParser;
+import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
@@ -95,7 +96,9 @@ class WildcardTypesTest {
             assertEquals(declared, composed, name);
             assertEquals(composed, declared, name);
             assertEquals(declared.hashCode(), composed.hashCode(), name);
-            assertEquals(declared, ElementTypes.of(ElementTypes.elementOf(composed)), name + " round trip");
+            // composed again in the compilation the class was read in
+            assertEquals(declared, ElementTypes.of(ElementTypes.elementOf(composed), ((ElementClassInfo) info).context()),
+                name + " round trip");
         }
     }
 }

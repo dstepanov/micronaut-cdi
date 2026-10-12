@@ -67,8 +67,11 @@ public final class ObserverRegistry {
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
-        // the lifecycle events of the application are fired through this before the container is up
-        CdiRunning.starting(beanContext);
+        // the lifecycle events of the application are fired through this before the container is up, which is
+        // as early as the resolution rules need the generic hierarchies of its classes: Micronaut builds the
+        // customizer that applies them before the context exists, and never hands it the context, so the context
+        // is handed to it here
+        CdiResolutionCustomizer.attach(beanContext);
     }
 
     /**
@@ -81,9 +84,13 @@ public final class ObserverRegistry {
         return CompiledAnnotationTypes.of(beanContext);
     }
 
-    @jakarta.annotation.PreDestroy
-    void stopped() {
-        CdiRunning.stopped(beanContext);
+    /**
+     * The generic hierarchies of the classes the application was compiled with, which event types are matched by.
+     *
+     * @return The index of this container
+     */
+    RecordedTypeIndex typeIndex() {
+        return RecordedTypeIndex.of(beanContext);
     }
 
     /**
@@ -155,13 +162,14 @@ public final class ObserverRegistry {
             return cached;
         }
         // the closure of the event's type is the same for every observer it is matched against
-        List<Argument<?>> closure = CdiAssignability.eventTypeClosureOf(eventType);
+        List<Argument<?>> closure = CdiAssignability.eventTypeClosureOf(typeIndex(), eventType);
         List<ObserverMethod<?>> notified = new ArrayList<>();
         for (ObserverMethod<?> observer : all) {
             if (observer.isAsync() != async) {
                 continue;
             }
-            if (CdiAssignability.isEventTypeMatching(((CdiNotifiable) observer).observedArgument(), closure)
+            if (CdiAssignability.isEventTypeMatching(typeIndex(), 
+                ((CdiNotifiable) observer).observedArgument(), closure)
                 && CdiAssignability.areEventQualifiersMatching(eventQualifiers,
                     ((CdiNotifiable) observer).observedQualifiers())) {
                 notified.add(observer);
@@ -188,7 +196,7 @@ public final class ObserverRegistry {
                                 Argument<?> declaredType,
                                 Set<Annotation> eventQualifiers,
                                 boolean async) {
-        notifyObservers(event, CdiTypes.eventTypeOf(event.getClass(), declaredType),
+        notifyObservers(event, CdiTypes.eventTypeOf(typeIndex(), event.getClass(), declaredType),
             CdiQualifier.ofInstances(types(), eventQualifiers), async, null);
     }
 
@@ -209,7 +217,7 @@ public final class ObserverRegistry {
                                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
                                     InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
-            new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
+            new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         for (ObserverMethod<?> observer : resolve(eventType, eventQualifiers, async)) {
             ((CdiNotifiable) observer).notifyWith(event, metadata);
         }
@@ -230,7 +238,7 @@ public final class ObserverRegistry {
         Object event, Argument<?> eventType, List<CdiQualifier> eventQualifiers,
         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
-            new CdiEventMetadata(eventQualifiers, firedFrom, eventType);
+            new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         java.util.List<Throwable> thrown = new java.util.ArrayList<>(0);
         io.micronaut.cdi.internal.context.RequestScope requestScope =
             beanContext.findBean(io.micronaut.cdi.internal.context.RequestScope.class).orElse(null);

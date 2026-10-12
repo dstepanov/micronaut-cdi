@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Gathers the generic hierarchy of every class a compilation compiles, and writes it where the runtime reads
@@ -54,10 +53,11 @@ final class TypeIndexCollector {
     private static final String PREFIX = "CdiTypeIndex";
 
     /**
-     * The records of the generated classes, from the moment a class is generated until the compiler comes to
-     * it, which a compiler is free to do with another visitor.
+     * What the record of a generated class is kept under, from the moment the class is generated until the
+     * compiler comes to it, which a compiler is free to do with another visitor: on the compilation, see
+     * {@link CompilationState}.
      */
-    private static final Map<String, AnnotationValue<CdiTypeIndex>> RECORDS = new ConcurrentHashMap<>();
+    private static final String RECORD = "typeIndex.";
 
     private final Map<String, List<AnnotationValue<CdiTypeEntry>>> byPackage = new LinkedHashMap<>();
     private final java.util.Set<String> seen = new java.util.HashSet<>();
@@ -137,8 +137,9 @@ final class TypeIndexCollector {
                     + "@jakarta.inject.Singleton\n"
                     + "@io.micronaut.cdi.internal.metadata.CdiExtensionComponents\n"
                     + (kotlin ? "class " + className + "\n" : "final class " + className + " {\n}\n");
-                RECORDS.put(packageName + "." + className, AnnotationValue.builder(CdiTypeIndex.class)
-                    .member("value", chunk.toArray(new AnnotationValue<?>[0])).build());
+                CompilationState.keep(context, RECORD + packageName + "." + className,
+                    AnnotationValue.builder(CdiTypeIndex.class)
+                        .member("value", chunk.toArray(new AnnotationValue<?>[0])).build());
                 BuildCompatibleExtensionVisitor.generatedSource(context, packageName, className, origins).ifPresent(file -> {
                     try {
                         file.write(writer -> writer.write(source));
@@ -157,11 +158,12 @@ final class TypeIndexCollector {
      *
      * @return Whether the class is one of the generated ones
      */
-    static boolean recordOn(ClassElement element) {
+    static boolean recordOn(ClassElement element, VisitorContext context) {
         if (!element.getSimpleName().startsWith(PREFIX)) {
             return false;
         }
-        AnnotationValue<CdiTypeIndex> record = RECORDS.remove(element.getName());
+        AnnotationValue<?> record =
+            CompilationState.take(context, RECORD + element.getName(), AnnotationValue.class);
         if (record == null) {
             return false;
         }

@@ -73,11 +73,12 @@ public final class CdiAssignability {
         requireNonNull(requiredQualifiers, "The required qualifiers");
         requireQualifiers(types, beanQualifiers);
         requireQualifiers(types, requiredQualifiers);
+        RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
         Argument<?> required = SpecificationTypes.argumentOf(requiredType);
         requireNoTypeVariable(required);
         // a type that is not a legal bean type — one with a wildcard in it — is passed over rather than
         // failing the whole set, and matches nothing, not even itself
-        if (!isTypeMatching(SpecificationTypes.argumentsOf(beanTypes), required)) {
+        if (!isTypeMatching(index, SpecificationTypes.argumentsOf(beanTypes), required)) {
             return false;
         }
         // the rule of section 2.1.3, applied to the given sets: every bean has Any, and one that names nothing
@@ -125,13 +126,15 @@ public final class CdiAssignability {
     /**
      * Whether any of the bean types matches the required type, by the type rules of section 2.4.2.1 alone.
      *
+     * @param index The generic hierarchies of the container asking, {@code null} where it has none yet
      * @param beanTypes    The bean types
      * @param requiredType The required type
      * @return Whether the types match
      */
-    public static boolean isTypeMatching(Collection<Argument<?>> beanTypes, Argument<?> requiredType) {
+    public static boolean isTypeMatching(@Nullable RecordedTypeIndex index,
+                                         Collection<Argument<?>> beanTypes, Argument<?> requiredType) {
         for (Argument<?> beanType : beanTypes) {
-            if (isLegalBeanType(beanType) && isAssignable(requiredType, beanType)) {
+            if (isLegalBeanType(beanType) && isAssignable(index, requiredType, beanType)) {
                 return true;
             }
         }
@@ -178,6 +181,7 @@ public final class CdiAssignability {
         requireNonNull(observedEventQualifiers, "The observed qualifiers");
         requireQualifiers(types, specifiedQualifiers);
         requireQualifiers(types, observedEventQualifiers);
+        RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
         Argument<?> specified = SpecificationTypes.argumentOf(specifiedType);
         requireNoTypeVariable(specified);
         if (CdiTypes.isParameterized(specified)) {
@@ -190,7 +194,7 @@ public final class CdiAssignability {
                 }
             }
         }
-        if (!isEventTypeMatching(SpecificationTypes.argumentOf(observedEventType), specified)) {
+        if (!isEventTypeMatching(index, SpecificationTypes.argumentOf(observedEventType), specified)) {
             return false;
         }
         // the qualifiers an event was fired with always include Any
@@ -228,25 +232,29 @@ public final class CdiAssignability {
      * 2.8.3 alone: the qualifiers of either side, and what the container's own API refuses of an event type, are
      * not looked at.
      *
+     * @param index The generic hierarchies of the container asking, {@code null} where it has none yet
      * @param observedEventType The type the observer observes
      * @param eventType         The type of the event
      * @return Whether the types match
      */
-    public static boolean isEventTypeMatching(Argument<?> observedEventType, Argument<?> eventType) {
-        return isEventTypeMatching(observedEventType, eventTypeClosureOf(eventType));
+    public static boolean isEventTypeMatching(@Nullable RecordedTypeIndex index,
+                                              Argument<?> observedEventType, Argument<?> eventType) {
+        return isEventTypeMatching(index, observedEventType, eventTypeClosureOf(index, eventType));
     }
 
     /**
      * Whether an observer of the given type hears an event of the given type closure: the form for matching one
      * event against many observers, its closure collected once.
      *
+     * @param index The generic hierarchies of the container asking, {@code null} where it has none yet
      * @param observedEventType The type the observer observes
      * @param eventTypeClosure  The closure of the type of the event, as {@link #eventTypeClosureOf} has it
      * @return Whether the types match
      */
-    static boolean isEventTypeMatching(Argument<?> observedEventType, List<Argument<?>> eventTypeClosure) {
+    static boolean isEventTypeMatching(@Nullable RecordedTypeIndex index,
+                                       Argument<?> observedEventType, List<Argument<?>> eventTypeClosure) {
         for (Argument<?> type : eventTypeClosure) {
-            if (isEventAssignable(observedEventType, type)) {
+            if (isEventAssignable(index, observedEventType, type)) {
                 return true;
             }
         }
@@ -256,11 +264,12 @@ public final class CdiAssignability {
     /**
      * The type closure an event of the given type is matched by.
      *
+     * @param index The generic hierarchies of the container asking, {@code null} where it has none yet
      * @param eventType The type of the event
      * @return The closure
      */
-    static List<Argument<?>> eventTypeClosureOf(Argument<?> eventType) {
-        return typeClosureOf(eventType);
+    static List<Argument<?>> eventTypeClosureOf(@Nullable RecordedTypeIndex index, Argument<?> eventType) {
+        return typeClosureOf(index, eventType);
     }
 
     /**
@@ -289,8 +298,8 @@ public final class CdiAssignability {
      * {@code Baz<String>} hears an event whose class extends {@code Baz<String>}, and only the closure knows
      * that it does.
      */
-    private static List<Argument<?>> typeClosureOf(Argument<?> type) {
-        List<Argument<?>> closure = new ArrayList<>(CdiTypes.closureOf(type));
+    private static List<Argument<?>> typeClosureOf(@Nullable RecordedTypeIndex index, Argument<?> type) {
+        List<Argument<?>> closure = new ArrayList<>(CdiTypes.closureOf(index, type));
         // every type's closure ends in Object, which collecting skips so that the many chains that all end
         // there contribute it only once
         closure.add(Argument.OBJECT_ARGUMENT);
@@ -302,13 +311,14 @@ public final class CdiAssignability {
      * it: the observed type is a supertype of the event type — real subtyping, unlike the matching of bean
      * types, because an observer of the supertype hears the events of every subtype.
      */
-    private static boolean isEventAssignable(Argument<?> observed, Argument<?> event) {
+    private static boolean isEventAssignable(@Nullable RecordedTypeIndex index,
+                                             Argument<?> observed, Argument<?> event) {
         if (observed.equalsStructure(event)) {
             return true;
         }
         if (observed.isUnresolvedTypeVariable()) {
             // an observed type variable observes whatever fits its bounds
-            return assignableToAll(boundsAgainst(observed, event), event);
+            return assignableToAll(index, boundsAgainst(observed, event), event);
         }
         if (CdiTypes.isArray(observed) || CdiTypes.isArray(event)) {
             // arrays are observed by their components, as the language assigns them: covariantly for classes,
@@ -322,7 +332,7 @@ public final class CdiAssignability {
                 return observedComponent.getType().isAssignableFrom(eventComponent.getType());
             }
             // a parameterized component is judged against the entry of its closure of the observed raw type
-            return isEventTypeMatching(observedComponent, eventComponent);
+            return isEventTypeMatching(index, observedComponent, eventComponent);
         }
         Class<?> observedRaw = rawTypeOf(observed);
         Class<?> eventRaw = rawTypeOf(event);
@@ -339,7 +349,7 @@ public final class CdiAssignability {
                 // what the observed type is judged against (section 9.3.1)
                 return false;
             }
-            return allMatch(observed.getTypeParameters(), event.getTypeParameters(), true);
+            return allMatch(index, observed.getTypeParameters(), event.getTypeParameters(), true);
         }
         return true;
     }
@@ -352,7 +362,8 @@ public final class CdiAssignability {
      * <p>{@code Object} is matched by everything, since every bean has it among its types whether or not the
      * caller listed it; and a primitive and the class that boxes it are the same type.</p>
      */
-    private static boolean isAssignable(Argument<?> required, Argument<?> candidate) {
+    private static boolean isAssignable(@Nullable RecordedTypeIndex index,
+                                        Argument<?> required, Argument<?> candidate) {
         if (required.equalsStructure(candidate)) {
             return true;
         }
@@ -394,18 +405,20 @@ public final class CdiAssignability {
             // include a wildcard (section 2.4.2.4): a raw Box is no Box<?>
             return saysNothingOfABean(required.getTypeParameters());
         }
-        return allMatch(required.getTypeParameters(), candidate.getTypeParameters(), false);
+        return allMatch(index, required.getTypeParameters(), candidate.getTypeParameters(), false);
     }
 
     /**
      * Whether two lists of type arguments match pair by pair, as event type arguments or as bean type arguments.
      */
-    private static boolean allMatch(Argument<?>[] required, Argument<?>[] candidate, boolean event) {
+    private static boolean allMatch(@Nullable RecordedTypeIndex index,
+                                    Argument<?>[] required, Argument<?>[] candidate, boolean event) {
         if (required.length != candidate.length) {
             return false;
         }
         for (int i = 0; i < required.length; i++) {
-            if (event ? !eventArgumentMatches(required[i], candidate[i]) : !argumentMatches(required[i], candidate[i])) {
+            if (event ? !eventArgumentMatches(index, required[i], candidate[i])
+                : !argumentMatches(index, required[i], candidate[i])) {
                 return false;
             }
         }
@@ -416,13 +429,14 @@ public final class CdiAssignability {
      * Whether one pair of event type arguments matches, per the cases of section 2.8.3: the observed side may
      * name a wildcard or a variable, and either admits what fits its bounds.
      */
-    private static boolean eventArgumentMatches(Argument<?> observed, Argument<?> event) {
+    private static boolean eventArgumentMatches(@Nullable RecordedTypeIndex index,
+                                                Argument<?> observed, Argument<?> event) {
         if (observed instanceof WildcardArgument<?> wildcard) {
-            return withinBounds(event, wildcard);
+            return withinBounds(index, event, wildcard);
         }
         if (observed.isUnresolvedTypeVariable()) {
             // the event type parameter is assignable to the upper bound of the observed variable
-            return assignableToAll(boundsAgainst(observed, event), event);
+            return assignableToAll(index, boundsAgainst(observed, event), event);
         }
         if (observed.equalsStructure(event)) {
             return true;
@@ -433,7 +447,7 @@ public final class CdiAssignability {
             return false;
         }
         if (CdiTypes.isParameterized(observed) && CdiTypes.isParameterized(event)) {
-            return allMatch(observed.getTypeParameters(), event.getTypeParameters(), true);
+            return allMatch(index, observed.getTypeParameters(), event.getTypeParameters(), true);
         }
         return false;
     }
@@ -446,29 +460,31 @@ public final class CdiAssignability {
      * from any type of the same raw class. And the upper bound of a type variable that is bounded by another
      * variable is that variable's bound, all the way up.</p>
      */
-    private static boolean argumentMatches(Argument<?> required, Argument<?> candidate) {
+    private static boolean argumentMatches(@Nullable RecordedTypeIndex index,
+                                           Argument<?> required, Argument<?> candidate) {
         if (required instanceof WildcardArgument<?> wildcard) {
-            return withinBounds(candidate, wildcard);
+            return withinBounds(index, candidate, wildcard);
         }
         if (required.isUnresolvedTypeVariable()) {
             if (candidate.isUnresolvedTypeVariable()) {
                 // both are variables: the upper bound of the required one is assignable to the upper bound of the
                 // bean one - every bound of the bean variable is satisfied by some bound of the required one
-                return boundsSatisfied(uppermostBoundsOf(candidate), uppermostBoundsOf(required));
+                return boundsSatisfied(index, uppermostBoundsOf(candidate), uppermostBoundsOf(required));
             }
             // the specification has no case for a required type variable and an actual bean argument
             return false;
         }
         if (candidate.isUnresolvedTypeVariable()) {
             // an actual required argument matches a variable whose upper bounds it is assignable to
-            return assignableToAll(boundsAgainst(candidate, required), required);
+            return assignableToAll(index, boundsAgainst(candidate, required), required);
         }
         // two actual arguments: the same raw type, and the parameters of a parameterized one matching by these
         // rules again. An argument is not a type: Object here is Object alone, and matches nothing else
-        return actualArgumentsMatch(required, candidate);
+        return actualArgumentsMatch(index, required, candidate);
     }
 
-    private static boolean actualArgumentsMatch(Argument<?> required, Argument<?> candidate) {
+    private static boolean actualArgumentsMatch(@Nullable RecordedTypeIndex index,
+                                                Argument<?> required, Argument<?> candidate) {
         if (required.equalsStructure(candidate)) {
             return true;
         }
@@ -476,7 +492,7 @@ public final class CdiAssignability {
             Argument<?> requiredComponent = required.componentType();
             Argument<?> candidateComponent = candidate.componentType();
             return requiredComponent != null && candidateComponent != null
-                && actualArgumentsMatch(requiredComponent, candidateComponent);
+                && actualArgumentsMatch(index, requiredComponent, candidateComponent);
         }
         Class<?> requiredRaw = rawTypeOf(required);
         if (requiredRaw == null || !requiredRaw.equals(rawTypeOf(candidate))) {
@@ -485,7 +501,7 @@ public final class CdiAssignability {
         boolean requiredParameterized = CdiTypes.isParameterized(required);
         boolean candidateParameterized = CdiTypes.isParameterized(candidate);
         if (requiredParameterized && candidateParameterized) {
-            return allMatch(required.getTypeParameters(), candidate.getTypeParameters(), false);
+            return allMatch(index, required.getTypeParameters(), candidate.getTypeParameters(), false);
         }
         // one of them raw: the other's parameters must say nothing
         return saysNothingOfABean((requiredParameterized ? required : candidate).getTypeParameters());
@@ -496,28 +512,29 @@ public final class CdiAssignability {
      * its lower bound. A type variable is relaxed, as section 2.4.2.1 relaxes it: its upper bound may be
      * assignable to or from the wildcard's upper bound, and must be assignable from the wildcard's lower bound.
      */
-    private static boolean withinBounds(Argument<?> candidate, WildcardArgument<?> wildcard) {
+    private static boolean withinBounds(@Nullable RecordedTypeIndex index,
+                                        Argument<?> candidate, WildcardArgument<?> wildcard) {
         // an upper bound that is a variable is every bound of that variable at once, so they are resolved; a
         // lower bound that is a variable is the variable, assignable to a type as soon as one of its bounds is
         List<Argument<?>> uppers = uppermostBoundsOf(wildcard.getUpperBounds());
         List<Argument<?>> lowers = wildcard.getLowerBounds();
         if (candidate.isUnresolvedTypeVariable()) {
             List<Argument<?>> beanBounds = uppermostBoundsOf(candidate);
-            if (!boundsSatisfied(uppers, beanBounds) && !boundsSatisfied(beanBounds, uppers)) {
+            if (!boundsSatisfied(index, uppers, beanBounds) && !boundsSatisfied(index, beanBounds, uppers)) {
                 return false;
             }
             for (Argument<?> lower : lowers) {
-                if (!assignableToAll(beanBounds, lower)) {
+                if (!assignableToAll(index, beanBounds, lower)) {
                     return false;
                 }
             }
             return true;
         }
-        if (!assignableToAll(uppers, candidate)) {
+        if (!assignableToAll(index, uppers, candidate)) {
             return false;
         }
         for (Argument<?> lower : lowers) {
-            if (!isJavaAssignable(candidate, lower)) {
+            if (!isJavaAssignable(index, candidate, lower)) {
                 return false;
             }
         }
@@ -528,11 +545,12 @@ public final class CdiAssignability {
      * Whether every bound of the first set is assignable from some bound of the second: what a type within the
      * second set's bounds is then within the first set's as well.
      */
-    private static boolean boundsSatisfied(List<Argument<?>> bounds, List<Argument<?>> from) {
+    private static boolean boundsSatisfied(@Nullable RecordedTypeIndex index,
+                                           List<Argument<?>> bounds, List<Argument<?>> from) {
         for (Argument<?> bound : bounds) {
             boolean satisfied = false;
             for (Argument<?> candidate : from) {
-                if (isJavaAssignable(bound, candidate)) {
+                if (isJavaAssignable(index, bound, candidate)) {
                     satisfied = true;
                     break;
                 }
@@ -544,9 +562,10 @@ public final class CdiAssignability {
         return true;
     }
 
-    private static boolean assignableToAll(List<Argument<?>> bounds, Argument<?> type) {
+    private static boolean assignableToAll(@Nullable RecordedTypeIndex index,
+                                           List<Argument<?>> bounds, Argument<?> type) {
         for (Argument<?> bound : bounds) {
-            if (!isJavaAssignable(bound, type)) {
+            if (!isJavaAssignable(index, bound, type)) {
                 return false;
             }
         }
@@ -598,13 +617,13 @@ public final class CdiAssignability {
      * wildcard admitting only itself - a wildcard from what fits its bounds, a variable from what fits all of
      * its bounds and from any of its bounds, and an array from an array of an assignable component.
      */
-    private static boolean isJavaAssignable(Argument<?> to, Argument<?> from) {
+    private static boolean isJavaAssignable(@Nullable RecordedTypeIndex index, Argument<?> to, Argument<?> from) {
         if (to.equalsStructure(from)) {
             return true;
         }
         if (from.isUnresolvedTypeVariable()) {
             for (Argument<?> bound : uppermostBoundsOf(from)) {
-                if (isJavaAssignable(to, bound)) {
+                if (isJavaAssignable(index, to, bound)) {
                     return true;
                 }
             }
@@ -612,17 +631,17 @@ public final class CdiAssignability {
         }
         if (from instanceof WildcardArgument<?> wildcard) {
             for (Argument<?> bound : uppermostBoundsOf(wildcard.getUpperBounds())) {
-                if (isJavaAssignable(to, bound)) {
+                if (isJavaAssignable(index, to, bound)) {
                     return true;
                 }
             }
             return false;
         }
         if (to.isUnresolvedTypeVariable()) {
-            return assignableToAll(boundsAgainst(to, from), from);
+            return assignableToAll(index, boundsAgainst(to, from), from);
         }
         if (to instanceof WildcardArgument<?> wildcard) {
-            return withinBounds(from, wildcard);
+            return withinBounds(index, from, wildcard);
         }
         if (CdiTypes.isArray(to) || CdiTypes.isArray(from)) {
             Argument<?> toComponent = to.componentType();
@@ -633,7 +652,7 @@ public final class CdiAssignability {
             if (CdiTypes.isClass(toComponent) && CdiTypes.isClass(fromComponent)) {
                 return toComponent.getType().isAssignableFrom(fromComponent.getType());
             }
-            return isJavaAssignable(toComponent, fromComponent);
+            return isJavaAssignable(index, toComponent, fromComponent);
         }
         Class<?> toRaw = rawTypeOf(to);
         Class<?> fromRaw = rawTypeOf(from);
@@ -645,7 +664,7 @@ public final class CdiAssignability {
         }
         Argument<?>[] toArguments = to.getTypeParameters();
         // the parameterization of the target's class that the source type carries, found among its supertypes
-        for (Argument<?> supertype : CdiTypes.closureOf(from)) {
+        for (Argument<?> supertype : CdiTypes.closureOf(index, from)) {
             if (!toRaw.equals(rawTypeOf(supertype))) {
                 continue;
             }
@@ -662,7 +681,7 @@ public final class CdiAssignability {
                 Argument<?> fromArgument = fromArguments[i];
                 // an argument is invariant, a type variable among them: only a wildcard admits other than itself
                 boolean assignable = toArgument.isWildcard()
-                    ? isJavaAssignable(toArgument, fromArgument)
+                    ? isJavaAssignable(index, toArgument, fromArgument)
                     : toArgument.equalsStructure(fromArgument);
                 if (!assignable) {
                     return false;

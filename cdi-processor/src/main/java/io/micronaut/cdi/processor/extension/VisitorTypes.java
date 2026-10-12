@@ -59,14 +59,14 @@ final class VisitorTypes implements Types {
             return ofArray(of(component), dimensions);
         }
         if (clazz.isPrimitive()) {
-            return ElementTypes.of(io.micronaut.inject.ast.PrimitiveElement.valueOf(clazz.getName()));
+            return ElementTypes.of(io.micronaut.inject.ast.PrimitiveElement.valueOf(clazz.getName()), context);
         }
         return element(clazz.getName());
     }
 
     @Override
     public VoidType ofVoid() {
-        return (VoidType) ElementTypes.of(ClassElement.of(void.class));
+        return (VoidType) ElementTypes.of(ClassElement.of(void.class), context);
     }
 
     @Override
@@ -80,7 +80,7 @@ final class VisitorTypes implements Types {
             case FLOAT -> float.class;
             case DOUBLE -> double.class;
             case CHAR -> char.class;
-        }));
+        }), context);
     }
 
     @Override
@@ -101,7 +101,7 @@ final class VisitorTypes implements Types {
         for (int i = 0; i < dimensions; i++) {
             component = component.toArray();
         }
-        return (ArrayType) ElementTypes.of(component);
+        return (ArrayType) ElementTypes.of(component, context);
     }
 
     @Override
@@ -130,22 +130,22 @@ final class VisitorTypes implements Types {
             throw new IllegalArgumentException("The class " + generic.getName() + " declares "
                 + generic.getTypeArguments().size() + " type parameters, and was given " + arguments.size());
         }
-        return (ParameterizedType) ElementTypes.of(generic.withTypeArguments(arguments));
+        return (ParameterizedType) ElementTypes.of(generic.withTypeArguments(arguments), context);
     }
 
     @Override
     public WildcardType wildcardWithUpperBound(Type upperBound) {
-        return ElementTypes.wildcardWithUpperBound(upperBound);
+        return ElementTypes.wildcardWithUpperBound(upperBound, context);
     }
 
     @Override
     public WildcardType wildcardWithLowerBound(Type lowerBound) {
-        return ElementTypes.wildcardWithLowerBound(lowerBound);
+        return ElementTypes.wildcardWithLowerBound(lowerBound, context);
     }
 
     @Override
     public WildcardType wildcardUnbounded() {
-        return ElementTypes.wildcardWithUpperBound(ofClass(Object.class.getName()));
+        return ElementTypes.wildcardWithUpperBound(ofClass(Object.class.getName()), context);
     }
 
     private Type element(String name) {
@@ -153,6 +153,6 @@ final class VisitorTypes implements Types {
             new IllegalArgumentException("The type " + name + " is not on the compilation's classpath"));
         // a class named by itself is the class type, whatever type parameters it declares: the arguments of a
         // parameterized type are given to parameterized
-        return ElementTypes.rawClassOf(element, java.util.List.of());
+        return ElementTypes.rawClassOf(element, java.util.List.of(), context);
     }
 }

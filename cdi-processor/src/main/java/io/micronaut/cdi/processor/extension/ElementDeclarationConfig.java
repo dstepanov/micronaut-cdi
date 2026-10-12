@@ -19,6 +19,7 @@ import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
@@ -42,9 +43,24 @@ import java.util.function.Predicate;
 public abstract class ElementDeclarationConfig<C extends DeclarationConfig> implements DeclarationConfig {
 
     private final Element element;
+    private final VisitorContext context;
 
-    protected ElementDeclarationConfig(Element element) {
+    /**
+     * @param element The declaration being enhanced
+     * @param context The compilation it belongs to, which what the configuration reports is read in
+     */
+    protected ElementDeclarationConfig(Element element, VisitorContext context) {
         this.element = element;
+        this.context = context;
+    }
+
+    /**
+     * The compilation the declaration belongs to.
+     *
+     * @return The visitor context
+     */
+    protected final VisitorContext context() {
+        return context;
     }
 
     /**
@@ -86,7 +102,7 @@ public abstract class ElementDeclarationConfig<C extends DeclarationConfig> impl
             if (annotation == null) {
                 annotation = element.getAnnotationMetadata().getDeclaredMetadata().getAnnotation(name);
             }
-            if (annotation != null && predicate.test(new ElementAnnotationInfo(annotation))) {
+            if (annotation != null && predicate.test(new ElementAnnotationInfo(annotation, context))) {
                 element.removeAnnotation(name);
             }
         }

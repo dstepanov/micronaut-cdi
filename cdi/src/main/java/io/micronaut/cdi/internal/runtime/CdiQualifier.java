@@ -249,10 +249,11 @@ public final class CdiQualifier {
      * The qualifier as an annotation instance, which is what the specification's interfaces report: the one a
      * program supplied, a literal of the specification, or an instance made by the module that makes them.
      *
+     * @param beanContext The context of the container asking, whose reflection module makes an instance
      * @return The instance, or {@code null} where the annotation class is not on the classpath
      * @throws UnsupportedOperationException Where an instance has to be made and the reflection module is absent
      */
-    public @Nullable Annotation instance() {
+    public @Nullable Annotation instance(io.micronaut.context.BeanContext beanContext) {
         Annotation resolved = instance;
         if (resolved != null) {
             return resolved;
@@ -266,7 +267,7 @@ public final class CdiQualifier {
                 return null;
             }
             try {
-                resolved = CdiAnnotations.annotationOf(type, written == null ? binding : written);
+                resolved = CdiAnnotations.annotationOf(beanContext, type, written == null ? binding : written);
             } catch (IllegalArgumentException e) {
                 return null;
             }
@@ -278,13 +279,15 @@ public final class CdiQualifier {
     /**
      * The instances of the given qualifiers, leaving out one whose annotation class is not on the classpath.
      *
-     * @param qualifiers The qualifiers
+     * @param beanContext The context of the container asking, whose reflection module makes an instance
+     * @param qualifiers  The qualifiers
      * @return The instances
      */
-    public static Set<Annotation> instances(Collection<CdiQualifier> qualifiers) {
+    public static Set<Annotation> instances(io.micronaut.context.BeanContext beanContext,
+                                            Collection<CdiQualifier> qualifiers) {
         Set<Annotation> instances = new LinkedHashSet<>();
         for (CdiQualifier qualifier : qualifiers) {
-            Annotation made = qualifier.instance();
+            Annotation made = qualifier.instance(beanContext);
             if (made != null) {
                 instances.add(made);
             }
@@ -395,7 +398,8 @@ public final class CdiQualifier {
         if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, Set.of(), null, annotation);
         }
-        CdiReflection reflection = CdiReflections.current("Reading the members of the annotation instance "
+        CdiReflection reflection = CdiReflection.require(types.beanContext(),
+            "Reading the members of the annotation instance "
             + annotation + " (" + SELECT_BY_VALUE + ")");
         return of(reflection.valuesOf(annotation), null, annotation);
     }
@@ -503,7 +507,8 @@ public final class CdiQualifier {
         if (known != null) {
             return known;
         }
-        return CdiReflections.current("Whether " + type.getName() + ", an annotation the application was not "
+        return CdiReflection.require(types.beanContext(),
+            "Whether " + type.getName() + ", an annotation the application was not "
             + "compiled with as a qualifier, is one").isAnnotated(type, jakarta.inject.Qualifier.class);
     }
 
@@ -565,7 +570,8 @@ public final class CdiQualifier {
         if (supplied == null) {
             return false;
         }
-        return CdiReflections.current("Whether the qualifier " + name + ", which the application was not compiled "
+        return CdiReflection.require(types.beanContext(),
+            "Whether the qualifier " + name + ", which the application was not compiled "
             + "with, may be given twice").isAnnotated(supplied.annotationType(), java.lang.annotation.Repeatable.class);
     }
 
@@ -589,7 +595,8 @@ public final class CdiQualifier {
         if (supplied == null) {
             return true;
         }
-        return CdiReflections.current("Whether the qualifier " + name + ", which the application was not compiled "
+        return CdiReflection.require(types.beanContext(),
+            "Whether the qualifier " + name + ", which the application was not compiled "
             + "with, is retained at runtime").isRetainedAtRuntime(supplied.annotationType());
     }
 

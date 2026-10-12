@@ -90,7 +90,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
      * with its type variables resolved from the type the event is fired as (section 2.8.1).
      */
     private Argument<?> eventTypeOf(Object event) {
-        return exact ? type : CdiTypes.eventTypeOf(event.getClass(), type);
+        return exact ? type : CdiTypes.eventTypeOf(registry.typeIndex(), event.getClass(), type);
     }
 
     @Override

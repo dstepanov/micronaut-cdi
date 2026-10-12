@@ -49,7 +49,8 @@ public final class RegistrationVisitor implements TypeElementVisitor<Object, Obj
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        BuildCompatibleExtensionVisitor visitor = BuildCompatibleExtensionVisitor.current();
+        // the visitor that ran the earlier phases of this compilation, kept on it as it started
+        BuildCompatibleExtensionVisitor visitor = BuildCompatibleExtensionVisitor.of(context);
         if (visitor != null) {
             visitor.register(element, new VisitorMessages(context), context);
         }

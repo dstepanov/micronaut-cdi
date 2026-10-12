@@ -19,6 +19,7 @@ import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
@@ -39,10 +40,10 @@ public final class ElementClassConfig extends ElementDeclarationConfig<ClassConf
     private final ClassElement element;
     private final ElementClassInfo info;
 
-    ElementClassConfig(ClassElement element) {
-        super(element);
+    ElementClassConfig(ClassElement element, VisitorContext context) {
+        super(element, context);
         this.element = element;
-        this.info = new ElementClassInfo(element);
+        this.info = new ElementClassInfo(element, context);
     }
 
     @Override
@@ -59,7 +60,7 @@ public final class ElementClassConfig extends ElementDeclarationConfig<ClassConf
     public Collection<MethodConfig> constructors() {
         Collection<MethodConfig> constructors = new ArrayList<>();
         element.getEnclosedElements(ElementQuery.CONSTRUCTORS)
-            .forEach(constructor -> constructors.add(new ElementMethodConfig(constructor, info)));
+            .forEach(constructor -> constructors.add(new ElementMethodConfig(constructor, info, context())));
         return constructors;
     }
 
@@ -67,7 +68,7 @@ public final class ElementClassConfig extends ElementDeclarationConfig<ClassConf
     public Collection<MethodConfig> methods() {
         Collection<MethodConfig> methods = new ArrayList<>();
         element.getEnclosedElements(ElementQuery.ALL_METHODS)
-            .forEach(method -> methods.add(new ElementMethodConfig(method, info)));
+            .forEach(method -> methods.add(new ElementMethodConfig(method, info, context())));
         return methods;
     }
 
@@ -75,7 +76,7 @@ public final class ElementClassConfig extends ElementDeclarationConfig<ClassConf
     public Collection<FieldConfig> fields() {
         Collection<FieldConfig> fields = new ArrayList<>();
         element.getEnclosedElements(ElementQuery.ALL_FIELDS)
-            .forEach(field -> fields.add(new ElementFieldConfig(field, info)));
+            .forEach(field -> fields.add(new ElementFieldConfig(field, info, context())));
         return fields;
     }
 }

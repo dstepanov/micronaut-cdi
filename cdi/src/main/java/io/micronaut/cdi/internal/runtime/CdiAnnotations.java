@@ -49,19 +49,23 @@ public final class CdiAnnotations {
      * is a reflection object: it is made by the module that answers the reflective parts of the specification's
      * API, and asking for one without that module fails with a message that names it.</p>
      *
-     * @param type  The annotation type
-     * @param value The values it was written with, if any were recorded
-     * @param <A>   The annotation type
+     * @param beanContext The context of the container asking, whose reflection module makes the instance
+     * @param type        The annotation type
+     * @param value       The values it was written with, if any were recorded
+     * @param <A>         The annotation type
      * @return The annotation
      * @throws UnsupportedOperationException Where the type has no builder and the reflection module is not on the
      *                                       classpath
      */
-    public static <A extends Annotation> A annotationOf(Class<A> type, @Nullable AnnotationValue<?> value) {
+    public static <A extends Annotation> A annotationOf(io.micronaut.context.BeanContext beanContext, Class<A> type,
+                                                       @Nullable AnnotationValue<?> value) {
         AnnotationBuilder<A> builder = AnnotationBuilder.find(type).orElse(null);
         if (builder != null) {
             return value == null ? builder.build(java.util.Map.of()) : builder.build(value);
         }
-        return CdiReflections.current("An instance of the annotation " + type.getName()).annotation(type, value);
+        String what = "An instance of the annotation " + type.getName();
+        return io.micronaut.cdi.spi.CdiReflection.require(beanContext, what)
+            .annotation(type, value);
     }
 
     /**

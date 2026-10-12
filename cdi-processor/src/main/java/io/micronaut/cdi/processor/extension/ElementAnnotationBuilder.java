@@ -54,31 +54,39 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
 
     private final String annotation;
     private final Map<CharSequence, Object> members = new LinkedHashMap<>();
+    private final @org.jspecify.annotations.Nullable VisitorContext context;
 
-    ElementAnnotationBuilder(String annotation) {
+    /**
+     * @param annotation The name of the annotation interface
+     * @param context    The compilation its interface is read through, or {@code null} outside one
+     */
+    ElementAnnotationBuilder(String annotation, @org.jspecify.annotations.Nullable VisitorContext context) {
         this.annotation = annotation;
+        this.context = context;
     }
 
     @Override
     public AnnotationInfo build() {
         Map<CharSequence, Object> values = new LinkedHashMap<>(members);
-        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
-        if (context != null) {
-            // a member that was not given is the default its interface declares, and one without a default
-            // has to be given (section 2.10)
-            context.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
-            ClassElement declaration = context.getClassElement(annotation).orElse(null);
-            if (declaration != null) {
-                for (MethodElement member
-                    : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-                    if (!values.containsKey(member.getName())) {
-                        throw new IllegalStateException("The member " + member.getName() + " of " + annotation
-                            + " was not composed and has no default");
-                    }
+        VisitorContext compilation = context;
+        if (compilation == null) {
+            // composed through the services the service loader found, with no compilation to read the
+            // interface through: the annotation is what it was given
+            return ElementAnnotationInfo.composedWithoutCompilation(new AnnotationValue<>(annotation, values));
+        }
+        // a member that was not given is the default its interface declares, and one without a default
+        // has to be given (section 2.10)
+        compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
+        ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
+        if (declaration != null) {
+            for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+                if (!values.containsKey(member.getName())) {
+                    throw new IllegalStateException("The member " + member.getName() + " of " + annotation
+                        + " was not composed and has no default");
                 }
             }
         }
-        return new ElementAnnotationInfo(new AnnotationValue<>(annotation, values));
+        return new ElementAnnotationInfo(new AnnotationValue<>(annotation, values), compilation);
     }
 
     private AnnotationBuilder put(String name, Object value) {

@@ -19,7 +19,6 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
-import org.jspecify.annotations.Nullable;
 
 /**
  * The language model of CDI read from Micronaut's compile-time AST: the entry point of this module.
@@ -37,51 +36,30 @@ import org.jspecify.annotations.Nullable;
  */
 public final class AstLanguageModel {
 
-    private static volatile @Nullable VisitorContext activeContext;
-
     private AstLanguageModel() {
-    }
-
-    /**
-     * Gives the model the visitor context of the compilation under way: what it reads beyond the element at
-     * hand - an annotation's retention, the defaults of its members, a class the element names - is asked of the
-     * compiler through it.
-     *
-     * @param context The context, or {@code null} once the compilation is over
-     */
-    public static void useContext(@Nullable VisitorContext context) {
-        activeContext = context;
-    }
-
-    /**
-     * The visitor context of the compilation under way.
-     *
-     * @return The context, or {@code null} outside a compilation
-     */
-    static @Nullable VisitorContext activeContext() {
-        return activeContext;
     }
 
     /**
      * The class, as the language model has it.
      *
      * @param element The class
-     * @param context The visitor context the class was handed with, which the model reads the compilation through
-     *                from here on (see {@link #useContext(VisitorContext)})
+     * @param context The visitor context the class was handed with: what the model reads beyond the element at
+     *                hand - an annotation's retention, the defaults of its members, a class the element names - is
+     *                asked of the compiler through it, by the class and by everything reached from it
      * @return The class info
      */
     public static ClassInfo classInfo(ClassElement element, VisitorContext context) {
-        useContext(context);
-        return ElementClassInfo.declarationOf(element);
+        return ElementClassInfo.declarationOf(element, context);
     }
 
     /**
      * A type, as the language model has it.
      *
-     * @param type The type
+     * @param type    The type
+     * @param context The visitor context of the compilation the type is read in
      * @return The type
      */
-    public static Type type(ClassElement type) {
-        return ElementTypes.of(type);
+    public static Type type(ClassElement type, VisitorContext context) {
+        return ElementTypes.of(type, context);
     }
 }

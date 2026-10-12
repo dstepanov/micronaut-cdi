@@ -137,7 +137,7 @@ final class SynthesisPhase {
      * The synthetic bean as the registration phase is told about it.
      */
     SyntheticBeanInfo describe(RecordingBeanBuilder<?> bean) {
-        return new SyntheticBeanInfo(bean, scopeOf(bean), isAlternative(bean));
+        return new SyntheticBeanInfo(bean, scopeOf(bean), isAlternative(bean), context);
     }
 
     private boolean isAlternative(RecordingBeanBuilder<?> bean) {

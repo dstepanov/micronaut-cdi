@@ -18,6 +18,7 @@ package io.micronaut.cdi.lang.model.ast;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementModifier;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import org.jspecify.annotations.Nullable;
@@ -45,9 +46,16 @@ import java.util.function.Predicate;
 public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     private final Element element;
+    private final VisitorContext context;
 
-    protected ElementDeclarationInfo(Element element) {
+    /**
+     * @param element The Micronaut element the declaration is read from
+     * @param context The compilation the element belongs to, which the declaration reads what the element does not
+     *                answer on its own through, and hands to everything it is asked for
+     */
+    protected ElementDeclarationInfo(Element element, VisitorContext context) {
         this.element = element;
+        this.context = context;
     }
 
     /**
@@ -57,6 +65,15 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
      */
     public final Element element() {
         return element;
+    }
+
+    /**
+     * The compilation the declaration is read in.
+     *
+     * @return The visitor context
+     */
+    public final VisitorContext context() {
+        return context;
     }
 
     @Override
@@ -81,7 +98,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
-        return ExtensionAnnotations.repeatableOn(element, annotationType.getName());
+        return ExtensionAnnotations.repeatableOn(element, annotationType.getName(), context);
     }
 
     @Override
@@ -91,7 +108,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public Collection<AnnotationInfo> annotations() {
-        return ExtensionAnnotations.declaredOn(element);
+        return ExtensionAnnotations.declaredOn(element, context);
     }
 
     /**

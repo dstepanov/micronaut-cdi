@@ -26,6 +26,7 @@ import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
@@ -55,29 +56,33 @@ import java.util.Set;
 @Internal
 final class AstSourceModel implements SourceModel {
 
-    static final AstSourceModel INSTANCE = new AstSourceModel();
-
     private static final String OBJECT = "java.lang.Object";
     private static final String RETENTION = "java.lang.annotation.Retention";
     private static final String REPEATABLE = "java.lang.annotation.Repeatable";
 
-    private AstSourceModel() {
+    private final VisitorContext context;
+
+    /**
+     * @param context The compilation the model is read from
+     */
+    AstSourceModel(VisitorContext context) {
+        this.context = context;
     }
 
     @Override
     public List<AnnotationInfo> annotationsOf(Element element) {
         List<AnnotationInfo> found = new ArrayList<>();
         for (String name : element.getDeclaredAnnotationNames()) {
-            if (!ExtensionAnnotations.isReported(element, name)) {
+            if (!ExtensionAnnotations.isReported(element, name, context)) {
                 continue;
             }
             AnnotationValue<Annotation> annotation = element.getDeclaredAnnotation(name);
             if (annotation != null) {
-                found.add(new ElementAnnotationInfo(annotation));
+                found.add(new ElementAnnotationInfo(annotation, context));
             }
         }
         if (element instanceof AnnotationElement annotation) {
-            addMetaAnnotations(annotation, found);
+            addMetaAnnotations(annotation, found, context);
         }
         return ExtensionAnnotations.unfoldSingleRepetitions(found, element);
     }
@@ -91,20 +96,22 @@ final class AstSourceModel implements SourceModel {
      * {@code Target} is not put back, since the targets of an interface that declares none read the same as
      * declared ones.
      */
-    private static void addMetaAnnotations(AnnotationElement annotation, List<AnnotationInfo> found) {
+    private static void addMetaAnnotations(AnnotationElement annotation, List<AnnotationInfo> found,
+                                           VisitorContext context) {
         Set<String> present = new HashSet<>();
         found.forEach(each -> present.add(each.name()));
         RetentionPolicy retention = annotation.getRetentionPolicy();
         if (!present.contains(RETENTION) && retention != RetentionPolicy.CLASS
-            && ExtensionAnnotations.isReported(annotation, RETENTION)) {
+            && ExtensionAnnotations.isReported(annotation, RETENTION, context)) {
             found.add(new ElementAnnotationInfo(
-                AnnotationValue.builder(RETENTION).member("value", retention.name()).build()));
+                AnnotationValue.builder(RETENTION).member("value", retention.name()).build(), context));
         }
         String container = annotation.getRepeatableContainer().orElse(null);
         if (container != null && !present.contains(REPEATABLE)
-            && ExtensionAnnotations.isReported(annotation, REPEATABLE)) {
+            && ExtensionAnnotations.isReported(annotation, REPEATABLE, context)) {
             found.add(new ElementAnnotationInfo(
-                AnnotationValue.builder(REPEATABLE).member("value", new AnnotationClassValue<>(container)).build()));
+                AnnotationValue.builder(REPEATABLE).member("value", new AnnotationClassValue<>(container)).build(),
+                context));
         }
     }
 
@@ -112,29 +119,29 @@ final class AstSourceModel implements SourceModel {
     public List<AnnotationInfo> repeatableOn(Element element, String annotation) {
         // Micronaut resolves the container of a repeatable annotation itself when asked for the annotations of
         // one name, whether they were written one by one or inside the container
-        if (!ExtensionAnnotations.isReported(element, annotation)) {
+        if (!ExtensionAnnotations.isReported(element, annotation, context)) {
             return List.of();
         }
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationValue<Annotation> value : element.getDeclaredAnnotationValuesByName(annotation)) {
-            found.add(new ElementAnnotationInfo(value));
+            found.add(new ElementAnnotationInfo(value, context));
         }
         return found;
     }
 
     @Override
     public Type typeOf(FieldElement field) {
-        return ElementTypes.of(field.getType(), field.getDeclaringType());
+        return ElementTypes.of(field.getType(), field.getDeclaringType(), context);
     }
 
     @Override
     public Type typeOf(ParameterElement parameter) {
-        return ElementTypes.of(parameter.getType(), parameter.getMethodElement().getDeclaringType());
+        return ElementTypes.of(parameter.getType(), parameter.getMethodElement().getDeclaringType(), context);
     }
 
     @Override
     public Type returnTypeOf(MethodElement method) {
-        return ElementTypes.of(method.getReturnType(), method.getDeclaringType());
+        return ElementTypes.of(method.getReturnType(), method.getDeclaringType(), context);
     }
 
     @Override
@@ -146,7 +153,7 @@ final class AstSourceModel implements SourceModel {
                 annotations.add(annotation);
             }
         }
-        return ElementTypes.rawClassOf(constructor.getDeclaringType(), annotations);
+        return ElementTypes.rawClassOf(constructor.getDeclaringType(), annotations, context);
     }
 
     @Override
@@ -159,7 +166,8 @@ final class AstSourceModel implements SourceModel {
         if (method instanceof ConstructorElement && !(declaring.isInner() && !declaring.isStatic())) {
             return null;
         }
-        return method.getReceiverType().map(ElementTypes::of).orElseGet(() -> ElementTypes.of(declaring));
+        return method.getReceiverType().map(type -> ElementTypes.of(type, context))
+            .orElseGet(() -> ElementTypes.of(declaring, context));
     }
 
     @Override
@@ -167,7 +175,7 @@ final class AstSourceModel implements SourceModel {
         ClassElement[] thrown = method.getThrownTypes();
         List<Type> types = new ArrayList<>(thrown.length);
         for (ClassElement type : thrown) {
-            types.add(ElementTypes.of(type));
+            types.add(ElementTypes.of(type, context));
         }
         return types;
     }
@@ -182,10 +190,10 @@ final class AstSourceModel implements SourceModel {
         return variablesOf(method.getDeclaredTypeVariables());
     }
 
-    private static List<TypeVariable> variablesOf(List<? extends GenericPlaceholderElement> placeholders) {
+    private List<TypeVariable> variablesOf(List<? extends GenericPlaceholderElement> placeholders) {
         List<TypeVariable> variables = new ArrayList<>(placeholders.size());
         for (GenericPlaceholderElement placeholder : placeholders) {
-            variables.add(ElementTypes.variableOf(placeholder));
+            variables.add(ElementTypes.variableOf(placeholder, context));
         }
         return variables;
     }
@@ -196,27 +204,28 @@ final class AstSourceModel implements SourceModel {
             return null;
         }
         // a class whose superclass is Object still has one, though Micronaut's model leaves it implicit
-        return clazz.getSuperType().map(ElementTypes::of).orElseGet(ElementTypes::objectType);
+        return clazz.getSuperType().map(type -> ElementTypes.of(type, context))
+            .orElseGet(() -> ElementTypes.objectType(context));
     }
 
     @Override
     public List<Type> superInterfacesOf(ClassElement clazz) {
         List<Type> types = new ArrayList<>();
         for (ClassElement type : clazz.getInterfaces()) {
-            types.add(ElementTypes.of(type));
+            types.add(ElementTypes.of(type, context));
         }
         return types;
     }
 
     @Override
     public @Nullable String containerOf(String annotation) {
-        return ExtensionAnnotationTypes.declarationOf(annotation) instanceof AnnotationElement declaration
+        return ExtensionAnnotationTypes.declarationOf(annotation, context) instanceof AnnotationElement declaration
             ? declaration.getRepeatableContainer().orElse(null) : null;
     }
 
     @Override
     public boolean isTypeUse(String annotation) {
-        return ExtensionAnnotationTypes.declarationOf(annotation) instanceof AnnotationElement declaration
+        return ExtensionAnnotationTypes.declarationOf(annotation, context) instanceof AnnotationElement declaration
             && declaration.getTargets().contains(ElementType.TYPE_USE);
     }
 }

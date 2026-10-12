@@ -228,7 +228,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         }
         try {
             // the definition is the one the lookup chose: resolved as it is, with no candidate lookup of its own
-            return beanContext.getBeanRegistration(definition, askedAs(selected, definition));
+            return beanContext.getBeanRegistration(definition, askedAs(beanContext, selected, definition));
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
@@ -258,8 +258,14 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * a bean resolvable only by its declared types is asked by one of them. The definition's own type serves
      * only where the selected one does not name the bean — a primitive selected where the boxed type is the
      * bean's, say.
+     *
+     * @param beanContext The context of the container asking, whose generic hierarchies an array is read from
+     * @param selected    The type the lookup selected
+     * @param definition  The definition of the bean
+     * @param <U>         The bean type
+     * @return The argument
      */
-    static <U> Argument<U> askedAs(Argument<U> selected, BeanDefinition<U> definition) {
+    static <U> Argument<U> askedAs(BeanContext beanContext, Argument<U> selected, BeanDefinition<U> definition) {
         if (CdiTypes.isArray(selected)) {
             // The producer's compiled definition may expose only the raw array argument. The lookup already
             // matched its recorded CDI types, so preserve the component's parameters for candidate resolution.
@@ -268,7 +274,8 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         if (CdiTypes.isArray(definition.asArgument())) {
             // A qualified Object lookup can select an array producer too. Resolve it by its recorded array
             // type rather than the erased array argument of the generated definition.
-            for (Argument<?> type : CdiBean.typesOf(definition, definition.getBeanType())) {
+            RecordedTypeIndex index = RecordedTypeIndex.of(beanContext);
+            for (Argument<?> type : CdiBean.typesOf(index, definition, definition.getBeanType())) {
                 if (CdiTypes.isArray(type)) {
                     @SuppressWarnings("unchecked") Argument<U> array = (Argument<U>) type;
                     return array;
@@ -477,7 +484,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         // a lookup that was injected nowhere - the bean container's, CDI.current(), the SE container - stands
         // for itself, and requires what it selected: the type, and every qualifier of every select, with the
         // members each was handed over with (section 2.4.5.7)
-        return new CdiInjectionPoint(null, type, null).viewedAs(type, required());
+        return new CdiInjectionPoint(beanContext, null, type, null).viewedAs(type, required());
     }
 
     private Collection<BeanDefinition<T>> definitions() {

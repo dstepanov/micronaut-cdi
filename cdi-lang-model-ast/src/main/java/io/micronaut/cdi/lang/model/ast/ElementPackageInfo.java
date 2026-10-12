@@ -17,6 +17,7 @@ package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.PackageElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.PackageInfo;
 
 /**
@@ -30,8 +31,8 @@ public final class ElementPackageInfo extends ElementDeclarationInfo implements 
 
     private final PackageElement element;
 
-    ElementPackageInfo(PackageElement element) {
-        super(element);
+    ElementPackageInfo(PackageElement element, VisitorContext context) {
+        super(element, context);
         this.element = element;
     }
 

@@ -564,15 +564,43 @@ are merged upstream; the remaining differences below still require adaptation or
   the reflection module answers the type closure, the declared type and the event type of a class itself
   (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
 - **A resolution customizer is handed no context.** Micronaut builds a `BeanResolutionCustomizer` from the builder
-  of a context, before the context exists, and calls it without one. The rules of section 2.4.2.1 that
-  `CdiResolutionCustomizer` applies to a parameterized lookup need the type closures the processor recorded, which
-  are beans of the context, so the closures are read from the running container (`CdiRunning`), the way
-  `CDI.current()` finds one; where two containers run at once, the one started last is asked. The other static
-  state is the specification's or the resolution path's: `CDI.current()` and the `BuildServices` of the build
-  compatible extensions are static entry points; the injection point of a bean obtained through `Instance` is
-  left on a thread local around its creation (`CurrentInjectionPoint`), the resolution of a lookup carrying no
-  injection point of its own; and the processor's mappers and remappers, which Micronaut instantiates apart from
-  the visitors, reach what the extension phase recorded through the visitor that ran it.
+  of a context, before the context exists, calls `isCandidateBean` without one, and applies no
+  `BeanContextConfigurable` to it (`DefaultBeanContext.getBeanResolutionCustomizer()` is package-private). The rules
+  of section 2.4.2.1 that `CdiResolutionCustomizer` applies to a parameterized lookup need the type closures the
+  processor recorded, which are beans of the context. The context reaches its own customizer through the public
+  `getContextConfiguration().beanResolutionCustomizer()`, and the container hands it the index of its closures as
+  it creates the registry its first lifecycle event goes through (`CdiResolutionCustomizer.attach`); a
+  parameterized lookup made before then is matched by what Micronaut exposes alone, and a customizer installed on a
+  builder that builds two contexts serves the first. Handing a customizer its context — a `configure(BeanContext)`,
+  or the context as an argument of `isCandidateBean` — would remove the step.
+- **A lookup by definition cannot carry the injection point it stands for.** `Instance` creates a dependent bean by
+  the definition it selected (`getBeanRegistration(definition, argument)`), which starts a resolution of its own;
+  the definition-keyed form that takes the caller's `BeanResolutionContext` is package-private on
+  `DefaultBeanContext`, and `BeanContext` has none, and a synthetic bean's creator is handed a
+  `RuntimeBeanDefinition.CreationContext` with no resolution context in it. The injection point of the lookup is
+  therefore left on a thread local around the creation (`CurrentInjectionPoint`), where the `InjectionPoint` bean
+  reads it; a public `getBeanRegistration(BeanResolutionContext, BeanDefinition, Argument)` would let it travel as
+  an attribute of the resolution instead.
+- **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
+  visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
+  (`CompilationState`, `NonbindingMembersRemapper`) rather than in static fields. Under javac they belong to one
+  processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
+  definition processor is remapped with that processor's attributes, so there a remapper does not see the
+  extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
+  that metadata reads. Under KSP they belong to the processor and last across its rounds. The Groovy compiler keeps
+  them in one static map for every compilation in the process (`GroovyVisitorContext`), so under Groovy two
+  compilations running at once in one process share them as they would a static field; the records of generated
+  classes are kept under the generated class's name, which differs between compilations, the visitor of the
+  compilation is not.
+- **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
+  to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
+  `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
+  compilation starts; the request context and `RequestContextController` follow the specification's per-thread
+  model with thread locals of each container's own. Two seams are left for the harnesses that run the
+  specification's test kit in one process: the extensions of one compiled deployment
+  (`BuildCompatibleExtensionVisitor.overrideExtensions`), since a compilation is handed nothing but options, and
+  the classpath a test's SE container sees (`MicronautSeContainerInitializer`), since the kit builds the container
+  itself through `SeContainerInitializer.newInstance()`.
 
 ## What other implementations' tests found
 

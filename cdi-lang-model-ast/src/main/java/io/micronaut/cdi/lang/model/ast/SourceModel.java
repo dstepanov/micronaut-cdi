@@ -21,6 +21,7 @@ import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
@@ -47,12 +48,14 @@ import java.util.List;
 interface SourceModel {
 
     /**
-     * The model for the compilation under way.
+     * The model of a compilation, which reads what an element does not answer on its own - the interface an
+     * annotation names, its retention and its targets - through the compiler.
      *
+     * @param context The compilation
      * @return The model
      */
-    static SourceModel active() {
-        return AstSourceModel.INSTANCE;
+    static SourceModel of(VisitorContext context) {
+        return new AstSourceModel(context);
     }
 
     /**

@@ -22,6 +22,7 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import org.jspecify.annotations.Nullable;
@@ -47,10 +48,11 @@ final class ExtensionAnnotations {
      * The annotations written on a declaration, the ones an extension added included.
      *
      * @param element The declaration
+     * @param context The compilation the declaration is read in
      * @return The annotations
      */
-    static List<AnnotationInfo> declaredOn(Element element) {
-        return SourceModel.active().annotationsOf(element);
+    static List<AnnotationInfo> declaredOn(Element element, VisitorContext context) {
+        return SourceModel.of(context).annotationsOf(element);
     }
 
     /**
@@ -60,10 +62,11 @@ final class ExtensionAnnotations {
      *
      * @param element    The declaration
      * @param annotation The annotation interface's binary name
+     * @param context    The compilation the declaration is read in
      * @return The annotations, in the order they were written
      */
-    static List<AnnotationInfo> repeatableOn(Element element, String annotation) {
-        return SourceModel.active().repeatableOn(element, annotation);
+    static List<AnnotationInfo> repeatableOn(Element element, String annotation, VisitorContext context) {
+        return SourceModel.of(context).repeatableOn(element, annotation);
     }
 
     /**
@@ -72,10 +75,12 @@ final class ExtensionAnnotations {
      *
      * @param annotations The annotations to look through
      * @param annotation  The annotation interface's binary name
+     * @param context     The compilation the annotations are read in
      * @return The annotations, in the order they were written
      */
-    static List<AnnotationInfo> repeatableIn(Collection<AnnotationInfo> annotations, String annotation) {
-        String container = SourceModel.active().containerOf(annotation);
+    static List<AnnotationInfo> repeatableIn(Collection<AnnotationInfo> annotations, String annotation,
+                                             VisitorContext context) {
+        String container = SourceModel.of(context).containerOf(annotation);
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationInfo written : annotations) {
             if (written.name().equals(annotation)) {
@@ -114,10 +119,11 @@ final class ExtensionAnnotations {
      * Whether an annotation of the given name is passed on to a class from its superclass.
      *
      * @param annotation The annotation interface's binary name
+     * @param context    The compilation to look the interface up in
      * @return Whether it is marked {@code Inherited}
      */
-    static boolean isInherited(String annotation) {
-        return ExtensionAnnotationTypes.declarationOf(annotation) instanceof AnnotationElement declaration
+    static boolean isInherited(String annotation, VisitorContext context) {
+        return ExtensionAnnotationTypes.declarationOf(annotation, context) instanceof AnnotationElement declaration
             && declaration.isInherited();
     }
 
@@ -127,10 +133,11 @@ final class ExtensionAnnotations {
      * constructor alone.
      *
      * @param annotation The annotation interface's binary name
+     * @param context    The compilation to look the interface up in
      * @return Whether {@code TYPE_USE} is among its targets
      */
-    static boolean isTypeUse(String annotation) {
-        return SourceModel.active().isTypeUse(annotation);
+    static boolean isTypeUse(String annotation, VisitorContext context) {
+        return SourceModel.of(context).isTypeUse(annotation);
     }
 
     /**
@@ -139,10 +146,11 @@ final class ExtensionAnnotations {
      *
      * @param element    The declaration
      * @param annotation The annotation interface's binary name
+     * @param context    The compilation the declaration is read in
      * @return Whether it is reported
      */
-    static boolean isReported(Element element, String annotation) {
-        return ExtensionAnnotationTypes.isRuntimeRetained(annotation)
+    static boolean isReported(Element element, String annotation, VisitorContext context) {
+        return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context)
             && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false));
     }
 
@@ -152,10 +160,12 @@ final class ExtensionAnnotations {
      *
      * @param annotation    The annotation interface's binary name
      * @param declaringType The class the use belongs to, or {@code null} where unknown
+     * @param context       The compilation the use is read in
      * @return Whether it is reported
      */
-    static boolean isReportedOnType(String annotation, @Nullable ClassElement declaringType) {
-        return ExtensionAnnotationTypes.isRuntimeRetained(annotation)
+    static boolean isReportedOnType(String annotation, @Nullable ClassElement declaringType,
+                                    VisitorContext context) {
+        return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context)
             && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(null, declaringType, true));
     }
 
