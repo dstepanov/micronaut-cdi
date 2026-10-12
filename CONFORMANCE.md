@@ -555,6 +555,16 @@ are merged upstream; the remaining differences below still require adaptation or
   container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
   the reflection module answers the type closure, the declared type and the event type of a class itself
   (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
+- **A resolution customizer is handed no context.** Micronaut builds a `BeanResolutionCustomizer` from the builder
+  of a context, before the context exists, and calls it without one. The rules of section 2.4.2.1 that
+  `CdiResolutionCustomizer` applies to a parameterized lookup need the type closures the processor recorded, which
+  are beans of the context, so the closures are read from the running container (`CdiRunning`), the way
+  `CDI.current()` finds one; where two containers run at once, the one started last is asked. The other static
+  state is the specification's or the resolution path's: `CDI.current()` and the `BuildServices` of the build
+  compatible extensions are static entry points; the injection point of a bean obtained through `Instance` is
+  left on a thread local around its creation (`CurrentInjectionPoint`), the resolution of a lookup carrying no
+  injection point of its own; and the processor's mappers and remappers, which Micronaut instantiates apart from
+  the visitors, reach what the extension phase recorded through the visitor that ran it.
 
 ## What other implementations' tests found
 

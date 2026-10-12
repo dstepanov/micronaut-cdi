@@ -380,6 +380,13 @@ public final class CdiTypes {
         return index == null ? null : index.of(type.getName());
     }
 
+    /**
+     * The reflection module of the running container. The type closures are asked from static code because their
+     * main caller cannot be handed a context: Micronaut builds the {@code BeanResolutionCustomizer} that matches
+     * parameterized lookups by these rules ({@code CdiResolutionCustomizer}) from the builder of the context,
+     * before the context exists, and hands it no context afterwards. The running container ({@link CdiRunning})
+     * is the one there is to ask.
+     */
     private static @Nullable CdiReflection reflection() {
         io.micronaut.context.BeanContext context = CdiRunning.currentContext();
         return context == null ? null : context.findBean(CdiReflection.class).orElse(null);
