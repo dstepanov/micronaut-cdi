@@ -77,8 +77,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * compilation run inside a test has for handing a visitor objects, where a compiler takes nothing but options.
      */
     private static volatile @org.jspecify.annotations.Nullable Deployment overriddenDeployment;
-    private static volatile io.micronaut.inject.visitor.@org.jspecify.annotations.Nullable VisitorContext
-        activeContext;
 
     private static final String GENERATED = "io.micronaut.cdi.generated";
     private static final String TRIGGER = "RegistrationEnd";
@@ -116,10 +114,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private @org.jspecify.annotations.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
-        // what AnnotationBuilder.of composes with: the specification's resolver looks for it through the loader
-        // of its own API, which is not always one that sees the service entry of this module
-        jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver.setBuildServices(
-            new ElementBuildServices());
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
         Deployment overridden = overriddenDeployment;
         deployment = overridden;
@@ -230,16 +224,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     public static @org.jspecify.annotations.Nullable DiscoveredClasses discoveryOf(VisitorContext context) {
         BuildCompatibleExtensionVisitor visitor = of(context);
         return visitor == null ? null : visitor.discovered;
-    }
-
-    /**
-     * The visitor context of the compilation under way, for the model classes that need the compiler's view of
-     * a class the element at hand does not name — the implicit {@code java.lang.Object} superclass, say.
-     *
-     * @return The context, or {@code null} outside a compilation
-     */
-    static io.micronaut.inject.visitor.@org.jspecify.annotations.Nullable VisitorContext activeVisitorContext() {
-        return activeContext;
     }
 
     private static void validateDiscovery(Method method) {
@@ -542,7 +526,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public void start(VisitorContext context) {
-        activeContext = context;
+        // what AnnotationBuilder.of composes with, reading the annotation interfaces through this compilation. The
+        // specification's resolver is the static entry point of its build time API, which an extension calls with
+        // nothing to hand it; it is set here, as the compilation starts, rather than left to the service loader,
+        // which looks through the loader of the API and does not always see the service entry of this module
+        jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver.setBuildServices(
+            new ElementBuildServices(context));
         io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts
@@ -568,7 +557,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        activeContext = context;
         io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // written as the first class is visited, so that the compiler still has rounds ahead of it to process
         // the generated import in
@@ -695,7 +683,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * validation of section 2.10.6.
      */
     private void synthesise(VisitorContext context) {
-        activeContext = context;
         io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         synthesized = true;
         if (synthesizers.isEmpty() && validators.isEmpty() && registrars.isEmpty()) {
@@ -799,7 +786,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * else has left it.</p>
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
-        activeContext = context;
         io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         if (registrars.isEmpty()) {
             return;

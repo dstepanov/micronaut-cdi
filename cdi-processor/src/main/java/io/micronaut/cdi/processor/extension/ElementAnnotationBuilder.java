@@ -54,20 +54,26 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
 
     private final String annotation;
     private final Map<CharSequence, Object> members = new LinkedHashMap<>();
+    private final @org.jspecify.annotations.Nullable VisitorContext context;
 
-    ElementAnnotationBuilder(String annotation) {
+    /**
+     * @param annotation The name of the annotation interface
+     * @param context    The compilation its interface is read through, or {@code null} outside one
+     */
+    ElementAnnotationBuilder(String annotation, @org.jspecify.annotations.Nullable VisitorContext context) {
         this.annotation = annotation;
+        this.context = context;
     }
 
     @Override
     public AnnotationInfo build() {
         Map<CharSequence, Object> values = new LinkedHashMap<>(members);
-        VisitorContext context = BuildCompatibleExtensionVisitor.activeVisitorContext();
-        if (context != null) {
+        VisitorContext compilation = context;
+        if (compilation != null) {
             // a member that was not given is the default its interface declares, and one without a default
             // has to be given (section 2.10)
-            context.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
-            ClassElement declaration = context.getClassElement(annotation).orElse(null);
+            compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
+            ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
             if (declaration != null) {
                 for (MethodElement member
                     : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
