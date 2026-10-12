@@ -61,7 +61,7 @@ public final class CdiAnnotations {
         if (builder != null) {
             return value == null ? builder.build(java.util.Map.of()) : builder.build(value);
         }
-        return CdiReflection.current("An instance of the annotation " + type.getName()).annotation(type, value);
+        return CdiReflections.current("An instance of the annotation " + type.getName()).annotation(type, value);
     }
 
     /**

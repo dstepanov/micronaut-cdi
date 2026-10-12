@@ -131,7 +131,8 @@ instance. The container compares one as the values it was written with: two qual
 are of one type and their binding members are equal, a member left at its default being equal to the default
 written down. Nothing is materialized to resolve a bean, inject an `Event` or an `Instance`, or notify an
 observer. An instance is made only when a program asks for one - `Bean.getQualifiers()` and its like - and that
-is the reflection module's.
+is the reflection module's, which synthesises it with Micronaut's `ReflectionAnnotations` and reads the members
+of one a program hands over the same way.
 
 The members that do not bind are recorded once, the way Micronaut records its own `@NonBinding` members: listed
 under `$nonBinding` in the values of the qualifier. Micronaut lists a member only on an occurrence that writes it,
@@ -167,7 +168,9 @@ records each: the closure of a bean on the bean or on its producer; the observed
 closure and the type variables of every class a compilation compiles, on a class it generates in the package of
 the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
-in `io.micronaut.cdi.internal.type`. The type of an event is the class of the event object with its type variables resolved from the
+in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, which reads a wildcard as its
+bound and a type variable as its first bound (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
+The type of an event is the class of the event object with its type variables resolved from the
 type the event was fired as, worked out from that record, and an object whose class leaves a variable
 unresolved is refused from it.
 
@@ -543,6 +546,13 @@ are merged upstream; the remaining differences below still require adaptation or
   an occurrence that leaves the member at its default nor a member a build compatible extension marked carries it.
   The processor completes the list (`NonbindingMembersRemapper`), and the comparison leaves out a member either
   side lists.
+- **Micronaut's reflective type arguments lose wildcards and type variables.** `ReflectionArguments.of(Type)`
+  reads a wildcard as its bound and a type variable as its first bound, and `ReflectionArguments.toType` never
+  makes a wildcard, while the rules of section 5.2.4 tell `List<? extends Number>` from `List<Number>` and a
+  type variable from its bound; and Micronaut has no utility for the parameterized type closure of a class. The
+  container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
+  the reflection module answers the type closure, the declared type and the event type of a class itself
+  (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
 
 ## What other implementations' tests found
 

@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.spi;
 
-import io.micronaut.cdi.internal.runtime.CdiRunning;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import jakarta.enterprise.inject.spi.Annotated;
@@ -38,6 +37,13 @@ import java.util.Set;
  * <p>The implementation is a bean, looked up when one of those calls is made. Where the module is absent the
  * call fails with an {@link UnsupportedOperationException} that names the module, rather than answering with
  * something that would read as there being nothing to report.</p>
+ *
+ * <p>The implementation reads annotations with Micronaut's {@code io.micronaut.reflection.ReflectionAnnotations}
+ * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The three questions about generic types -
+ * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked here because Micronaut has
+ * no counterpart that keeps what they need: {@code ReflectionArguments.of(Type)} reads a wildcard as its bound and
+ * a type variable as its first bound, and Micronaut has no utility for the parameterized type closure of a
+ * class.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -160,16 +166,5 @@ public interface CdiReflection {
                 + "use: add " + MODULE + " to the classpath of the application to have it");
         }
         return reflection;
-    }
-
-    /**
-     * The implementation of the running container, for a call made where no bean context is at hand.
-     *
-     * @param what What needs it, to open the message with when the module is absent
-     * @return The implementation
-     * @throws UnsupportedOperationException Where the module is not on the classpath
-     */
-    static CdiReflection current(String what) {
-        return require(CdiRunning.currentContext(), what);
     }
 }

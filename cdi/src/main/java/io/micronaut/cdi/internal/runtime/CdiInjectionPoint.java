@@ -139,7 +139,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             // an injection point that stands for a programmatic lookup has no member
             return null;
         }
-        return CdiReflection.current("InjectionPoint.getMember()").member(site);
+        return CdiReflections.current("InjectionPoint.getMember()").member(site);
     }
 
     /**
@@ -191,7 +191,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             throw new UnsupportedOperationException("An injection point that stands for a programmatic lookup "
                 + "has no annotated model");
         }
-        return CdiReflection.current("InjectionPoint.getAnnotated()").annotated(site);
+        return CdiReflections.current("InjectionPoint.getAnnotated()").annotated(site);
     }
 
     @Override
