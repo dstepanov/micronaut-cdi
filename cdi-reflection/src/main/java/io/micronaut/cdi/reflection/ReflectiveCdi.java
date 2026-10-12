@@ -17,10 +17,12 @@ package io.micronaut.cdi.reflection;
 
 import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
 import io.micronaut.cdi.spi.CdiReflection;
+import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.reflection.ReflectionAnnotations;
 import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.util.Nonbinding;
@@ -33,7 +35,6 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -238,94 +239,75 @@ public final class ReflectiveCdi implements CdiReflection {
     }
 
     @Override
-    public @Nullable Member member(Class<?> declaringClass, String memberName, boolean field, Class<?> injectedType) {
-        for (Class<?> type = declaringClass; type != null && type != Object.class; type = type.getSuperclass()) {
-            if (field) {
-                try {
-                    return type.getDeclaredField(memberName);
-                } catch (NoSuchFieldException e) {
-                    // declared further up
-                }
-            } else if ("<init>".equals(memberName)) {
-                Constructor<?> fallback = null;
-                for (Constructor<?> constructor : type.getDeclaredConstructors()) {
-                    if (constructor.isSynthetic()) {
-                        continue;
-                    }
-                    // the bean constructor is the injected one where one is marked; else the one that takes
-                    // what the point injects
-                    if (constructor.isAnnotationPresent(jakarta.inject.Inject.class)
-                        || takes(constructor.getParameterTypes(), injectedType)) {
-                        return constructor;
-                    }
-                    if (fallback == null) {
-                        fallback = constructor;
-                    }
-                }
-                if (fallback != null) {
-                    return fallback;
-                }
-            } else {
-                Method fallback = null;
-                for (Method method : type.getDeclaredMethods()) {
-                    if (!method.getName().equals(memberName)) {
-                        continue;
-                    }
-                    // of same-named overloads, the injected member is the one that takes what the point
-                    // injects
-                    if (takes(method.getParameterTypes(), injectedType)) {
-                        return method;
-                    }
-                    if (fallback == null) {
-                        fallback = method;
-                    }
-                }
-                if (fallback != null) {
-                    return fallback;
-                }
+    public @Nullable Member member(InjectionSite site) {
+        Class<?>[] parameterTypes = site.parameterTypes().toArray(new Class<?>[0]);
+        if (site.field()) {
+            return ReflectionUtils.findField(site.declaringClass(), site.memberName()).orElse(null);
+        }
+        if (site.isConstructor()) {
+            Constructor<?> exact = ReflectionUtils.findConstructor(site.declaringClass(), parameterTypes).orElse(null);
+            return exact != null ? exact
+                : declaredFor(site.declaringClass().getDeclaredConstructors(), parameterTypes);
+        }
+        Method exact = ReflectionUtils.findMethod(site.declaringClass(), site.memberName(), parameterTypes)
+            .orElse(null);
+        if (exact != null) {
+            return exact;
+        }
+        for (Class<?> type = site.declaringClass(); type != null && type != Object.class; type = type.getSuperclass()) {
+            Method[] named = java.util.Arrays.stream(type.getDeclaredMethods())
+                .filter(method -> method.getName().equals(site.memberName()))
+                .toArray(Method[]::new);
+            Executable found = declaredFor(named, parameterTypes);
+            if (found != null) {
+                return found;
             }
         }
         return null;
     }
 
-    private static boolean takes(Class<?>[] parameterTypes, Class<?> injectedType) {
-        for (Class<?> parameterType : parameterTypes) {
-            if (parameterType.equals(injectedType)) {
-                return true;
+    /**
+     * The one executable among the given ones whose parameters the compiled types fit, where none declares them
+     * exactly: a bean's definition compiles the parameters of a member its class inherits with the type arguments
+     * the class gives the type variables of the class above it, so {@code T[]} of {@code Bar<T>} is compiled as
+     * {@code String[]} for {@code Foo extends Bar<String>}, which the erased {@code Object[]} the member declares
+     * is assignable from.
+     */
+    private static @Nullable Executable declaredFor(Executable[] candidates, Class<?>[] compiledTypes) {
+        Executable found = null;
+        for (Executable candidate : candidates) {
+            if (candidate.isSynthetic() || candidate.getParameterCount() != compiledTypes.length) {
+                continue;
+            }
+            Class<?>[] declared = candidate.getParameterTypes();
+            boolean fits = true;
+            for (int i = 0; i < declared.length && fits; i++) {
+                fits = declared[i].isAssignableFrom(compiledTypes[i]);
+            }
+            if (fits) {
+                if (found != null) {
+                    // two overloads the compiled types fit, which nothing tells apart
+                    return null;
+                }
+                found = candidate;
             }
         }
-        return false;
+        return found;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public Annotated annotated(Member member, Class<?> injectedType, String injectedName) {
+    public Annotated annotated(InjectionSite site) {
+        Member member = member(site);
         if (member instanceof Field field) {
             return new ReflectiveAnnotatedField(field);
         }
-        if (member instanceof Executable executable) {
-            int position = positionOf(executable, injectedType, injectedName);
-            if (position >= 0) {
-                return new ReflectiveAnnotatedParameter(executable, position);
-            }
+        if (member instanceof Executable executable && site.index() >= 0
+            && site.index() < executable.getParameterCount()) {
+            return new ReflectiveAnnotatedParameter(executable, site.index());
         }
-        throw new UnsupportedOperationException("The annotated model of this injection point cannot be read "
-            + "back from the compiled class");
-    }
-
-    private static int positionOf(Executable executable, Class<?> injectedType, String injectedName) {
-        Parameter[] parameters = executable.getParameters();
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getType().equals(injectedType) && parameters[i].getName().equals(injectedName)) {
-                return i;
-            }
-        }
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getType().equals(injectedType)) {
-                return i;
-            }
-        }
-        return -1;
+        throw new UnsupportedOperationException("The annotated model of the injection point at " + site
+            + " cannot be read back from the compiled class");
     }
 
     @Override

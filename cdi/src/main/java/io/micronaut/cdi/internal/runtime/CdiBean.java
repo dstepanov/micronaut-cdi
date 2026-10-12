@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.core.type.Argument;
 import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
@@ -53,14 +54,6 @@ import java.util.Set;
 @Internal
 public class CdiBean<T> implements Bean<T> {
 
-    /**
-     * The parameters Micronaut adds to the constructor of the subclass it generates for an intercepted bean, after
-     * the ones the author wrote: the resolution context, the bean context, the qualifier, the interceptors and
-     * the interceptor registry.
-     */
-    private static final Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = Set.of(
-        "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
-
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
     private volatile java.util.@Nullable List<CdiQualifier> qualifiers;
@@ -87,15 +80,6 @@ public class CdiBean<T> implements Bean<T> {
         Class<?> declaring = definition.getAnnotationMetadata()
             .classValue("io.micronaut.cdi.internal.metadata.CdiProducer", "declaringType").orElse(null);
         return declaring != null ? declaring : beanClass();
-    }
-
-    /**
-     * Whether the argument is something the container hands a generated constructor rather than an injection
-     * point the author wrote. It is told by what it is - one of the parameters Micronaut generates - and not by
-     * the package of its type: an application may well inject a type of its own from a package of that name.
-     */
-    private static boolean isContainerMachinery(io.micronaut.core.type.Argument<?> argument) {
-        return GENERATED_CONSTRUCTOR_PARAMETERS.contains(argument.getName());
     }
 
     /**
@@ -330,31 +314,38 @@ public class CdiBean<T> implements Bean<T> {
         io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation> producer =
             described.getAnnotationMetadata().getAnnotation("io.micronaut.cdi.internal.metadata.CdiProducer");
         if (producer == null) {
-            for (io.micronaut.core.type.Argument<?> argument : constructor.getArguments()) {
-                if (isContainerMachinery(argument)) {
+            io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
+            for (io.micronaut.core.type.Argument<?> argument : arguments) {
+                if (CdiResolution.isGeneratedConstructorParameter(argument)) {
                     // what the container itself passes a generated constructor is not an injection point
                     continue;
                 }
-                points.add(new CdiInjectionPoint(this, argument, declaring, "<init>", false));
+                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(declaring,
+                    InjectionSite.CONSTRUCTOR, arguments, argument)));
             }
         } else if (!producer.booleanValue("field").orElse(false)) {
             // section 2.2.2.2: all producer method parameters are injection points. The producer method is what
             // Micronaut constructs the bean with, and its parameters are the ones of the method the producer
             // names; a producer field has none
-            String member = producer.stringValue("member").orElse(null);
-            for (io.micronaut.core.type.Argument<?> argument : constructor.getArguments()) {
-                points.add(new CdiInjectionPoint(this, argument, getBeanClass(), member, false));
+            String member = producer.stringValue("member").orElse(InjectionSite.CONSTRUCTOR);
+            io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
+            for (io.micronaut.core.type.Argument<?> argument : arguments) {
+                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(getBeanClass(),
+                    member, arguments, argument)));
             }
         }
         for (io.micronaut.inject.FieldInjectionPoint<T, ?> field : described.getInjectedFields()) {
-            points.add(new CdiInjectionPoint(this, field.asArgument(), declaring, field.getName(), true));
+            points.add(new CdiInjectionPoint(this, field.asArgument(), InjectionSite.ofField(declaring,
+                field.getName())));
         }
         for (io.micronaut.inject.MethodInjectionPoint<T, ?> method : described.getInjectedMethods()) {
             if (method.isPostConstructMethod() || method.isPreDestroyMethod()) {
                 continue;
             }
-            for (io.micronaut.core.type.Argument<?> argument : method.getArguments()) {
-                points.add(new CdiInjectionPoint(this, argument, declaring, method.getName(), false));
+            io.micronaut.core.type.Argument<?>[] arguments = method.getArguments();
+            for (io.micronaut.core.type.Argument<?> argument : arguments) {
+                points.add(new CdiInjectionPoint(this, argument, CdiInjectionPoint.parameterSite(declaring,
+                    method.getName(), arguments, argument)));
             }
         }
         return points;

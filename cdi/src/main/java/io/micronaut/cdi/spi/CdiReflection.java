@@ -112,23 +112,20 @@ public interface CdiReflection {
     /**
      * The member an injection point injects into.
      *
-     * @param declaringClass The class that declares the injection point
-     * @param memberName     The name of the member, {@code <init>} for a constructor
-     * @param field          Whether the member is a field
-     * @param injectedType   The raw type the point injects, which tells overloads apart
-     * @return The member, or {@code null} where the class declares none of the name
+     * @param site Where the point injects, as its bean was compiled
+     * @return The member, or {@code null} where neither the class nor a class above it declares one of that name
+     * and those parameter types
      */
-    @Nullable Member member(Class<?> declaringClass, String memberName, boolean field, Class<?> injectedType);
+    @Nullable Member member(InjectionSite site);
 
     /**
      * The annotated model of an injection point: the field, or the parameter of the constructor or method.
      *
-     * @param member       The member the point injects into
-     * @param injectedType The raw type the point injects
-     * @param injectedName The name of the injected parameter
+     * @param site Where the point injects, as its bean was compiled
      * @return The annotated field or parameter
+     * @throws UnsupportedOperationException Where the member cannot be found
      */
-    Annotated annotated(Member member, Class<?> injectedType, String injectedName);
+    Annotated annotated(InjectionSite site);
 
     /**
      * Whether an annotation type is itself annotated with another.
