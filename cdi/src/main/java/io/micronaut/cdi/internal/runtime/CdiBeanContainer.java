@@ -427,20 +427,37 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
     }
 
+    /**
+     * The definition of a reference where it is a bean here: one whose condition does not hold is not, as Micronaut
+     * has it, and neither is one that names a class absent from the classpath - an optional dependency the
+     * application does not have - which Micronaut reports as a definition that failed to initialize. Anything else
+     * that goes wrong reading a definition, a condition that throws among it, is a broken deployment, and is
+     * reported rather than taken for there being no bean.
+     */
+    private @Nullable BeanDefinition<?> enabledDefinitionOf(io.micronaut.inject.BeanDefinitionReference<Object> reference) {
+        try {
+            BeanDefinition<?> definition = reference.load(beanContext);
+            return definition.isEnabled(beanContext) ? definition : null;
+        } catch (NoClassDefFoundError | TypeNotPresentException e) {
+            return null;
+        } catch (io.micronaut.context.exceptions.BeanInstantiationException e) {
+            if (CdiResolution.isAbsentClass(e)) {
+                return null;
+            }
+            throw e;
+        }
+    }
+
     private List<CdiBean<?>> loadCandidates() {
         // the references are the ones the beans predicate of the context admits, so an environment that
         // narrowed the context reports exactly the beans it narrowed it to
         Map<String, BeanDefinition<?>> byName = new java.util.LinkedHashMap<>();
         for (io.micronaut.inject.BeanDefinitionReference<Object> reference
             : beanContext.getBeanDefinitionReferences()) {
-            try {
-                BeanDefinition<?> definition = reference.load(beanContext);
-                if (definition.isEnabled(beanContext) && !definition.isAbstract()) {
-                    // an abstract class is not a bean of the specification, however it is annotated
-                    byName.put(definition.getClass().getName(), definition);
-                }
-            } catch (RuntimeException | LinkageError e) {
-                // a definition that cannot be loaded here is not a bean of this container
+            BeanDefinition<?> definition = enabledDefinitionOf(reference);
+            if (definition != null && !definition.isAbstract()) {
+                // an abstract class is not a bean of the specification, however it is annotated
+                byName.put(definition.getClass().getName(), definition);
             }
         }
         // a bean the container was handed at runtime — a synthetic bean an extension described — has a

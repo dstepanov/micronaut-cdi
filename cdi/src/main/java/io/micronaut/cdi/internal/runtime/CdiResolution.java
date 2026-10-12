@@ -98,6 +98,27 @@ public final class CdiResolution {
     }
 
     /**
+     * Whether a failure is a class absent from the classpath, anywhere in its causes: what reading a definition or
+     * the types it recorded fails with where it names a class of an optional dependency the application does not
+     * have, which is no bean rather than a broken one.
+     *
+     * @param failure The failure
+     * @return Whether a class is absent
+     */
+    public static boolean isAbsentClass(Throwable failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof NoClassDefFoundError || cause instanceof ClassNotFoundException
+                || cause instanceof TypeNotPresentException) {
+                return true;
+            }
+            if (cause.getCause() == cause) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Whether the definition was compiled as a bean of the specification - one written with a scope of the
      * specification, or given one by default - rather than as a bean of Micronaut's own that only shares the
      * context: the scope marker the processor writes says which.

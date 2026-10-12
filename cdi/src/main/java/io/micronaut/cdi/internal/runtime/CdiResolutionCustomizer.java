@@ -199,7 +199,9 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                     return CdiBean.typesOf(definition, beanClass);
                 });
                 return CdiAssignability.isTypeMatching(types, beanType);
-            } catch (RuntimeException | LinkageError e) {
+            } catch (NoClassDefFoundError | TypeNotPresentException e) {
+                // a type the bean recorded is of a class absent from the classpath: what Micronaut matches it by
+                // is all there is to go on
                 return delegate.isCandidateBean(beanType, candidate);
             }
         }
