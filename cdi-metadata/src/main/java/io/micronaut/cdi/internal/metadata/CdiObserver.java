@@ -98,6 +98,11 @@ public @interface CdiObserver {
      * The priority the observer is notified in, which the specification reads from
      * {@code jakarta.annotation.Priority} and defaults to the middle of the range.
      *
+     * <p>It is recorded here rather than read from Micronaut's {@code Order}: the specification puts the
+     * priority of an observer on its event parameter, which Micronaut maps to nothing, while the {@code Order}
+     * Micronaut maps a {@code Priority} to is the order of a bean - the declaring bean's own, which is not the
+     * observer's. A synthetic observer records its priority the same way, for the same reason.</p>
+     *
      * @return The priority
      */
     int priority() default 2500;
