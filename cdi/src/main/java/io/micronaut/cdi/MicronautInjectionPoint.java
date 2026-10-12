@@ -45,6 +45,9 @@ public interface MicronautInjectionPoint extends InjectionPoint {
      * {@code micronaut-cdi-reflection}, is there. The instance itself is among {@link #getQualifiers()} as it
      * was handed over.</p>
      *
+     * <p>A value carries the members of the annotation and nothing else: the list of the members that do not
+     * bind, which Micronaut's metadata keeps under {@code $nonBinding}, is not one of them.</p>
+     *
      * @return The qualifiers, in the order they were required
      */
     List<AnnotationValue<?>> getQualifierValues();

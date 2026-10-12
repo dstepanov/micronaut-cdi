@@ -116,15 +116,37 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
     public java.util.List<io.micronaut.core.annotation.AnnotationValue<?>> getQualifierValues() {
         java.util.List<io.micronaut.core.annotation.AnnotationValue<?>> all = new java.util.ArrayList<>();
         for (CdiQualifier declared : CdiQualifier.declared(argument.getAnnotationMetadata())) {
-            all.add(declared.written());
+            all.add(reported(declared.written()));
         }
         for (CdiQualifier selected : selectedQualifiers) {
-            all.add(selected.written());
+            all.add(reported(selected.written()));
         }
         if (all.isEmpty()) {
             all.add(CdiQualifier.DEFAULT.written());
         }
         return java.util.Collections.unmodifiableList(all);
+    }
+
+    /**
+     * A qualifier as a program is told it: its members, without the ones Micronaut's metadata keeps for itself -
+     * the {@code $nonBinding} list the container compares by among them - which are no member of the annotation.
+     */
+    private static io.micronaut.core.annotation.AnnotationValue<?> reported(
+        io.micronaut.core.annotation.AnnotationValue<?> written) {
+        java.util.Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
+        boolean internal = false;
+        for (java.util.Map.Entry<CharSequence, Object> member : written.getValues().entrySet()) {
+            if (member.getKey().toString().startsWith("$")) {
+                internal = true;
+            } else {
+                members.put(member.getKey(), member.getValue());
+            }
+        }
+        if (!internal) {
+            return written;
+        }
+        return new io.micronaut.core.annotation.AnnotationValue<>(written.getAnnotationName(), members,
+            written.getDefaultValues(), written.getRetentionPolicy(), written.getStereotypes());
     }
 
     @Override

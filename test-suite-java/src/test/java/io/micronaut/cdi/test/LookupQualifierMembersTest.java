@@ -80,6 +80,48 @@ class LookupQualifierMembersTest {
         }
     }
 
+    @Qualifier
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Graded {
+        int value();
+
+        @Nonbinding String remark() default "";
+
+        final class Literal extends AnnotationLiteral<Graded> implements Graded {
+            private final int value;
+            private final String remark;
+
+            Literal(int value, String remark) {
+                this.value = value;
+                this.remark = remark;
+            }
+
+            @Override
+            public int value() {
+                return value;
+            }
+
+            @Override
+            public String remark() {
+                return remark;
+            }
+        }
+    }
+
+    @Dependent
+    @Graded(1)
+    public static class GradedSettings {
+        @Inject
+        InjectionPoint at;
+    }
+
+    @Dependent
+    public static class GradedConsumer {
+        @Inject
+        @Graded(value = 1, remark = "declared")
+        GradedSettings settings;
+    }
+
     @Dependent
     public static class PlainSettings {
         @Inject
@@ -145,6 +187,28 @@ class LookupQualifierMembersTest {
             assertEquals(Prefixed.class.getName(), qualifiers.get(0).getAnnotationName());
             assertEquals("client", qualifiers.get(0).stringValue("prefix").orElse(null));
         }
+    }
+
+    @Test
+    void theValuesReportedCarryTheMembersOfTheQualifierAlone() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            // a literal is read with the list of its non-binding members, and a compiled qualifier carries it,
+            // which the container compares by and which is no member of the qualifier
+            GradedSettings selected = lookup(context)
+                .select(GradedSettings.class, new Graded.Literal(1, "selected")).get();
+            assertEquals(Set.of("value", "remark"), membersReported(selected.at));
+            GradedSettings declared = context.getBean(MicronautBeanContainer.class).createInstance()
+                .select(GradedConsumer.class).get().settings;
+            assertEquals(Set.of("value", "remark"), membersReported(declared.at));
+        }
+    }
+
+    private static Set<String> membersReported(InjectionPoint point) {
+        MicronautInjectionPoint at = assertInstanceOf(MicronautInjectionPoint.class, point);
+        List<AnnotationValue<?>> qualifiers = at.getQualifierValues();
+        assertEquals(1, qualifiers.size());
+        return qualifiers.get(0).getValues().keySet().stream()
+            .map(CharSequence::toString).collect(java.util.stream.Collectors.toSet());
     }
 
     @Test
