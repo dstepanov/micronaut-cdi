@@ -72,8 +72,11 @@ import java.util.ServiceLoader;
 @Internal
 public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor<Object, Object> {
 
-    private static volatile @org.jspecify.annotations.Nullable List<BuildCompatibleExtension> overriddenExtensions;
-    private static volatile @org.jspecify.annotations.Nullable BuildCompatibleExtensionVisitor current;
+    /**
+     * The extensions of one deployment, set by a harness that compiles a deployment at a time: the one seam a
+     * compilation run inside a test has for handing a visitor objects, where a compiler takes nothing but options.
+     */
+    private static volatile @org.jspecify.annotations.Nullable Deployment overriddenDeployment;
     private static volatile io.micronaut.inject.visitor.@org.jspecify.annotations.Nullable VisitorContext
         activeContext;
 
@@ -91,12 +94,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private static final String TRIGGERED = "trigger.";
     private static final String FACTORY_RECORDS = "factory.";
+    private static final String VISITOR = "visitor";
 
     private final List<Enhancer> enhancers = new ArrayList<>();
     private final List<Registrar> registrars = new ArrayList<>();
     private final List<ExtensionMethod> discoveries = new ArrayList<>();
     private final List<ExtensionMethod> synthesizers = new ArrayList<>();
     private final List<ExtensionMethod> validators = new ArrayList<>();
+    private final @org.jspecify.annotations.Nullable Deployment deployment;
     private final DiscoveredClasses discovered = new DiscoveredClasses();
     private boolean discoveryRan;
     private boolean scannedImportWritten;
@@ -116,9 +121,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver.setBuildServices(
             new ElementBuildServices());
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
-        List<BuildCompatibleExtension> overridden = overriddenExtensions;
+        Deployment overridden = overriddenDeployment;
+        deployment = overridden;
         if (overridden != null) {
-            extensions.addAll(overridden);
+            extensions.addAll(overridden.extensions());
         } else {
             ServiceLoader.load(BuildCompatibleExtension.class, BuildCompatibleExtensionVisitor.class.getClassLoader())
                 .forEach(extensions::add);
@@ -185,28 +191,44 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * @param extensions The extensions, or {@code null} to load them as usual
      */
     public static void overrideExtensions(@org.jspecify.annotations.Nullable List<BuildCompatibleExtension> extensions) {
-        overriddenExtensions = extensions;
+        overrideExtensions(extensions, scanned -> {
+        });
     }
 
     /**
-     * The visitor of the compilation under way, so that the registration visitor — which runs last, after
+     * Hands this visitor the extensions of one deployment, and has it report the classes their discovery phase
+     * added to the scanned ones: an archive without a beans.xml has no discovered beans beyond these, which the
+     * harness that compiles it is the one to apply. Setting {@code null} puts the service loading back.
+     *
+     * @param extensions     The extensions, or {@code null} to load them as usual
+     * @param scannedClasses Handed the names of the classes the discovery phase added, once it has run
+     */
+    public static void overrideExtensions(@org.jspecify.annotations.Nullable List<BuildCompatibleExtension> extensions,
+                                          java.util.function.Consumer<java.util.Set<String>> scannedClasses) {
+        overriddenDeployment = extensions == null ? null : new Deployment(List.copyOf(extensions), scannedClasses);
+    }
+
+    /**
+     * The visitor that started the given compilation, so that the registration visitor — which runs last, after
      * every other visitor has had its say — describes the beans with the same extensions and state.
      *
-     * @return The visitor, or {@code null} outside a compilation
+     * @param context The compilation
+     * @return The visitor, or {@code null} where none started it
      */
-    static @org.jspecify.annotations.Nullable BuildCompatibleExtensionVisitor current() {
-        return current;
+    static @org.jspecify.annotations.Nullable BuildCompatibleExtensionVisitor of(VisitorContext context) {
+        return CompilationState.get(context, VISITOR, BuildCompatibleExtensionVisitor.class);
     }
 
     /**
-     * What the discovery phase of the compilation under way said, for the annotation remapping that records the
+     * What the discovery phase of the given compilation said, for the annotation remapping that records the
      * non-binding members of a qualifier or binding an extension configured: it runs as the metadata of each
-     * element is built, outside any visitor.
+     * element is built, outside any visitor, and is handed the compilation it builds it for.
      *
-     * @return What was discovered, or {@code null} outside a compilation
+     * @param context The compilation
+     * @return What was discovered, or {@code null} where no visitor of this kind started the compilation
      */
-    public static @org.jspecify.annotations.Nullable DiscoveredClasses currentDiscovery() {
-        BuildCompatibleExtensionVisitor visitor = current;
+    public static @org.jspecify.annotations.Nullable DiscoveredClasses discoveryOf(VisitorContext context) {
+        BuildCompatibleExtensionVisitor visitor = of(context);
         return visitor == null ? null : visitor.discovered;
     }
 
@@ -218,19 +240,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     static io.micronaut.inject.visitor.@org.jspecify.annotations.Nullable VisitorContext activeVisitorContext() {
         return activeContext;
-    }
-
-    /**
-     * The classes the discovery phase of the compilation under way added to the scanned ones, for the harness
-     * that compiles a deployment at a time: an archive without a beans.xml has no discovered beans beyond
-     * these.
-     *
-     * @return The class names
-     */
-    public static java.util.Set<String> lastScannedClasses() {
-        BuildCompatibleExtensionVisitor visitor = current;
-        return visitor == null ? java.util.Set.of()
-            : java.util.Set.copyOf(visitor.discovered.scannedClasses());
     }
 
     private static void validateDiscovery(Method method) {
@@ -537,12 +546,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         io.micronaut.cdi.lang.model.ast.AstLanguageModel.useContext(context);
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts
-        current = this;
+        CompilationState.keep(context, VISITOR, this);
         if (!discoveryRan) {
             discoveryRan = true;
             discovered.compilation(context);
             for (ExtensionMethod discovery : discoveries) {
                 discover(discovery.extension(), discovery.method(), context);
+            }
+            Deployment overridden = deployment;
+            if (overridden != null) {
+                overridden.scannedClasses().accept(java.util.Set.copyOf(discovered.scannedClasses()));
             }
         }
         // what the discovery phase said about annotations is put on the annotation types before any class is
@@ -1219,6 +1232,17 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + " declares a parameter of type " + parameterType.getName()
                 + ", which the phase does not hand to one (section " + section + ")");
         }
+    }
+
+    /**
+     * The extensions a harness handed in for one deployment, and where it wants to hear what their discovery
+     * phase added to the scanned classes.
+     *
+     * @param extensions     The extensions
+     * @param scannedClasses Handed the classes the discovery phase added
+     */
+    private record Deployment(List<BuildCompatibleExtension> extensions,
+                              java.util.function.Consumer<java.util.Set<String>> scannedClasses) {
     }
 
     /**

@@ -207,10 +207,12 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             }
         }
         Iterable<? extends javax.tools.JavaFileObject> generated;
+        // the classes the discovery phase of the deployment's extensions added, reported by the visitor that ran it
+        Set<String> discovered = new HashSet<>();
         try {
             if (!extensions.isEmpty()) {
                 io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor
-                    .overrideExtensions(extensions);
+                    .overrideExtensions(extensions, discovered::addAll);
             }
             generated = DeploymentCompiler.compile(compilable);
         } catch (jakarta.enterprise.inject.spi.DefinitionException
@@ -234,8 +236,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         if (!beanArchive) {
             // only what the extensions scanned is a bean of an archive that is not a bean archive
             Set<String> scanned = new HashSet<>();
-            for (String scannedClass
-                : io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.lastScannedClasses()) {
+            for (String scannedClass : discovered) {
                 scanned.add(outerClassOf(scannedClass));
             }
             classes = scanned;
