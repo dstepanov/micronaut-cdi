@@ -240,6 +240,21 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
     }
 
+    /**
+     * The definition a container injection point resolves to: a field or a parameter of a collection, an
+     * {@code Optional}, an array or a stream, which the processor marks for this container to resolve
+     * ({@code ResolveWith}), resolved as section 5.2 has it - the one bean of its full declared type and the
+     * qualifiers it declares - wherever the point is: a bean's own, an observer's or a disposer's.
+     *
+     * @param argument The injection point
+     * @return The definition, or {@code null} where no bean qualifies
+     * @throws jakarta.enterprise.inject.AmbiguousResolutionException Where more than one does
+     */
+    @Nullable BeanDefinition<?> resolveContainerInjection(Argument<?> argument) {
+        Bean<?> selected = resolve(beansOf(argument, CdiQualifier.declared(argument.getAnnotationMetadata())));
+        return selected == null ? null : ((CdiBean<?>) selected).definition();
+    }
+
     Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (CdiBean<?> bean : candidatesOfType(beanType)) {

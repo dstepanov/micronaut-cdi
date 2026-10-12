@@ -186,15 +186,13 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             container = beanContext.getBean(CdiBeanContainer.class);
             this.container = container;
         }
-        jakarta.enterprise.inject.spi.Bean<?> selected = container.resolve(container.beansOf(argument,
-            CdiQualifier.declared(argument.getAnnotationMetadata())));
-        if (selected == null) {
+        BeanDefinition<Object> definition = (BeanDefinition<Object>) container.resolveContainerInjection(argument);
+        if (definition == null) {
             if (argument.isNullable()) {
                 return null;
             }
             throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
         }
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) ((CdiBean<?>) selected).definition();
         return dependencies.getBean(definition, CdiInstance.askedAs((Argument<Object>) argument, definition));
     }
 

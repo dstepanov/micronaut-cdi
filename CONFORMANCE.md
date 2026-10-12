@@ -217,7 +217,9 @@ throws is logged and stops neither the events after it nor the context from stop
 Core's `@ResolveWith` provider hook for container injection points, and `CdiBeanInjectionProvider` resolves the
 full declared type with the final qualifier binding records. Core's active resolution context creates the
 selected definition and retains its dependent ownership. Missing required producers are deployment errors;
-ordinary Micronaut beans retain Micronaut's aggregation behavior.
+ordinary Micronaut beans retain Micronaut's aggregation behavior. The parameters of an observer method and of a
+disposer method are marked the same way and resolved by the same rule (`CdiBeanContainer.resolveContainerInjection`):
+the container, not Core, invokes those methods, and resolves what they take as a bean's own injection points are.
 
 ### A primitive is boxed by the lookup rather than by the bean
 
