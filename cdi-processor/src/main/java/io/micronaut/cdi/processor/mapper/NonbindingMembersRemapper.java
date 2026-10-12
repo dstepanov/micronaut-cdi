@@ -32,7 +32,6 @@ import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,17 +62,13 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
     private static final String MICRONAUT_NONBINDING = "io.micronaut.context.annotation.NonBinding";
 
     /**
-     * The members each annotation interface marks, for the compilation they were read from: an annotation is
-     * met at every element it is written on, and its interface is read once.
+     * The attribute of the compilation that names the annotation interfaces being read: reading one builds the
+     * metadata of its members, which comes back here, and an annotation that names itself there is not read
+     * again. The compilation is what the reading belongs to, so the names are kept on it rather than on this class
+     * or on the thread, and nothing outlives it. The interface itself is not cached: Micronaut keeps the
+     * resolved type and the metadata of its members for the round, and reading the names off them is cheap.
      */
-    private static final Map<String, Set<String>> DECLARED = new HashMap<>();
-    private static @Nullable VisitorContext declaredFor;
-
-    /**
-     * The annotation interfaces being read on this thread: reading one builds the metadata of its members, which
-     * comes back here, and an annotation that names itself there is not read again.
-     */
-    private static final ThreadLocal<Set<String>> READING = ThreadLocal.withInitial(HashSet::new);
+    private static final String READING = NonbindingMembersRemapper.class.getName() + ".reading";
 
     @Override
     public String getPackageName() {
@@ -194,32 +189,25 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
 
     private static Set<String> declaredNonbindingMembersOf(String name, VisitorContext context,
                                                            boolean askDeclaration) {
-        Set<String> cached;
-        synchronized (DECLARED) {
-            if (declaredFor != context) {
-                DECLARED.clear();
-                declaredFor = context;
-            }
-            cached = DECLARED.get(name);
-        }
-        if (cached != null) {
-            return cached;
-        }
-        Set<String> reading = READING.get();
+        Set<String> reading = reading(context);
         if (!reading.add(name)) {
             return Set.of();
         }
         try {
-            Set<String> members = readDeclaration(name, context, askDeclaration);
-            synchronized (DECLARED) {
-                if (declaredFor == context) {
-                    DECLARED.put(name, members);
-                }
-            }
-            return members;
+            return readDeclaration(name, context, askDeclaration);
         } finally {
             reading.remove(name);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Set<String> reading(VisitorContext context) {
+        Set<String> reading = context.get(READING, Set.class).orElse(null);
+        if (reading == null) {
+            reading = new HashSet<>();
+            context.put(READING, reading);
+        }
+        return reading;
     }
 
     private static Set<String> readDeclaration(String name, VisitorContext context, boolean askDeclaration) {
