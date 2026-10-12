@@ -212,6 +212,19 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return getBeans((Type) beanType, wellFormed(all));
     }
 
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.context.Qualifier<?> qualifier) {
+        Set<Bean<?>> beans = new LinkedHashSet<>();
+        for (Bean<?> bean : beansOf(beanType, List.of(CdiQualifier.ANY))) {
+            io.micronaut.inject.BeanDefinition<?> definition = ((CdiBean<?>) bean).definition();
+            if (((io.micronaut.context.Qualifier) qualifier).doesQualify(definition.getBeanType(), definition)) {
+                beans.add(bean);
+            }
+        }
+        return beans;
+    }
+
     private Set<Bean<?>> getBeans(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
         return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);

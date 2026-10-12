@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi;
 
+import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.Instance;
@@ -30,7 +31,8 @@ import java.lang.annotation.Annotation;
  * objects: the members of an annotation instance a program hands over can only be read reflectively, which
  * this container leaves to the optional {@code micronaut-cdi-reflection} module. Micronaut's own form of an
  * annotation is an {@link AnnotationValue}, and its own form of a type is an {@link Argument}; a selection made
- * with those is resolved from what was compiled, with no reflection module on the classpath.</p>
+ * with those is resolved from what was compiled, with no reflection module on the classpath. A lookup may also be
+ * narrowed by a Micronaut {@link Qualifier}, such as one of {@code io.micronaut.inject.qualifiers.Qualifiers}.</p>
  *
  * <p>Every {@code Instance} this container hands out is one of these, whether it was injected, obtained from
  * {@code BeanContainer.createInstance()} or from {@code CDI.current()}, and an injection point may be declared
@@ -80,6 +82,35 @@ public interface MicronautInstance<T> extends Instance<T> {
      * @throws IllegalArgumentException Where an annotation is not a qualifier, or is given twice
      */
     <U extends T> MicronautInstance<U> select(Argument<U> subtype, AnnotationValue<?>... qualifiers);
+
+    /**
+     * Obtains a child lookup for the given required type, narrowed by a Micronaut {@link Qualifier} beside the
+     * qualifiers of the specification this lookup requires: a bean is selected when it has every one of those,
+     * and the Micronaut qualifier keeps its definition.
+     *
+     * <p>Selecting by a Micronaut qualifier is selecting by a qualifier: a lookup that required no qualifier of the
+     * specification no longer requires the default one, as it does not after {@code select(Annotation...)}. The
+     * Micronaut qualifier is a predicate over definitions rather than an annotation, so the rules of the
+     * specification for a qualifier given to {@code select} do not apply to it, and the injection point of a bean
+     * the lookup creates reports the qualifiers of the specification alone.</p>
+     *
+     * @param subtype   The required type
+     * @param qualifier The Micronaut qualifier
+     * @param <U>       The required type
+     * @return The child lookup
+     */
+    <U extends T> MicronautInstance<U> select(Argument<U> subtype, Qualifier<U> qualifier);
+
+    /**
+     * Obtains a child lookup for the given required type, narrowed by a Micronaut {@link Qualifier}, as
+     * {@link #select(Argument, Qualifier)} does.
+     *
+     * @param subtype   The required type
+     * @param qualifier The Micronaut qualifier
+     * @param <U>       The required type
+     * @return The child lookup
+     */
+    <U extends T> MicronautInstance<U> select(Class<U> subtype, Qualifier<U> qualifier);
 
     @Override
     MicronautInstance<T> select(Annotation... qualifiers);

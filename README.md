@@ -138,9 +138,9 @@ by Micronaut's own forms of an annotation and of a type:
 
 | Specification | Micronaut | Adds |
 | --- | --- | --- |
-| `Instance<T>` | `io.micronaut.cdi.MicronautInstance<T>` | `select(AnnotationValue, AnnotationValue...)`, `select(Class, AnnotationValue, AnnotationValue...)`, `select(Argument, AnnotationValue...)` |
+| `Instance<T>` | `io.micronaut.cdi.MicronautInstance<T>` | `select(AnnotationValue, AnnotationValue...)`, `select(Class, AnnotationValue, AnnotationValue...)`, `select(Argument, AnnotationValue...)`, and `select(Class, Qualifier)` / `select(Argument, Qualifier)` narrowing by a Micronaut `Qualifier` |
 | `Event<T>` | `io.micronaut.cdi.MicronautEvent<T>` | the same three selections |
-| `BeanContainer` | `io.micronaut.cdi.MicronautBeanContainer` | `getBeans(Argument, AnnotationValue, AnnotationValue...)` - and `getBeans(Type, Annotation...)` takes an `Argument` as the type - `resolveObserverMethods(event, AnnotationValue, AnnotationValue...)`, and `createInstance()` / `getEvent()` returning the Micronaut types |
+| `BeanContainer` | `io.micronaut.cdi.MicronautBeanContainer` | `getBeans(Argument, AnnotationValue, AnnotationValue...)`, `getBeans(Argument, Qualifier)` - and `getBeans(Type, Annotation...)` takes an `Argument` as the type - `resolveObserverMethods(event, AnnotationValue, AnnotationValue...)`, and `createInstance()` / `getEvent()` returning the Micronaut types |
 | `InjectionPoint` | `io.micronaut.cdi.MicronautInjectionPoint` | `getQualifierValues()`: the required qualifiers as `AnnotationValue`s with every member, a non-binding one included - for a bean obtained by a lookup, the ones the lookup selected |
 
 ```java
@@ -157,6 +157,14 @@ held to the rules of the specification's own - the annotation has to be a qualif
 repeatable is given once - checked from what was recorded. It selects the same beans and notifies the same
 observers as the literal does where the reflection module is there to read the literal. `select(Argument, ...)`
 is the counterpart of `select(TypeLiteral, ...)`.
+
+A lookup may also be narrowed by a Micronaut `Qualifier` - `Qualifiers.byName`, `byStereotype`, `byType` and the
+like - beside the qualifiers of the specification it requires: a bean is selected when it has those and the
+Micronaut qualifier keeps its definition, and a lookup narrowed that way no longer requires the default qualifier,
+as one narrowed by `select(Annotation...)` does not. The Micronaut qualifier is a predicate rather than an
+annotation, so the injection point of a bean the lookup creates reports the qualifiers of the specification alone.
+`MicronautBeanContainer.getBeans(Argument, Qualifier)` answers the beans of a type the qualifier keeps, whatever
+qualifiers of the specification they have.
 
 ### Types without reflection
 

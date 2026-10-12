@@ -125,6 +125,18 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
     }
 
     @Override
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(Argument<U> subtype,
+                                                            io.micronaut.context.Qualifier<U> qualifier) {
+        return active().select(subtype, qualifier);
+    }
+
+    @Override
+    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype,
+                                                            io.micronaut.context.Qualifier<U> qualifier) {
+        return active().select(subtype, qualifier);
+    }
+
+    @Override
     public boolean isUnsatisfied() {
         return active().isUnsatisfied();
     }
