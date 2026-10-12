@@ -201,7 +201,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return getBeans(beanType, wellFormed(CdiQualifier.ofInstances(types(), qualifiers)));
+        return beansOf(beanType, wellFormed(CdiQualifier.ofInstances(types(), qualifiers)));
     }
 
     @Override
@@ -210,7 +210,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
         all.add(CdiQualifier.ofValue(qualifier));
         all.addAll(qualifiersOf(qualifiers));
-        return getBeans((Type) beanType, wellFormed(all));
+        return beansOf((Type) beanType, wellFormed(all));
     }
 
     @Override
@@ -226,7 +226,16 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return beans;
     }
 
-    private Set<Bean<?>> getBeans(Type required, List<CdiQualifier> requiredQualifiers) {
+    /**
+     * The beans of a type as the specification's API hands it over, read into Micronaut's form of it first.
+     *
+     * @param required           The required type
+     * @param requiredQualifiers The required qualifiers
+     * @return The beans
+     * @throws IllegalArgumentException For a type that is not a class, a parameterized type, a wildcard, a type
+     *                                  variable or an array of one
+     */
+    Set<Bean<?>> beansOf(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
         return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
     }

@@ -18,7 +18,6 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -240,7 +239,7 @@ final class DeploymentValidation {
         List<CdiQualifier> qualifiers = CdiQualifier.declared(argument.getAnnotationMetadata());
         Set<Bean<?>> beans;
         try {
-            beans = container.beansOf(SpecificationTypes.argumentOf(CdiTypes.requiredTypeOf(argument)), qualifiers);
+            beans = container.beansOf(CdiTypes.requiredTypeOf(argument), qualifiers);
         } catch (IllegalArgumentException e) {
             // a type with a variable the declaring class gives a value the definition does not carry: resolved
             // as the bean is created
