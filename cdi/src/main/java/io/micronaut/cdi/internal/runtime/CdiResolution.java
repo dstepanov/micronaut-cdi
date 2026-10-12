@@ -98,6 +98,18 @@ public final class CdiResolution {
     }
 
     /**
+     * Whether the definition was compiled as a bean of the specification - one written with a scope of the
+     * specification, or given one by default - rather than as a bean of Micronaut's own that only shares the
+     * context: the scope marker the processor writes says which.
+     *
+     * @param definition The definition
+     * @return Whether it is a bean of the specification
+     */
+    public static boolean isBeanOfTheSpecification(BeanDefinition<?> definition) {
+        return definition.getAnnotationMetadata().hasStereotype(CdiScope.class);
+    }
+
+    /**
      * Whether a bean, or a producer, was compiled into a normal scope of the specification, which is what makes
      * it reached through a client proxy.
      *

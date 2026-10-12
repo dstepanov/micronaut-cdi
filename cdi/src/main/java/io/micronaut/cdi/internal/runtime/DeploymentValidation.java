@@ -17,7 +17,6 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -176,7 +175,7 @@ final class DeploymentValidation {
      * given one by default, rather than a bean of Micronaut's own that only shares the context.
      */
     private static boolean isOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation(CdiScope.class)
+        return CdiResolution.isBeanOfTheSpecification(definition)
             && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
     }
 

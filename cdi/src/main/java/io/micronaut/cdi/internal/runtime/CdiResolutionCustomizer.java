@@ -16,7 +16,6 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiProducer;
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.BeanResolutionCustomizer;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -116,7 +115,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 }
             }
         }
-        if (qualifier != null || !candidates.stream().allMatch(CdiResolutionCustomizer::isBeanOfTheSpecification)) {
+        if (qualifier != null || !candidates.stream().allMatch(CdiResolution::isBeanOfTheSpecification)) {
             // a lookup that names its qualifiers, or one among beans of Micronaut's own - which are not given
             // the default qualifier - is resolved by Micronaut's rules: a primary bean, a secondary one, order
             return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
@@ -188,7 +187,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
         if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
             && candidate instanceof BeanDefinition<?> definition
-            && isBeanOfTheSpecification(definition)) {
+            && CdiResolution.isBeanOfTheSpecification(definition)) {
             // a parameterized lookup of a bean of the specification is answered by the rules of section
             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
@@ -205,14 +204,6 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             }
         }
         return delegate.isCandidateBean(beanType, candidate);
-    }
-
-    /**
-     * Whether the definition was compiled as a bean of the specification, which is what its scope marker says.
-     */
-    private static boolean isBeanOfTheSpecification(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation(CdiScope.class)
-            || definition.getAnnotationMetadata().hasStereotype(CdiScope.class);
     }
 
     /**

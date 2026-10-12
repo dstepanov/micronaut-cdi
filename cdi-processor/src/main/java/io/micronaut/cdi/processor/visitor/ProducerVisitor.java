@@ -33,7 +33,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
@@ -390,18 +389,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // deliberately more lenient than Lite's annotated discovery: a producer compiles wherever it is
         // declared, because whether its class is a bean of a given deployment is decided per deployment — the
         // SE bootstrap's addBeanClasses makes a class with no bean defining annotation a bean by fiat
-        List<ConstructorElement> constructors = element.getEnclosedElements(ElementQuery.CONSTRUCTORS);
-        if (constructors.isEmpty()) {
-            // the implicit constructor takes no parameters
-            return true;
-        }
-        for (ConstructorElement constructor : constructors) {
-            if (constructor.getParameters().length == 0
-                || constructor.hasDeclaredAnnotation("jakarta.inject.Inject")) {
-                return true;
-            }
-        }
-        return false;
+        return SpecificationBeans.hasABeanConstructor(element);
     }
 
     /**

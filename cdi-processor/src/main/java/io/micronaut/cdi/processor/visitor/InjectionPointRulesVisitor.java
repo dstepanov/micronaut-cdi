@@ -82,7 +82,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return;
         }
         leaveUninjected(element);
-        boolean normalScoped = isNormalScoped(element);
+        boolean normalScoped = SpecificationBeans.isNormalScoped(element);
         // a type variable of a generic class is resolved by whoever extends it, where the class is no bean of
         // its own; a bean has nothing to resolve its variable, and an injection point of it is the definition
         // error of CDI 4.1 section 5.2.3, as is one declared anywhere else
@@ -362,14 +362,5 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         // declares as well, and the class's scope is the one this must not be answered with
         return producer.getAnnotationMetadata().getDeclaredMetadata()
             .booleanValue(CdiScope.class, "normal").orElse(false);
-    }
-
-    private static boolean isNormalScoped(ClassElement element) {
-        if (element.hasStereotype(Cdi.NORMAL_SCOPE)) {
-            return true;
-        }
-        return element.getAnnotationMetadata()
-            .booleanValue(CdiScope.class, "normal")
-            .orElse(false);
     }
 }

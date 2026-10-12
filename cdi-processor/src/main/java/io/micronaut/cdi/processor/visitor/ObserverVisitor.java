@@ -159,21 +159,12 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * Whether the class is in the dependent scope, written either as the specification writes it or as the
-     * mapper has already read it.
+     * Whether the class is in the dependent scope: declared there, or declaring no scope at all, which is
+     * dependent by default.
      */
     private static boolean isDependentScoped(ClassElement element) {
-        if (element.hasStereotype(Cdi.DEPENDENT)) {
-            return true;
-        }
-        String scope = element.getAnnotationMetadata()
-            .stringValue(CdiScope.class).orElse(null);
-        if (scope != null) {
-            return Cdi.DEPENDENT.equals(scope);
-        }
-        // a bean with no scope at all is dependent by default
-        return !element.hasStereotype("jakarta.enterprise.context.NormalScope")
-            && !element.hasStereotype(CdiScope.class);
+        return SpecificationBeans.isDependentScoped(element)
+            || (!element.hasStereotype(Cdi.NORMAL_SCOPE) && !element.hasStereotype(CdiScope.class));
     }
 
     /**

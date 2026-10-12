@@ -16,21 +16,15 @@
 package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ConstructorElement;
-import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.PackageElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * Decides which of the classes that look like beans are beans, which is the part of discovery the specification
@@ -55,17 +49,6 @@ import java.util.Set;
  */
 @Internal
 public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Object> {
-
-    /**
-     * The scopes of the specification, one of which a bean of it carries.
-     */
-    private static final Set<String> SCOPES = Set.of(
-        Cdi.APPLICATION_SCOPED,
-        Cdi.REQUEST_SCOPED,
-        Cdi.SESSION_SCOPED,
-        Cdi.CONVERSATION_SCOPED,
-        Cdi.DEPENDENT
-    );
 
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
@@ -117,8 +100,9 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
             notABean(element);
             return;
         }
-        if (isBeanOfTheSpecification(element) && !element.getDeclaredGenericPlaceholders().isEmpty()
-            && !isDependentScoped(element)) {
+        if (SpecificationBeans.hasScopeOfTheSpecification(element)
+            && !element.getDeclaredGenericPlaceholders().isEmpty()
+            && !SpecificationBeans.isDependentScoped(element)) {
             // section 2.2.1 allows a generic class to be a managed bean only in the dependent scope: there is
             // no one bean a scoped context could hold for a class that is a different type each place it is
             // asked for. The container detects it as a definition error, and this container detects it here
@@ -127,14 +111,16 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
             return;
         }
         if (element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
-            && isBeanOfTheSpecification(element) && !isDependentScoped(element)) {
+            && SpecificationBeans.hasScopeOfTheSpecification(element)
+            && !SpecificationBeans.isDependentScoped(element)) {
             // section 2.7 has an interceptor be a dependent object of what it intercepts: one shared instance
             // in a wider scope would interleave the invocations of every intercepted bean
             context.fail("An interceptor is dependent scoped: " + element.getName()
                 + " declares another scope", element);
             return;
         }
-        if (isBeanOfTheSpecification(element) && !hasABeanConstructor(element)) {
+        if (SpecificationBeans.hasScopeOfTheSpecification(element)
+            && !SpecificationBeans.hasABeanConstructor(element)) {
             // section 2.2.5 has a managed bean declare either a constructor taking no parameters or one
             // annotated Inject, and a class that declares neither is not a managed bean however it is
             // annotated. It comes up more often than it sounds: a scope of the specification is annotated
@@ -179,55 +165,6 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
         int order = -priority;
         element.removeAnnotation("io.micronaut.core.annotation.Order");
         element.annotate("io.micronaut.core.annotation.Order", builder -> builder.value(order));
-    }
-
-    /**
-     * Whether the class is in the dependent scope, written either as the specification writes it or as the
-     * mapper has already read it into this module's scope annotation.
-     */
-    private static boolean isDependentScoped(ClassElement element) {
-        if (element.hasStereotype(Cdi.DEPENDENT)) {
-            return true;
-        }
-        return element.getAnnotationMetadata().stringValue(CdiScope.class)
-            .map(Cdi.DEPENDENT::equals)
-            .orElse(false);
-    }
-
-    /**
-     * Whether the class is a bean of this specification, which is to say that it carries one of its scopes
-     * either as it was written or as it has already been read into a Micronaut one. Both are looked for, so
-     * that this does not depend on which visitor ran first.
-     */
-    private static boolean isBeanOfTheSpecification(ClassElement element) {
-        if (element.hasStereotype(CdiScope.class)) {
-            return true;
-        }
-        for (String scope : SCOPES) {
-            if (element.hasStereotype(scope)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Whether the class declares a constructor a bean can be created through, which section 2.2.5 says is one
-     * taking no parameters or one annotated {@code Inject}.
-     */
-    private static boolean hasABeanConstructor(ClassElement element) {
-        List<ConstructorElement> constructors = element.getEnclosedElements(ElementQuery.CONSTRUCTORS);
-        if (constructors.isEmpty()) {
-            // the implicit constructor takes no parameters
-            return true;
-        }
-        for (ConstructorElement constructor : constructors) {
-            if (constructor.getParameters().length == 0
-                || constructor.hasDeclaredAnnotation("jakarta.inject.Inject")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

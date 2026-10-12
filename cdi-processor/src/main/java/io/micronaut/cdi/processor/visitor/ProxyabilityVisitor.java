@@ -17,7 +17,6 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -68,9 +67,9 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             // an interceptor class is invoked, not proxied
             return;
         }
-        boolean normalScoped = isNormalScoped(element);
+        boolean normalScoped = SpecificationBeans.isNormalScoped(element);
         boolean intercepted = element.hasStereotype("jakarta.interceptor.InterceptorBinding");
-        if (!normalScoped && !(intercepted && isBeanOfTheSpecification(element))) {
+        if (!normalScoped && !(intercepted && SpecificationBeans.hasScopeOfTheSpecification(element))) {
             return;
         }
         String reached = normalScoped ? "its normal scope" : "the interception of its methods";
@@ -161,18 +160,5 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             }
         }
         return null;
-    }
-
-    private static boolean isNormalScoped(ClassElement element) {
-        if (element.hasStereotype("jakarta.enterprise.context.NormalScope")) {
-            return true;
-        }
-        return element.getAnnotationMetadata()
-            .booleanValue(CdiScope.class, "normal")
-            .orElse(false);
-    }
-
-    private static boolean isBeanOfTheSpecification(ClassElement element) {
-        return element.hasStereotype(CdiScope.class);
     }
 }
