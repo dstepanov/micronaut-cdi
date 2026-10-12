@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
-import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -125,7 +124,7 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
             return recorded;
         }
         Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
-        return type != null && CdiReflection.current("Whether " + name + ", an annotation the application was "
+        return type != null && CdiReflections.current("Whether " + name + ", an annotation the application was "
             + "not compiled with as an interceptor binding, is one")
             .isAnnotated(type, jakarta.interceptor.InterceptorBinding.class);
     }

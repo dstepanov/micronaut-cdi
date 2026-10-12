@@ -394,7 +394,7 @@ public final class CdiQualifier {
         if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, Set.of(), null, annotation);
         }
-        CdiReflection reflection = CdiReflection.current("Reading the members of the annotation instance "
+        CdiReflection reflection = CdiReflections.current("Reading the members of the annotation instance "
             + annotation + " (" + SELECT_BY_VALUE + ")");
         return of(reflection.valuesOf(annotation), null, annotation);
     }
@@ -502,7 +502,7 @@ public final class CdiQualifier {
         if (known != null) {
             return known;
         }
-        return CdiReflection.current("Whether " + type.getName() + ", an annotation the application was not "
+        return CdiReflections.current("Whether " + type.getName() + ", an annotation the application was not "
             + "compiled with as a qualifier, is one").isAnnotated(type, jakarta.inject.Qualifier.class);
     }
 
@@ -564,7 +564,7 @@ public final class CdiQualifier {
         if (supplied == null) {
             return false;
         }
-        return CdiReflection.current("Whether the qualifier " + name + ", which the application was not compiled "
+        return CdiReflections.current("Whether the qualifier " + name + ", which the application was not compiled "
             + "with, may be given twice").isAnnotated(supplied.annotationType(), java.lang.annotation.Repeatable.class);
     }
 
@@ -588,7 +588,7 @@ public final class CdiQualifier {
         if (supplied == null) {
             return true;
         }
-        return CdiReflection.current("Whether the qualifier " + name + ", which the application was not compiled "
+        return CdiReflections.current("Whether the qualifier " + name + ", which the application was not compiled "
             + "with, is retained at runtime").isRetainedAtRuntime(supplied.annotationType());
     }
 

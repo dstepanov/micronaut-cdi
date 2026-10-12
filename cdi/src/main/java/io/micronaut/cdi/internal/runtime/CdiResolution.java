@@ -32,7 +32,27 @@ import java.util.List;
 @Internal
 public final class CdiResolution {
 
+    /**
+     * The parameters Micronaut adds to the constructor of the subclass it generates for an intercepted bean, after
+     * the ones the author wrote: the resolution context, the bean context, the qualifier, the interceptors and
+     * the interceptor registry.
+     */
+    private static final java.util.Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = java.util.Set.of(
+        "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
+
     private CdiResolution() {
+    }
+
+    /**
+     * Whether the argument is something the container hands a generated constructor rather than an injection
+     * point the author wrote. It is told by what it is - one of the parameters Micronaut generates - and not by
+     * the package of its type: an application may well inject a type of its own from a package of that name.
+     *
+     * @param argument The argument of a constructor
+     * @return Whether Micronaut generated it
+     */
+    public static boolean isGeneratedConstructorParameter(io.micronaut.core.type.Argument<?> argument) {
+        return GENERATED_CONSTRUCTOR_PARAMETERS.contains(argument.getName());
     }
 
     /**
