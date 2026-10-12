@@ -17,20 +17,25 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.util.TypeLiteral;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * An injection point answers its member through the module that reads classes of the container it belongs to,
- * not through whichever container started last: two containers can run side by side, and only one of them may
- * have the module.
+ * An injection point answers its member, and a container compares types it was not compiled with, through the
+ * module that reads classes of the container they belong to, not through whichever container started last: two
+ * containers can run side by side, and only one of them may have the module.
  */
 class OwnContainerReflectionTest {
 
@@ -68,6 +73,25 @@ class OwnContainerReflectionTest {
                 InjectionPoint unanswered = withoutModule.getBean(Holder.class).probe.at;
                 assertThrows(UnsupportedOperationException.class, unanswered::getMember,
                     "the container without the module does not borrow the other one's");
+            }
+        }
+    }
+
+    @Test
+    void eachContainerMatchesTypesItWasNotCompiledWithByItsOwnModule() {
+        // ArrayList was not compiled with the processor: only the module that reads classes knows it is a List
+        java.lang.reflect.Type event = new TypeLiteral<java.util.ArrayList<String>>() { }.getType();
+        java.lang.reflect.Type observed = new TypeLiteral<java.util.List<String>>() { }.getType();
+        try (ApplicationContext withModule = ApplicationContext.run()) {
+            try (ApplicationContext withoutModule = ApplicationContext.builder()
+                .beansPredicate(bean -> !bean.getBeanType().getName().equals(REFLECTION_MODULE))
+                .start()) {
+
+                assertTrue(withModule.getBean(BeanManager.class)
+                    .isMatchingEvent(event, Set.of(), observed, Set.of()));
+                assertFalse(withoutModule.getBean(BeanManager.class)
+                    .isMatchingEvent(event, Set.of(), observed, Set.of()),
+                    "the container without the module knows nothing above a class it was not compiled with");
             }
         }
     }

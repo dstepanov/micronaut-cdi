@@ -363,6 +363,7 @@ public final class RecordedSynthesis {
             return null;
         }
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        return CdiInjectionPoint.of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()), segment);
+        return CdiInjectionPoint.of(container.beanContext(),
+            container.canonicalBean(segment.getDeclaringType()), segment);
     }
 }

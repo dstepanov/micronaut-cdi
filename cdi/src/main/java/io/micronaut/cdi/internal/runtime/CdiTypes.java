@@ -303,42 +303,49 @@ public final class CdiTypes {
      * <p>It is read from what the processor recorded of the class. For a class the application was not compiled
      * with, the module that reads classes answers where it is there; otherwise the closure is the type alone.</p>
      *
+     * @param index The generic hierarchies of the container asking, which also reach its module that reads
+     *              classes; {@code null} where it has none yet, and nothing above a type is known
      * @param type The type
      * @return The closure, the type first
      */
-    public static List<Argument<?>> closureOf(Argument<?> type) {
-        return closureOf(type, false);
+    public static List<Argument<?>> closureOf(@Nullable RecordedTypeIndex index, Argument<?> type) {
+        return closureOf(index, type, false);
     }
 
     /**
      * The closure a bean's types are taken from: the {@link #closureOf type closure}, except that an array
      * and a primitive have no closure beyond themselves (section 2.2.1).
      *
+     * @param index The generic hierarchies of the container asking, which also reach its module that reads
+     *              classes; {@code null} where it has none yet, and nothing above a type is known
      * @param type The type
      * @return The closure, the type first
      */
-    public static List<Argument<?>> beanTypeClosureOf(Argument<?> type) {
-        return closureOf(type, true);
+    public static List<Argument<?>> beanTypeClosureOf(@Nullable RecordedTypeIndex index, Argument<?> type) {
+        return closureOf(index, type, true);
     }
 
     /**
      * The closure the types of a bean of the given class are taken from, starting at the class over its own
      * type variables.
      *
+     * @param index The generic hierarchies of the container asking, which also reach its module that reads
+     *              classes; {@code null} where it has none yet, and nothing above a type is known
      * @param beanClass The bean class
      * @return The closure, the class first
      */
-    static List<Argument<?>> beanTypeClosureOf(Class<?> beanClass) {
-        RecordedTypeIndex.Entry recorded = recordOf(beanClass);
+    static List<Argument<?>> beanTypeClosureOf(@Nullable RecordedTypeIndex index, Class<?> beanClass) {
+        RecordedTypeIndex.Entry recorded = recordOf(index, beanClass);
         if (recorded != null) {
-            return closureOf(recorded.declaredTypeOf(beanClass), true);
+            return closureOf(index, recorded.declaredTypeOf(beanClass), true);
         }
-        CdiReflection reflection = reflection();
-        return closureOf(reflection != null
+        CdiReflection reflection = reflection(index);
+        return closureOf(index, reflection != null
             ? SpecificationTypes.argumentOf(reflection.declaredTypeOf(beanClass)) : Argument.of(beanClass), true);
     }
 
-    private static List<Argument<?>> closureOf(Argument<?> type, boolean arrayStops) {
+    private static List<Argument<?>> closureOf(@Nullable RecordedTypeIndex index, Argument<?> type,
+                                              boolean arrayStops) {
         Class<?> raw = rawClassOf(type);
         if (raw == null || isObject(type)) {
             return new ArrayList<>();
@@ -346,14 +353,14 @@ public final class CdiTypes {
         if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
             return new ArrayList<>(List.of(type));
         }
-        RecordedTypeIndex.Entry recorded = recordOf(raw);
+        RecordedTypeIndex.Entry recorded = recordOf(index, raw);
         if (recorded != null) {
             List<Argument<?>> closure = recorded.closureOf(type);
             if (closure != null) {
                 return closure;
             }
         }
-        CdiReflection reflection = reflection();
+        CdiReflection reflection = reflection(index);
         if (reflection != null) {
             // the module that reads classes speaks the types of the reflection API
             return SpecificationTypes.argumentsOf(
@@ -368,28 +375,21 @@ public final class CdiTypes {
      * Whether the types above the given class can be said: the processor recorded them, or the module that
      * reads classes is there to read them.
      *
+     * @param index The generic hierarchies of the container asking, which also reach its module that reads
+     *              classes; {@code null} where it has none yet, and nothing above a type is known
      * @param type The class
      * @return Whether its closure is known
      */
-    static boolean knowsClosureOf(Class<?> type) {
-        return recordOf(type) != null || reflection() != null;
+    static boolean knowsClosureOf(@Nullable RecordedTypeIndex index, Class<?> type) {
+        return recordOf(index, type) != null || reflection(index) != null;
     }
 
-    private static RecordedTypeIndex.@Nullable Entry recordOf(Class<?> type) {
-        RecordedTypeIndex index = RecordedTypeIndex.current();
+    private static RecordedTypeIndex.@Nullable Entry recordOf(@Nullable RecordedTypeIndex index, Class<?> type) {
         return index == null ? null : index.of(type.getName());
     }
 
-    /**
-     * The reflection module of the running container. The type closures are asked from static code because their
-     * main caller cannot be handed a context: Micronaut builds the {@code BeanResolutionCustomizer} that matches
-     * parameterized lookups by these rules ({@code CdiResolutionCustomizer}) from the builder of the context,
-     * before the context exists, and hands it no context afterwards. The running container ({@link CdiRunning})
-     * is the one there is to ask.
-     */
-    private static @Nullable CdiReflection reflection() {
-        io.micronaut.context.BeanContext context = CdiRunning.currentContext();
-        return context == null ? null : context.findBean(CdiReflection.class).orElse(null);
+    private static @Nullable CdiReflection reflection(@Nullable RecordedTypeIndex index) {
+        return index == null ? null : index.reflection();
     }
 
     /**
@@ -397,15 +397,17 @@ public final class CdiTypes {
      * declares type variables. Known from the record of a class the application was compiled with, and from
      * the class itself where the module that reads classes is there.
      *
+     * @param index The generic hierarchies of the container asking, which also reach its module that reads
+     *              classes; {@code null} where it has none yet, and nothing above a type is known
      * @param type The class
      * @return Whether it declares type variables, as far as can be known
      */
-    static boolean declaresTypeVariables(Class<?> type) {
-        RecordedTypeIndex.Entry recorded = recordOf(type);
+    static boolean declaresTypeVariables(@Nullable RecordedTypeIndex index, Class<?> type) {
+        RecordedTypeIndex.Entry recorded = recordOf(index, type);
         if (recorded != null) {
             return !recorded.variables().isEmpty();
         }
-        CdiReflection reflection = reflection();
+        CdiReflection reflection = reflection(index);
         return reflection != null && reflection.declaredTypeOf(type) != type;
     }
 
@@ -413,15 +415,17 @@ public final class CdiTypes {
      * The type of an event of the given runtime class that was fired as the given type, where both are the
      * types of the specification's API.
      *
+     * @param index        The generic hierarchies of the container asking, {@code null} where it has none yet
      * @param runtimeClass The class of the event object
      * @param declaredType The type the event was fired as
      * @return The event type
      * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
      *                                  unresolved
-     * @see #eventTypeOf(Class, Argument)
+     * @see #eventTypeOf(RecordedTypeIndex, Class, Argument)
      */
-    public static Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
-        return SpecificationTypes.typeOf(eventTypeOf(runtimeClass, SpecificationTypes.argumentOf(declaredType)));
+    public static Type eventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass, Type declaredType) {
+        return SpecificationTypes.typeOf(
+            eventTypeOf(index, runtimeClass, SpecificationTypes.argumentOf(declaredType)));
     }
 
     /**
@@ -435,16 +439,19 @@ public final class CdiTypes {
      * classes - where it names a supertype. An event of a generic class is fired as its full type, with
      * nothing read, through {@code MicronautEvent.select(Argument)}.</p>
      *
+     * @param index The generic hierarchies of the container asking, which also reach its module that reads
+     *              classes; {@code null} where it has none yet, and nothing above a type is known
      * @param runtimeClass The class of the event object
      * @param declaredType The type the event was fired as
      * @return The event type
      * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
      *                                  unresolved
      */
-    public static Argument<?> eventTypeOf(Class<?> runtimeClass, Argument<?> declaredType) {
-        RecordedTypeIndex.Entry recorded = recordOf(runtimeClass);
+    public static Argument<?> eventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass,
+                                          Argument<?> declaredType) {
+        RecordedTypeIndex.Entry recorded = recordOf(index, runtimeClass);
         if (recorded == null) {
-            CdiReflection reflection = reflection();
+            CdiReflection reflection = reflection(index);
             if (reflection != null) {
                 return SpecificationTypes.argumentOf(
                     reflection.eventTypeOf(runtimeClass, SpecificationTypes.typeOf(declaredType)));

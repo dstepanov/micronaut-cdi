@@ -55,6 +55,7 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
         }
         // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
         // narrowing the candidates to it would become part of the key its scope holds the instance under
-        return resolutionContext.getBean(definition, CdiInstance.askedAs(argument, definition));
+        return resolutionContext.getBean(definition,
+            CdiInstance.askedAs(resolutionContext.getContext(), argument, definition));
     }
 }

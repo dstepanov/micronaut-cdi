@@ -56,7 +56,8 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-            injectedAt = CdiInjectionPoint.of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()), segment);
+            injectedAt = CdiInjectionPoint.of(container.beanContext(),
+                container.canonicalBean(segment.getDeclaringType()), segment);
         }
         return new CdiInstance<>(context, injectedAt, (Argument<T>) type, qualifiers);
     }

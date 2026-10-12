@@ -63,7 +63,8 @@ public final class CdiAnnotations {
         if (builder != null) {
             return value == null ? builder.build(java.util.Map.of()) : builder.build(value);
         }
-        return io.micronaut.cdi.spi.CdiReflection.require(beanContext, "An instance of the annotation " + type.getName())
+        String what = "An instance of the annotation " + type.getName();
+        return io.micronaut.cdi.spi.CdiReflection.require(beanContext, what)
             .annotation(type, value);
     }
 

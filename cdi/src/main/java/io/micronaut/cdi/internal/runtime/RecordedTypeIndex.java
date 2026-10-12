@@ -53,14 +53,23 @@ public final class RecordedTypeIndex {
     }
 
     /**
-     * The index of the container that is current, for the type closures that are asked from static code: see
-     * {@code CdiTypes}, whose main caller, the resolution customizer, Micronaut hands no context.
+     * The index of the given container.
      *
-     * @return The index, or {@code null} where no container is running
+     * @param beanContext The context of the container
+     * @return Its index
      */
-    static @Nullable RecordedTypeIndex current() {
-        BeanContext context = CdiRunning.currentContext();
-        return context == null ? null : context.findBean(RecordedTypeIndex.class).orElse(null);
+    public static RecordedTypeIndex of(BeanContext beanContext) {
+        return beanContext.getBean(RecordedTypeIndex.class);
+    }
+
+    /**
+     * The module of the same container that reads classes, which answers for a class the application was not
+     * compiled with.
+     *
+     * @return The module, or {@code null} where it is not on the classpath
+     */
+    io.micronaut.cdi.spi.@Nullable CdiReflection reflection() {
+        return beanContext.findBean(io.micronaut.cdi.spi.CdiReflection.class).orElse(null);
     }
 
     /**

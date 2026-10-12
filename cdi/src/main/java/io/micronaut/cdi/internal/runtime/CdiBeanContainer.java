@@ -162,7 +162,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (!amongTheTypes && CdiTypes.isParameterized(required)) {
             // a bean type with variables among its arguments - a producer of List<T> - is a List<Spider> as well,
             // by the rules the bean was resolved with
-            amongTheTypes = CdiAssignability.isTypeMatching(types, required);
+            amongTheTypes = CdiAssignability.isTypeMatching(typeIndex(), types, required);
         }
         if (!amongTheTypes) {
             throw new IllegalArgumentException("The type " + beanType.getTypeName()
@@ -269,7 +269,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 }
                 continue;
             }
-            if (CdiAssignability.isTypeMatching(bean.types(), requireNoTypeVariable(beanType))
+            if (CdiAssignability.isTypeMatching(typeIndex(), bean.types(), requireNoTypeVariable(beanType))
                 && CdiAssignability.areQualifiersMatching(bean.qualifiers(), required)) {
                 beans.add(bean);
             }
@@ -340,6 +340,13 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private List<CdiQualifier> wellFormed(List<CdiQualifier> qualifiers) {
         CdiQualifier.requireWellFormed(types(), List.of(), qualifiers);
         return qualifiers;
+    }
+
+    /**
+     * The generic hierarchies of the classes the application was compiled with, which types are compared by.
+     */
+    private RecordedTypeIndex typeIndex() {
+        return RecordedTypeIndex.of(beanContext);
     }
 
     /**
@@ -561,7 +568,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @SuppressWarnings("unchecked")
     private <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, List<CdiQualifier> qualifiers) {
-        if (CdiTypes.declaresTypeVariables(event.getClass())) {
+        if (CdiTypes.declaresTypeVariables(typeIndex(), event.getClass())) {
             throw new IllegalArgumentException("The event object's class " + event.getClass().getName()
                 + " declares type variables, and its runtime class alone does not resolve them");
         }

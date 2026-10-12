@@ -375,7 +375,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                     + argument);
             }
             registration = beanContext.getBeanRegistration(definition,
-                CdiInstance.askedAs((Argument<Object>) argument, definition));
+                CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
         } else {
             Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
             registration = beanContext.getBeanRegistration((Argument<Object>) argument, qualifier);

@@ -61,12 +61,31 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         new java.util.concurrent.ConcurrentHashMap<>();
 
     private final BeanResolutionCustomizer delegate;
+    // the generic hierarchies of the context this customizer resolves for, handed over once the context is up
+    // (see attach): until then a parameterized lookup knows nothing above a type but what Micronaut exposes
+    private volatile @org.jspecify.annotations.Nullable RecordedTypeIndex typeIndex;
 
     /**
      * @param delegate The customizer installed before this one, which resolves what is not the specification's
      */
     CdiResolutionCustomizer(BeanResolutionCustomizer delegate) {
         this.delegate = delegate;
+    }
+
+    /**
+     * Hands the customizer of the given context the context's generic hierarchies. Micronaut reads the customizer
+     * from the builder before the context exists and never hands it the context; the context hands itself over
+     * through its configuration, which is the builder the customizer was installed on.
+     *
+     * @param beanContext The context, now creating its beans
+     */
+    static void attach(io.micronaut.context.BeanContext beanContext) {
+        if (beanContext.getContextConfiguration().beanResolutionCustomizer() instanceof CdiResolutionCustomizer own
+            && own.typeIndex == null) {
+            own.typeIndex = RecordedTypeIndex.of(beanContext);
+            // what was worked out before is what Micronaut exposed, and is worked out again with the hierarchies
+            own.beanTypes.clear();
+        }
     }
 
     @Override
@@ -183,13 +202,14 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
             // the required argument does not satisfy
+            RecordedTypeIndex index = typeIndex;
             try {
                 java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionIdentity(definition), key -> {
                     Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
                         ? proxy.getTargetType() : definition.getBeanType();
-                    return CdiBean.typesOf(definition, beanClass);
+                    return CdiBean.typesOf(index, definition, beanClass);
                 });
-                return CdiAssignability.isTypeMatching(types, beanType);
+                return CdiAssignability.isTypeMatching(index, types, beanType);
             } catch (NoClassDefFoundError | TypeNotPresentException e) {
                 // a type the bean recorded is of a class absent from the classpath: what Micronaut matches it by
                 // is all there is to go on
