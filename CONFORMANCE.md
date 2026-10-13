@@ -150,6 +150,28 @@ is left out of a comparison when either side lists it. A programmatic lookup is 
 back to matching the simple name of the annotation against the name of the bean class, which a qualifier of the
 specification does not.
 
+A qualifier and an interceptor binding are compared by one rule, the Jakarta Interceptors implementation's
+`BindingValues.matches`, so that `areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer as the
+interceptor chains are built: the members a value leaves out filled in from the defaults it carries, the members
+either side lists under `$nonBinding` left out of both, an empty string compared as the member left out, only
+`$nonBinding` and `$stereotypes` of Micronaut's members left out, an enum constant by its name, a class as its
+`AnnotationClassValue`, an array element by element, and an annotation held by a member compared as a binding
+is - by the members it binds by rather than by every member, which section 5.2.6 leaves non-portable for a
+qualifier member that is an annotation and is not `@Nonbinding`. Two things the container does beside it:
+
+- **A value that carries no defaults is given the ones Micronaut registered for its type** before it is
+  compared. Compiled metadata hands every value its defaults; a qualifier a program composes, as
+  `AnnotationValue.builder(Shelf.class).build()`, carries none, and `BindingValues`, which fills defaults from the
+  value alone, would not match it with the bean compiled with `@Shelf`. An annotation such a value holds is
+  compared with the defaults it carries, as `BindingValues` compares it. The value with the defaults is also what
+  the container hands the interceptors implementation (`BeanManager.resolveInterceptors`), so the two still agree.
+- **`getQualifierHashCode` and `getInterceptorBindingHashCode` hash the members that bind.**
+  `BindingValues.hashCode` hashes the name alone, because the two values it compares may list different members
+  as non-binding; the container hashes an annotation instance, whose non-binding members are those of its type
+  whichever instance it is, and the specification's tests ask two qualifiers that differ by a binding member to
+  hash differently. The members are hashed as `BindingValues.normalize` shapes them, an annotation a member holds by
+  its name, so two annotations that match hash alike.
+
 An annotation literal a program hands to `select`, `getBeans` and their like is a reflection object. The
 literals of the specification and a literal of a qualifier with no binding member are taken as they are; any
 other has to be read member by member, which needs `micronaut-cdi-reflection` and says so. The reflection-free
@@ -594,11 +616,8 @@ are merged upstream; the remaining differences below still require adaptation or
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
   one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
-  compares qualifiers in one normalised shape of its own (`CdiQualifier.matches`), kept to the rules the Jakarta
-  Interceptors implementation compares bindings by - the defaults each value carries, an empty string no default
-  is recorded for read as the member left out, only `$nonBinding` and `$stereotypes` of Micronaut's members left
-  out - whose normaliser is not public yet. A structural comparison in Micronaut, or the interceptors' normaliser
-  made public, would remove the copy.
+  compares qualifiers and interceptor bindings through the Jakarta Interceptors implementation's
+  `BindingValues.matches` instead (`CdiQualifier.matches`), the comparison its chains are built from.
 - **Micronaut's reflective type arguments lose wildcards and type variables.** `ReflectionArguments.of(Type)`
   reads a wildcard as its bound and a type variable as its first bound, and `ReflectionArguments.toType` never
   makes a wildcard, while the rules of section 5.2.4 tell `List<? extends Number>` from `List<Number>` and a
