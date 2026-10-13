@@ -393,18 +393,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * Whether the producer declares a scope of its own, which is the scope the bean it produces belongs to.
-     */
-    private static boolean declaresANormalScope(MemberElement producer) {
-        return producer.hasDeclaredAnnotation(CdiRequestScope.class)
-            || producer.hasDeclaredAnnotation(CdiApplicationScope.class)
-            || producer.getAnnotationMetadata()
-                .hasDeclaredStereotype(CdiRequestScope.class)
-            || producer.getAnnotationMetadata()
-                .hasDeclaredStereotype(CdiApplicationScope.class);
-    }
-
-    /**
      * Whether the producer declares a scope the dependent pseudo-scope is not, which is the scope section 3.3.2
      * allows a producer of a type containing a variable: writing the dependent scope down says what the producer
      * would have been without it, so a producer that declares it declares nothing the rule is about.
