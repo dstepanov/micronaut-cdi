@@ -64,7 +64,7 @@ public final class ExtensionContexts {
 
     @PostConstruct
     void standUp() {
-        // the definition the discovery phase generated for each context class an extension registered
+        // the definition the processor registered for each context class an extension registered
         java.util.Collection<BeanDefinition<Object>> contextDefinitions = beanContext.getBeanDefinitions(
             io.micronaut.inject.qualifiers.Qualifiers.byStereotype(
                 io.micronaut.cdi.internal.metadata.CdiRegisteredContext.class));

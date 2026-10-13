@@ -96,8 +96,9 @@ public final class RecordedSynthesis {
         Map<String, BeanDefinition<?>> beans = new LinkedHashMap<>();
         Map<String, BeanDefinition<?>> disposers = new LinkedHashMap<>();
         Map<String, BeanDefinition<?>> observers = new LinkedHashMap<>();
-        // each kind of record is found by its annotation on the references of the generated factories' methods:
-        // only those definitions are loaded, rather than every definition of the application
+        // each kind of record is found by its annotation on the references of the definitions the processor
+        // registered for the classes the extensions named: only those definitions are loaded, rather than every
+        // definition of the application
         for (BeanDefinition<?> definition : recorded(CdiSyntheticBean.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticBean.class).ifPresent(record ->
                 beans.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
@@ -127,7 +128,7 @@ public final class RecordedSynthesis {
             if (disposer == null && record.booleanValue("disposer").orElse(false)) {
                 throw new IllegalStateException("The synthetic bean " + record.stringValue("implementation").orElse("")
                     + " was recorded with a disposer, and the definition of the disposer is not among the beans "
-                    + "of the application: the factory generated with it is not on the classpath");
+                    + "of the application: the definitions compiled with it are not on the classpath");
             }
             register(record, parameters, bean.getValue(), disposer);
         }

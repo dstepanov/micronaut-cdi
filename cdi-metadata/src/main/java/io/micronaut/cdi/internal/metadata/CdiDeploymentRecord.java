@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.generated;
+package io.micronaut.cdi.internal.metadata;
+
+import io.micronaut.core.annotation.Internal;
 
 /**
- * Stands for the class a compilation of the module {@code cditest:probe} that ran the discovery phase alone left
- * on the classpath, under the name a later compilation of the module would choose first (GeneratedClassNamesTest).
+ * The type of the bean a compilation registers for what its build compatible extensions said of the deployment
+ * as a whole rather than of a class - the annotations they made qualifiers of ({@link CdiExtensionQualifiers}) -
+ * which is recorded on the definition of that bean. The container reads the record from the definition, and never
+ * creates the bean.
+ *
+ * @author Denis Stepanov
+ * @since 1.0
  */
-public final class RegisteredQualifiers8bf758f0 {
-
-    private RegisteredQualifiers8bf758f0() {
-    }
+@Internal
+public final class CdiDeploymentRecord {
 }

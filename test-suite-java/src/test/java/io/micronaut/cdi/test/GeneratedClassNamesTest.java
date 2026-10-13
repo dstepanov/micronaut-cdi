@@ -27,10 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Two compilations of one application - two modules, or the main and the test classes of one - each run the
- * build compatible extensions, and each generates classes for what they said. None of those may be named as a
- * class the other generated: the class loader would hand out one of them, and what the other recorded would be
- * lost. The classes of this suite were compiled with the extensions of the suite; a second compilation with the
- * same extensions generates its own.
+ * build compatible extensions, and under javac each generates the import of the classes they scanned. Neither
+ * may be named as a class the other generated: the class loader would hand out one of them, and what the other
+ * imported would be lost. The beans the extensions register are named after a class of each compilation, and
+ * need no name of their own. The classes of this suite were compiled with the extensions of the suite; a second
+ * compilation with the same extensions generates its own.
  */
 class GeneratedClassNamesTest {
 
@@ -50,8 +51,8 @@ class GeneratedClassNamesTest {
 
     /**
      * A compilation of a module - named by the group and the module Micronaut's build passes every compilation -
-     * that ran the discovery phase alone generated the classes of what it registered and no marker of the
-     * registration: a later compilation of the module does not take that compilation's name all the same.
+     * that ran the discovery phase alone generated the import of what it scanned and nothing else: a later
+     * compilation of the module does not take that compilation's name all the same.
      */
     @Test
     void aCompilationOfAModuleTakesNoNameAnEarlierCompilationOfItUsed() {

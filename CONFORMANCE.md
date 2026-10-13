@@ -45,7 +45,7 @@ visible in a test report as what passes.
 | 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, and `Instance` and `BeanContainer.getBeans` narrowed by a Micronaut `Qualifier`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 12.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
-| 12.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each written as a generated bean definition | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
+| 12.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each registered as a bean definition of the class the extension named, without a source | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
 | 12.6 | The `@Validation` phase, whose errors fail the compilation | `BuildCompatibleExtensionVisitor` |
 | 12.4 | The `@Registration` phase, run over each bean and observer as it is compiled, and over the synthetic beans and observers and the built-in beans once synthesis has run | `ElementBeanInfo`, `ElementObserverInfo`, `SyntheticBeanInfo`, `SyntheticObserverInfo`, `BuildCompatibleExtensionVisitor` |
 | 12 | `AnnotationBuilder` and `Types`, composing annotation values and types of the one language model | `ElementAnnotationBuilder`, `ElementBuildServices`, `VisitorTypes` |
@@ -243,12 +243,22 @@ says. The running application does not load it, and an extension that is only on
 nothing.
 
 What the discovery phase says is recorded by name and applied as the named classes come past the compiler.
-`ScannedClasses.add` writes a generated `@ClassImport` source so that a class that says nothing at all about
-itself is still compiled into a bean. `MetaAnnotations.addContext` declares a bean of the context
-class, recording the scope it serves, and the runtime obtains the context from that definition. An annotation
-registered as a qualifier, an interceptor binding or a stereotype is one only if it is compiled by the same build.
+A class `ScannedClasses.add` names is a bean even where it says nothing at all about itself. KSP and the Groovy
+compiler hand every class they compile to the bean machinery, which makes a scanned one a bean with the scope it
+was given as it was visited; a scanned class of a library, which no compilation of the application compiles, is
+put through the discovery, enhancement and registration phases and registered as a bean with Micronaut's
+`VisitorContext.registerBean` - a definition of its constructor and injection points, without what the other
+visitors of the processor record of a class they compile. javac hands the bean machinery only the classes that
+carry an annotation it reacts to, and decides which of those are beans after the visitors have run, so a bean
+registered for a scanned class could stand beside the definition javac writes for it: under javac the processor
+generates a `@ClassImport` source naming the scanned classes, the one source left of the extensions besides the
+type index, and javac makes each of them a bean once. `MetaAnnotations.addContext` registers a bean of the
+context class, recording the scope it serves, and the runtime obtains the context from that definition. The
+annotations registered as qualifiers are recorded on a bean registered for the purpose, of the type
+`CdiDeploymentRecord`, which is never created. An annotation registered as a qualifier, an interceptor binding or
+a stereotype is one only if it is compiled by the same build.
 
-A synthetic bean is written as a bean of the creator class the extension named, declared by a generated factory, and the
+A synthetic bean is registered as a bean of the creator class the extension named, without a source, and the
 rest of what the extension said - the bean types, the qualifiers, the scope, the name, the priority, the
 parameters - is the annotation metadata of that definition. The disposer class and the observer class of a
 synthetic observer get a definition the same way. As the container starts it reads those records, registers a
@@ -256,7 +266,7 @@ bean for each synthetic bean, and obtains a creator, a disposer, an observer or 
 it loads no extension, invokes nothing reflectively and instantiates no class by name. The parameters an
 extension attaches with `withParam` are the types the specification allows, all of which an annotation value
 holds. The classes the extension names have to be on the classpath the application is compiled against, and
-each needs a constructor the generated definition can call.
+each needs a constructor without parameters the generated definition can call.
 
 The language model an extension reads, and the annotations and types it composes with `AnnotationBuilder` and
 `Types`, have one implementation, built on the compiler's view of the classes. A synthetic bean, a synthetic
@@ -272,13 +282,17 @@ synthetic component or in validation fails the compilation: there is no deployme
 compilation is where the application is put together.
 
 The phases run the same way whichever language the application is compiled in - by javac, by the Groovy
-compiler, or by KSP - through two sources the processor generates in that language. One is a marker: a generated
-source is compiled after the sources the compilation started with, so the marker coming past is the moment every
-class has been registered, and synthesis, the registration of what it described, and validation run then. The
-other is a factory with a method for each class an extension named, which is how a bean of a class compiled
-elsewhere is declared in all three; the record of a component is put on its method as annotation values when the
-factory is compiled. A compilation that cannot compile a generated source fails rather than leaving the phases
-out.
+compiler, or by KSP - with no source generated for them. Micronaut calls `TypeElementVisitor.finishRound` once
+every visitor has visited every class of a round, the registration visitor included, and before the beans of the
+round are written, in all three; the first round that visits a class of the compilation is the moment every class
+has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
+javac, where the scanned classes are imported, they wait for the next round, which visits the imported classes.
+Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
+`VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
+the record of the component is put on the definition as annotation values. The definition is named after the
+first class of the compilation and has every class of it as an origin: under javac, Gradle then recompiles the
+whole source set when one changes, and under KSP the definitions are written again with any of them. A Groovy or
+Kotlin compilation that finished no round fails rather than leaving the phases out.
 
 Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
@@ -633,9 +647,13 @@ are merged upstream; the remaining differences below still require adaptation or
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
   that metadata reads. Under KSP they belong to the processor and last across its rounds. The Groovy compiler keeps
   them in one static map for every compilation in the process (`GroovyVisitorContext`), so under Groovy two
-  compilations running at once in one process share them as they would a static field; the records of generated
-  classes are kept under the generated class's name, which differs between compilations, the visitor of the
-  compilation is not.
+  compilations running at once in one process share them as they would a static field; the records of the type
+  index are kept under the generated class's name, which differs between compilations, the visitor of the
+  compilation is not. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
+  the phases of the build compatible extensions run as a round finishes and their beans are registered without a
+  source, so the visitor and the records of the components no longer wait on the attributes for a generated marker
+  or factory to come past; what is left there is the visitor the compilation started, read by the registration
+  visitor, and the records of the type index, which is still generated as source.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
