@@ -139,16 +139,22 @@ is the reflection module's, which synthesises it with Micronaut's `ReflectionAnn
 of one a program hands over the same way.
 
 The members that do not bind are recorded once, the way Micronaut records its own `@NonBinding` members: listed
-under `$nonBinding` in the values of the qualifier. Micronaut lists a member only on an occurrence that writes it,
-and only where the member's declaration marks it, so the processor completes the list (`NonbindingMembersRemapper`)
-on every occurrence of a qualifier or binding it compiles - one that leaves a non-binding member at its default,
-and a member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes,
-among them - and on the qualifiers it records for a synthetic component. A qualifier the program composes as an
-`AnnotationValue` lists nothing, and one read from an annotation instance lists what its type marks, so a member
-is left out of a comparison when either side lists it. A programmatic lookup is resolved by one Micronaut
-`Qualifier`, `CdiBeanQualifier`, which compares these and nothing else: Micronaut's own annotation qualifiers fall
-back to matching the simple name of the annotation against the name of the bean class, which a qualifier of the
-specification does not.
+under `$nonBinding` in the values of the qualifier. Since Micronaut Core 5.3 Micronaut lists every member the
+annotation interface marks on every occurrence it compiles, one that leaves the member at its default among them,
+and on its qualifier stereotype. The processor adds what Micronaut cannot know (`NonbindingMembersRemapper`): a
+member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes, on every
+occurrence of the qualifier or binding; and the members a qualifier the processor records for a synthetic
+component excludes, which an extension composed rather than the compiler reading it. A qualifier the program
+composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
+marks, so a member is left out of a comparison when either side lists it. A programmatic lookup is resolved by one
+Micronaut `Qualifier`, `CdiBeanQualifier`, which compares these and nothing else. Micronaut's own qualifier for an
+annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotation(AnnotationMetadata,
+AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
+the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
+specification are also the ones a portable extension added as the container started, a bean that declares
+none has `@Default` and `@Any`, and two values are compared by the members that bind as `BindingValues.matches`
+compares them (an enum constant by its name, a class as its `AnnotationClassValue`); so `CdiBeanQualifier`
+stays.
 
 A qualifier and an interceptor binding are compared by one rule, the Jakarta Interceptors implementation's
 `BindingValues.matches`, so that `areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer as the
@@ -618,20 +624,26 @@ own rather than the first one alone.
   them as methods, KSP as properties and no methods. The members are enumerated one way or the other in one place
   (`ElementMembers.annotationMembersOf`), which the processor's non-binding members and the language model's
   annotation members and methods read; a member query on `AnnotationElement` would remove it.
-- **Micronaut's annotation qualifiers match by the name of the bean.** `AnnotationMetadataQualifier` and
-  `AnnotationQualifier` fall back to matching the simple name of the annotation against the simple name of the
-  candidate's class where the candidate does not carry the annotation, so `Qualifiers.byAnnotation` for a
-  `@Default` lookup selects a `@Special class DefaultGreeter`. A lookup here resolves by `CdiBeanQualifier`, which
-  implements `Qualifier` directly: `FilteringQualifier` is `@Internal`, and
-  `AnnotationMetadataQualifier.fromAnnotation` is package-private.
+- **Micronaut's annotation qualifiers compare the qualifiers a bean was compiled with.** Since Micronaut Core 5.3
+  `Qualifiers.byAnnotation(Annotation)` and `byAnnotation(AnnotationMetadata, AnnotationValue)` select by the
+  annotation alone; the qualifiers read off an injection point (`byAnnotation(AnnotationMetadata, Class)` and its
+  `String` form) still fall back to the simple name of the candidate's class, the convention by which `@V8 Engine`
+  selects a `V8Engine`, which a qualifier of the specification does not follow. Either compares a candidate by the
+  qualifiers its metadata records, while the qualifiers of a bean of the specification are also the ones a portable
+  extension added as the container started, and `@Default` where it declares none. A lookup here resolves by
+  `CdiBeanQualifier`, which implements `Qualifier` directly over the container's own record of each bean's
+  qualifiers: `FilteringQualifier` is `@Internal`, and `AnnotationMetadataQualifier.fromAnnotation` is
+  package-private.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
   marker of its own (`CdiAny`) rather than into Micronaut's.
-- **`$nonBinding` is recorded only where a member is written, and only as the source marks it.** Micronaut lists a
-  `@NonBinding` member on an occurrence that writes it, reading the mark from the member's declaration, so neither
-  an occurrence that leaves the member at its default nor a member a build compatible extension marked carries it.
-  The processor completes the list (`NonbindingMembersRemapper`), and the comparison leaves out a member either
-  side lists.
+- **A member an extension marks `@Nonbinding` is the processor's to record.** Since Micronaut Core 5.3 Micronaut
+  lists every `@NonBinding` member of an annotation under `$nonBinding` on each occurrence, written or not, and on
+  its qualifier stereotype, and guards the reading of the members' own annotations against two annotation interfaces
+  whose members are annotated with each other (`MutuallyAnnotatedQualifierMembersTest` holds the shape). What it
+  cannot see is a member a build compatible extension marked during discovery, which the source does not, and a
+  qualifier an extension composed for a synthetic component, which is no occurrence it reads: the processor lists
+  those (`NonbindingMembersRemapper`), and the comparison leaves out a member either side lists.
 - **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
@@ -660,8 +672,7 @@ own rather than the first one alone.
   resolution instead.
 - **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
   visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
-  (`CompilationState`) rather than in static fields; what belongs to one call stack rather than to the compilation,
-  the guard `NonbindingMembersRemapper` reads a qualifier interface under, stays on the thread. Under javac they belong to one
+  (`CompilationState`) rather than in static fields. Under javac they belong to one
   processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
   definition processor is remapped with that processor's attributes, so there a remapper does not see the
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
