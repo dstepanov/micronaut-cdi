@@ -19,7 +19,6 @@ import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.processor.Cdi;
@@ -357,29 +356,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // may still select it as the container is built; the class's own selection has already decided
             // whether the whole factory is a bean, so only the member is made conditional here
             if (!element.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE)) {
-                java.util.List<String> stereotypes = producer.getAnnotationMetadata()
-                    .getAnnotationNamesByStereotype(Cdi.ALTERNATIVE).stream()
-                    .filter(name -> !name.equals(Cdi.ALTERNATIVE))
-                    .toList();
-                producer.annotate(io.micronaut.context.annotation.Requires.class, builder -> builder
-                    .member("condition", new AnnotationClassValue<>(
-                        "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
-                String className = element.getName();
-                producer.annotate(CdiSelectableAlternative.class, builder -> {
-                    builder.value(className);
-                    builder.member("producer", true);
-                    if (!stereotypes.isEmpty()) {
-                        builder.member("stereotypes", stereotypes.toArray(new String[0]));
-                    }
-                });
+                Alternatives.leaveUnselected(producer, element.getName(), true);
             }
             return;
         }
-        // the order is the priority negated, written over the one Micronaut read from the priority itself:
-        // a Micronaut order prefers the lowest, the specification the highest
-        int order = -priority;
-        producer.removeAnnotation("io.micronaut.core.annotation.Order");
-        producer.annotate("io.micronaut.core.annotation.Order", builder -> builder.value(order));
+        // not made primary here: a producer that declares no qualifier is primary already, as the default bean
+        // of its type (DefaultQualifierVisitor)
+        Alternatives.select(producer, priority, false);
     }
 
     /**
