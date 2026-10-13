@@ -152,6 +152,7 @@ public final class OwnedDependents implements AutoCloseable {
         keep(registration, false);
         return registration;
     }
+
     /**
      * A fresh instance of the definition, whatever its scope, which belongs to the owner.
      *

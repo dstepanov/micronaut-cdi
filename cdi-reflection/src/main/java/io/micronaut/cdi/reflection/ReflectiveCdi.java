@@ -56,6 +56,13 @@ import java.util.Set;
 @Internal
 public final class ReflectiveCdi implements CdiReflection {
 
+    /**
+     * The primitive types, by the names a recorded parameter type names them by.
+     */
+    private static final Map<String, Class<?>> PRIMITIVES = Map.of(
+        "boolean", boolean.class, "byte", byte.class, "char", char.class, "short", short.class, "int", int.class,
+        "long", long.class, "float", float.class, "double", double.class);
+
     @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A annotation(Class<A> type, @Nullable AnnotationValue<?> value) {
@@ -278,10 +285,6 @@ public final class ReflectiveCdi implements CdiReflection {
         }
         return types;
     }
-
-    private static final Map<String, Class<?>> PRIMITIVES = Map.of(
-        "boolean", boolean.class, "byte", byte.class, "char", char.class, "short", short.class, "int", int.class,
-        "long", long.class, "float", float.class, "double", double.class);
 
     /**
      * Whether the method is the only declaration of its name in the class and above it that the compiled types
