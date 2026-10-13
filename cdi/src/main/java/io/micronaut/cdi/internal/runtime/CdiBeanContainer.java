@@ -197,7 +197,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public <T> CreationalContext<T> createCreationalContext(@Nullable Contextual<T> contextual) {
-        return new CdiCreationalContext<>();
+        return new CdiCreationalContext<>(beanContext);
     }
 
     @Override

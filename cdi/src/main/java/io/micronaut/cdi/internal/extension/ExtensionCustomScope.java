@@ -121,7 +121,7 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
         public T create(CreationalContext<T> creationalContext) {
             CreatedBean<T> created = creation.create();
             if (creationalContext instanceof CdiCreationalContext<T> tracking) {
-                tracking.track(created);
+                tracking.created().hold(created);
             }
             return created.bean();
         }
