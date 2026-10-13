@@ -162,6 +162,8 @@ class OverloadedInjectionPointTest {
             Method member = assertInstanceOf(Method.class, point.getMember());
             assertEquals("setAll", member.getName());
             assertEquals(GenericInitializer.class, member.getDeclaringClass());
+            // the declaration the compiled types resolve to, rather than the overload they fit as well
+            assertEquals(List.of(Object[].class), List.of(member.getParameterTypes()));
             assertEquals(0, assertInstanceOf(AnnotatedParameter.class, point.getAnnotated()).getPosition());
         }
     }

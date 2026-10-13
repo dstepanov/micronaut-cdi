@@ -23,6 +23,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.reflection.ReflectionAnnotations;
+import io.micronaut.reflection.ReflectionExecutables;
 import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
@@ -32,7 +33,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -223,29 +223,19 @@ public final class ReflectiveCdi implements CdiReflection {
             return exact != null ? exact
                 : declaredFor(site.declaringClass().getDeclaredConstructors(), parameterTypes);
         }
-        Method exact = ReflectionUtils.findMethod(site.declaringClass(), site.memberName(), parameterTypes)
+        // a bean's definition compiles the parameters of a method its class inherits with the type arguments the
+        // class gives the type variables of the class above it, so T[] of Bar<T> is compiled as String[] for
+        // Foo extends Bar<String>, which the erased Object[] the method declares is assignable from. Micronaut finds
+        // the declaration the compiled types resolve to, through the superclasses and the interfaces, the most
+        // specific one where an overload fits them as well
+        return ReflectionExecutables.findMethod(site.declaringClass(), site.memberName(), parameterTypes)
             .orElse(null);
-        if (exact != null) {
-            return exact;
-        }
-        for (Class<?> type = site.declaringClass(); type != null && type != Object.class; type = type.getSuperclass()) {
-            Method[] named = java.util.Arrays.stream(type.getDeclaredMethods())
-                .filter(method -> method.getName().equals(site.memberName()))
-                .toArray(Method[]::new);
-            Executable found = declaredFor(named, parameterTypes);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
     }
 
     /**
-     * The one executable among the given ones whose parameters the compiled types fit, where none declares them
-     * exactly: a bean's definition compiles the parameters of a member its class inherits with the type arguments
-     * the class gives the type variables of the class above it, so {@code T[]} of {@code Bar<T>} is compiled as
-     * {@code String[]} for {@code Foo extends Bar<String>}, which the erased {@code Object[]} the member declares
-     * is assignable from.
+     * The one constructor among the given ones whose parameters the compiled types fit, where none declares them
+     * exactly: a constructor is not inherited, so the class declares it, and two that the compiled types fit are
+     * told apart by nothing.
      */
     private static @Nullable Executable declaredFor(Executable[] candidates, Class<?>[] compiledTypes) {
         Executable found = null;
