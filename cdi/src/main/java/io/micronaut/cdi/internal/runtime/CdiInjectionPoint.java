@@ -69,21 +69,24 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
     }
 
     /**
-     * The site of one parameter of a constructor or method, from the arguments Micronaut compiled for it: the
-     * parameters Micronaut generates for an intercepted bean are not the author's, and are left out.
+     * The site of one parameter of a constructor or method, from the arguments Micronaut compiled for it. The
+     * constructor of the subclass Micronaut generates for an intercepted bean takes parameters of its own after
+     * the author's, which are left out; any other constructor or method is the author's, every parameter of it,
+     * whatever they are named.
      *
-     * @param declaringClass The class that declares the constructor or method
-     * @param memberName     The name of the method, {@value InjectionSite#CONSTRUCTOR} for a constructor
-     * @param arguments      The arguments of the constructor or method
-     * @param argument       The injected one among them
+     * @param declaringClass   The class that declares the constructor or method
+     * @param memberName       The name of the method, {@value InjectionSite#CONSTRUCTOR} for a constructor
+     * @param arguments        The arguments of the constructor or method
+     * @param argument         The injected one among them
+     * @param proxyConstructor Whether they are the arguments of the constructor of a generated subclass
      * @return The site
      */
     static InjectionSite parameterSite(Class<?> declaringClass, String memberName, Argument<?>[] arguments,
-                                       Argument<?> argument) {
+                                       Argument<?> argument, boolean proxyConstructor) {
         List<Class<?>> types = new ArrayList<>(arguments.length);
         int index = -1;
         for (Argument<?> parameter : arguments) {
-            if (CdiResolution.isGeneratedConstructorParameter(parameter)) {
+            if (proxyConstructor && CdiResolution.isGeneratedConstructorParameter(parameter)) {
                 continue;
             }
             // the names of the parameters of one executable are distinct, which tells an argument apart from
@@ -206,7 +209,9 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             // all the same, whose name is the member's
             String member = outer instanceof io.micronaut.inject.MethodInjectionPoint<?, ?> method
                 ? method.getName() : InjectionSite.CONSTRUCTOR;
-            site = parameterSite(declaring, member, outer.getArguments(), argument);
+            site = parameterSite(declaring, member, outer.getArguments(), argument,
+                outer instanceof io.micronaut.inject.ConstructorInjectionPoint<?>
+                    && CdiResolution.isProxyDefinition(segment.getDeclaringType()));
         } else {
             site = InjectionSite.ofParameter(declaring, segment.getName(), List.of(), -1);
         }

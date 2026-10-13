@@ -54,13 +54,26 @@ public final class CdiResolution {
     /**
      * Whether the argument is something the container hands a generated constructor rather than an injection
      * point the author wrote. It is told by what it is - one of the parameters Micronaut generates - and not by
-     * the package of its type: an application may well inject a type of its own from a package of that name.
+     * the package of its type: an application may well inject a type of its own from a package of that name. It
+     * holds of the constructor of a {@link #isProxyDefinition generated subclass} alone.
      *
      * @param argument The argument of a constructor
      * @return Whether Micronaut generated it
      */
     public static boolean isGeneratedConstructorParameter(io.micronaut.core.type.Argument<?> argument) {
         return GENERATED_CONSTRUCTOR_PARAMETERS.contains(argument.getName());
+    }
+
+    /**
+     * Whether the definition is the one of the subclass Micronaut generates for an intercepted bean, whose
+     * constructor takes the {@link #isGeneratedConstructorParameter generated parameters} after the author's.
+     * Nothing else has them: a parameter of any other constructor or method so named is the author's.
+     *
+     * @param definition The definition
+     * @return Whether it is the definition of a generated subclass
+     */
+    public static boolean isProxyDefinition(io.micronaut.inject.BeanType<?> definition) {
+        return definition instanceof io.micronaut.inject.AdvisedBeanType<?>;
     }
 
     /**

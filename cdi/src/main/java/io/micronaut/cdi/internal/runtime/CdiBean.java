@@ -319,13 +319,14 @@ public class CdiBean<T> implements Bean<T> {
             described.getAnnotationMetadata().getAnnotation(CdiProducer.class);
         if (producer == null) {
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
+            boolean proxy = CdiResolution.isProxyDefinition(described);
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                if (CdiResolution.isGeneratedConstructorParameter(argument)) {
+                if (proxy && CdiResolution.isGeneratedConstructorParameter(argument)) {
                     // what the container itself passes a generated constructor is not an injection point
                     continue;
                 }
                 points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
-                    InjectionSite.CONSTRUCTOR, arguments, argument)));
+                    InjectionSite.CONSTRUCTOR, arguments, argument, proxy)));
             }
         } else if (!producer.booleanValue("field").orElse(false)) {
             // section 2.2.2.2: all producer method parameters are injection points. The producer method is what
@@ -335,7 +336,7 @@ public class CdiBean<T> implements Bean<T> {
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
                 points.add(new CdiInjectionPoint(beanContext, this, argument,
-                    CdiInjectionPoint.parameterSite(getBeanClass(), member, arguments, argument)));
+                    CdiInjectionPoint.parameterSite(getBeanClass(), member, arguments, argument, false)));
             }
         }
         for (io.micronaut.inject.FieldInjectionPoint<T, ?> field : described.getInjectedFields()) {
@@ -349,7 +350,7 @@ public class CdiBean<T> implements Bean<T> {
             io.micronaut.core.type.Argument<?>[] arguments = method.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
                 points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
-                    method.getName(), arguments, argument)));
+                    method.getName(), arguments, argument, false)));
             }
         }
         return points;

@@ -91,6 +91,22 @@ class OverloadedInjectionPointTest {
         }
     }
 
+
+    /**
+     * Names a parameter of an initializer as Micronaut names one it generates for the constructor of an
+     * intercepted bean: a name an application may use as well.
+     */
+    @Dependent
+    public static class DollarNamed {
+
+        Probe probe;
+
+        @Inject
+        void init(Bar $qualifier, Probe probe) {
+            this.probe = probe;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> Bean<T> beanOf(BeanManager manager, Class<T> type) {
         return (Bean<T>) manager.resolve(manager.getBeans(type));
@@ -162,6 +178,20 @@ class OverloadedInjectionPointTest {
             assertEquals(List.of(Probe.class), List.of(alone.getParameterTypes()));
             assertEquals(List.of(Bar.class, Probe.class), List.of(beside.getParameterTypes()));
             assertEquals(1, assertInstanceOf(AnnotatedParameter.class, overloads.beside.at.getAnnotated()).getPosition());
+        }
+    }
+
+    @Test
+    void aMethodParameterNamedAsAGeneratedOneIsAParameterAllTheSame() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Bean<DollarNamed> bean = beanOf(context.getBean(BeanManager.class), DollarNamed.class);
+
+            assertEquals(Set.of(Bar.class, Probe.class), bean.getInjectionPoints().stream()
+                .map(point -> (Object) point.getType()).collect(java.util.stream.Collectors.toSet()));
+            DollarNamed named = context.getBean(BeanManager.class).createInstance().select(DollarNamed.class).get();
+            Method member = assertInstanceOf(Method.class, named.probe.at.getMember());
+            assertEquals(List.of(Bar.class, Probe.class), List.of(member.getParameterTypes()));
+            assertEquals(1, assertInstanceOf(AnnotatedParameter.class, named.probe.at.getAnnotated()).getPosition());
         }
     }
 }
