@@ -101,7 +101,7 @@ bean was compiled. What cannot be answered that way is the API a program calls t
 reflection, and it is kept out of `micronaut-cdi`, in `micronaut-cdi-reflection`, so that an application only
 reads classes back if it asks to:
 
-- `InjectionPoint.getMember()`, `getAnnotated()` and, for a field, `isTransient()`;
+- `InjectionPoint.getMember()` and `getAnnotated()` (whether an injected field is `transient` was recorded);
 - an annotation instance of a type the specification has no literal for: what `Bean.getQualifiers()`,
   `InjectionPoint.getQualifiers()`, `ObserverMethod.getObservedQualifiers()`, `EventMetadata.getQualifiers()` and
   `Interceptor.getInterceptorBindings()` report for an annotation of the application's own, and an annotation

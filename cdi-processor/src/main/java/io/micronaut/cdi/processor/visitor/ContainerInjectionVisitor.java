@@ -66,7 +66,13 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
         }
         bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
             .filter(ContainerInjectionVisitor::isInjected)
-            .forEach(field -> mark(field, field.getGenericType()));
+            .forEach(field -> {
+                mark(field, field.getGenericType());
+                if (field.getModifiers().contains(io.micronaut.inject.ast.ElementModifier.TRANSIENT)) {
+                    // InjectionPoint.isTransient() answers from the record rather than from the field itself
+                    field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class);
+                }
+            });
         BeanInjectionUtils.findBeanConstructor(bean).ifPresent(ContainerInjectionVisitor::markParameters);
         for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             if (isInjected(method) || method.hasAnnotation(Cdi.PRODUCES)

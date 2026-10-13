@@ -235,9 +235,9 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
 
     @Override
     public boolean isTransient() {
-        // only a field can be transient, and whether one is is read off the field itself
-        return site != null && site.field() && getMember() instanceof java.lang.reflect.Field javaField
-            && java.lang.reflect.Modifier.isTransient(javaField.getModifiers());
+        // only a field can be transient, and the processor recorded whether one is
+        return site != null && site.field()
+            && argument.getAnnotationMetadata().hasAnnotation(io.micronaut.cdi.internal.metadata.CdiTransient.class);
     }
 
     @Override

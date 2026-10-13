@@ -193,7 +193,7 @@ but the accessors of a `java.lang.reflect.Type` it was handed and the making of 
 `io.micronaut.cdi.internal.type`, which such a type is reported as. The
 methods of the specification that return a reflection object, or that can only be answered from one, are
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
-module: `InjectionPoint.getMember()`, `getAnnotated()` and `isTransient()`; the qualifiers and interceptor
+module: `InjectionPoint.getMember()` and `getAnnotated()`; the qualifiers and interceptor
 bindings of a bean, an injection point, an observer or an event reported as annotation instances, for an
 annotation that is not one of the specification's and whose type the application did not list in
 `@RegisterAnnotations` (Micronaut Core generates a builder for a type listed there, which makes the instance
