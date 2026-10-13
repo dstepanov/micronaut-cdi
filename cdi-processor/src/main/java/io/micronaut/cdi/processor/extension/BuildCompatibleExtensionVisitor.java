@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -858,12 +859,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         java.util.Map<String, List<AnnotationValue<?>>> members =
             discovered.memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
-            for (io.micronaut.inject.ast.MethodElement method
-                : element.getEnclosedElements(io.micronaut.inject.ast.ElementQuery.ALL_METHODS)) {
-                for (AnnotationValue<?> annotation : members.getOrDefault(method.getName(), List.of())) {
-                    method.annotate(annotation);
+            // the members of an annotation interface as the compiler answers them, which KSP does as properties
+            NonbindingMembersRemapper.memberElementsOf(element).forEach((name, member) -> {
+                for (AnnotationValue<?> annotation : members.getOrDefault(name, List.of())) {
+                    member.annotate(annotation);
                 }
-            }
+            });
         }
     }
 

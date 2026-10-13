@@ -25,6 +25,7 @@ import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.AnnotationRemapper;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.PropertyElement;
@@ -236,12 +237,25 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
      */
     public static Map<String, AnnotationMetadata> membersOf(ClassElement declaration) {
         Map<String, AnnotationMetadata> members = new LinkedHashMap<>();
+        memberElementsOf(declaration).forEach((name, member) -> members.put(name, member.getAnnotationMetadata()));
+        return members;
+    }
+
+    /**
+     * The members an annotation interface declares, as the elements the compiler answers them as: methods under
+     * javac and the Groovy compiler, properties under KSP.
+     *
+     * @param declaration The annotation interface
+     * @return The members, by name, in the order they are declared
+     */
+    public static Map<String, Element> memberElementsOf(ClassElement declaration) {
+        Map<String, Element> members = new LinkedHashMap<>();
         for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-            members.put(member.getName(), member.getAnnotationMetadata());
+            members.put(member.getName(), member);
         }
         if (members.isEmpty()) {
             for (PropertyElement member : declaration.getBeanProperties()) {
-                members.put(member.getName(), member.getAnnotationMetadata());
+                members.put(member.getName(), member);
             }
         }
         return members;
