@@ -26,7 +26,6 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.cdi.processor.Cdi;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
@@ -783,23 +782,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      *
      * <p>The phase is invoked once per bean rather than once for the container, which is what the specification
      * says it is and what a compiler can give. It runs last, so that what it describes is the bean as everything
-     * else has left it.</p>
+     * else has left it. A class that cannot be a bean - one vetoed, an abstract class, an interface, one with no
+     * bean constructor (section 3.1.1) - declares none, and a producer is described by the class that declares
+     * it: one a superclass declares is the superclass's bean (section 4.2).</p>
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
-        if (registrars.isEmpty()) {
+        if (registrars.isEmpty() || element.isAbstract() || element.isInterface()
+            || element.hasStereotype("jakarta.enterprise.inject.Vetoed")) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
-        if (element.hasStereotype(CdiScope.class)
-            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")) {
+        if ((element.hasStereotype(CdiScope.class)
+            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor"))
+            && io.micronaut.cdi.processor.visitor.SpecificationBeans.hasABeanConstructor(element)) {
             beans.add(new ElementBeanInfo(element, null, context));
         }
-        element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
-            .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(method -> beans.add(new ElementBeanInfo(element, method, context)));
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-            .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(field -> beans.add(new ElementBeanInfo(element, field, context)));
+        for (io.micronaut.inject.ast.MemberElement producer
+            : io.micronaut.cdi.processor.visitor.SpecificationBeans.producersOf(element)) {
+            beans.add(new ElementBeanInfo(element, producer, context));
+        }
         for (ElementBeanInfo bean : beans) {
             for (Registrar registrar : registrars) {
                 if (registrar.matches(bean)) {
@@ -808,7 +809,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             }
         }
         // section 2.10.3 also tells the phase about the observers: a registration method asking for an
-        // ObserverInfo is invoked once for each observer whose observed event type matches
+        // ObserverInfo is invoked once for each observer whose observed event type matches. An observer method
+        // is inherited, so the bean of this class observes with the ones its superclasses declare as well
         for (io.micronaut.inject.ast.MethodElement method
             : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             io.micronaut.inject.ast.ParameterElement observed = null;

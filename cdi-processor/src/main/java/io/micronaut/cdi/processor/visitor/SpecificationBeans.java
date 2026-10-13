@@ -182,7 +182,7 @@ public final class SpecificationBeans {
      * @param element The class
      * @return Whether it has a bean constructor
      */
-    static boolean hasABeanConstructor(ClassElement element) {
+    public static boolean hasABeanConstructor(ClassElement element) {
         List<ConstructorElement> constructors = element.getEnclosedElements(ElementQuery.CONSTRUCTORS);
         if (constructors.isEmpty()) {
             // the implicit constructor takes no parameters

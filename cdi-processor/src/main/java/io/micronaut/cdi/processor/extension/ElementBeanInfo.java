@@ -63,6 +63,20 @@ import java.util.List;
 @Internal
 public final class ElementBeanInfo implements InterceptorInfo {
 
+    /**
+     * The qualifiers a bean is not qualified by as far as the specification goes: what Micronaut writes on a
+     * bean of its own accord, and the markers {@code Any} and {@code Default} are read into, which are reported
+     * as themselves.
+     */
+    private static final java.util.Set<String> NOT_QUALIFIERS_OF_THE_BEAN = java.util.Set.of(
+        Cdi.ANY,
+        io.micronaut.cdi.internal.metadata.CdiAny.class.getName(),
+        "io.micronaut.context.annotation.Primary",
+        "io.micronaut.context.annotation.Secondary",
+        "io.micronaut.context.annotation.Any",
+        "io.micronaut.context.annotation.Type"
+    );
+
     private final ClassElement declaringClass;
     private final @Nullable MemberElement producer;
     private final VisitorContext context;
@@ -142,15 +156,33 @@ public final class ElementBeanInfo implements InterceptorInfo {
         return new ElementScopeInfo(scope, normal);
     }
 
+    /**
+     * The bean types as the container resolves the bean by them (section 2.2): the type and everything above
+     * it, each once, narrowed to what the bean named with {@code Typed}, without a parameterized type that holds
+     * a wildcard, and with {@code Object}, which every bean has, once and last.
+     */
     @Override
     public Collection<Type> types() {
+        java.util.Set<Type> closure = new java.util.LinkedHashSet<>();
+        collect(beanType(), closure, context);
+        java.util.Set<String> narrowed = new java.util.HashSet<>(java.util.Arrays.asList(
+            declaration().getAnnotationMetadata().stringValues("jakarta.enterprise.inject.Typed")));
+        boolean typed = declaration().hasAnnotation("jakarta.enterprise.inject.Typed");
         List<Type> types = new ArrayList<>();
-        collect(beanType(), types, context);
+        for (Type type : closure) {
+            if (typed && !narrowed.contains(nameOf(type))) {
+                continue;
+            }
+            if (!holdsAWildcard(type)) {
+                types.add(type);
+            }
+        }
+        context.getClassElement(Object.class).ifPresent(object -> types.add(ElementTypes.of(object, context)));
         return types;
     }
 
-    private static void collect(@Nullable ClassElement type, List<Type> types, VisitorContext context) {
-        if (type == null) {
+    private static void collect(@Nullable ClassElement type, java.util.Set<Type> types, VisitorContext context) {
+        if (type == null || ("java.lang.Object".equals(type.getName()) && !type.isArray())) {
             return;
         }
         types.add(ElementTypes.of(type, context));
@@ -161,13 +193,42 @@ public final class ElementBeanInfo implements InterceptorInfo {
         type.getSuperType().ifPresent(each -> collect(each, types, context));
     }
 
+    private static String nameOf(Type type) {
+        if (type.isClass()) {
+            return type.asClass().declaration().name();
+        }
+        if (type.isParameterizedType()) {
+            return type.asParameterizedType().declaration().name();
+        }
+        return type.toString();
+    }
+
+    private static boolean holdsAWildcard(Type type) {
+        return type.isParameterizedType() && type.asParameterizedType().typeArguments().stream()
+            .anyMatch(argument -> argument.isWildcardType() || holdsAWildcard(argument));
+    }
+
+    /**
+     * The qualifiers as the container resolves the bean by them: {@code Any}, which every bean has, and the ones
+     * the bean was compiled with - each occurrence of a repeatable one - without the qualifiers Micronaut writes of
+     * its own accord, nor a {@code Named} a stereotype gave rather than the bean. A producer has the ones it
+     * declares, not its class's.
+     */
     @Override
     public Collection<AnnotationInfo> qualifiers() {
         List<AnnotationInfo> qualifiers = new ArrayList<>();
-        for (String name : declaration().getAnnotationMetadata()
-            .getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
-            io.micronaut.core.annotation.AnnotationValue<?> annotation = declaration().getAnnotation(name);
-            if (annotation != null) {
+        qualifiers.add(new ElementAnnotationInfo(
+            io.micronaut.core.annotation.AnnotationValue.builder(Cdi.ANY).build(), context));
+        io.micronaut.core.annotation.AnnotationMetadata metadata = producer == null
+            ? declaringClass.getAnnotationMetadata() : producer.getAnnotationMetadata().getDeclaredMetadata();
+        for (String name : metadata.getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
+            if (NOT_QUALIFIERS_OF_THE_BEAN.contains(name)
+                || ("jakarta.inject.Named".equals(name) && metadata.hasAnnotation(CdiName.class))) {
+                continue;
+            }
+            List<io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation>> occurrences =
+                metadata.getAnnotationValuesByName(name);
+            for (io.micronaut.core.annotation.AnnotationValue<?> annotation : occurrences) {
                 qualifiers.add(new ElementAnnotationInfo(annotation, context));
             }
         }
@@ -212,15 +273,25 @@ public final class ElementBeanInfo implements InterceptorInfo {
             ? new ElementFieldInfo(field, declaringClass(), context) : null;
     }
 
+    /**
+     * Whether the bean is an alternative, written so or through a stereotype, as the container reads it.
+     */
     @Override
     public boolean isAlternative() {
-        return declaration().hasAnnotation(Cdi.ALTERNATIVE);
+        return declaration().hasAnnotation(Cdi.ALTERNATIVE) || declaration().hasStereotype(Cdi.ALTERNATIVE);
     }
 
+    /**
+     * The priority of the bean: the one it declares, or for a producer the one of the class that declares it,
+     * which is what selects an alternative producer (section 2.7.2).
+     */
     @Override
     public @Nullable Integer priority() {
-        return declaration().getAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
-            .stream().boxed().findFirst().orElse(null);
+        java.util.OptionalInt declared = declaration().getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
+        if (declared.isEmpty() && producer != null) {
+            declared = declaringClass.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
+        }
+        return declared.isPresent() ? declared.getAsInt() : null;
     }
 
     @Override
