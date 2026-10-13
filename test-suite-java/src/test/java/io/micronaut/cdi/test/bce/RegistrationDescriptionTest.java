@@ -293,6 +293,77 @@ class RegistrationDescriptionTest {
         }
     }
 
+    @Test
+    void aClassOfAVetoedPackageIsNoBeanToDescribe() {
+        Scanning extension = new Scanning(false);
+        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
+        try (JavaParser parser = new JavaParser()) {
+            parser.generate(
+                source("vetoedpkg.package-info", """
+                    @jakarta.enterprise.inject.Vetoed
+                    package vetoedpkg;
+                    """),
+                source("vetoedpkg.Hidden", """
+                    package vetoedpkg;
+
+                    @jakarta.enterprise.context.Dependent
+                    public class Hidden {
+                    }
+                    """));
+        }
+        assertEquals(List.of(), extension.described);
+    }
+
+    @Test
+    void aClassTheDiscoveryPhaseScannedIsDescribedAsTheDependentBeanItIs() {
+        Scanning extension = new Scanning(true);
+        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
+        try (JavaParser parser = new JavaParser()) {
+            parser.generate("scanned.Plain", """
+                package scanned;
+
+                public class Plain {
+                }
+                """);
+        }
+        assertEquals(List.of("scanned.Plain jakarta.enterprise.context.Dependent"), extension.described);
+    }
+
+    private static javax.tools.JavaFileObject source(String className, String code) {
+        return new javax.tools.SimpleJavaFileObject(java.net.URI.create("string:///"
+            + className.replace('.', '/') + javax.tools.JavaFileObject.Kind.SOURCE.extension),
+            javax.tools.JavaFileObject.Kind.SOURCE) {
+            @Override
+            public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+                return code;
+            }
+        };
+    }
+
+    public static class Scanning implements BuildCompatibleExtension {
+        final List<String> described = new ArrayList<>();
+        private final boolean scans;
+
+        Scanning(boolean scans) {
+            this.scans = scans;
+        }
+
+        @jakarta.enterprise.inject.build.compatible.spi.Discovery
+        public void scan(jakarta.enterprise.inject.build.compatible.spi.ScannedClasses scanned) {
+            if (scans) {
+                scanned.add("scanned.Plain");
+            }
+        }
+
+        @Registration(types = Object.class)
+        public void bean(BeanInfo bean) {
+            String name = bean.declaringClass().name();
+            if (name.startsWith("vetoedpkg.") || name.startsWith("scanned.")) {
+                described.add(name + " " + bean.scope().name());
+            }
+        }
+    }
+
     public static class Recording implements BuildCompatibleExtension {
         final Map<String, String> beans = new LinkedHashMap<>();
         final Map<String, String> types = new LinkedHashMap<>();

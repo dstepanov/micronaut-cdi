@@ -20,7 +20,6 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.PackageElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -75,7 +74,7 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        if (isVetoed(element)) {
+        if (SpecificationBeans.isVetoed(element)) {
             notABean(element);
             return;
         }
@@ -144,17 +143,6 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
         // prefers it, and it is ordered by its priority, so that of several candidates the one the highest
         // priority wins — which is the resolution rule of section 2.4.2
         Alternatives.select(element, priority, true);
-    }
-
-    /**
-     * Whether the class is vetoed, either by itself or by the package it is in.
-     */
-    private static boolean isVetoed(ClassElement element) {
-        if (element.hasDeclaredAnnotation(Cdi.VETOED)) {
-            return true;
-        }
-        PackageElement declaringPackage = element.getPackage();
-        return declaringPackage.hasDeclaredAnnotation(Cdi.VETOED);
     }
 
     /**

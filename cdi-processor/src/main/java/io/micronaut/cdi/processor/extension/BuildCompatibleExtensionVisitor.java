@@ -114,6 +114,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean contextBeansWritten;
     private boolean importedClassesPending;
     private boolean synthesized;
+    /**
+     * The classes described to the registration phase already: a class the discovery phase scanned is visited as
+     * it is compiled and again as the generated import names it.
+     */
+    private final java.util.Set<String> registered = new java.util.HashSet<>();
     private boolean triggerWritten;
     private @org.jspecify.annotations.Nullable String pendingTrigger;
     private final TypeIndexCollector typeIndex = new TypeIndexCollector();
@@ -694,6 +699,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + "validation phases of the build compatible extensions did not run: the compilation never "
                 + "compiled the source generated to mark the end of registration", null);
         }
+        if (context.getLanguage() != VisitorContext.Language.JAVA
+            && CompilationState.get(context, VISITOR, BuildCompatibleExtensionVisitor.class) == this) {
+            // the Groovy compiler keeps the attributes of every compilation in one static map, which would hold
+            // the visitor, and everything it read, for as long as the process runs
+            CompilationState.take(context, VISITOR, BuildCompatibleExtensionVisitor.class);
+        }
     }
 
     /**
@@ -807,7 +818,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
         if (registrars.isEmpty() || element.isAbstract() || element.isInterface()
-            || element.hasStereotype("jakarta.enterprise.inject.Vetoed")) {
+            || io.micronaut.cdi.processor.visitor.SpecificationBeans.isVetoed(element)) {
+            return;
+        }
+        if (!registered.add(element.getName())) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
@@ -866,10 +880,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (discovered.isScanned(element.getName())
             && !element.getAnnotationMetadata().hasStereotype("jakarta.inject.Scope")
             && !element.getAnnotationMetadata().hasStereotype(CdiScope.class)) {
-            // added to the scanned classes during discovery: a bean as though it declared the dependent
-            // scope. Only the prototype pseudo-scope is written — a scope a stereotype gives the class must
-            // win, and a bean with nothing else reports the dependent scope anyway
-            element.annotate("io.micronaut.context.annotation.Prototype");
+            // added to the scanned classes during discovery: a bean as though it declared the dependent scope,
+            // recorded as one so that it is a bean of the specification - described to the registration phase and
+            // validated as any. Written only where nothing gives the class a scope: a stereotype's must win
+            for (AnnotationValue<?> annotation : io.micronaut.cdi.processor.CdiScopes.annotationsOf(
+                io.micronaut.cdi.processor.Cdi.DEPENDENT, false)) {
+                element.annotate(annotation);
+            }
         }
         for (AnnotationValue<?> annotation : discovered.annotationsFor(element.getName())) {
             element.annotate(annotation);

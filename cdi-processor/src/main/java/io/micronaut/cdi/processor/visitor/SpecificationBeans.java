@@ -104,6 +104,17 @@ public final class SpecificationBeans {
     }
 
     /**
+     * Whether the class is vetoed (section 2.12.2), by itself or by the package it is in: no bean, and declaring
+     * no producer or observer.
+     *
+     * @param element The class
+     * @return Whether it is vetoed
+     */
+    public static boolean isVetoed(ClassElement element) {
+        return element.hasDeclaredAnnotation(Cdi.VETOED) || element.getPackage().hasDeclaredAnnotation(Cdi.VETOED);
+    }
+
+    /**
      * The producers the class declares, methods first: a producer is not inherited (section 4.2), so one a
      * superclass declares is the superclass's.
      *
