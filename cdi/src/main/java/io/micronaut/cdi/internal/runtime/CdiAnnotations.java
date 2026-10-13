@@ -17,7 +17,6 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.core.annotation.AnnotationBuilder;
-import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import org.jspecify.annotations.Nullable;
@@ -94,7 +93,6 @@ public final class CdiAnnotations {
      * @return The hash code
      */
     public static int bindingHashCode(CompiledAnnotationTypes types, Annotation annotation) {
-        return annotation.annotationType().getName().hashCode()
-            + AnnotationUtil.calculateHashCode(CdiQualifier.ofInstance(types, annotation).binding().getValues());
+        return CdiQualifier.ofInstance(types, annotation).bindingHashCode();
     }
 }

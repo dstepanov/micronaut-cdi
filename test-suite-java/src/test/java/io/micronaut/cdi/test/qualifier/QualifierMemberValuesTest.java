@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A qualifier a program builds as an {@code AnnotationValue} holds its members as the program gave them - an enum
  * constant, a class, a nested annotation of its own - where the one compiled onto a bean holds them as Micronaut
  * records them. The two are compared as the same values: an enum constant as its name, and a nested annotation
- * member by member, every member of it, a member one side leaves out at its default included.
+ * as a binding is, member by member, a member one side leaves out at its default included.
  */
 class QualifierMemberValuesTest {
 

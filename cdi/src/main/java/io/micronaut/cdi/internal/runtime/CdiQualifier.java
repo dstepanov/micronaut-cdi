@@ -23,6 +23,7 @@ import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.AnnotationMetadataSupport;
+import io.micronaut.interceptor.spi.BindingValues;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
 import jakarta.inject.Named;
@@ -66,13 +67,13 @@ public final class CdiQualifier {
      * The {@code Any} qualifier.
      */
     public static final CdiQualifier ANY =
-        new CdiQualifier(AnnotationValue.builder(Any.class).build(), null, Set.of(), null, Any.Literal.INSTANCE);
+        new CdiQualifier(AnnotationValue.builder(Any.class).build(), null, null, Any.Literal.INSTANCE);
 
     /**
      * The {@code Default} qualifier.
      */
     public static final CdiQualifier DEFAULT =
-        new CdiQualifier(AnnotationValue.builder(Default.class).build(), null, Set.of(), null, Default.Literal.INSTANCE);
+        new CdiQualifier(AnnotationValue.builder(Default.class).build(), null, null, Default.Literal.INSTANCE);
 
     private static final String ANY_NAME = "jakarta.enterprise.inject.Any";
     private static final String DEFAULT_NAME = "jakarta.enterprise.inject.Default";
@@ -80,15 +81,13 @@ public final class CdiQualifier {
 
     private final AnnotationValue<?> binding;
     private final @Nullable AnnotationValue<?> written;
-    private final Set<String> nonbinding;
     private final @Nullable AnnotationMetadata source;
     private volatile @Nullable Annotation instance;
 
-    private CdiQualifier(AnnotationValue<?> binding, @Nullable AnnotationValue<?> written, Set<String> nonbinding,
+    private CdiQualifier(AnnotationValue<?> binding, @Nullable AnnotationValue<?> written,
                          @Nullable AnnotationMetadata source, @Nullable Annotation instance) {
         this.binding = binding;
         this.written = written;
-        this.nonbinding = nonbinding;
         this.source = source;
         this.instance = instance;
     }
@@ -126,17 +125,6 @@ public final class CdiQualifier {
     }
 
     /**
-     * The members this qualifier lists as taking no part in resolution: what it was written with under
-     * {@code $nonBinding}, which the processor records on every qualifier it compiles. A qualifier a program
-     * composed, or read from an instance of a type an extension configured, may list fewer than its type has.
-     *
-     * @return The member names
-     */
-    public Set<String> nonbinding() {
-        return nonbinding;
-    }
-
-    /**
      * Whether this is the {@code Any} qualifier.
      *
      * @return Whether it is
@@ -167,48 +155,48 @@ public final class CdiQualifier {
      * Whether the other qualifier is the same one as far as resolution goes: of the same type, with every
      * binding member equal, a member left at its default being equal to the default written down.
      *
-     * <p>A member either side lists as non-binding is left out of both. The two lists are of one annotation
-     * type and differ only where one side lacked the information - a qualifier a program composed as an
-     * {@code AnnotationValue}, or an instance of a type whose member an extension marked - never because the
-     * type says two things, so a member is non-binding when either side says it is.</p>
+     * <p>It is compared exactly as the Jakarta Interceptors implementation compares an interceptor binding,
+     * through {@link BindingValues#matches(AnnotationValue, AnnotationValue)}, so that a qualifier and an
+     * interceptor binding of one annotation are told apart by the same rules, and what the container reports of
+     * a binding is what the chains run. A member either side lists as non-binding is left out of both: the two
+     * lists are of one annotation type and differ only where one side lacked the information - a qualifier a
+     * program composed as an {@code AnnotationValue}, or an instance of a type whose member an extension
+     * marked - never because the type says two things.</p>
      *
      * @param other The other qualifier
      * @return Whether they are equivalent
      */
     public boolean matches(CdiQualifier other) {
-        String name = name();
-        if (!name.equals(other.name())) {
-            return false;
-        }
-        Map<CharSequence, Object> values = binding.getValues();
-        Map<CharSequence, Object> others = other.binding.getValues();
-        if (!nonbinding.equals(other.nonbinding)) {
-            values = without(values, other.nonbinding);
-            others = without(others, nonbinding);
-        }
-        if (values.isEmpty() && others.isEmpty()) {
-            return true;
-        }
-        return compared(values, defaultsOf(written())).equals(compared(others, defaultsOf(other.written())));
+        // told apart by the name before either value is brought into shape
+        return name().equals(other.name()) && BindingValues.matches(written(), other.written());
     }
 
     /**
-     * The members in the one shape they are compared in: every member the annotation defaults to filled in, and
-     * every value as {@link #normalized(Object)} makes it.
+     * A hash code that two qualifiers which {@link #matches(CdiQualifier) match} share, over the members that
+     * bind: what the container answers when asked for the hash code of a qualifier or an interceptor binding.
      *
-     * <p>{@link AnnotationValue#matches} fills the defaults in too, but compares what it then holds with
-     * {@code equals}: an enum constant a program wrote is not the name compiled metadata holds, and a nested
-     * annotation value passes over a member the other one does not have. The rules are the ones the interceptor
-     * bindings are compared by in the Jakarta Interceptors implementation, whose comparison is not public; the
-     * two are kept alike so that a binding compares here as it does in the chains.</p>
+     * <p>{@link BindingValues#hashCode(AnnotationValue)} hashes the name alone, because two values it is given may
+     * list different members as non-binding. The container hashes an annotation instance, whose non-binding
+     * members are the ones the application was compiled with for its type whichever instance it is, and the
+     * specification asks two qualifiers that differ by a binding member to hash differently. So the members that
+     * bind are hashed, as {@link BindingValues#normalize(AnnotationValue)} brings them into shape; an annotation
+     * held by a member is hashed by its name alone, since it may itself list non-binding members.</p>
+     *
+     * @return The hash code
      */
-    private static Map<String, Object> compared(Map<CharSequence, Object> values, Map<CharSequence, Object> defaults) {
-        Map<String, Object> compared = new LinkedHashMap<>();
-        defaults.forEach((member, value) -> compared.put(member.toString(), normalized(value)));
-        written(values, defaults).forEach((member, value) -> compared.put(member.toString(), normalized(value)));
-        // the members Micronaut keeps for itself are not the annotation's
-        compared.keySet().removeIf(CdiQualifier::isMicronautMember);
-        return compared;
+    public int bindingHashCode() {
+        AnnotationValue<?> normalized = BindingValues.normalize(written());
+        int hash = name().hashCode();
+        for (Map.Entry<CharSequence, Object> member : normalized.getValues().entrySet()) {
+            Object value = member.getValue();
+            String memberName = member.getKey().toString();
+            // an empty string is compared as the member left out
+            if (isMicronautMember(memberName) || value instanceof String text && text.isEmpty()) {
+                continue;
+            }
+            hash += memberName.hashCode() ^ hashOf(value);
+        }
+        return hash;
     }
 
     /**
@@ -220,116 +208,31 @@ public final class CdiQualifier {
     }
 
     /**
-     * A member value in the one shape it is compared in, whether it was read from compiled metadata or given by
-     * a program: an enum constant is its name, a class is an {@link AnnotationClassValue}, an array is the list of
-     * its elements, and a nested annotation is its name and every member of it, compared the same way. The
-     * array types are listed out rather than read through {@code java.lang.reflect.Array}, which keeps the
-     * comparison free of reflection.
+     * The hash code of a member value as {@link BindingValues#normalize(AnnotationValue)} spells it: an array by
+     * its elements, a class by its name and a nested annotation by its name. The array types are listed out
+     * rather than read through {@code java.lang.reflect.Array}, which keeps it free of reflection.
      */
-    private static Object normalized(Object value) {
+    private static int hashOf(Object value) {
         return switch (value) {
-            case AnnotationValue<?> nested -> new Nested(nested.getAnnotationName(), compared(nested.getValues(),
-                defaultsOf(nested)));
-            case Enum<?> constant -> constant.name();
-            case Class<?> type -> new AnnotationClassValue<>(type.getName());
+            case AnnotationValue<?> nested -> nested.getAnnotationName().hashCode();
+            case AnnotationClassValue<?> type -> type.getName().hashCode();
             case Object[] array -> {
-                List<Object> elements = new ArrayList<>(array.length);
+                int hash = 1;
                 for (Object element : array) {
-                    elements.add(normalized(element));
+                    hash = 31 * hash + hashOf(element);
                 }
-                yield elements;
+                yield hash;
             }
-            case int[] array -> Arrays.stream(array).boxed().toList();
-            case long[] array -> Arrays.stream(array).boxed().toList();
-            case double[] array -> Arrays.stream(array).boxed().toList();
-            case boolean[] array -> {
-                List<Object> elements = new ArrayList<>(array.length);
-                for (boolean element : array) {
-                    elements.add(element);
-                }
-                yield elements;
-            }
-            case byte[] array -> {
-                List<Object> elements = new ArrayList<>(array.length);
-                for (byte element : array) {
-                    elements.add(element);
-                }
-                yield elements;
-            }
-            case short[] array -> {
-                List<Object> elements = new ArrayList<>(array.length);
-                for (short element : array) {
-                    elements.add(element);
-                }
-                yield elements;
-            }
-            case char[] array -> {
-                List<Object> elements = new ArrayList<>(array.length);
-                for (char element : array) {
-                    elements.add(element);
-                }
-                yield elements;
-            }
-            case float[] array -> {
-                List<Object> elements = new ArrayList<>(array.length);
-                for (float element : array) {
-                    elements.add(element);
-                }
-                yield elements;
-            }
-            default -> value;
+            case int[] array -> Arrays.hashCode(array);
+            case long[] array -> Arrays.hashCode(array);
+            case double[] array -> Arrays.hashCode(array);
+            case boolean[] array -> Arrays.hashCode(array);
+            case byte[] array -> Arrays.hashCode(array);
+            case short[] array -> Arrays.hashCode(array);
+            case char[] array -> Arrays.hashCode(array);
+            case float[] array -> Arrays.hashCode(array);
+            default -> value.hashCode();
         };
-    }
-
-    /**
-     * The defaults of an annotation: the ones the value carries, which compiled metadata hands every value it
-     * holds, and the ones Micronaut registered for its type where the value carries none - a value a program
-     * built without them.
-     */
-    private static Map<CharSequence, Object> defaultsOf(AnnotationValue<?> value) {
-        Map<CharSequence, Object> carried = value.getDefaultValues();
-        if (carried != null && !carried.isEmpty()) {
-            return carried;
-        }
-        return AnnotationMetadataSupport.getDefaultValues(value.getAnnotationName());
-    }
-
-    private static Map<CharSequence, Object> without(Map<CharSequence, Object> values, Set<String> members) {
-        if (values.isEmpty() || members.isEmpty()) {
-            return values;
-        }
-        Map<CharSequence, Object> kept = null;
-        for (CharSequence member : values.keySet()) {
-            if (members.contains(member.toString())) {
-                if (kept == null) {
-                    kept = new LinkedHashMap<>(values);
-                }
-                kept.remove(member);
-            }
-        }
-        return kept == null ? values : kept;
-    }
-
-    /**
-     * The values less the members that hold the empty string or an empty array where no default is recorded
-     * for them: compiled metadata leaves an empty default out, so an empty member that was written down and
-     * one that was left at its default are told apart by nothing but being there.
-     */
-    private static Map<CharSequence, Object> written(Map<CharSequence, Object> values,
-                                                     Map<CharSequence, Object> defaults) {
-        Map<CharSequence, Object> written = null;
-        for (Map.Entry<CharSequence, Object> member : values.entrySet()) {
-            Object value = member.getValue();
-            boolean empty = value instanceof CharSequence text ? text.isEmpty()
-                : value instanceof Object[] array && array.length == 0;
-            if (empty && !defaults.containsKey(member.getKey().toString())) {
-                if (written == null) {
-                    written = new LinkedHashMap<>(values);
-                }
-                written.remove(member.getKey());
-            }
-        }
-        return written == null ? values : written;
     }
 
     /**
@@ -404,7 +307,7 @@ public final class CdiQualifier {
      * @return The qualifier
      */
     public static CdiQualifier named(String name) {
-        return new CdiQualifier(AnnotationValue.builder(Named.class).value(name).build(), null, Set.of(), null, null);
+        return new CdiQualifier(AnnotationValue.builder(Named.class).value(name).build(), null, null, null);
     }
 
     /**
@@ -486,7 +389,7 @@ public final class CdiQualifier {
         }
         if (annotation instanceof Named named) {
             return new CdiQualifier(AnnotationValue.builder(Named.class).value(named.value()).build(),
-                null, Set.of(), null, annotation);
+                null, null, annotation);
         }
         // the qualifiers the container itself fires its lifecycle events with, read through their own interface
         if (annotation instanceof jakarta.enterprise.context.Initialized initialized) {
@@ -500,7 +403,7 @@ public final class CdiQualifier {
         }
         String name = annotation.annotationType().getName();
         if (Boolean.TRUE.equals(types.isMarker(name))) {
-            return new CdiQualifier(new AnnotationValue<>(name), null, Set.of(), null, annotation);
+            return new CdiQualifier(new AnnotationValue<>(name), null, null, annotation);
         }
         if (annotation instanceof io.micronaut.core.annotation.AnnotationValueProvider<?> provider) {
             return of(withNonbinding(provider.annotationValue(), types.nonbindingOf(name)), null, annotation);
@@ -528,10 +431,32 @@ public final class CdiQualifier {
         return value.mutate().member(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(new String[0])).build();
     }
 
+    /**
+     * The value carrying the defaults of its annotation, which {@link BindingValues} fills a member left out
+     * from: the ones it carries, which compiled metadata hands every value it holds, and otherwise the ones
+     * Micronaut registered for the type of a qualifier the application was compiled with - a value a program
+     * built, as {@code AnnotationValue.builder(Shelf.class).build()} is, carries none, and would not otherwise
+     * select the bean compiled with {@code @Shelf}. An annotation such a value holds is compared with the
+     * defaults it carries alone, as {@link BindingValues} compares it.
+     */
+    private static AnnotationValue<?> withDefaults(AnnotationValue<?> value) {
+        Map<CharSequence, Object> carried = value.getDefaultValues();
+        if (carried != null && !carried.isEmpty()) {
+            return value;
+        }
+        Map<CharSequence, Object> registered = AnnotationMetadataSupport.getDefaultValues(value.getAnnotationName());
+        if (registered.isEmpty()) {
+            return value;
+        }
+        // built anew rather than mutated: the builder of a mutated value adds the defaults to the value's own map,
+        // which is immutable where the value carries none
+        return new AnnotationValue<>(value.getAnnotationName(), value.getValues(), registered);
+    }
+
     private static CdiQualifier scoped(Class<? extends Annotation> type, Class<? extends Annotation> scope,
                                        Annotation annotation) {
         return new CdiQualifier(AnnotationValue.builder(type)
-            .member("value", scope).build(), null, Set.of(), null, annotation);
+            .member("value", scope).build(), null, null, annotation);
     }
 
     /**
@@ -717,13 +642,14 @@ public final class CdiQualifier {
      * A qualifier of the values it was written with, the members it lists under {@code $nonBinding} taking no
      * part in resolution.
      */
-    private static CdiQualifier of(AnnotationValue<?> written, @Nullable AnnotationMetadata source,
+    private static CdiQualifier of(AnnotationValue<?> given, @Nullable AnnotationMetadata source,
                                    @Nullable Annotation instance) {
+        AnnotationValue<?> written = withDefaults(given);
         String name = written.getAnnotationName();
         Map<CharSequence, Object> values = written.getValues();
         if (values.isEmpty()) {
             return new CdiQualifier(new AnnotationValue<>(name, Map.of(), written.getDefaultValues()), written,
-                Set.of(), source, instance);
+                source, instance);
         }
         Set<String> nonbinding = new LinkedHashSet<>();
         for (String member : written.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
@@ -738,9 +664,9 @@ public final class CdiQualifier {
             // annotation's
             return isMicronautMember(memberName) || nonbinding.contains(memberName);
         });
-        // the defaults the value carries are kept, which is what a member left at its default is compared with
+        // the defaults the value carries are kept, which Micronaut compares a member left at its default with
         return new CdiQualifier(new AnnotationValue<>(name, binding, written.getDefaultValues()), written,
-            Set.copyOf(nonbinding), source, instance);
+            source, instance);
     }
 
     @Override
@@ -756,16 +682,6 @@ public final class CdiQualifier {
     @Override
     public String toString() {
         return "@" + name() + binding.getValues();
-    }
-
-    /**
-     * An annotation held by a member of a qualifier, compared by its name and every member: a record rather than
-     * an annotation value, whose {@code equals} passes over a member the other one does not have.
-     *
-     * @param name    The name of the annotation
-     * @param members The members, normalized
-     */
-    private record Nested(String name, Map<String, Object> members) {
     }
 
     /**
