@@ -59,6 +59,10 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
             injectedAt = CdiInjectionPoint.of(container.beanContext(),
                 container.canonicalBean(segment.getDeclaringType()), segment);
         }
-        return new CdiInstance<>(context, injectedAt, (Argument<T>) type, qualifiers);
+        // what the lookup creates of dependent instances belongs to the bean it is injected into, and is destroyed
+        // with it: the resolver of that bean creates it
+        return new CdiInstance<>(context, injectedAt,
+            OwnedDependents.ownedBy(context, resolutionContext.getDependencyResolver()), (Argument<T>) type,
+            qualifiers);
     }
 }

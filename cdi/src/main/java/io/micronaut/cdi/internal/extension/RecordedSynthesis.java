@@ -26,6 +26,7 @@ import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifiers;
 import io.micronaut.cdi.internal.runtime.CurrentInjectionPoint;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
+import io.micronaut.cdi.internal.runtime.OwnedDependents;
 import io.micronaut.cdi.internal.runtime.RecordedInvoker;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
@@ -49,8 +50,6 @@ import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -81,13 +80,6 @@ public final class RecordedSynthesis {
     private static final String DEPENDENT = "jakarta.enterprise.context.Dependent";
 
     private final BeanContext beanContext;
-
-    /**
-     * The lookup handed to each synthetic instance's creation function, kept until the instance is destroyed:
-     * the dependent instances it obtained are the created instance's own (section 2.10.5).
-     */
-    private final Map<Object, CdiInstance<Object>> creatorLookups =
-        Collections.synchronizedMap(new IdentityHashMap<>());
 
     public RecordedSynthesis(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -199,10 +191,12 @@ public final class RecordedSynthesis {
         // the bean types are exactly what was declared (or the API's {Object} default) — the implementation
         // class is not among them unless the extension said so
         builder.exposedTypes(record.classValues("types"));
-        // the definition disposes of each instance it created as the instance is destroyed, which is the moment
-        // the extension meant (section 2.10.5)
-        builder.disposer((context, instance) ->
-            dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, parameters, instance));
+        if (disposer != null) {
+            // the definition disposes of each instance it created as the instance is destroyed, which is the
+            // moment the extension meant (section 2.10.5)
+            builder.injectedDisposer((disposalContext, instance) ->
+                dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, parameters, instance, disposalContext));
+        }
         beanContext.registerBeanDefinition(builder.build());
     }
 
@@ -233,27 +227,30 @@ public final class RecordedSynthesis {
     /**
      * Disposes of an instance of a synthetic bean the way the extension said to (section 2.10.5).
      */
-    private <T> void dispose(@Nullable BeanDefinition<SyntheticBeanDisposer<T>> disposerDefinition,
-                             CdiParameters parameters, T instance) {
-        try {
-            if (disposerDefinition != null) {
-                SyntheticBeanDisposer<T> disposer = beanContext.getBean(disposerDefinition);
-                CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
-                try {
-                    disposer.dispose(instance, lookup, parameters);
-                } finally {
-                    // what the disposal function looked up as a dependent instance lives only as long as
-                    // the disposal itself (section 2.10.5)
-                    lookup.destroyTransients();
-                }
-            }
-        } finally {
-            CdiInstance<Object> creatorLookup = creatorLookups.remove(instance);
-            if (creatorLookup != null) {
-                // and what the creation function looked up belongs to the instance it created, gone with it
-                creatorLookup.destroyTransients();
-            }
+    private <T> void dispose(BeanDefinition<SyntheticBeanDisposer<T>> disposerDefinition,
+                             CdiParameters parameters, T instance,
+                             RuntimeBeanDefinition.DisposalContext disposalContext) {
+        SyntheticBeanDisposer<T> disposer = beanContext.getBean(disposerDefinition);
+        // what the disposal function looks up as a dependent instance lives only as long as the disposal itself
+        // (section 2.10.5): the resolver of the disposal destroys it as the disposer returns
+        try (CdiInstance<Object> lookup = lookupFor(disposalContext)) {
+            disposer.dispose(instance, lookup, parameters);
         }
+    }
+
+    /**
+     * The lookup handed to a creation or a disposal function, which creates what it looks up on behalf of the
+     * synthetic bean: the dependent instances are destroyed with the created bean, or as the disposal returns.
+     * Where the context tracks no dependents of a bean, the lookup owns them, and closing it destroys them.
+     */
+    private CdiInstance<Object> lookupFor(RuntimeBeanDefinition.LookupContext lookupContext) {
+        io.micronaut.context.BeanDependencyResolver resolver;
+        try {
+            resolver = lookupContext.getDependencies();
+        } catch (UnsupportedOperationException e) {
+            resolver = null;
+        }
+        return CdiInstance.ownedBy(beanContext, OwnedDependents.ownedBy(beanContext, resolver));
     }
 
     /**
@@ -318,23 +315,12 @@ public final class RecordedSynthesis {
         if (injectionPoint != null) {
             CurrentInjectionPoint.enter(injectionPoint);
         }
-        CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
-        boolean handedOver = false;
+        // what the creation function looks up as dependent instances belongs to the instance it creates, and is
+        // destroyed with it (section 2.10.5): the resolver of the creation creates it
+        CdiInstance<Object> lookup = lookupFor(creationContext);
         try {
-            T instance = creator.create(lookup, parameters);
-            if (instance != null) {
-                // what the creation function looked up as dependent instances belongs to the instance it
-                // created, and is destroyed with it (section 2.10.5)
-                creatorLookups.put(instance, lookup);
-                handedOver = true;
-            }
-            return instance;
+            return creator.create(lookup, parameters);
         } finally {
-            if (!handedOver) {
-                // a creation that failed, or made nothing, leaves nothing to hand the lookups to: what it
-                // looked up is let go here rather than leaking
-                lookup.destroyTransients();
-            }
             if (injectionPoint != null) {
                 CurrentInjectionPoint.leave();
             }

@@ -54,74 +54,97 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     private final Argument<T> type;
     private final List<CdiQualifier> qualifiers;
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
-    private final java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated;
+    /**
+     * What the lookup creates of dependent instances, shared by every lookup selected from it: the instances of
+     * the bean it was injected into, or its own.
+     */
+    private final OwnedDependents dependents;
     /**
      * The Micronaut qualifier a program narrowed the lookup by, beside the qualifiers of the specification: a
      * predicate over definitions, which has no annotation to report.
      */
     private final io.micronaut.context.@Nullable Qualifier<?> narrowedBy;
 
+    /**
+     * A lookup injected nowhere, whose dependent instances are its own and go when it is closed.
+     *
+     * @param beanContext The context the lookup resolves in
+     * @param type        The type looked up
+     * @param qualifiers  The qualifiers
+     */
     public CdiInstance(BeanContext beanContext, Argument<T> type, Annotation... qualifiers) {
-        this(beanContext, null, type, CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers));
+        this(beanContext, null, OwnedDependents.of(beanContext), type,
+            CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers));
     }
 
     CdiInstance(BeanContext beanContext,
                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
-                Argument<T> type, List<CdiQualifier> qualifiers) {
-        this(beanContext, injectedAt,
-            java.util.Collections.synchronizedList(new java.util.ArrayList<>(2)), null, type, qualifiers);
+                OwnedDependents dependents, Argument<T> type, List<CdiQualifier> qualifiers) {
+        this(beanContext, injectedAt, dependents, null, type, qualifiers);
     }
 
     private CdiInstance(BeanContext beanContext,
                         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
-                        java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated,
+                        OwnedDependents dependents,
                         io.micronaut.context.@Nullable Qualifier<?> narrowedBy,
                         Argument<T> type, List<CdiQualifier> qualifiers) {
         this.beanContext = beanContext;
         this.injectedAt = injectedAt;
-        this.transientlyCreated = transientlyCreated;
+        this.dependents = dependents;
         this.narrowedBy = narrowedBy;
         this.type = type;
         this.qualifiers = qualifiers;
     }
 
+    /**
+     * A lookup of every bean whose dependent instances belong to the owner given, with nothing selected yet: what
+     * the creation and the disposal of a synthetic bean are handed, creating on behalf of the bean.
+     *
+     * @param beanContext The context the lookup resolves in
+     * @param dependents  Who the dependent instances it creates belong to
+     * @return The lookup
+     */
+    public static CdiInstance<Object> ownedBy(BeanContext beanContext, OwnedDependents dependents) {
+        return new CdiInstance<>(beanContext, null, dependents, Argument.OBJECT_ARGUMENT, List.of());
+    }
+
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, type,
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type,
             and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, Argument.of(subtype),
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, Argument.of(subtype),
             and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype,
                                                                       Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy,
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy,
             CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, type, and(valuesOf(qualifier, qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type, and(valuesOf(qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, Argument.of(subtype),
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, Argument.of(subtype),
             and(valuesOf(qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, subtype,
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, subtype,
             and(valuesOf(null, qualifiers)));
     }
 
@@ -130,7 +153,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
                                                                       io.micronaut.context.Qualifier<U> qualifier) {
         // a predicate over definitions rather than an annotation: none of the rules of the specification for a
         // qualifier given to select applies to it
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy(qualifier), subtype,
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy(qualifier), subtype,
             qualifiers);
     }
 
@@ -178,7 +201,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @return The lookup
      */
     <U> CdiInstance<U> selectArgument(Argument<U> argument, List<CdiQualifier> qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, transientlyCreated, narrowedBy, argument, qualifiers);
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, argument, qualifiers);
     }
 
     private List<CdiQualifier> and(List<CdiQualifier> more) {
@@ -201,18 +224,16 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      */
     private T dependent(BeanDefinition<T> definition) {
         // a dependent instance obtained through this lookup belongs to the bean the lookup was injected
-        // into, and is destroyed with it — which is when this lookup itself is closed. Section 2.5.2.5
+        // into, and is destroyed with it, or to the lookup, and is destroyed as it is closed. Section 2.5.2.5
         // gives it the lookup's own injection point as its metadata, which is left out for its creation
-        io.micronaut.context.BeanRegistration<T> registration =
-            createDependent(beanContext, type, definition, lookupPoint());
-        transientlyCreated.add(registration);
-        return registration.bean();
+        return createDependent(dependents, beanContext, type, definition, lookupPoint()).bean();
     }
 
     /**
      * Creates a dependent instance for a lookup, however the lookup hands it out - {@code get()}, iterating, or
      * a handle - so that what its creation throws comes out the same from each.
      *
+     * @param dependents  Who the instance belongs to
      * @param beanContext The bean context
      * @param selected    The type the lookup selected
      * @param definition  The bean
@@ -221,14 +242,14 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @return The registration that created the instance, which knows the dependents to destroy with it
      */
     static <U> io.micronaut.context.BeanRegistration<U> createDependent(
-        BeanContext beanContext, Argument<U> selected, BeanDefinition<U> definition,
+        OwnedDependents dependents, BeanContext beanContext, Argument<U> selected, BeanDefinition<U> definition,
         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookedUpAt) {
         if (lookedUpAt != null) {
             CurrentInjectionPoint.enter(lookedUpAt);
         }
         try {
             // the definition is the one the lookup chose: resolved as it is, with no candidate lookup of its own
-            return beanContext.getBeanRegistration(definition, askedAs(beanContext, selected, definition));
+            return dependents.registration(definition, askedAs(beanContext, selected, definition));
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
@@ -298,50 +319,13 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     }
 
     /**
-     * Lets go of every dependent instance this lookup created, which happens when the bean the lookup belongs
-     * to is destroyed.
+     * Lets go of every dependent instance this lookup created as its own, which happens when the bean the lookup
+     * belongs to is destroyed, and when a synthetic bean's creation or disposal function is done with the lookup it
+     * was handed (section 2.10.5). What it created for the bean it was injected into goes with that bean.
      */
     @Override
     public void close() {
-        destroyTransients();
-    }
-
-    /**
-     * Everything tracked so far, taken out atomically so that no registration is destroyed twice and none is
-     * lost to a concurrent add.
-     */
-    private java.util.List<io.micronaut.context.BeanRegistration<?>> drainTransients() {
-        synchronized (transientlyCreated) {
-            java.util.List<io.micronaut.context.BeanRegistration<?>> drained =
-                new java.util.ArrayList<>(transientlyCreated);
-            transientlyCreated.clear();
-            return drained;
-        }
-    }
-
-    /**
-     * Destroys every dependent instance this lookup created, through the context so that the whole destruction
-     * lifecycle runs: what section 2.10.5 asks for the lookup handed to a synthetic bean's creation and
-     * disposal functions, whose dependent instances are destroyed once the function's work is done with.
-     */
-    public void destroyTransients() {
-        // one throwing @PreDestroy must not leave the rest undestroyed: every registration is attempted, and
-        // the first failure is what comes out
-        RuntimeException failure = null;
-        for (io.micronaut.context.BeanRegistration<?> registration : drainTransients()) {
-            try {
-                registration.close();
-            } catch (RuntimeException e) {
-                if (failure == null) {
-                    failure = e;
-                } else {
-                    failure.addSuppressed(e);
-                }
-            }
-        }
-        if (failure != null) {
-            throw failure;
-        }
+        dependents.close();
     }
 
     /**
@@ -384,20 +368,9 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     public void destroy(T instance) {
         // the instance this lookup created is destroyed through the registration that created it, which is
         // what knows the dependents that were created along with it
-        io.micronaut.context.BeanRegistration<?> tracked = null;
-        synchronized (transientlyCreated) {
-            for (java.util.Iterator<io.micronaut.context.BeanRegistration<?>> created =
-                 transientlyCreated.iterator(); created.hasNext();) {
-                io.micronaut.context.BeanRegistration<?> registration = created.next();
-                if (registration.bean() == instance) {
-                    created.remove();
-                    tracked = registration;
-                    break;
-                }
-            }
-        }
+        io.micronaut.context.scope.CreatedBean<?> tracked = dependents.registrationOf(instance);
         if (tracked != null) {
-            tracked.close();
+            dependents.destroy(tracked);
             return;
         }
         Collection<BeanDefinition<T>> definitions = definitions();
@@ -452,7 +425,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
     @Override
     public Handle<T> getHandle() {
-        return new CdiHandle<>(beanContext, type, one(), lookupPoint(), transientlyCreated);
+        return new CdiHandle<>(beanContext, type, one(), lookupPoint(), dependents);
     }
 
     @Override
@@ -461,7 +434,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         // one pass must not be what a second pass hands out
         return () -> CdiResolution.narrow(definitions()).stream()
             .map(definition -> (Handle<T>) new CdiHandle<>(beanContext, type, definition, lookupPoint(),
-                transientlyCreated))
+                dependents))
             .iterator();
     }
 
@@ -529,19 +502,19 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         private final Argument<T> selected;
         private final BeanDefinition<T> definition;
         private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookupPoint;
-        private final java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated;
+        private final OwnedDependents dependents;
         private io.micronaut.context.@Nullable BeanRegistration<T> registration;
         private @Nullable T instance;
         private boolean destroyed;
 
         private CdiHandle(BeanContext beanContext, Argument<T> selected, BeanDefinition<T> definition,
                           jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookupPoint,
-                          java.util.List<io.micronaut.context.BeanRegistration<?>> transientlyCreated) {
+                          OwnedDependents dependents) {
             this.beanContext = beanContext;
             this.selected = selected;
             this.definition = definition;
             this.lookupPoint = lookupPoint;
-            this.transientlyCreated = transientlyCreated;
+            this.dependents = dependents;
         }
 
         @Override
@@ -553,12 +526,11 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             if (resolved == null) {
                 if (CdiResolution.isDependent(definition)) {
                     // held as the registration that created it, which knows the dependents to destroy with it
-                    io.micronaut.context.BeanRegistration<T> created =
-                        createDependent(beanContext, selected, definition, lookupPoint);
-                    registration = created;
                     // a dependent obtained through a handle is a dependent of the lookup like any other, and
                     // goes when the lookup goes — unless the handle destroys it first
-                    transientlyCreated.add(created);
+                    io.micronaut.context.BeanRegistration<T> created =
+                        createDependent(dependents, beanContext, selected, definition, lookupPoint);
+                    registration = created;
                     resolved = created.bean();
                 } else {
                     resolved = resolve(beanContext, definition);
@@ -584,11 +556,9 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             if (!destroyed) {
                 io.micronaut.context.BeanRegistration<T> created = registration;
                 if (created != null) {
-                    // taken off the lookup's list first: if it is no longer there the lookup already
-                    // destroyed it, and destroying it twice would run its @PreDestroy twice
-                    if (transientlyCreated.remove(created)) {
-                        created.close();
-                    }
+                    // destroyed only where the lookup still has it: if it does not the lookup destroyed it already,
+                    // and destroying it twice would run its @PreDestroy twice
+                    dependents.destroy(created);
                 } else {
                     CdiInstance.destroyResolved(beanContext, definition, resolved);
                 }

@@ -156,7 +156,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         } finally {
             // what an invocation looked up — the instance included, when it was looked up — lives only as
             // long as the invocation; a dependent among it is destroyed here
-            lookup.destroyTransients();
+            lookup.close();
         }
     }
 

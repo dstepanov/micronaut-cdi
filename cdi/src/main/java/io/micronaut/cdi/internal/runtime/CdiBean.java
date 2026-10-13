@@ -359,22 +359,18 @@ public class CdiBean<T> implements Bean<T> {
     @Override
     public T create(CreationalContext<T> creationalContext) {
         try {
-            if (isDependent() && creationalContext instanceof CdiCreationalContext<T> tracking) {
+            OwnedDependents owner = creationalContext instanceof CdiCreationalContext<T> tracking
+                ? tracking.created() : null;
+            if (isDependent() && owner != null) {
                 // a dependent instance belongs to whoever asked for it, and what was created along with it
-                // belongs to it: the registration carries both, and releasing the creational context closes it
-                io.micronaut.context.BeanRegistration<T> registration =
-                    beanContext.getBeanRegistration(definition);
-                tracking.track(registration);
-                return registration.bean();
+                // belongs to it: releasing the creational context destroys both
+                return owner.registration(definition, definition.asArgument()).bean();
             }
             // section 2.5.1: create() creates a new contextual instance. That a scope has one instance is the
             // business of its context, which creates it once and hands the same one out - scopedInstance()
-            io.micronaut.context.scope.CreatedBean<T> created = createOutsideOfScope();
+            io.micronaut.context.scope.CreatedBean<T> created = createOutsideOfScope(owner);
             if (created == null) {
                 return scopedInstance();
-            }
-            if (creationalContext instanceof CdiCreationalContext<T> tracking) {
-                tracking.track(created);
             }
             return created.bean();
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
@@ -414,12 +410,16 @@ public class CdiBean<T> implements Bean<T> {
     /**
      * Creates a fresh scoped instance and retains the complete dependency tree for its owner.
      *
+     * @param owner What the creational context the instance is created in owns, or {@code null} for a creational
+     *              context of another kind, which owns nothing
      * @return The fresh instance and its lifecycle, or {@code null} for a dependent bean
      */
-    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CreatedBean<T> createOutsideOfScope() {
+    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CreatedBean<T> createOutsideOfScope(
+        @org.jspecify.annotations.Nullable OwnedDependents owner) {
         if (isNormalScoped() || definition.isSingleton()) {
             return beanContext.getBean(io.micronaut.cdi.internal.context.RequestScope.class)
-                .duringCreation(() -> beanContext.createBeanRegistration(targetDefinition()));
+                .duringCreation(() -> owner != null
+                    ? owner.fresh(targetDefinition()) : beanContext.createBeanRegistration(targetDefinition()));
         }
         return null;
     }

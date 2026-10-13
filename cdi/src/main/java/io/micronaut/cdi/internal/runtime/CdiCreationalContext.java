@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.spi.CreationalContext;
 import org.jspecify.annotations.Nullable;
@@ -23,11 +24,12 @@ import org.jspecify.annotations.Nullable;
  * The creational context a bean is created in, which the specification hands to a program so that it can create a
  * bean itself and say when it is done with it.
  *
- * <p>It carries almost nothing here. What the specification uses it for is to hold the instance while it is being
- * created, so that a circular reference between two beans can be resolved to the half-built one, and to keep the
- * dependent instances that were created along with it so that they can be released together. Micronaut does both
- * of those things in its own resolution context, which is already under way by the time a bean is created, so
- * what is left for this to do is to remember the incomplete instance and to be something to hand back.</p>
+ * <p>What the specification uses it for is to hold the instance while it is being created, so that a circular
+ * reference between two beans can be resolved to the half-built one, and to keep the dependent instances that were
+ * created along with it so that they can be released together. Micronaut resolves the circular reference in its
+ * own resolution context, and owns what is created through the context in a dependency group, which releasing the
+ * context closes; what is left for this to do is to remember the incomplete instance and to be something to hand
+ * back.</p>
  *
  * @param <T> The bean type
  * @author Denis Stepanov
@@ -37,9 +39,15 @@ import org.jspecify.annotations.Nullable;
 public final class CdiCreationalContext<T> implements CreationalContext<T> {
 
     private @Nullable T incompleteInstance;
-    private final java.util.List<io.micronaut.context.scope.CreatedBean<?>> tracked = new java.util.ArrayList<>(2);
+    private final OwnedDependents created;
 
-    public CdiCreationalContext() {
+    /**
+     * A creational context of the given container.
+     *
+     * @param beanContext The context what is created through it is created in
+     */
+    public CdiCreationalContext(BeanContext beanContext) {
+        this.created = OwnedDependents.of(beanContext);
     }
 
     @Override
@@ -48,13 +56,13 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
     }
 
     /**
-     * Remembers what was created in this context, so that releasing the context destroys it along with the
-     * dependent instances that were created with it.
+     * What is created through this context, which releasing it destroys along with the dependent instances that
+     * were created with it.
      *
-     * @param registration The registration of what was created
+     * @return The instances created through it
      */
-    public void track(io.micronaut.context.scope.CreatedBean<?> registration) {
-        tracked.add(registration);
+    public OwnedDependents created() {
+        return created;
     }
 
     /**
@@ -63,34 +71,15 @@ public final class CdiCreationalContext<T> implements CreationalContext<T> {
      * @return Whether anything is tracked
      */
     public boolean hasTracked() {
-        return !tracked.isEmpty();
+        return !created.isEmpty();
     }
 
     @Override
     public void release() {
         incompleteInstance = null;
-        java.util.List<io.micronaut.context.scope.CreatedBean<?>> toClose = java.util.List.copyOf(tracked);
-        tracked.clear();
-        // one throwing @PreDestroy must not leave the rest undestroyed
-        RuntimeException failure = null;
-        // in the reverse of the order they were created in, as Micronaut destroys the dependents of a bean: one
-        // created later may use one created before it as it is destroyed
-        for (io.micronaut.context.scope.CreatedBean<?> registration : toClose.reversed()) {
-            try {
-                // closing a registration the context created destroys through the context, so the pre-destroy
-                // listeners — the disposer methods of section 3.3.4 — are notified
-                registration.close();
-            } catch (RuntimeException e) {
-                if (failure == null) {
-                    failure = e;
-                } else {
-                    failure.addSuppressed(e);
-                }
-            }
-        }
-        if (failure != null) {
-            throw failure;
-        }
+        // every instance is attempted, the last created first, and the first failure is what comes out; the
+        // pre-destroy listeners - the disposer methods of section 3.3.4 - are notified
+        created.close();
     }
 
     /**

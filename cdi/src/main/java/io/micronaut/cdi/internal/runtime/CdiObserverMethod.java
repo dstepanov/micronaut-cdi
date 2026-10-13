@@ -211,40 +211,38 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     void notify(T event, jakarta.enterprise.inject.spi.EventMetadata metadata) {
-        Object target = null;
-        io.micronaut.context.BeanRegistration<?> transientTarget = null;
-        if (!staticMethod) {
-            // a static observer method is notified without an instance of the bean that declares it, which is
-            // what the specification allows and what the executable method Micronaut generated for it expects
-            if (ifExists && !exists()) {
-                // the observer is notified only if an instance of its bean exists already, and none does
-                return;
-            }
-            if (!ifExists && !contextIsActive()) {
-                // a bean in a normal scope is reachable only while its context is active; while it is not,
-                // the observer is simply not notified
-                return;
-            }
-            if (isDependent()) {
-                // a dependent observer bean exists for the one notification: it is created for it, and it and
-                // everything created along with it are destroyed when the notification completes
-                transientTarget = registrationOfDeclaring();
-                target = transientTarget.bean();
-            } else {
-                target = beanContext.getBean(declaring);
-                if (target instanceof io.micronaut.aop.InterceptedProxy<?> proxy) {
-                    // the observer method may be protected, which a client proxy does not delegate: the
-                    // notification goes to the instance the context holds
-                    target = proxy.interceptedTarget();
+        // a dependent observer bean, and a dependent parameter, exist for the one notification: they are created
+        // for it, and they and everything created along with them are destroyed when it completes, the last
+        // created first
+        try (OwnedDependents dependents = OwnedDependents.of(beanContext)) {
+            Object target = null;
+            if (!staticMethod) {
+                // a static observer method is notified without an instance of the bean that declares it, which is
+                // what the specification allows and what the executable method Micronaut generated for it expects
+                if (ifExists && !exists()) {
+                    // the observer is notified only if an instance of its bean exists already, and none does
+                    return;
+                }
+                if (!ifExists && !contextIsActive()) {
+                    // a bean in a normal scope is reachable only while its context is active; while it is not,
+                    // the observer is simply not notified
+                    return;
+                }
+                if (isDependent()) {
+                    // the registration of this very definition, rather than of whatever re-resolving its type
+                    // would pick
+                    target = instanceOf(declaring, dependents);
+                } else {
+                    target = beanContext.getBean(declaring);
+                    if (target instanceof io.micronaut.aop.InterceptedProxy<?> proxy) {
+                        // the observer method may be protected, which a client proxy does not delegate: the
+                        // notification goes to the instance the context holds
+                        target = proxy.interceptedTarget();
+                    }
                 }
             }
-        }
-        Argument<?>[] arguments = method.getArguments();
-        Object[] parameters = new Object[arguments.length];
-        java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments = new java.util.ArrayList<>(2);
-        // the try begins before the parameters resolve: a parameter that fails to resolve must not leave the
-        // dependent observer instance — or the parameters resolved before it — undestroyed
-        try {
+            Argument<?>[] arguments = method.getArguments();
+            Object[] parameters = new Object[arguments.length];
             for (int i = 0; i < arguments.length; i++) {
                 if (i == observedParameter) {
                     parameters[i] = event;
@@ -252,43 +250,19 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                     // the metadata of the firing is supplied by the notification rather than resolved
                     parameters[i] = metadata;
                 } else {
-                    parameters[i] = resolve(arguments[i], transientArguments);
+                    parameters[i] = resolve(arguments[i], dependents);
                 }
             }
             invoke(target, parameters);
-        } finally {
-            RuntimeException destructionFailure = null;
-            if (transientTarget != null) {
-                try {
-                    transientTarget.close();
-                } catch (RuntimeException e) {
-                    destructionFailure = e;
-                }
-            }
-            for (io.micronaut.context.BeanRegistration<?> registration : transientArguments) {
-                try {
-                    registration.close();
-                } catch (RuntimeException e) {
-                    if (destructionFailure == null) {
-                        destructionFailure = e;
-                    } else {
-                        destructionFailure.addSuppressed(e);
-                    }
-                }
-            }
-            if (destructionFailure != null) {
-                throw destructionFailure;
-            }
         }
+    }
+
+    private static <B> B instanceOf(BeanDefinition<B> definition, OwnedDependents dependents) {
+        return dependents.registration(definition, definition.asArgument()).bean();
     }
 
     private boolean isDependent() {
         return CdiResolution.isDependent(declaring);
-    }
-
-    private io.micronaut.context.BeanRegistration<?> registrationOfDeclaring() {
-        // the registration of this very definition, rather than of whatever re-resolving its type would pick
-        return beanContext.getBeanRegistration(declaring);
     }
 
     @SuppressWarnings({"unchecked", "NullAway"})
@@ -359,8 +333,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     @SuppressWarnings("unchecked")
-    private @Nullable Object resolve(Argument<?> argument,
-                                     java.util.List<io.micronaut.context.BeanRegistration<?>> transientArguments) {
+    private @Nullable Object resolve(Argument<?> argument, OwnedDependents dependents) {
         io.micronaut.context.BeanRegistration<Object> registration;
         if (argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)) {
             // a container parameter - a list, an optional, an array - is the bean of its full declared type, as
@@ -374,15 +347,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for observer parameter "
                     + argument);
             }
-            registration = beanContext.getBeanRegistration(definition,
+            registration = dependents.registration(definition,
                 CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
         } else {
             Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
-            registration = beanContext.getBeanRegistration((Argument<Object>) argument, qualifier);
-        }
-        if (CdiResolution.isDependent(registration.getBeanDefinition())) {
-            // a dependent argument exists for the one notification, and is destroyed when it completes
-            transientArguments.add(registration);
+            registration = dependents.registration((Argument<Object>) argument, qualifier);
         }
         return registration.bean();
     }
