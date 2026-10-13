@@ -84,6 +84,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final String CONTEXTS = "RegisteredContexts";
     private static final String REGISTERED_QUALIFIERS = "RegisteredQualifiers";
     private static final String SCANNED_CLASSES = "ScannedClassesImport";
+    /**
+     * The names of every class a compilation generates, before the suffix that tells the compilation's apart.
+     */
+    private static final List<String> GENERATED_NAMES = List.of(TRIGGER, TRIGGER + "Again", COMPONENTS, CONTEXTS,
+        REGISTERED_QUALIFIERS, SCANNED_CLASSES);
     private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
@@ -625,12 +630,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         for (int taken = 0; taken < MAX_COMPILATIONS_OF_A_MODULE; taken++) {
             String candidate = Integer.toHexString(
                 (taken == 0 ? compilation : compilation + "#" + taken).hashCode());
-            if (context.getClassElement(GENERATED + "." + TRIGGER + candidate).isEmpty()
-                && context.getClassElement(GENERATED + "." + CONTEXTS + candidate).isEmpty()) {
+            if (isUnused(candidate, context)) {
                 return candidate;
             }
         }
         return Integer.toHexString(firstClass.hashCode());
+    }
+
+    /**
+     * Whether no class the compilation could generate is named with the suffix on the class path: a compilation
+     * that ran some of the phases alone - the discovery phase, which records the qualifiers and the scanned
+     * classes - generated some of the classes and none of the others.
+     */
+    private static boolean isUnused(String suffix, VisitorContext context) {
+        for (String generated : GENERATED_NAMES) {
+            if (context.getClassElement(GENERATED + "." + generated + suffix).isPresent()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
