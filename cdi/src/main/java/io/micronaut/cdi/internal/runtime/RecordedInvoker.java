@@ -178,9 +178,13 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             BeanDefinition<?> definition = definitionOf(beanContext);
             beanClass = beanClassOf(definition);
             method = executable(definition);
+            cachedTarget = new Target(definition, method);
         } catch (IllegalStateException e) {
             throw new jakarta.enterprise.inject.spi.DeploymentException(
                 "The invoker of " + beanClassName + "#" + methodName + " names a class that is not there", e);
+        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
+            throw new jakarta.enterprise.inject.spi.DeploymentException(
+                "The invoker of " + beanClassName + "#" + methodName + " names a class of more than one bean", e);
         }
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
         if (instanceLookup && !staticMethod) {
@@ -258,20 +262,10 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
 
     /**
      * The definition of the bean the invoker names, found by the name of its class among the definitions of
-     * the container: the class is named, not loaded.
+     * the container - the class is named, not loaded - as the declaring bean of a disposer is found.
      */
     private BeanDefinition<?> definitionOf(BeanContext beanContext) {
-        BeanDefinition<?> found = null;
-        for (BeanDefinition<?> candidate : beanContext.getAllBeanDefinitions()) {
-            if (!beanClassOf(candidate).getName().equals(beanClassName)) {
-                continue;
-            }
-            if (found == null || found instanceof ProxyBeanDefinition<?>) {
-                // a plain definition is preferred, but a proxy's inherits the class's executable methods and
-                // serves where it is the only one the context reports
-                found = candidate;
-            }
-        }
+        BeanDefinition<?> found = CdiResolution.declaringBeanOf(beanContext.getAllBeanDefinitions(), beanClassName);
         if (found == null) {
             throw new IllegalStateException("No bean of " + beanClassName + " to invoke");
         }

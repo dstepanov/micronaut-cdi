@@ -100,6 +100,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * @param disposer    The record
      * @return The disposer, or {@code null} where the record names no disposed parameter
      * @throws IllegalStateException Where the declaring bean has no executable method of the recorded signature
+     * @throws io.micronaut.context.exceptions.NoSuchBeanException   Where no bean is of the declaring class
+     * @throws io.micronaut.context.exceptions.NonUniqueBeanException Where more than one bean is of it
      */
     static @Nullable Disposer disposerOf(BeanContext beanContext, AnnotationValue<CdiDisposer> disposer) {
         Optional<Class<?>> declaringType = disposer.classValue("declaringType");
@@ -109,7 +111,12 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             return null;
         }
         boolean staticMethod = disposer.booleanValue("staticMethod").orElse(false);
-        BeanDefinition<?> declaring = beanContext.getBeanDefinition(declaringType.get());
+        // the bean of the declaring class itself: a selected alternative that extends it is another bean
+        BeanDefinition<?> declaring = CdiResolution.declaringBeanOf(
+            beanContext.getBeanDefinitions(declaringType.get()), declaringType.get().getName());
+        if (declaring == null) {
+            throw new io.micronaut.context.exceptions.NoSuchBeanException(declaringType.get());
+        }
         ExecutableMethod<?, ?> method = findMethod(declaring, methodName, disposer.stringValues("parameterTypes"))
             .orElseThrow(() -> new IllegalStateException("The " + (staticMethod ? "static " : "")
                 + "disposer method " + methodName + " of " + declaringType.get().getName() + " has no executable "

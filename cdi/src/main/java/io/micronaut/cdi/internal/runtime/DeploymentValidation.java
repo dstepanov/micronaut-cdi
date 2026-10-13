@@ -154,6 +154,11 @@ final class DeploymentValidation {
         } catch (IllegalStateException e) {
             problems.add(new DeploymentException(e.getMessage(), e));
             return;
+        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
+            // a subclass of the one below, and a problem rather than the absence of the declaring bean
+            problems.add(new DeploymentException("The bean that declares the disposer method of "
+                + definition.getBeanType().getName() + " is not one bean: " + e.getMessage(), e));
+            return;
         } catch (io.micronaut.context.exceptions.NoSuchBeanException e) {
             // the bean that declares it is not one of the deployment, and neither is what it produces
             return;
