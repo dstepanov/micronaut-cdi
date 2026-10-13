@@ -74,6 +74,43 @@ class InjectionDefinitionErrorTest {
             """, "A method may not be annotated both Inject and Produces");
     }
 
+    @Test
+    void aProducerOfACustomNormalScopeToldItsInjectionPointIsRefused() {
+        // CDI 4.1 section 2.5.2.5: a bean of a normal scope cannot be told the injection point, and a producer's
+        // scope is its own - here one a stereotype carries, of a normal scope the application declares
+        assertRefused("""
+            package broken;
+
+            import jakarta.enterprise.context.Dependent;
+            import jakarta.enterprise.inject.Produces;
+            import jakarta.enterprise.inject.spi.InjectionPoint;
+
+            @Dependent
+            public class Subject {
+
+                @jakarta.enterprise.context.NormalScope
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                public @interface Busy {
+                }
+
+                @jakarta.enterprise.inject.Stereotype
+                @Busy
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                public @interface Busily {
+                }
+
+                public static class Thing {
+                }
+
+                @Produces
+                @Busily
+                Thing thing(InjectionPoint point) {
+                    return new Thing();
+                }
+            }
+            """, "A bean of a normal scope outlives any one injection point");
+    }
+
     static void assertRefused(String source, String expected) {
         try (JavaParser parser = new JavaParser()) {
             assertThrows(RuntimeException.class, () -> parser.generate("broken.Subject", source),
