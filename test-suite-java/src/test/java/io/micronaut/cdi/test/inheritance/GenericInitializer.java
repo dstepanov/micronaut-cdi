@@ -19,7 +19,8 @@ import jakarta.enterprise.inject.Vetoed;
 import jakarta.inject.Inject;
 
 /**
- * Declares an initializer in terms of its type variable, which a subclass binds.
+ * Declares an initializer in terms of its type variable, which a subclass binds, beside an ordinary method of the
+ * same name that takes anything: the types a subclass's definition compiles the initializer with fit both.
  *
  * @param <T> The element type
  */
@@ -31,5 +32,14 @@ public class GenericInitializer<T> {
     @Inject
     public void setAll(T[] all) {
         this.all = all;
+    }
+
+    /**
+     * Not an initializer.
+     *
+     * @param other Anything
+     */
+    public void setAll(Object other) {
+        throw new UnsupportedOperationException("not an initializer");
     }
 }
