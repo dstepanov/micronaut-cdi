@@ -101,9 +101,13 @@ that cannot be told apart, or to a bean in a normal scope that cannot be proxied
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
-by Micronaut's rules. Collections, arrays, streams, maps and `Optional` injection require a bean of the full
-declared type. Explicitly nullable injection may be unsatisfied. An injection point of `Instance`, `Provider`,
-`Event` or `InjectionPoint` resolves late by design and is not validated.
+by Micronaut's rules. An injection point is validated whatever package its type is in: what the container hands
+the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
+manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
+overload its producer recorded, which is the one invoked. Collections, arrays, streams, maps and `Optional`
+injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied. An
+injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`, or of their Micronaut forms, resolves
+late by design and is not validated.
 
 A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
 classpath narrows each container to its own: the SE bootstrap's synthetic archive, a beans predicate, or a
@@ -255,7 +259,12 @@ each needs a constructor the generated definition can call.
 
 The language model an extension reads, and the annotations and types it composes with `AnnotationBuilder` and
 `Types`, have one implementation, built on the compiler's view of the classes. A synthetic bean, a synthetic
-observer and the built-in beans are described to the registration phase in that model too.
+observer and the built-in beans are described to the registration phase in that model too. A bean is described to
+the registration phase as the container resolves it: a class bean only where the class can be one - not vetoed,
+not abstract, with a bean constructor - a producer by the class that declares it, its bean types narrowed by
+`Typed` and ending in `Object`, its qualifiers with `Any` and without the ones Micronaut writes of its own accord,
+an alternative stereotype making it an alternative, and an observer with the priority it is notified in, written
+on its parameter or on the method.
 
 An error an extension reports through `Messages`, or a problem it throws, in synthesis, in the registration of a
 synthetic component or in validation fails the compilation: there is no deployment to refuse later, and the
@@ -411,6 +420,25 @@ written twice do not match, and every such disposer matches every such producer,
 both "more than one disposer" and "no producer". And an interceptor binding declared on a class reaches the
 producer methods of that class, so what a producer of an intercepted class produces is proxied as though it were
 intercepted — which a primitive cannot be, and the class is refused.
+
+### An asynchronous event is notified on Micronaut's executor of blocking work
+
+*CDI 4.1 section 2.8.5.* The specification leaves the executor of `fireAsync` without `NotificationOptions` to the
+container. Here it is Micronaut's executor of blocking work (`TaskExecutors.BLOCKING`), read as the first event
+is fired asynchronously, since an observer may block as any other code does; a context that has no such executor
+notifies on the common pool. An executor the firing names is used as it is.
+
+### The dependent instances created for one use go with it, the last created first
+
+*CDI 4.1 sections 2.8.4, 5.1.1 and 10.4.* A dependent instance an `Instance` creates belongs to the bean the
+lookup was injected into and goes with it; one created for a notification of an observer method - the dependent
+observer bean, a dependent parameter - goes as the notification completes; one created through a
+`CreationalContext` goes as it is released; one a synthetic bean's creation function looks up goes with the bean
+it created, and one its disposal function looks up as the disposal returns. Micronaut owns them, through the
+resolver of the bean and through dependency groups (`OwnedDependents`), and destroys each set in the reverse of the
+order it was created in, every one of them attempted where one fails. As the context stops Micronaut opens a
+new group for a listener of its shutdown event alone; what a lookup that runs later creates - from a
+`@PreDestroy`, or on the thread of an executor - is held by the container and destroyed the same way.
 
 ### Known limitations a review has named
 
@@ -583,7 +611,8 @@ are merged upstream; the remaining differences below still require adaptation or
   an attribute of the resolution instead.
 - **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
   visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
-  (`CompilationState`, `NonbindingMembersRemapper`) rather than in static fields. Under javac they belong to one
+  (`CompilationState`) rather than in static fields; what belongs to one call stack rather than to the compilation,
+  the guard `NonbindingMembersRemapper` reads a qualifier interface under, stays on the thread. Under javac they belong to one
   processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
   definition processor is remapped with that processor's attributes, so there a remapper does not see the
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
@@ -592,6 +621,15 @@ are merged upstream; the remaining differences below still require adaptation or
   compilations running at once in one process share them as they would a static field; the records of generated
   classes are kept under the generated class's name, which differs between compilations, the visitor of the
   compilation is not.
+- **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
+  constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
+  context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
+  that are private constants of `AopProxyWriter`, and how many there are is passed to generated code alone. A
+  definition of such a subclass is an `AdvisedBeanType`, so the container leaves those names out of the
+  constructor of that definition alone (`CdiResolution.isGeneratedConstructorParameter`, `isProxyDefinition`) when
+  it describes or validates the injection points; a parameter of any other constructor or method so named is the
+  author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
+  remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

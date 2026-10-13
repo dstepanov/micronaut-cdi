@@ -65,7 +65,10 @@ final class DeploymentValidation {
         "io.micronaut.context.BeanProvider",
         "jakarta.enterprise.event.Event",
         "jakarta.enterprise.inject.spi.InjectionPoint",
-        "jakarta.enterprise.inject.spi.EventMetadata"
+        "jakarta.enterprise.inject.spi.EventMetadata",
+        io.micronaut.cdi.MicronautInstance.class.getName(),
+        io.micronaut.cdi.MicronautEvent.class.getName(),
+        io.micronaut.cdi.MicronautInjectionPoint.class.getName()
     );
 
     private final CdiBeanContainer container;
@@ -87,8 +90,12 @@ final class DeploymentValidation {
             if (!isOfTheSpecification(definition)) {
                 continue;
             }
+            boolean proxy = CdiResolution.isProxyDefinition(definition);
             for (Argument<?> argument : definition.getConstructor().getArguments()) {
-                validate(definition, argument);
+                // what the container itself hands the constructor of a generated subclass is no injection point
+                if (!proxy || !CdiResolution.isGeneratedConstructorParameter(argument)) {
+                    validate(definition, argument);
+                }
             }
             for (FieldInjectionPoint<?, ?> field : definition.getInjectedFields()) {
                 validate(definition, field.asArgument());
@@ -101,7 +108,7 @@ final class DeploymentValidation {
                     validate(definition, argument);
                 }
             }
-            validateDisposer(definition, beans);
+            validateDisposer(definition);
             validateObservers(definition);
         }
         validateNames(beans);
@@ -117,34 +124,29 @@ final class DeploymentValidation {
     /**
      * The parameters of a disposer method other than the disposed one are injection points.
      */
-    private void validateDisposer(BeanDefinition<?> definition, List<CdiBean<?>> beans) {
-        AnnotationValue<?> disposer = definition.getAnnotationMetadata()
-            .getAnnotation(CdiDisposer.class);
+    private void validateDisposer(BeanDefinition<?> definition) {
+        AnnotationValue<CdiDisposer> recorded = definition.getAnnotationMetadata().getAnnotation(CdiDisposer.class);
+        if (recorded == null) {
+            return;
+        }
+        DisposerInvoker.Disposer disposer;
+        try {
+            // the disposer the product is destroyed by, found the way it is found then
+            disposer = DisposerInvoker.disposerOf(container.beanContext(), recorded);
+        } catch (IllegalStateException e) {
+            problems.add(new DeploymentException(e.getMessage(), e));
+            return;
+        } catch (io.micronaut.context.exceptions.NoSuchBeanException e) {
+            // the bean that declares it is not one of the deployment, and neither is what it produces
+            return;
+        }
         if (disposer == null) {
             return;
         }
-        String method = disposer.stringValue("method").orElse(null);
-        String declaring = disposer.stringValue("declaringType").orElse(null);
-        if (method == null || declaring == null) {
-            return;
-        }
-        int disposed = disposer.intValue("disposedParameter").orElse(0);
-        for (CdiBean<?> bean : beans) {
-            BeanDefinition<?> declaringDefinition = bean.definition();
-            if (!declaringDefinition.getBeanType().getName().equals(declaring)) {
-                continue;
-            }
-            for (ExecutableMethod<?, ?> executable : declaringDefinition.getExecutableMethods()) {
-                if (!executable.getMethodName().equals(method)) {
-                    continue;
-                }
-                Argument<?>[] arguments = executable.getArguments();
-                for (int i = 0; i < arguments.length; i++) {
-                    if (i != disposed) {
-                        validate(definition, arguments[i]);
-                    }
-                }
-                return;
+        Argument<?>[] arguments = disposer.method().getArguments();
+        for (int i = 0; i < arguments.length; i++) {
+            if (i != disposer.disposedParameter()) {
+                validate(definition, arguments[i]);
             }
         }
     }
@@ -174,24 +176,11 @@ final class DeploymentValidation {
      * given one by default, rather than a bean of Micronaut's own that only shares the context.
      */
     private static boolean isOfTheSpecification(BeanDefinition<?> definition) {
+        // the bean manager is a built-in bean, handed the context it belongs to rather than injected by the rules
+        // of the specification
         return CdiResolution.isBeanOfTheSpecification(definition)
+            && definition.getBeanType() != CdiBeanContainer.class
             && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
-    }
-
-    /**
-     * Whether the argument is something the container hands a generated constructor rather than an injection
-     * point the author wrote: its type, or a type inside it, belongs to the container.
-     */
-    private static boolean isContainerMachinery(Argument<?> argument) {
-        if (argument.getType().getName().startsWith("io.micronaut.")) {
-            return true;
-        }
-        for (Argument<?> parameter : argument.getTypeParameters()) {
-            if (isContainerMachinery(parameter)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -228,8 +217,7 @@ final class DeploymentValidation {
      * where that bean is in a normal scope and cannot be proxied.
      */
     private void validate(BeanDefinition<?> definition, Argument<?> argument) {
-        if (LAZY_KINDS.contains(argument.getType().getName())
-            || isContainerMachinery(argument)) {
+        if (LAZY_KINDS.contains(argument.getType().getName())) {
             return;
         }
         if (argument.isNullable()) {

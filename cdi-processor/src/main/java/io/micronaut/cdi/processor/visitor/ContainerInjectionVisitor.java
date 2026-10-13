@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.core.annotation.AnnotationClassValue;
@@ -62,7 +61,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
 
     @Override
     public void visitClass(ClassElement bean, VisitorContext context) {
-        if (!bean.hasAnnotation(CdiScope.class) && !bean.hasStereotype(CdiScope.class)) {
+        if (!SpecificationBeans.isBeanOfTheSpecification(bean)) {
             return;
         }
         bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()

@@ -15,9 +15,8 @@
  */
 package io.micronaut.cdi.processor.mapper;
 
-import io.micronaut.cdi.internal.metadata.CdiRequestScope;
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.NamedAnnotationMapper;
@@ -45,10 +44,9 @@ public final class RequestScopedAnnotationMapper implements NamedAnnotationMappe
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         // the annotation of the specification is kept beside the Micronaut one it was read as, so that the scope
         // a bean was written with is still what the container reports for it
-        return List.of(
-            annotation,
-            AnnotationValue.builder(CdiRequestScope.class).build(),
-            AnnotationValue.builder(CdiScope.class).value(Cdi.REQUEST_SCOPED).member("normal", true).build()
-        );
+        List<AnnotationValue<?>> mapped = new java.util.ArrayList<>();
+        mapped.add(annotation);
+        mapped.addAll(CdiScopes.annotationsOf(Cdi.REQUEST_SCOPED, true));
+        return mapped;
     }
 }

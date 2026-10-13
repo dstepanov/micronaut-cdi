@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A qualifier given as an {@code AnnotationValue} and the same qualifier given as an annotation literal select
@@ -126,6 +127,17 @@ class SelectByAnnotationValueTest {
             events.select(Marked.class, grade(1, "y")).fire(new Marked("value"));
             events.select(Marked.class, grade(2, "z")).fire(new Marked("value"));
             assertEquals(List.of("first:literal", "first:value", "second:value"), examiner.seen());
+        }
+    }
+
+    @Test
+    void twoLiteralsDifferingInANonbindingMemberAreEquivalent() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            // both read reflectively, neither carrying the list of the members that do not bind
+            jakarta.enterprise.inject.spi.BeanManager manager = CDI.current().getBeanManager();
+            assertTrue(manager.areQualifiersEquivalent(new GradeLiteral(1, "a"), new GradeLiteral(1, "b")));
+            assertEquals(manager.getQualifierHashCode(new GradeLiteral(1, "a")),
+                manager.getQualifierHashCode(new GradeLiteral(1, "b")));
         }
     }
 }

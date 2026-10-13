@@ -319,13 +319,14 @@ public class CdiBean<T> implements Bean<T> {
             described.getAnnotationMetadata().getAnnotation(CdiProducer.class);
         if (producer == null) {
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
+            boolean proxy = CdiResolution.isProxyDefinition(described);
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                if (CdiResolution.isGeneratedConstructorParameter(argument)) {
+                if (proxy && CdiResolution.isGeneratedConstructorParameter(argument)) {
                     // what the container itself passes a generated constructor is not an injection point
                     continue;
                 }
                 points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
-                    InjectionSite.CONSTRUCTOR, arguments, argument)));
+                    InjectionSite.CONSTRUCTOR, arguments, argument, proxy)));
             }
         } else if (!producer.booleanValue("field").orElse(false)) {
             // section 2.2.2.2: all producer method parameters are injection points. The producer method is what
@@ -335,7 +336,7 @@ public class CdiBean<T> implements Bean<T> {
             io.micronaut.core.type.Argument<?>[] arguments = constructor.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
                 points.add(new CdiInjectionPoint(beanContext, this, argument,
-                    CdiInjectionPoint.parameterSite(getBeanClass(), member, arguments, argument)));
+                    CdiInjectionPoint.parameterSite(getBeanClass(), member, arguments, argument, false)));
             }
         }
         for (io.micronaut.inject.FieldInjectionPoint<T, ?> field : described.getInjectedFields()) {
@@ -349,7 +350,7 @@ public class CdiBean<T> implements Bean<T> {
             io.micronaut.core.type.Argument<?>[] arguments = method.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
                 points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
-                    method.getName(), arguments, argument)));
+                    method.getName(), arguments, argument, false)));
             }
         }
         return points;
@@ -358,22 +359,18 @@ public class CdiBean<T> implements Bean<T> {
     @Override
     public T create(CreationalContext<T> creationalContext) {
         try {
-            if (isDependent() && creationalContext instanceof CdiCreationalContext<T> tracking) {
+            OwnedDependents owner = creationalContext instanceof CdiCreationalContext<T> tracking
+                ? tracking.created() : null;
+            if (isDependent() && owner != null) {
                 // a dependent instance belongs to whoever asked for it, and what was created along with it
-                // belongs to it: the registration carries both, and releasing the creational context closes it
-                io.micronaut.context.BeanRegistration<T> registration =
-                    beanContext.getBeanRegistration(definition);
-                tracking.track(registration);
-                return registration.bean();
+                // belongs to it: releasing the creational context destroys both
+                return owner.registration(definition, definition.asArgument()).bean();
             }
             // section 2.5.1: create() creates a new contextual instance. That a scope has one instance is the
             // business of its context, which creates it once and hands the same one out - scopedInstance()
-            io.micronaut.context.scope.CreatedBean<T> created = createOutsideOfScope();
+            io.micronaut.context.scope.CreatedBean<T> created = createOutsideOfScope(owner);
             if (created == null) {
                 return scopedInstance();
-            }
-            if (creationalContext instanceof CdiCreationalContext<T> tracking) {
-                tracking.track(created);
             }
             return created.bean();
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
@@ -413,12 +410,16 @@ public class CdiBean<T> implements Bean<T> {
     /**
      * Creates a fresh scoped instance and retains the complete dependency tree for its owner.
      *
+     * @param owner What the creational context the instance is created in owns, or {@code null} for a creational
+     *              context of another kind, which owns nothing
      * @return The fresh instance and its lifecycle, or {@code null} for a dependent bean
      */
-    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CreatedBean<T> createOutsideOfScope() {
+    private io.micronaut.context.scope.@org.jspecify.annotations.Nullable CreatedBean<T> createOutsideOfScope(
+        @org.jspecify.annotations.Nullable OwnedDependents owner) {
         if (isNormalScoped() || definition.isSingleton()) {
             return beanContext.getBean(io.micronaut.cdi.internal.context.RequestScope.class)
-                .duringCreation(() -> beanContext.createBeanRegistration(targetDefinition()));
+                .duringCreation(() -> owner != null
+                    ? owner.fresh(targetDefinition()) : beanContext.createBeanRegistration(targetDefinition()));
         }
         return null;
     }
@@ -447,7 +448,9 @@ public class CdiBean<T> implements Bean<T> {
 
     /**
      * The first cause that is not the container's own wrapping, which is what the bean's code threw: the
-     * causes it carries in turn are its own business.
+     * causes it carries in turn are its own business. The wrapping is told by its type - an exception of the
+     * bean context, or the one an executable method wraps a checked exception in - and not by its package, which
+     * an application's exception may share.
      */
     private static @org.jspecify.annotations.Nullable Throwable firstForeignCause(Throwable thrown) {
         // guarded against cause cycles of any length, which the platform permits
@@ -455,7 +458,8 @@ public class CdiBean<T> implements Bean<T> {
         walked.add(thrown);
         for (Throwable cause = thrown.getCause(); cause != null && walked.add(cause);
              cause = cause.getCause()) {
-            if (!cause.getClass().getName().startsWith("io.micronaut.")) {
+            if (!(cause instanceof io.micronaut.context.exceptions.BeanContextException)
+                && !(cause instanceof io.micronaut.core.reflect.exception.InvocationException)) {
                 return cause;
             }
         }
@@ -520,22 +524,16 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
-     * The class of the one definition the compiler wrote for this bean, which a proxy definition stands in
-     * front of: the proxy and its target are the same bean.
+     * What tells this bean from another: its definition, which Micronaut compares as the bean - a compiled
+     * definition is equal to every other of its class, and one registered at runtime, as a synthetic bean is, only
+     * to itself - or, for a proxy, the class of the definition it stands in front of: the proxy and its target are
+     * the same bean.
      */
-    private String canonicalDefinitionName() {
+    private Object identity() {
         if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy) {
-            return proxy.getTargetDefinitionType().getName();
+            return proxy.getTargetDefinitionType();
         }
-        return definition.getClass().getName();
-    }
-
-    /**
-     * A definition registered at runtime, as a synthetic bean is: every one shares a class, so each is a bean of
-     * its own, compared by identity.
-     */
-    private boolean isRuntimeDefinition() {
-        return definition instanceof io.micronaut.context.RuntimeBeanDefinition<?>;
+        return definition;
     }
 
     @Override
@@ -546,18 +544,22 @@ public class CdiBean<T> implements Bean<T> {
         if (!(o instanceof CdiBean<?> other)) {
             return false;
         }
-        if (isRuntimeDefinition() || other.isRuntimeDefinition()) {
-            return definition == other.definition;
+        Object identity = identity();
+        Object otherIdentity = other.identity();
+        // the class of a proxy's target is the target's compiled definition, which is equal to its class's others
+        if (identity instanceof Class<?> type) {
+            return otherIdentity instanceof Class<?> ? type == otherIdentity : otherIdentity.getClass() == type;
         }
-        return canonicalDefinitionName().equals(other.canonicalDefinitionName());
+        if (otherIdentity instanceof Class<?> type) {
+            return identity.getClass() == type;
+        }
+        return identity.equals(otherIdentity);
     }
 
     @Override
     public int hashCode() {
-        if (isRuntimeDefinition()) {
-            return System.identityHashCode(definition);
-        }
-        return canonicalDefinitionName().hashCode();
+        // a compiled definition hashes as its class, which is what a proxy's target class hashes as
+        return identity().hashCode();
     }
 
     @Override

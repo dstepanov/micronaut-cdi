@@ -109,11 +109,20 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         AnnotationMetadata metadata = definition.getAnnotationMetadata();
         java.util.List<CdiQualifier> bindings = new java.util.ArrayList<>(2);
         for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
-            AnnotationValue<?> value = metadata.getAnnotation(name);
-            if (isBindingType(CompiledAnnotationTypes.of(beanContext), metadata, name)) {
-                // a binding a binding carries is recorded by name, with no member written
-                bindings.add(CdiQualifier.ofCompiled(metadata, value != null ? value : new AnnotationValue<>(name)));
+            if (!isBindingType(CompiledAnnotationTypes.of(beanContext), metadata, name)) {
+                continue;
             }
+            // every occurrence of a repeatable binding, each of which the chains are resolved by
+            java.util.List<AnnotationValue<Annotation>> occurrences = metadata.getAnnotationValuesByName(name);
+            if (!occurrences.isEmpty()) {
+                for (AnnotationValue<Annotation> occurrence : occurrences) {
+                    bindings.add(CdiQualifier.ofCompiled(metadata, occurrence));
+                }
+                continue;
+            }
+            AnnotationValue<?> value = metadata.getAnnotation(name);
+            // a binding a binding carries is recorded by name, with no member written
+            bindings.add(CdiQualifier.ofCompiled(metadata, value != null ? value : new AnnotationValue<>(name)));
         }
         return bindings;
     }

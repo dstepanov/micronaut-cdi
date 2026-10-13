@@ -25,6 +25,7 @@ import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.AnnotationRemapper;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.PropertyElement;
@@ -62,13 +63,14 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
     private static final String MICRONAUT_NONBINDING = "io.micronaut.context.annotation.NonBinding";
 
     /**
-     * The attribute of the compilation that names the annotation interfaces being read: reading one builds the
-     * metadata of its members, which comes back here, and an annotation that names itself there is not read
-     * again. The compilation is what the reading belongs to, so the names are kept on it rather than on this class
-     * or on the thread, and nothing outlives it. The interface itself is not cached: Micronaut keeps the
-     * resolved type and the metadata of its members for the round, and reading the names off them is cheap.
+     * The annotation interfaces being read on this thread: reading one builds the metadata of its members, which
+     * comes back here, and an annotation that names itself there is not read again. The guard belongs to the call
+     * stack rather than to the compilation: under Groovy the attributes of a visitor context are one map for the
+     * whole process, which two compilations running at once would share. The interface itself is not cached:
+     * Micronaut keeps the resolved type and the metadata of its members for the round, and reading the names off
+     * them is cheap.
      */
-    private static final String READING = NonbindingMembersRemapper.class.getName() + ".reading";
+    private static final ThreadLocal<Set<String>> READING = ThreadLocal.withInitial(HashSet::new);
 
     @Override
     public String getPackageName() {
@@ -189,7 +191,7 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
 
     private static Set<String> declaredNonbindingMembersOf(String name, VisitorContext context,
                                                            boolean askDeclaration) {
-        Set<String> reading = reading(context);
+        Set<String> reading = READING.get();
         if (!reading.add(name)) {
             return Set.of();
         }
@@ -198,16 +200,6 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
         } finally {
             reading.remove(name);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Set<String> reading(VisitorContext context) {
-        Set<String> reading = context.get(READING, Set.class).orElse(null);
-        if (reading == null) {
-            reading = new HashSet<>();
-            context.put(READING, reading);
-        }
-        return reading;
     }
 
     private static Set<String> readDeclaration(String name, VisitorContext context, boolean askDeclaration) {
@@ -245,12 +237,25 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
      */
     public static Map<String, AnnotationMetadata> membersOf(ClassElement declaration) {
         Map<String, AnnotationMetadata> members = new LinkedHashMap<>();
+        memberElementsOf(declaration).forEach((name, member) -> members.put(name, member.getAnnotationMetadata()));
+        return members;
+    }
+
+    /**
+     * The members an annotation interface declares, as the elements the compiler answers them as: methods under
+     * javac and the Groovy compiler, properties under KSP.
+     *
+     * @param declaration The annotation interface
+     * @return The members, by name, in the order they are declared
+     */
+    public static Map<String, Element> memberElementsOf(ClassElement declaration) {
+        Map<String, Element> members = new LinkedHashMap<>();
         for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-            members.put(member.getName(), member.getAnnotationMetadata());
+            members.put(member.getName(), member);
         }
         if (members.isEmpty()) {
             for (PropertyElement member : declaration.getBeanProperties()) {
-                members.put(member.getName(), member.getAnnotationMetadata());
+                members.put(member.getName(), member);
             }
         }
         return members;

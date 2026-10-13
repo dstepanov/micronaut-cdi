@@ -125,6 +125,36 @@ public final class CdiTypes {
     }
 
     /**
+     * The executable method of a definition of the given name and erased parameter types, which tell overloads of
+     * one name apart: what a producer records of its disposer and an invoker of its method. The types are compared
+     * by name, so that none has to be loaded by name, which a native image would need metadata for.
+     *
+     * @param definition     The definition
+     * @param name           The name of the method
+     * @param parameterTypes The {@link #erasedName erased names} of its parameter types
+     * @return The method, or {@code null} where the definition has no executable method of the signature
+     */
+    static io.micronaut.inject.@Nullable ExecutableMethod<?, ?> executableMethodOf(
+        io.micronaut.inject.BeanDefinition<?> definition, String name, String[] parameterTypes) {
+        return definition.findPossibleMethods(name)
+            .filter(method -> hasParameterTypes(method.getArgumentTypes(), parameterTypes))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private static boolean hasParameterTypes(Class<?>[] types, String[] parameterTypes) {
+        if (types.length != parameterTypes.length) {
+            return false;
+        }
+        for (int i = 0; i < types.length; i++) {
+            if (!parameterTypes[i].equals(erasedName(types[i]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * The required type of the lookup, as the specification's API reports a type.
      *
      * @param beanType The compiled argument of the lookup

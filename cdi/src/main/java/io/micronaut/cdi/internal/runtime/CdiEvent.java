@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * The event a program fires, which is the injectable half of section 2.8.
@@ -95,7 +94,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public <U extends T> CompletionStage<U> fireAsync(U event) {
-        return fireAsync(event, NotificationOptions.ofExecutor(ForkJoinPool.commonPool()));
+        return fireAsync(event, NotificationOptions.ofExecutor(registry.asyncExecutor()));
     }
 
     @Override
@@ -116,7 +115,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
                 throw failure;
             }
             return event;
-        }, executor == null ? ForkJoinPool.commonPool() : executor);
+        }, executor == null ? registry.asyncExecutor() : executor);
     }
 
     @Override

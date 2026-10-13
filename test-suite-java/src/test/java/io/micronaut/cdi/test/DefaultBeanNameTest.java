@@ -60,6 +60,19 @@ class DefaultBeanNameTest {
         }
     }
 
+    @Test
+    void aProducerNamedAsAPropertyIsNamedAsJavaBeansNamesTheProperty() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            // the name of the property of a getter whose name goes on in two capitals keeps them
+            assertEquals(1, container.getBeans("URL").size());
+            assertEquals(0, container.getBeans("uRL").size());
+            assertEquals(1, container.getBeans("flameColour").size());
+            // a method that takes a parameter is no getter, and is named after itself
+            assertEquals(1, container.getBeans("getWax").size());
+        }
+    }
+
     /**
      * A nested bean class that asks for the default name.
      */
@@ -90,6 +103,37 @@ class DefaultBeanNameTest {
         @Named
         String wick() {
             return "wick";
+        }
+
+        /**
+         * @return The address of the works
+         */
+        @Produces
+        @Dependent
+        @Named
+        java.net.URI getURL() {
+            return java.net.URI.create("https://lantern.example");
+        }
+
+        /**
+         * @return The colour of the flame
+         */
+        @Produces
+        @Dependent
+        @Named
+        StringBuilder getFlameColour() {
+            return new StringBuilder("yellow");
+        }
+
+        /**
+         * @param wick The wick, which makes this no getter
+         * @return The wax
+         */
+        @Produces
+        @Dependent
+        @Named
+        Integer getWax(@Named("wick") String wick) {
+            return wick.length();
         }
     }
 }

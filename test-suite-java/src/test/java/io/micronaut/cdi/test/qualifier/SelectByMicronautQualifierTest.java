@@ -114,4 +114,38 @@ class SelectByMicronautQualifierTest {
             assertEquals(1, beans.size());
         }
     }
+
+    interface Converter<T> {
+        String name();
+    }
+
+    @Dependent
+    static class NumberConverter implements Converter<Number> {
+        @Override
+        public String name() {
+            return "number";
+        }
+    }
+
+    @Dependent
+    static class ObjectConverter implements Converter<Object> {
+        @Override
+        public String name() {
+            return "object";
+        }
+    }
+
+    @Test
+    void theBeanContainerAnswersTheBeansAReducingMicronautQualifierKeepsAmongThemAll() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            // the closest type argument is a choice among the candidates rather than a test of each, made by the
+            // type that was asked for. A raw type is not a required type a converter of numbers matches
+            Argument<?> converters = io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(
+                new jakarta.enterprise.util.TypeLiteral<Converter<? super Integer>>() { }.getType());
+            Set<Bean<?>> beans = context.getBean(MicronautBeanContainer.class)
+                .getBeans(converters, Qualifiers.byTypeArgumentsClosest(Integer.class));
+            assertEquals(Set.of(NumberConverter.class),
+                beans.stream().map(Bean::getBeanClass).collect(java.util.stream.Collectors.toSet()));
+        }
+    }
 }

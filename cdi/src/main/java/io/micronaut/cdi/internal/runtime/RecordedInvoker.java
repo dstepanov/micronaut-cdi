@@ -156,7 +156,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         } finally {
             // what an invocation looked up — the instance included, when it was looked up — lives only as
             // long as the invocation; a dependent among it is destroyed here
-            lookup.destroyTransients();
+            lookup.close();
         }
     }
 
@@ -248,21 +248,9 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
      */
     @SuppressWarnings("unchecked")
     private ExecutableMethod<Object, Object> executable(BeanDefinition<?> definition) {
-        for (ExecutableMethod<?, ?> candidate : definition.getExecutableMethods()) {
-            if (!candidate.getMethodName().equals(methodName)) {
-                continue;
-            }
-            Class<?>[] types = candidate.getArgumentTypes();
-            if (types.length != parameterTypeNames.length) {
-                continue;
-            }
-            boolean same = true;
-            for (int i = 0; i < types.length && same; i++) {
-                same = CdiTypes.erasedName(types[i]).equals(parameterTypeNames[i]);
-            }
-            if (same) {
-                return (ExecutableMethod<Object, Object>) candidate;
-            }
+        ExecutableMethod<?, ?> found = CdiTypes.executableMethodOf(definition, methodName, parameterTypeNames);
+        if (found != null) {
+            return (ExecutableMethod<Object, Object>) found;
         }
         throw new IllegalStateException("The method " + beanClassName + "#" + methodName
             + " was not compiled as an executable method");

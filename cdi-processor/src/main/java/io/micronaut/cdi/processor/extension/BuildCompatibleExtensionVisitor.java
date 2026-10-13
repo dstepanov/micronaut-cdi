@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -26,7 +27,6 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.cdi.processor.Cdi;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
@@ -82,6 +82,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final String TRIGGER = "RegistrationEnd";
     private static final String COMPONENTS = "SyntheticComponents";
     private static final String CONTEXTS = "RegisteredContexts";
+    private static final String REGISTERED_QUALIFIERS = "RegisteredQualifiers";
+    private static final String SCANNED_CLASSES = "ScannedClassesImport";
     private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
@@ -103,7 +105,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private final DiscoveredClasses discovered = new DiscoveredClasses();
     private boolean discoveryRan;
     private boolean scannedImportWritten;
-    private boolean contextRecordWritten;
+    private boolean registeredQualifiersWritten;
     private boolean contextBeansWritten;
     private boolean importedClassesPending;
     private boolean synthesized;
@@ -329,16 +331,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         return LOWEST_PRECEDENCE;
     }
 
-    private void writeContextRecord(VisitorContext context) {
-        if (contextRecordWritten || discovered.registeredQualifiers().isEmpty()) {
+    private void writeRegisteredQualifiers(VisitorContext context) {
+        if (registeredQualifiersWritten || discovered.registeredQualifiers().isEmpty()) {
             return;
         }
-        contextRecordWritten = true;
+        registeredQualifiersWritten = true;
         GeneratedSource source = new GeneratedSource(context.getLanguage())
             .annotation("jakarta.inject.Singleton", null)
             .annotation(CdiExtensionQualifiers.class.getName(),
                 new GeneratedSource(context.getLanguage()).strings(discovered.registeredQualifiers()));
-        write(context, "ExtensionContextRecordHolder", source, "The extension qualifier record");
+        write(context, REGISTERED_QUALIFIERS + suffix, source, "The record of the registered qualifiers");
     }
 
     /**
@@ -492,7 +494,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     private void writeScannedImport(VisitorContext context) {
-        writeContextRecord(context);
+        writeRegisteredQualifiers(context);
         if (scannedImportWritten || discovered.scannedClasses().isEmpty()) {
             return;
         }
@@ -510,7 +512,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         source.annotation("io.micronaut.context.annotation.ClassImport",
             "classes = " + source.classes(canonicalNames));
-        write(context, "ScannedClassesImport", source, "The scanned classes import");
+        write(context, SCANNED_CLASSES + suffix, source, "The scanned classes import");
     }
 
     private void write(VisitorContext context, String className, GeneratedSource source, String what) {
@@ -584,8 +586,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 writeTrigger(context, TRIGGER + suffix);
             }
         }
-        writeScannedImport(context);
         if (suffix != null) {
+            // what is generated is named with the suffix of the compilation, which its first class gives
+            writeScannedImport(context);
             writeContextBeans(element, context);
         }
         applyWhatWasDiscovered(element);
@@ -780,23 +783,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      *
      * <p>The phase is invoked once per bean rather than once for the container, which is what the specification
      * says it is and what a compiler can give. It runs last, so that what it describes is the bean as everything
-     * else has left it.</p>
+     * else has left it. A class that cannot be a bean - one vetoed, an abstract class, an interface, one with no
+     * bean constructor (section 3.1.1) - declares none, and a producer is described by the class that declares
+     * it: one a superclass declares is the superclass's bean (section 4.2).</p>
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
-        if (registrars.isEmpty()) {
+        if (registrars.isEmpty() || element.isAbstract() || element.isInterface()
+            || element.hasStereotype("jakarta.enterprise.inject.Vetoed")) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
-        if (element.hasStereotype(CdiScope.class)
-            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")) {
+        if ((element.hasStereotype(CdiScope.class)
+            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor"))
+            && io.micronaut.cdi.processor.visitor.SpecificationBeans.hasABeanConstructor(element)) {
             beans.add(new ElementBeanInfo(element, null, context));
         }
-        element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
-            .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(method -> beans.add(new ElementBeanInfo(element, method, context)));
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-            .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(field -> beans.add(new ElementBeanInfo(element, field, context)));
+        for (io.micronaut.inject.ast.MemberElement producer
+            : io.micronaut.cdi.processor.visitor.SpecificationBeans.producersOf(element)) {
+            beans.add(new ElementBeanInfo(element, producer, context));
+        }
         for (ElementBeanInfo bean : beans) {
             for (Registrar registrar : registrars) {
                 if (registrar.matches(bean)) {
@@ -805,7 +810,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             }
         }
         // section 2.10.3 also tells the phase about the observers: a registration method asking for an
-        // ObserverInfo is invoked once for each observer whose observed event type matches
+        // ObserverInfo is invoked once for each observer whose observed event type matches. An observer method
+        // is inherited, so the bean of this class observes with the ones its superclasses declare as well
         for (io.micronaut.inject.ast.MethodElement method
             : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             io.micronaut.inject.ast.ParameterElement observed = null;
@@ -853,12 +859,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         java.util.Map<String, List<AnnotationValue<?>>> members =
             discovered.memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
-            for (io.micronaut.inject.ast.MethodElement method
-                : element.getEnclosedElements(io.micronaut.inject.ast.ElementQuery.ALL_METHODS)) {
-                for (AnnotationValue<?> annotation : members.getOrDefault(method.getName(), List.of())) {
-                    method.annotate(annotation);
+            // the members of an annotation interface as the compiler answers them, which KSP does as properties
+            NonbindingMembersRemapper.memberElementsOf(element).forEach((name, member) -> {
+                for (AnnotationValue<?> annotation : members.getOrDefault(name, List.of())) {
+                    member.annotate(annotation);
                 }
-            }
+            });
         }
     }
 

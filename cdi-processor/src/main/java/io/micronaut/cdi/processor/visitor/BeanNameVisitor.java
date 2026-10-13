@@ -16,8 +16,6 @@
 package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiName;
-import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -72,9 +70,8 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         // the singleton pseudo-scope is read as Micronaut's own rather than into a CdiScope, and a class written
-        // with it is a bean of the specification (section 2.5.1) that may ask for the default name like any other
-        if (element.getAnnotationMetadata().hasStereotype(CdiScope.class)
-            || element.getAnnotationMetadata().hasStereotype("jakarta.inject.Singleton")) {
+        // with it is a bean that may ask for the default name like any other
+        if (SpecificationBeans.isBean(element)) {
             nameIfAskedFor(element, defaultClassName(unqualified(element.getSimpleName())));
             if (element.getAnnotationMetadata().hasStereotype(NAMED) && reachableFromAnExpression(context)) {
                 // a bean with a name is what an expression reaches, and an expression invokes a method through
@@ -85,12 +82,10 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
                     .forEach(method -> method.annotate("io.micronaut.context.annotation.Executable"));
             }
         }
-        element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
-            .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(method -> nameIfAskedFor(method, defaultMethodName(method)));
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-            .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(field -> nameIfAskedFor(field, field.getName()));
+        for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
+            nameIfAskedFor(producer, producer instanceof MethodElement method
+                ? defaultMethodName(method) : producer.getName());
+        }
     }
 
     /**
@@ -142,18 +137,34 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * The default name of a producer method: the property name when the method is a getter, and the method name
-     * itself otherwise.
+     * The default name of a producer method (section 2.6.3): the name of the property when the method is a getter
+     * of one in the sense of JavaBeans - it takes nothing, and is named {@code get} or, returning a
+     * {@code boolean}, {@code is}, followed by the property's name - and the method name itself otherwise.
      */
     private static String defaultMethodName(MethodElement method) {
         String name = method.getName();
-        if (name.startsWith("get") && name.length() > 3) {
-            return defaultClassName(name.substring(3));
-        }
-        if (name.startsWith("is") && name.length() > 2
-            && method.getReturnType().getName().equals("boolean")) {
-            return defaultClassName(name.substring(2));
+        if (method.getParameters().length == 0) {
+            if (name.startsWith("get") && name.length() > 3) {
+                return propertyName(name.substring(3));
+            }
+            if (name.startsWith("is") && name.length() > 2
+                && method.getReturnType().getName().equals("boolean")) {
+                return propertyName(name.substring(2));
+            }
         }
         return name;
+    }
+
+    /**
+     * The name of a property as JavaBeans derives it from what follows {@code get} or {@code is}: the first
+     * character made lower case, unless the second is upper case too, which keeps an acronym as it is -
+     * {@code getURL} names the property {@code URL}.
+     */
+    private static String propertyName(String capitalized) {
+        if (capitalized.length() > 1 && Character.isUpperCase(capitalized.charAt(1))
+            && Character.isUpperCase(capitalized.charAt(0))) {
+            return capitalized;
+        }
+        return defaultClassName(capitalized);
     }
 }

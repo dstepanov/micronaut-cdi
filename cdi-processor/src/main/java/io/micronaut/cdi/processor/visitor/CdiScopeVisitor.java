@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
@@ -141,14 +142,27 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         if (!checkScopesOf(element, "The stereotype " + element.getName(), context)) {
             return false;
         }
-        String named = element.getAnnotationMetadata()
-            .stringValue("jakarta.inject.Named").orElse(null);
-        if (named != null && !named.isEmpty()) {
+        String named = namedValueOf(element);
+        if (named != null) {
             context.fail("The stereotype " + element.getName() + " declares a Named with the value \""
                 + named + "\"; a stereotype's Named names nothing itself (section 2.7.1)", element);
             return false;
         }
         return true;
+    }
+
+    /**
+     * The value a stereotype's {@code Named} names, which it may not (section 2.7.1): the bean the stereotype is
+     * on takes the default name. Asked as the stereotype compiles, and again where a class uses one compiled
+     * elsewhere.
+     *
+     * @param stereotype The stereotype
+     * @return The value, or {@code null} where the stereotype declares no Named or one without a value
+     */
+    private static @Nullable String namedValueOf(ClassElement stereotype) {
+        return stereotype.getAnnotationMetadata().stringValue("jakarta.inject.Named")
+            .filter(name -> !name.isEmpty())
+            .orElse(null);
     }
 
     /**
@@ -177,11 +191,10 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             declaration.getAnnotationMetadata()
                 .intValue(Cdi.PRIORITY, io.micronaut.core.annotation.AnnotationMetadata.VALUE_MEMBER)
                 .ifPresent(priorities::add);
-            // a stereotype's own Named names nothing: the bean it is on takes the default name, so a value
-            // written on the stereotype is a definition error wherever it is used (section 2.7.1)
-            String named = declaration.getAnnotationMetadata()
-                .stringValue("jakarta.inject.Named").orElse(null);
-            if (named != null && !named.isEmpty()) {
+            // a value written on the stereotype is a definition error wherever it is used, the stereotype
+            // perhaps compiled elsewhere
+            String named = namedValueOf(declaration);
+            if (named != null) {
                 context.fail("The stereotype " + stereotype + " on " + element.getName() + " declares a "
                     + "Named with the value \"" + named + "\"; a stereotype's Named names nothing itself "
                     + "(section 2.7.1)", element);
@@ -241,23 +254,15 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         element.removeAnnotation(CdiScope.class);
         element.removeAnnotation(CdiApplicationScope.class);
         element.removeAnnotation(CdiRequestScope.class);
-        switch (resolved) {
-            case Cdi.APPLICATION_SCOPED -> {
-                element.annotate(CdiApplicationScope.class);
-                element.annotate(CdiScope.class, builder -> builder
-                    .value(Cdi.APPLICATION_SCOPED).member("normal", true));
-            }
-            case Cdi.REQUEST_SCOPED -> {
-                element.annotate(CdiRequestScope.class);
-                element.annotate(CdiScope.class, builder -> builder
-                    .value(Cdi.REQUEST_SCOPED).member("normal", true));
-            }
-            case Cdi.DEPENDENT -> {
-                element.annotate(Prototype.class);
-                element.annotate(CdiScope.class, builder -> builder.value(Cdi.DEPENDENT));
-            }
-            default -> element.annotate(CdiScope.class, builder -> builder
-                .value(resolved).member("normal", true));
+        // a scope other than the specification's own is resolved here only where it is a scope of the kind the
+        // specification declares, and whether it is normal is what its declaration says
+        boolean normal = !Cdi.DEPENDENT.equals(resolved) && !"jakarta.inject.Singleton".equals(resolved)
+            && (Cdi.APPLICATION_SCOPED.equals(resolved) || Cdi.REQUEST_SCOPED.equals(resolved)
+                || context.getClassElement(resolved)
+                    .map(declaration -> declaration.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE)).orElse(true));
+        for (io.micronaut.core.annotation.AnnotationValue<?> annotation
+            : CdiScopes.annotationsOf(resolved, normal)) {
+            element.annotate(annotation);
         }
     }
 

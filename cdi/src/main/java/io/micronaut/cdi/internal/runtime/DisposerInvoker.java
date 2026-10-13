@@ -55,7 +55,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
      * makes is disposed of by the same method.
      */
-    private final java.util.concurrent.ConcurrentHashMap<DefinitionIdentity, Disposer> disposers =
+    private final java.util.concurrent.ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
         new java.util.concurrent.ConcurrentHashMap<>();
     private volatile @Nullable CdiBeanContainer container;
 
@@ -67,18 +67,18 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     public Object onPreDestroy(BeanPreDestroyEvent<Object> event) {
         Object bean = event.getBean();
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        Disposer found = disposers.get(new DefinitionIdentity(definition));
+        Disposer found = disposers.get(definition);
         if (found == null) {
             AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
             if (disposer == null) {
                 // every bean of the context is destroyed through here, and few of them were produced
                 return bean;
             }
-            found = disposerOf(disposer);
+            found = disposerOf(beanContext, disposer);
             if (found == null) {
                 return bean;
             }
-            disposers.putIfAbsent(new DefinitionIdentity(definition), found);
+            disposers.putIfAbsent(definition, found);
         }
         Disposer disposer = found;
         return event.withDependencies(dependencies -> {
@@ -91,7 +91,17 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         });
     }
 
-    private @Nullable Disposer disposerOf(AnnotationValue<CdiDisposer> disposer) {
+    /**
+     * The disposer a producer's record names: the method of the declaring bean with the recorded name and
+     * parameter types, which is the one invoked as the product is destroyed and the one whose parameters are
+     * validated as the container starts.
+     *
+     * @param beanContext The context the declaring bean is defined in
+     * @param disposer    The record
+     * @return The disposer, or {@code null} where the record names no disposed parameter
+     * @throws IllegalStateException Where the declaring bean has no executable method of the recorded signature
+     */
+    static @Nullable Disposer disposerOf(BeanContext beanContext, AnnotationValue<CdiDisposer> disposer) {
         Optional<Class<?>> declaringType = disposer.classValue("declaringType");
         String methodName = disposer.stringValue("method").orElse(null);
         int disposedParameter = disposer.intValue("disposedParameter").orElse(-1);
@@ -138,8 +148,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
 
     /**
      * The executable method of the disposer: the one of its erased parameter types, which tell overloads of one
-     * name apart, or the one of its name for a producer compiled before the types were recorded. The types are
-     * compared by name, so that none has to be loaded by name, which a native image would need metadata for.
+     * name apart, or the one of its name for a producer compiled before the types were recorded - a disposer has
+     * its disposed parameter, so a record without types is one of those.
      */
     private static Optional<? extends ExecutableMethod<?, ?>> findMethod(BeanDefinition<?> declaring,
                                                                           String methodName,
@@ -147,22 +157,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (parameterTypes.length == 0) {
             return declaring.findPossibleMethods(methodName).findFirst();
         }
-        return declaring.findPossibleMethods(methodName)
-            .filter(method -> hasParameterTypes(method, parameterTypes))
-            .findFirst();
-    }
-
-    private static boolean hasParameterTypes(ExecutableMethod<?, ?> method, String[] parameterTypes) {
-        Class<?>[] types = method.getArgumentTypes();
-        if (types.length != parameterTypes.length) {
-            return false;
-        }
-        for (int i = 0; i < types.length; i++) {
-            if (!parameterTypes[i].equals(CdiTypes.erasedName(types[i]))) {
-                return false;
-            }
-        }
-        return true;
+        return Optional.ofNullable(CdiTypes.executableMethodOf(declaring, methodName, parameterTypes));
     }
 
     @SuppressWarnings({"unchecked", "NullAway"})
@@ -206,7 +201,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * @param staticMethod      Whether it is static, and invoked on no instance
      * @param publicMethod      Whether it is public, and invoked through a client proxy's interceptors
      */
-    private record Disposer(BeanDefinition<?> declaring, ExecutableMethod<?, ?> method, int disposedParameter,
-                            boolean staticMethod, boolean publicMethod) {
+    record Disposer(BeanDefinition<?> declaring, ExecutableMethod<?, ?> method, int disposedParameter,
+                    boolean staticMethod, boolean publicMethod) {
     }
 }

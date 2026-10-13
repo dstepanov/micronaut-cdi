@@ -114,4 +114,85 @@ class DependentDestructionTest {
         @Inject
         Flare second;
     }
+
+    @Test
+    void aLookupUsedInTheConstructorOfItsOwnerCreatesWhatGoesWithTheOwner() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Instance.Handle<Launcher> handle = container.createInstance().select(Launcher.class).getHandle();
+            Launcher launcher = handle.get();
+            assertEquals(0, Flare.DESTROYED.get());
+            assertEquals(Flare.class, launcher.flare.getClass());
+            handle.destroy();
+            assertEquals(1, Flare.DESTROYED.get());
+        }
+    }
+
+    @Test
+    void theDependentsOfALookupGoTheLastCreatedFirstEveryOneOfThemThoughOneFails() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Instance.Handle<Salvo> handle = container.createInstance().select(Salvo.class).getHandle();
+            Salvo salvo = handle.get();
+            salvo.fire(3);
+            Spark.SPENT.clear();
+            // a failing @PreDestroy is reported rather than thrown, and stops none of the others
+            handle.destroy();
+            assertEquals(java.util.List.of(3, 2, 1), Spark.SPENT);
+        }
+    }
+
+    /**
+     * Looks up a dependent bean as it is constructed, through the lookup it is constructed with.
+     */
+    @Dependent
+    public static class Launcher {
+
+        final Flare flare;
+
+        @Inject
+        Launcher(Instance<Flare> flares) {
+            this.flare = flares.get();
+        }
+    }
+
+    /**
+     * A dependent bean that records the order it is destroyed in, and fails as the second one is.
+     */
+    @Dependent
+    public static class Spark {
+
+        static final java.util.List<Integer> SPENT = new java.util.concurrent.CopyOnWriteArrayList<>();
+        private static final AtomicInteger CREATED = new AtomicInteger();
+
+        int number;
+
+        void number(int number) {
+            this.number = number;
+        }
+
+        @PreDestroy
+        void spent() {
+            SPENT.add(number);
+            if (number == 2) {
+                throw new IllegalStateException("the second spark fails as it is destroyed");
+            }
+        }
+    }
+
+    /**
+     * Looks up a number of dependent beans after it is constructed.
+     */
+    @Dependent
+    public static class Salvo {
+
+        @Inject
+        Instance<Spark> sparks;
+
+        void fire(int count) {
+            for (int i = 1; i <= count; i++) {
+                sparks.get().number(i);
+            }
+        }
+    }
 }

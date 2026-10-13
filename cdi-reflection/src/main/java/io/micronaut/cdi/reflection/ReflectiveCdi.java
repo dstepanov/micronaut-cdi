@@ -19,13 +19,12 @@ import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
-import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.reflection.ReflectionAnnotations;
+import io.micronaut.reflection.ReflectionExecutables;
 import jakarta.enterprise.inject.spi.Annotated;
-import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -34,12 +33,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -204,32 +201,9 @@ public final class ReflectiveCdi implements CdiReflection {
 
     @Override
     public AnnotationValue<?> valuesOf(Annotation annotation) {
-        Class<? extends Annotation> type = annotation.annotationType();
-        return ReflectionAnnotations.valueOf(annotation, values -> listNonbinding(type, values));
-    }
-
-    /**
-     * Lists the members the specification marks {@code jakarta.enterprise.util.Nonbinding} beside the ones
-     * Micronaut lists for its own {@code NonBinding}, which is how the processor records both on a compiled
-     * qualifier: under {@code $nonBinding}, the attribute naming itself.
-     */
-    private static void listNonbinding(Class<? extends Annotation> annotationType, Map<CharSequence, Object> values) {
-        Set<String> listed = new LinkedHashSet<>();
-        for (Map.Entry<CharSequence, Object> value : values.entrySet()) {
-            if (AnnotationUtil.NON_BINDING_ATTRIBUTE.contentEquals(value.getKey())
-                && value.getValue() instanceof String[] micronauts) {
-                listed.addAll(List.of(micronauts));
-            }
-        }
-        for (Method member : annotationType.getDeclaredMethods()) {
-            if (member.isAnnotationPresent(Nonbinding.class)) {
-                listed.add(member.getName());
-            }
-        }
-        if (!listed.isEmpty()) {
-            listed.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
-            values.put(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(String[]::new));
-        }
+        // the members the specification marks Nonbinding are listed under $nonBinding by the customizer this module
+        // registers, which every reflective read of Micronaut's applies
+        return ReflectionAnnotations.valueOf(annotation);
     }
 
     @Override
@@ -249,29 +223,19 @@ public final class ReflectiveCdi implements CdiReflection {
             return exact != null ? exact
                 : declaredFor(site.declaringClass().getDeclaredConstructors(), parameterTypes);
         }
-        Method exact = ReflectionUtils.findMethod(site.declaringClass(), site.memberName(), parameterTypes)
+        // a bean's definition compiles the parameters of a method its class inherits with the type arguments the
+        // class gives the type variables of the class above it, so T[] of Bar<T> is compiled as String[] for
+        // Foo extends Bar<String>, which the erased Object[] the method declares is assignable from. Micronaut finds
+        // the declaration the compiled types resolve to, through the superclasses and the interfaces, the most
+        // specific one where an overload fits them as well
+        return ReflectionExecutables.findMethod(site.declaringClass(), site.memberName(), parameterTypes)
             .orElse(null);
-        if (exact != null) {
-            return exact;
-        }
-        for (Class<?> type = site.declaringClass(); type != null && type != Object.class; type = type.getSuperclass()) {
-            Method[] named = java.util.Arrays.stream(type.getDeclaredMethods())
-                .filter(method -> method.getName().equals(site.memberName()))
-                .toArray(Method[]::new);
-            Executable found = declaredFor(named, parameterTypes);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
     }
 
     /**
-     * The one executable among the given ones whose parameters the compiled types fit, where none declares them
-     * exactly: a bean's definition compiles the parameters of a member its class inherits with the type arguments
-     * the class gives the type variables of the class above it, so {@code T[]} of {@code Bar<T>} is compiled as
-     * {@code String[]} for {@code Foo extends Bar<String>}, which the erased {@code Object[]} the member declares
-     * is assignable from.
+     * The one constructor among the given ones whose parameters the compiled types fit, where none declares them
+     * exactly: a constructor is not inherited, so the class declares it, and two that the compiled types fit are
+     * told apart by nothing.
      */
     private static @Nullable Executable declaredFor(Executable[] candidates, Class<?>[] compiledTypes) {
         Executable found = null;

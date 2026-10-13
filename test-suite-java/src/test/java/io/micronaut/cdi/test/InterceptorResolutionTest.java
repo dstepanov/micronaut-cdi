@@ -240,4 +240,60 @@ class InterceptorResolutionTest {
                     (java.lang.annotation.Annotation) () -> Override.class));
         }
     }
+
+    @InterceptorBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({TYPE, METHOD})
+    @java.lang.annotation.Repeatable(Tags.class)
+    @interface Tag {
+        String value();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({TYPE, METHOD})
+    @interface Tags {
+        Tag[] value();
+    }
+
+    @SuppressWarnings("serial")
+    static final class TagLiteral extends AnnotationLiteral<Tag> implements Tag {
+        private final String value;
+
+        TagLiteral(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String value() {
+            return value;
+        }
+    }
+
+    @Tag("a")
+    @Tag("b")
+    @jakarta.interceptor.Interceptor
+    @Priority(400)
+    public static class TaggedInterceptor {
+        @AroundInvoke
+        Object tagged(InvocationContext ctx) throws Exception {
+            return ctx.proceed();
+        }
+    }
+
+    /**
+     * An interceptor bound by a repeatable binding written twice reports both occurrences: the ones its chains
+     * are resolved by.
+     */
+    @Test
+    void everyOccurrenceOfARepeatableBindingIsReported() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            List<Interceptor<?>> interceptors = manager.resolveInterceptors(InterceptionType.AROUND_INVOKE,
+                new TagLiteral("a"), new TagLiteral("b"));
+            assertEquals(List.of(TaggedInterceptor.class),
+                interceptors.stream().<Class<?>>map(Interceptor::getBeanClass).toList());
+            assertEquals(java.util.Set.of(new TagLiteral("a"), new TagLiteral("b")),
+                interceptors.get(0).getInterceptorBindings());
+        }
+    }
 }

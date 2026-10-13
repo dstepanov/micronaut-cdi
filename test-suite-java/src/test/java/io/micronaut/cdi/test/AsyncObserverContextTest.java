@@ -32,6 +32,7 @@ class AsyncObserverContextTest {
     static final AtomicInteger IDS = new AtomicInteger();
     static final List<String> EVENTS = new CopyOnWriteArrayList<>();
     static volatile int observed;
+    static volatile Thread observedOn;
 
     /** The event, so that no other observer of the suite hears it. */
     public record Ping(String text) {
@@ -69,6 +70,7 @@ class AsyncObserverContextTest {
 
         void on(@ObservesAsync Ping ping) {
             observed = state.id();
+            observedOn = Thread.currentThread();
             EVENTS.add("observed in " + observed);
         }
     }
@@ -128,6 +130,22 @@ class AsyncObserverContextTest {
                 .toCompletableFuture().get(30, TimeUnit.SECONDS);
 
             assertEquals(List.of("observed in " + observed, "state " + observed + " destroyed"), EVENTS);
+        }
+    }
+
+    @Test
+    void theDefaultExecutorIsMicronautsExecutorOfBlockingWork() throws Exception {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            manager.getEvent().select(Ping.class).fireAsync(new Ping("ping"))
+                .toCompletableFuture().get(30, TimeUnit.SECONDS);
+            ExecutorService blocking = context.getBean(ExecutorService.class,
+                io.micronaut.inject.qualifiers.Qualifiers.byName(io.micronaut.scheduling.TaskExecutors.BLOCKING));
+            Thread worker = blocking.submit(Thread::currentThread).get(30, TimeUnit.SECONDS);
+
+            // not the common pool, which work that blocks would starve, but where Micronaut runs such work
+            assertEquals(worker.isVirtual(), observedOn.isVirtual(), observedOn.toString());
+            assertEquals(false, observedOn instanceof java.util.concurrent.ForkJoinWorkerThread, observedOn.toString());
         }
     }
 }

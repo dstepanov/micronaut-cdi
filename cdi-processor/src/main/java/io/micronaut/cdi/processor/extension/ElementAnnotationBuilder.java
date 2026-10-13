@@ -18,12 +18,11 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationMember;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.AnnotationBuilder;
 import jakarta.enterprise.lang.model.AnnotationInfo;
@@ -79,9 +78,10 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
         compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
         ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
         if (declaration != null) {
-            for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-                if (!values.containsKey(member.getName())) {
-                    throw new IllegalStateException("The member " + member.getName() + " of " + annotation
+            // the members as the compiler answers them, which KSP does as properties rather than methods
+            for (String member : NonbindingMembersRemapper.membersOf(declaration).keySet()) {
+                if (!values.containsKey(member)) {
+                    throw new IllegalStateException("The member " + member + " of " + annotation
                         + " was not composed and has no default");
                 }
             }

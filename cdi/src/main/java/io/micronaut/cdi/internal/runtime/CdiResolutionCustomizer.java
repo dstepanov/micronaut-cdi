@@ -54,10 +54,10 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         char.class, '\u0000');
 
     // the bean types of a definition, worked out once: every parameterized lookup asks them of every candidate,
-    // and working them out walks the class's supertypes. Definitions are compared by identity here — two runtime
-    // definitions of one class are equal to each other, and are not the same bean — and the map lives as long
-    // as the context this customizer was built for
-    private final java.util.concurrent.ConcurrentHashMap<DefinitionIdentity, java.util.List<Argument<?>>> beanTypes =
+    // and working them out walks the class's supertypes. A compiled definition is equal to another of its class
+    // and a runtime one only to itself, which is what tells the beans apart; the map lives as long as the context
+    // this customizer was built for
+    private final java.util.concurrent.ConcurrentHashMap<BeanDefinition<?>, java.util.List<Argument<?>>> beanTypes =
         new java.util.concurrent.ConcurrentHashMap<>();
 
     private final BeanResolutionCustomizer delegate;
@@ -204,7 +204,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // the required argument does not satisfy
             RecordedTypeIndex index = typeIndex;
             try {
-                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(new DefinitionIdentity(definition), key -> {
+                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(definition, key -> {
                     Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
                         ? proxy.getTargetType() : definition.getBeanType();
                     return CdiBean.typesOf(index, definition, beanClass);

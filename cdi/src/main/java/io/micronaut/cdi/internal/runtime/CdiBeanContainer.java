@@ -197,7 +197,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public <T> CreationalContext<T> createCreationalContext(@Nullable Contextual<T> contextual) {
-        return new CdiCreationalContext<>();
+        return new CdiCreationalContext<>(beanContext);
     }
 
     @Override
@@ -217,10 +217,19 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.context.Qualifier<?> qualifier) {
-        Set<Bean<?>> beans = new LinkedHashSet<>();
+        // the qualifier is handed every eligible definition at once and the type that was asked for, as Micronaut's
+        // own lookups hand it: a qualifier may choose among the candidates - the closest type arguments - rather
+        // than test each on its own
+        Map<BeanDefinition<?>, Bean<?>> byDefinition = new java.util.LinkedHashMap<>();
         for (Bean<?> bean : beansOf(beanType, List.of(CdiQualifier.ANY))) {
-            io.micronaut.inject.BeanDefinition<?> definition = ((CdiBean<?>) bean).definition();
-            if (((io.micronaut.context.Qualifier) qualifier).doesQualify(definition.getBeanType(), definition)) {
+            byDefinition.putIfAbsent(((CdiBean<?>) bean).definition(), bean);
+        }
+        Collection kept = ((io.micronaut.context.Qualifier) qualifier)
+            .filter(beanType.getType(), (Collection) byDefinition.keySet());
+        Set<Bean<?>> beans = new LinkedHashSet<>();
+        for (Object definition : kept) {
+            Bean<?> bean = byDefinition.get(definition);
+            if (bean != null) {
                 beans.add(bean);
             }
         }
@@ -483,29 +492,23 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private List<CdiBean<?>> loadCandidates() {
         // the references are the ones the beans predicate of the context admits, so an environment that
         // narrowed the context reports exactly the beans it narrowed it to
-        Map<String, BeanDefinition<?>> byName = new java.util.LinkedHashMap<>();
+        // a compiled definition is equal to every other of its class, and a runtime one only to itself, so the set
+        // holds each bean once
+        java.util.Set<BeanDefinition<?>> definitions = new LinkedHashSet<>();
         for (io.micronaut.inject.BeanDefinitionReference<Object> reference
             : beanContext.getBeanDefinitionReferences()) {
             BeanDefinition<?> definition = enabledDefinitionOf(reference);
             if (definition != null) {
-                byName.put(definition.getClass().getName(), definition);
+                definitions.add(definition);
             }
         }
         // a bean the container was handed at runtime — a synthetic bean an extension described — has a
-        // definition without a compiled reference. Such definitions share a class, so the instance tells
-        // them apart
-        for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            String key = definition.getClass().getName();
-            BeanDefinition<?> existing = byName.get(key);
-            if (existing != null && existing != definition && !existing.equals(definition)) {
-                key = key + "@" + System.identityHashCode(definition);
-            }
-            byName.putIfAbsent(key, definition);
-        }
+        // definition without a compiled reference
+        definitions.addAll(beanContext.getAllBeanDefinitions());
         List<CdiBean<?>> loaded = new java.util.ArrayList<>();
         // an abstract class is not a bean of the specification, however it is annotated, and a bean in a normal
         // scope is two definitions, the proxy and its target, of which the proxy is the bean
-        for (BeanDefinition<?> definition : CdiResolution.beansAmong(byName.values())) {
+        for (BeanDefinition<?> definition : CdiResolution.beansAmong(definitions)) {
             if (io.micronaut.cdi.internal.extension.ExtensionComponents.isComponent(definition.getAnnotationMetadata())) {
                 // the definition of a creator, a disposer, a synthetic observer or a context an extension
                 // named: what the container instantiates the class through, and not a bean of the application
@@ -594,7 +597,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 throw new IllegalArgumentException("The annotation " + binding.annotationType().getName()
                     + " is not an interceptor binding");
             }
-            if (!distinct.add(binding.annotationType())) {
+            // a repeatable binding may be given once for each of its occurrences
+            if (!distinct.add(binding.annotationType())
+                && !Boolean.TRUE.equals(types().isRepeatable(binding.annotationType().getName()))) {
                 throw new IllegalArgumentException("The interceptor binding " + binding.annotationType().getName()
                     + " was given twice");
             }
@@ -630,52 +635,16 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     /**
      * The values of interceptor bindings handed over as annotation instances, in the form the Jakarta Interceptors
-     * implementation compares bindings in: an annotation held by a member is its value too, as compiled metadata
-     * records it, rather than an instance.
+     * implementation compares bindings in. They are the values the bindings were read into: a member that holds an
+     * annotation holds its value already, as compiled metadata records it and as the reflection module reads an
+     * instance, so nothing is read again here - core's own reading of an annotation instance would reflect.
      */
     private static List<AnnotationValue<?>> bindingValuesOf(List<CdiQualifier> bindings) {
         List<AnnotationValue<?>> values = new java.util.ArrayList<>(bindings.size());
         for (CdiQualifier binding : bindings) {
-            values.add(asValues(binding.written()));
+            values.add(binding.written());
         }
         return values;
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static AnnotationValue<?> asValues(AnnotationValue<?> value) {
-        Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
-        boolean converted = false;
-        for (Map.Entry<CharSequence, Object> member : value.getValues().entrySet()) {
-            Object converting = asValue(member.getValue());
-            converted |= converting != member.getValue();
-            members.put(member.getKey(), converting);
-        }
-        return converted ? new AnnotationValue(value.getAnnotationName(), members, value.getDefaultValues())
-            : value;
-    }
-
-    private static Object asValue(Object member) {
-        if (member instanceof Annotation annotation) {
-            return asValues(AnnotationValue.of(annotation));
-        }
-        if (member instanceof AnnotationValue<?> nested) {
-            return asValues(nested);
-        }
-        if (member instanceof Object[] array) {
-            Object[] converted = null;
-            for (int i = 0; i < array.length; i++) {
-                Object element = asValue(array[i]);
-                if (element != array[i]) {
-                    if (converted == null) {
-                        converted = new Object[array.length];
-                        System.arraycopy(array, 0, converted, 0, array.length);
-                    }
-                    converted[i] = element;
-                }
-            }
-            return converted == null ? member : converted;
-        }
-        return member;
     }
 
     /**

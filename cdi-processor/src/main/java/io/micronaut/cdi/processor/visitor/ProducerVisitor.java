@@ -19,7 +19,6 @@ import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.processor.Cdi;
@@ -207,11 +206,16 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 } else if (metadata.hasDeclaredStereotype("jakarta.inject.Singleton")) {
                     stereotypeScope = "jakarta.inject.Singleton";
                 }
+                if (stereotypeScope == null) {
+                    // a normal scope of the application's own, which the stereotype carries
+                    List<String> custom = metadata.getDeclaredMetadata().getAnnotationNamesByStereotype(Cdi.NORMAL_SCOPE);
+                    if (!custom.isEmpty()) {
+                        stereotypeScope = custom.get(0);
+                        normal = true;
+                    }
+                }
                 if (stereotypeScope != null) {
-                    String value = stereotypeScope;
-                    boolean isNormal = normal;
-                    producer.annotate(CdiScope.class,
-                        builder -> builder.value(value).member("normal", isNormal));
+                    producer.annotate(io.micronaut.cdi.processor.CdiScopes.recordOf(stereotypeScope, normal));
                 }
             }
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
@@ -352,29 +356,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // may still select it as the container is built; the class's own selection has already decided
             // whether the whole factory is a bean, so only the member is made conditional here
             if (!element.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE)) {
-                java.util.List<String> stereotypes = producer.getAnnotationMetadata()
-                    .getAnnotationNamesByStereotype(Cdi.ALTERNATIVE).stream()
-                    .filter(name -> !name.equals(Cdi.ALTERNATIVE))
-                    .toList();
-                producer.annotate(io.micronaut.context.annotation.Requires.class, builder -> builder
-                    .member("condition", new AnnotationClassValue<>(
-                        "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
-                String className = element.getName();
-                producer.annotate(CdiSelectableAlternative.class, builder -> {
-                    builder.value(className);
-                    builder.member("producer", true);
-                    if (!stereotypes.isEmpty()) {
-                        builder.member("stereotypes", stereotypes.toArray(new String[0]));
-                    }
-                });
+                Alternatives.leaveUnselected(producer, element.getName(), true);
             }
             return;
         }
-        // the order is the priority negated, written over the one Micronaut read from the priority itself:
-        // a Micronaut order prefers the lowest, the specification the highest
-        int order = -priority;
-        producer.removeAnnotation("io.micronaut.core.annotation.Order");
-        producer.annotate("io.micronaut.core.annotation.Order", builder -> builder.value(order));
+        // not made primary here: a producer that declares no qualifier is primary already, as the default bean
+        // of its type (DefaultQualifierVisitor)
+        Alternatives.select(producer, priority, false);
     }
 
     /**
@@ -390,18 +378,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // declared, because whether its class is a bean of a given deployment is decided per deployment — the
         // SE bootstrap's addBeanClasses makes a class with no bean defining annotation a bean by fiat
         return SpecificationBeans.hasABeanConstructor(element);
-    }
-
-    /**
-     * Whether the producer declares a scope of its own, which is the scope the bean it produces belongs to.
-     */
-    private static boolean declaresANormalScope(MemberElement producer) {
-        return producer.hasDeclaredAnnotation(CdiRequestScope.class)
-            || producer.hasDeclaredAnnotation(CdiApplicationScope.class)
-            || producer.getAnnotationMetadata()
-                .hasDeclaredStereotype(CdiRequestScope.class)
-            || producer.getAnnotationMetadata()
-                .hasDeclaredStereotype(CdiApplicationScope.class);
     }
 
     /**

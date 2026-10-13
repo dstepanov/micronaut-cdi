@@ -10,7 +10,7 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
+import jakarta.inject.Qualifier;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
@@ -39,17 +39,22 @@ class BeanInjectionPointsTest {
     public static class Part {
     }
 
+    @Qualifier
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Spare {
+    }
+
     @Dependent
     public static class Assembled {
         @Inject
-        public Assembled(Part part, @Named("spare") Part spare) {
+        public Assembled(Part part, @Spare Part spare) {
         }
     }
 
     @Dependent
     public static class Spares {
         @Produces
-        @Named("spare")
+        @Spare
         Part spare() {
             return new Part();
         }

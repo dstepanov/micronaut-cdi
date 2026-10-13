@@ -15,10 +15,8 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -138,33 +136,14 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
             // an alternative that is not selected by a priority is not enabled here — but the SE bootstrap may
             // still select it as the container is built, so instead of being no bean at all it is a bean on
             // the condition that something selected it, with the names that would beside it
-            java.util.List<String> stereotypes = element.getAnnotationMetadata()
-                .getAnnotationNamesByStereotype(Cdi.ALTERNATIVE).stream()
-                .filter(name -> !name.equals(Cdi.ALTERNATIVE))
-                .toList();
-            element.annotate(Requires.class, builder -> builder
-                .member("condition", new AnnotationClassValue<>(
-                    "io.micronaut.cdi.internal.runtime.UnselectedAlternative")));
-            String className = element.getName();
-            element.annotate(CdiSelectableAlternative.class, builder -> {
-                builder.value(className);
-                if (!stereotypes.isEmpty()) {
-                    builder.member("stereotypes", stereotypes.toArray(new String[0]));
-                }
-            });
+            Alternatives.leaveUnselected(element, element.getName(), false);
             return;
         }
         // a selected alternative is preferred over what it is an alternative to, and preferred over another
-        // alternative of a lower priority. Both are said the Micronaut way: it is primary, so an unqualified
-        // injection point prefers it, and it is ordered by its priority, so that of several candidates the one
-        // the highest priority wins — which is the resolution rule of section 2.4.2
-        element.annotate(Primary.class);
-        // Micronaut reads a jakarta priority as an order of the same value, and a Micronaut order prefers the
-        // lowest; the specification prefers the highest priority, so the order is written negated — and written
-        // over what was read, not beside it
-        int order = -priority;
-        element.removeAnnotation("io.micronaut.core.annotation.Order");
-        element.annotate("io.micronaut.core.annotation.Order", builder -> builder.value(order));
+        // alternative of a lower priority: it is primary, so an unqualified injection point Micronaut resolves
+        // prefers it, and it is ordered by its priority, so that of several candidates the one the highest
+        // priority wins — which is the resolution rule of section 2.4.2
+        Alternatives.select(element, priority, true);
     }
 
     /**

@@ -354,13 +354,17 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * <p>A produced bean has the scope the producer declares rather than the scope of the class that declares the
      * producer, and the two are different often enough to matter: a dependent instance produced by a method of an
      * application scoped bean may be told which injection point it was produced for (section 2.5.2.5), and
-     * reading the class's scope instead would refuse it. The producer carries the scope of the bean it produces
-     * by the time this runs, written there by the visitor that reads producers.</p>
+     * reading the class's scope instead would refuse it.</p>
+     *
+     * <p>It is read from the scope the producer declares, directly or through a stereotype, as the mappers read it
+     * and as the annotation that declares it a normal scope says, rather than from what the visitor that reads
+     * producers writes on it: that visitor runs after this one.</p>
      */
     private static boolean isNormalScopedProducer(MethodElement producer) {
         // read from what the member itself declares: the annotation metadata of a member carries what its class
         // declares as well, and the class's scope is the one this must not be answered with
-        return producer.getAnnotationMetadata().getDeclaredMetadata()
-            .booleanValue(CdiScope.class, "normal").orElse(false);
+        io.micronaut.core.annotation.AnnotationMetadata declared = producer.getAnnotationMetadata().getDeclaredMetadata();
+        return declared.booleanValue(CdiScope.class, "normal").orElse(false)
+            || declared.hasStereotype(Cdi.NORMAL_SCOPE);
     }
 }
