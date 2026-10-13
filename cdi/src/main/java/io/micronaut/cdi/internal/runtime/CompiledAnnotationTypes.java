@@ -170,6 +170,18 @@ public final class CompiledAnnotationTypes {
         return recorded == null ? null : recorded.nonbinding.containsAll(recorded.members);
     }
 
+    /**
+     * The members of the annotation type of the given name that take no part in resolution, as the qualifiers
+     * and bindings the application was compiled with list them under {@code $nonBinding}.
+     *
+     * @param name The annotation type name
+     * @return The members, or {@code null} where nothing was compiled of the type
+     */
+    public @Nullable Set<String> nonbindingOf(String name) {
+        Recorded recorded = recorded(name);
+        return recorded == null ? null : Set.copyOf(recorded.nonbinding);
+    }
+
     private @Nullable Recorded recorded(String name) {
         Recorded recorded = fromClasses().get(name);
         if (recorded != null) {

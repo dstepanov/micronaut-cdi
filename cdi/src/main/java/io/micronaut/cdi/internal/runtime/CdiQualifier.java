@@ -458,9 +458,11 @@ public final class CdiQualifier {
      * A qualifier a program handed over as an annotation instance.
      *
      * <p>The qualifiers of the specification are known for what they are, and a qualifier the application was
-     * compiled with that has no binding member is told from another of its type by nothing: neither is read.
-     * Anything else is read member by member, which is reflection, and is asked of the module that does
-     * it.</p>
+     * compiled with that has no binding member is told from another of its type by nothing: neither is read. An
+     * instance that carries its values - one the builder generated for a registered annotation type made, or one
+     * Micronaut synthesised - hands them over, the members the application was compiled with as non-binding
+     * listed beside them. Anything else is read member by member, which is reflection, and is asked of the module
+     * that does it.</p>
      *
      * @param types      What the application was compiled with
      * @param annotation The annotation
@@ -493,10 +495,30 @@ public final class CdiQualifier {
         if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, Set.of(), null, annotation);
         }
+        if (annotation instanceof io.micronaut.core.annotation.AnnotationValueProvider<?> provider) {
+            return of(withNonbinding(provider.annotationValue(), types.nonbindingOf(name)), null, annotation);
+        }
         CdiReflection reflection = CdiReflection.require(types.beanContext(),
             "Reading the members of the annotation instance "
             + annotation + " (" + SELECT_BY_VALUE + ")");
         return of(reflection.valuesOf(annotation), null, annotation);
+    }
+
+    /**
+     * The values with the given non-binding members listed under {@code $nonBinding} beside the ones they list.
+     */
+    private static AnnotationValue<?> withNonbinding(AnnotationValue<?> value, @Nullable Set<String> nonbinding) {
+        if (nonbinding == null || nonbinding.isEmpty()) {
+            return value;
+        }
+        Set<String> listed = new LinkedHashSet<>(List.of(value.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)));
+        if (listed.containsAll(nonbinding)) {
+            return value;
+        }
+        listed.addAll(nonbinding);
+        // the attribute lists itself, as Micronaut records it
+        listed.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+        return value.mutate().member(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(new String[0])).build();
     }
 
     private static CdiQualifier scoped(Class<? extends Annotation> type, Class<? extends Annotation> scope,
