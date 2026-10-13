@@ -645,14 +645,19 @@ own rather than the first one alone.
   container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
   the reflection module answers the type closure, the declared type and the event type of a class itself
   (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
-- **A lookup by definition cannot carry the injection point it stands for.** `Instance` creates a dependent bean by
-  the definition it selected (`getBeanRegistration(definition, argument)`), which starts a resolution of its own;
-  the definition-keyed form that takes the caller's `BeanResolutionContext` is package-private on
-  `DefaultBeanContext`, and `BeanContext` has none, and a synthetic bean's creator is handed a
-  `RuntimeBeanDefinition.CreationContext` with no resolution context in it. The injection point of the lookup is
-  therefore left on a thread local around the creation (`CurrentInjectionPoint`), where the `InjectionPoint` bean
-  reads it; a public `getBeanRegistration(BeanResolutionContext, BeanDefinition, Argument)` would let it travel as
-  an attribute of the resolution instead.
+- **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
+  definition chosen within a creation is resolved within it (`RuntimeBeanDefinition.LookupContext.getBeanRegistration`
+  and `BeanResolutionContext.getBeanRegistration`): the lookup a synthetic bean's creation function is handed
+  resolves the injection point metadata so (`OwnedDependents.registrationAtCurrentPoint`), and the `InjectionPoint`
+  bean finds the point the dependent synthetic bean is created for on the path of the resolution, as it does for a
+  bean injected there. What is left is `Instance.get()` and its handles: they create the dependent bean they
+  selected by its definition (`getBeanRegistration(definition, argument)`) in a resolution of their own, since the
+  lookup is not made within the creation of a bean and `BeanContext` has no resolution context to resolve within,
+  while section 2.5.2.5 gives the bean the injection point the `Instance` was injected into, or the lookup itself.
+  That injection point is left on a thread local around the creation (`CurrentInjectionPoint`), where the
+  `InjectionPoint` bean reads it when the path has nothing to say; a definition-keyed lookup that took the
+  injection point to report, or an attribute the new resolution starts with, would let it travel with the
+  resolution instead.
 - **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
   visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
   (`CompilationState`) rather than in static fields; what belongs to one call stack rather than to the compilation,

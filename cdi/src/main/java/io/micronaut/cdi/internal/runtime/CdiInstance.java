@@ -248,8 +248,13 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             CurrentInjectionPoint.enter(lookedUpAt);
         }
         try {
-            // the definition is the one the lookup chose: resolved as it is, with no candidate lookup of its own
-            return dependents.registration(definition, askedAs(beanContext, selected, definition));
+            // the definition is the one the lookup chose: resolved as it is, with no candidate lookup of its own. One
+            // created for the point already current - the injection point metadata - is resolved within the creation
+            // the lookup is made in, where there is one, whose path says what that point is
+            Argument<U> asked = askedAs(beanContext, selected, definition);
+            return lookedUpAt == null
+                ? dependents.registrationAtCurrentPoint(definition, asked)
+                : dependents.registration(definition, asked);
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
