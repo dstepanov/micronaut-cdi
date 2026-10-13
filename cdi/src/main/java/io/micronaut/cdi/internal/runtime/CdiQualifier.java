@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.spi.CdiReflection;
+import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -29,6 +30,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -188,8 +190,101 @@ public final class CdiQualifier {
             return true;
         }
         Map<CharSequence, Object> defaults = AnnotationMetadataSupport.getDefaultValues(name);
-        return new AnnotationValue<>(name, written(values, defaults), defaults)
-            .matches(new AnnotationValue<>(name, written(others, defaults), defaults));
+        return compared(values, defaults).equals(compared(others, defaults));
+    }
+
+    /**
+     * The members in the one shape they are compared in: every member the annotation registers a default for
+     * filled in, and every value as {@link #normalized(Object)} makes it.
+     *
+     * <p>{@link AnnotationValue#matches} fills the defaults in too, but compares what it then holds with
+     * {@code equals}: an enum constant a program wrote is not the name compiled metadata holds, and a nested
+     * annotation value passes over a member the other one does not have.</p>
+     */
+    private static Map<String, Object> compared(Map<CharSequence, Object> values, Map<CharSequence, Object> defaults) {
+        Map<String, Object> compared = new LinkedHashMap<>();
+        defaults.forEach((member, value) -> compared.put(member.toString(), normalized(value)));
+        written(values, defaults).forEach((member, value) -> compared.put(member.toString(), normalized(value)));
+        // a member Micronaut keeps for itself is not one of the annotation's
+        compared.keySet().removeIf(member -> member.startsWith("$"));
+        return compared;
+    }
+
+    /**
+     * A member value in the one shape it is compared in, whether it was read from compiled metadata or given by
+     * a program: an enum constant is its name, a class is an {@link AnnotationClassValue}, an array is the list of
+     * its elements, and a nested annotation is its name and every member of it, compared the same way. The
+     * array types are listed out rather than read through {@code java.lang.reflect.Array}, which keeps the
+     * comparison free of reflection.
+     */
+    private static Object normalized(Object value) {
+        return switch (value) {
+            case AnnotationValue<?> nested -> new Nested(nested.getAnnotationName(), compared(nested.getValues(),
+                defaultsOf(nested)));
+            case Enum<?> constant -> constant.name();
+            case Class<?> type -> new AnnotationClassValue<>(type.getName());
+            case Object[] array -> {
+                List<Object> elements = new ArrayList<>(array.length);
+                for (Object element : array) {
+                    elements.add(normalized(element));
+                }
+                yield elements;
+            }
+            case int[] array -> Arrays.stream(array).boxed().toList();
+            case long[] array -> Arrays.stream(array).boxed().toList();
+            case double[] array -> Arrays.stream(array).boxed().toList();
+            case boolean[] array -> {
+                List<Object> elements = new ArrayList<>(array.length);
+                for (boolean element : array) {
+                    elements.add(element);
+                }
+                yield elements;
+            }
+            case byte[] array -> {
+                List<Object> elements = new ArrayList<>(array.length);
+                for (byte element : array) {
+                    elements.add(element);
+                }
+                yield elements;
+            }
+            case short[] array -> {
+                List<Object> elements = new ArrayList<>(array.length);
+                for (short element : array) {
+                    elements.add(element);
+                }
+                yield elements;
+            }
+            case char[] array -> {
+                List<Object> elements = new ArrayList<>(array.length);
+                for (char element : array) {
+                    elements.add(element);
+                }
+                yield elements;
+            }
+            case float[] array -> {
+                List<Object> elements = new ArrayList<>(array.length);
+                for (float element : array) {
+                    elements.add(element);
+                }
+                yield elements;
+            }
+            default -> value;
+        };
+    }
+
+    /**
+     * The defaults of a nested annotation: the ones Micronaut registered for its type, and the ones the value
+     * carries.
+     */
+    private static Map<CharSequence, Object> defaultsOf(AnnotationValue<?> nested) {
+        Map<CharSequence, Object> registered = AnnotationMetadataSupport.getDefaultValues(nested.getAnnotationName());
+        Map<CharSequence, Object> carried = nested.getDefaultValues();
+        if (carried == null || carried.isEmpty()) {
+            return registered;
+        }
+        Map<CharSequence, Object> defaults = new LinkedHashMap<>(registered);
+        defaults.putAll(carried);
+        return defaults;
     }
 
     private static Map<CharSequence, Object> without(Map<CharSequence, Object> values, Set<String> members) {
@@ -641,6 +736,16 @@ public final class CdiQualifier {
     @Override
     public String toString() {
         return "@" + name() + binding.getValues();
+    }
+
+    /**
+     * An annotation held by a member of a qualifier, compared by its name and every member: a record rather than
+     * an annotation value, whose {@code equals} passes over a member the other one does not have.
+     *
+     * @param name    The name of the annotation
+     * @param members The members, normalized
+     */
+    private record Nested(String name, Map<String, Object> members) {
     }
 
     /**
