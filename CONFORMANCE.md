@@ -584,6 +584,15 @@ are merged upstream; the remaining differences below still require adaptation or
   an occurrence that leaves the member at its default nor a member a build compatible extension marked carries it.
   The processor completes the list (`NonbindingMembersRemapper`), and the comparison leaves out a member either
   side lists.
+- **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
+  then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
+  holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
+  one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
+  compares qualifiers in one normalised shape of its own (`CdiQualifier.matches`), kept to the rules the Jakarta
+  Interceptors implementation compares bindings by - the defaults each value carries, an empty string no default
+  is recorded for read as the member left out, only `$nonBinding` and `$stereotypes` of Micronaut's members left
+  out - whose normaliser is not public yet. A structural comparison in Micronaut, or the interceptors' normaliser
+  made public, would remove the copy.
 - **Micronaut's reflective type arguments lose wildcards and type variables.** `ReflectionArguments.of(Type)`
   reads a wildcard as its bound and a type variable as its first bound, and `ReflectionArguments.toType` never
   makes a wildcard, while the rules of section 5.2.4 tell `List<? extends Number>` from `List<Number>` and a
