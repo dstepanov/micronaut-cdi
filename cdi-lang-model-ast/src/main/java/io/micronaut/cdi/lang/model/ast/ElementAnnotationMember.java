@@ -19,8 +19,6 @@ import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
@@ -230,13 +228,12 @@ public final class ElementAnnotationMember implements AnnotationMember {
         if (declaration == null) {
             return null;
         }
-        MethodElement declared = declaration
-            .getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().named(member)).stream()
-            .findFirst().orElse(null);
+        // the members as the compiler answers them: KSP answers them as properties
+        io.micronaut.inject.ast.Element declared = ElementMembers.annotationMembersOf(declaration).get(member);
         if (declared == null) {
             return null;
         }
-        ClassElement type = declared.getReturnType();
+        ClassElement type = ElementMembers.annotationMemberTypeOf(declared);
         return type.isArray() ? type.fromArray() : type;
     }
 

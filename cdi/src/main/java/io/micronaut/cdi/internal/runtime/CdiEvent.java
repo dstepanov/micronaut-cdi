@@ -81,12 +81,10 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     }
 
     /**
-     * Section 2.8.1: an event object whose runtime class declares type variables the event's own type does not
-     * resolve has no event types, and firing it is an error. Resolving is what checks it.
-     */
-    /**
      * The type of the event: the type stated in full where it was, and otherwise the class of the event object
-     * with its type variables resolved from the type the event is fired as (section 2.8.1).
+     * with its type variables resolved from the type the event is fired as (section 2.8.1). An event object whose
+     * runtime class declares type variables the event's own type does not resolve has no event types, and firing
+     * it is an error: resolving is what checks it.
      */
     private Argument<?> eventTypeOf(Object event) {
         return exact ? type : CdiTypes.eventTypeOf(registry.typeIndex(), event.getClass(), type);

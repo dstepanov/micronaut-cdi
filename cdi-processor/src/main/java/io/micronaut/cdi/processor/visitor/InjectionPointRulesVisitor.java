@@ -113,7 +113,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared())) {
             if (isInjected(field)) {
-                if (field.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+                if (SpecificationBeans.isProducer(field)) {
                     // section 3.4.1: a field is a producer or an injection point, never both
                     context.fail("A field may not be annotated both Inject and Produces (section 3.4.1)",
                         field);
@@ -130,7 +130,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
             boolean injected = isInjected(method);
-            boolean producer = method.hasDeclaredAnnotation(Cdi.PRODUCES);
+            boolean producer = SpecificationBeans.isProducer(method);
             boolean disposer = false;
             boolean observer = false;
             for (ParameterElement parameter : method.getParameters()) {
@@ -175,7 +175,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     // an injection point
                     continue;
                 }
-                checkParameter(parameter, method, producer ? isNormalScopedProducer(method) : normalScoped,
+                checkParameter(parameter, method, producer ? isNormalScopedProducer(method, context) : normalScoped,
                     disposer, observer, genericClass, element, allowedMetadataType, context);
             }
         }
@@ -317,7 +317,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
             if (field.isStatic() || field.isFinal() || isInjectedField(field)
-                || field.hasDeclaredAnnotation(Cdi.PRODUCES)
+                || SpecificationBeans.isProducer(field)
                 || field.hasStereotype("io.micronaut.context.annotation.Value")
                 || field.hasStereotype("io.micronaut.context.annotation.Property")) {
                 continue;
@@ -360,11 +360,18 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * and as the annotation that declares it a normal scope says, rather than from what the visitor that reads
      * producers writes on it: that visitor runs after this one.</p>
      */
-    private static boolean isNormalScopedProducer(MethodElement producer) {
+    private static boolean isNormalScopedProducer(MethodElement producer, VisitorContext context) {
         // read from what the member itself declares: the annotation metadata of a member carries what its class
-        // declares as well, and the class's scope is the one this must not be answered with
+        // declares as well, and the class's scope is the one this must not be answered with. A scope written on
+        // the member wins over one a stereotype carries (section 2.7.2), and that is resolved as a class's is
         io.micronaut.core.annotation.AnnotationMetadata declared = producer.getAnnotationMetadata().getDeclaredMetadata();
-        return declared.booleanValue(CdiScope.class, "normal").orElse(false)
-            || declared.hasStereotype(Cdi.NORMAL_SCOPE);
+        io.micronaut.core.annotation.AnnotationValue<CdiScope> written = declared.hasAnnotation(CdiScope.class)
+            ? declared.getAnnotation(CdiScope.class) : null;
+        if (written != null) {
+            return written.booleanValue("normal").orElse(false);
+        }
+        io.micronaut.core.annotation.AnnotationValue<CdiScope> resolved =
+            CdiScopeVisitor.scopeRecordOf(producer, context);
+        return resolved != null && resolved.booleanValue("normal").orElse(false);
     }
 }

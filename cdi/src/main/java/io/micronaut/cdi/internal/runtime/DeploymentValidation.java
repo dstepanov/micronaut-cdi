@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
@@ -50,7 +51,8 @@ import java.util.Set;
  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
  * {@code Event}, the injection point itself - are left to their own lateness, and so are injection points
- * marked nullable. Container injection points require a bean of their full declared type, just like other
+ * marked nullable. So are the types Micronaut resolves without a bean definition: the context itself, under each
+ * interface it is handed out as, and Micronaut's own injection point. Container injection points require a bean of their full declared type, just like other
  * CDI injection points.</p>
  *
  * @author Denis Stepanov
@@ -69,6 +71,22 @@ final class DeploymentValidation {
         io.micronaut.cdi.MicronautInstance.class.getName(),
         io.micronaut.cdi.MicronautEvent.class.getName(),
         io.micronaut.cdi.MicronautInjectionPoint.class.getName()
+    );
+
+    /**
+     * The interfaces Micronaut hands the context itself out as, without a bean definition for any of them: the
+     * private {@code thisInterfaces} of {@code DefaultBeanContext}, which Micronaut does not publish.
+     */
+    private static final Set<Class<?>> CONTEXT_TYPES = Set.of(
+        io.micronaut.context.BeanDefinitionRegistry.class,
+        io.micronaut.context.BeanContext.class,
+        io.micronaut.core.annotation.AnnotationMetadataResolver.class,
+        io.micronaut.context.BeanLocator.class,
+        io.micronaut.context.ExecutionHandleLocator.class,
+        io.micronaut.context.ApplicationContext.class,
+        io.micronaut.core.value.PropertyResolver.class,
+        io.micronaut.core.value.ValueResolver.class,
+        io.micronaut.context.env.PropertyPlaceholderResolver.class
     );
 
     private final CdiBeanContainer container;
@@ -136,6 +154,11 @@ final class DeploymentValidation {
         } catch (IllegalStateException e) {
             problems.add(new DeploymentException(e.getMessage(), e));
             return;
+        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
+            // a subclass of the one below, and a problem rather than the absence of the declaring bean
+            problems.add(new DeploymentException("The bean that declares the disposer method of "
+                + definition.getBeanType().getName() + " is not one bean: " + e.getMessage(), e));
+            return;
         } catch (io.micronaut.context.exceptions.NoSuchBeanException e) {
             // the bean that declares it is not one of the deployment, and neither is what it produces
             return;
@@ -176,11 +199,19 @@ final class DeploymentValidation {
      * given one by default, rather than a bean of Micronaut's own that only shares the context.
      */
     private static boolean isOfTheSpecification(BeanDefinition<?> definition) {
-        // the bean manager is a built-in bean, handed the context it belongs to rather than injected by the rules
-        // of the specification
+        // a built-in bean, such as the bean manager, is handed the context it belongs to rather than injected by
+        // the rules of the specification
         return CdiResolution.isBeanOfTheSpecification(definition)
-            && definition.getBeanType() != CdiBeanContainer.class
+            && !definition.hasAnnotation(CdiBuiltIn.class)
             && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+    }
+
+    /**
+     * Whether Micronaut resolves the type without a bean definition: the context itself, under each of the
+     * interfaces Micronaut hands it out as, and the injection point being injected.
+     */
+    private static boolean isProvidedByTheContext(Class<?> type) {
+        return CONTEXT_TYPES.contains(type) || io.micronaut.inject.InjectionPoint.class.isAssignableFrom(type);
     }
 
     /**
@@ -217,7 +248,7 @@ final class DeploymentValidation {
      * where that bean is in a normal scope and cannot be proxied.
      */
     private void validate(BeanDefinition<?> definition, Argument<?> argument) {
-        if (LAZY_KINDS.contains(argument.getType().getName())) {
+        if (LAZY_KINDS.contains(argument.getType().getName()) || isProvidedByTheContext(argument.getType())) {
             return;
         }
         if (argument.isNullable()) {

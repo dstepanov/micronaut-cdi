@@ -45,9 +45,40 @@ class GeneratedClassNamesTest {
             public class Subject {
             }
             """;
+        assertNoneTaken(new JavaParser(), source);
+    }
+
+    /**
+     * A compilation of a module - named by the group and the module Micronaut's build passes every compilation -
+     * that ran the discovery phase alone generated the classes of what it registered and no marker of the
+     * registration: a later compilation of the module does not take that compilation's name all the same.
+     */
+    @Test
+    void aCompilationOfAModuleTakesNoNameAnEarlierCompilationOfItUsed() {
+        String source = """
+            package collide;
+
+            @jakarta.enterprise.context.Dependent
+            public class SubjectOfTheModule {
+            }
+            """;
+        assertNoneTaken(new JavaParser() {
+            @Override
+            protected java.util.Set<String> getCompilerOptions() {
+                java.util.Set<String> options = new java.util.LinkedHashSet<>(super.getCompilerOptions());
+                options.add("-Amicronaut.processing.group=cditest");
+                options.add("-Amicronaut.processing.module=probe");
+                return options;
+            }
+        }, source);
+    }
+
+    private static void assertNoneTaken(JavaParser compilation, String source) {
         List<String> generated = new ArrayList<>();
-        try (JavaParser parser = new JavaParser()) {
-            for (JavaFileObject file : parser.generate("collide.Subject", source)) {
+        String className = source.substring(source.indexOf("public class ") + "public class ".length(),
+            source.indexOf(" {")).trim();
+        try (JavaParser parser = compilation) {
+            for (JavaFileObject file : parser.generate("collide." + className, source)) {
                 if (file.getKind() == JavaFileObject.Kind.CLASS) {
                     String name = file.getName();
                     name = name.substring(name.indexOf("/CLASS_OUTPUT/") + "/CLASS_OUTPUT/".length(),

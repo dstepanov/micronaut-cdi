@@ -45,7 +45,7 @@ import java.util.Set;
  * @since 1.0
  */
 @Internal
-final class ElementMembers {
+public final class ElementMembers {
 
     private static final String OBJECT = "java.lang.Object";
 
@@ -76,6 +76,38 @@ final class ElementMembers {
      */
     static List<FieldElement> fieldsOf(ClassElement clazz) {
         return declaredIn(clazz, FIELDS);
+    }
+
+    /**
+     * The members an annotation interface declares, as the elements the compiler answers them as: methods under
+     * javac and the Groovy compiler, properties under KSP, which answers the members of an annotation as its
+     * properties and no methods, a Java annotation on the classpath included.
+     *
+     * @param declaration The annotation interface
+     * @return The members, by name, in the order they are declared
+     */
+    public static java.util.Map<String, Element> annotationMembersOf(ClassElement declaration) {
+        java.util.Map<String, Element> members = new java.util.LinkedHashMap<>();
+        for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+            members.put(member.getName(), member);
+        }
+        if (members.isEmpty()) {
+            for (io.micronaut.inject.ast.PropertyElement member : declaration.getBeanProperties()) {
+                members.put(member.getName(), member);
+            }
+        }
+        return members;
+    }
+
+    /**
+     * The type a member of an annotation interface declares, as {@link #annotationMembersOf} answers the member.
+     *
+     * @param member The member
+     * @return The type
+     */
+    static ClassElement annotationMemberTypeOf(Element member) {
+        return member instanceof MethodElement method ? method.getReturnType()
+            : ((io.micronaut.inject.ast.PropertyElement) member).getType();
     }
 
     private static <T extends Element> List<T> declaredIn(ClassElement clazz, ElementQuery<T> query) {

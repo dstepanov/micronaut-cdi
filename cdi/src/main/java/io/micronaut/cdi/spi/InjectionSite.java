@@ -25,13 +25,19 @@ import java.util.List;
  *
  * <p>The types are the ones the definition of the bean compiled: a member the bean's class inherits from a
  * generic class has its type variables bound to the arguments the bean's class gives them, so a type may be a
- * subtype of the erased type the member declares.</p>
+ * subtype of the erased type the member declares, and may fit another overload of the name as well. Where the
+ * processor recorded the declaration of an injected method, the site names the class that declares it and the
+ * erasure of each parameter type it declares, which identify the method exactly.</p>
  *
- * @param declaringClass The class that declares the injection point, or a subclass of it
- * @param memberName     The name of the member, {@value #CONSTRUCTOR} for a constructor
- * @param field          Whether the member is a field
- * @param parameterTypes The erased types of the parameters of the constructor or method, empty for a field
- * @param index          The position of the injected parameter, {@code -1} for a field
+ * @param declaringClass         The class that declares the injection point, or a subclass of it
+ * @param memberName             The name of the member, {@value #CONSTRUCTOR} for a constructor
+ * @param field                  Whether the member is a field
+ * @param parameterTypes         The erased types of the parameters of the constructor or method as the definition
+ *                               compiled them, empty for a field
+ * @param index                  The position of the injected parameter, {@code -1} for a field
+ * @param declaredParameterTypes The erasure of each parameter type the method declares, by the binary name of its
+ *                               class followed by a pair of brackets for each dimension of an array, where the
+ *                               processor recorded them; empty otherwise
  * @author Denis Stepanov
  * @since 1.0
  */
@@ -39,7 +45,8 @@ public record InjectionSite(Class<?> declaringClass,
                             String memberName,
                             boolean field,
                             List<Class<?>> parameterTypes,
-                            int index) {
+                            int index,
+                            List<String> declaredParameterTypes) {
 
     /**
      * The name of a constructor, as the class file and Micronaut name it.
@@ -47,14 +54,16 @@ public record InjectionSite(Class<?> declaringClass,
     public static final String CONSTRUCTOR = "<init>";
 
     /**
-     * @param declaringClass The class that declares the injection point, or a subclass of it
-     * @param memberName     The name of the member, {@value #CONSTRUCTOR} for a constructor
-     * @param field          Whether the member is a field
-     * @param parameterTypes The erased types of the parameters of the constructor or method, empty for a field
-     * @param index          The position of the injected parameter, {@code -1} for a field
+     * @param declaringClass         The class that declares the injection point, or a subclass of it
+     * @param memberName             The name of the member, {@value #CONSTRUCTOR} for a constructor
+     * @param field                  Whether the member is a field
+     * @param parameterTypes         The erased types of the parameters as the definition compiled them
+     * @param index                  The position of the injected parameter, {@code -1} for a field
+     * @param declaredParameterTypes The erasure of each parameter type the method declares, where recorded
      */
     public InjectionSite {
         parameterTypes = List.copyOf(parameterTypes);
+        declaredParameterTypes = List.copyOf(declaredParameterTypes);
     }
 
     /**
@@ -65,7 +74,7 @@ public record InjectionSite(Class<?> declaringClass,
      * @return The site
      */
     public static InjectionSite ofField(Class<?> declaringClass, String name) {
-        return new InjectionSite(declaringClass, name, true, List.of(), -1);
+        return new InjectionSite(declaringClass, name, true, List.of(), -1, List.of());
     }
 
     /**
@@ -79,7 +88,23 @@ public record InjectionSite(Class<?> declaringClass,
      */
     public static InjectionSite ofParameter(Class<?> declaringClass, String memberName, List<Class<?>> parameterTypes,
                                             int index) {
-        return new InjectionSite(declaringClass, memberName, false, parameterTypes, index);
+        return new InjectionSite(declaringClass, memberName, false, parameterTypes, index, List.of());
+    }
+
+    /**
+     * The site of an injected parameter of a method whose declaration the processor recorded.
+     *
+     * @param declaringClass         The class that declares the method
+     * @param memberName             The name of the method
+     * @param parameterTypes         The erased types of every parameter of it, as the definition compiled them
+     * @param index                  The position of the injected parameter
+     * @param declaredParameterTypes The erasure of each parameter type the method declares
+     * @return The site
+     */
+    public static InjectionSite ofDeclaredParameter(Class<?> declaringClass, String memberName,
+                                                    List<Class<?>> parameterTypes, int index,
+                                                    List<String> declaredParameterTypes) {
+        return new InjectionSite(declaringClass, memberName, false, parameterTypes, index, declaredParameterTypes);
     }
 
     /**

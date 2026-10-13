@@ -26,16 +26,24 @@ public @interface Seen {
     String[] fieldTypeAnnotations() default {};
 
     /**
+     * @return The kind of each member of the class's annotations of this module, each as
+     * {@code Annotation.member:KIND}, and each method of their declarations, as {@code Annotation#method}
+     */
+    String[] annotationMembers() default {};
+
+    /**
      * The annotation as an instance, which is what an extension adds to a class.
      */
     final class Literal extends AnnotationLiteral<Seen> implements Seen {
 
         private final String[] classAnnotations;
         private final String[] fieldTypeAnnotations;
+        private final String[] annotationMembers;
 
-        public Literal(String[] classAnnotations, String[] fieldTypeAnnotations) {
+        public Literal(String[] classAnnotations, String[] fieldTypeAnnotations, String[] annotationMembers) {
             this.classAnnotations = classAnnotations;
             this.fieldTypeAnnotations = fieldTypeAnnotations;
+            this.annotationMembers = annotationMembers;
         }
 
         @Override
@@ -46,6 +54,11 @@ public @interface Seen {
         @Override
         public String[] fieldTypeAnnotations() {
             return fieldTypeAnnotations;
+        }
+
+        @Override
+        public String[] annotationMembers() {
+            return annotationMembers;
         }
     }
 }

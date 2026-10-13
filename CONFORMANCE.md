@@ -193,15 +193,16 @@ but the accessors of a `java.lang.reflect.Type` it was handed and the making of 
 `io.micronaut.cdi.internal.type`, which such a type is reported as. The
 methods of the specification that return a reflection object, or that can only be answered from one, are
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
-module: `InjectionPoint.getMember()`, `getAnnotated()` and `isTransient()`; the qualifiers and interceptor
+module: `InjectionPoint.getMember()` and `getAnnotated()`; the qualifiers and interceptor
 bindings of a bean, an injection point, an observer or an event reported as annotation instances, for an
 annotation that is not one of the specification's and whose type the application did not list in
 `@RegisterAnnotations` (Micronaut Core generates a builder for a type listed there, which makes the instance
-without reflection); an annotation literal with binding members handed to a
-lookup; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an annotation the
-build recorded nothing of; `getStereotypeDefinition` and `getInterceptorBindingDefinition`; and the generic
-hierarchy of a class no compilation with this processor has seen. Everything else - resolution, injection,
-events, interception, the contexts, what an extension registered - needs only `micronaut-cdi`, and
+without reflection); an annotation literal with binding members handed to a lookup, unless it carries its
+values as an instance such a builder made does; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and
+`isInterceptorBinding` for an annotation the build recorded nothing of; `getStereotypeDefinition` and
+`getInterceptorBindingDefinition`; and the generic hierarchy of a class no compilation with this processor has
+seen. Everything else - resolution, injection, events, interception, the contexts, what an extension registered -
+needs only `micronaut-cdi`, and
 `MicronautInstance`, `MicronautEvent` and `MicronautBeanContainer` give the selections a reflection-free form.
 
 ### The application context is destroyed as the context begins to stop
@@ -568,8 +569,13 @@ are merged upstream; the remaining differences below still require adaptation or
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
-  annotation interface as its properties rather than its methods, which is where the processor reads them from
-  there (`NonbindingMembersRemapper.membersOf`).
+  annotation interface as its properties rather than its methods, which is where the processor and the language
+  model read them from there (`ElementMembers.annotationMembersOf`).
+- **`AnnotationElement` cannot list the members of an annotation interface.** There is no query of Micronaut's AST
+  that answers the members of an annotation interface under every compiler: javac and the Groovy compiler answer
+  them as methods, KSP as properties and no methods. The members are enumerated one way or the other in one place
+  (`ElementMembers.annotationMembersOf`), which the processor's non-binding members and the language model's
+  annotation members and methods read; a member query on `AnnotationElement` would remove it.
 - **Micronaut's annotation qualifiers match by the name of the bean.** `AnnotationMetadataQualifier` and
   `AnnotationQualifier` fall back to matching the simple name of the annotation against the simple name of the
   candidate's class where the candidate does not carry the annotation, so `Qualifiers.byAnnotation` for a
@@ -584,6 +590,15 @@ are merged upstream; the remaining differences below still require adaptation or
   an occurrence that leaves the member at its default nor a member a build compatible extension marked carries it.
   The processor completes the list (`NonbindingMembersRemapper`), and the comparison leaves out a member either
   side lists.
+- **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
+  then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
+  holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
+  one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
+  compares qualifiers in one normalised shape of its own (`CdiQualifier.matches`), kept to the rules the Jakarta
+  Interceptors implementation compares bindings by - the defaults each value carries, an empty string no default
+  is recorded for read as the member left out, only `$nonBinding` and `$stereotypes` of Micronaut's members left
+  out - whose normaliser is not public yet. A structural comparison in Micronaut, or the interceptors' normaliser
+  made public, would remove the copy.
 - **Micronaut's reflective type arguments lose wildcards and type variables.** `ReflectionArguments.of(Type)`
   reads a wildcard as its bound and a type variable as its first bound, and `ReflectionArguments.toType` never
   makes a wildcard, while the rules of section 5.2.4 tell `List<? extends Number>` from `List<Number>` and a
@@ -630,6 +645,13 @@ are merged upstream; the remaining differences below still require adaptation or
   it describes or validates the injection points; a parameter of any other constructor or method so named is the
   author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
   remove the copy.
+- **The context is injected under types no bean definition stands for.** `DefaultBeanContext` hands itself out as
+  `BeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`, `ExecutionHandleLocator`,
+  `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and `PropertyPlaceholderResolver`, listed in
+  its private `thisInterfaces`, and resolves `io.micronaut.inject.InjectionPoint` from the resolution under way;
+  none of them has a definition the container could see. The deployment validation, which resolves an injection
+  point by the definitions, therefore keeps a copy of that list (`DeploymentValidation.CONTEXT_TYPES`); a public
+  list, or a definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

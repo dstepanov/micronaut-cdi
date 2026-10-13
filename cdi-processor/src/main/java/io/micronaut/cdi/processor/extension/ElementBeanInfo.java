@@ -68,13 +68,9 @@ public final class ElementBeanInfo implements InterceptorInfo {
      * bean of its own accord, and the markers {@code Any} and {@code Default} are read into, which are reported
      * as themselves.
      */
-    private static final java.util.Set<String> NOT_QUALIFIERS_OF_THE_BEAN = java.util.Set.of(
+    private static final java.util.Set<String> NOT_QUALIFIERS_OF_THE_BEAN = Cdi.withMicronautQualifiers(
         Cdi.ANY,
-        io.micronaut.cdi.internal.metadata.CdiAny.class.getName(),
-        "io.micronaut.context.annotation.Primary",
-        "io.micronaut.context.annotation.Secondary",
-        "io.micronaut.context.annotation.Any",
-        "io.micronaut.context.annotation.Type"
+        io.micronaut.cdi.internal.metadata.CdiAny.class.getName()
     );
 
     private final ClassElement declaringClass;
@@ -95,10 +91,19 @@ public final class ElementBeanInfo implements InterceptorInfo {
     @Override
     public java.util.Collection<jakarta.enterprise.lang.model.AnnotationInfo> interceptorBindings() {
         java.util.List<jakarta.enterprise.lang.model.AnnotationInfo> bindings = new java.util.ArrayList<>();
-        for (String name : declaringClass.getAnnotationMetadata()
-            .getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
-            io.micronaut.core.annotation.AnnotationValue<?> value =
-                declaringClass.getAnnotationMetadata().getAnnotation(name);
+        io.micronaut.core.annotation.AnnotationMetadata metadata = declaringClass.getAnnotationMetadata();
+        for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
+            // every occurrence of a repeatable binding, as the container reports them
+            List<io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation>> occurrences =
+                metadata.getAnnotationValuesByName(name);
+            if (!occurrences.isEmpty()) {
+                for (io.micronaut.core.annotation.AnnotationValue<?> occurrence : occurrences) {
+                    bindings.add(new ElementAnnotationInfo(occurrence, context));
+                }
+                continue;
+            }
+            // a binding only a stereotype carries
+            io.micronaut.core.annotation.AnnotationValue<?> value = metadata.getAnnotation(name);
             if (value != null) {
                 bindings.add(new ElementAnnotationInfo(value, context));
             }
@@ -131,6 +136,17 @@ public final class ElementBeanInfo implements InterceptorInfo {
     }
 
     /**
+     * What the bean was declared with: the annotations of the class, or of the producer alone. The metadata of a
+     * method carries its class's as well, and the class's scope, name or {@code Typed} are not the producer's.
+     */
+    private io.micronaut.core.annotation.AnnotationMetadata declared() {
+        if (producer instanceof MethodElement method) {
+            return method.getMethodAnnotationMetadata();
+        }
+        return declaration().getAnnotationMetadata();
+    }
+
+    /**
      * The type of the bean, which is the class itself or what the producer produces.
      *
      * @return The type
@@ -147,12 +163,8 @@ public final class ElementBeanInfo implements InterceptorInfo {
 
     @Override
     public ScopeInfo scope() {
-        String scope = declaration().getAnnotationMetadata()
-            .stringValue(CdiScope.class)
-            .orElse(Cdi.DEPENDENT);
-        boolean normal = declaration().getAnnotationMetadata()
-            .booleanValue(CdiScope.class, "normal")
-            .orElse(false);
+        String scope = declared().stringValue(CdiScope.class).orElse(Cdi.DEPENDENT);
+        boolean normal = declared().booleanValue(CdiScope.class, "normal").orElse(false);
         return new ElementScopeInfo(scope, normal);
     }
 
@@ -164,10 +176,12 @@ public final class ElementBeanInfo implements InterceptorInfo {
     @Override
     public Collection<Type> types() {
         java.util.Set<Type> closure = new java.util.LinkedHashSet<>();
-        collect(beanType(), closure, context);
+        // the closure the container records, the supertypes of a raw type erased
+        io.micronaut.cdi.processor.visitor.BeanTypesVisitor.walkClosure(beanType(), (type, bindings, erased) ->
+            closure.add(erased ? ElementTypes.rawClassOf(type, List.of(), context) : ElementTypes.of(type, context)));
         java.util.Set<String> narrowed = new java.util.HashSet<>(java.util.Arrays.asList(
-            declaration().getAnnotationMetadata().stringValues("jakarta.enterprise.inject.Typed")));
-        boolean typed = declaration().hasAnnotation("jakarta.enterprise.inject.Typed");
+            declared().stringValues("jakarta.enterprise.inject.Typed")));
+        boolean typed = declared().hasAnnotation("jakarta.enterprise.inject.Typed");
         List<Type> types = new ArrayList<>();
         for (Type type : closure) {
             if (typed && !narrowed.contains(nameOf(type))) {
@@ -181,16 +195,20 @@ public final class ElementBeanInfo implements InterceptorInfo {
         return types;
     }
 
-    private static void collect(@Nullable ClassElement type, java.util.Set<Type> types, VisitorContext context) {
-        if (type == null || ("java.lang.Object".equals(type.getName()) && !type.isArray())) {
-            return;
+    /**
+     * Whether a type of the given class is among the bean types, as a registration method asks for the beans of a
+     * type: what {@code Typed} leaves out is not.
+     *
+     * @param className The binary name of the class
+     * @return Whether the bean has a type of the class
+     */
+    boolean hasTypeOfClass(String className) {
+        for (Type type : types()) {
+            if (className.equals(nameOf(type))) {
+                return true;
+            }
         }
-        types.add(ElementTypes.of(type, context));
-        if (type.isArray() || type.isPrimitive()) {
-            return;
-        }
-        type.getInterfaces().forEach(each -> collect(each, types, context));
-        type.getSuperType().ifPresent(each -> collect(each, types, context));
+        return false;
     }
 
     private static String nameOf(Type type) {
@@ -274,11 +292,14 @@ public final class ElementBeanInfo implements InterceptorInfo {
     }
 
     /**
-     * Whether the bean is an alternative, written so or through a stereotype, as the container reads it.
+     * Whether the bean is an alternative, written so or through a stereotype, as the container reads it: a
+     * producer is one where it is declared one or its class is.
      */
     @Override
     public boolean isAlternative() {
-        return declaration().hasAnnotation(Cdi.ALTERNATIVE) || declaration().hasStereotype(Cdi.ALTERNATIVE);
+        boolean declaredOne = declared().hasAnnotation(Cdi.ALTERNATIVE) || declared().hasStereotype(Cdi.ALTERNATIVE);
+        return producer == null ? declaredOne
+            : declaredOne || declaringClass.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE);
     }
 
     /**
@@ -287,7 +308,7 @@ public final class ElementBeanInfo implements InterceptorInfo {
      */
     @Override
     public @Nullable Integer priority() {
-        java.util.OptionalInt declared = declaration().getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
+        java.util.OptionalInt declared = declared().intValue(Cdi.PRIORITY, "value");
         if (declared.isEmpty() && producer != null) {
             declared = declaringClass.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
         }
@@ -296,9 +317,9 @@ public final class ElementBeanInfo implements InterceptorInfo {
 
     @Override
     public @Nullable String name() {
-        return declaration().getAnnotationMetadata().stringValue("jakarta.inject.Named")
+        return declared().stringValue("jakarta.inject.Named")
             // a stereotype-supplied default name is recorded as CdiName, with no Named materialized
-            .or(() -> declaration().getAnnotationMetadata().stringValue(CdiName.class))
+            .or(() -> declared().stringValue(CdiName.class))
             .orElse(null);
     }
 

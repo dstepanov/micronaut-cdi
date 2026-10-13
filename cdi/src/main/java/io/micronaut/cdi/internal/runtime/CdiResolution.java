@@ -21,6 +21,7 @@ import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -173,6 +174,88 @@ public final class CdiResolution {
             beans.add(definition);
         }
         return beans;
+    }
+
+    /**
+     * The definitions among the given ones that no other among them replaces with Micronaut's {@code Replaces}:
+     * what Micronaut leaves out of the candidates of a lookup, by the replacement each definition describes, so
+     * that the bean manager resolves a type to the beans a lookup or an injection point resolves it to.
+     *
+     * @param definitions The definitions a type resolved to
+     * @param <D>         The definition type
+     * @return The definitions that are not replaced, the given collection itself where none is
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <D extends BeanDefinition<?>> Collection<D> withoutReplaced(Collection<D> definitions) {
+        if (definitions.size() < 2) {
+            return definitions;
+        }
+        List<D> replacing = new ArrayList<>(1);
+        for (D definition : definitions) {
+            if (definition.getReplacesDefinition() != null) {
+                replacing.add(definition);
+            }
+        }
+        if (replacing.isEmpty()) {
+            return definitions;
+        }
+        List<D> kept = new ArrayList<>(definitions.size());
+        for (D definition : definitions) {
+            if (!isReplaced((BeanDefinition) definition, (List) replacing)) {
+                kept.add(definition);
+            }
+        }
+        return kept;
+    }
+
+    private static boolean isReplaced(BeanDefinition<Object> definition, List<BeanDefinition<Object>> replacing) {
+        if (!definition.isCanBeReplaced()) {
+            return false;
+        }
+        for (BeanDefinition<Object> replacement : replacing) {
+            io.micronaut.inject.ReplacesDefinition<Object> replaces = replacement.getReplacesDefinition();
+            boolean proxyOfIt = replacement instanceof ProxyBeanDefinition<?> proxy
+                && proxy.getTargetDefinitionType() == definition.getClass();
+            if (replacement != definition && !proxyOfIt && replaces != null && replaces.replaces(definition)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The bean a class declares, which a disposer method or an invoker the class declares is invoked on: among the
+     * beans of the given definitions, the one whose class is exactly the named class. A selected alternative that
+     * extends the class is another bean, and so is one a producer makes of the class; a bean in a normal scope is
+     * its client proxy, which carries the executable methods of the class too.
+     *
+     * @param candidates The definitions to look among, which may be every definition of the context
+     * @param className  The name of the declaring class
+     * @return The definition, or {@code null} where no bean is of the class
+     * @throws io.micronaut.context.exceptions.NonUniqueBeanException Where more than one bean is of the class
+     */
+    public static @Nullable BeanDefinition<?> declaringBeanOf(Collection<? extends BeanDefinition<?>> candidates,
+                                                              String className) {
+        List<BeanDefinition<?>> found = new ArrayList<>(1);
+        for (BeanDefinition<?> candidate : beansAmong(new ArrayList<BeanDefinition<?>>(candidates))) {
+            Class<?> beanClass = candidate instanceof ProxyBeanDefinition<?> proxy
+                ? proxy.getTargetType() : candidate.getBeanType();
+            if (beanClass.getName().equals(className)
+                && !candidate.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
+                found.add(candidate);
+            }
+        }
+        if (found.size() > 1) {
+            throw nonUnique(found);
+        }
+        return found.isEmpty() ? null : found.get(0);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static io.micronaut.context.exceptions.NonUniqueBeanException nonUnique(List<BeanDefinition<?>> found) {
+        List raw = found;
+        return new io.micronaut.context.exceptions.NonUniqueBeanException(found.get(0).getBeanType(),
+            ((List<BeanDefinition<Object>>) raw).iterator());
     }
 
     /**

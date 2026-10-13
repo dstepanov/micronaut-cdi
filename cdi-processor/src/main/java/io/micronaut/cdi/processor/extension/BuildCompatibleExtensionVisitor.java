@@ -84,6 +84,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final String CONTEXTS = "RegisteredContexts";
     private static final String REGISTERED_QUALIFIERS = "RegisteredQualifiers";
     private static final String SCANNED_CLASSES = "ScannedClassesImport";
+    /**
+     * The names of every class a compilation generates, before the suffix that tells the compilation's apart.
+     */
+    private static final List<String> GENERATED_NAMES = List.of(TRIGGER, TRIGGER + "Again", COMPONENTS, CONTEXTS,
+        REGISTERED_QUALIFIERS, SCANNED_CLASSES);
     private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
@@ -109,6 +114,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean contextBeansWritten;
     private boolean importedClassesPending;
     private boolean synthesized;
+    /**
+     * The classes described to the registration phase already: a class the discovery phase scanned is visited as
+     * it is compiled and again as the generated import names it.
+     */
+    private final java.util.Set<String> registered = new java.util.HashSet<>();
     private boolean triggerWritten;
     private @org.jspecify.annotations.Nullable String pendingTrigger;
     private final TypeIndexCollector typeIndex = new TypeIndexCollector();
@@ -625,12 +635,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         for (int taken = 0; taken < MAX_COMPILATIONS_OF_A_MODULE; taken++) {
             String candidate = Integer.toHexString(
                 (taken == 0 ? compilation : compilation + "#" + taken).hashCode());
-            if (context.getClassElement(GENERATED + "." + TRIGGER + candidate).isEmpty()
-                && context.getClassElement(GENERATED + "." + CONTEXTS + candidate).isEmpty()) {
+            if (isUnused(candidate, context)) {
                 return candidate;
             }
         }
         return Integer.toHexString(firstClass.hashCode());
+    }
+
+    /**
+     * Whether no class the compilation could generate is named with the suffix on the class path: a compilation
+     * that ran some of the phases alone - the discovery phase, which records the qualifiers and the scanned
+     * classes - generated some of the classes and none of the others.
+     */
+    private static boolean isUnused(String suffix, VisitorContext context) {
+        for (String generated : GENERATED_NAMES) {
+            if (context.getClassElement(GENERATED + "." + generated + suffix).isPresent()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -675,6 +698,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             context.fail("The generic hierarchies of the compiled classes were not recorded, and the synthesis and "
                 + "validation phases of the build compatible extensions did not run: the compilation never "
                 + "compiled the source generated to mark the end of registration", null);
+        }
+        if (context.getLanguage() != VisitorContext.Language.JAVA
+            && CompilationState.get(context, VISITOR, BuildCompatibleExtensionVisitor.class) == this) {
+            // the Groovy compiler keeps the attributes of every compilation in one static map, which would hold
+            // the visitor, and everything it read, for as long as the process runs
+            CompilationState.take(context, VISITOR, BuildCompatibleExtensionVisitor.class);
         }
     }
 
@@ -789,13 +818,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
         if (registrars.isEmpty() || element.isAbstract() || element.isInterface()
-            || element.hasStereotype("jakarta.enterprise.inject.Vetoed")) {
+            || io.micronaut.cdi.processor.visitor.SpecificationBeans.isVetoed(element)) {
+            return;
+        }
+        if (!registered.add(element.getName())) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
-        if ((element.hasStereotype(CdiScope.class)
-            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor"))
-            && io.micronaut.cdi.processor.visitor.SpecificationBeans.hasABeanConstructor(element)) {
+        if (io.micronaut.cdi.processor.visitor.SpecificationBeans.isClassBean(element)) {
             beans.add(new ElementBeanInfo(element, null, context));
         }
         for (io.micronaut.inject.ast.MemberElement producer
@@ -848,10 +878,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (discovered.isScanned(element.getName())
             && !element.getAnnotationMetadata().hasStereotype("jakarta.inject.Scope")
             && !element.getAnnotationMetadata().hasStereotype(CdiScope.class)) {
-            // added to the scanned classes during discovery: a bean as though it declared the dependent
-            // scope. Only the prototype pseudo-scope is written — a scope a stereotype gives the class must
-            // win, and a bean with nothing else reports the dependent scope anyway
-            element.annotate("io.micronaut.context.annotation.Prototype");
+            // added to the scanned classes during discovery: a bean as though it declared the dependent scope,
+            // recorded as one so that it is a bean of the specification - described to the registration phase and
+            // validated as any. Written only where nothing gives the class a scope: a stereotype's must win
+            for (AnnotationValue<?> annotation : io.micronaut.cdi.processor.CdiScopes.annotationsOf(
+                io.micronaut.cdi.processor.Cdi.DEPENDENT, false)) {
+                element.annotate(annotation);
+            }
         }
         for (AnnotationValue<?> annotation : discovered.annotationsFor(element.getName())) {
             element.annotate(annotation);
@@ -877,8 +910,21 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private record Registrar(BuildCompatibleExtension extension, Method method, Registration registration) {
 
+        /**
+         * Whether the method asks to be told about the bean: a method that asks for a bean asks about any, one
+         * that asks for an interceptor about an interceptor alone, and either about the ones that have a type it
+         * names among their bean types.
+         */
         private boolean matches(ElementBeanInfo bean) {
-            return asksForBeans(true) && matches(bean.beanType());
+            if (!asksForBeans(false) && !(bean.isInterceptor() && asksForBeans(true))) {
+                return false;
+            }
+            for (Class<?> asked : registration.types()) {
+                if (bean.hasTypeOfClass(asked.getName())) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
@@ -917,7 +963,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
 
         private boolean matchesObserver(ElementObserverInfo observer) {
-            return asksForObservers() && matches(observer.observedParameter().getGenericType());
+            return asksForObservers() && matches(observer.observedType());
         }
 
         private void describeObserver(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo observer,

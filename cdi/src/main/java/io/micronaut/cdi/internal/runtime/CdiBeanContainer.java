@@ -71,6 +71,7 @@ import java.util.Set;
  * @since 1.0
  */
 @io.micronaut.context.annotation.Context
+@io.micronaut.cdi.internal.metadata.CdiBuiltIn
 @io.micronaut.cdi.internal.metadata.CdiScope("jakarta.enterprise.context.Dependent")
 @jakarta.enterprise.inject.Default
 @Internal
@@ -283,7 +284,30 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 beans.add(bean);
             }
         }
-        return beans;
+        return withoutReplaced(beans);
+    }
+
+    /**
+     * The beans less the ones another among them replaces with Micronaut's {@code Replaces}, which Micronaut
+     * leaves out of the candidates of a lookup and an injection point alike.
+     */
+    private static Set<Bean<?>> withoutReplaced(Set<Bean<?>> beans) {
+        if (beans.size() < 2) {
+            return beans;
+        }
+        Map<BeanDefinition<?>, Bean<?>> byDefinition = new java.util.LinkedHashMap<>();
+        for (Bean<?> bean : beans) {
+            byDefinition.put(((CdiBean<?>) bean).definition(), bean);
+        }
+        java.util.Collection<BeanDefinition<?>> kept = CdiResolution.withoutReplaced(byDefinition.keySet());
+        if (kept == byDefinition.keySet()) {
+            return beans;
+        }
+        Set<Bean<?>> remaining = new LinkedHashSet<>();
+        for (BeanDefinition<?> definition : kept) {
+            remaining.add(byDefinition.get(definition));
+        }
+        return remaining;
     }
 
     /**
@@ -366,16 +390,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * Every bean of the container, read once from the compiled definitions.
-     *
-     * <p>The programmatic lookup of section 2.4.2 asks for the beans a type and some qualifiers make eligible,
-     * before anything is resolved among them: a selected alternative and the bean it outranks are both in the
-     * answer, and choosing between them is what {@link #resolve} is for. Micronaut's own lookups resolve as
-     * they go, so this reads the definition references directly — everything that was compiled, minus what is
-     * disabled and minus what an environment narrowed away — and lets the rules of the specification decide
-     * eligibility.</p>
-     */
-    /**
      * The container's own bean for the given definition, so that everyone who describes the same bean holds
      * the same object: the one {@code getBeans} answers with.
      *
@@ -449,6 +463,16 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return candidates();
     }
 
+    /**
+     * Every bean of the container, read once from the compiled definitions.
+     *
+     * <p>The programmatic lookup of section 2.4.2 asks for the beans a type and some qualifiers make eligible,
+     * before anything is resolved among them: a selected alternative and the bean it outranks are both in the
+     * answer, and choosing between them is what {@link #resolve} is for. Micronaut's own lookups resolve as
+     * they go, so this reads the definition references directly — everything that was compiled, minus what is
+     * disabled and minus what an environment narrowed away — and lets the rules of the specification decide
+     * eligibility.</p>
+     */
     private List<CdiBean<?>> candidates() {
         List<CdiBean<?>> resolved = beans;
         if (resolved != null) {
@@ -607,17 +631,18 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         // compared as the interceptor chains compare them, so that what is reported here is what runs
         io.micronaut.interceptor.spi.InterceptorBindings given = io.micronaut.interceptor.spi.InterceptorBindings
             .ofValues(bindingValuesOf(CdiQualifier.ofInstances(types(), interceptorBindings)));
+        // found as the interceptors implementation finds the ones bound to an element: through the type it indexes
+        // every interceptor class by, narrowed by the bindings, rather than among every bean
         List<CdiInterceptor<?>> resolved = new java.util.ArrayList<>();
-        for (CdiBean<?> candidate : candidates()) {
-            BeanDefinition<?> definition = candidate.definition();
+        for (BeanDefinition<?> definition : CdiResolution.beansAmong(beanContext.getBeanDefinitions(
+            io.micronaut.interceptor.internal.metadata.JakartaInterceptorIndex.class,
+            io.micronaut.interceptor.spi.InterceptorBindings.boundTo(given)))) {
             if (!definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor")) {
+                // a class that declares interceptor methods without being an interceptor class is bound by nothing
                 continue;
             }
             CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
-            if (!interceptor.isEnabled() || !interceptor.intercepts(type)) {
-                continue;
-            }
-            if (interceptor.recordedBindings().isBoundBy(given)) {
+            if (interceptor.isEnabled() && interceptor.intercepts(type)) {
                 resolved.add(interceptor);
             }
         }

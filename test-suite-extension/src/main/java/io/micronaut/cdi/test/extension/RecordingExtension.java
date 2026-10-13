@@ -32,7 +32,17 @@ public final class RecordingExtension implements BuildCompatibleExtension {
                 fieldTypeAnnotations.add(field.name() + ":" + annotation.name());
             }
         }
+        List<String> annotationMembers = new ArrayList<>();
+        for (AnnotationInfo annotation : config.info().annotations()) {
+            if (!annotation.name().startsWith("io.micronaut.cdi.test.extension.")) {
+                continue;
+            }
+            String simple = annotation.declaration().simpleName();
+            annotation.members().forEach((name, value) ->
+                annotationMembers.add(simple + "." + name + ":" + value.kind()));
+            annotation.declaration().methods().forEach(method -> annotationMembers.add(simple + "#" + method.name()));
+        }
         config.addAnnotation(new Seen.Literal(classAnnotations.toArray(String[]::new),
-            fieldTypeAnnotations.toArray(String[]::new)));
+            fieldTypeAnnotations.toArray(String[]::new), annotationMembers.toArray(String[]::new)));
     }
 }

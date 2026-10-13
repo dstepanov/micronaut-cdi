@@ -183,7 +183,7 @@ public final class RecordedSynthesis {
             // extension registered — so that the instance lives and dies with the context rather than being
             // held as a raw singleton or created afresh for every asker
             builder.singleton(false);
-            builder.scope(contextScopeOf(scope));
+            builder.scope(ExtensionContexts.servedBy(scope));
         } else {
             // the dependent default of section 2.10.5: created afresh for whoever asks
             builder.singleton(false);
@@ -211,20 +211,6 @@ public final class RecordedSynthesis {
     }
 
     /**
-     * The scope annotation whose context holds the bean: the specification's built-in scopes are served by
-     * this module's own contexts, and a scope an extension registered is served by the context it registered.
-     */
-    private static Class<? extends Annotation> contextScopeOf(Class<? extends Annotation> scope) {
-        return switch (scope.getName()) {
-            case "jakarta.enterprise.context.ApplicationScoped" ->
-                io.micronaut.cdi.internal.metadata.CdiApplicationScope.class;
-            case "jakarta.enterprise.context.RequestScoped" ->
-                io.micronaut.cdi.internal.metadata.CdiRequestScope.class;
-            default -> scope;
-        };
-    }
-
-    /**
      * Disposes of an instance of a synthetic bean the way the extension said to (section 2.10.5).
      */
     private <T> void dispose(BeanDefinition<SyntheticBeanDisposer<T>> disposerDefinition,
@@ -241,7 +227,10 @@ public final class RecordedSynthesis {
     /**
      * The lookup handed to a creation or a disposal function, which creates what it looks up on behalf of the
      * synthetic bean: the dependent instances are destroyed with the created bean, or as the disposal returns.
-     * Where the context tracks no dependents of a bean, the lookup owns them, and closing it destroys them.
+     * Where the context tracks no dependents of a bean - a context other than Micronaut's own, whose creation
+     * context hands out no resolver - the lookup owns them in a group of its own: the disposal closes it as it
+     * returns, and the lookup a creation was handed is not closed, as Micronaut destroys nothing a bean it does not
+     * track the dependents of looked up.
      */
     private CdiInstance<Object> lookupFor(RuntimeBeanDefinition.LookupContext lookupContext) {
         io.micronaut.context.BeanDependencyResolver resolver;

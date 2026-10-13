@@ -174,4 +174,17 @@ public final class Cdi {
         java.util.OptionalInt declared = metadata.intValue(PRIORITY, "value");
         return declared.isPresent() ? declared.getAsInt() : null;
     }
+
+    /**
+     * The given qualifier names and the ones Micronaut writes on a bean of its own accord, which the container
+     * leaves out of a bean's qualifiers as well ({@link io.micronaut.cdi.internal.metadata.MicronautQualifiers}).
+     *
+     * @param names The names
+     * @return The names, with Micronaut's own
+     */
+    public static java.util.Set<String> withMicronautQualifiers(String... names) {
+        java.util.Set<String> all = new java.util.HashSet<>(java.util.Arrays.asList(names));
+        all.addAll(io.micronaut.cdi.internal.metadata.MicronautQualifiers.NAMES);
+        return java.util.Set.copyOf(all);
+    }
 }

@@ -106,27 +106,45 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     }
 
     /**
-     * Collects the type closure of a type: the type, the interfaces it implements and the class it extends, and
+     * Collects the type closure of a type, as {@link #walkClosure} walks it.
+     */
+    private static void collect(ClassElement type, java.util.Map<String, ClassElement> bindings,
+                                List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds,
+                                boolean erased) {
+        walk(type, bindings, erased, (member, memberBindings, memberErased) -> {
+            if (memberErased) {
+                closure.add(RecordedTypeValues.ofErasure(member));
+            } else {
+                closure.add(erasedBounds ? RecordedTypeValues.ofBeanType(member, memberBindings)
+                    : RecordedTypeValues.of(member, memberBindings));
+            }
+        });
+    }
+
+    /**
+     * Walks the type closure of a type: the type, the interfaces it implements and the class it extends, and
      * theirs in turn, each with the variables it names bound to what the type below it gives them. An array
      * and a primitive have no closure beyond themselves, and {@code Object}, which every closure ends in, is
      * left for the reader to add once.
      *
      * <p>The supertypes of a raw type are erased, as the language has them (JLS 4.8): a raw {@code Box} that
      * implements {@code View<T>} is a {@code View}, not a {@code View<T>} that any lookup of a {@code View} would
-     * match.</p>
+     * match. What records the closure for the container and what describes it to the registration phase both
+     * walk it here, so that the two agree.</p>
+     *
+     * @param type   The type
+     * @param member What is done with each type of the closure
      */
-    private static void collect(ClassElement type, java.util.Map<String, ClassElement> bindings,
-                                List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds,
-                                boolean erased) {
+    public static void walkClosure(ClassElement type, ClosureMember member) {
+        walk(type, java.util.Map.of(), false, member);
+    }
+
+    private static void walk(ClassElement type, java.util.Map<String, ClassElement> bindings, boolean erased,
+                             ClosureMember member) {
         if ("java.lang.Object".equals(type.getName()) && !type.isArray()) {
             return;
         }
-        if (erased) {
-            closure.add(RecordedTypeValues.ofErasure(type));
-        } else {
-            closure.add(erasedBounds ? RecordedTypeValues.ofBeanType(type, bindings)
-                : RecordedTypeValues.of(type, bindings));
-        }
+        member.accept(type, bindings, erased);
         if (type.isArray() || type.isPrimitive()) {
             return;
         }
@@ -140,8 +158,24 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
             own.put(name, bound != null ? bound : argument);
         });
         for (ClassElement anInterface : type.getInterfaces()) {
-            collect(anInterface, own, closure, erasedBounds, raw);
+            walk(anInterface, own, raw, member);
         }
-        type.getSuperType().ifPresent(superType -> collect(superType, own, closure, erasedBounds, raw));
+        type.getSuperType().ifPresent(superType -> walk(superType, own, raw, member));
+    }
+
+    /**
+     * What is done with one type of a type closure.
+     */
+    @FunctionalInterface
+    public interface ClosureMember {
+
+        /**
+         * Takes one type of the closure.
+         *
+         * @param type     The type, as the type below it names it
+         * @param bindings What the type below it gives the variables the type names
+         * @param erased   Whether the type is erased, being a supertype of a raw type
+         */
+        void accept(ClassElement type, java.util.Map<String, ClassElement> bindings, boolean erased);
     }
 }

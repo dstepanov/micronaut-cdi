@@ -56,6 +56,13 @@ import java.util.Set;
 @Internal
 public final class ReflectiveCdi implements CdiReflection {
 
+    /**
+     * The primitive types, by the names a recorded parameter type names them by.
+     */
+    private static final Map<String, Class<?>> PRIMITIVES = Map.of(
+        "boolean", boolean.class, "byte", byte.class, "char", char.class, "short", short.class, "int", int.class,
+        "long", long.class, "float", float.class, "double", double.class);
+
     @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A annotation(Class<A> type, @Nullable AnnotationValue<?> value) {
@@ -223,13 +230,100 @@ public final class ReflectiveCdi implements CdiReflection {
             return exact != null ? exact
                 : declaredFor(site.declaringClass().getDeclaredConstructors(), parameterTypes);
         }
+        if (!site.declaredParameterTypes().isEmpty() || site.parameterTypes().isEmpty()) {
+            // the processor recorded the declaration itself: the class that declares the method, and the erasure of
+            // the parameter types it declares
+            Class<?>[] declared = declaredTypesOf(site);
+            if (declared != null) {
+                java.lang.reflect.Method exact = ReflectionUtils.findMethod(site.declaringClass(), site.memberName(),
+                    declared).orElse(null);
+                if (exact != null) {
+                    return exact;
+                }
+            }
+        }
         // a bean's definition compiles the parameters of a method its class inherits with the type arguments the
         // class gives the type variables of the class above it, so T[] of Bar<T> is compiled as String[] for
         // Foo extends Bar<String>, which the erased Object[] the method declares is assignable from. Micronaut finds
-        // the declaration the compiled types resolve to, through the superclasses and the interfaces, the most
-        // specific one where an overload fits them as well
-        return ReflectionExecutables.findMethod(site.declaringClass(), site.memberName(), parameterTypes)
-            .orElse(null);
+        // the declaration the compiled types resolve to, through the superclasses and the interfaces; where another
+        // declaration fits them as well, nothing tells which of them was injected, and none is answered
+        java.lang.reflect.Method found = ReflectionExecutables.findMethod(site.declaringClass(), site.memberName(),
+            parameterTypes).orElse(null);
+        if (found == null || java.util.Arrays.equals(found.getParameterTypes(), parameterTypes)) {
+            // a declaration of the compiled types themselves is the one: no other of its name declares them
+            return found;
+        }
+        return isTheOnlyFit(site.declaringClass(), found, parameterTypes) ? found : null;
+    }
+
+    /**
+     * The classes of the parameter types the site records the method to declare, or {@code null} where one of them
+     * cannot be loaded.
+     */
+    private static Class<?> @Nullable [] declaredTypesOf(InjectionSite site) {
+        ClassLoader loader = site.declaringClass().getClassLoader();
+        Class<?>[] types = new Class<?>[site.declaredParameterTypes().size()];
+        for (int i = 0; i < types.length; i++) {
+            String name = site.declaredParameterTypes().get(i);
+            int dimensions = 0;
+            while (name.endsWith("[]")) {
+                name = name.substring(0, name.length() - 2);
+                dimensions++;
+            }
+            Class<?> type = PRIMITIVES.get(name);
+            if (type == null) {
+                try {
+                    type = Class.forName(name, false, loader);
+                } catch (ClassNotFoundException | LinkageError e) {
+                    return null;
+                }
+            }
+            for (int d = 0; d < dimensions; d++) {
+                type = type.arrayType();
+            }
+            types[i] = type;
+        }
+        return types;
+    }
+
+    /**
+     * Whether the method is the only declaration of its name in the class and above it that the compiled types
+     * fit: a method it overrides is the same declaration, any other is another.
+     */
+    private static boolean isTheOnlyFit(Class<?> type, java.lang.reflect.Method found, Class<?>[] compiledTypes) {
+        java.util.Set<java.util.List<Class<?>>> fitting = new java.util.HashSet<>();
+        java.util.Deque<Class<?>> classes = new java.util.ArrayDeque<>();
+        java.util.Set<Class<?>> seen = new java.util.HashSet<>();
+        classes.add(type);
+        while (!classes.isEmpty()) {
+            Class<?> current = classes.poll();
+            if (!seen.add(current)) {
+                continue;
+            }
+            for (java.lang.reflect.Method candidate : current.getDeclaredMethods()) {
+                if (!candidate.isSynthetic() && candidate.getName().equals(found.getName())
+                    && fits(candidate.getParameterTypes(), compiledTypes)) {
+                    fitting.add(java.util.List.of(candidate.getParameterTypes()));
+                }
+            }
+            if (current.getSuperclass() != null) {
+                classes.add(current.getSuperclass());
+            }
+            classes.addAll(java.util.List.of(current.getInterfaces()));
+        }
+        return fitting.size() == 1;
+    }
+
+    private static boolean fits(Class<?>[] declared, Class<?>[] compiledTypes) {
+        if (declared.length != compiledTypes.length) {
+            return false;
+        }
+        for (int i = 0; i < declared.length; i++) {
+            if (!declared[i].isAssignableFrom(compiledTypes[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -47,6 +47,17 @@ class ReflectiveApiWithoutReflectionTest {
         }
     }
 
+    @ApplicationScoped
+    static class TransientHolder {
+
+        @Inject
+        transient Probe probe;
+
+        InjectionPoint injectionPointOfTheProbe() {
+            return probe.injectionPoint;
+        }
+    }
+
     @Stereotype
     @Retention(RetentionPolicy.RUNTIME)
     @interface Plain {
@@ -85,7 +96,12 @@ class ReflectiveApiWithoutReflectionTest {
         assertEquals(Holder.class, injectionPoint.getBean().getBeanClass());
         assertNamesTheModule(injectionPoint::getMember);
         assertNamesTheModule(injectionPoint::getAnnotated);
-        assertNamesTheModule(injectionPoint::isTransient);
+    }
+
+    @Test
+    void whetherAnInjectedFieldIsTransientIsRecorded() {
+        assertFalse(context.getBean(Holder.class).injectionPointOfTheProbe().isTransient());
+        assertTrue(context.getBean(TransientHolder.class).injectionPointOfTheProbe().isTransient());
     }
 
     @Test

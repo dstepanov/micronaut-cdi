@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.cdi.processor.Cdi;
@@ -46,7 +45,6 @@ import java.util.Set;
  */
 @Internal
 public final class ObserverVisitor implements TypeElementVisitor<Object, Object> {
-
 
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
@@ -115,7 +113,7 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
             AnnotationValue<?> observes = parameter.getAnnotation(async ? Cdi.OBSERVES_ASYNC : Cdi.OBSERVES);
             boolean ifExists = observes != null
                 && observes.stringValue("notifyObserver").filter("IF_EXISTS"::equals).isPresent();
-            if (ifExists && isDependentScoped(element)) {
+            if (ifExists && SpecificationBeans.isDependent(element)) {
                 // section 2.8.2: a conditional observer needs an instance that may already exist, and a
                 // dependent bean never has one — each resolution is a new instance
                 context.fail("A dependent bean has no instance that could already exist, so its observer "
@@ -158,21 +156,12 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * Whether the class is in the dependent scope: declared there, or declaring no scope at all, which is
-     * dependent by default.
-     */
-    private static boolean isDependentScoped(ClassElement element) {
-        return SpecificationBeans.isDependentScoped(element)
-            || (!element.hasStereotype(Cdi.NORMAL_SCOPE) && !element.hasStereotype(CdiScope.class));
-    }
-
-    /**
      * The priority the observer is notified in, which the registration phase of the build compatible extensions
      * reports as well.
      *
      * <p>The specification puts it on the parameter the method observes, beside the annotation that declares it
      * an observer. One on the method itself is read as well, since it is the more obvious place to write one and
-     * says the same thing.</p>
+     * says the same thing; one on the class that declares the method is not.</p>
      *
      * @param parameter The parameter the method observes
      * @param method    The observer method
@@ -183,12 +172,14 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
         if (onParameter.isPresent()) {
             return onParameter.getAsInt();
         }
-        return method.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
+        // the method's own annotations: the metadata of a method carries its class's as well, and the priority that
+        // selects an alternative class is not the priority of the observers it declares
+        return method.getMethodAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
             .orElse(jakarta.enterprise.inject.spi.ObserverMethod.DEFAULT_PRIORITY);
     }
 
     private static boolean validate(MethodElement method, VisitorContext context) {
-        if (method.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+        if (SpecificationBeans.isProducer(method)) {
             context.fail("A method cannot be both a producer method and an observer method", method);
             return false;
         }

@@ -106,6 +106,21 @@ public final class ExtensionContexts {
     }
 
     /**
+     * The annotation Micronaut holds the beans of a scope by: the specification's built-in normal scopes are read
+     * into this module's own scope annotations as they compile, and any other scope is served by its own.
+     *
+     * @param scope The scope annotation
+     * @return The annotation the scope is served by
+     */
+    static Class<? extends Annotation> servedBy(Class<? extends Annotation> scope) {
+        return switch (scope.getName()) {
+            case "jakarta.enterprise.context.ApplicationScoped" -> io.micronaut.cdi.internal.metadata.CdiApplicationScope.class;
+            case "jakarta.enterprise.context.RequestScoped" -> io.micronaut.cdi.internal.metadata.CdiRequestScope.class;
+            default -> scope;
+        };
+    }
+
+    /**
      * Registers a context a portable extension handed the container as it started, for the scope it serves. A
      * context for a built-in normal scope takes the place of the container's own: the scope is served by the
      * annotation the compiler read it into.
@@ -131,11 +146,7 @@ public final class ExtensionContexts {
         if (normal) {
             normalScopes.add(scopeName);
         }
-        Class<? extends Annotation> served = switch (scopeName) {
-            case "jakarta.enterprise.context.ApplicationScoped" -> io.micronaut.cdi.internal.metadata.CdiApplicationScope.class;
-            case "jakarta.enterprise.context.RequestScoped" -> io.micronaut.cdi.internal.metadata.CdiRequestScope.class;
-            default -> scopeAnnotation;
-        };
+        Class<? extends Annotation> served = servedBy(scopeAnnotation);
         RuntimeBeanDefinition.Builder<io.micronaut.context.scope.CustomScope> builder = RuntimeBeanDefinition
             .builder(io.micronaut.context.scope.CustomScope.class,
                 () -> new ExtensionCustomScope(served, contextsOfScope, beanContext))

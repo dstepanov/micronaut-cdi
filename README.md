@@ -101,15 +101,17 @@ bean was compiled. What cannot be answered that way is the API a program calls t
 reflection, and it is kept out of `micronaut-cdi`, in `micronaut-cdi-reflection`, so that an application only
 reads classes back if it asks to:
 
-- `InjectionPoint.getMember()`, `getAnnotated()` and, for a field, `isTransient()`;
+- `InjectionPoint.getMember()` and `getAnnotated()` (whether an injected field is `transient` was recorded);
 - an annotation instance of a type the specification has no literal for: what `Bean.getQualifiers()`,
   `InjectionPoint.getQualifiers()`, `ObserverMethod.getObservedQualifiers()`, `EventMetadata.getQualifiers()` and
   `Interceptor.getInterceptorBindings()` report for an annotation of the application's own, and an annotation
   parameter of a synthetic component asked for as an annotation - unless the application lists the annotation
   type in Micronaut's `@RegisterAnnotations`, which has a builder generated that makes the instance without
   reflection;
-- an annotation literal with members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)` or
-  `resolveInterceptors(...)`: its members can only be read reflectively;
+- an annotation literal with binding members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)`
+  or `resolveInterceptors(...)`, unless it carries its values - an instance the builder Micronaut generates for a type
+  listed in `@RegisterAnnotations` made, or one Micronaut synthesised: the members of any other can only be read
+  reflectively;
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
   annotation the build recorded nothing of;
 - `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`;

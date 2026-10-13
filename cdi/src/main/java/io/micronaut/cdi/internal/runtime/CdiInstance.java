@@ -488,7 +488,24 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
             io.micronaut.context.Qualifier<T> micronaut = (io.micronaut.context.Qualifier<T>) narrowing;
             qualifier = Qualifiers.byQualifiers(qualifier, micronaut);
         }
-        return CdiResolution.beansAmong(beanContext.getBeanDefinitions(asked, qualifier));
+        Collection<BeanDefinition<T>> found = CdiResolution.beansAmong(beanContext.getBeanDefinitions(asked,
+            qualifier));
+        // Micronaut also enumerates a definition under a type it is only indexed by, which is no bean type of it:
+        // a candidate is one Micronaut would inject as the class asked for. Whether the arguments of the type
+        // match is left to the resolution that enumerated it, which compares them by the rules of the
+        // specification
+        Class<?> raw = CdiTypes.classOf(asked);
+        if (raw == null || raw == Object.class) {
+            return found;
+        }
+        Argument<?> asClass = Argument.of(raw);
+        List<BeanDefinition<T>> beans = new ArrayList<>(found.size());
+        for (BeanDefinition<T> definition : found) {
+            if (definition instanceof CdiInjectionPointFactory<?> || definition.isCandidateBean(asClass)) {
+                beans.add(definition);
+            }
+        }
+        return beans.size() == found.size() ? found : beans;
     }
 
     /**

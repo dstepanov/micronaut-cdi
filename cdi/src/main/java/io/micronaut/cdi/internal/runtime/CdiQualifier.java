@@ -189,25 +189,34 @@ public final class CdiQualifier {
         if (values.isEmpty() && others.isEmpty()) {
             return true;
         }
-        Map<CharSequence, Object> defaults = AnnotationMetadataSupport.getDefaultValues(name);
-        return compared(values, defaults).equals(compared(others, defaults));
+        return compared(values, defaultsOf(written())).equals(compared(others, defaultsOf(other.written())));
     }
 
     /**
-     * The members in the one shape they are compared in: every member the annotation registers a default for
-     * filled in, and every value as {@link #normalized(Object)} makes it.
+     * The members in the one shape they are compared in: every member the annotation defaults to filled in, and
+     * every value as {@link #normalized(Object)} makes it.
      *
      * <p>{@link AnnotationValue#matches} fills the defaults in too, but compares what it then holds with
      * {@code equals}: an enum constant a program wrote is not the name compiled metadata holds, and a nested
-     * annotation value passes over a member the other one does not have.</p>
+     * annotation value passes over a member the other one does not have. The rules are the ones the interceptor
+     * bindings are compared by in the Jakarta Interceptors implementation, whose comparison is not public; the
+     * two are kept alike so that a binding compares here as it does in the chains.</p>
      */
     private static Map<String, Object> compared(Map<CharSequence, Object> values, Map<CharSequence, Object> defaults) {
         Map<String, Object> compared = new LinkedHashMap<>();
         defaults.forEach((member, value) -> compared.put(member.toString(), normalized(value)));
         written(values, defaults).forEach((member, value) -> compared.put(member.toString(), normalized(value)));
-        // a member Micronaut keeps for itself is not one of the annotation's
-        compared.keySet().removeIf(member -> member.startsWith("$"));
+        // the members Micronaut keeps for itself are not the annotation's
+        compared.keySet().removeIf(CdiQualifier::isMicronautMember);
         return compared;
+    }
+
+    /**
+     * Whether the member is one Micronaut keeps beside the annotation's own: the list of the non-binding members,
+     * or the stereotypes.
+     */
+    private static boolean isMicronautMember(String member) {
+        return AnnotationUtil.NON_BINDING_ATTRIBUTE.equals(member) || AnnotationUtil.STEREOTYPES_MEMBER.equals(member);
     }
 
     /**
@@ -273,18 +282,16 @@ public final class CdiQualifier {
     }
 
     /**
-     * The defaults of a nested annotation: the ones Micronaut registered for its type, and the ones the value
-     * carries.
+     * The defaults of an annotation: the ones the value carries, which compiled metadata hands every value it
+     * holds, and the ones Micronaut registered for its type where the value carries none - a value a program
+     * built without them.
      */
-    private static Map<CharSequence, Object> defaultsOf(AnnotationValue<?> nested) {
-        Map<CharSequence, Object> registered = AnnotationMetadataSupport.getDefaultValues(nested.getAnnotationName());
-        Map<CharSequence, Object> carried = nested.getDefaultValues();
-        if (carried == null || carried.isEmpty()) {
-            return registered;
+    private static Map<CharSequence, Object> defaultsOf(AnnotationValue<?> value) {
+        Map<CharSequence, Object> carried = value.getDefaultValues();
+        if (carried != null && !carried.isEmpty()) {
+            return carried;
         }
-        Map<CharSequence, Object> defaults = new LinkedHashMap<>(registered);
-        defaults.putAll(carried);
-        return defaults;
+        return AnnotationMetadataSupport.getDefaultValues(value.getAnnotationName());
     }
 
     private static Map<CharSequence, Object> without(Map<CharSequence, Object> values, Set<String> members) {
@@ -580,7 +587,7 @@ public final class CdiQualifier {
                 continue;
             }
             String name = annotation.getAnnotationName();
-            if (isMicronautOwn(name)) {
+            if (io.micronaut.cdi.internal.metadata.MicronautQualifiers.isMicronautOwn(name)) {
                 continue;
             }
             if (NAMED_NAME.equals(name) && metadata.hasAnnotation(CdiName.class)) {
@@ -598,17 +605,6 @@ public final class CdiQualifier {
             qualifiers.add(ofCompiled(metadata, annotation));
         }
         return qualifiers;
-    }
-
-    /**
-     * Whether the qualifier is one Micronaut declares on a bean of its own accord rather than one the author
-     * wrote, and so is not a qualifier of the bean as far as the specification is concerned.
-     */
-    private static boolean isMicronautOwn(String name) {
-        return "io.micronaut.context.annotation.Primary".equals(name)
-            || "io.micronaut.context.annotation.Secondary".equals(name)
-            || "io.micronaut.context.annotation.Any".equals(name)
-            || "io.micronaut.context.annotation.Type".equals(name);
     }
 
     /**
@@ -726,11 +722,12 @@ public final class CdiQualifier {
         String name = written.getAnnotationName();
         Map<CharSequence, Object> values = written.getValues();
         if (values.isEmpty()) {
-            return new CdiQualifier(new AnnotationValue<>(name), written, Set.of(), source, instance);
+            return new CdiQualifier(new AnnotationValue<>(name, Map.of(), written.getDefaultValues()), written,
+                Set.of(), source, instance);
         }
         Set<String> nonbinding = new LinkedHashSet<>();
         for (String member : written.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
-            if (!member.startsWith("$")) {
+            if (!isMicronautMember(member)) {
                 nonbinding.add(member);
             }
         }
@@ -739,10 +736,11 @@ public final class CdiQualifier {
             String memberName = member.toString();
             // a member Micronaut keeps for itself, the list of non-binding members among them, is not one of the
             // annotation's
-            return memberName.startsWith("$") || nonbinding.contains(memberName);
+            return isMicronautMember(memberName) || nonbinding.contains(memberName);
         });
-        return new CdiQualifier(new AnnotationValue<>(name, binding), written, Set.copyOf(nonbinding), source,
-            instance);
+        // the defaults the value carries are kept, which is what a member left at its default is compared with
+        return new CdiQualifier(new AnnotationValue<>(name, binding, written.getDefaultValues()), written,
+            Set.copyOf(nonbinding), source, instance);
     }
 
     @Override
