@@ -877,8 +877,21 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private record Registrar(BuildCompatibleExtension extension, Method method, Registration registration) {
 
+        /**
+         * Whether the method asks to be told about the bean: a method that asks for a bean asks about any, one
+         * that asks for an interceptor about an interceptor alone, and either about the ones that have a type it
+         * names among their bean types.
+         */
         private boolean matches(ElementBeanInfo bean) {
-            return asksForBeans(true) && matches(bean.beanType());
+            if (!asksForBeans(false) && !(bean.isInterceptor() && asksForBeans(true))) {
+                return false;
+            }
+            for (Class<?> asked : registration.types()) {
+                if (bean.hasTypeOfClass(asked.getName())) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
@@ -917,7 +930,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
 
         private boolean matchesObserver(ElementObserverInfo observer) {
-            return asksForObservers() && matches(observer.observedParameter().getGenericType());
+            return asksForObservers() && matches(observer.observedType());
         }
 
         private void describeObserver(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo observer,

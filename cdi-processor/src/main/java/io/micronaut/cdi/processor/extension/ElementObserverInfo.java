@@ -70,9 +70,32 @@ final class ElementObserverInfo implements ObserverInfo {
         return observed;
     }
 
+    /**
+     * The type the method observes, as the bean of the class observes it: an observer method a generic superclass
+     * declares observes what the class makes of the superclass's variables, as the container records it.
+     *
+     * @return The observed type
+     */
+    ClassElement observedType() {
+        ClassElement type = observed.getGenericType();
+        java.util.Map<String, ClassElement> inherited = declaringClass.getAllTypeArguments()
+            .getOrDefault(method.getDeclaringType().getName(), java.util.Map.of());
+        if (inherited.isEmpty()) {
+            return type;
+        }
+        if (type instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder && !type.isArray()) {
+            ClassElement bound = inherited.get(placeholder.getVariableName());
+            return bound != null ? bound : type;
+        }
+        ClassElement resolved = type.foldBoundGenericTypes(argument ->
+            argument instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder && !argument.isArray()
+                ? inherited.getOrDefault(placeholder.getVariableName(), argument) : argument);
+        return resolved != null ? resolved : type;
+    }
+
     @Override
     public Type eventType() {
-        return ElementTypes.of(observed.getGenericType(), context);
+        return ElementTypes.of(observedType(), context);
     }
 
     @Override
