@@ -24,9 +24,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a class the processor generated for the build compatible extensions of a compilation: the factory of
- * the classes the extensions named, and the marker of the end of registration. Neither is a bean of the
- * application.
+ * Marks what the processor wrote for the build compatible extensions of a compilation that is no bean of the
+ * application: the classes that record the generic hierarchies of a package, and the definition that records
+ * what the extensions said of the deployment as a whole ({@link CdiDeploymentRecord}).
  *
  * @author Denis Stepanov
  * @since 1.0

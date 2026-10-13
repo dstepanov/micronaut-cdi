@@ -70,6 +70,24 @@ final class TypeIndexCollector {
     }
 
     /**
+     * The packages something has been gathered for.
+     */
+    java.util.Set<String> packages() {
+        return byPackage.keySet();
+    }
+
+    /**
+     * The name of the first class that records the generic hierarchies of a package.
+     *
+     * @param packageName The package
+     * @param suffix      What the classes the compilation generates are named with
+     * @return The name of the class
+     */
+    static String classNameOf(String packageName, String suffix) {
+        return packageName + "." + PREFIX + suffix;
+    }
+
+    /**
      * Gathers what the class says of the types above it, where it says anything a raw class does not.
      */
     void collect(ClassElement element) {

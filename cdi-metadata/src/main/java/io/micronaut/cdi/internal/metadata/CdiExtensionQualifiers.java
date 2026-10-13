@@ -24,8 +24,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The annotations the build compatible extensions of one compilation made qualifiers of, written onto a
- * generated class: an annotation an extension registered says nothing about it on its own class, and no bean may
+ * The annotations the build compatible extensions of one compilation made qualifiers of, recorded on the
+ * definition of a {@link CdiDeploymentRecord}: an annotation an extension registered says nothing about it on its
+ * own class, and no bean may
  * use it, so this is the one witness of it the container reads its qualifier types from.
  *
  * @author Denis Stepanov

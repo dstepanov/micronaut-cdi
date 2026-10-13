@@ -2,6 +2,7 @@ package io.micronaut.cdi.test.groovy
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer
 import io.micronaut.cdi.test.PlainScannedBean
+import io.micronaut.cdi.test.extension.ScannedLibraryBean
 import io.micronaut.cdi.test.extension.Zesty
 import io.micronaut.cdi.spi.CdiReflection
 import io.micronaut.cdi.test.extension.Tended
@@ -39,12 +40,25 @@ class SynthesisUnderGroovyTest {
 
     @Test
     void aNestedClassNamedWithADollarSignIsScannedAndQualifies() {
-        // the generated sources name both by a binary name, which a Groovy string would otherwise interpolate
+        // the extension names both by a binary name, with the dollar sign a Groovy string would interpolate
         ApplicationContext context = ApplicationContext.run()
         try {
             CdiBeanContainer container = context.getBean(CdiBeanContainer)
             assertEquals(1, container.getBeans(PlainScannedBean.Nested).size())
             assertTrue(container.isQualifier(Zesty.Nested))
+        } finally {
+            context.close()
+        }
+    }
+
+    @Test
+    void aScannedClassOfALibraryIsRegisteredAsABean() {
+        // no compilation of the application compiles it, and the Groovy compiler reads no import of it
+        ApplicationContext context = ApplicationContext.run()
+        try {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer)
+            assertEquals(1, container.getBeans(ScannedLibraryBean).size())
+            assertEquals("library", container.createInstance().select(ScannedLibraryBean).get().name())
         } finally {
             context.close()
         }
