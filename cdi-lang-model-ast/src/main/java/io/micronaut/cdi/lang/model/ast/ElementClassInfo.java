@@ -260,6 +260,15 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
             // the class the method was declared by, which an inherited method's is not this one
             methods.add(new ElementMethodInfo(method, declarationOf(method.getDeclaringType(), context()), context()));
         }
+        if (methods.isEmpty() && isAnnotation()) {
+            // KSP answers the members of an annotation interface as its properties, and no methods
+            for (io.micronaut.inject.ast.Element member : ElementMembers.annotationMembersOf(element).values()) {
+                if (member instanceof io.micronaut.inject.ast.PropertyElement property) {
+                    property.getReadMethod()
+                        .ifPresent(read -> methods.add(new ElementMethodInfo(read, this, context())));
+                }
+            }
+        }
         return methods;
     }
 

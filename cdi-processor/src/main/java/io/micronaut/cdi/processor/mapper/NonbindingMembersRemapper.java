@@ -26,9 +26,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.AnnotationRemapper;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
-import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.ast.MethodElement;
-import io.micronaut.inject.ast.PropertyElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
@@ -249,15 +246,7 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
      * @return The members, by name, in the order they are declared
      */
     public static Map<String, Element> memberElementsOf(ClassElement declaration) {
-        Map<String, Element> members = new LinkedHashMap<>();
-        for (MethodElement member : declaration.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-            members.put(member.getName(), member);
-        }
-        if (members.isEmpty()) {
-            for (PropertyElement member : declaration.getBeanProperties()) {
-                members.put(member.getName(), member);
-            }
-        }
-        return members;
+        // enumerated where the language model enumerates them, so that the two agree under every compiler
+        return io.micronaut.cdi.lang.model.ast.ElementMembers.annotationMembersOf(declaration);
     }
 }

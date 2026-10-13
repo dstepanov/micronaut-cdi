@@ -569,8 +569,13 @@ are merged upstream; the remaining differences below still require adaptation or
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
-  annotation interface as its properties rather than its methods, which is where the processor reads them from
-  there (`NonbindingMembersRemapper.membersOf`).
+  annotation interface as its properties rather than its methods, which is where the processor and the language
+  model read them from there (`ElementMembers.annotationMembersOf`).
+- **`AnnotationElement` cannot list the members of an annotation interface.** There is no query of Micronaut's AST
+  that answers the members of an annotation interface under every compiler: javac and the Groovy compiler answer
+  them as methods, KSP as properties and no methods. The members are enumerated one way or the other in one place
+  (`ElementMembers.annotationMembersOf`), which the processor's non-binding members and the language model's
+  annotation members and methods read; a member query on `AnnotationElement` would remove it.
 - **Micronaut's annotation qualifiers match by the name of the bean.** `AnnotationMetadataQualifier` and
   `AnnotationQualifier` fall back to matching the simple name of the annotation against the simple name of the
   candidate's class where the candidate does not carry the annotation, so `Qualifiers.byAnnotation` for a
