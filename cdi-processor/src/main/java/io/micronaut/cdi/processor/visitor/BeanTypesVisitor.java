@@ -17,13 +17,11 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
-import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
-import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
@@ -72,13 +70,10 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
         if (!element.isInterface() && !element.isAbstract()) {
             record(element, element);
         }
-        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
-            if (method.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+        for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
+            if (producer instanceof MethodElement method) {
                 record(method.getGenericReturnType(), method);
-            }
-        }
-        for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
-            if (field.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+            } else if (producer instanceof FieldElement field) {
                 record(field.getGenericType(), field);
             }
         }
