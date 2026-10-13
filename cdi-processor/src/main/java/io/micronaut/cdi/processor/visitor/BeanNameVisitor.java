@@ -142,18 +142,34 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * The default name of a producer method: the property name when the method is a getter, and the method name
-     * itself otherwise.
+     * The default name of a producer method (section 2.6.3): the name of the property when the method is a getter
+     * of one in the sense of JavaBeans - it takes nothing, and is named {@code get} or, returning a
+     * {@code boolean}, {@code is}, followed by the property's name - and the method name itself otherwise.
      */
     private static String defaultMethodName(MethodElement method) {
         String name = method.getName();
-        if (name.startsWith("get") && name.length() > 3) {
-            return defaultClassName(name.substring(3));
-        }
-        if (name.startsWith("is") && name.length() > 2
-            && method.getReturnType().getName().equals("boolean")) {
-            return defaultClassName(name.substring(2));
+        if (method.getParameters().length == 0) {
+            if (name.startsWith("get") && name.length() > 3) {
+                return propertyName(name.substring(3));
+            }
+            if (name.startsWith("is") && name.length() > 2
+                && method.getReturnType().getName().equals("boolean")) {
+                return propertyName(name.substring(2));
+            }
         }
         return name;
+    }
+
+    /**
+     * The name of a property as JavaBeans derives it from what follows {@code get} or {@code is}: the first
+     * character made lower case, unless the second is upper case too, which keeps an acronym as it is -
+     * {@code getURL} names the property {@code URL}.
+     */
+    private static String propertyName(String capitalized) {
+        if (capitalized.length() > 1 && Character.isUpperCase(capitalized.charAt(1))
+            && Character.isUpperCase(capitalized.charAt(0))) {
+            return capitalized;
+        }
+        return defaultClassName(capitalized);
     }
 }
