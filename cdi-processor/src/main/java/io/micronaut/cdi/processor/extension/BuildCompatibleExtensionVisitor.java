@@ -82,6 +82,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final String TRIGGER = "RegistrationEnd";
     private static final String COMPONENTS = "SyntheticComponents";
     private static final String CONTEXTS = "RegisteredContexts";
+    private static final String REGISTERED_QUALIFIERS = "RegisteredQualifiers";
+    private static final String SCANNED_CLASSES = "ScannedClassesImport";
     private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
@@ -103,7 +105,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private final DiscoveredClasses discovered = new DiscoveredClasses();
     private boolean discoveryRan;
     private boolean scannedImportWritten;
-    private boolean contextRecordWritten;
+    private boolean registeredQualifiersWritten;
     private boolean contextBeansWritten;
     private boolean importedClassesPending;
     private boolean synthesized;
@@ -329,16 +331,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         return LOWEST_PRECEDENCE;
     }
 
-    private void writeContextRecord(VisitorContext context) {
-        if (contextRecordWritten || discovered.registeredQualifiers().isEmpty()) {
+    private void writeRegisteredQualifiers(VisitorContext context) {
+        if (registeredQualifiersWritten || discovered.registeredQualifiers().isEmpty()) {
             return;
         }
-        contextRecordWritten = true;
+        registeredQualifiersWritten = true;
         GeneratedSource source = new GeneratedSource(context.getLanguage())
             .annotation("jakarta.inject.Singleton", null)
             .annotation(CdiExtensionQualifiers.class.getName(),
                 new GeneratedSource(context.getLanguage()).strings(discovered.registeredQualifiers()));
-        write(context, "ExtensionContextRecordHolder", source, "The extension qualifier record");
+        write(context, REGISTERED_QUALIFIERS + suffix, source, "The record of the registered qualifiers");
     }
 
     /**
@@ -492,7 +494,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     private void writeScannedImport(VisitorContext context) {
-        writeContextRecord(context);
+        writeRegisteredQualifiers(context);
         if (scannedImportWritten || discovered.scannedClasses().isEmpty()) {
             return;
         }
@@ -510,7 +512,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         source.annotation("io.micronaut.context.annotation.ClassImport",
             "classes = " + source.classes(canonicalNames));
-        write(context, "ScannedClassesImport", source, "The scanned classes import");
+        write(context, SCANNED_CLASSES + suffix, source, "The scanned classes import");
     }
 
     private void write(VisitorContext context, String className, GeneratedSource source, String what) {
@@ -584,8 +586,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 writeTrigger(context, TRIGGER + suffix);
             }
         }
-        writeScannedImport(context);
         if (suffix != null) {
+            // what is generated is named with the suffix of the compilation, which its first class gives
+            writeScannedImport(context);
             writeContextBeans(element, context);
         }
         applyWhatWasDiscovered(element);
