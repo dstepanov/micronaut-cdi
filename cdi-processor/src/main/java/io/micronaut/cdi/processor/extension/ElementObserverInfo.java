@@ -116,8 +116,8 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public int priority() {
-        return observed.intValue(jakarta.annotation.Priority.class).orElse(
-            jakarta.interceptor.Interceptor.Priority.APPLICATION + 500);
+        // read as the observer is compiled, so that what is reported is the priority it is notified in
+        return io.micronaut.cdi.processor.visitor.ObserverVisitor.priorityOf(observed, method);
     }
 
     @Override

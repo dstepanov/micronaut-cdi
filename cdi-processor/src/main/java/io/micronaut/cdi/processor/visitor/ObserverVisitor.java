@@ -47,7 +47,6 @@ import java.util.Set;
 @Internal
 public final class ObserverVisitor implements TypeElementVisitor<Object, Object> {
 
-    private static final int DEFAULT_PRIORITY = 2500;
 
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
@@ -168,18 +167,24 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * The priority the observer is notified in.
+     * The priority the observer is notified in, which the registration phase of the build compatible extensions
+     * reports as well.
      *
      * <p>The specification puts it on the parameter the method observes, beside the annotation that declares it
      * an observer. One on the method itself is read as well, since it is the more obvious place to write one and
      * says the same thing.</p>
+     *
+     * @param parameter The parameter the method observes
+     * @param method    The observer method
+     * @return The priority
      */
-    private static int priorityOf(ParameterElement parameter, MethodElement method) {
+    public static int priorityOf(ParameterElement parameter, MethodElement method) {
         OptionalInt onParameter = parameter.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
         if (onParameter.isPresent()) {
             return onParameter.getAsInt();
         }
-        return method.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value").orElse(DEFAULT_PRIORITY);
+        return method.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
+            .orElse(jakarta.enterprise.inject.spi.ObserverMethod.DEFAULT_PRIORITY);
     }
 
     private static boolean validate(MethodElement method, VisitorContext context) {
