@@ -608,17 +608,18 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         // compared as the interceptor chains compare them, so that what is reported here is what runs
         io.micronaut.interceptor.spi.InterceptorBindings given = io.micronaut.interceptor.spi.InterceptorBindings
             .ofValues(bindingValuesOf(CdiQualifier.ofInstances(types(), interceptorBindings)));
+        // found as the interceptors implementation finds the ones bound to an element: through the type it indexes
+        // every interceptor class by, narrowed by the bindings, rather than among every bean
         List<CdiInterceptor<?>> resolved = new java.util.ArrayList<>();
-        for (CdiBean<?> candidate : candidates()) {
-            BeanDefinition<?> definition = candidate.definition();
+        for (BeanDefinition<?> definition : CdiResolution.beansAmong(beanContext.getBeanDefinitions(
+            io.micronaut.interceptor.internal.metadata.JakartaInterceptorIndex.class,
+            io.micronaut.interceptor.spi.InterceptorBindings.boundTo(given)))) {
             if (!definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor")) {
+                // a class that declares interceptor methods without being an interceptor class is bound by nothing
                 continue;
             }
             CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
-            if (!interceptor.isEnabled() || !interceptor.intercepts(type)) {
-                continue;
-            }
-            if (interceptor.recordedBindings().isBoundBy(given)) {
+            if (interceptor.isEnabled() && interceptor.intercepts(type)) {
                 resolved.add(interceptor);
             }
         }
