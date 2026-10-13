@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
@@ -253,23 +254,15 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         element.removeAnnotation(CdiScope.class);
         element.removeAnnotation(CdiApplicationScope.class);
         element.removeAnnotation(CdiRequestScope.class);
-        switch (resolved) {
-            case Cdi.APPLICATION_SCOPED -> {
-                element.annotate(CdiApplicationScope.class);
-                element.annotate(CdiScope.class, builder -> builder
-                    .value(Cdi.APPLICATION_SCOPED).member("normal", true));
-            }
-            case Cdi.REQUEST_SCOPED -> {
-                element.annotate(CdiRequestScope.class);
-                element.annotate(CdiScope.class, builder -> builder
-                    .value(Cdi.REQUEST_SCOPED).member("normal", true));
-            }
-            case Cdi.DEPENDENT -> {
-                element.annotate(Prototype.class);
-                element.annotate(CdiScope.class, builder -> builder.value(Cdi.DEPENDENT));
-            }
-            default -> element.annotate(CdiScope.class, builder -> builder
-                .value(resolved).member("normal", true));
+        // a scope other than the specification's own is resolved here only where it is a scope of the kind the
+        // specification declares, and whether it is normal is what its declaration says
+        boolean normal = !Cdi.DEPENDENT.equals(resolved) && !"jakarta.inject.Singleton".equals(resolved)
+            && (Cdi.APPLICATION_SCOPED.equals(resolved) || Cdi.REQUEST_SCOPED.equals(resolved)
+                || context.getClassElement(resolved)
+                    .map(declaration -> declaration.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE)).orElse(true));
+        for (io.micronaut.core.annotation.AnnotationValue<?> annotation
+            : CdiScopes.annotationsOf(resolved, normal)) {
+            element.annotate(annotation);
         }
     }
 

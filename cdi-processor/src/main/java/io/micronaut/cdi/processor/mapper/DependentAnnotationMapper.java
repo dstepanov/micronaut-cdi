@@ -15,11 +15,10 @@
  */
 package io.micronaut.cdi.processor.mapper;
 
-import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.inject.annotation.NamedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -49,9 +48,6 @@ public final class DependentAnnotationMapper implements NamedAnnotationMapper {
         // the annotation of the specification is not kept beside the Micronaut one it was read as: it is
         // annotated jakarta.inject.Scope itself, so keeping it would leave the bean declaring a second scope that
         // has no context to be resolved in. What it was written with is recorded instead
-        return List.of(
-            AnnotationValue.builder(Prototype.class).build(),
-            AnnotationValue.builder(CdiScope.class).value(Cdi.DEPENDENT).build()
-        );
+        return CdiScopes.annotationsOf(Cdi.DEPENDENT, false);
     }
 }

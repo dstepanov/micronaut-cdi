@@ -207,11 +207,16 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 } else if (metadata.hasDeclaredStereotype("jakarta.inject.Singleton")) {
                     stereotypeScope = "jakarta.inject.Singleton";
                 }
+                if (stereotypeScope == null) {
+                    // a normal scope of the application's own, which the stereotype carries
+                    List<String> custom = metadata.getDeclaredMetadata().getAnnotationNamesByStereotype(Cdi.NORMAL_SCOPE);
+                    if (!custom.isEmpty()) {
+                        stereotypeScope = custom.get(0);
+                        normal = true;
+                    }
+                }
                 if (stereotypeScope != null) {
-                    String value = stereotypeScope;
-                    boolean isNormal = normal;
-                    producer.annotate(CdiScope.class,
-                        builder -> builder.value(value).member("normal", isNormal));
+                    producer.annotate(io.micronaut.cdi.processor.CdiScopes.recordOf(stereotypeScope, normal));
                 }
             }
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
