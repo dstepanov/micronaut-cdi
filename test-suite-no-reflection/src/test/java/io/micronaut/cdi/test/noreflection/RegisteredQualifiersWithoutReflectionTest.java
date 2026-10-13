@@ -2,12 +2,14 @@ package io.micronaut.cdi.test.noreflection;
 
 import io.micronaut.cdi.MicronautBeanContainer;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.core.annotation.AnnotationBuilder;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.RegisterAnnotations;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.CDI;
+import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A qualifier with members whose annotation type the application registers for a generated builder is made an
- * instance of without the reflection module: the qualifiers of a bean are reported as annotation instances.
+ * instance of without the reflection module: the qualifiers of a bean are reported as annotation instances, and
+ * such an instance is read back without it, since it carries its values.
  */
 @RegisterAnnotations(RegisteredQualifiersWithoutReflectionTest.Topping.class)
 public class RegisteredQualifiersWithoutReflectionTest {
@@ -29,13 +32,15 @@ public class RegisteredQualifiersWithoutReflectionTest {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Topping {
         String value();
+
+        @Nonbinding String note() default "";
     }
 
     public interface Dessert {
     }
 
     @Dependent
-    @Topping("cream")
+    @Topping(value = "cream", note = "warm")
     public static class Pie implements Dessert {
     }
 
@@ -54,6 +59,23 @@ public class RegisteredQualifiersWithoutReflectionTest {
             assertTrue(topping != null, "the qualifiers " + pie.getQualifiers());
             assertEquals("cream", topping.value());
             assertEquals(Topping.class, topping.annotationType());
+        }
+    }
+
+    @Test
+    void anInstanceOfARegisteredAnnotationTypeSelectsWithoutTheReflectionModule() {
+        try (ApplicationContext ignored = ApplicationContext.run()) {
+            MicronautBeanContainer container = (MicronautBeanContainer) CDI.current().getBeanContainer();
+            Bean<?> pie = container.getBeans(Argument.of(Dessert.class),
+                AnnotationValue.builder(Topping.class).value("cream").build()).iterator().next();
+            Annotation reported = pie.getQualifiers().stream()
+                .filter(Topping.class::isInstance).findFirst().orElseThrow();
+            assertEquals(java.util.Set.of(pie), container.getBeans(Dessert.class, reported));
+            assertEquals(Pie.class, CDI.current().select(Dessert.class, reported).get().getClass());
+            // one the generated builder made, with a value of the member that does not bind the bean was not given
+            Topping built = AnnotationBuilder.find(Topping.class).orElseThrow()
+                .build(AnnotationValue.builder(Topping.class).value("cream").member("note", "cold").build());
+            assertEquals(Pie.class, CDI.current().select(Dessert.class, built).get().getClass());
         }
     }
 }
