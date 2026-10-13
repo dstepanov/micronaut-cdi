@@ -172,7 +172,7 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
      *
      * <p>The specification puts it on the parameter the method observes, beside the annotation that declares it
      * an observer. One on the method itself is read as well, since it is the more obvious place to write one and
-     * says the same thing.</p>
+     * says the same thing; one on the class that declares the method is not.</p>
      *
      * @param parameter The parameter the method observes
      * @param method    The observer method
@@ -183,7 +183,9 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
         if (onParameter.isPresent()) {
             return onParameter.getAsInt();
         }
-        return method.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
+        // the method's own annotations: the metadata of a method carries its class's as well, and the priority that
+        // selects an alternative class is not the priority of the observers it declares
+        return method.getMethodAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
             .orElse(jakarta.enterprise.inject.spi.ObserverMethod.DEFAULT_PRIORITY);
     }
 
