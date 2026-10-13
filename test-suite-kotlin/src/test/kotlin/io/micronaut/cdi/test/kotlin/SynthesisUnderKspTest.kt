@@ -2,6 +2,7 @@ package io.micronaut.cdi.test.kotlin
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer
 import io.micronaut.cdi.test.PlainScannedBean
+import io.micronaut.cdi.test.extension.ScannedLibraryBean
 import io.micronaut.cdi.test.extension.Zesty
 import io.micronaut.cdi.spi.CdiReflection
 import io.micronaut.cdi.test.extension.Tended
@@ -45,11 +46,21 @@ class SynthesisUnderKspTest {
 
     @Test
     fun aNestedClassNamedWithADollarSignIsScannedAndQualifies() {
-        // the generated sources name both by a binary name, which a Kotlin string would otherwise interpolate
+        // the extension names both by a binary name, with the dollar sign a Kotlin string would interpolate
         ApplicationContext.run().use { context ->
             val container = context.getBean(CdiBeanContainer::class.java)
             assertEquals(1, container.getBeans(PlainScannedBean.Nested::class.java).size)
             assertTrue(container.isQualifier(Zesty.Nested::class.java))
+        }
+    }
+
+    @Test
+    fun aScannedClassOfALibraryIsRegisteredAsABean() {
+        // no compilation of the application compiles it, and KSP reads no import of it
+        ApplicationContext.run().use { context ->
+            val container = context.getBean(CdiBeanContainer::class.java)
+            assertEquals(1, container.getBeans(ScannedLibraryBean::class.java).size)
+            assertEquals("library", container.createInstance().select(ScannedLibraryBean::class.java).get().name())
         }
     }
 

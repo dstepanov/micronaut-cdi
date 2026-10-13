@@ -38,6 +38,15 @@ class ScanAndChangeTest {
     }
 
     @Test
+    void aScannedClassOfALibraryIsABean() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            assertEquals(1, manager.getBeans(io.micronaut.cdi.test.extension.ScannedLibraryBean.class).size(),
+                "the class of a library the extension scanned is a bean");
+        }
+    }
+
+    @Test
     void aRemovedQualifierIsGone() {
         try (ApplicationContext context = ApplicationContext.run()) {
             BeanManager manager = context.getBean(BeanManager.class);
