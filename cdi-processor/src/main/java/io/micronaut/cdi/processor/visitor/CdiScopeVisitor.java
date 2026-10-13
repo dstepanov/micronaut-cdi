@@ -53,6 +53,8 @@ import java.util.List;
 @Internal
 public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object> {
 
+    private static final String PSEUDO_SCOPE = "jakarta.inject.Scope";
+
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
@@ -79,7 +81,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         readClass(element, context);
         for (io.micronaut.inject.ast.MemberElement member : element.getEnclosedElements(
             io.micronaut.inject.ast.ElementQuery.of(io.micronaut.inject.ast.MemberElement.class).onlyDeclared())) {
-            if (member.hasDeclaredAnnotation(Cdi.PRODUCES)
+            if (SpecificationBeans.isProducer(member)
                 && !checkScopesOf(member, "The producer " + element.getName() + "#" + member.getName(),
                     context)) {
                 // reported; the scopes — and what the mappers read them into — are taken off, so that the
@@ -337,8 +339,6 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         }
         return null;
     }
-
-    private static final String PSEUDO_SCOPE = "jakarta.inject.Scope";
 
     /**
      * The pseudo-scope the candidate annotation is or carries, as {@link #resolveToScope} finds a normal scope;

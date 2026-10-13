@@ -115,6 +115,28 @@ public final class SpecificationBeans {
     }
 
     /**
+     * Whether the container makes a bean of the class itself: one given a scope of the specification - the one
+     * {@code CdiScopeVisitor} resolved - or an interceptor, with a bean constructor (section 3.1.1).
+     *
+     * @param element The class
+     * @return Whether the class is a bean
+     */
+    public static boolean isClassBean(ClassElement element) {
+        return (element.hasStereotype(CdiScope.class) || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor"))
+            && hasABeanConstructor(element);
+    }
+
+    /**
+     * Whether a method or a field is a producer: one that declares itself one, which a producer is not inherited.
+     *
+     * @param member The method or field
+     * @return Whether it is a producer
+     */
+    public static boolean isProducer(io.micronaut.inject.ast.Element member) {
+        return member.hasDeclaredAnnotation(Cdi.PRODUCES);
+    }
+
+    /**
      * The producers the class declares, methods first: a producer is not inherited (section 4.2), so one a
      * superclass declares is the superclass's.
      *
@@ -124,12 +146,12 @@ public final class SpecificationBeans {
     public static List<MemberElement> producersOf(ClassElement element) {
         List<MemberElement> producers = new ArrayList<>();
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-            if (method.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+            if (isProducer(method)) {
                 producers.add(method);
             }
         }
         element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared()).stream()
-            .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
+            .filter(SpecificationBeans::isProducer)
             .forEach(producers::add);
         return producers;
     }
@@ -169,6 +191,18 @@ public final class SpecificationBeans {
         return element.getAnnotationMetadata().stringValue(CdiScope.class)
             .map(Cdi.DEPENDENT::equals)
             .orElse(false);
+    }
+
+    /**
+     * Whether the bean of the class is dependent: declared in the dependent pseudo-scope, or declaring no scope
+     * at all, which a bean of the specification is dependent by default.
+     *
+     * @param element The class
+     * @return Whether it is dependent
+     */
+    static boolean isDependent(ClassElement element) {
+        return isDependentScoped(element)
+            || (!element.hasStereotype(Cdi.NORMAL_SCOPE) && !element.hasStereotype(CdiScope.class));
     }
 
     /**

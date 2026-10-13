@@ -825,9 +825,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
-        if ((element.hasStereotype(CdiScope.class)
-            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor"))
-            && io.micronaut.cdi.processor.visitor.SpecificationBeans.hasABeanConstructor(element)) {
+        if (io.micronaut.cdi.processor.visitor.SpecificationBeans.isClassBean(element)) {
             beans.add(new ElementBeanInfo(element, null, context));
         }
         for (io.micronaut.inject.ast.MemberElement producer

@@ -587,7 +587,7 @@ public final class CdiQualifier {
                 continue;
             }
             String name = annotation.getAnnotationName();
-            if (isMicronautOwn(name)) {
+            if (io.micronaut.cdi.internal.metadata.MicronautQualifiers.isMicronautOwn(name)) {
                 continue;
             }
             if (NAMED_NAME.equals(name) && metadata.hasAnnotation(CdiName.class)) {
@@ -605,17 +605,6 @@ public final class CdiQualifier {
             qualifiers.add(ofCompiled(metadata, annotation));
         }
         return qualifiers;
-    }
-
-    /**
-     * Whether the qualifier is one Micronaut declares on a bean of its own accord rather than one the author
-     * wrote, and so is not a qualifier of the bean as far as the specification is concerned.
-     */
-    private static boolean isMicronautOwn(String name) {
-        return "io.micronaut.context.annotation.Primary".equals(name)
-            || "io.micronaut.context.annotation.Secondary".equals(name)
-            || "io.micronaut.context.annotation.Any".equals(name)
-            || "io.micronaut.context.annotation.Type".equals(name);
     }
 
     /**

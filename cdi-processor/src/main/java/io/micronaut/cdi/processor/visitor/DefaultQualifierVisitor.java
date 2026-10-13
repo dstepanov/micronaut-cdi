@@ -50,14 +50,13 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
     /**
      * The qualifiers that do not count as declaring one, per the rule of the specification.
      */
-    private static final Set<String> NOT_A_DECLARED_QUALIFIER = Set.of(
+    private static final Set<String> NOT_A_DECLARED_QUALIFIER = Cdi.withMicronautQualifiers(
         "jakarta.inject.Named",
         Cdi.ANY,
         CdiAny.class.getName(),
-        Cdi.DEFAULT,
-        // what this module's own visitors write on a selected alternative: Micronaut's primary is a
-        // qualifier, but it is not the bean declaring one
-        "io.micronaut.context.annotation.Primary"
+        Cdi.DEFAULT
+        // and what Micronaut writes of its own accord - this module's visitors write its primary on a selected
+        // alternative: a qualifier, but not the bean declaring one
     );
 
     @Override

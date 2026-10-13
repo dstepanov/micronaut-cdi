@@ -113,7 +113,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared())) {
             if (isInjected(field)) {
-                if (field.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+                if (SpecificationBeans.isProducer(field)) {
                     // section 3.4.1: a field is a producer or an injection point, never both
                     context.fail("A field may not be annotated both Inject and Produces (section 3.4.1)",
                         field);
@@ -130,7 +130,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
             boolean injected = isInjected(method);
-            boolean producer = method.hasDeclaredAnnotation(Cdi.PRODUCES);
+            boolean producer = SpecificationBeans.isProducer(method);
             boolean disposer = false;
             boolean observer = false;
             for (ParameterElement parameter : method.getParameters()) {
@@ -317,7 +317,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
             if (field.isStatic() || field.isFinal() || isInjectedField(field)
-                || field.hasDeclaredAnnotation(Cdi.PRODUCES)
+                || SpecificationBeans.isProducer(field)
                 || field.hasStereotype("io.micronaut.context.annotation.Value")
                 || field.hasStereotype("io.micronaut.context.annotation.Property")) {
                 continue;

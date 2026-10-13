@@ -42,7 +42,6 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,10 +71,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     /**
      * The qualifiers that take no part in matching a disposer to its producer.
      */
-    private static final Set<String> NOT_COMPARED = Set.of(
+    private static final Set<String> NOT_COMPARED = Cdi.withMicronautQualifiers(
         Cdi.DEFAULT,
-        Cdi.ANY,
-        "io.micronaut.context.annotation.Primary"
+        Cdi.ANY
     );
 
     /**
@@ -122,12 +120,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // section 3.3.6: a producer or disposer is not inherited — it belongs to the class that declares it,
         // and a subclass that wants one declares its own
         List<MethodElement> methods = element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared());
-        List<MemberElement> producers = new ArrayList<>();
-        methods.stream().filter(m -> m.hasDeclaredAnnotation(Cdi.PRODUCES)).forEach(producers::add);
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared())
-            .stream()
-            .filter(f -> f.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(producers::add);
+        List<MemberElement> producers = SpecificationBeans.producersOf(element);
 
         List<MethodElement> disposers = methods.stream()
             .filter(ProducerVisitor::isDisposer)

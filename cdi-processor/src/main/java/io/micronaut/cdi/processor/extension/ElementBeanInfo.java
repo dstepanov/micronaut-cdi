@@ -68,13 +68,9 @@ public final class ElementBeanInfo implements InterceptorInfo {
      * bean of its own accord, and the markers {@code Any} and {@code Default} are read into, which are reported
      * as themselves.
      */
-    private static final java.util.Set<String> NOT_QUALIFIERS_OF_THE_BEAN = java.util.Set.of(
+    private static final java.util.Set<String> NOT_QUALIFIERS_OF_THE_BEAN = Cdi.withMicronautQualifiers(
         Cdi.ANY,
-        io.micronaut.cdi.internal.metadata.CdiAny.class.getName(),
-        "io.micronaut.context.annotation.Primary",
-        "io.micronaut.context.annotation.Secondary",
-        "io.micronaut.context.annotation.Any",
-        "io.micronaut.context.annotation.Type"
+        io.micronaut.cdi.internal.metadata.CdiAny.class.getName()
     );
 
     private final ClassElement declaringClass;
