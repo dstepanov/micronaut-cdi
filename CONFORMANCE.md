@@ -416,6 +416,25 @@ both "more than one disposer" and "no producer". And an interceptor binding decl
 producer methods of that class, so what a producer of an intercepted class produces is proxied as though it were
 intercepted — which a primitive cannot be, and the class is refused.
 
+### An asynchronous event is notified on Micronaut's executor of blocking work
+
+*CDI 4.1 section 2.8.5.* The specification leaves the executor of `fireAsync` without `NotificationOptions` to the
+container. Here it is Micronaut's executor of blocking work (`TaskExecutors.BLOCKING`), read as the first event
+is fired asynchronously, since an observer may block as any other code does; a context that has no such executor
+notifies on the common pool. An executor the firing names is used as it is.
+
+### The dependent instances created for one use go with it, the last created first
+
+*CDI 4.1 sections 2.8.4, 5.1.1 and 10.4.* A dependent instance an `Instance` creates belongs to the bean the
+lookup was injected into and goes with it; one created for a notification of an observer method - the dependent
+observer bean, a dependent parameter - goes as the notification completes; one created through a
+`CreationalContext` goes as it is released; one a synthetic bean's creation function looks up goes with the bean
+it created, and one its disposal function looks up as the disposal returns. Micronaut owns them, through the
+resolver of the bean and through dependency groups (`OwnedDependents`), and destroys each set in the reverse of the
+order it was created in, every one of them attempted where one fails. As the context stops Micronaut opens a
+new group for a listener of its shutdown event alone; what a lookup that runs later creates - from a
+`@PreDestroy`, or on the thread of an executor - is held by the container and destroyed the same way.
+
 ### Known limitations a review has named
 
 Three findings of an internal review are documented rather than coded around. A dependent bean reached from an
