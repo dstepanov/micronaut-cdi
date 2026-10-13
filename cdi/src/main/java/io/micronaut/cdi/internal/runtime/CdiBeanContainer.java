@@ -284,7 +284,30 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 beans.add(bean);
             }
         }
-        return beans;
+        return withoutReplaced(beans);
+    }
+
+    /**
+     * The beans less the ones another among them replaces with Micronaut's {@code Replaces}, which Micronaut
+     * leaves out of the candidates of a lookup and an injection point alike.
+     */
+    private static Set<Bean<?>> withoutReplaced(Set<Bean<?>> beans) {
+        if (beans.size() < 2) {
+            return beans;
+        }
+        Map<BeanDefinition<?>, Bean<?>> byDefinition = new java.util.LinkedHashMap<>();
+        for (Bean<?> bean : beans) {
+            byDefinition.put(((CdiBean<?>) bean).definition(), bean);
+        }
+        java.util.Collection<BeanDefinition<?>> kept = CdiResolution.withoutReplaced(byDefinition.keySet());
+        if (kept == byDefinition.keySet()) {
+            return beans;
+        }
+        Set<Bean<?>> remaining = new LinkedHashSet<>();
+        for (BeanDefinition<?> definition : kept) {
+            remaining.add(byDefinition.get(definition));
+        }
+        return remaining;
     }
 
     /**
