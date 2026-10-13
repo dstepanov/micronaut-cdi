@@ -90,7 +90,8 @@ final class SynthesisPhase {
 
             @Override
             public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
-                return observer(new VisitorTypes(context).of(eventType), SyntheticRecords.typeOf(eventType));
+                Type type = new VisitorTypes(context).of(eventType);
+                return observer(type, SyntheticRecords.typeOf(type));
             }
 
             @Override

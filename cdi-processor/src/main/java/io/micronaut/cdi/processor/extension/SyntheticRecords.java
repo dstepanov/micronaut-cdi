@@ -31,7 +31,6 @@ import jakarta.enterprise.lang.model.types.Type;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -127,59 +126,15 @@ final class SyntheticRecords {
     }
 
     /**
-     * A type of the language model as the record the container composes a {@code java.lang.reflect.Type} from.
+     * A type of the language model as the record the container composes a {@code java.lang.reflect.Type} from:
+     * the record of a compiled type, a wildcard and a type variable among its arguments included.
      *
      * @param type The type
      * @return The record
      */
     static AnnotationValue<CdiRecordedType> typeOf(Type type) {
-        int dimensions = 0;
-        Type component = type;
-        while (component.isArray()) {
-            dimensions++;
-            component = component.asArray().componentType();
-        }
-        AnnotationValueBuilder<CdiRecordedType> record = AnnotationValue.builder(CdiRecordedType.class);
-        if (component.isClass()) {
-            record.member("value", new AnnotationClassValue<>(component.asClass().declaration().name()));
-        } else if (component.isParameterizedType()) {
-            record.member("value", new AnnotationClassValue<>(
-                component.asParameterizedType().genericClass().declaration().name()));
-            List<Type> arguments = component.asParameterizedType().typeArguments();
-            AnnotationValue<?>[] recorded = new AnnotationValue<?>[arguments.size()];
-            for (int i = 0; i < recorded.length; i++) {
-                recorded[i] = typeOf(arguments.get(i));
-            }
-            record.member(CdiRecordedType.ARGUMENTS, recorded);
-        } else {
-            throw new IllegalArgumentException("The type " + type + " cannot be the type of a synthetic "
-                + "component: a class, a parameterized type or an array of one is");
-        }
-        if (dimensions > 0) {
-            record.member("dimensions", dimensions);
-        }
-        return record.build();
-    }
-
-    /**
-     * A class as the record the container reads a {@code java.lang.reflect.Type} from.
-     *
-     * @param type The class
-     * @return The record
-     */
-    static AnnotationValue<CdiRecordedType> typeOf(Class<?> type) {
-        int dimensions = 0;
-        Class<?> component = type;
-        while (component.isArray()) {
-            dimensions++;
-            component = component.getComponentType();
-        }
-        AnnotationValueBuilder<CdiRecordedType> record = AnnotationValue.builder(CdiRecordedType.class)
-            .member("value", new AnnotationClassValue<>(component.getName()));
-        if (dimensions > 0) {
-            record.member("dimensions", dimensions);
-        }
-        return record.build();
+        return io.micronaut.cdi.processor.visitor.RecordedTypeValues.of(
+            io.micronaut.cdi.lang.model.ast.ElementTypes.elementOf(type));
     }
 
     private static AnnotationValueBuilder<CdiSyntheticParameter> parameter(String key, String kind, boolean array) {
