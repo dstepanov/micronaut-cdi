@@ -492,29 +492,23 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private List<CdiBean<?>> loadCandidates() {
         // the references are the ones the beans predicate of the context admits, so an environment that
         // narrowed the context reports exactly the beans it narrowed it to
-        Map<String, BeanDefinition<?>> byName = new java.util.LinkedHashMap<>();
+        // a compiled definition is equal to every other of its class, and a runtime one only to itself, so the set
+        // holds each bean once
+        java.util.Set<BeanDefinition<?>> definitions = new LinkedHashSet<>();
         for (io.micronaut.inject.BeanDefinitionReference<Object> reference
             : beanContext.getBeanDefinitionReferences()) {
             BeanDefinition<?> definition = enabledDefinitionOf(reference);
             if (definition != null) {
-                byName.put(definition.getClass().getName(), definition);
+                definitions.add(definition);
             }
         }
         // a bean the container was handed at runtime — a synthetic bean an extension described — has a
-        // definition without a compiled reference. Such definitions share a class, so the instance tells
-        // them apart
-        for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            String key = definition.getClass().getName();
-            BeanDefinition<?> existing = byName.get(key);
-            if (existing != null && existing != definition && !existing.equals(definition)) {
-                key = key + "@" + System.identityHashCode(definition);
-            }
-            byName.putIfAbsent(key, definition);
-        }
+        // definition without a compiled reference
+        definitions.addAll(beanContext.getAllBeanDefinitions());
         List<CdiBean<?>> loaded = new java.util.ArrayList<>();
         // an abstract class is not a bean of the specification, however it is annotated, and a bean in a normal
         // scope is two definitions, the proxy and its target, of which the proxy is the bean
-        for (BeanDefinition<?> definition : CdiResolution.beansAmong(byName.values())) {
+        for (BeanDefinition<?> definition : CdiResolution.beansAmong(definitions)) {
             if (io.micronaut.cdi.internal.extension.ExtensionComponents.isComponent(definition.getAnnotationMetadata())) {
                 // the definition of a creator, a disposer, a synthetic observer or a context an extension
                 // named: what the container instantiates the class through, and not a bean of the application

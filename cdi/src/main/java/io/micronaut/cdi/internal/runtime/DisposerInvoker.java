@@ -55,7 +55,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
      * makes is disposed of by the same method.
      */
-    private final java.util.concurrent.ConcurrentHashMap<DefinitionIdentity, Disposer> disposers =
+    private final java.util.concurrent.ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
         new java.util.concurrent.ConcurrentHashMap<>();
     private volatile @Nullable CdiBeanContainer container;
 
@@ -67,7 +67,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     public Object onPreDestroy(BeanPreDestroyEvent<Object> event) {
         Object bean = event.getBean();
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        Disposer found = disposers.get(new DefinitionIdentity(definition));
+        Disposer found = disposers.get(definition);
         if (found == null) {
             AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
             if (disposer == null) {
@@ -78,7 +78,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             if (found == null) {
                 return bean;
             }
-            disposers.putIfAbsent(new DefinitionIdentity(definition), found);
+            disposers.putIfAbsent(definition, found);
         }
         Disposer disposer = found;
         return event.withDependencies(dependencies -> {

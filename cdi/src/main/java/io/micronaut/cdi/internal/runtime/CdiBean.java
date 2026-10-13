@@ -524,22 +524,16 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
-     * The class of the one definition the compiler wrote for this bean, which a proxy definition stands in
-     * front of: the proxy and its target are the same bean.
+     * What tells this bean from another: its definition, which Micronaut compares as the bean - a compiled
+     * definition is equal to every other of its class, and one registered at runtime, as a synthetic bean is, only
+     * to itself - or, for a proxy, the class of the definition it stands in front of: the proxy and its target are
+     * the same bean.
      */
-    private String canonicalDefinitionName() {
+    private Object identity() {
         if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy) {
-            return proxy.getTargetDefinitionType().getName();
+            return proxy.getTargetDefinitionType();
         }
-        return definition.getClass().getName();
-    }
-
-    /**
-     * A definition registered at runtime, as a synthetic bean is: every one shares a class, so each is a bean of
-     * its own, compared by identity.
-     */
-    private boolean isRuntimeDefinition() {
-        return definition instanceof io.micronaut.context.RuntimeBeanDefinition<?>;
+        return definition;
     }
 
     @Override
@@ -550,18 +544,22 @@ public class CdiBean<T> implements Bean<T> {
         if (!(o instanceof CdiBean<?> other)) {
             return false;
         }
-        if (isRuntimeDefinition() || other.isRuntimeDefinition()) {
-            return definition == other.definition;
+        Object identity = identity();
+        Object otherIdentity = other.identity();
+        // the class of a proxy's target is the target's compiled definition, which is equal to its class's others
+        if (identity instanceof Class<?> type) {
+            return otherIdentity instanceof Class<?> ? type == otherIdentity : otherIdentity.getClass() == type;
         }
-        return canonicalDefinitionName().equals(other.canonicalDefinitionName());
+        if (otherIdentity instanceof Class<?> type) {
+            return identity.getClass() == type;
+        }
+        return identity.equals(otherIdentity);
     }
 
     @Override
     public int hashCode() {
-        if (isRuntimeDefinition()) {
-            return System.identityHashCode(definition);
-        }
-        return canonicalDefinitionName().hashCode();
+        // a compiled definition hashes as its class, which is what a proxy's target class hashes as
+        return identity().hashCode();
     }
 
     @Override
