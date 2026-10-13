@@ -383,10 +383,11 @@ can inject it.
 
 `BeanContainer.resolveInterceptors` (section 11.1.9) resolves the interceptor classes the Jakarta Interceptors
 processor compiled: an interceptor is enabled by the priority it declares, bound when every binding it declares
-is among the given ones, and the resolved list is ordered lowest priority first. The bindings are compared by
-Jakarta Interceptors' own `InterceptorBindings`, on the bindings its processor recorded for the interceptor class
-and the values of the ones given, which is the comparison that resolves the interceptor chains: what the manager
-reports bound is what runs. The interception of a bean still happens where it was compiled; what the manager adds
+is among the given ones, and the resolved list is ordered lowest priority first. The selection is the one Jakarta Interceptors makes for a
+chain, asked of it (`InterceptorBindings.boundInterceptors`): its own comparison of the bindings its processor
+recorded for the interceptor class with the values of the ones given, the enablement and the order of the chain
+included, so what the manager reports bound is what runs; the manager keeps the ones that interpose on the kind of
+interception asked about. The interception of a bean still happens where it was compiled; what the manager adds
 is the description of it the specification asks for, including invoking an interceptor directly through
 `Interceptor.intercept`.
 

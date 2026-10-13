@@ -33,9 +33,9 @@ import java.util.List;
  * annotation.
  *
  * <p>The Jakarta Interceptors implementation resolves the chains, and on its own enables every interceptor class.
- * It asks this bean about each one a binding binds, and the bean manager asks it as well, through
- * {@link CdiInterceptor}, so that the interceptors {@code resolveInterceptors} reports are the interceptors that are
- * invoked. An interceptor class a bean names with {@code @Interceptors} is not asked about: it is enabled by being
+ * It asks this bean about each one a binding binds, and the bean manager asks the same selection of it
+ * ({@code InterceptorBindings.boundInterceptors}), so that the interceptors {@code resolveInterceptors} reports are the
+ * interceptors that are invoked. An interceptor class a bean names with {@code @Interceptors} is not asked about: it is enabled by being
  * named.</p>
  *
  * <p>An interceptor is enabled by the priority it declares, {@code @Priority}, or by the SE bootstrap, whose
