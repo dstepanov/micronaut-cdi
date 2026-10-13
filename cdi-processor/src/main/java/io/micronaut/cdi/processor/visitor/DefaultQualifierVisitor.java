@@ -21,13 +21,9 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
-import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -88,39 +84,14 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        if (!isBeanOfTheSpecification(element)) {
+        // a bean written with the singleton pseudo-scope and nothing else is still a bean that an injection point
+        // naming no qualifier has to resolve to
+        if (!SpecificationBeans.isBean(element)) {
             return;
         }
-        List<MemberElement> producers = new ArrayList<>();
-        element.getEnclosedElements(ElementQuery.ALL_METHODS)
-            .stream()
-            .filter(m -> m.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(producers::add);
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS)
-            .stream()
-            .filter(f -> f.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(producers::add);
         qualifyByDefault(element, true, false);
         // a producer declares its own qualifiers, so the rule is applied to it in its own right
-        producers.forEach(producer -> qualifyByDefault(producer, true, true));
-    }
-
-    /**
-     * Whether the class is a bean of this specification rather than a plain Micronaut one, which is what makes it
-     * subject to the rule. A class that produces beans is one even when it declares no scope itself.
-     */
-    private static boolean isBeanOfTheSpecification(ClassElement element) {
-        // the singleton pseudo-scope is a scope of the specification as much as the others, and a bean-defining
-        // annotation in its own right (section 2.5.1): a bean written with it and nothing else is still a bean
-        // that an injection point naming no qualifier has to resolve to
-        if (SpecificationBeans.hasScopeOfTheSpecification(element)
-            || element.hasStereotype("jakarta.inject.Singleton")) {
-            return true;
-        }
-        return element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
-            .anyMatch(m -> m.hasDeclaredAnnotation(Cdi.PRODUCES))
-            || element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-            .anyMatch(f -> f.hasDeclaredAnnotation(Cdi.PRODUCES));
+        SpecificationBeans.producersOf(element).forEach(producer -> qualifyByDefault(producer, true, true));
     }
 
     private static void qualifyByDefault(Element element, boolean primary, boolean declaredOnly) {
