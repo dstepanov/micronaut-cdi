@@ -349,8 +349,8 @@ public class CdiBean<T> implements Bean<T> {
             }
             io.micronaut.core.type.Argument<?>[] arguments = method.getArguments();
             for (io.micronaut.core.type.Argument<?> argument : arguments) {
-                points.add(new CdiInjectionPoint(beanContext, this, argument, CdiInjectionPoint.parameterSite(declaring,
-                    method.getName(), arguments, argument, false)));
+                points.add(new CdiInjectionPoint(beanContext, this, argument,
+                    CdiInjectionPoint.methodSite(declaring, method, argument)));
             }
         }
         return points;

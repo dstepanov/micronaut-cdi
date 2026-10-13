@@ -16,7 +16,9 @@
 package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.test.inheritance.BoundInitializer;
+import io.micronaut.cdi.test.inheritance.BoundSpecificOverload;
 import io.micronaut.cdi.test.inheritance.GenericInitializer;
+import io.micronaut.cdi.test.inheritance.SpecificOverloadInitializer;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.AnnotatedParameter;
@@ -164,6 +166,20 @@ class OverloadedInjectionPointTest {
             assertEquals(GenericInitializer.class, member.getDeclaringClass());
             // the declaration the compiled types resolve to, rather than the overload they fit as well
             assertEquals(List.of(Object[].class), List.of(member.getParameterTypes()));
+            assertEquals(0, assertInstanceOf(AnnotatedParameter.class, point.getAnnotated()).getPosition());
+        }
+    }
+
+    @Test
+    void anInheritedInitializerIsTheDeclarationItselfWhereAMoreSpecificOverloadFitsTheCompiledTypes() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Bean<BoundSpecificOverload> bean = beanOf(context.getBean(BeanManager.class), BoundSpecificOverload.class);
+
+            InjectionPoint point = bean.getInjectionPoints().iterator().next();
+
+            assertEquals(SpecificOverloadInitializer.Value.class, point.getType());
+            Method member = assertInstanceOf(Method.class, point.getMember());
+            assertEquals(List.of(Object.class), List.of(member.getParameterTypes()));
             assertEquals(0, assertInstanceOf(AnnotatedParameter.class, point.getAnnotated()).getPosition());
         }
     }

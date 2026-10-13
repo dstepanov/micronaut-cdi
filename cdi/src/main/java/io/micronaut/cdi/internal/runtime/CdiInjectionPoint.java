@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiInjectedMethod;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.context.BeanContext;
@@ -97,6 +98,33 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             types.add(parameter.getType());
         }
         return InjectionSite.ofParameter(declaringClass, memberName, types, index);
+    }
+
+    /**
+     * The site of one parameter of an injected method, which names the method by the declaration the processor
+     * recorded of it where it recorded one: the types the definition compiled an inherited method with may fit
+     * another overload of its name as well.
+     *
+     * @param declaringClass The class of the bean
+     * @param method         The injected method
+     * @param argument       The injected parameter
+     * @return The site
+     */
+    static InjectionSite methodSite(Class<?> declaringClass, io.micronaut.inject.MethodInjectionPoint<?, ?> method,
+                                    Argument<?> argument) {
+        InjectionSite compiled = parameterSite(declaringClass, method.getName(), method.getArguments(), argument,
+            false);
+        io.micronaut.core.annotation.AnnotationValue<CdiInjectedMethod> declared = method.getAnnotationMetadata()
+            .getAnnotation(CdiInjectedMethod.class);
+        if (declared == null) {
+            return compiled;
+        }
+        Class<?> declaring = declared.classValue("declaringType").orElse(null);
+        if (declaring == null) {
+            return compiled;
+        }
+        return InjectionSite.ofDeclaredParameter(declaring, compiled.memberName(), compiled.parameterTypes(),
+            compiled.index(), List.of(declared.stringValues("parameterTypes")));
     }
 
     @Override
@@ -209,9 +237,11 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
             // all the same, whose name is the member's
             String member = outer instanceof io.micronaut.inject.MethodInjectionPoint<?, ?> method
                 ? method.getName() : InjectionSite.CONSTRUCTOR;
-            site = parameterSite(declaring, member, outer.getArguments(), argument,
-                outer instanceof io.micronaut.inject.ConstructorInjectionPoint<?>
-                    && CdiResolution.isProxyDefinition(segment.getDeclaringType()));
+            site = outer instanceof io.micronaut.inject.MethodInjectionPoint<?, ?> method
+                ? methodSite(declaring, method, argument)
+                : parameterSite(declaring, member, outer.getArguments(), argument,
+                    outer instanceof io.micronaut.inject.ConstructorInjectionPoint<?>
+                        && CdiResolution.isProxyDefinition(segment.getDeclaringType()));
         } else {
             site = InjectionSite.ofParameter(declaring, segment.getName(), List.of(), -1);
         }
