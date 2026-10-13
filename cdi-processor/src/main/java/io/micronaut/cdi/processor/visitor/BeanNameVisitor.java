@@ -16,8 +16,6 @@
 package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiName;
-import io.micronaut.cdi.internal.metadata.CdiScope;
-import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -72,9 +70,8 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         // the singleton pseudo-scope is read as Micronaut's own rather than into a CdiScope, and a class written
-        // with it is a bean of the specification (section 2.5.1) that may ask for the default name like any other
-        if (element.getAnnotationMetadata().hasStereotype(CdiScope.class)
-            || element.getAnnotationMetadata().hasStereotype("jakarta.inject.Singleton")) {
+        // with it is a bean that may ask for the default name like any other
+        if (SpecificationBeans.isBean(element)) {
             nameIfAskedFor(element, defaultClassName(unqualified(element.getSimpleName())));
             if (element.getAnnotationMetadata().hasStereotype(NAMED) && reachableFromAnExpression(context)) {
                 // a bean with a name is what an expression reaches, and an expression invokes a method through
@@ -85,12 +82,10 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
                     .forEach(method -> method.annotate("io.micronaut.context.annotation.Executable"));
             }
         }
-        element.getEnclosedElements(ElementQuery.ALL_METHODS).stream()
-            .filter(method -> method.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(method -> nameIfAskedFor(method, defaultMethodName(method)));
-        element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-            .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
-            .forEach(field -> nameIfAskedFor(field, field.getName()));
+        for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
+            nameIfAskedFor(producer, producer instanceof MethodElement method
+                ? defaultMethodName(method) : producer.getName());
+        }
     }
 
     /**

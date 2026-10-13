@@ -18,26 +18,29 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Tells a class this processor compiles as a bean of the specification apart from a plain Micronaut class compiled
- * alongside it, which keeps Micronaut's own rules, and answers what the visitors ask of such a class: the scope it
- * declares and whether it has a bean constructor. Each visitor asks the narrowest question its rule needs - the
- * rule about qualifiers takes the singleton pseudo-scope and a producer for a bean, the rule about bean
- * constructors does not - so the questions are kept apart rather than folded into one.
+ * alongside it, which keeps Micronaut's own rules, and answers what the visitors - and the phases of the build
+ * compatible extensions - ask of such a class: whether it is a bean, the producers it declares, the scope it
+ * declares and whether it has a bean constructor. Every visitor asks here, so that each is answered one way.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
-final class SpecificationBeans {
+@Internal
+public final class SpecificationBeans {
 
     /**
      * The scopes of the specification a class may be written with, the singleton pseudo-scope aside.
@@ -62,7 +65,7 @@ final class SpecificationBeans {
      * @param element The class
      * @return Whether it is a bean of the specification
      */
-    static boolean isBeanOfTheSpecification(ClassElement element) {
+    public static boolean isBeanOfTheSpecification(ClassElement element) {
         AnnotationMetadata metadata = element.getAnnotationMetadata();
         if (metadata.hasStereotype(CdiScope.class)
             || metadata.hasStereotype(Cdi.NORMAL_SCOPE)
@@ -70,19 +73,54 @@ final class SpecificationBeans {
             || metadata.hasStereotype("jakarta.interceptor.Interceptor")) {
             return true;
         }
-        if (element.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
-            .anyMatch(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))) {
+        if (!producersOf(element).isEmpty()) {
             return true;
         }
+        // an observer method is inherited, where a producer and a disposer are not (section 4.2)
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
-            if (method.hasDeclaredAnnotation(Cdi.PRODUCES) || Arrays.stream(method.getParameters()).anyMatch(
+            if (Arrays.stream(method.getParameters()).anyMatch(
                 parameter -> parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
                     || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)
-                    || parameter.hasDeclaredAnnotation(Cdi.DISPOSES))) {
+                    || (parameter.hasDeclaredAnnotation(Cdi.DISPOSES)
+                        && method.getDeclaringType().getName().equals(element.getName())))) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Whether the class is a bean a lookup of the specification resolves to: a {@link #isBeanOfTheSpecification
+     * bean of the specification}, or a class written with the singleton pseudo-scope, which the specification
+     * names a scope of its own (section 2.4) and which may be named and is qualified by default like any other
+     * bean. The rules a bean of the specification is held to while it compiles are not applied to such a class:
+     * Micronaut writes the same annotation on beans that keep its own rules.
+     *
+     * @param element The class
+     * @return Whether it is a bean a lookup resolves to
+     */
+    public static boolean isBean(ClassElement element) {
+        return isBeanOfTheSpecification(element) || element.hasStereotype("jakarta.inject.Singleton");
+    }
+
+    /**
+     * The producers the class declares, methods first: a producer is not inherited (section 4.2), so one a
+     * superclass declares is the superclass's.
+     *
+     * @param element The class
+     * @return The producer methods and fields
+     */
+    public static List<MemberElement> producersOf(ClassElement element) {
+        List<MemberElement> producers = new ArrayList<>();
+        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+            if (method.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+                producers.add(method);
+            }
+        }
+        element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared()).stream()
+            .filter(field -> field.hasDeclaredAnnotation(Cdi.PRODUCES))
+            .forEach(producers::add);
+        return producers;
     }
 
     /**
