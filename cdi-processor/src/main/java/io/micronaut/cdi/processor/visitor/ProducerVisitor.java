@@ -185,7 +185,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // the dependent pseudo-scope. The scope is written onto the producer rather than left to default to
             // it, because the annotation metadata of a producer carries what its class declares as well: without
             // one of its own the produced bean would be resolved in the scope of the class that produces it
-            if (!declaresAScope(producer)) {
+            io.micronaut.core.annotation.AnnotationValue<CdiScope> declaredScope =
+                CdiScopeVisitor.scopeRecordOf(producer, context);
+            if (!declaresAScope(producer) && declaredScope == null) {
                 producer.annotate(Prototype.class);
                 // written on the member so that it shadows the scope of the class that declares the producer,
                 // which the produced bean's metadata carries as well
@@ -193,29 +195,12 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     builder -> builder.value(Cdi.DEPENDENT));
             } else if (!producer.hasDeclaredAnnotation(CdiScope.class)) {
                 // the scope came through a stereotype the producer declares: written onto the member itself so
-                // that it shadows the scope of the class that declares the producer (section 2.6.1)
-                io.micronaut.core.annotation.AnnotationMetadata metadata = producer.getAnnotationMetadata();
-                String stereotypeScope = null;
-                boolean normal = false;
-                if (metadata.hasDeclaredStereotype(CdiRequestScope.class)) {
-                    stereotypeScope = Cdi.REQUEST_SCOPED;
-                    normal = true;
-                } else if (metadata.hasDeclaredStereotype(CdiApplicationScope.class)) {
-                    stereotypeScope = Cdi.APPLICATION_SCOPED;
-                    normal = true;
-                } else if (metadata.hasDeclaredStereotype("jakarta.inject.Singleton")) {
-                    stereotypeScope = "jakarta.inject.Singleton";
-                }
-                if (stereotypeScope == null) {
-                    // a normal scope of the application's own, which the stereotype carries
-                    List<String> custom = metadata.getDeclaredMetadata().getAnnotationNamesByStereotype(Cdi.NORMAL_SCOPE);
-                    if (!custom.isEmpty()) {
-                        stereotypeScope = custom.get(0);
-                        normal = true;
-                    }
-                }
-                if (stereotypeScope != null) {
-                    producer.annotate(io.micronaut.cdi.processor.CdiScopes.recordOf(stereotypeScope, normal));
+                // that it shadows the scope of the class that declares the producer (section 2.6.1). It is resolved
+                // as the scope of a class is: what the mappers add for a normal scope - the application scope
+                // Micronaut holds one of the application's own in - is not what was written, and a pseudo-scope of
+                // the application's own is one no mapper reads
+                if (declaredScope != null) {
+                    producer.annotate(declaredScope);
                 }
             }
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is

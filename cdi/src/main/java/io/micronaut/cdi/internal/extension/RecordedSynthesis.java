@@ -183,7 +183,7 @@ public final class RecordedSynthesis {
             // extension registered — so that the instance lives and dies with the context rather than being
             // held as a raw singleton or created afresh for every asker
             builder.singleton(false);
-            builder.scope(contextScopeOf(scope));
+            builder.scope(ExtensionContexts.servedBy(scope));
         } else {
             // the dependent default of section 2.10.5: created afresh for whoever asks
             builder.singleton(false);
@@ -208,20 +208,6 @@ public final class RecordedSynthesis {
     private static @Nullable Class<? extends Annotation> scopeOf(AnnotationValue<CdiSyntheticBean> record) {
         Class<?> scope = record.classValue("scope").orElse(null);
         return scope == null || scope == void.class ? null : (Class<? extends Annotation>) scope;
-    }
-
-    /**
-     * The scope annotation whose context holds the bean: the specification's built-in scopes are served by
-     * this module's own contexts, and a scope an extension registered is served by the context it registered.
-     */
-    private static Class<? extends Annotation> contextScopeOf(Class<? extends Annotation> scope) {
-        return switch (scope.getName()) {
-            case "jakarta.enterprise.context.ApplicationScoped" ->
-                io.micronaut.cdi.internal.metadata.CdiApplicationScope.class;
-            case "jakarta.enterprise.context.RequestScoped" ->
-                io.micronaut.cdi.internal.metadata.CdiRequestScope.class;
-            default -> scope;
-        };
     }
 
     /**

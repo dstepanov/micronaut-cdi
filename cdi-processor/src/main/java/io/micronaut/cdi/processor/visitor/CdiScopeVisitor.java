@@ -256,10 +256,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         element.removeAnnotation(CdiRequestScope.class);
         // a scope other than the specification's own is resolved here only where it is a scope of the kind the
         // specification declares, and whether it is normal is what its declaration says
-        boolean normal = !Cdi.DEPENDENT.equals(resolved) && !"jakarta.inject.Singleton".equals(resolved)
-            && (Cdi.APPLICATION_SCOPED.equals(resolved) || Cdi.REQUEST_SCOPED.equals(resolved)
-                || context.getClassElement(resolved)
-                    .map(declaration -> declaration.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE)).orElse(true));
+        boolean normal = isNormal(resolved, context);
         for (io.micronaut.core.annotation.AnnotationValue<?> annotation
             : CdiScopes.annotationsOf(resolved, normal)) {
             element.annotate(annotation);
@@ -294,10 +291,88 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
+     * The record of the scope a producer method or field declares, directly or through a stereotype it declares,
+     * resolved as the scope of a class is: a normal scope - one of the specification's own, or one the application
+     * or an extension declared - the dependent pseudo-scope, or another pseudo-scope. What the class that declares
+     * the producer declares is not the producer's.
+     *
+     * @param member  The producer
+     * @param context The visitor context
+     * @return The record, or {@code null} where the producer declares no scope
+     */
+    public static io.micronaut.core.annotation.@Nullable AnnotationValue<CdiScope> scopeRecordOf(Element member,
+                                                                                               VisitorContext context) {
+        DeclaredScope declared = scopeDeclaredOn(member, context);
+        String scope = declared != null ? declared.scope() : pseudoScopeDeclaredOn(member, context);
+        return scope == null ? null : CdiScopes.recordOf(scope, isNormal(scope, context));
+    }
+
+    /**
+     * Whether a resolved scope is a normal one: the specification's application and request scopes are, the
+     * dependent and singleton pseudo-scopes are not, and any other is what its declaration says.
+     */
+    private static boolean isNormal(String scope, VisitorContext context) {
+        if (Cdi.DEPENDENT.equals(scope) || "jakarta.inject.Singleton".equals(scope)) {
+            return false;
+        }
+        if (Cdi.APPLICATION_SCOPED.equals(scope) || Cdi.REQUEST_SCOPED.equals(scope)) {
+            return true;
+        }
+        // a scope is resolved only where the compilation can read its declaration
+        return context.getClassElement(scope)
+            .map(declaration -> declaration.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE)).orElse(false);
+    }
+
+    /**
+     * The pseudo-scope other than the dependent one the element declares, directly or through a stereotype it
+     * declares: the singleton pseudo-scope, or an annotation the application declared a scope.
+     */
+    private static @Nullable String pseudoScopeDeclaredOn(Element element, VisitorContext context) {
+        for (String candidate : element.getAnnotationMetadata().getAnnotationNamesByStereotype(PSEUDO_SCOPE)) {
+            String scope = resolveToPseudoScope(candidate, context, new java.util.HashSet<>());
+            if (scope != null && !Cdi.DEPENDENT.equals(scope)
+                && declaredContributorOf(element, candidate, context) != null) {
+                return scope;
+            }
+        }
+        return null;
+    }
+
+    private static final String PSEUDO_SCOPE = "jakarta.inject.Scope";
+
+    /**
+     * The pseudo-scope the candidate annotation is or carries, as {@link #resolveToScope} finds a normal scope;
+     * Micronaut's own scopes, which the mappers add, are none of the application's.
+     */
+    private static @Nullable String resolveToPseudoScope(String candidate, VisitorContext context,
+                                                         java.util.Set<String> seen) {
+        if ("jakarta.inject.Singleton".equals(candidate) || Cdi.DEPENDENT.equals(candidate)) {
+            return candidate;
+        }
+        if (candidate.startsWith("io.micronaut.") || !seen.add(candidate)) {
+            return null;
+        }
+        ClassElement annotation = context.getClassElement(candidate).orElse(null);
+        if (annotation == null) {
+            return null;
+        }
+        if (annotation.hasDeclaredAnnotation(PSEUDO_SCOPE)) {
+            return candidate;
+        }
+        for (String carried : annotation.getAnnotationMetadata().getAnnotationNamesByStereotype(PSEUDO_SCOPE)) {
+            String resolved = resolveToPseudoScope(carried, context, seen);
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        return null;
+    }
+
+    /**
      * The scope the class itself declares: one of the specification's own or an annotation the application
      * declared a normal scope, written on the class directly or carried by a stereotype the class declares.
      */
-    private static @Nullable DeclaredScope scopeDeclaredOn(ClassElement element, VisitorContext context) {
+    private static @Nullable DeclaredScope scopeDeclaredOn(Element element, VisitorContext context) {
         for (String candidate : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.NORMAL_SCOPE)) {
             // what the index hands back is the annotation credited with the stereotype, which for a transitive
             // chain is the annotation the class declares — a stereotype, as often as not — rather than the
@@ -358,7 +433,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * declared annotation that carries it. An annotation that reached the class some other way — by
      * inheritance — has no declared contributor, and none is returned for it.
      */
-    private static @Nullable String declaredContributorOf(ClassElement element,
+    private static @Nullable String declaredContributorOf(Element element,
                                                           String annotation,
                                                           VisitorContext context) {
         if (element.hasDeclaredAnnotation(annotation)) {
