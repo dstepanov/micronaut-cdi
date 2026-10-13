@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.processor.extension;
 
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -212,10 +211,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         if (isNormal) {
             annotations.add(AnnotationValue.builder("io.micronaut.runtime.context.scope.ScopedProxy").build());
         }
-        annotations.add(AnnotationValue.builder(CdiScope.class)
-            .value(scopeName)
-            .member("normal", isNormal)
-            .build());
+        annotations.add(io.micronaut.cdi.processor.CdiScopes.recordOf(scopeName, isNormal));
         normalContexts.put(scopeName, isNormal);
     }
 
