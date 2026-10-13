@@ -259,7 +259,12 @@ each needs a constructor the generated definition can call.
 
 The language model an extension reads, and the annotations and types it composes with `AnnotationBuilder` and
 `Types`, have one implementation, built on the compiler's view of the classes. A synthetic bean, a synthetic
-observer and the built-in beans are described to the registration phase in that model too.
+observer and the built-in beans are described to the registration phase in that model too. A bean is described to
+the registration phase as the container resolves it: a class bean only where the class can be one - not vetoed,
+not abstract, with a bean constructor - a producer by the class that declares it, its bean types narrowed by
+`Typed` and ending in `Object`, its qualifiers with `Any` and without the ones Micronaut writes of its own accord,
+an alternative stereotype making it an alternative, and an observer with the priority it is notified in, written
+on its parameter or on the method.
 
 An error an extension reports through `Messages`, or a problem it throws, in synthesis, in the registration of a
 synthetic component or in validation fails the compilation: there is no deployment to refuse later, and the
