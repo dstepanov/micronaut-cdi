@@ -64,6 +64,7 @@ public final class ObserverRegistry {
      * events of a bounded number of types, and past the bound the rest are resolved as they are fired.
      */
     private volatile Map<Resolution, List<ObserverMethod<?>>> resolved = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile java.util.concurrent.@Nullable Executor asyncExecutor;
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -82,6 +83,25 @@ public final class ObserverRegistry {
      */
     CompiledAnnotationTypes types() {
         return CompiledAnnotationTypes.of(beanContext);
+    }
+
+    /**
+     * The executor an event fired asynchronously notifies its observers on where the firing names none: Micronaut's
+     * executor of blocking work, which an observer may well do, read as it is first needed. A context without one
+     * notifies them on the common pool.
+     *
+     * @return The executor
+     */
+    java.util.concurrent.Executor asyncExecutor() {
+        java.util.concurrent.Executor found = asyncExecutor;
+        if (found == null) {
+            found = beanContext.findBean(java.util.concurrent.ExecutorService.class,
+                    io.micronaut.inject.qualifiers.Qualifiers.byName(io.micronaut.scheduling.TaskExecutors.BLOCKING))
+                .<java.util.concurrent.Executor>map(executor -> executor)
+                .orElseGet(java.util.concurrent.ForkJoinPool::commonPool);
+            asyncExecutor = found;
+        }
+        return found;
     }
 
     /**
