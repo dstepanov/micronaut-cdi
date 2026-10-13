@@ -111,6 +111,46 @@ class InjectionDefinitionErrorTest {
             """, "A bean of a normal scope outlives any one injection point");
     }
 
+    @Test
+    void aProducerThatDeclaresTheDependentScopeBesideANormalStereotypeIsToldItsInjectionPoint() {
+        // CDI 4.1 section 2.7.2: a scope the producer declares itself wins over the one a stereotype carries, so the
+        // producer is dependent and may be told the injection point
+        try (JavaParser parser = new JavaParser()) {
+            parser.generate("accepted.Subject", """
+                package accepted;
+
+                import jakarta.enterprise.context.Dependent;
+                import jakarta.enterprise.inject.Produces;
+                import jakarta.enterprise.inject.spi.InjectionPoint;
+
+                @Dependent
+                public class Subject {
+
+                    @jakarta.enterprise.inject.Stereotype
+                    @jakarta.enterprise.context.RequestScoped
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    public @interface PerRequest {
+                    }
+
+                    public static class Thing {
+                    }
+
+                    @Produces
+                    @Dependent
+                    @PerRequest
+                    Thing thing(InjectionPoint point) {
+                        return new Thing();
+                    }
+                }
+                """);
+            String errors = parser.getDiagnosticCollector().getDiagnostics().stream()
+                .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
+                .map(diagnostic -> diagnostic.getMessage(null))
+                .collect(Collectors.joining("\n"));
+            assertTrue(errors.isEmpty(), errors);
+        }
+    }
+
     static void assertRefused(String source, String expected) {
         try (JavaParser parser = new JavaParser()) {
             assertThrows(RuntimeException.class, () -> parser.generate("broken.Subject", source),
