@@ -200,8 +200,8 @@ records each: the closure of a bean on the bean or on its producer; the observed
 closure and the type variables of every class a compilation compiles, on a class it generates in the package of
 the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
-in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, which reads a wildcard as its
-bound and a type variable as its first bound (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
+in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
+module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
 The type of an event is the class of the event object with its type variables resolved from the
 type the event was fired as, worked out from that record, and an object whose class leaves a variable
 unresolved is refused from it.
@@ -650,13 +650,19 @@ own rather than the first one alone.
   one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
   compares qualifiers and interceptor bindings through the Jakarta Interceptors implementation's
   `BindingValues.matches` instead (`CdiQualifier.matches`), the comparison its chains are built from.
-- **Micronaut's reflective type arguments lose wildcards and type variables.** `ReflectionArguments.of(Type)`
-  reads a wildcard as its bound and a type variable as its first bound, and `ReflectionArguments.toType` never
-  makes a wildcard, while the rules of section 5.2.4 tell `List<? extends Number>` from `List<Number>` and a
-  type variable from its bound; and Micronaut has no utility for the parameterized type closure of a class. The
-  container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
-  the reflection module answers the type closure, the declared type and the event type of a class itself
-  (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
+- **Micronaut's exact type arguments are in its reflection module.** Since Micronaut Core 5.3
+  `ReflectionArguments.ofExact`, `toExactType` and `typeClosureOf` keep a wildcard a wildcard and a type variable
+  a variable, as the rules of section 5.2.4 need, and answer the parameterized type closure of a class; the
+  reflection module of this one reads the type closure of a class, and the closure the event type of a class is
+  resolved through, with them (`ReflectiveCdi.typeClosureOf`, `eventTypeOf`), adding only what an array
+  implements, which `typeClosureOf` does not list. They are in `micronaut-reflection`, which reads classes back,
+  and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
+  `Argument`, and one the specification's API reports made from one, in `io.micronaut.cdi.internal.type`, by the
+  accessors of the type alone. That reading is also what the reflection module reads the type it is handed with,
+  since the container hands over the types it rendered there: `ofExact` reads a variable by its annotated bounds,
+  which a variable the container renders, holding no annotations, has none of. A variable `toExactType` renders has
+  no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
+  module tells the variables of an event's class apart by their names.
 - **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
   definition chosen within a creation is resolved within it (`RuntimeBeanDefinition.LookupContext.getBeanRegistration`
   and `BeanResolutionContext.getBeanRegistration`): the lookup a synthetic bean's creation function is handed
