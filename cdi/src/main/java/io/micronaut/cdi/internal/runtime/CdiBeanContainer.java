@@ -217,10 +217,19 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.context.Qualifier<?> qualifier) {
-        Set<Bean<?>> beans = new LinkedHashSet<>();
+        // the qualifier is handed every eligible definition at once and the type that was asked for, as Micronaut's
+        // own lookups hand it: a qualifier may choose among the candidates - the closest type arguments - rather
+        // than test each on its own
+        Map<BeanDefinition<?>, Bean<?>> byDefinition = new java.util.LinkedHashMap<>();
         for (Bean<?> bean : beansOf(beanType, List.of(CdiQualifier.ANY))) {
-            io.micronaut.inject.BeanDefinition<?> definition = ((CdiBean<?>) bean).definition();
-            if (((io.micronaut.context.Qualifier) qualifier).doesQualify(definition.getBeanType(), definition)) {
+            byDefinition.putIfAbsent(((CdiBean<?>) bean).definition(), bean);
+        }
+        Collection kept = ((io.micronaut.context.Qualifier) qualifier)
+            .filter(beanType.getType(), (Collection) byDefinition.keySet());
+        Set<Bean<?>> beans = new LinkedHashSet<>();
+        for (Object definition : kept) {
+            Bean<?> bean = byDefinition.get(definition);
+            if (bean != null) {
                 beans.add(bean);
             }
         }
