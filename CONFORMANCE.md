@@ -101,9 +101,13 @@ that cannot be told apart, or to a bean in a normal scope that cannot be proxied
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
-by Micronaut's rules. Collections, arrays, streams, maps and `Optional` injection require a bean of the full
-declared type. Explicitly nullable injection may be unsatisfied. An injection point of `Instance`, `Provider`,
-`Event` or `InjectionPoint` resolves late by design and is not validated.
+by Micronaut's rules. An injection point is validated whatever package its type is in: what the container hands
+the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
+manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
+overload its producer recorded, which is the one invoked. Collections, arrays, streams, maps and `Optional`
+injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied. An
+injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`, or of their Micronaut forms, resolves
+late by design and is not validated.
 
 A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
 classpath narrows each container to its own: the SE bootstrap's synthetic archive, a beans predicate, or a
@@ -583,7 +587,8 @@ are merged upstream; the remaining differences below still require adaptation or
   an attribute of the resolution instead.
 - **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
   visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
-  (`CompilationState`, `NonbindingMembersRemapper`) rather than in static fields. Under javac they belong to one
+  (`CompilationState`) rather than in static fields; what belongs to one call stack rather than to the compilation,
+  the guard `NonbindingMembersRemapper` reads a qualifier interface under, stays on the thread. Under javac they belong to one
   processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
   definition processor is remapped with that processor's attributes, so there a remapper does not see the
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
@@ -592,6 +597,15 @@ are merged upstream; the remaining differences below still require adaptation or
   compilations running at once in one process share them as they would a static field; the records of generated
   classes are kept under the generated class's name, which differs between compilations, the visitor of the
   compilation is not.
+- **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
+  constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
+  context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
+  that are private constants of `AopProxyWriter`, and how many there are is passed to generated code alone. A
+  definition of such a subclass is an `AdvisedBeanType`, so the container leaves those names out of the
+  constructor of that definition alone (`CdiResolution.isGeneratedConstructorParameter`, `isProxyDefinition`) when
+  it describes or validates the injection points; a parameter of any other constructor or method so named is the
+  author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
+  remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
