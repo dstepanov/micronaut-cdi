@@ -65,7 +65,10 @@ final class DeploymentValidation {
         "io.micronaut.context.BeanProvider",
         "jakarta.enterprise.event.Event",
         "jakarta.enterprise.inject.spi.InjectionPoint",
-        "jakarta.enterprise.inject.spi.EventMetadata"
+        "jakarta.enterprise.inject.spi.EventMetadata",
+        io.micronaut.cdi.MicronautInstance.class.getName(),
+        io.micronaut.cdi.MicronautEvent.class.getName(),
+        io.micronaut.cdi.MicronautInjectionPoint.class.getName()
     );
 
     private final CdiBeanContainer container;
@@ -87,8 +90,12 @@ final class DeploymentValidation {
             if (!isOfTheSpecification(definition)) {
                 continue;
             }
+            boolean proxy = CdiResolution.isProxyDefinition(definition);
             for (Argument<?> argument : definition.getConstructor().getArguments()) {
-                validate(definition, argument);
+                // what the container itself hands the constructor of a generated subclass is no injection point
+                if (!proxy || !CdiResolution.isGeneratedConstructorParameter(argument)) {
+                    validate(definition, argument);
+                }
             }
             for (FieldInjectionPoint<?, ?> field : definition.getInjectedFields()) {
                 validate(definition, field.asArgument());
@@ -169,24 +176,11 @@ final class DeploymentValidation {
      * given one by default, rather than a bean of Micronaut's own that only shares the context.
      */
     private static boolean isOfTheSpecification(BeanDefinition<?> definition) {
+        // the bean manager is a built-in bean, handed the context it belongs to rather than injected by the rules
+        // of the specification
         return CdiResolution.isBeanOfTheSpecification(definition)
+            && definition.getBeanType() != CdiBeanContainer.class
             && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
-    }
-
-    /**
-     * Whether the argument is something the container hands a generated constructor rather than an injection
-     * point the author wrote: its type, or a type inside it, belongs to the container.
-     */
-    private static boolean isContainerMachinery(Argument<?> argument) {
-        if (argument.getType().getName().startsWith("io.micronaut.")) {
-            return true;
-        }
-        for (Argument<?> parameter : argument.getTypeParameters()) {
-            if (isContainerMachinery(parameter)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -223,8 +217,7 @@ final class DeploymentValidation {
      * where that bean is in a normal scope and cannot be proxied.
      */
     private void validate(BeanDefinition<?> definition, Argument<?> argument) {
-        if (LAZY_KINDS.contains(argument.getType().getName())
-            || isContainerMachinery(argument)) {
+        if (LAZY_KINDS.contains(argument.getType().getName())) {
             return;
         }
         if (argument.isNullable()) {

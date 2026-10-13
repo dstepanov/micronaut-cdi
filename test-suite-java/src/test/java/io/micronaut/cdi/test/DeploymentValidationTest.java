@@ -242,9 +242,29 @@ class DeploymentValidationTest {
             """, "has no bean to satisfy it");
     }
 
+
+    @Test
+    void anApplicationTypeInAMicronautPackageIsValidatedAsAnyOther() {
+        // what the container hands a generated constructor is told by what it is, not by the package of its type
+        for (String type : java.util.List.of("Missing", "java.util.List<Missing>")) {
+            assertRejected("io.micronaut.app.Consumer", """
+                package io.micronaut.app;
+                @jakarta.enterprise.context.Dependent
+                public class Consumer {
+                    @jakarta.inject.Inject %s missing;
+                    public interface Missing {}
+                }
+                """.formatted(type), "has no bean to satisfy it");
+        }
+    }
+
     static void assertRejected(String source, String expected) {
+        assertRejected("invalid.Consumer", source, expected);
+    }
+
+    static void assertRejected(String className, String source, String expected) {
         RuntimeException failure = assertThrows(RuntimeException.class,
-            () -> InMemoryDeployment.start("invalid.Consumer", source).close(), source);
+            () -> InMemoryDeployment.start(className, source).close(), source);
         DeploymentException problem = null;
         for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
             if (cause instanceof DeploymentException deployment) {

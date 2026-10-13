@@ -448,7 +448,9 @@ public class CdiBean<T> implements Bean<T> {
 
     /**
      * The first cause that is not the container's own wrapping, which is what the bean's code threw: the
-     * causes it carries in turn are its own business.
+     * causes it carries in turn are its own business. The wrapping is told by its type - an exception of the
+     * bean context, or the one an executable method wraps a checked exception in - and not by its package, which
+     * an application's exception may share.
      */
     private static @org.jspecify.annotations.Nullable Throwable firstForeignCause(Throwable thrown) {
         // guarded against cause cycles of any length, which the platform permits
@@ -456,7 +458,8 @@ public class CdiBean<T> implements Bean<T> {
         walked.add(thrown);
         for (Throwable cause = thrown.getCause(); cause != null && walked.add(cause);
              cause = cause.getCause()) {
-            if (!cause.getClass().getName().startsWith("io.micronaut.")) {
+            if (!(cause instanceof io.micronaut.context.exceptions.BeanContextException)
+                && !(cause instanceof io.micronaut.core.reflect.exception.InvocationException)) {
                 return cause;
             }
         }

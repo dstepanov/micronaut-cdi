@@ -57,4 +57,29 @@ class InstanceCreationFailureTest {
             assertFails(() -> lookup.getHandle().get());
         }
     }
+
+    /**
+     * An exception of the application's own, declared in a package under {@code io.micronaut} as this suite's are.
+     */
+    public static class Refused extends RuntimeException {
+        public Refused() {
+            super("refused");
+        }
+    }
+
+    @Dependent
+    public static class Refusing {
+        public Refusing() {
+            throw new Refused();
+        }
+    }
+
+    @Test
+    void theExceptionOfTheBeanIsThrownWhateverPackageItIsIn() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Instance<Refusing> lookup = context.getBean(BeanManager.class).createInstance().select(Refusing.class);
+
+            assertEquals("refused", assertThrows(Refused.class, lookup::get).getMessage());
+        }
+    }
 }
