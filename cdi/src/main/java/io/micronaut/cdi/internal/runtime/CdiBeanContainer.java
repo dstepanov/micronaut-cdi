@@ -603,7 +603,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 throw new IllegalArgumentException("The annotation " + binding.annotationType().getName()
                     + " is not an interceptor binding");
             }
-            if (!distinct.add(binding.annotationType())) {
+            // a repeatable binding may be given once for each of its occurrences
+            if (!distinct.add(binding.annotationType())
+                && !Boolean.TRUE.equals(types().isRepeatable(binding.annotationType().getName()))) {
                 throw new IllegalArgumentException("The interceptor binding " + binding.annotationType().getName()
                     + " was given twice");
             }
