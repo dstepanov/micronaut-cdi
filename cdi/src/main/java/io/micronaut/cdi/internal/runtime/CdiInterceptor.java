@@ -103,6 +103,10 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
      * carries is a binding where its own type is one, which is what was recorded of the type while the
      * application compiled, and is asked of the annotation class only for a type nothing was recorded of.
      *
+     * <p>They are read from what the interceptor class declares rather than from the values the Jakarta
+     * Interceptors processor recorded for resolution: those leave out the members that do not bind, and
+     * {@code getInterceptorBindings()} reports every member the annotation was written with.</p>
+     *
      * @return The bindings
      */
     java.util.List<CdiQualifier> bindings() {

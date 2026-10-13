@@ -108,8 +108,10 @@ reads classes back if it asks to:
   parameter of a synthetic component asked for as an annotation - unless the application lists the annotation
   type in Micronaut's `@RegisterAnnotations`, which has a builder generated that makes the instance without
   reflection;
-- an annotation literal with members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)` or
-  `resolveInterceptors(...)`: its members can only be read reflectively;
+- an annotation literal with binding members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)`
+  or `resolveInterceptors(...)`, unless it carries its values - an instance the builder Micronaut generates for a type
+  listed in `@RegisterAnnotations` made, or one Micronaut synthesised: the members of any other can only be read
+  reflectively;
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
   annotation the build recorded nothing of;
 - `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`;

@@ -390,16 +390,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * Every bean of the container, read once from the compiled definitions.
-     *
-     * <p>The programmatic lookup of section 2.4.2 asks for the beans a type and some qualifiers make eligible,
-     * before anything is resolved among them: a selected alternative and the bean it outranks are both in the
-     * answer, and choosing between them is what {@link #resolve} is for. Micronaut's own lookups resolve as
-     * they go, so this reads the definition references directly — everything that was compiled, minus what is
-     * disabled and minus what an environment narrowed away — and lets the rules of the specification decide
-     * eligibility.</p>
-     */
-    /**
      * The container's own bean for the given definition, so that everyone who describes the same bean holds
      * the same object: the one {@code getBeans} answers with.
      *
@@ -473,6 +463,16 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return candidates();
     }
 
+    /**
+     * Every bean of the container, read once from the compiled definitions.
+     *
+     * <p>The programmatic lookup of section 2.4.2 asks for the beans a type and some qualifiers make eligible,
+     * before anything is resolved among them: a selected alternative and the bean it outranks are both in the
+     * answer, and choosing between them is what {@link #resolve} is for. Micronaut's own lookups resolve as
+     * they go, so this reads the definition references directly — everything that was compiled, minus what is
+     * disabled and minus what an environment narrowed away — and lets the rules of the specification decide
+     * eligibility.</p>
+     */
     private List<CdiBean<?>> candidates() {
         List<CdiBean<?>> resolved = beans;
         if (resolved != null) {

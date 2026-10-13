@@ -197,11 +197,12 @@ module: `InjectionPoint.getMember()` and `getAnnotated()`; the qualifiers and in
 bindings of a bean, an injection point, an observer or an event reported as annotation instances, for an
 annotation that is not one of the specification's and whose type the application did not list in
 `@RegisterAnnotations` (Micronaut Core generates a builder for a type listed there, which makes the instance
-without reflection); an annotation literal with binding members handed to a
-lookup; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an annotation the
-build recorded nothing of; `getStereotypeDefinition` and `getInterceptorBindingDefinition`; and the generic
-hierarchy of a class no compilation with this processor has seen. Everything else - resolution, injection,
-events, interception, the contexts, what an extension registered - needs only `micronaut-cdi`, and
+without reflection); an annotation literal with binding members handed to a lookup, unless it carries its
+values as an instance such a builder made does; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and
+`isInterceptorBinding` for an annotation the build recorded nothing of; `getStereotypeDefinition` and
+`getInterceptorBindingDefinition`; and the generic hierarchy of a class no compilation with this processor has
+seen. Everything else - resolution, injection, events, interception, the contexts, what an extension registered -
+needs only `micronaut-cdi`, and
 `MicronautInstance`, `MicronautEvent` and `MicronautBeanContainer` give the selections a reflection-free form.
 
 ### The application context is destroyed as the context begins to stop

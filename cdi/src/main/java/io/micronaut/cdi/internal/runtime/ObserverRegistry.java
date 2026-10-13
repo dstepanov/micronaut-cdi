@@ -285,13 +285,6 @@ public final class ObserverRegistry {
     }
 
     /**
-     * The type an event is resolved by.
-     *
-     * <p>It is the runtime class of the event, which is what section 2.8.1 says, except where the type it was
-     * declared as is parameterized: the parameterization is not on the object itself and would be lost.</p>
-     */
-
-    /**
      * What an event's observers are resolved by: the type it was fired as, compared by its structure, the
      * qualifiers it was fired with, and whether it was fired asynchronously.
      *

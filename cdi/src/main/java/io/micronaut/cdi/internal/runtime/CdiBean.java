@@ -127,13 +127,6 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
-     * The bean types of the bean the given definition describes, without an instance of this class around.
-     *
-     * @param definition The definition
-     * @param beanClass  The class of the bean, with a proxy's target already resolved
-     * @return The bean types
-     */
-    /**
      * The type closure the processor recorded for the bean, where it recorded one and every class of it can
      * be referred to from the definition.
      */
@@ -155,6 +148,14 @@ public class CdiBean<T> implements Bean<T> {
         return closure;
     }
 
+    /**
+     * The bean types of the bean the given definition describes, without an instance of this class around.
+     *
+     * @param index      The generic hierarchies the processor recorded, or {@code null}
+     * @param definition The definition
+     * @param beanClass  The class of the bean, with a proxy's target already resolved
+     * @return The bean types
+     */
     static java.util.List<Argument<?>> typesOf(@Nullable RecordedTypeIndex index, BeanDefinition<?> definition,
                                                Class<?> beanClass) {
         if (definition instanceof io.micronaut.inject.provider.AbstractProviderDefinition<?>) {

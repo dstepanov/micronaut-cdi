@@ -444,15 +444,6 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     /**
-     * The beans of one request, carried by the propagated context so that they reach wherever the request's work
-     * goes. The map is mutable and the element holds it, because the context itself is immutable: beans are put
-     * into the map as the request asks for them, rather than by replacing the element.
-     *
-     * @param owner The scope the request belongs to, each container having its own
-     * @param beans The beans of the request
-     * @param ended Whether the request has ended, its beans destroyed
-     */
-    /**
      * The beans of one request, and the locks their creations in it take. The locks are held beside the beans
      * rather than in the same map: a creation that resolves another bean of the request would otherwise update the
      * map recursively.
@@ -466,6 +457,15 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         }
     }
 
+    /**
+     * The beans of one request, carried by the propagated context so that they reach wherever the request's work
+     * goes. The map is mutable and the element holds it, because the context itself is immutable: beans are put
+     * into the map as the request asks for them, rather than by replacing the element.
+     *
+     * @param owner The scope the request belongs to, each container having its own
+     * @param beans The beans of the request
+     * @param ended Whether the request has ended, its beans destroyed
+     */
     private record Instances(RequestScope owner, Map<BeanIdentifier, CreatedBean<?>> beans,
                              java.util.concurrent.atomic.AtomicBoolean ended)
         implements PropagatedContextElement {
