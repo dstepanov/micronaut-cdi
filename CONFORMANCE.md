@@ -589,6 +589,11 @@ Groovy class.
 What this module works around in Micronaut Core, or accepts from it, as of Micronaut Core 5.3.
 The provider hook, fresh registrations, dependency groups, destruction ownership and type-annotation fixes
 are merged upstream; the remaining differences below still require adaptation or are accepted limitations.
+Micronaut Core 5.3 also hands a resolution customizer the context it serves (`BeanResolutionCustomizer.forContext`),
+so `CdiResolutionCustomizer` reads the type closures the processor recorded from that context rather than being
+handed them as the first lifecycle event's registry is created: a parameterized lookup made before then is matched
+by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
+own rather than the first one alone.
 
 - **Annotations as the source wrote them are derived, not recorded.** A repeatable annotation is folded into its
   container, and what Micronaut's mappers add is not told apart from what the source wrote. The language model
@@ -640,16 +645,6 @@ are merged upstream; the remaining differences below still require adaptation or
   container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
   the reflection module answers the type closure, the declared type and the event type of a class itself
   (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
-- **A resolution customizer is handed no context.** Micronaut builds a `BeanResolutionCustomizer` from the builder
-  of a context, before the context exists, calls `isCandidateBean` without one, and applies no
-  `BeanContextConfigurable` to it (`DefaultBeanContext.getBeanResolutionCustomizer()` is package-private). The rules
-  of section 2.4.2.1 that `CdiResolutionCustomizer` applies to a parameterized lookup need the type closures the
-  processor recorded, which are beans of the context. The context reaches its own customizer through the public
-  `getContextConfiguration().beanResolutionCustomizer()`, and the container hands it the index of its closures as
-  it creates the registry its first lifecycle event goes through (`CdiResolutionCustomizer.attach`); a
-  parameterized lookup made before then is matched by what Micronaut exposes alone, and a customizer installed on a
-  builder that builds two contexts serves the first. Handing a customizer its context — a `configure(BeanContext)`,
-  or the context as an argument of `isCandidateBean` — would remove the step.
 - **A lookup by definition cannot carry the injection point it stands for.** `Instance` creates a dependent bean by
   the definition it selected (`getBeanRegistration(definition, argument)`), which starts a resolution of its own;
   the definition-keyed form that takes the caller's `BeanResolutionContext` is package-private on

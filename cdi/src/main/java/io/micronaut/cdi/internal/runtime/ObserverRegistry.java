@@ -68,11 +68,6 @@ public final class ObserverRegistry {
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
-        // the lifecycle events of the application are fired through this before the container is up, which is
-        // as early as the resolution rules need the generic hierarchies of its classes: Micronaut builds the
-        // customizer that applies them before the context exists, and never hands it the context, so the context
-        // is handed to it here
-        CdiResolutionCustomizer.attach(beanContext);
     }
 
     /**
