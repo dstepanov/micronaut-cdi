@@ -606,6 +606,13 @@ are merged upstream; the remaining differences below still require adaptation or
   it describes or validates the injection points; a parameter of any other constructor or method so named is the
   author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
   remove the copy.
+- **The context is injected under types no bean definition stands for.** `DefaultBeanContext` hands itself out as
+  `BeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`, `ExecutionHandleLocator`,
+  `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and `PropertyPlaceholderResolver`, listed in
+  its private `thisInterfaces`, and resolves `io.micronaut.inject.InjectionPoint` from the resolution under way;
+  none of them has a definition the container could see. The deployment validation, which resolves an injection
+  point by the definitions, therefore keeps a copy of that list (`DeploymentValidation.CONTEXT_TYPES`); a public
+  list, or a definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

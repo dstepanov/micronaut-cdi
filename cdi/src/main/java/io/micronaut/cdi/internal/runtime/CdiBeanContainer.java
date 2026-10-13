@@ -71,6 +71,7 @@ import java.util.Set;
  * @since 1.0
  */
 @io.micronaut.context.annotation.Context
+@io.micronaut.cdi.internal.metadata.CdiBuiltIn
 @io.micronaut.cdi.internal.metadata.CdiScope("jakarta.enterprise.context.Dependent")
 @jakarta.enterprise.inject.Default
 @Internal
