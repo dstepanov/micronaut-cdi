@@ -35,11 +35,11 @@ import java.util.Set;
  * two halves of that rule are what tell a bean written for no particular use apart from one written for a
  * particular one, and without it the two would be indistinguishable and every such pair ambiguous.</p>
  *
- * <p>Only the bean half of the rule is written onto the bean here. The injection point half is left to Micronaut,
- * which resolves an injection point that names no qualifier to the primary bean of the type when there is more
- * than one candidate; declaring the default bean primary is what makes that resolution pick the same bean the
- * specification's rule would. It is also what keeps a bean of this specification injectable into one that is not:
- * an injection point of a plain Micronaut bean is not rewritten, so it goes on resolving the way it did.</p>
+ * <p>Only the bean half of the rule is written onto the bean here. The injection point half is the container's:
+ * a lookup of the specification resolves by the qualifiers of the bean, {@code Default} among them. The default
+ * bean is declared primary as well, which is what keeps a bean of this specification injectable into one that is
+ * not: Micronaut resolves an injection point of a plain Micronaut bean that names no qualifier to the primary bean
+ * of the type where there is more than one, which is the bean the specification's rule picks.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -57,8 +57,7 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
         Cdi.DEFAULT,
         // what this module's own visitors write on a selected alternative: Micronaut's primary is a
         // qualifier, but it is not the bean declaring one
-        "io.micronaut.context.annotation.Primary",
-        "io.micronaut.context.annotation.Order"
+        "io.micronaut.context.annotation.Primary"
     );
 
     @Override

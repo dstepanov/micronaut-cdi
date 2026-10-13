@@ -31,9 +31,10 @@ import java.util.List;
  * Narrows the bean types of a bean to the ones {@code jakarta.enterprise.inject.Typed} names.
  *
  * <p>Micronaut limits the types a bean is resolvable by with the {@code typed} member of its own bean annotation,
- * which is the same restriction. A {@code @Typed} with no type at all leaves the bean resolvable by nothing but
- * {@code java.lang.Object}, which the specification says as well, and which is written here as the empty list of
- * types it is.</p>
+ * which is the same restriction, and which its own lookups apply; the container reads the bean types of a bean of
+ * the specification from the {@code Typed} itself, kept beside it. A {@code @Typed} with no type at all leaves the
+ * bean resolvable by nothing but {@code java.lang.Object}, which the specification says as well, and which is
+ * written here as that one type, since an empty list of types reads to Micronaut as no restriction.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

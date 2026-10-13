@@ -20,8 +20,8 @@ import io.micronaut.core.annotation.Internal;
 /**
  * The names of the annotations of the Jakarta Contexts and Dependency Injection specification.
  *
- * <p>The names are used rather than the classes so that the specification does not have to be on the annotation
- * processor classpath of a build that does not use it.</p>
+ * <p>Compiled annotation metadata records an annotation by its name, and the visitors read it so: the names are
+ * what an element is asked about, whether the annotation class is on the processor's classpath or not.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
