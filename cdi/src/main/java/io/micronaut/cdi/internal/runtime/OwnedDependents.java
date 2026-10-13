@@ -38,10 +38,11 @@ import java.util.List;
  * own, opened as it creates its first instance and closed with it. A singleton or an instance of another scope
  * stays its scope's.</p>
  *
- * <p>As the context stops, Micronaut opens a new group for a listener of its shutdown event alone, so a lookup
- * made from a {@code @PreDestroy} that runs after it, or on another thread, gets none. What such a lookup creates
- * is held here instead and destroyed the same way, as is an instance a context of an extension created, which
- * Micronaut did not.</p>
+ * <p>As the context stops, Micronaut opens a new group for a listener of its shutdown event alone, and resolves
+ * through a group or the resolver of a bean on the thread that stops it alone, so a lookup made from a
+ * {@code @PreDestroy} that runs after it, or on another thread, gets neither. What such a lookup creates is held
+ * here instead and destroyed the same way, as is an instance a context of an extension created, which Micronaut
+ * did not.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -101,10 +102,22 @@ public final class OwnedDependents implements AutoCloseable {
      * @return The registration
      */
     public <T> BeanRegistration<T> registration(BeanDefinition<? extends T> definition, Argument<T> type) {
+        if (resolver == null && !CdiResolution.isDependent(definition)) {
+            // a bean of a scope is the scope's, and needs no group of the owner's opened for it
+            return beanContext.getBeanRegistration(definition, type);
+        }
         BeanDependencyResolver owner = owner();
-        BeanRegistration<T> registration = owner != null
-            ? owner.getBeanRegistration(definition, type) : beanContext.getBeanRegistration(definition, type);
-        keep(registration, owner != null);
+        if (owner != null) {
+            try {
+                BeanRegistration<T> registration = owner.getBeanRegistration(definition, type);
+                keep(registration, true);
+                return registration;
+            } catch (IllegalStateException e) {
+                // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
+            }
+        }
+        BeanRegistration<T> registration = beanContext.getBeanRegistration(definition, type);
+        keep(registration, false);
         return registration;
     }
 
@@ -118,13 +131,27 @@ public final class OwnedDependents implements AutoCloseable {
      * @return The registration
      */
     public <T> BeanRegistration<T> registration(Argument<T> type, @Nullable Qualifier<T> qualifier) {
+        if (resolver == null) {
+            BeanDefinition<T> definition = beanContext.findBeanDefinition(type, qualifier).orElse(null);
+            if (definition != null && !CdiResolution.isDependent(definition)) {
+                // a bean of a scope is the scope's, and needs no group of the owner's opened for it
+                return beanContext.getBeanRegistration(definition, type);
+            }
+        }
         BeanDependencyResolver owner = owner();
-        BeanRegistration<T> registration = owner != null
-            ? owner.getBeanRegistration(type, qualifier) : beanContext.getBeanRegistration(type, qualifier);
-        keep(registration, owner != null);
+        if (owner != null) {
+            try {
+                BeanRegistration<T> registration = owner.getBeanRegistration(type, qualifier);
+                keep(registration, true);
+                return registration;
+            } catch (IllegalStateException e) {
+                // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
+            }
+        }
+        BeanRegistration<T> registration = beanContext.getBeanRegistration(type, qualifier);
+        keep(registration, false);
         return registration;
     }
-
     /**
      * A fresh instance of the definition, whatever its scope, which belongs to the owner.
      *
@@ -203,8 +230,11 @@ public final class OwnedDependents implements AutoCloseable {
             }
         }
         BeanDependencyResolver owner = resolver != null ? resolver : currentGroup();
-        if (owner == null || !owner.destroy((BeanRegistration<?>) registration)) {
+        if (owner == null) {
             registration.close();
+        } else {
+            // an owner that no longer has it destroyed it already, as its own owner was destroyed
+            owner.destroy((BeanRegistration<?>) registration);
         }
         return true;
     }
@@ -221,8 +251,8 @@ public final class OwnedDependents implements AutoCloseable {
 
     /**
      * Destroys what the owner created and Micronaut does not destroy with a bean: its own group, and what it
-     * holds itself, every one attempted. What it created through the resolver of the bean it belongs to goes with
-     * that bean.
+     * holds itself, every one attempted, after an error as after an exception. What it created through the
+     * resolver of the bean it belongs to goes with that bean.
      */
     @Override
     public void close() {
@@ -238,29 +268,32 @@ public final class OwnedDependents implements AutoCloseable {
                 created.clear();
             }
         }
-        RuntimeException failure = null;
+        Throwable failure = null;
         // in the reverse of the order they were created in, as Micronaut destroys the dependents of a bean: one
         // created later may use one created before it as it is destroyed
         for (CreatedBean<?> registration : releasing.reversed()) {
             try {
                 registration.close();
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | Error e) {
                 failure = joined(failure, e);
             }
         }
         if (closing != null) {
             try {
                 closing.close();
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | Error e) {
                 failure = joined(failure, e);
             }
         }
+        if (failure instanceof Error error) {
+            throw error;
+        }
         if (failure != null) {
-            throw failure;
+            throw (RuntimeException) failure;
         }
     }
 
-    private static RuntimeException joined(@Nullable RuntimeException failure, RuntimeException next) {
+    private static Throwable joined(@Nullable Throwable failure, Throwable next) {
         if (failure == null) {
             return next;
         }

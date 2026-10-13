@@ -241,7 +241,10 @@ public final class RecordedSynthesis {
     /**
      * The lookup handed to a creation or a disposal function, which creates what it looks up on behalf of the
      * synthetic bean: the dependent instances are destroyed with the created bean, or as the disposal returns.
-     * Where the context tracks no dependents of a bean, the lookup owns them, and closing it destroys them.
+     * Where the context tracks no dependents of a bean - a context other than Micronaut's own, whose creation
+     * context hands out no resolver - the lookup owns them in a group of its own: the disposal closes it as it
+     * returns, and the lookup a creation was handed is not closed, as Micronaut destroys nothing a bean it does not
+     * track the dependents of looked up.
      */
     private CdiInstance<Object> lookupFor(RuntimeBeanDefinition.LookupContext lookupContext) {
         io.micronaut.context.BeanDependencyResolver resolver;
