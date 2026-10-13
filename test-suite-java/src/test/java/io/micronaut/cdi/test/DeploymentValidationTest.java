@@ -222,6 +222,26 @@ class DeploymentValidationTest {
         }
     }
 
+
+    @Test
+    void anOverloadedDisposerIsValidatedAsTheOverloadItsProducerNames() {
+        // the first overload of the name is the one of the other producer: the parameters validated are the ones
+        // of the overload that is invoked
+        assertRejected("""
+            package invalid;
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                public static class Fig {}
+                public static class Pear {}
+                public interface Missing {}
+                @jakarta.enterprise.inject.Produces Fig fig() { return new Fig(); }
+                @jakarta.enterprise.inject.Produces Pear pear() { return new Pear(); }
+                void dispose(@jakarta.enterprise.inject.Disposes Fig fig) { }
+                void dispose(@jakarta.enterprise.inject.Disposes Pear pear, Missing missing) { }
+            }
+            """, "has no bean to satisfy it");
+    }
+
     static void assertRejected(String source, String expected) {
         RuntimeException failure = assertThrows(RuntimeException.class,
             () -> InMemoryDeployment.start("invalid.Consumer", source).close(), source);

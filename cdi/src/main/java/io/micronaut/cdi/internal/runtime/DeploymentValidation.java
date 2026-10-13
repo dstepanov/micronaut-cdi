@@ -101,7 +101,7 @@ final class DeploymentValidation {
                     validate(definition, argument);
                 }
             }
-            validateDisposer(definition, beans);
+            validateDisposer(definition);
             validateObservers(definition);
         }
         validateNames(beans);
@@ -117,34 +117,29 @@ final class DeploymentValidation {
     /**
      * The parameters of a disposer method other than the disposed one are injection points.
      */
-    private void validateDisposer(BeanDefinition<?> definition, List<CdiBean<?>> beans) {
-        AnnotationValue<?> disposer = definition.getAnnotationMetadata()
-            .getAnnotation(CdiDisposer.class);
+    private void validateDisposer(BeanDefinition<?> definition) {
+        AnnotationValue<CdiDisposer> recorded = definition.getAnnotationMetadata().getAnnotation(CdiDisposer.class);
+        if (recorded == null) {
+            return;
+        }
+        DisposerInvoker.Disposer disposer;
+        try {
+            // the disposer the product is destroyed by, found the way it is found then
+            disposer = DisposerInvoker.disposerOf(container.beanContext(), recorded);
+        } catch (IllegalStateException e) {
+            problems.add(new DeploymentException(e.getMessage(), e));
+            return;
+        } catch (io.micronaut.context.exceptions.NoSuchBeanException e) {
+            // the bean that declares it is not one of the deployment, and neither is what it produces
+            return;
+        }
         if (disposer == null) {
             return;
         }
-        String method = disposer.stringValue("method").orElse(null);
-        String declaring = disposer.stringValue("declaringType").orElse(null);
-        if (method == null || declaring == null) {
-            return;
-        }
-        int disposed = disposer.intValue("disposedParameter").orElse(0);
-        for (CdiBean<?> bean : beans) {
-            BeanDefinition<?> declaringDefinition = bean.definition();
-            if (!declaringDefinition.getBeanType().getName().equals(declaring)) {
-                continue;
-            }
-            for (ExecutableMethod<?, ?> executable : declaringDefinition.getExecutableMethods()) {
-                if (!executable.getMethodName().equals(method)) {
-                    continue;
-                }
-                Argument<?>[] arguments = executable.getArguments();
-                for (int i = 0; i < arguments.length; i++) {
-                    if (i != disposed) {
-                        validate(definition, arguments[i]);
-                    }
-                }
-                return;
+        Argument<?>[] arguments = disposer.method().getArguments();
+        for (int i = 0; i < arguments.length; i++) {
+            if (i != disposer.disposedParameter()) {
+                validate(definition, arguments[i]);
             }
         }
     }
