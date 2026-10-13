@@ -641,52 +641,16 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     /**
      * The values of interceptor bindings handed over as annotation instances, in the form the Jakarta Interceptors
-     * implementation compares bindings in: an annotation held by a member is its value too, as compiled metadata
-     * records it, rather than an instance.
+     * implementation compares bindings in. They are the values the bindings were read into: a member that holds an
+     * annotation holds its value already, as compiled metadata records it and as the reflection module reads an
+     * instance, so nothing is read again here - core's own reading of an annotation instance would reflect.
      */
     private static List<AnnotationValue<?>> bindingValuesOf(List<CdiQualifier> bindings) {
         List<AnnotationValue<?>> values = new java.util.ArrayList<>(bindings.size());
         for (CdiQualifier binding : bindings) {
-            values.add(asValues(binding.written()));
+            values.add(binding.written());
         }
         return values;
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static AnnotationValue<?> asValues(AnnotationValue<?> value) {
-        Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
-        boolean converted = false;
-        for (Map.Entry<CharSequence, Object> member : value.getValues().entrySet()) {
-            Object converting = asValue(member.getValue());
-            converted |= converting != member.getValue();
-            members.put(member.getKey(), converting);
-        }
-        return converted ? new AnnotationValue(value.getAnnotationName(), members, value.getDefaultValues())
-            : value;
-    }
-
-    private static Object asValue(Object member) {
-        if (member instanceof Annotation annotation) {
-            return asValues(AnnotationValue.of(annotation));
-        }
-        if (member instanceof AnnotationValue<?> nested) {
-            return asValues(nested);
-        }
-        if (member instanceof Object[] array) {
-            Object[] converted = null;
-            for (int i = 0; i < array.length; i++) {
-                Object element = asValue(array[i]);
-                if (element != array[i]) {
-                    if (converted == null) {
-                        converted = new Object[array.length];
-                        System.arraycopy(array, 0, converted, 0, array.length);
-                    }
-                    converted[i] = element;
-                }
-            }
-            return converted == null ? member : converted;
-        }
-        return member;
     }
 
     /**
