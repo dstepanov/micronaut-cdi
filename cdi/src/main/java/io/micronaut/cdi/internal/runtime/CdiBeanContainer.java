@@ -277,6 +277,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         boolean specification = false;
         boolean micronaut = false;
         for (CdiBean<?> bean : candidatesOfType(point)) {
+            if (isInterceptor(bean)) {
+                // a bean of the specification of its class, though never one a point is injected with: it says
+                // nothing of which rules the point is resolved by
+                continue;
+            }
             if (CdiResolution.isBeanOfTheSpecification(bean.definition())) {
                 specification = true;
             } else {
