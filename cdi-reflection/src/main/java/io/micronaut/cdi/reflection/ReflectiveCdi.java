@@ -22,6 +22,8 @@ import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.type.Argument;
+import io.micronaut.reflection.ReflectionArguments;
 import io.micronaut.reflection.ReflectionAnnotations;
 import io.micronaut.reflection.ReflectionExecutables;
 import jakarta.enterprise.inject.spi.Annotated;
@@ -74,8 +76,36 @@ public final class ReflectiveCdi implements CdiReflection {
 
     @Override
     public java.util.List<Type> typeClosureOf(Type type, boolean arrayStops) {
+        return closureOf(type, arrayStops);
+    }
+
+    private static java.util.List<Type> closureOf(Type type, boolean arrayStops) {
         java.util.List<Type> closure = new java.util.ArrayList<>();
-        collectClosure(type, closure, arrayStops);
+        Class<?> raw = CdiTypes.rawClassOf(type);
+        if (raw == null || raw == Object.class) {
+            // a type variable or a wildcard names no type of its own
+            return closure;
+        }
+        closure.add(type);
+        if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
+            return closure;
+        }
+        if (raw.isArray()) {
+            // what every array implements, which Micronaut's closure of an array does not list
+            closure.addAll(java.util.List.of(raw.getInterfaces()));
+            return closure;
+        }
+        // Micronaut's reading of the generic signatures above the type, which keeps a wildcard a wildcard and a
+        // variable a variable, with what a subtype says about its parameters carried into its supertypes. The type
+        // is read as the container reads one handed in: the container hands over the ones it rendered itself, whose
+        // variables carry their bounds but no annotated bounds
+        java.util.List<Argument<?>> supertypes =
+            ReflectionArguments.typeClosureOf(io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(type));
+        for (Argument<?> supertype : supertypes.subList(1, supertypes.size())) {
+            if (supertype.getType() != Object.class) {
+                closure.add(ReflectionArguments.toExactType(supertype));
+            }
+        }
         return closure;
     }
 
@@ -87,63 +117,9 @@ public final class ReflectiveCdi implements CdiReflection {
      * @return The closure
      */
     static Set<Type> annotatedTypeClosure(Type type) {
-        java.util.List<Type> collected = new java.util.ArrayList<>();
-        collectClosure(type, collected, true);
-        Set<Type> closure = new LinkedHashSet<>(collected);
+        Set<Type> closure = new LinkedHashSet<>(closureOf(type, true));
         closure.add(Object.class);
         return closure;
-    }
-
-    private static void collectClosure(@Nullable Type type, java.util.List<Type> closure, boolean arrayStops) {
-        if (type == null || type == Object.class) {
-            return;
-        }
-        Class<?> raw = CdiTypes.rawClassOf(type);
-        if (raw == null) {
-            // a type variable or a wildcard names no type of its own
-            return;
-        }
-        closure.add(type);
-        if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
-            // a primitive has no supertypes to collect in the first place
-            return;
-        }
-        Map<TypeVariable<?>, Type> substitution = new java.util.HashMap<>();
-        if (type instanceof ParameterizedType parameterized) {
-            TypeVariable<?>[] variables = raw.getTypeParameters();
-            Type[] arguments = parameterized.getActualTypeArguments();
-            for (int i = 0; i < variables.length && i < arguments.length; i++) {
-                substitution.put(variables[i], arguments[i]);
-            }
-        }
-        for (Type anInterface : raw.getGenericInterfaces()) {
-            collectClosure(substitute(anInterface, substitution), closure, arrayStops);
-        }
-        collectClosure(substitute(raw.getGenericSuperclass(), substitution), closure, arrayStops);
-    }
-
-    /**
-     * The type with the given variables substituted, so that what a subtype says about its parameters carries
-     * into the supertypes it collects.
-     */
-    private static @Nullable Type substitute(@Nullable Type type, Map<TypeVariable<?>, Type> substitution) {
-        if (substitution.isEmpty() || type == null) {
-            return type;
-        }
-        if (type instanceof TypeVariable<?> variable) {
-            return substitution.getOrDefault(variable, variable);
-        }
-        if (type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> rawType) {
-            Type[] arguments = parameterized.getActualTypeArguments();
-            Type[] substituted = new Type[arguments.length];
-            boolean changed = false;
-            for (int i = 0; i < arguments.length; i++) {
-                substituted[i] = substitute(arguments[i], substitution);
-                changed |= substituted[i] != arguments[i];
-            }
-            return changed ? CdiParameterizedType.of(rawType, substituted) : type;
-        }
-        return type;
     }
 
     @Override
@@ -159,8 +135,9 @@ public final class ReflectiveCdi implements CdiReflection {
             return runtimeClass;
         }
         // the variables the class declares are resolved against the type the event was fired as: the class's
-        // own view of that type is unified with it
-        Map<TypeVariable<?>, Type> resolution = new java.util.HashMap<>();
+        // own view of that type is unified with it. The variables are told apart by their names, which are the
+        // class's own: the closure renders a variable of its own rather than the one the class declares
+        Map<String, Type> resolution = new java.util.HashMap<>();
         Class<?> declaredRaw = CdiTypes.rawClassOf(declaredType);
         if (declaredType instanceof ParameterizedType declaredParameterized && declaredRaw != null) {
             for (Type supertype : typeClosureOf(declaredTypeOf(runtimeClass), false)) {
@@ -176,7 +153,7 @@ public final class ReflectiveCdi implements CdiReflection {
         }
         Type[] arguments = new Type[variables.length];
         for (int i = 0; i < variables.length; i++) {
-            Type resolved = resolution.get(variables[i]);
+            Type resolved = resolution.get(variables[i].getName());
             if (resolved instanceof java.lang.reflect.WildcardType wildcard) {
                 Type[] uppers = wildcard.getUpperBounds();
                 resolved = uppers.length > 0 ? uppers[0] : Object.class;
@@ -191,9 +168,9 @@ public final class ReflectiveCdi implements CdiReflection {
         return CdiParameterizedType.of(runtimeClass, arguments);
     }
 
-    private static void unify(Type own, Type declared, Map<TypeVariable<?>, Type> resolution) {
+    private static void unify(Type own, Type declared, Map<String, Type> resolution) {
         if (own instanceof TypeVariable<?> variable) {
-            resolution.put(variable, declared);
+            resolution.put(variable.getName(), declared);
             return;
         }
         if (own instanceof ParameterizedType ownParameterized

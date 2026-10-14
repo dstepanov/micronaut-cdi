@@ -30,7 +30,6 @@ import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,16 +38,16 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Records on every occurrence of a qualifier or an interceptor binding which of its members take no part in
- * resolution, under {@code $nonBinding}: the one record of them the container compares by.
+ * Records on every occurrence of a qualifier or an interceptor binding the members a build compatible extension
+ * marked {@code Nonbinding} while the compilation was discovering its classes, under {@code $nonBinding}: the one
+ * record of the members that take no part in resolution the container compares by.
  *
- * <p>Micronaut lists a member it reads as {@code NonBinding} only on an occurrence that writes the member, and reads
- * whether it is one from the member as the source declares it. Two things are left out by that: an occurrence that
- * leaves a non-binding member at its default says nothing, so a lookup that writes the member down cannot tell that
- * it does not bind; and a member a build compatible extension marked {@code Nonbinding} while the compilation was
- * discovering its classes is not marked in the source. This lists every member the annotation interface marks, and
- * every member the discovery phase marked, on every occurrence, merged with what Micronaut wrote. The qualifier
- * stereotype of the occurrence is given the same list, which is where Micronaut's own resolution reads it from.</p>
+ * <p>Micronaut lists the members the annotation interface marks {@code NonBinding} on every occurrence itself,
+ * written or left at their defaults, and on the qualifier stereotype of the occurrence, which is where its own
+ * resolution reads them from. What it cannot know is a member the discovery phase marked, which the source does not:
+ * those are merged with what Micronaut wrote, on the occurrence and on its qualifier stereotype. A qualifier an
+ * extension composes for a synthetic component is no occurrence Micronaut reads, and is given the members its
+ * interface marks as well ({@link #complete(AnnotationValue, VisitorContext, DiscoveredClasses)}).</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -58,16 +57,6 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
 
     private static final String BINDING = "jakarta.interceptor.InterceptorBinding";
     private static final String MICRONAUT_NONBINDING = "io.micronaut.context.annotation.NonBinding";
-
-    /**
-     * The annotation interfaces being read on this thread: reading one builds the metadata of its members, which
-     * comes back here, and an annotation that names itself there is not read again. The guard belongs to the call
-     * stack rather than to the compilation: under Groovy the attributes of a visitor context are one map for the
-     * whole process, which two compilations running at once would share. The interface itself is not cached:
-     * Micronaut keeps the resolved type and the metadata of its members for the round, and reading the names off
-     * them is cheap.
-     */
-    private static final ThreadLocal<Set<String>> READING = ThreadLocal.withInitial(HashSet::new);
 
     @Override
     public String getPackageName() {
@@ -81,17 +70,21 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
             return List.of(annotation);
         }
         DiscoveredClasses discovered = BuildCompatibleExtensionVisitor.discoveryOf(visitorContext);
-        Boolean bindingType = isBindingType(annotation, discovered);
-        if (Boolean.FALSE.equals(bindingType)) {
+        if (discovered == null) {
             return List.of(annotation);
         }
-        return List.of(complete(annotation, nonbindingMembersOf(name, visitorContext, discovered, bindingType == null)));
+        Set<String> marked = discovered.nonbindingMembersOf(name);
+        if (marked.isEmpty() || Boolean.FALSE.equals(isBindingType(annotation, discovered))) {
+            return List.of(annotation);
+        }
+        return List.of(complete(annotation, marked));
     }
 
     /**
      * The qualifier with every member that takes no part in resolution listed under {@code $nonBinding}: what a
      * synthetic component's qualifier, which an extension composes rather than the compiler reading it, is
-     * recorded with.
+     * recorded with. Micronaut lists the members an annotation interface marks only on an occurrence it reads, so
+     * they are read off the interface here, and the ones the discovery phase marked are added to them.
      *
      * @param qualifier  The qualifier
      * @param context    The compilation, which the annotation interface is read from
@@ -104,7 +97,11 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
         if (isNeverABindingType(name)) {
             return qualifier;
         }
-        return complete(qualifier, nonbindingMembersOf(name, context, discovered, false));
+        Set<String> members = new LinkedHashSet<>(declaredNonbindingMembersOf(name, context));
+        if (discovered != null) {
+            members.addAll(discovered.nonbindingMembersOf(name));
+        }
+        return complete(qualifier, members);
     }
 
     private static AnnotationValue<?> complete(AnnotationValue<?> annotation, Set<String> members) {
@@ -153,8 +150,8 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
      *
      * @return Whether it is, or {@code null} where the occurrence carries no meta-annotations to say
      */
-    private static @Nullable Boolean isBindingType(AnnotationValue<?> annotation, @Nullable DiscoveredClasses discovered) {
-        if (discovered != null && discovered.isRegisteredBindingType(annotation.getAnnotationName())) {
+    private static @Nullable Boolean isBindingType(AnnotationValue<?> annotation, DiscoveredClasses discovered) {
+        if (discovered.isRegisteredBindingType(annotation.getAnnotationName())) {
             return true;
         }
         List<AnnotationValue<?>> stereotypes = annotation.getStereotypes();
@@ -171,35 +168,11 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
     }
 
     /**
-     * The members of the annotation that take no part in resolution: the ones its interface marks, and the ones
-     * the discovery phase marked.
-     *
-     * @param askDeclaration Whether the occurrence left it open whether the annotation is a binding type, which
-     *                       its declaration then answers
+     * The members the annotation interface of the given name marks as taking no part in resolution. Reading them
+     * builds the metadata of the members, which Micronaut guards against two annotation interfaces whose members are
+     * annotated with each other.
      */
-    private static Set<String> nonbindingMembersOf(String name, VisitorContext context,
-                                                   @Nullable DiscoveredClasses discovered, boolean askDeclaration) {
-        Set<String> members = new LinkedHashSet<>(declaredNonbindingMembersOf(name, context, askDeclaration));
-        if (discovered != null) {
-            members.addAll(discovered.nonbindingMembersOf(name));
-        }
-        return members;
-    }
-
-    private static Set<String> declaredNonbindingMembersOf(String name, VisitorContext context,
-                                                           boolean askDeclaration) {
-        Set<String> reading = READING.get();
-        if (!reading.add(name)) {
-            return Set.of();
-        }
-        try {
-            return readDeclaration(name, context, askDeclaration);
-        } finally {
-            reading.remove(name);
-        }
-    }
-
-    private static Set<String> readDeclaration(String name, VisitorContext context, boolean askDeclaration) {
+    private static Set<String> declaredNonbindingMembersOf(String name, VisitorContext context) {
         // a nested annotation is recorded by its binary name, and asked of the compiler by its canonical one
         Optional<ClassElement> found = context.getClassElement(name);
         if (found.isEmpty() && name.indexOf('$') >= 0) {
@@ -207,10 +180,6 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
         }
         ClassElement declaration = found.orElse(null);
         if (declaration == null) {
-            return Set.of();
-        }
-        if (askDeclaration && !declaration.hasDeclaredAnnotation(Cdi.QUALIFIER)
-            && !declaration.hasDeclaredAnnotation(BINDING)) {
             return Set.of();
         }
         Set<String> members = new LinkedHashSet<>();

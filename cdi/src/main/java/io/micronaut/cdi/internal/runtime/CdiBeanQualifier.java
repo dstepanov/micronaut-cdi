@@ -32,9 +32,11 @@ import java.util.stream.Stream;
  * bean qualifies when it has every qualifier the lookup requires, by the rules of section 2.4.2.
  *
  * <p>Micronaut's own annotation qualifiers are not used for that. They compare a qualifier by the members the
- * candidate's metadata records, and when the candidate does not carry the annotation they fall back to matching the
- * annotation's simple name against the bean's, which would have an unqualified lookup of {@code Greeter} find a
- * {@code @Special class SpecialGreeter} as well. Here a candidate qualifies by the qualifiers the container says the
+ * candidate's metadata records, which leaves out the qualifiers a portable extension added to a bean and the default
+ * qualifier of one that declares none; and one read off an injection point, when the candidate does not carry the
+ * annotation, falls back to matching the annotation's simple name against the bean's, which would have a lookup of
+ * {@code @Special Greeter} find a {@code class SpecialGreeter} as well. Here a candidate qualifies by the qualifiers
+ * the container says the
  * bean has - the ones it was compiled with, and the ones a portable extension added as the container started - and
  * by nothing else. A candidate that is not a bean definition has no qualifiers to compare, and does not
  * qualify.</p>

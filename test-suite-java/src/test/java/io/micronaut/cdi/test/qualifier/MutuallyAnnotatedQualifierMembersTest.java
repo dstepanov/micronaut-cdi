@@ -31,6 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Two qualifier interfaces whose members are annotated with each other: reading the non-binding members of one
  * reads the annotations of its members, which names the other, whose members name the first. The compilation
  * has to end, and the bean has to resolve.
+ *
+ * <p>Micronaut reads the non-binding members of a qualifier itself, on every occurrence, and guards that reading
+ * against such a cycle; this module no longer reads them for a compiled occurrence, so what this holds is that the
+ * guard it relies on is there.</p>
  */
 class MutuallyAnnotatedQualifierMembersTest {
 

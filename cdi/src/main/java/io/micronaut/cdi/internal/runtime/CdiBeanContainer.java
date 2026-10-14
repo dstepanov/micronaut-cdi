@@ -631,30 +631,19 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         // compared as the interceptor chains compare them, so that what is reported here is what runs
         io.micronaut.interceptor.spi.InterceptorBindings given = io.micronaut.interceptor.spi.InterceptorBindings
             .ofValues(bindingValuesOf(CdiQualifier.ofInstances(types(), interceptorBindings)));
-        // found as the interceptors implementation finds the ones bound to an element: through the type it indexes
-        // every interceptor class by, narrowed by the bindings, rather than among every bean
-        List<CdiInterceptor<?>> resolved = new java.util.ArrayList<>();
-        for (BeanDefinition<?> definition : CdiResolution.beansAmong(beanContext.getBeanDefinitions(
-            io.micronaut.interceptor.internal.metadata.JakartaInterceptorIndex.class,
-            io.micronaut.interceptor.spi.InterceptorBindings.boundTo(given)))) {
-            if (!definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor")) {
-                // a class that declares interceptor methods without being an interceptor class is bound by nothing
-                continue;
-            }
+        // selected as the interceptors implementation selects the chain of an element bound by these bindings: the
+        // enabled interceptor classes bound to them, by priority, then by class name, with the ones the SE bootstrap
+        // listed after them in the order of the list (CdiInterceptorEnablement), so that what is reported here is
+        // what is invoked
+        List<Interceptor<?>> resolved = new java.util.ArrayList<>();
+        for (BeanDefinition<?> definition : io.micronaut.interceptor.spi.InterceptorBindings
+            .boundInterceptors(beanContext, given)) {
             CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
-            if (interceptor.isEnabled() && interceptor.intercepts(type)) {
+            // a chain holds the interceptor classes whatever they interpose on; the question is asked for one kind
+            if (interceptor.intercepts(type)) {
                 resolved.add(interceptor);
             }
         }
-        // ordered as the interceptors implementation orders the chain that runs, equal priorities by class name,
-        // so that what is reported here is what is invoked
-        resolved.sort(java.util.Comparator.<CdiInterceptor<?>>comparingInt(CdiInterceptor::priority)
-            .thenComparing(interceptor -> interceptor.getBeanClass().getName()));
-        // the ones the SE bootstrap listed come after the ones ordered by priority, in the order of the list
-        List<CdiInterceptor<?>> listed = new java.util.ArrayList<>();
-        resolved.removeIf(interceptor -> interceptor.position() >= 0 && listed.add(interceptor));
-        listed.sort(java.util.Comparator.comparingInt(CdiInterceptor::position));
-        resolved.addAll(listed);
         return List.copyOf(resolved);
     }
 

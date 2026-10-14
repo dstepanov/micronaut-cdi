@@ -52,40 +52,59 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         float.class, 0f,
         double.class, 0d,
         char.class, '\u0000');
-
     // the bean types of a definition, worked out once: every parameterized lookup asks them of every candidate,
     // and working them out walks the class's supertypes. A compiled definition is equal to another of its class
     // and a runtime one only to itself, which is what tells the beans apart; the map lives as long as the context
-    // this customizer was built for
+    // this customizer serves
     private final java.util.concurrent.ConcurrentHashMap<BeanDefinition<?>, java.util.List<Argument<?>>> beanTypes =
         new java.util.concurrent.ConcurrentHashMap<>();
 
     private final BeanResolutionCustomizer delegate;
-    // the generic hierarchies of the context this customizer resolves for, handed over once the context is up
-    // (see attach): until then a parameterized lookup knows nothing above a type but what Micronaut exposes
+    // the context this customizer serves, which Micronaut hands it before resolving anything (forContext); none for
+    // the one installed on the builder, which only hands out the customizer of each context it builds
+    private final io.micronaut.context.@org.jspecify.annotations.Nullable BeanContext beanContext;
+    // the generic hierarchies of that context, read from it as the first parameterized lookup is made
     private volatile @org.jspecify.annotations.Nullable RecordedTypeIndex typeIndex;
 
     /**
      * @param delegate The customizer installed before this one, which resolves what is not the specification's
      */
     CdiResolutionCustomizer(BeanResolutionCustomizer delegate) {
+        this(delegate, null);
+    }
+
+    private CdiResolutionCustomizer(BeanResolutionCustomizer delegate,
+                                    io.micronaut.context.@org.jspecify.annotations.Nullable BeanContext beanContext) {
         this.delegate = delegate;
+        this.beanContext = beanContext;
     }
 
     /**
-     * Hands the customizer of the given context the context's generic hierarchies. Micronaut reads the customizer
-     * from the builder before the context exists and never hands it the context; the context hands itself over
-     * through its configuration, which is the builder the customizer was installed on.
+     * The customizer of one context, which holds the context and the bean types it worked out for it. One builder
+     * may build several contexts, and a context that reads a bootstrap environment builds another from its
+     * configuration: each is served by a customizer of its own, over the one the customizer installed before this
+     * one hands that context.
      *
-     * @param beanContext The context, now creating its beans
+     * @param beanContext The context, not yet resolving anything
+     * @return The customizer that serves it
      */
-    static void attach(io.micronaut.context.BeanContext beanContext) {
-        if (beanContext.getContextConfiguration().beanResolutionCustomizer() instanceof CdiResolutionCustomizer own
-            && own.typeIndex == null) {
-            own.typeIndex = RecordedTypeIndex.of(beanContext);
-            // what was worked out before is what Micronaut exposed, and is worked out again with the hierarchies
-            own.beanTypes.clear();
+    @Override
+    public BeanResolutionCustomizer forContext(io.micronaut.context.BeanContext beanContext) {
+        return new CdiResolutionCustomizer(delegate.forContext(beanContext), beanContext);
+    }
+
+    /**
+     * The generic hierarchies of the context this customizer serves. They are beans of the context, and a
+     * parameterized lookup is made once the context is resolving beans, so they are read from it the first time
+     * one is: from the first lookup on, it is matched by them.
+     */
+    private @org.jspecify.annotations.Nullable RecordedTypeIndex typeIndex() {
+        RecordedTypeIndex index = typeIndex;
+        if (index == null && beanContext != null) {
+            index = RecordedTypeIndex.of(beanContext);
+            typeIndex = index;
         }
+        return index;
     }
 
     @Override
@@ -202,7 +221,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
             // the required argument does not satisfy
-            RecordedTypeIndex index = typeIndex;
+            RecordedTypeIndex index = typeIndex();
             try {
                 java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(definition, key -> {
                     Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy

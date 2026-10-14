@@ -64,15 +64,36 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
             // the first segment is this metadata's own injection into the bean being created; the ones after
             // that with the same declaring bean are that bean's own construction, not places it is going
             BeanResolutionContext.Segment<?, ?> self = segments.next();
+            if (!isOfTheMetadata(self)) {
+                // the metadata was resolved by its definition within the creation of a bean, which pushes no
+                // segment of its own (OwnedDependents.registrationAtCurrentPoint): the creation of a synthetic bean
+                // resolves it so for the injection point the bean is created for, which heads the path
+                return of(context, self);
+            }
             while (segments.hasNext()) {
                 BeanResolutionContext.Segment<?, ?> outer = segments.next();
                 if (!outer.getDeclaringType().equals(self.getDeclaringType())) {
-                    CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-                    return CdiInjectionPoint.of(container.beanContext(),
-                        container.canonicalBean(outer.getDeclaringType()), outer);
+                    return of(context, outer);
                 }
             }
         }
+        // a bean obtained through a lookup that stands on its own is created in a resolution of its own, whose path
+        // does not say what the lookup was injected into
         return CurrentInjectionPoint.current();
+    }
+
+    private static InjectionPoint of(BeanContext context, BeanResolutionContext.Segment<?, ?> segment) {
+        CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+        return CdiInjectionPoint.of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()),
+            segment);
+    }
+
+    /**
+     * Whether a segment is an injection of the metadata itself - its own injection into the bean being created -
+     * rather than a place that bean is going.
+     */
+    private static boolean isOfTheMetadata(BeanResolutionContext.Segment<?, ?> segment) {
+        Argument<?> argument = segment.getArgument();
+        return argument == null || InjectionPoint.class.isAssignableFrom(argument.getType());
     }
 }

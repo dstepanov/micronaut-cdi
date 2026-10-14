@@ -21,10 +21,8 @@ import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
-import io.micronaut.cdi.internal.runtime.CdiInjectionPoint;
 import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifiers;
-import io.micronaut.cdi.internal.runtime.CurrentInjectionPoint;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.runtime.OwnedDependents;
 import io.micronaut.cdi.internal.runtime.RecordedInvoker;
@@ -220,27 +218,27 @@ public final class RecordedSynthesis {
         SyntheticBeanDisposer<T> disposer = beanContext.getBean(disposerDefinition);
         // what the disposal function looks up as a dependent instance lives only as long as the disposal itself
         // (section 2.10.5): the resolver of the disposal destroys it as the disposer returns
-        try (CdiInstance<Object> lookup = lookupFor(disposalContext)) {
+        try (CdiInstance<Object> lookup = CdiInstance.ownedBy(beanContext, dependentsOf(disposalContext))) {
             disposer.dispose(instance, lookup, parameters);
         }
     }
 
     /**
-     * The lookup handed to a creation or a disposal function, which creates what it looks up on behalf of the
-     * synthetic bean: the dependent instances are destroyed with the created bean, or as the disposal returns.
+     * The owner of what the lookup handed to a creation or a disposal function creates on behalf of the synthetic
+     * bean: the dependent instances are destroyed with the created bean, or as the disposal returns.
      * Where the context tracks no dependents of a bean - a context other than Micronaut's own, whose creation
      * context hands out no resolver - the lookup owns them in a group of its own: the disposal closes it as it
      * returns, and the lookup a creation was handed is not closed, as Micronaut destroys nothing a bean it does not
      * track the dependents of looked up.
      */
-    private CdiInstance<Object> lookupFor(RuntimeBeanDefinition.LookupContext lookupContext) {
+    private OwnedDependents dependentsOf(RuntimeBeanDefinition.LookupContext lookupContext) {
         io.micronaut.context.BeanDependencyResolver resolver;
         try {
             resolver = lookupContext.getDependencies();
         } catch (UnsupportedOperationException e) {
             resolver = null;
         }
-        return CdiInstance.ownedBy(beanContext, OwnedDependents.ownedBy(beanContext, resolver));
+        return OwnedDependents.ownedBy(beanContext, resolver);
     }
 
     /**
@@ -294,6 +292,11 @@ public final class RecordedSynthesis {
      * Creates a synthetic bean by asking the creator the extension named for it, which the container obtains
      * from the definition the compiler generated for the creator class. What the creator needs from the
      * container it asks the lookup it is handed for.
+     *
+     * <p>Section 2.10.5 hands the creation function a lookup that can answer {@code InjectionPoint}. For a dependent
+     * bean created for an injection point, the lookup resolves the metadata within the creation under way
+     * ({@link OwnedDependents#within}), so the metadata finds the point the bean is created for on the path of the
+     * resolution, as it finds it for any bean injected there.</p>
      */
     private <T> T create(Class<T> implementation,
                          @Nullable Class<? extends Annotation> scope,
@@ -301,45 +304,33 @@ public final class RecordedSynthesis {
                          CdiParameters parameters,
                          RuntimeBeanDefinition.CreationContext creationContext) {
         SyntheticBeanCreator<T> creator = beanContext.getBean(creatorDefinition);
-        CdiInjectionPoint injectionPoint = currentInjectionPointOf(implementation, scope, creationContext);
-        if (injectionPoint != null) {
-            CurrentInjectionPoint.enter(injectionPoint);
-        }
         // what the creation function looks up as dependent instances belongs to the instance it creates, and is
         // destroyed with it (section 2.10.5): the resolver of the creation creates it
-        CdiInstance<Object> lookup = lookupFor(creationContext);
-        try {
-            return creator.create(lookup, parameters);
-        } finally {
-            if (injectionPoint != null) {
-                CurrentInjectionPoint.leave();
-            }
+        OwnedDependents dependents = dependentsOf(creationContext);
+        CdiInstance<Object> lookup = CdiInstance.ownedBy(beanContext, dependents);
+        if (isCreatedForAnInjectionPoint(implementation, scope, creationContext)) {
+            return dependents.within(creationContext, () -> creator.create(lookup, parameters));
         }
+        return creator.create(lookup, parameters);
     }
 
     /**
-     * The injection point a dependent synthetic bean is being created for, as the creation under way reports it:
-     * section 2.10.5 hands the creation function a lookup that can answer {@code InjectionPoint}.
+     * Whether a synthetic bean is being created for an injection point, which is what its injection point metadata
+     * then describes: the creation under way reports the segment of the resolution that asked for it, absent for a
+     * lookup made directly rather than for an injection point.
      */
-    private @Nullable CdiInjectionPoint currentInjectionPointOf(
-        Class<?> implementation, @Nullable Class<? extends Annotation> scope,
-        RuntimeBeanDefinition.CreationContext creationContext) {
+    private static boolean isCreatedForAnInjectionPoint(Class<?> implementation,
+                                                        @Nullable Class<? extends Annotation> scope,
+                                                        RuntimeBeanDefinition.CreationContext creationContext) {
         if (scope != null && !DEPENDENT.equals(scope.getName())) {
             // for anything but a dependent bean the specification leaves the answer open, and null it is
-            return null;
+            return false;
         }
-        // the injection point the bean is created for is the segment of the resolution that asked for it, and it is
-        // absent for a lookup made directly rather than for an injection point
         if (!(creationContext.getInjectionPoint().orElse(null)
             instanceof BeanResolutionContext.Segment<?, ?> segment)) {
-            return null;
+            return false;
         }
         Argument<?> argument = segment.getArgument();
-        if (argument == null || !argument.getType().isAssignableFrom(implementation)) {
-            return null;
-        }
-        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        return CdiInjectionPoint.of(container.beanContext(),
-            container.canonicalBean(segment.getDeclaringType()), segment);
+        return argument != null && argument.getType().isAssignableFrom(implementation);
     }
 }

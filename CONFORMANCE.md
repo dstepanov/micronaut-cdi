@@ -139,16 +139,22 @@ is the reflection module's, which synthesises it with Micronaut's `ReflectionAnn
 of one a program hands over the same way.
 
 The members that do not bind are recorded once, the way Micronaut records its own `@NonBinding` members: listed
-under `$nonBinding` in the values of the qualifier. Micronaut lists a member only on an occurrence that writes it,
-and only where the member's declaration marks it, so the processor completes the list (`NonbindingMembersRemapper`)
-on every occurrence of a qualifier or binding it compiles - one that leaves a non-binding member at its default,
-and a member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes,
-among them - and on the qualifiers it records for a synthetic component. A qualifier the program composes as an
-`AnnotationValue` lists nothing, and one read from an annotation instance lists what its type marks, so a member
-is left out of a comparison when either side lists it. A programmatic lookup is resolved by one Micronaut
-`Qualifier`, `CdiBeanQualifier`, which compares these and nothing else: Micronaut's own annotation qualifiers fall
-back to matching the simple name of the annotation against the name of the bean class, which a qualifier of the
-specification does not.
+under `$nonBinding` in the values of the qualifier. Since Micronaut Core 5.3 Micronaut lists every member the
+annotation interface marks on every occurrence it compiles, one that leaves the member at its default among them,
+and on its qualifier stereotype. The processor adds what Micronaut cannot know (`NonbindingMembersRemapper`): a
+member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes, on every
+occurrence of the qualifier or binding; and the members a qualifier the processor records for a synthetic
+component excludes, which an extension composed rather than the compiler reading it. A qualifier the program
+composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
+marks, so a member is left out of a comparison when either side lists it. A programmatic lookup is resolved by one
+Micronaut `Qualifier`, `CdiBeanQualifier`, which compares these and nothing else. Micronaut's own qualifier for an
+annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotation(AnnotationMetadata,
+AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
+the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
+specification are also the ones a portable extension added as the container started, a bean that declares
+none has `@Default` and `@Any`, and two values are compared by the members that bind as `BindingValues.matches`
+compares them (an enum constant by its name, a class as its `AnnotationClassValue`); so `CdiBeanQualifier`
+stays.
 
 A qualifier and an interceptor binding are compared by one rule, the Jakarta Interceptors implementation's
 `BindingValues.matches`, so that `areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer as the
@@ -194,8 +200,8 @@ records each: the closure of a bean on the bean or on its producer; the observed
 closure and the type variables of every class a compilation compiles, on a class it generates in the package of
 the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
-in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, which reads a wildcard as its
-bound and a type variable as its first bound (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
+in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
+module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
 The type of an event is the class of the event object with its type variables resolved from the
 type the event was fired as, worked out from that record, and an object whose class leaves a variable
 unresolved is refused from it.
@@ -383,10 +389,11 @@ can inject it.
 
 `BeanContainer.resolveInterceptors` (section 11.1.9) resolves the interceptor classes the Jakarta Interceptors
 processor compiled: an interceptor is enabled by the priority it declares, bound when every binding it declares
-is among the given ones, and the resolved list is ordered lowest priority first. The bindings are compared by
-Jakarta Interceptors' own `InterceptorBindings`, on the bindings its processor recorded for the interceptor class
-and the values of the ones given, which is the comparison that resolves the interceptor chains: what the manager
-reports bound is what runs. The interception of a bean still happens where it was compiled; what the manager adds
+is among the given ones, and the resolved list is ordered lowest priority first. The selection is the one Jakarta Interceptors makes for a
+chain, asked of it (`InterceptorBindings.boundInterceptors`): its own comparison of the bindings its processor
+recorded for the interceptor class with the values of the ones given, the enablement and the order of the chain
+included, so what the manager reports bound is what runs; the manager keeps the ones that interpose on the kind of
+interception asked about. The interception of a bean still happens where it was compiled; what the manager adds
 is the description of it the specification asks for, including invoking an interceptor directly through
 `Interceptor.intercept`.
 
@@ -588,6 +595,11 @@ Groovy class.
 What this module works around in Micronaut Core, or accepts from it, as of Micronaut Core 5.3.
 The provider hook, fresh registrations, dependency groups, destruction ownership and type-annotation fixes
 are merged upstream; the remaining differences below still require adaptation or are accepted limitations.
+Micronaut Core 5.3 also hands a resolution customizer the context it serves (`BeanResolutionCustomizer.forContext`),
+so `CdiResolutionCustomizer` reads the type closures the processor recorded from that context rather than being
+handed them as the first lifecycle event's registry is created: a parameterized lookup made before then is matched
+by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
+own rather than the first one alone.
 
 - **Annotations as the source wrote them are derived, not recorded.** A repeatable annotation is folded into its
   container, and what Micronaut's mappers add is not told apart from what the source wrote. The language model
@@ -612,55 +624,61 @@ are merged upstream; the remaining differences below still require adaptation or
   them as methods, KSP as properties and no methods. The members are enumerated one way or the other in one place
   (`ElementMembers.annotationMembersOf`), which the processor's non-binding members and the language model's
   annotation members and methods read; a member query on `AnnotationElement` would remove it.
-- **Micronaut's annotation qualifiers match by the name of the bean.** `AnnotationMetadataQualifier` and
-  `AnnotationQualifier` fall back to matching the simple name of the annotation against the simple name of the
-  candidate's class where the candidate does not carry the annotation, so `Qualifiers.byAnnotation` for a
-  `@Default` lookup selects a `@Special class DefaultGreeter`. A lookup here resolves by `CdiBeanQualifier`, which
-  implements `Qualifier` directly: `FilteringQualifier` is `@Internal`, and
-  `AnnotationMetadataQualifier.fromAnnotation` is package-private.
+- **Micronaut's annotation qualifiers compare the qualifiers a bean was compiled with.** Since Micronaut Core 5.3
+  `Qualifiers.byAnnotation(Annotation)` and `byAnnotation(AnnotationMetadata, AnnotationValue)` select by the
+  annotation alone; the qualifiers read off an injection point (`byAnnotation(AnnotationMetadata, Class)` and its
+  `String` form) still fall back to the simple name of the candidate's class, the convention by which `@V8 Engine`
+  selects a `V8Engine`, which a qualifier of the specification does not follow. Either compares a candidate by the
+  qualifiers its metadata records, while the qualifiers of a bean of the specification are also the ones a portable
+  extension added as the container started, and `@Default` where it declares none. A lookup here resolves by
+  `CdiBeanQualifier`, which implements `Qualifier` directly over the container's own record of each bean's
+  qualifiers: `FilteringQualifier` is `@Internal`, and `AnnotationMetadataQualifier.fromAnnotation` is
+  package-private.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
   marker of its own (`CdiAny`) rather than into Micronaut's.
-- **`$nonBinding` is recorded only where a member is written, and only as the source marks it.** Micronaut lists a
-  `@NonBinding` member on an occurrence that writes it, reading the mark from the member's declaration, so neither
-  an occurrence that leaves the member at its default nor a member a build compatible extension marked carries it.
-  The processor completes the list (`NonbindingMembersRemapper`), and the comparison leaves out a member either
-  side lists.
+- **A member an extension marks `@Nonbinding` is the processor's to record.** Since Micronaut Core 5.3 Micronaut
+  lists every `@NonBinding` member of an annotation under `$nonBinding` on each occurrence, written or not, and on
+  its qualifier stereotype, and guards the reading of the members' own annotations against two annotation interfaces
+  whose members are annotated with each other (`MutuallyAnnotatedQualifierMembersTest` holds the shape). What it
+  cannot see is a member a build compatible extension marked during discovery, which the source does not, and a
+  qualifier an extension composed for a synthetic component, which is no occurrence it reads: the processor lists
+  those (`NonbindingMembersRemapper`), and the comparison leaves out a member either side lists.
 - **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
   one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
   compares qualifiers and interceptor bindings through the Jakarta Interceptors implementation's
   `BindingValues.matches` instead (`CdiQualifier.matches`), the comparison its chains are built from.
-- **Micronaut's reflective type arguments lose wildcards and type variables.** `ReflectionArguments.of(Type)`
-  reads a wildcard as its bound and a type variable as its first bound, and `ReflectionArguments.toType` never
-  makes a wildcard, while the rules of section 5.2.4 tell `List<? extends Number>` from `List<Number>` and a
-  type variable from its bound; and Micronaut has no utility for the parameterized type closure of a class. The
-  container reads a `java.lang.reflect.Type` into an `Argument` and back in `io.micronaut.cdi.internal.type`, and
-  the reflection module answers the type closure, the declared type and the event type of a class itself
-  (`CdiReflection.typeClosureOf`, `declaredTypeOf`, `eventTypeOf`).
-- **A resolution customizer is handed no context.** Micronaut builds a `BeanResolutionCustomizer` from the builder
-  of a context, before the context exists, calls `isCandidateBean` without one, and applies no
-  `BeanContextConfigurable` to it (`DefaultBeanContext.getBeanResolutionCustomizer()` is package-private). The rules
-  of section 2.4.2.1 that `CdiResolutionCustomizer` applies to a parameterized lookup need the type closures the
-  processor recorded, which are beans of the context. The context reaches its own customizer through the public
-  `getContextConfiguration().beanResolutionCustomizer()`, and the container hands it the index of its closures as
-  it creates the registry its first lifecycle event goes through (`CdiResolutionCustomizer.attach`); a
-  parameterized lookup made before then is matched by what Micronaut exposes alone, and a customizer installed on a
-  builder that builds two contexts serves the first. Handing a customizer its context — a `configure(BeanContext)`,
-  or the context as an argument of `isCandidateBean` — would remove the step.
-- **A lookup by definition cannot carry the injection point it stands for.** `Instance` creates a dependent bean by
-  the definition it selected (`getBeanRegistration(definition, argument)`), which starts a resolution of its own;
-  the definition-keyed form that takes the caller's `BeanResolutionContext` is package-private on
-  `DefaultBeanContext`, and `BeanContext` has none, and a synthetic bean's creator is handed a
-  `RuntimeBeanDefinition.CreationContext` with no resolution context in it. The injection point of the lookup is
-  therefore left on a thread local around the creation (`CurrentInjectionPoint`), where the `InjectionPoint` bean
-  reads it; a public `getBeanRegistration(BeanResolutionContext, BeanDefinition, Argument)` would let it travel as
-  an attribute of the resolution instead.
+- **Micronaut's exact type arguments are in its reflection module.** Since Micronaut Core 5.3
+  `ReflectionArguments.ofExact`, `toExactType` and `typeClosureOf` keep a wildcard a wildcard and a type variable
+  a variable, as the rules of section 5.2.4 need, and answer the parameterized type closure of a class; the
+  reflection module of this one reads the type closure of a class, and the closure the event type of a class is
+  resolved through, with them (`ReflectiveCdi.typeClosureOf`, `eventTypeOf`), adding only what an array
+  implements, which `typeClosureOf` does not list. They are in `micronaut-reflection`, which reads classes back,
+  and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
+  `Argument`, and one the specification's API reports made from one, in `io.micronaut.cdi.internal.type`, by the
+  accessors of the type alone. That reading is also what the reflection module reads the type it is handed with,
+  since the container hands over the types it rendered there: `ofExact` reads a variable by its annotated bounds,
+  which a variable the container renders, holding no annotations, has none of. A variable `toExactType` renders has
+  no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
+  module tells the variables of an event's class apart by their names.
+- **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
+  definition chosen within a creation is resolved within it (`RuntimeBeanDefinition.LookupContext.getBeanRegistration`
+  and `BeanResolutionContext.getBeanRegistration`): the lookup a synthetic bean's creation function is handed
+  resolves the injection point metadata so (`OwnedDependents.registrationAtCurrentPoint`), and the `InjectionPoint`
+  bean finds the point the dependent synthetic bean is created for on the path of the resolution, as it does for a
+  bean injected there. What is left is `Instance.get()` and its handles: they create the dependent bean they
+  selected by its definition (`getBeanRegistration(definition, argument)`) in a resolution of their own, since the
+  lookup is not made within the creation of a bean and `BeanContext` has no resolution context to resolve within,
+  while section 2.5.2.5 gives the bean the injection point the `Instance` was injected into, or the lookup itself.
+  That injection point is left on a thread local around the creation (`CurrentInjectionPoint`), where the
+  `InjectionPoint` bean reads it when the path has nothing to say; a definition-keyed lookup that took the
+  injection point to report, or an attribute the new resolution starts with, would let it travel with the
+  resolution instead.
 - **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
   visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
-  (`CompilationState`) rather than in static fields; what belongs to one call stack rather than to the compilation,
-  the guard `NonbindingMembersRemapper` reads a qualifier interface under, stays on the thread. Under javac they belong to one
+  (`CompilationState`) rather than in static fields. Under javac they belong to one
   processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
   definition processor is remapped with that processor's attributes, so there a remapper does not see the
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which

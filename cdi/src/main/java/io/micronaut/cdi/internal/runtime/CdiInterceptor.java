@@ -59,40 +59,6 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         this.bean = new CdiBean<>(beanContext, definition);
     }
 
-    /**
-     * Whether an interceptor takes part in interception at all. Section 2.7 of the specification has CDI Lite
-     * enable and order interceptors by {@code @Priority}, which section 5.2.1 of Jakarta Interceptors makes the
-     * way an interceptor bound by an interceptor binding is enabled.
-     *
-     * @return Whether the interceptor is enabled
-     */
-    boolean isEnabled() {
-        // answered by what the interceptors implementation asks as it resolves a chain, so that what is reported
-        // here is what runs
-        return beanContext.getBean(CdiInterceptorEnablement.class).isEnabled(definition);
-    }
-
-    /**
-     * The place of the interceptor among the ones the SE bootstrap listed, which come after the ones ordered by a
-     * priority.
-     *
-     * @return The position, or a negative number for an interceptor ordered by its priority
-     */
-    int position() {
-        return beanContext.getBean(CdiInterceptorEnablement.class).position(definition);
-    }
-
-    /**
-     * The priority the interceptor declared, which orders a resolved chain lowest first.
-     *
-     * @return The priority
-     */
-    int priority() {
-        // read by the interceptors implementation, the way it orders a chain, so that the order this reports is the
-        // order that runs
-        return InterceptorMethods.priorityOf(definition);
-    }
-
     @Override
     public Set<Annotation> getInterceptorBindings() {
         return CdiQualifier.instances(beanContext, bindings());

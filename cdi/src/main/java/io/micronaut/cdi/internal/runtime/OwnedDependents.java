@@ -20,6 +20,7 @@ import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.BeanDependencyResolver;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.Qualifier;
+import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -63,6 +64,11 @@ public final class OwnedDependents implements AutoCloseable {
      * What was created without Micronaut owning it, destroyed here.
      */
     private final List<CreatedBean<?>> held = new ArrayList<>(0);
+    /**
+     * The creation under way that the owner's lookups are made within, while it is: a bean looked up for the point
+     * already current is resolved within it, and sees on its path what that creation is for.
+     */
+    private volatile RuntimeBeanDefinition.@Nullable LookupContext creation;
 
     private OwnedDependents(BeanContext beanContext, @Nullable BeanDependencyResolver resolver) {
         this.beanContext = beanContext;
@@ -119,6 +125,49 @@ public final class OwnedDependents implements AutoCloseable {
         BeanRegistration<T> registration = beanContext.getBeanRegistration(definition, type);
         keep(registration, false);
         return registration;
+    }
+
+    /**
+     * The registration of the bean of the given definition, created for the point already current rather than for
+     * an injection point of the lookup's own - the injection point metadata, which describes that point. Within a
+     * creation under way (see {@link #within}) the bean is resolved within it, by
+     * {@link RuntimeBeanDefinition.LookupContext#getBeanRegistration(BeanDefinition, Argument)}, so that the path
+     * it sees is the creation's and says what the creation is for; it is a dependent of the bean being created, as
+     * one the creation's own lookups create is. Otherwise it is {@link #registration(BeanDefinition, Argument)}.
+     *
+     * @param definition The definition
+     * @param type       The type it is asked for as
+     * @param <T>        The bean type
+     * @return The registration
+     */
+    public <T> BeanRegistration<T> registrationAtCurrentPoint(BeanDefinition<? extends T> definition,
+                                                              Argument<T> type) {
+        RuntimeBeanDefinition.LookupContext within = creation;
+        if (within == null) {
+            return registration(definition, type);
+        }
+        BeanRegistration<T> registration = within.getBeanRegistration(definition, type);
+        keep(registration, resolver != null);
+        return registration;
+    }
+
+    /**
+     * Makes the lookups of the owner within a creation while the given action runs: what is looked up for the point
+     * already current is resolved within the creation (see {@link #registrationAtCurrentPoint}). A lookup the
+     * created bean keeps resolves on its own once the creation is over.
+     *
+     * @param creationContext The creation under way
+     * @param action          What runs within it
+     * @param <R>             What the action returns
+     * @return What the action returned
+     */
+    public <R> R within(RuntimeBeanDefinition.LookupContext creationContext, java.util.function.Supplier<R> action) {
+        creation = creationContext;
+        try {
+            return action.get();
+        } finally {
+            creation = null;
+        }
     }
 
     /**
