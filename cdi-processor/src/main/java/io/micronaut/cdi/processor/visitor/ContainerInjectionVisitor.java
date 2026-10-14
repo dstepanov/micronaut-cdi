@@ -120,9 +120,14 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
             .forEach(field -> field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class));
         for (io.micronaut.inject.ast.PropertyElement property : bean.getSyntheticBeanProperties()) {
             // a property a compiler describes as one - a Kotlin property under KSP - is injected through its setter,
-            // with the metadata of the property
-            if (isInjected(property) && property.getDeclaringType().getName().equals(bean.getName())) {
-                property.getWriteMethod().ifPresent(ContainerInjectionVisitor::markParameters);
+            // with the metadata of the property; one whose setter alone is annotated, @set:Inject, as well
+            MethodElement setter = property.getWriteMethod().orElse(null);
+            if (setter != null && (isInjected(property) || isInjected(setter))) {
+                // the declaration is the same whatever class inherits the setter
+                recordDeclaration(setter);
+                if (property.getDeclaringType().getName().equals(bean.getName())) {
+                    markParameters(setter);
+                }
             }
         }
         BeanInjectionUtils.findBeanConstructor(bean).ifPresent(ContainerInjectionVisitor::markParameters);
