@@ -229,9 +229,10 @@ final class DeploymentValidation {
      * where that bean is in a normal scope and cannot be proxied.
      */
     private void validate(BeanDefinition<?> definition, Argument<?> argument) {
-        if (!argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)) {
+        if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             // a point Micronaut resolves itself, which the processor left unmarked: a lookup, an event, the
-            // injection point metadata, the context, a value of the configuration
+            // injection point metadata, the context, a value of the configuration; or one a provider of the
+            // application's own supplies, which needs no bean
             return;
         }
         if (argument.isNullable()) {

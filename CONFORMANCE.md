@@ -261,7 +261,11 @@ parameters of an observer and of a disposer method - is resolved by the containe
 selects Core's `@ResolveWith` provider hook for it as the bean compiles, and `CdiBeanInjectionProvider` resolves
 the full declared type with the qualifiers the container records of each bean. What Micronaut resolves itself is
 left to it and not marked: a lookup (`Instance`, `Provider`, `BeanProvider`), an `Event`, the injection point
-metadata, the context under the interfaces it hands itself out as, a value of the configuration.
+metadata, the context under the interfaces it hands itself out as, a value of the configuration. A point the
+application marked with a `@ResolveWith` provider of its own is left to that provider and not validated: a field or
+a parameter of a bean's own is supplied by Micronaut from it, and a parameter of an observer or a disposer method
+by the container from it, through a resolution of its own that starts at the bean declaring the method - what the
+provider creates there is not a dependent of the invocation (`CdiResolution.fromApplicationProvider`).
 
 There is one selection of candidates, `CdiBeanContainer.beansOf`, which the provider, an `Instance`, the bean
 manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make:

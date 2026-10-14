@@ -50,7 +50,70 @@ public final class CdiResolution {
     private static final java.util.Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = java.util.Set.of(
         "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
 
+    /**
+     * The provider the processor marks the injection points the container resolves with.
+     */
+    private static final String CONTAINER_PROVIDER = "io.micronaut.cdi.internal.runtime.CdiBeanInjectionProvider";
+
     private CdiResolution() {
+    }
+
+    /**
+     * Whether the point is one the container resolves: one the processor marked for Micronaut's {@code ResolveWith}
+     * hook with the container's own provider. A point an application marked with a provider of its own is the
+     * provider's to supply, and one that is not marked at all Micronaut's.
+     *
+     * @param point The annotation metadata of the injection point
+     * @return Whether the container resolves it
+     */
+    public static boolean isResolvedByTheContainer(io.micronaut.core.annotation.AnnotationMetadata point) {
+        return CONTAINER_PROVIDER.equals(point.stringValue(io.micronaut.context.annotation.ResolveWith.class).orElse(null));
+    }
+
+    /**
+     * Whether the point is supplied by a {@code ResolveWith} provider of the application's own rather than the
+     * container's.
+     *
+     * @param point The annotation metadata of the injection point
+     * @return Whether an application's provider supplies it
+     */
+    public static boolean isSuppliedByAnApplicationProvider(io.micronaut.core.annotation.AnnotationMetadata point) {
+        return point.hasStereotype(io.micronaut.context.annotation.ResolveWith.class) && !isResolvedByTheContainer(point);
+    }
+
+    /**
+     * Supplies a parameter of an observer or a disposer method from the {@code ResolveWith} provider of the
+     * application's own it was marked with, the way Micronaut supplies a field or a parameter of a bean's own from
+     * it: the provider is a bean of the context, handed a resolution of its own that starts at the bean declaring
+     * the method, since a callback is invoked outside the creation of any bean. What the provider creates within
+     * that resolution is not a dependent of the invocation.
+     *
+     * @param beanContext The context
+     * @param declaring   The definition of the bean declaring the method, or {@code null}
+     * @param argument    The parameter
+     * @return The value the provider supplied
+     * @throws jakarta.enterprise.inject.UnsatisfiedResolutionException Where it supplies none for a parameter that
+     *                                                                   is not nullable
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static @Nullable Object fromApplicationProvider(io.micronaut.context.BeanContext beanContext,
+                                                           @Nullable BeanDefinition<?> declaring,
+                                                           io.micronaut.core.type.Argument<?> argument) {
+        Class<?> providerType = argument.getAnnotationMetadata()
+            .classValue(io.micronaut.context.annotation.ResolveWith.class)
+            .orElseThrow(() -> new IllegalStateException("No provider is named for " + argument));
+        try (io.micronaut.context.BeanResolutionContext resolution =
+                 new io.micronaut.context.DefaultBeanResolutionContext(beanContext, declaring)) {
+            io.micronaut.context.BeanInjectionProvider provider = (io.micronaut.context.BeanInjectionProvider)
+                resolution.getBean((io.micronaut.core.type.Argument) io.micronaut.core.type.Argument.of(providerType), null);
+            Object value = provider.get(resolution, (io.micronaut.core.type.Argument) argument,
+                io.micronaut.inject.qualifiers.Qualifiers.forArgument(argument), argument.isNullable());
+            if (value == null && !argument.isNullable()) {
+                throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("The injection provider "
+                    + providerType.getName() + " supplied nothing for " + argument);
+            }
+            return value;
+        }
     }
 
     /**

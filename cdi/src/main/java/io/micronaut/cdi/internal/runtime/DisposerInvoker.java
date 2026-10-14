@@ -18,7 +18,6 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanDependencyGroup;
-import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -180,7 +179,11 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
 
     @SuppressWarnings("unchecked")
     private @Nullable Object resolve(Argument<?> argument, BeanDependencyGroup dependencies) {
-        if (!argument.getAnnotationMetadata().hasStereotype(ResolveWith.class)) {
+        if (CdiResolution.isSuppliedByAnApplicationProvider(argument.getAnnotationMetadata())) {
+            // a provider of the application's own supplies it, as it does a field of a bean
+            return CdiResolution.fromApplicationProvider(beanContext, null, argument);
+        }
+        if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
         }
         CdiBeanContainer container = this.container;
