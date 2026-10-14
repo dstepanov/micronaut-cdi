@@ -353,8 +353,10 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for observer parameter "
                     + argument);
             }
-            registration = dependents.registration(definition,
-                CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
+            Argument<Object> askedAs = CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition);
+            registration = argument.getType().isPrimitive()
+                ? dependents.registrationOfAPrimitive(definition, askedAs)
+                : dependents.registration(definition, askedAs);
         } else {
             // one Micronaut resolves itself - a lookup, the event metadata - or one no bean of the specification is
             // a candidate for: Micronaut's rules, among the beans of Micronaut's own where the point is marked
@@ -363,7 +365,13 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 : CdiBeanContainer.Selection.micronautQualifier((Argument<Object>) argument, null);
             registration = dependents.registration((Argument<Object>) argument, qualifier);
         }
-        return registration.bean();
+        Object bean = registration.bean();
+        if (bean == null && argument.getType().isPrimitive()) {
+            // section 2.5.2.4: a producer that returns null satisfies a primitive parameter with its default value,
+            // as it does a field
+            return CdiResolutionCustomizer.primitiveDefaultOf(argument.getType());
+        }
+        return bean;
     }
 
     @Override
