@@ -175,8 +175,8 @@ qualifiers of the specification they have.
 
 ### Types without reflection
 
-The bean types of a bean, what an observer observes and the generic hierarchy of every class a compilation
-compiles are recorded by the processor, so a parameterized injection point or lookup, and an event, are matched
+The bean types of a bean, what an observer observes and the generic hierarchy of the classes a compilation
+compiles that have a parameterized type above them or declare type variables are recorded by the processor, so a parameterized injection point or lookup, and an event, are matched
 by their type arguments with nothing read from a class:
 
 - a bean's type closure is recorded on the bean, and on the producer that produces it;

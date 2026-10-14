@@ -83,6 +83,12 @@ The difference left is there: at a point of a bean of Micronaut's own, or in a `
 qualifier where every candidate is qualified, the specification has no bean to resolve, and Micronaut resolves
 one.
 
+A class written with the singleton pseudo-scope alone, `jakarta.inject.Singleton`, is given the default qualifier
+and its name as a bean of the specification is (`SpecificationBeans.isBean`), since the specification names the
+pseudo-scope a scope of its own and Micronaut writes the same annotation; the rules a bean of the specification is
+held to as it compiles, and the container's resolution of its injection points, are not applied to it, since
+Micronaut's own beans carry the same annotation.
+
 ### An unproxyable normal scoped bean is detected as it is compiled
 
 *Section 3.10.* A bean in a normal scope has to be proxyable, and the specification has the container detect a
@@ -211,8 +217,8 @@ reflection module.
 *Sections 3.1, 5.2.1 and 9.1.* The type closure of a bean, the type an observer observes and the closure
 an event is matched by are properties of generic signatures, which the container does not read. The processor
 records each: the closure of a bean on the bean or on its producer; the observed type on the observer; and the
-closure and the type variables of every class a compilation compiles, on a class it generates in the package of
-the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+closure and the type variables of every class a compilation compiles that has a parameterized type above it or
+declares type variables, on a class it generates in the package of the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
@@ -299,7 +305,9 @@ metadata is read from. Missing required producers are deployment errors.
 A bean of the specification may be injected with a bean of Micronaut's own: where no bean of the specification
 is of the class of the point, or none of them qualifies while beans of Micronaut's own are of it, the point is
 resolved by Micronaut's rules - its qualifier, its primary bean, the one that is not secondary, its name
-convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selectionFor`), and validated by them. A
+convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selectionFor`), and validated by them. The point keeps
+its full declared type: a `List<Foo>` is resolved as a bean of that type, as the specification has it, rather than
+collected as Micronaut collects one at a point of a bean of its own. A
 bean of the specification the qualifiers of the point rejected is not admitted again by Micronaut's rules: an
 `@Inject @Fancy Engine` beside a bean of the specification of `Engine` that is not `@Fancy` and a bean of
 Micronaut's own is not injected with the first by the prefix of its name, and an `@Inject Shape` beside a `@Fancy`
