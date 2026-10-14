@@ -26,7 +26,10 @@ import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Resolves the exact CDI bean type while retaining the active injection point and dependent ownership.
+ * Resolves an injection point of a bean of the specification the way the container resolves every one of them
+ * ({@link CdiBeanContainer#injectionCandidates}), while retaining the active injection point and dependent
+ * ownership: the active resolution context creates the bean selected. A point no bean of the specification
+ * answers is resolved by Micronaut's rules, as the point of a bean of Micronaut's own would be.
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -44,9 +47,14 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
     @Override
     public <T> @Nullable T get(BeanResolutionContext resolutionContext, Argument<T> argument,
                                @Nullable Qualifier<T> qualifier, boolean nullable) {
-        // Resolve qualifiers through CDI's final binding records, including build-time enhancements.
-        // Then let the active Core context create the selected definition and retain its dependents.
-        BeanDefinition<T> definition = (BeanDefinition<T>) container.resolveContainerInjection(argument);
+        java.util.Set<jakarta.enterprise.inject.spi.Bean<?>> candidates = container.injectionCandidates(argument);
+        if (candidates == null) {
+            // no bean of the specification is a candidate: Micronaut's rules, with the qualifier Micronaut read off
+            // the point
+            return nullable ? resolutionContext.findBean(argument, qualifier).orElse(null)
+                : resolutionContext.getBean(argument, qualifier);
+        }
+        BeanDefinition<T> definition = (BeanDefinition<T>) container.definitionAmong(candidates);
         if (definition == null) {
             if (nullable) {
                 return null;
@@ -55,7 +63,12 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
         }
         // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
         // narrowing the candidates to it would become part of the key its scope holds the instance under
-        return resolutionContext.getBean(definition,
+        T bean = resolutionContext.getBean(definition,
             CdiInstance.askedAs(resolutionContext.getContext(), argument, definition));
+        if (bean == null && argument.getType().isPrimitive()) {
+            // section 2.5.2.4: a producer that returns null satisfies a primitive point with its default value
+            return (T) CdiResolutionCustomizer.primitiveDefaultOf(argument.getType());
+        }
+        return bean;
     }
 }

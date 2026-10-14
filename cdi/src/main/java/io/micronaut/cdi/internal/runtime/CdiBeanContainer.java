@@ -252,22 +252,121 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * The definition a container injection point resolves to: a field or a parameter of a collection, an
-     * {@code Optional}, an array or a stream, which the processor marks for this container to resolve
-     * ({@code ResolveWith}), resolved as section 5.2 has it - the one bean of its full declared type and the
-     * qualifiers it declares - wherever the point is: a bean's own, an observer's or a disposer's.
+     * The beans an injection point of a bean of the specification is resolved among: a bean's own - a field, a
+     * parameter of its constructor, of an initializer or of a producer - an observer's or a disposer's, which the
+     * processor marks for this container to resolve ({@code ResolveWith}). They are the beans of {@link #beansOf}
+     * for the full declared type of the point and the qualifiers it declares, the ones of the specification alone
+     * where any of those qualifies: section 5.2 resolves among the beans of the specification, and a bean of
+     * Micronaut's own of the same type is no more than one Micronaut also has.
      *
-     * @param argument The injection point
-     * @return The definition, or {@code null} where no bean qualifies
-     * @throws jakarta.enterprise.inject.AmbiguousResolutionException Where more than one does
+     * <p>Where no bean of the specification is of the class of the point, or none qualifies while beans of
+     * Micronaut's own are of the class, the point is left to Micronaut's rules - a primary bean, a secondary one,
+     * a name - which is what lets a bean of the specification be injected with a bean of Micronaut's own as a bean
+     * of Micronaut's would be. So is a type with a type variable among its arguments, which no bean type is.</p>
+     *
+     * @param point The injection point
+     * @return The beans, the alternatives not yet narrowed, or {@code null} where Micronaut's rules resolve it
      */
-    @Nullable BeanDefinition<?> resolveContainerInjection(Argument<?> argument) {
-        Bean<?> selected = resolve(beansOf(argument, CdiQualifier.declared(argument.getAnnotationMetadata())));
+    @Nullable Set<Bean<?>> injectionCandidates(Argument<?> point) {
+        boolean specification = false;
+        boolean micronaut = false;
+        for (CdiBean<?> bean : candidatesOfType(point)) {
+            // an interceptor is a bean of the specification of its class, though never one a point is injected with
+            if (CdiResolution.isBeanOfTheSpecification(bean.definition())) {
+                specification = true;
+            } else {
+                micronaut = true;
+            }
+            if (specification && micronaut) {
+                break;
+            }
+        }
+        if (!specification) {
+            return null;
+        }
+        Set<Bean<?>> eligible;
+        try {
+            eligible = beansOf(point, CdiQualifier.declared(point.getAnnotationMetadata()));
+        } catch (IllegalArgumentException e) {
+            // a type with a variable the declaring class gives a value the definition does not carry
+            return null;
+        }
+        Set<Bean<?>> ofTheSpecification = ofTheSpecification(eligible);
+        if (ofTheSpecification.isEmpty() && micronaut) {
+            return null;
+        }
+        return ofTheSpecification;
+    }
+
+    /**
+     * The definition of the one bean among the candidates of an injection point, narrowed by {@link #resolve}.
+     *
+     * @param candidates The candidates {@link #injectionCandidates} answered
+     * @return The definition, or {@code null} where there is none
+     * @throws AmbiguousResolutionException Where more than one bean remains
+     */
+    @Nullable BeanDefinition<?> definitionAmong(Set<Bean<?>> candidates) {
+        Bean<?> selected = resolve(candidates);
         return selected == null ? null : ((CdiBean<?>) selected).definition();
     }
 
+    /**
+     * The definitions a lookup of the type with the qualifiers resolves among, as {@link #beansOf} has them: what
+     * an {@code Instance} enumerates, narrowed further by the Micronaut qualifier a program narrowed it by.
+     *
+     * @param type       The type looked up
+     * @param required   The qualifiers of the specification required
+     * @param narrowedBy The Micronaut qualifier, or {@code null}
+     * @param <T>        The bean type
+     * @return The definitions, the alternatives not yet narrowed
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    <T> List<BeanDefinition<T>> definitionsOf(Argument<T> type, List<CdiQualifier> required,
+                                              io.micronaut.context.@Nullable Qualifier<?> narrowedBy) {
+        List<BeanDefinition<T>> definitions = new ArrayList<>();
+        for (Bean<?> bean : beansOf(type, required)) {
+            BeanDefinition<T> definition = (BeanDefinition<T>) ((CdiBean<?>) bean).definition();
+            if (!definitions.contains(definition)) {
+                definitions.add(definition);
+            }
+        }
+        if (narrowedBy == null || definitions.isEmpty()) {
+            return definitions;
+        }
+        // the qualifier is handed every eligible definition at once, as Micronaut's own lookups hand it
+        Collection kept = ((io.micronaut.context.Qualifier) narrowedBy).filter(type.getType(), (Collection) definitions);
+        return kept.size() == definitions.size() ? definitions : new ArrayList<>((Collection<BeanDefinition<T>>) kept);
+    }
+
+    /**
+     * The beans of a type with the qualifiers, by the rules of section 2.4.2, before the alternatives have their
+     * say: the one candidate selection of the container, which an injection point, an {@code Instance}, the bean
+     * manager and the validation of the deployment all make. A bean qualifies by the bean types its definition
+     * recorded - a type Micronaut only indexes the definition under is none of them - and by the qualifiers the
+     * container records of it, with what a portable extension added; a bean another one replaces with Micronaut's
+     * {@code Replaces} is left out, as Micronaut leaves it out, and so is an interceptor, which is never injected.
+     *
+     * @param beanType The required type
+     * @param required The required qualifiers, none at all requiring the default qualifier
+     * @return The beans
+     * @throws IllegalArgumentException For a type with a type variable among its arguments
+     */
     Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
+        for (CdiBean<?> bean : beansOfType(beanType)) {
+            if (bean.definition() instanceof CdiInjectionPointFactory<?>
+                || CdiAssignability.areQualifiersMatching(bean.qualifiers(), required)) {
+                beans.add(bean);
+            }
+        }
+        return beans;
+    }
+
+    /**
+     * The beans one of whose bean types matches the required one, less the ones another among them replaces.
+     */
+    private Set<CdiBean<?>> beansOfType(Argument<?> beanType) {
+        Set<CdiBean<?>> beans = new LinkedHashSet<>();
         for (CdiBean<?> bean : candidatesOfType(beanType)) {
             if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {
                 // the built-in event and lookup exist for whatever legal type an injection point asks them
@@ -279,31 +378,45 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
                 }
                 continue;
             }
-            if (CdiAssignability.isTypeMatching(typeIndex(), bean.types(), requireNoTypeVariable(beanType))
-                && CdiAssignability.areQualifiersMatching(bean.qualifiers(), required)) {
+            if (!isInterceptor(bean)
+                && CdiAssignability.isTypeMatching(typeIndex(), bean.types(), requireNoTypeVariable(beanType))) {
                 beans.add(bean);
             }
         }
         return withoutReplaced(beans);
     }
 
+    private static boolean isInterceptor(CdiBean<?> bean) {
+        return bean.definition().getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+    }
+
+    private static Set<Bean<?>> ofTheSpecification(Set<Bean<?>> beans) {
+        Set<Bean<?>> kept = new LinkedHashSet<>();
+        for (Bean<?> bean : beans) {
+            if (bean instanceof CdiBean<?> cdiBean && CdiResolution.isBeanOfTheSpecification(cdiBean.definition())) {
+                kept.add(bean);
+            }
+        }
+        return kept;
+    }
+
     /**
      * The beans less the ones another among them replaces with Micronaut's {@code Replaces}, which Micronaut
      * leaves out of the candidates of a lookup and an injection point alike.
      */
-    private static Set<Bean<?>> withoutReplaced(Set<Bean<?>> beans) {
+    private static Set<CdiBean<?>> withoutReplaced(Set<CdiBean<?>> beans) {
         if (beans.size() < 2) {
             return beans;
         }
-        Map<BeanDefinition<?>, Bean<?>> byDefinition = new java.util.LinkedHashMap<>();
-        for (Bean<?> bean : beans) {
-            byDefinition.put(((CdiBean<?>) bean).definition(), bean);
+        Map<BeanDefinition<?>, CdiBean<?>> byDefinition = new java.util.LinkedHashMap<>();
+        for (CdiBean<?> bean : beans) {
+            byDefinition.put(bean.definition(), bean);
         }
         java.util.Collection<BeanDefinition<?>> kept = CdiResolution.withoutReplaced(byDefinition.keySet());
         if (kept == byDefinition.keySet()) {
             return beans;
         }
-        Set<Bean<?>> remaining = new LinkedHashSet<>();
+        Set<CdiBean<?>> remaining = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : kept) {
             remaining.add(byDefinition.get(definition));
         }
@@ -411,20 +524,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         return described;
     }
-
-    /**
-     * The Micronaut qualifier a lookup of this container resolves by: a definition qualifies when the bean it
-     * describes has every one of the given qualifiers - with what a portable extension added to the bean class
-     * - by the rules {@link #beansOf} applies.
-     *
-     * @param required The qualifiers a lookup requires, none at all requiring the default qualifier
-     * @param <T>      The bean type
-     * @return The qualifier
-     */
-    public <T> CdiBeanQualifier<T> qualifierFor(List<CdiQualifier> required) {
-        return new CdiBeanQualifier<>(required, definition -> canonicalBean(definition).qualifiers());
-    }
-
     /**
      * Forgets the beans already read, so that beans registered while the container starts — the synthetic
      * ones of section 2.10.5 — are seen by the next lookup.
@@ -562,14 +661,23 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (beans.size() == 1) {
             return beans.iterator().next();
         }
-        // more than one bean qualifies: the alternatives outrank everything else, and among them the one of
-        // the highest priority wins. Anything short of a single winner is the ambiguity of section 2.4.2
-        List<Bean<? extends X>> narrowed = CdiResolution.narrow(beans, Bean::isAlternative,
-            CdiBeanContainer::priorityOf);
+        // more than one bean qualifies: a bean of the specification outranks a bean of Micronaut's own of the
+        // same type, as at an injection point - among beans of Micronaut's own alone its primary one does - the
+        // alternatives outrank everything else, and among them the one of the highest priority wins. Anything short
+        // of a single winner is the ambiguity of section 2.4.2
+        List<Bean<? extends X>> narrowed = CdiResolution.narrow(
+            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf),
+            Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);
         }
         throw new AmbiguousResolutionException("More than one bean qualifies: " + beans);
+    }
+
+    private static @Nullable BeanDefinition<?> definitionOf(Bean<?> bean) {
+        // a bean the container did not describe - one a program handed in - has none, and is taken as one of the
+        // specification
+        return bean instanceof CdiBean<?> cdiBean ? cdiBean.definition() : null;
     }
 
     private static int priorityOf(Bean<?> bean) {

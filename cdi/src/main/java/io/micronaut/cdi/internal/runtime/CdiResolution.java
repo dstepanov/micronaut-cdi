@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
@@ -89,6 +90,64 @@ public final class CdiResolution {
         // the priority a selected alternative was written with is carried as its order, negated: an order
         // prefers the lowest where a priority prefers the highest
         return narrow(candidates, CdiResolution::isAlternative, CdiResolution::priorityOf);
+    }
+
+    /**
+     * Narrows the candidates to the one bean resolution picks the way {@link #narrow(Collection)} does, after
+     * {@link #resolvedAmong leaving out} the beans of Micronaut's own where beans of the specification are among
+     * them: what an injection point of a bean of the specification resolves among, and so what a lookup that
+     * resolves one bean - {@code Instance.get()}, the bean manager's {@code resolve} - resolves among too.
+     *
+     * @param candidates The candidate definitions
+     * @param <T>        The bean type
+     * @return The narrowed candidates
+     */
+    public static <T extends BeanDefinition<?>> List<T> narrowToOne(Collection<T> candidates) {
+        return narrow(resolvedAmong(candidates, definition -> definition));
+    }
+
+    /**
+     * The candidates one bean is resolved among. Where beans of the specification are among them, they are those
+     * beans, and the rules of the specification choose among them. Where none is, they are beans of Micronaut's
+     * own, and Micronaut's rules choose as Micronaut chooses for an injection point none of the specification's
+     * answers: the primary bean, or else the one that is not secondary.
+     *
+     * @param candidates   The candidates
+     * @param definitionOf The definition of a candidate, or {@code null} for one that is not a bean the container
+     *                     described, which is taken for a bean of the specification
+     * @param <T>          The candidate type
+     * @return The candidates, the given collection itself where it has nothing to drop
+     */
+    public static <T> Collection<T> resolvedAmong(Collection<T> candidates,
+                                                   Function<? super T, @Nullable BeanDefinition<?>> definitionOf) {
+        if (candidates.size() < 2) {
+            return candidates;
+        }
+        List<T> kept = new ArrayList<>(candidates.size());
+        for (T candidate : candidates) {
+            BeanDefinition<?> definition = definitionOf.apply(candidate);
+            if (definition == null || isBeanOfTheSpecification(definition)) {
+                kept.add(candidate);
+            }
+        }
+        if (!kept.isEmpty()) {
+            return kept.size() == candidates.size() ? candidates : kept;
+        }
+        List<T> primary = new ArrayList<>(1);
+        List<T> notSecondary = new ArrayList<>(candidates.size());
+        for (T candidate : candidates) {
+            BeanDefinition<?> definition = java.util.Objects.requireNonNull(definitionOf.apply(candidate));
+            if (definition.isPrimary()) {
+                primary.add(candidate);
+            }
+            if (!definition.getAnnotationMetadata().hasDeclaredStereotype(io.micronaut.context.annotation.Secondary.class)) {
+                notSecondary.add(candidate);
+            }
+        }
+        if (primary.size() == 1) {
+            return primary;
+        }
+        return notSecondary.size() == 1 ? notSecondary : candidates;
     }
 
     /**

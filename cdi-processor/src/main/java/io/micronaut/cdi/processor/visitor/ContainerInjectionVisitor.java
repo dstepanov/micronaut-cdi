@@ -29,20 +29,53 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.inject.utils.BeanInjectionUtils;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
 
 /**
- * Selects exact CDI resolution for declared container injection points, before Core generates aggregation.
- * Only user members are annotated; generated proxy infrastructure retains its own resolution.
+ * Selects the container's resolution for every injection point of a bean of the specification - a field, a
+ * parameter of its constructor, of an initializer, of a producer, of a disposer and of an observer - through
+ * Micronaut's {@code ResolveWith}, so that a point is resolved among the beans the container selects for a lookup
+ * and the bean manager as well, the full declared type of a container type - a list, an optional, an array - among
+ * them, before Micronaut generates its aggregation. What Micronaut resolves itself is left to it. Only user members
+ * are annotated; generated proxy infrastructure retains its own resolution, and so does a bean of Micronaut's own.
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Internal
 public final class ContainerInjectionVisitor implements TypeElementVisitor<Object, Object> {
+
+    /**
+     * The kinds whose beans are built in and read the point they are injected into, resolved as late as the point
+     * is used.
+     */
+    private static final Set<String> LATE_KINDS = Set.of(
+        "jakarta.enterprise.inject.Instance",
+        "jakarta.inject.Provider",
+        "io.micronaut.context.BeanProvider",
+        "jakarta.enterprise.event.Event",
+        "jakarta.enterprise.inject.spi.InjectionPoint",
+        "jakarta.enterprise.inject.spi.EventMetadata",
+        "io.micronaut.cdi.MicronautInstance",
+        "io.micronaut.cdi.MicronautEvent",
+        "io.micronaut.cdi.MicronautInjectionPoint"
+    );
+
+    /**
+     * The interfaces Micronaut hands the context itself out as, without a bean definition for any of them: the
+     * private {@code thisInterfaces} of {@code DefaultBeanContext}, which Micronaut does not publish.
+     */
+    private static final Set<String> CONTEXT_TYPES = Set.of(
+        "io.micronaut.context.BeanDefinitionRegistry",
+        "io.micronaut.context.BeanContext",
+        "io.micronaut.core.annotation.AnnotationMetadataResolver",
+        "io.micronaut.context.BeanLocator",
+        "io.micronaut.context.ExecutionHandleLocator",
+        "io.micronaut.context.ApplicationContext",
+        "io.micronaut.core.value.PropertyResolver",
+        "io.micronaut.core.value.ValueResolver",
+        "io.micronaut.context.env.PropertyPlaceholderResolver"
+    );
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
@@ -73,6 +106,13 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
                     field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class);
                 }
             });
+        for (io.micronaut.inject.ast.PropertyElement property : bean.getSyntheticBeanProperties()) {
+            // a property a compiler describes as one - a Kotlin property under KSP - is injected through its setter,
+            // with the metadata of the property
+            if (isInjected(property)) {
+                property.getWriteMethod().ifPresent(ContainerInjectionVisitor::markParameters);
+            }
+        }
         BeanInjectionUtils.findBeanConstructor(bean).ifPresent(ContainerInjectionVisitor::markParameters);
         for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             if (isInjected(method)) {
@@ -116,14 +156,31 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
     }
 
     private static void mark(Element element, ClassElement type) {
-        if (element.hasStereotype(ResolveWith.class) || type.getFirstTypeArgument()
-            .map(argument -> argument.isAssignable(io.micronaut.context.BeanRegistration.class)).orElse(false)) {
+        if (element.hasStereotype(ResolveWith.class) || isResolvedByMicronaut(element, type)) {
             return;
         }
-        if (type.isArray() || type.isAssignable(Optional.class) || type.isAssignable(Collection.class)
-            || type.isAssignable(Iterable.class) || type.isAssignable(Map.class) || type.isAssignable(Stream.class)) {
-            element.annotate(ResolveWith.class, builder -> builder.member("value", new AnnotationClassValue<>(
-                "io.micronaut.cdi.internal.runtime.CdiBeanInjectionProvider")));
+        element.annotate(ResolveWith.class, builder -> builder.member("value", new AnnotationClassValue<>(
+            "io.micronaut.cdi.internal.runtime.CdiBeanInjectionProvider")));
+    }
+
+    /**
+     * Whether Micronaut resolves the point itself rather than by a bean of its type: a value of the configuration,
+     * a registration, the context itself, or one of the kinds resolved late - a lookup, an event, the injection
+     * point metadata - whose beans are built-in ones that read the point they are injected into.
+     */
+    private static boolean isResolvedByMicronaut(Element element, ClassElement type) {
+        if (element.hasStereotype(io.micronaut.context.annotation.Value.class)
+            || element.hasStereotype(io.micronaut.context.annotation.Property.class)
+            || element.hasStereotype(io.micronaut.context.annotation.Parameter.class)) {
+            return true;
         }
+        ClassElement resolved = type.isArray() ? type.fromArray() : type;
+        if (resolved.isAssignable(io.micronaut.context.BeanRegistration.class)
+            || type.getFirstTypeArgument().map(argument -> argument.isAssignable(io.micronaut.context.BeanRegistration.class))
+                .orElse(false)) {
+            return true;
+        }
+        return LATE_KINDS.contains(type.getName()) || CONTEXT_TYPES.contains(type.getName())
+            || type.isAssignable("io.micronaut.inject.InjectionPoint");
     }
 }

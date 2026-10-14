@@ -290,12 +290,12 @@ class PortableExtensionTest {
     }
 
     @Test
-    void aQualifierAddedToABeanClassIsNotSeenByAnInjectionPoint() {
-        // the limit of the overlay: an injection point is resolved by Micronaut from the compiled metadata of
-        // the definitions, which a qualifier added as the container starts is not part of
+    void aQualifierAddedToABeanClassIsSeenByAnInjectionPoint() {
+        // an injection point is resolved among the beans the container selects, by the qualifiers it records of
+        // each - a qualifier added as the container starts among them - as a lookup is
         try (SeContainer container = bootstrap(Widget.class, WantsATaggedWidget.class).addExtensions(new Tagging())
             .addProperty(WantsATaggedWidget.DEPLOYED, true).initialize()) {
-            assertThrows(RuntimeException.class, () -> container.select(WantsATaggedWidget.class).get().widget());
+            assertEquals(Widget.class, container.select(WantsATaggedWidget.class).get().widget().getClass());
         }
     }
 

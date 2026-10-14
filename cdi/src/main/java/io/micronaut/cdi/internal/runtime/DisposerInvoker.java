@@ -188,7 +188,12 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             container = beanContext.getBean(CdiBeanContainer.class);
             this.container = container;
         }
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) container.resolveContainerInjection(argument);
+        java.util.Set<jakarta.enterprise.inject.spi.Bean<?>> candidates = container.injectionCandidates(argument);
+        if (candidates == null) {
+            // no bean of the specification is a candidate: Micronaut's rules, as at a bean's own point
+            return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
+        }
+        BeanDefinition<Object> definition = (BeanDefinition<Object>) container.definitionAmong(candidates);
         if (definition == null) {
             if (argument.isNullable()) {
                 return null;

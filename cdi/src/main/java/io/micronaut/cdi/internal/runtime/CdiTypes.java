@@ -50,32 +50,6 @@ public final class CdiTypes {
     }
 
     /**
-     * The other of the primitive type and the class that boxes it.
-     *
-     * <p>Section 2.1.2 counts the two as one bean type, so a bean of either is resolved by a lookup of the
-     * other. Micronaut resolves a bean by the type it was written as and keeps them apart, so a lookup here is
-     * made twice and what the two resolve is put together.</p>
-     *
-     * @param type The type looked up
-     * @param <T>  The type
-     * @return The counterpart, or {@code null} when the type is neither a primitive nor a class that boxes one
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> @Nullable Argument<T> counterpartOf(Argument<?> type) {
-        if (type.getTypeParameters().length > 0) {
-            return null;
-        }
-        Class<?> raw = type.getType();
-        if (raw == void.class || raw == Void.class) {
-            // void is no bean type, and the class that boxes it none either
-            return null;
-        }
-        Class<?> counterpart = raw.isPrimitive()
-            ? ReflectionUtils.getWrapperType(raw) : ReflectionUtils.getPrimitiveType(raw);
-        return counterpart == raw ? null : (Argument<T>) Argument.of(counterpart);
-    }
-
-    /**
      * The raw class of a type that was handed in, or {@code null} for one that has none of its own.
      *
      * @param type The type
