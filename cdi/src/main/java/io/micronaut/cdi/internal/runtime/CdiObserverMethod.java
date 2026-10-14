@@ -335,13 +335,13 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     @SuppressWarnings("unchecked")
     private @Nullable Object resolve(Argument<?> argument, OwnedDependents dependents) {
         io.micronaut.context.BeanRegistration<Object> registration;
-        java.util.Set<jakarta.enterprise.inject.spi.Bean<?>> candidates =
+        CdiBeanContainer.Selection selection =
             argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)
-                ? container().injectionCandidates(argument) : null;
-        if (candidates != null) {
+                ? container().selectionFor(argument) : null;
+        if (selection != null && selection != CdiBeanContainer.Selection.MICRONAUT) {
             // a parameter the processor marked is resolved as a bean's own and a disposer's are: among the beans of
             // its full declared type the container selects
-            BeanDefinition<Object> definition = (BeanDefinition<Object>) container().definitionAmong(candidates);
+            BeanDefinition<Object> definition = (BeanDefinition<Object>) selection.definition();
             if (definition == null) {
                 if (argument.isNullable()) {
                     return null;
@@ -353,8 +353,10 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
         } else {
             // one Micronaut resolves itself - a lookup, the event metadata - or one no bean of the specification is
-            // a candidate for: Micronaut's rules
-            Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
+            // a candidate for: Micronaut's rules, among the beans of Micronaut's own where the point is marked
+            Qualifier<Object> qualifier = selection == null
+                ? (Qualifier<Object>) Qualifiers.<Object>forArgument(argument)
+                : CdiBeanContainer.Selection.micronautQualifier((Argument<Object>) argument, null);
             registration = dependents.registration((Argument<Object>) argument, qualifier);
         }
         return registration.bean();

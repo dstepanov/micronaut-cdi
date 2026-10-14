@@ -108,7 +108,7 @@ name that is the path prefix of another - each is a `DeploymentException`, every
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
 by Micronaut's rules. A point is validated by the selection it is resolved by as the bean is created
-(`CdiBeanContainer.injectionCandidates`), and one that selection leaves to Micronaut's rules is validated by them. An
+(`CdiBeanContainer.selectionFor`), and one that selection leaves to Micronaut's rules is validated by them. An
 injection point is validated whatever package its type is in: what the container hands
 the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
 manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
@@ -277,8 +277,13 @@ metadata is read from. Missing required producers are deployment errors.
 
 A bean of the specification may be injected with a bean of Micronaut's own: where no bean of the specification
 is of the class of the point, or none of them qualifies while beans of Micronaut's own are of it, the point is
-resolved by Micronaut's rules - its primary bean, the one that is not secondary, its name convention - as it
-would be in a bean of Micronaut's own, and validated by them. A lookup that resolves one bean among beans of
+resolved by Micronaut's rules - its qualifier, its primary bean, the one that is not secondary, its name
+convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selectionFor`), and validated by them. A
+bean of the specification the qualifiers of the point rejected is not admitted again by Micronaut's rules: an
+`@Inject @Fancy Engine` beside a bean of the specification of `Engine` that is not `@Fancy` and a bean of
+Micronaut's own is not injected with the first by the prefix of its name, and an `@Inject Shape` beside a `@Fancy`
+bean of the specification and a bean of Micronaut's own is injected with the bean of Micronaut's own, as an
+`Instance` and the bean manager resolve it. A lookup that resolves one bean among beans of
 Micronaut's own alone chooses the primary one, or the one that is not secondary, as well. A bean of Micronaut's
 own keeps Micronaut's resolution and aggregation for its own injection points, with the type rules of section
 2.4.2.1 for a parameterized type a bean of the specification has (`CdiResolutionCustomizer.isCandidateBean`).

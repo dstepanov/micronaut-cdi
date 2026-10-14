@@ -252,26 +252,27 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * The beans an injection point of a bean of the specification is resolved among: a bean's own - a field, a
-     * parameter of its constructor, of an initializer or of a producer - an observer's or a disposer's, which the
-     * processor marks for this container to resolve ({@code ResolveWith}). They are the beans of {@link #beansOf}
-     * for the full declared type of the point and the qualifiers it declares, the ones of the specification alone
-     * where any of those qualifies: section 5.2 resolves among the beans of the specification, and a bean of
-     * Micronaut's own of the same type is no more than one Micronaut also has.
+     * What an injection point of a bean of the specification resolves to: a bean's own - a field, a parameter of
+     * its constructor, of an initializer or of a producer - an observer's or a disposer's, which the processor
+     * marks for this container to resolve ({@code ResolveWith}). The beans it is resolved among are the beans of
+     * {@link #beansOf} for the full declared type of the point and the qualifiers it declares, and one is chosen
+     * among them as {@link #resolve} chooses: section 5.2 resolves among the beans of the specification, and a
+     * bean of Micronaut's own of the same type is no more than one Micronaut also has.
      *
-     * <p>Where no bean of the specification is of the class of the point, or none qualifies while beans of
-     * Micronaut's own are of the class, the point is left to Micronaut's rules - a primary bean, a secondary one,
-     * a name - which is what lets a bean of the specification be injected with a bean of Micronaut's own as a bean
-     * of Micronaut's would be. So is a type with a type variable among its arguments, which no bean type is.</p>
+     * <p>Where none of those beans is a bean of the specification - none is of the class of the point, or none of
+     * the ones that are qualifies - the point is left to Micronaut's rules among the beans of Micronaut's own
+     * ({@link Selection#MICRONAUT}, resolved by {@link Selection#micronautQualifier}): a bean of the specification
+     * the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its name or by
+     * being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
      *
      * @param point The injection point
-     * @return The beans, the alternatives not yet narrowed, or {@code null} where Micronaut's rules resolve it
+     * @return What it resolves to
+     * @throws AmbiguousResolutionException Where more than one bean remains
      */
-    @Nullable Set<Bean<?>> injectionCandidates(Argument<?> point) {
+    Selection selectionFor(Argument<?> point) {
         boolean specification = false;
         boolean micronaut = false;
         for (CdiBean<?> bean : candidatesOfType(point)) {
-            // an interceptor is a bean of the specification of its class, though never one a point is injected with
             if (CdiResolution.isBeanOfTheSpecification(bean.definition())) {
                 specification = true;
             } else {
@@ -282,32 +283,66 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
         }
         if (!specification) {
-            return null;
+            return Selection.MICRONAUT;
         }
         Set<Bean<?>> eligible;
         try {
             eligible = beansOf(point, CdiQualifier.declared(point.getAnnotationMetadata()));
         } catch (IllegalArgumentException e) {
             // a type with a variable the declaring class gives a value the definition does not carry
-            return null;
+            return Selection.MICRONAUT;
         }
-        Set<Bean<?>> ofTheSpecification = ofTheSpecification(eligible);
-        if (ofTheSpecification.isEmpty() && micronaut) {
-            return null;
+        if (micronaut && ofTheSpecification(eligible).isEmpty()) {
+            // the beans of the specification of the class are not among the ones the qualifiers admit, and the
+            // beans of Micronaut's own of it are left to Micronaut's rules
+            return Selection.MICRONAUT;
         }
-        return ofTheSpecification;
+        Bean<?> selected = resolve(eligible);
+        return selected == null ? Selection.NONE : new Selection(((CdiBean<?>) selected).definition());
     }
 
     /**
-     * The definition of the one bean among the candidates of an injection point, narrowed by {@link #resolve}.
-     *
-     * @param candidates The candidates {@link #injectionCandidates} answered
-     * @return The definition, or {@code null} where there is none
-     * @throws AmbiguousResolutionException Where more than one bean remains
+     * What an injection point resolves to: the definition of the one bean the container selected, no bean at all,
+     * or whatever Micronaut's rules resolve among the beans of Micronaut's own.
      */
-    @Nullable BeanDefinition<?> definitionAmong(Set<Bean<?>> candidates) {
-        Bean<?> selected = resolve(candidates);
-        return selected == null ? null : ((CdiBean<?>) selected).definition();
+    static final class Selection {
+        /**
+         * No bean the container selects satisfies the point.
+         */
+        static final Selection NONE = new Selection(null);
+        /**
+         * The point is resolved by Micronaut's rules among the beans of Micronaut's own.
+         */
+        static final Selection MICRONAUT = new Selection(null);
+
+        private final @Nullable BeanDefinition<?> definition;
+
+        private Selection(@Nullable BeanDefinition<?> definition) {
+            this.definition = definition;
+        }
+
+        /**
+         * The definition of the bean selected.
+         *
+         * @return The definition, or {@code null} where there is none, or Micronaut's rules resolve the point
+         */
+        @Nullable BeanDefinition<?> definition() {
+            return definition;
+        }
+
+        /**
+         * The qualifier Micronaut's rules resolve a point {@link #MICRONAUT} leaves to them by: the one Micronaut
+         * reads off the point, among the beans of Micronaut's own alone.
+         *
+         * @param point     The injection point
+         * @param qualifier The qualifier Micronaut handed over for the point, or {@code null} to read it off it
+         * @param <T>       The bean type
+         * @return The qualifier
+         */
+        static <T> io.micronaut.context.Qualifier<T> micronautQualifier(
+            Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
+            return NotOfTheSpecification.forPoint(point, qualifier);
+        }
     }
 
     /**

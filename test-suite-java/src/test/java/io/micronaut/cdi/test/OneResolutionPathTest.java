@@ -35,6 +35,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -134,6 +135,27 @@ class OneResolutionPathTest {
     public static class Square implements Shape {
     }
 
+    // -- a bean of the specification no qualifier admits beside a bean of Micronaut's own
+
+    public interface Figure {
+    }
+
+    @Dependent
+    @Fancy
+    public static class FancyFigure implements Figure {
+    }
+
+    @Bean
+    public static class PlainFigure implements Figure {
+    }
+
+    public static class Meter {
+    }
+
+    @io.micronaut.context.annotation.Context
+    public static class PlainMeter extends Meter {
+    }
+
     @Bean
     public static class Drawer {
         @Inject
@@ -160,6 +182,10 @@ class OneResolutionPathTest {
         Engine engine;
         @Inject
         Shape shape;
+        @Inject
+        Figure figure;
+        @Inject
+        Meter meter;
     }
 
     @Test
@@ -233,6 +259,21 @@ class OneResolutionPathTest {
             assertInstanceOf(Circle.class, context.getBean(Injected.class).shape);
             assertInstanceOf(Circle.class, container.createInstance().select(Shape.class).get());
             assertEquals(Set.of(Circle.class), beanClasses(container, Shape.class));
+        }
+    }
+
+    @Test
+    void aBeanOfTheSpecificationNoQualifierAdmitsIsNotReadmittedByMicronautsRules() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            // the bean of the specification is @Fancy, so the point is resolved among the beans of Micronaut's own
+            // alone, which the disqualified one is not among
+            assertInstanceOf(PlainFigure.class, context.getBean(Injected.class).figure);
+            assertInstanceOf(PlainFigure.class, container.createInstance().select(Figure.class).get());
+            assertEquals(Set.of(PlainFigure.class), beanClasses(container, Figure.class));
+            assertEquals(PlainFigure.class, container.resolve(container.getBeans(Figure.class)).getBeanClass());
+            // a shared bean of Micronaut's own resolved by Micronaut's rules is the instance its scope holds
+            assertSame(context.getBean(PlainMeter.class), context.getBean(Injected.class).meter);
         }
     }
 
