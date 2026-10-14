@@ -301,23 +301,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return selection;
     }
 
-    /**
-     * An injection point as the key of what it resolves to: the point itself, compared by identity.
-     *
-     * @param point The injection point
-     */
-    private record PointKey(Argument<?> point) {
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof PointKey key && key.point == point;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(point);
-        }
-    }
-
     private Selection select(Argument<?> point) {
         boolean specification = false;
         boolean micronaut = false;
@@ -353,50 +336,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         Bean<?> selected = resolve(eligible);
         return selected == null ? Selection.NONE : new Selection(((CdiBean<?>) selected).definition());
-    }
-
-    /**
-     * What an injection point resolves to: the definition of the one bean the container selected, no bean at all,
-     * or whatever Micronaut's rules resolve among the beans of Micronaut's own.
-     */
-    static final class Selection {
-        /**
-         * No bean the container selects satisfies the point.
-         */
-        static final Selection NONE = new Selection(null);
-        /**
-         * The point is resolved by Micronaut's rules among the beans of Micronaut's own.
-         */
-        static final Selection MICRONAUT = new Selection(null);
-
-        private final @Nullable BeanDefinition<?> definition;
-
-        private Selection(@Nullable BeanDefinition<?> definition) {
-            this.definition = definition;
-        }
-
-        /**
-         * The definition of the bean selected.
-         *
-         * @return The definition, or {@code null} where there is none, or Micronaut's rules resolve the point
-         */
-        @Nullable BeanDefinition<?> definition() {
-            return definition;
-        }
-
-        /**
-         * The qualifier Micronaut's rules resolve a point {@link #MICRONAUT} leaves to them by: the one Micronaut
-         * reads off the point, among the beans of Micronaut's own alone.
-         *
-         * @param point     The injection point
-         * @param qualifier The qualifier Micronaut handed over for the point, or {@code null} to read it off it
-         * @param <T>       The bean type
-         * @return The qualifier
-         */
-        static <T> io.micronaut.context.Qualifier<T> micronautQualifier(
-            Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
-            return NotOfTheSpecification.forPoint(point, qualifier);
-        }
     }
 
     /**
@@ -624,6 +563,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         return described;
     }
+
     /**
      * Forgets the beans already read, so that beans registered while the container starts — the synthetic
      * ones of section 2.10.5 — are seen by the next lookup.
@@ -669,12 +609,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             deployed = known;
         }
         return known.beans();
-    }
-
-    /**
-     * The beans of the deployment, and the beans the container knows they were narrowed from.
-     */
-    private record Deployed(List<CdiBean<?>> from, List<CdiBean<?>> beans) {
     }
 
     /**
@@ -1236,5 +1170,75 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private static UnsupportedOperationException belongsToFull(String what) {
         return new UnsupportedOperationException(what + " belongs to CDI Full, which this module does not "
             + "implement. See Conformance");
+    }
+
+    /**
+     * An injection point as the key of what it resolves to: the point itself, compared by identity.
+     *
+     * @param point The injection point
+     */
+    private record PointKey(Argument<?> point) {
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof PointKey key && key.point == point;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(point);
+        }
+    }
+
+    /**
+     * What an injection point resolves to: the definition of the one bean the container selected, no bean at all,
+     * or whatever Micronaut's rules resolve among the beans of Micronaut's own.
+     */
+    static final class Selection {
+        /**
+         * No bean the container selects satisfies the point.
+         */
+        static final Selection NONE = new Selection(null);
+        /**
+         * The point is resolved by Micronaut's rules among the beans of Micronaut's own.
+         */
+        static final Selection MICRONAUT = new Selection(null);
+
+        private final @Nullable BeanDefinition<?> definition;
+
+        private Selection(@Nullable BeanDefinition<?> definition) {
+            this.definition = definition;
+        }
+
+        /**
+         * The definition of the bean selected.
+         *
+         * @return The definition, or {@code null} where there is none, or Micronaut's rules resolve the point
+         */
+        @Nullable BeanDefinition<?> definition() {
+            return definition;
+        }
+
+        /**
+         * The qualifier Micronaut's rules resolve a point {@link #MICRONAUT} leaves to them by: the one Micronaut
+         * reads off the point, among the beans of Micronaut's own alone.
+         *
+         * @param point     The injection point
+         * @param qualifier The qualifier Micronaut handed over for the point, or {@code null} to read it off it
+         * @param <T>       The bean type
+         * @return The qualifier
+         */
+        static <T> io.micronaut.context.Qualifier<T> micronautQualifier(
+            Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
+            return NotOfTheSpecification.forPoint(point, qualifier);
+        }
+    }
+
+    /**
+     * The beans of the deployment, and the beans the container knows they were narrowed from.
+     *
+     * @param from  The beans the container knows
+     * @param beans The beans of the deployment
+     */
+    private record Deployed(List<CdiBean<?>> from, List<CdiBean<?>> beans) {
     }
 }
