@@ -697,11 +697,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             return beans.iterator().next();
         }
         // more than one bean qualifies: a bean of the specification outranks a bean of Micronaut's own of the
-        // same type, as at an injection point - among beans of Micronaut's own alone its primary one does - the
+        // same type, as at an injection point - among beans of Micronaut's own alone Micronaut's precedence chooses - the
         // alternatives outrank everything else, and among them the one of the highest priority wins. Anything short
         // of a single winner is the ambiguity of section 2.4.2
         List<Bean<? extends X>> narrowed = CdiResolution.narrow(
-            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf),
+            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, beanContext),
             Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);

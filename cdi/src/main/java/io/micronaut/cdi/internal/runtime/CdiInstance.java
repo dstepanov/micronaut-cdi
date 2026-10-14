@@ -337,7 +337,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * The one definition the lookup resolves to, narrowed the way section 2.4.2 narrows several candidates.
      */
     private BeanDefinition<T> one() {
-        java.util.List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions());
+        java.util.List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions(), type, beanContext);
         if (candidates.isEmpty()) {
             throw new UnsatisfiedResolutionException("No bean of type " + type.getTypeName() + " qualifies");
         }
@@ -366,7 +366,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
     @Override
     public boolean isAmbiguous() {
-        return CdiResolution.narrowToOne(definitions()).size() > 1;
+        return CdiResolution.narrowToOne(definitions(), type, beanContext).size() > 1;
     }
 
     @Override

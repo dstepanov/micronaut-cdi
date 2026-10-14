@@ -149,6 +149,39 @@ class OneResolutionPathTest {
     public static class PlainFigure implements Figure {
     }
 
+    public interface Gear {
+    }
+
+    @Bean
+    @io.micronaut.core.annotation.Order(20)
+    public static class SlowGear implements Gear {
+    }
+
+    @Bean
+    @io.micronaut.core.annotation.Order(10)
+    public static class FastGear implements Gear {
+    }
+
+    public interface Lever {
+    }
+
+    @Bean
+    @Primary
+    @io.micronaut.core.annotation.Order(5)
+    public static class LongLever implements Lever {
+    }
+
+    @Bean
+    @Primary
+    @io.micronaut.core.annotation.Order(1)
+    public static class ShortLever implements Lever {
+    }
+
+    @Bean
+    @io.micronaut.core.annotation.Order(0)
+    public static class SpareLever implements Lever {
+    }
+
     public static class Meter {
     }
 
@@ -186,6 +219,10 @@ class OneResolutionPathTest {
         Figure figure;
         @Inject
         Meter meter;
+        @Inject
+        Gear gear;
+        @Inject
+        Lever lever;
     }
 
     @Test
@@ -274,6 +311,22 @@ class OneResolutionPathTest {
             assertEquals(PlainFigure.class, container.resolve(container.getBeans(Figure.class)).getBeanClass());
             // a shared bean of Micronaut's own resolved by Micronaut's rules is the instance its scope holds
             assertSame(context.getBean(PlainMeter.class), context.getBean(Injected.class).meter);
+        }
+    }
+
+    @Test
+    void beansOfMicronautsOwnAreResolvedByMicronautsWholePrecedenceWhereverTheyAreResolved() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Injected injected = context.getBean(Injected.class);
+            // no primary one: the lowest order
+            assertInstanceOf(FastGear.class, injected.gear);
+            assertInstanceOf(FastGear.class, container.createInstance().select(Gear.class).get());
+            assertEquals(FastGear.class, container.resolve(container.getBeans(Gear.class)).getBeanClass());
+            // several primary ones: the lowest order among them, not among every candidate
+            assertInstanceOf(ShortLever.class, injected.lever);
+            assertInstanceOf(ShortLever.class, container.createInstance().select(Lever.class).get());
+            assertEquals(ShortLever.class, container.resolve(container.getBeans(Lever.class)).getBeanClass());
         }
     }
 
