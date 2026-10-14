@@ -131,8 +131,8 @@ as the values it was compiled with, less the members marked `@Nonbinding`; injec
 nothing but `micronaut-cdi`, whatever qualifiers the application declares. The processor lists the members that
 do not bind under `$nonBinding` on every occurrence of a qualifier or binding it compiles, the way Micronaut lists
 its own `@NonBinding` members - one that leaves such a member at its default, and one an extension marked, among
-them - and a lookup resolves by one Micronaut `Qualifier` that compares the qualifiers of the specification and
-nothing else. What the container has to know of a qualifier or binding type - whether it is one, its members,
+them - and an injection point, a lookup and the bean manager select their beans by one rule of the container that
+compares the qualifiers of the specification and nothing else. What the container has to know of a qualifier or binding type - whether it is one, its members,
 which are non-binding, whether it is repeatable, its retention - is read from the compiled metadata of the beans
 that use it, for every such type the application was compiled with. The qualifiers of the specification -
 `@Default`, `@Any`, `@Named` - and a literal of a qualifier that has no binding member are taken as they are, with

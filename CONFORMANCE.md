@@ -17,10 +17,10 @@ visible in a test report as what passes.
 | 2.4, 6.6 | The dependent pseudo-scope, read as the Micronaut prototype scope | `DependentAnnotationMapper` |
 | 2.4, 6.6 | The application scope, read as a proxied Micronaut scope | `ApplicationScope`, `CdiApplicationScope` |
 | 2.4, 6.6 | The request scope, and the `ContextNotActiveException` of reaching for it outside a request | `RequestScope`, `CdiRequestScope` |
-| 2.3, 3.8 | Qualifiers, and the rule that a bean declaring none has the default qualifier | `DefaultQualifierVisitor` |
+| 2.3, 3.8 | Qualifiers, and the rule that a bean declaring none has the default qualifier and an injection point declaring none requires it | `DefaultQualifierVisitor`, `CdiBeanContainer` |
 | 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields | `ProducerVisitor` |
 | 3.4 | Disposer methods, resolved to their producer while it is compiled | `ProducerVisitor`, `DisposerInvoker` |
-| 3.5, 3.6, 3.7 | Bean constructors, injected fields and initializer methods | Micronaut's own injection |
+| 3.5, 3.6, 3.7 | Bean constructors, injected fields and initializer methods, each point resolved by the container | Micronaut's own injection, `CdiBeanInjectionProvider` |
 | 2.2 | Narrowing the bean types of a bean with `@Typed` | `TypedAnnotationMapper` |
 | 8 | Interceptor bindings | deferred to Micronaut Jakarta Interceptors |
 | 5.6 | Programmatic lookup through `Instance`, including handles | `CdiInstance` |
@@ -41,7 +41,7 @@ visible in a test report as what passes.
 | 2.2 | The bean types of a bean, including a produced array, interface and primitive, and narrowing with `@Typed` | `CdiBean` |
 | 2.2 | A primitive and the class that boxes it as one bean type | `CdiTypes`, `CdiInstance`, `CdiBeanContainer` |
 | 3.5 | A managed bean has a constructor taking no parameters or one annotated `@Inject` | `BeanDiscoveryVisitor` |
-| 5.2 | Resolution by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with, through one Micronaut qualifier that compares nothing but the qualifiers of the bean | `CdiQualifier`, `CdiBeanQualifier`, `NonbindingMembersRemapper`, `CompiledAnnotationTypes` |
+| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembersRemapper`, `CompiledAnnotationTypes` |
 | 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, and `Instance` and `BeanContainer.getBeans` narrowed by a Micronaut `Qualifier`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 12.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
@@ -64,18 +64,24 @@ if `IN_PROGRESS`.
 
 ## Differences
 
-### The default qualifier is given to the bean rather than to the injection point
+### The default qualifier is also written as Micronaut's primary bean
 
 Section 3.8 has an injection point that declares no qualifier looking for the default qualifier, and section
-2.3 has a bean that declares no qualifier having it. This module writes the second half of that rule onto the
-bean and leaves the first half to Micronaut, which resolves an injection point that names no qualifier to the
-primary bean of the type when there is more than one candidate; the bean given the default qualifier is declared
-primary, so the same bean is resolved.
+2.3 has a bean that declares no qualifier having it. Both halves are applied by the container. The processor
+writes `@Default` onto a bean that declares no qualifier (`DefaultQualifierVisitor`), and every injection point of
+a bean of the specification is resolved by the container rather than by Micronaut
+([Container injection](#container-injection-resolves-the-full-declared-bean-type)): among the beans of its type,
+the ones that have every qualifier the point requires, `@Default` where it names none. An `Instance`, the bean
+manager and the deployment validation select their beans the same way, so none of them can resolve a type
+differently from an injection point.
 
-The difference this leaves is at an injection point that names no qualifier where every candidate is qualified:
-the specification has no bean to resolve, and Micronaut resolves one. Writing the rule onto injection points
-instead would make a bean of this specification unable to be injected with a bean that is not one, which is the
-worse of the two.
+The bean given the default qualifier is also declared Micronaut's `@Primary`. That serves the beans of
+Micronaut's own: their injection points are not resolved by the container, and one that names no qualifier
+where a bean of the specification and a qualified one are candidates resolves to the primary one, the bean with
+the default qualifier, rather than being ambiguous. A program's own `BeanContext.getBean` resolves the same way.
+The difference left is there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
+qualifier where every candidate is qualified, the specification has no bean to resolve, and Micronaut resolves
+one.
 
 ### An unproxyable normal scoped bean is detected as it is compiled
 
@@ -101,13 +107,16 @@ that cannot be told apart, or to a bean in a normal scope that cannot be proxied
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
-by Micronaut's rules. An injection point is validated whatever package its type is in: what the container hands
+by Micronaut's rules. A point is validated by the selection it is resolved by as the bean is created
+(`CdiBeanContainer.injectionCandidates`), and one that selection leaves to Micronaut's rules is validated by them. An
+injection point is validated whatever package its type is in: what the container hands
 the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
 manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
 overload its producer recorded, which is the one invoked. Collections, arrays, streams, maps and `Optional`
 injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied. An
 injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`, or of their Micronaut forms, resolves
-late by design and is not validated.
+late by design and is not validated, and neither is one Micronaut resolves itself - the context, a value of the
+configuration - which the processor leaves unmarked.
 
 A deployment is the beans its container sees, so a program that keeps beans for different deployments on one
 classpath narrows each container to its own: the SE bootstrap's synthetic archive, a beans predicate, or a
@@ -146,15 +155,15 @@ member a build compatible extension marked `@Nonbinding` while the compilation d
 occurrence of the qualifier or binding; and the members a qualifier the processor records for a synthetic
 component excludes, which an extension composed rather than the compiler reading it. A qualifier the program
 composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
-marks, so a member is left out of a comparison when either side lists it. A programmatic lookup is resolved by one
-Micronaut `Qualifier`, `CdiBeanQualifier`, which compares these and nothing else. Micronaut's own qualifier for an
+marks, so a member is left out of a comparison when either side lists it. An injection point, a programmatic lookup
+and the bean manager select their beans by these and nothing else (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
 annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotation(AnnotationMetadata,
 AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
 the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
 specification are also the ones a portable extension added as the container started, a bean that declares
 none has `@Default` and `@Any`, and two values are compared by the members that bind as `BindingValues.matches`
-compares them (an enum constant by its name, a class as its `AnnotationClassValue`); so `CdiBeanQualifier`
-stays.
+compares them (an enum constant by its name, a class as its `AnnotationClassValue`); so the container compares
+the qualifiers itself.
 
 A qualifier and an interceptor binding are compared by one rule, the Jakarta Interceptors implementation's
 `BindingValues.matches`, so that `areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer as the
@@ -246,19 +255,40 @@ throws is logged and stops neither the events after it nor the context from stop
 
 ### Container injection resolves the full declared bean type
 
-*Section 5.2.* `List<Foo>` and `Optional<Foo>` are bean types like any other. `ContainerInjectionVisitor` selects
-Core's `@ResolveWith` provider hook for container injection points, and `CdiBeanInjectionProvider` resolves the
-full declared type with the final qualifier binding records. Core's active resolution context creates the
-selected definition and retains its dependent ownership. Missing required producers are deployment errors;
-ordinary Micronaut beans retain Micronaut's aggregation behavior. The parameters of an observer method and of a
-disposer method are marked the same way and resolved by the same rule (`CdiBeanContainer.resolveContainerInjection`):
-the container, not Core, invokes those methods, and resolves what they take as a bean's own injection points are.
+*Section 5.2.* `List<Foo>` and `Optional<Foo>` are bean types like any other. Every injection point of a bean of
+the specification - a field, a parameter of its constructor, of an initializer or of a producer, and the
+parameters of an observer and of a disposer method - is resolved by the container: `ContainerInjectionVisitor`
+selects Core's `@ResolveWith` provider hook for it as the bean compiles, and `CdiBeanInjectionProvider` resolves
+the full declared type with the qualifiers the container records of each bean. What Micronaut resolves itself is
+left to it and not marked: a lookup (`Instance`, `Provider`, `BeanProvider`), an `Event`, the injection point
+metadata, the context under the interfaces it hands itself out as, a value of the configuration.
+
+There is one selection of candidates, `CdiBeanContainer.beansOf`, which the provider, an `Instance`, the bean
+manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make:
+the beans one of whose recorded bean types matches by the rules of section 2.4.2.1 - a type Micronaut only indexes
+a definition under is none of them - with every required qualifier, a qualifier a portable extension added among
+the ones a bean has; less a bean another one replaces with Micronaut's `Replaces`, an interceptor, an abstract
+class and the target a proxy stands in front of. Resolving one bean narrows them as section 2.4.2 has it: a
+bean of the specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank
+everything else (`CdiResolution.narrowToOne`). The beans are read from the definitions once per container, their
+types and qualifiers once per bean, and the beans of a class once per class asked for. Core's active resolution
+context creates the selected definition and retains its dependent ownership and the path the injection point
+metadata is read from. Missing required producers are deployment errors.
+
+A bean of the specification may be injected with a bean of Micronaut's own: where no bean of the specification
+is of the class of the point, or none of them qualifies while beans of Micronaut's own are of it, the point is
+resolved by Micronaut's rules - its primary bean, the one that is not secondary, its name convention - as it
+would be in a bean of Micronaut's own, and validated by them. A lookup that resolves one bean among beans of
+Micronaut's own alone chooses the primary one, or the one that is not secondary, as well. A bean of Micronaut's
+own keeps Micronaut's resolution and aggregation for its own injection points, with the type rules of section
+2.4.2.1 for a parameterized type a bean of the specification has (`CdiResolutionCustomizer.isCandidateBean`).
 
 ### A primitive is boxed by the lookup rather than by the bean
 
 *Section 2.2.* A primitive type and the class that boxes it are one bean type. Micronaut resolves a bean by the
-type it was written as and keeps the two apart, so a lookup made through this module is made for both and what
-they resolve is put together. An injection point of a plain Micronaut bean is not rewritten, so it goes on
+type it was written as and keeps the two apart; the container compares a primitive and the class that boxes it as
+one type wherever it selects beans - an injection point of a bean of the specification, a lookup, the bean
+manager. An injection point of a plain Micronaut bean is not rewritten, so it goes on
 resolving the way it did: a field of `Double` injected into one does not resolve a producer of `double`.
 
 ### Every phase of an extension runs while the application compiles
@@ -351,10 +381,10 @@ What an extension can do:
 
 - `BeforeBeanDiscovery.addQualifier(Class)` makes an annotation a qualifier for that container;
 - `ProcessAnnotatedType.configureAnnotatedType().add(qualifier)` adds a qualifier to a bean class. It is seen
-  where this container compares qualifiers - `Instance`, the SE container and `BeanContainer` lookups,
-  `Bean.getQualifiers()` - and takes the default qualifier away as a written one does. It is **not** seen by an
-  injection point: `@Inject @Added Foo` is resolved by Micronaut from the compiled metadata of the definitions,
-  and does not find the bean;
+  where this container compares qualifiers - an injection point of a bean of the specification, `Instance`, the
+  SE container and `BeanContainer` lookups, `Bean.getQualifiers()` - and takes the default qualifier away as a
+  written one does. It is not seen by an injection point of a bean of Micronaut's own, which Micronaut resolves
+  from the compiled metadata of the definitions;
 - `AfterTypeDiscovery.getAlternatives()` lists the classes of the selected alternatives, and cannot change them;
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
   place of the container's own; `addObserverMethod(ObserverMethod)` adds an observer method; and
@@ -630,10 +660,9 @@ own rather than the first one alone.
   `String` form) still fall back to the simple name of the candidate's class, the convention by which `@V8 Engine`
   selects a `V8Engine`, which a qualifier of the specification does not follow. Either compares a candidate by the
   qualifiers its metadata records, while the qualifiers of a bean of the specification are also the ones a portable
-  extension added as the container started, and `@Default` where it declares none. A lookup here resolves by
-  `CdiBeanQualifier`, which implements `Qualifier` directly over the container's own record of each bean's
-  qualifiers: `FilteringQualifier` is `@Internal`, and `AnnotationMetadataQualifier.fromAnnotation` is
-  package-private.
+  extension added as the container started, and `@Default` where it declares none. An injection point of a bean
+  of the specification, a lookup and the bean manager here select their beans by the container's own record of
+  each bean's qualifiers (`CdiBeanContainer.beansOf`) rather than through a Micronaut `Qualifier`.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
   marker of its own (`CdiAny`) rather than into Micronaut's.
@@ -704,9 +733,10 @@ own rather than the first one alone.
   `BeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`, `ExecutionHandleLocator`,
   `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and `PropertyPlaceholderResolver`, listed in
   its private `thisInterfaces`, and resolves `io.micronaut.inject.InjectionPoint` from the resolution under way;
-  none of them has a definition the container could see. The deployment validation, which resolves an injection
-  point by the definitions, therefore keeps a copy of that list (`DeploymentValidation.CONTEXT_TYPES`); a public
-  list, or a definition for each, would remove the copy.
+  none of them has a definition the container could see. The processor, which marks every other injection point
+  of a bean of the specification to be resolved by the definitions the container selects, therefore keeps a copy of
+  that list and leaves those to Micronaut (`ContainerInjectionVisitor.CONTEXT_TYPES`); a public list, or a
+  definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
