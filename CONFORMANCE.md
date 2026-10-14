@@ -214,7 +214,9 @@ read into one where a program hands it to the specification's API and made from 
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
 The type of an event is the class of the event object with its type variables resolved from the
-type the event was fired as, worked out from that record, and an object whose class leaves a variable
+type the event was fired as, worked out from that record, through the type arguments and the components of the arrays the
+supertypes of the class use them in - `class Batch<T> implements Payload<T[]>` fired as `Payload<String[]>` is a
+`Batch<String>` - and an object whose class leaves a variable
 unresolved is refused from it.
 
 A class no compilation with this processor has seen has no record. With `micronaut-cdi-reflection` its generic

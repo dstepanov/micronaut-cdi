@@ -263,6 +263,12 @@ public final class CdiTypes {
         if (arguments.isEmpty()) {
             return type;
         }
+        Argument<?> component = type.componentType();
+        if (component != null) {
+            // an array of a variable, or of a type that uses one, is the array of the substituted component
+            Argument<?> substituted = substitute(component, arguments, intoWildcards);
+            return substituted == component ? type : substituted.arrayType();
+        }
         if (type.isUnresolvedTypeVariable()) {
             Argument<?> argument = arguments.get(((GenericPlaceholder<?>) type).getVariableName());
             return argument != null ? argument : type;
@@ -497,6 +503,15 @@ public final class CdiTypes {
     }
 
     private static void unify(Argument<?> own, Argument<?> declared, Map<String, Argument<?>> resolution) {
+        Argument<?> ownComponent = own.componentType();
+        if (ownComponent != null) {
+            // an array of a variable, or of a type that uses one, T[] or List<T>[], is unified through its component
+            Argument<?> declaredComponent = declared.componentType();
+            if (declaredComponent != null) {
+                unify(ownComponent, declaredComponent, resolution);
+            }
+            return;
+        }
         if (own.isUnresolvedTypeVariable()) {
             resolution.put(((GenericPlaceholder<?>) own).getVariableName(), declared);
             return;

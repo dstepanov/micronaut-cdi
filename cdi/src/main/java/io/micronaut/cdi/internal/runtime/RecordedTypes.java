@@ -74,7 +74,15 @@ public final class RecordedTypes {
             }
             case "VARIABLE" -> {
                 Argument<?>[] bounds = all(record.getAnnotations(CdiRecordedType.BOUNDS));
-                yield bounds == null ? null : CdiTypes.variable(record.stringValue("name").orElse("T"), bounds);
+                if (bounds == null) {
+                    yield null;
+                }
+                // an array of a variable, T[], is the variable with the dimensions of the array
+                Argument<?> variable = CdiTypes.variable(record.stringValue("name").orElse("T"), bounds);
+                for (int i = record.intValue("dimensions").orElse(0); i > 0; i--) {
+                    variable = variable.arrayType();
+                }
+                yield variable;
             }
             case "PRIMITIVE" -> arrayOf(primitive(record.stringValue("name").orElse("")), record);
             default -> classOf(record);
