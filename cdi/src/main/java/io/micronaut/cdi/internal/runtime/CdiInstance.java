@@ -337,7 +337,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * The one definition the lookup resolves to, narrowed the way section 2.4.2 narrows several candidates.
      */
     private BeanDefinition<T> one() {
-        java.util.List<BeanDefinition<T>> candidates = CdiResolution.narrow(definitions());
+        java.util.List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions());
         if (candidates.isEmpty()) {
             throw new UnsatisfiedResolutionException("No bean of type " + type.getTypeName() + " qualifies");
         }
@@ -366,7 +366,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
     @Override
     public boolean isAmbiguous() {
-        return CdiResolution.narrow(definitions()).size() > 1;
+        return CdiResolution.narrowToOne(definitions()).size() > 1;
     }
 
     @Override
@@ -466,51 +466,10 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     }
 
     private Collection<BeanDefinition<T>> definitions() {
-        Collection<BeanDefinition<T>> resolved = definitionsOf(type);
-        Argument<T> counterpart = CdiTypes.counterpartOf(type);
-        if (counterpart == null) {
-            return resolved;
-        }
-        // a primitive and the class that boxes it are one bean type, and Micronaut keeps them apart
-        Collection<BeanDefinition<T>> boxed = definitionsOf(counterpart);
-        if (boxed.isEmpty()) {
-            return resolved;
-        }
-        List<BeanDefinition<T>> both = new ArrayList<>(resolved);
-        boxed.stream().filter(definition -> !both.contains(definition)).forEach(both::add);
-        return both;
-    }
-
-    private Collection<BeanDefinition<T>> definitionsOf(Argument<T> asked) {
-        // the beans of the type are compared by the qualifiers each has, as section 2.4.2 compares them - a
-        // qualifier a portable extension added to the bean class among them
-        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        io.micronaut.context.Qualifier<T> qualifier = container.qualifierFor(required());
-        io.micronaut.context.Qualifier<?> narrowing = narrowedBy;
-        if (narrowing != null) {
-            // and the Micronaut qualifier a program narrowed the lookup by keeps the definition
-            @SuppressWarnings("unchecked")
-            io.micronaut.context.Qualifier<T> micronaut = (io.micronaut.context.Qualifier<T>) narrowing;
-            qualifier = Qualifiers.byQualifiers(qualifier, micronaut);
-        }
-        Collection<BeanDefinition<T>> found = CdiResolution.beansAmong(beanContext.getBeanDefinitions(asked,
-            qualifier));
-        // Micronaut also enumerates a definition under a type it is only indexed by, which is no bean type of it:
-        // a candidate is one Micronaut would inject as the class asked for. Whether the arguments of the type
-        // match is left to the resolution that enumerated it, which compares them by the rules of the
-        // specification
-        Class<?> raw = CdiTypes.classOf(asked);
-        if (raw == null || raw == Object.class) {
-            return found;
-        }
-        Argument<?> asClass = Argument.of(raw);
-        List<BeanDefinition<T>> beans = new ArrayList<>(found.size());
-        for (BeanDefinition<T> definition : found) {
-            if (definition instanceof CdiInjectionPointFactory<?> || definition.isCandidateBean(asClass)) {
-                beans.add(definition);
-            }
-        }
-        return beans.size() == found.size() ? found : beans;
+        // the beans of the type and the qualifiers as the container selects them for an injection point and the
+        // bean manager alike - a primitive and the class that boxes it as one type, a qualifier a portable
+        // extension added among the ones a bean has - and the Micronaut qualifier a program narrowed the lookup by
+        return beanContext.getBean(CdiBeanContainer.class).definitionsOf(type, required(), narrowedBy);
     }
 
     /**

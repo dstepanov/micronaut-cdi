@@ -335,11 +335,13 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     @SuppressWarnings("unchecked")
     private @Nullable Object resolve(Argument<?> argument, OwnedDependents dependents) {
         io.micronaut.context.BeanRegistration<Object> registration;
-        if (argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)) {
-            // a container parameter - a list, an optional, an array - is the bean of its full declared type, as
-            // the processor marked it to be resolved and as a bean's own and a disposer's are
-            BeanDefinition<Object> definition = (BeanDefinition<Object>) beanContext.getBean(CdiBeanContainer.class)
-                .resolveContainerInjection(argument);
+        java.util.Set<jakarta.enterprise.inject.spi.Bean<?>> candidates =
+            argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)
+                ? container().injectionCandidates(argument) : null;
+        if (candidates != null) {
+            // a parameter the processor marked is resolved as a bean's own and a disposer's are: among the beans of
+            // its full declared type the container selects
+            BeanDefinition<Object> definition = (BeanDefinition<Object>) container().definitionAmong(candidates);
             if (definition == null) {
                 if (argument.isNullable()) {
                     return null;
@@ -350,6 +352,8 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             registration = dependents.registration(definition,
                 CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
         } else {
+            // one Micronaut resolves itself - a lookup, the event metadata - or one no bean of the specification is
+            // a candidate for: Micronaut's rules
             Qualifier<Object> qualifier = (Qualifier<Object>) Qualifiers.<Object>forArgument(argument);
             registration = dependents.registration((Argument<Object>) argument, qualifier);
         }

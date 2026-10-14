@@ -26,6 +26,7 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.DeploymentException;
@@ -244,6 +245,25 @@ final class DeploymentValidation {
     }
 
     /**
+     * Resolves a point no bean of the specification is a candidate for the way Micronaut resolves it then, by its
+     * own rules, and reports it where they find no bean or more than one.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
+        try {
+            if (container.beanContext().findBeanDefinition((Argument) argument,
+                Qualifiers.forArgument((Argument) argument)).isEmpty()) {
+                problems.add(new DeploymentException("The injection point " + argument + " of "
+                    + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
+            }
+        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
+            problems.add(new DeploymentException("The injection point " + argument + " of "
+                + definition.getBeanType().getName() + " is ambiguous (CDI 4.1 section 5.2.2): "
+                + e.getMessage(), e));
+        }
+    }
+
+    /**
      * Resolves the injection point the way the container resolves it, and reports the bean it resolves to
      * where that bean is in a normal scope and cannot be proxied.
      */
@@ -256,17 +276,12 @@ final class DeploymentValidation {
             return;
         }
         List<CdiQualifier> qualifiers = CdiQualifier.declared(argument.getAnnotationMetadata());
-        Set<Bean<?>> beans;
-        try {
-            beans = container.beansOf(CdiTypes.requiredTypeOf(argument), qualifiers);
-        } catch (IllegalArgumentException e) {
-            // a type with a variable the declaring class gives a value the definition does not carry: resolved
-            // as the bean is created
+        // the beans the point is resolved among as the bean is created
+        Set<Bean<?>> beans = container.injectionCandidates(argument);
+        if (beans == null) {
+            validateByMicronaut(definition, argument);
             return;
         }
-        // an interceptor is a bean of its class, but is never injected
-        beans.removeIf(bean -> bean instanceof CdiBean<?> cdiBean && cdiBean.definition()
-            .getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor"));
         Bean<?> resolved;
         try {
             resolved = container.resolve(beans);

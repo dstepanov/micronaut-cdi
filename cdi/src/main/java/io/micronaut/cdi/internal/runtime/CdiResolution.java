@@ -92,6 +92,42 @@ public final class CdiResolution {
     }
 
     /**
+     * Narrows the candidates to the one bean resolution picks the way {@link #narrow(Collection)} does, after
+     * leaving out the beans of Micronaut's own where beans of the specification are among them: what an
+     * injection point of a bean of the specification resolves among, and so what a lookup that resolves one bean
+     * - {@code Instance.get()}, the bean manager's {@code resolve} - resolves among too.
+     *
+     * @param candidates The candidate definitions
+     * @param <T>        The bean type
+     * @return The narrowed candidates
+     */
+    public static <T extends BeanDefinition<?>> List<T> narrowToOne(Collection<T> candidates) {
+        return narrow(ofTheSpecificationWhereAny(candidates, CdiResolution::isBeanOfTheSpecification));
+    }
+
+    /**
+     * The candidates of the specification where there are any among them, and all of them otherwise.
+     *
+     * @param candidates    The candidates
+     * @param specification Whether a candidate is a bean of the specification
+     * @param <T>           The candidate type
+     * @return The candidates, the given collection itself where it has nothing to drop
+     */
+    public static <T> Collection<T> ofTheSpecificationWhereAny(Collection<T> candidates,
+                                                                Predicate<? super T> specification) {
+        if (candidates.size() < 2) {
+            return candidates;
+        }
+        List<T> kept = new ArrayList<>(candidates.size());
+        for (T candidate : candidates) {
+            if (specification.test(candidate)) {
+                kept.add(candidate);
+            }
+        }
+        return kept.isEmpty() || kept.size() == candidates.size() ? candidates : kept;
+    }
+
+    /**
      * Narrows the candidates the way resolution does, whatever they are: the beans the bean container is handed
      * as well as the definitions the container reads. The result has one element where resolution succeeds, and
      * more where it is ambiguous.

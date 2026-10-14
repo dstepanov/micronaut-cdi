@@ -193,6 +193,20 @@ public class CdiBean<T> implements Bean<T> {
                     closure.add(Argument.of(exposed));
                 }
             }
+            Set<Class<?>> exposed = definition.getExposedTypes();
+            if (!exposed.isEmpty() && !exposed.contains(beanClass)) {
+                // a definition that does not expose its own class - a synthetic bean of exactly the types it
+                // declared, a bean of Micronaut's own typed to some of its types - is a bean of those alone
+                closure.removeIf(type -> {
+                    Class<?> raw = CdiTypes.classOf(type);
+                    return raw == null || !exposed.contains(raw);
+                });
+                for (Class<?> type : exposed) {
+                    if (closure.stream().noneMatch(known -> CdiTypes.classOf(known) == type)) {
+                        closure.add(Argument.of(type));
+                    }
+                }
+            }
         }
         if (definition.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Typed")) {
             // the types the bean named with Typed keep the parameters the closure gives them: an Emu typed

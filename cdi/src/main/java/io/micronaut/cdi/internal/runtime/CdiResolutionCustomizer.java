@@ -107,6 +107,16 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         return index;
     }
 
+    /**
+     * The default value of a primitive type, which a producer returning null satisfies a point of it with.
+     *
+     * @param type The primitive type
+     * @return The default value, or {@code null} for a type that is not primitive
+     */
+    static @org.jspecify.annotations.Nullable Object primitiveDefaultOf(Class<?> type) {
+        return PRIMITIVE_DEFAULTS.get(type);
+    }
+
     @Override
     public Argument<?> resolveBeanLookupArgument(Argument<?> beanType) {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type; Micronaut keeps them
