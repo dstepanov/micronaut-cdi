@@ -165,7 +165,8 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
 
     /**
      * Whether Micronaut resolves the point itself rather than by a bean of its type: a value of the configuration,
-     * a registration, the context itself, or one of the kinds resolved late - a lookup, an event, the injection
+     * a registration, the context itself, its own injection point, the qualifier the bean is resolved by, or one of
+     * the kinds resolved late - a lookup, an event, the injection
      * point metadata - whose beans are built-in ones that read the point they are injected into.
      */
     private static boolean isResolvedByMicronaut(Element element, ClassElement type) {
@@ -180,7 +181,10 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
                 .orElse(false)) {
             return true;
         }
+        // Micronaut injects its InjectionPoint from the resolution under way, and its Qualifier as the qualifier the
+        // bean is resolved by, without a bean definition of either
         return LATE_KINDS.contains(type.getName()) || CONTEXT_TYPES.contains(type.getName())
-            || type.isAssignable("io.micronaut.inject.InjectionPoint");
+            || type.isAssignable("io.micronaut.inject.InjectionPoint")
+            || type.isAssignable("io.micronaut.context.Qualifier");
     }
 }
