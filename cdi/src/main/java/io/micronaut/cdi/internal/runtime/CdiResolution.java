@@ -50,7 +50,70 @@ public final class CdiResolution {
     private static final java.util.Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = java.util.Set.of(
         "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
 
+    /**
+     * The provider the processor marks the injection points the container resolves with.
+     */
+    private static final String CONTAINER_PROVIDER = "io.micronaut.cdi.internal.runtime.CdiBeanInjectionProvider";
+
     private CdiResolution() {
+    }
+
+    /**
+     * Whether the point is one the container resolves: one the processor marked for Micronaut's {@code ResolveWith}
+     * hook with the container's own provider. A point an application marked with a provider of its own is the
+     * provider's to supply, and one that is not marked at all Micronaut's.
+     *
+     * @param point The annotation metadata of the injection point
+     * @return Whether the container resolves it
+     */
+    public static boolean isResolvedByTheContainer(io.micronaut.core.annotation.AnnotationMetadata point) {
+        return CONTAINER_PROVIDER.equals(point.stringValue(io.micronaut.context.annotation.ResolveWith.class).orElse(null));
+    }
+
+    /**
+     * Whether the point is supplied by a {@code ResolveWith} provider of the application's own rather than the
+     * container's.
+     *
+     * @param point The annotation metadata of the injection point
+     * @return Whether an application's provider supplies it
+     */
+    public static boolean isSuppliedByAnApplicationProvider(io.micronaut.core.annotation.AnnotationMetadata point) {
+        return point.hasStereotype(io.micronaut.context.annotation.ResolveWith.class) && !isResolvedByTheContainer(point);
+    }
+
+    /**
+     * Supplies a parameter of an observer or a disposer method from the {@code ResolveWith} provider of the
+     * application's own it was marked with, the way Micronaut supplies a field or a parameter of a bean's own from
+     * it: the provider is a bean of the context, handed a resolution of its own that starts at the bean declaring
+     * the method, since a callback is invoked outside the creation of any bean. What the provider creates within
+     * that resolution is not a dependent of the invocation.
+     *
+     * @param beanContext The context
+     * @param declaring   The definition of the bean declaring the method, or {@code null}
+     * @param argument    The parameter
+     * @return The value the provider supplied
+     * @throws jakarta.enterprise.inject.UnsatisfiedResolutionException Where it supplies none for a parameter that
+     *                                                                   is not nullable
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static @Nullable Object fromApplicationProvider(io.micronaut.context.BeanContext beanContext,
+                                                           @Nullable BeanDefinition<?> declaring,
+                                                           io.micronaut.core.type.Argument<?> argument) {
+        Class<?> providerType = argument.getAnnotationMetadata()
+            .classValue(io.micronaut.context.annotation.ResolveWith.class)
+            .orElseThrow(() -> new IllegalStateException("No provider is named for " + argument));
+        try (io.micronaut.context.BeanResolutionContext resolution =
+                 new io.micronaut.context.DefaultBeanResolutionContext(beanContext, declaring)) {
+            io.micronaut.context.BeanInjectionProvider provider = (io.micronaut.context.BeanInjectionProvider)
+                resolution.getBean((io.micronaut.core.type.Argument) io.micronaut.core.type.Argument.of(providerType), null);
+            Object value = provider.get(resolution, (io.micronaut.core.type.Argument) argument,
+                io.micronaut.inject.qualifiers.Qualifiers.forArgument(argument), argument.isNullable());
+            if (value == null && !argument.isNullable()) {
+                throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("The injection provider "
+                    + providerType.getName() + " supplied nothing for " + argument);
+            }
+            return value;
+        }
     }
 
     /**
@@ -98,28 +161,36 @@ public final class CdiResolution {
      * them: what an injection point of a bean of the specification resolves among, and so what a lookup that
      * resolves one bean - {@code Instance.get()}, the bean manager's {@code resolve} - resolves among too.
      *
-     * @param candidates The candidate definitions
-     * @param <T>        The bean type
+     * @param candidates  The candidate definitions
+     * @param type        The type looked up, or {@code null} where it is not known
+     * @param beanContext The context, whose resolution customizer has a say among beans of Micronaut's own
+     * @param <T>         The bean type
      * @return The narrowed candidates
      */
-    public static <T extends BeanDefinition<?>> List<T> narrowToOne(Collection<T> candidates) {
-        return narrow(resolvedAmong(candidates, definition -> definition));
+    public static <T extends BeanDefinition<?>> List<T> narrowToOne(Collection<T> candidates,
+                                                                    io.micronaut.core.type.@Nullable Argument<?> type,
+                                                                    io.micronaut.context.BeanContext beanContext) {
+        return narrow(resolvedAmong(candidates, definition -> definition, type, beanContext));
     }
 
     /**
      * The candidates one bean is resolved among. Where beans of the specification are among them, they are those
      * beans, and the rules of the specification choose among them. Where none is, they are beans of Micronaut's
      * own, and Micronaut's rules choose as Micronaut chooses for an injection point none of the specification's
-     * answers: the primary bean, or else the one that is not secondary.
+     * answers ({@link #amongMicronautsOwn}).
      *
      * @param candidates   The candidates
      * @param definitionOf The definition of a candidate, or {@code null} for one that is not a bean the container
      *                     described, which is taken for a bean of the specification
+     * @param type         The type looked up, or {@code null} where it is not known
+     * @param beanContext  The context, whose resolution customizer has a say among beans of Micronaut's own
      * @param <T>          The candidate type
      * @return The candidates, the given collection itself where it has nothing to drop
      */
     public static <T> Collection<T> resolvedAmong(Collection<T> candidates,
-                                                   Function<? super T, @Nullable BeanDefinition<?>> definitionOf) {
+                                                   Function<? super T, @Nullable BeanDefinition<?>> definitionOf,
+                                                   io.micronaut.core.type.@Nullable Argument<?> type,
+                                                   io.micronaut.context.BeanContext beanContext) {
         if (candidates.size() < 2) {
             return candidates;
         }
@@ -133,21 +204,101 @@ public final class CdiResolution {
         if (!kept.isEmpty()) {
             return kept.size() == candidates.size() ? candidates : kept;
         }
-        List<T> primary = new ArrayList<>(1);
-        List<T> notSecondary = new ArrayList<>(candidates.size());
+        java.util.Map<BeanDefinition<?>, T> byDefinition = new java.util.LinkedHashMap<>();
         for (T candidate : candidates) {
-            BeanDefinition<?> definition = java.util.Objects.requireNonNull(definitionOf.apply(candidate));
-            if (definition.isPrimary()) {
+            byDefinition.putIfAbsent(java.util.Objects.requireNonNull(definitionOf.apply(candidate)), candidate);
+        }
+        List<BeanDefinition<?>> chosen = amongMicronautsOwn(new ArrayList<>(byDefinition.keySet()), type,
+            beanContext.getContextConfiguration().beanResolutionCustomizer());
+        if (chosen.size() == byDefinition.size()) {
+            return candidates;
+        }
+        List<T> remaining = new ArrayList<>(chosen.size());
+        for (BeanDefinition<?> definition : chosen) {
+            remaining.add(byDefinition.get(definition));
+        }
+        return remaining;
+    }
+
+    /**
+     * Micronaut's choice of one bean among several beans of Micronaut's own, in the order Micronaut makes it: the
+     * primary ones where there are any, the choice of the resolution customizer, the ones that are not secondary,
+     * the one of the lowest order, the default implementation, and the one of exactly the type looked up. It is
+     * the selection of {@code DefaultBeanContext} after the qualifier has narrowed the candidates, which Micronaut
+     * does not offer for a collection already chosen - the bean manager's {@code resolve} is handed one without a
+     * type - and is kept to that one method so that it can become a call of Micronaut's once Micronaut offers one.
+     * The customizer is the one the context was configured with.
+     *
+     * @param candidates The definitions, more than one
+     * @param type       The type looked up, or {@code null} where it is not known
+     * @param customizer The resolution customizer the context was configured with
+     * @return The one definition chosen, or the candidates nothing chose among
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static List<BeanDefinition<?>> amongMicronautsOwn(List<BeanDefinition<?>> candidates,
+                                                       io.micronaut.core.type.@Nullable Argument<?> type,
+                                                       io.micronaut.context.BeanResolutionCustomizer customizer) {
+        if (candidates.size() < 2) {
+            return candidates;
+        }
+        List<BeanDefinition<?>> remaining = candidates;
+        List<BeanDefinition<?>> primary = new ArrayList<>(remaining.size());
+        for (BeanDefinition<?> candidate : remaining) {
+            if (candidate.isPrimary()) {
                 primary.add(candidate);
             }
-            if (!definition.getAnnotationMetadata().hasDeclaredStereotype(io.micronaut.context.annotation.Secondary.class)) {
+        }
+        if (!primary.isEmpty()) {
+            remaining = primary;
+        }
+        if (remaining.size() == 1) {
+            return remaining;
+        }
+        if (type != null) {
+            java.util.Optional<BeanDefinition<Object>> custom = customizer.resolveNonUniqueBean(
+                (io.micronaut.core.type.Argument) type, null, (Collection) remaining);
+            if (custom.isPresent()) {
+                return List.of(custom.get());
+            }
+        }
+        List<BeanDefinition<?>> notSecondary = new ArrayList<>(remaining.size());
+        for (BeanDefinition<?> candidate : remaining) {
+            if (!candidate.getAnnotationMetadata().hasDeclaredStereotype(io.micronaut.context.annotation.Secondary.class)) {
                 notSecondary.add(candidate);
             }
         }
-        if (primary.size() == 1) {
-            return primary;
+        if (notSecondary.size() == 1) {
+            return notSecondary;
         }
-        return notSecondary.size() == 1 ? notSecondary : candidates;
+        if (!notSecondary.isEmpty()) {
+            // where every one is secondary none is preferred to another, and the order still has its say
+            remaining = notSecondary;
+        }
+        List<BeanDefinition<?>> ordered = new ArrayList<>(remaining);
+        ordered.sort(io.micronaut.core.order.OrderUtil.ORDERED_COMPARATOR);
+        if (ordered.get(0).getOrder() != ordered.get(1).getOrder()) {
+            return List.of(ordered.get(0));
+        }
+        Class<?> defaultImplementation = remaining.get(0).getDefaultImplementation();
+        if (defaultImplementation != null) {
+            for (BeanDefinition<?> candidate : remaining) {
+                if (candidate.getBeanType().equals(defaultImplementation)) {
+                    return List.of(candidate);
+                }
+            }
+        }
+        if (type != null) {
+            List<BeanDefinition<?>> exact = new ArrayList<>(1);
+            for (BeanDefinition<?> candidate : remaining) {
+                if (candidate.getBeanType() == type.getType()) {
+                    exact.add(candidate);
+                }
+            }
+            if (exact.size() == 1) {
+                return exact;
+            }
+        }
+        return remaining;
     }
 
     /**

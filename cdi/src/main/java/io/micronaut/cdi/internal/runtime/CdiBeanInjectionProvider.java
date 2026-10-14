@@ -27,7 +27,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Resolves an injection point of a bean of the specification the way the container resolves every one of them
- * ({@link CdiBeanContainer#injectionCandidates}), while retaining the active injection point and dependent
+ * ({@link CdiBeanContainer#selectionFor}), while retaining the active injection point and dependent
  * ownership: the active resolution context creates the bean selected. A point no bean of the specification
  * answers is resolved by Micronaut's rules, as the point of a bean of Micronaut's own would be.
  *
@@ -47,14 +47,15 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
     @Override
     public <T> @Nullable T get(BeanResolutionContext resolutionContext, Argument<T> argument,
                                @Nullable Qualifier<T> qualifier, boolean nullable) {
-        java.util.Set<jakarta.enterprise.inject.spi.Bean<?>> candidates = container.injectionCandidates(argument);
-        if (candidates == null) {
-            // no bean of the specification is a candidate: Micronaut's rules, with the qualifier Micronaut read off
-            // the point
-            return nullable ? resolutionContext.findBean(argument, qualifier).orElse(null)
-                : resolutionContext.getBean(argument, qualifier);
+        CdiBeanContainer.Selection selection = container.selectionFor(argument);
+        if (selection == CdiBeanContainer.Selection.MICRONAUT) {
+            // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own, with
+            // the qualifier Micronaut read off the point
+            Qualifier<T> micronaut = CdiBeanContainer.Selection.micronautQualifier(argument, qualifier);
+            return nullable ? resolutionContext.findBean(argument, micronaut).orElse(null)
+                : resolutionContext.getBean(argument, micronaut);
         }
-        BeanDefinition<T> definition = (BeanDefinition<T>) container.definitionAmong(candidates);
+        BeanDefinition<T> definition = (BeanDefinition<T>) selection.definition();
         if (definition == null) {
             if (nullable) {
                 return null;

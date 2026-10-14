@@ -35,6 +35,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -68,6 +69,24 @@ class OneResolutionPathTest {
     @Dependent
     @Replaces(OriginalService.class)
     public static class ReplacingService implements Service {
+    }
+
+    // -- a named bean Micronaut's Replaces replaced, with a dependency nothing satisfies
+
+    public interface Unsatisfiable {
+    }
+
+    @Dependent
+    @jakarta.inject.Named("namedService")
+    public static class OriginalNamedService {
+        @Inject
+        Unsatisfiable missing;
+    }
+
+    @Dependent
+    @jakarta.inject.Named("namedService")
+    @Replaces(OriginalNamedService.class)
+    public static class ReplacingNamedService {
     }
 
     // -- a definition Micronaut only indexes under a type it is not of
@@ -134,6 +153,80 @@ class OneResolutionPathTest {
     public static class Square implements Shape {
     }
 
+    // -- a bean of the specification no qualifier admits beside a bean of Micronaut's own
+
+    public interface Figure {
+    }
+
+    @Dependent
+    @Fancy
+    public static class FancyFigure implements Figure {
+    }
+
+    @Bean
+    public static class PlainFigure implements Figure {
+    }
+
+    public interface Gear {
+    }
+
+    @Bean
+    @io.micronaut.core.annotation.Order(20)
+    public static class SlowGear implements Gear {
+    }
+
+    @Bean
+    @io.micronaut.core.annotation.Order(10)
+    public static class FastGear implements Gear {
+    }
+
+    public interface Lever {
+    }
+
+    @Bean
+    @Primary
+    @io.micronaut.core.annotation.Order(5)
+    public static class LongLever implements Lever {
+    }
+
+    @Bean
+    @Primary
+    @io.micronaut.core.annotation.Order(1)
+    public static class ShortLever implements Lever {
+    }
+
+    @Bean
+    @io.micronaut.core.annotation.Order(0)
+    public static class SpareLever implements Lever {
+    }
+
+    public static class Meter {
+    }
+
+    @io.micronaut.context.annotation.Context
+    public static class PlainMeter extends Meter {
+    }
+
+    // -- a primary bean of Micronaut's own beside a bean of the specification, at a point of Micronaut's own
+
+    public interface Motor {
+    }
+
+    @Bean
+    @Primary
+    public static class MainMotor implements Motor {
+    }
+
+    @Dependent
+    public static class CdiMotor implements Motor {
+    }
+
+    @Bean
+    public static class Garage {
+        @Inject
+        Motor motor;
+    }
+
     @Bean
     public static class Drawer {
         @Inject
@@ -160,6 +253,14 @@ class OneResolutionPathTest {
         Engine engine;
         @Inject
         Shape shape;
+        @Inject
+        Figure figure;
+        @Inject
+        Meter meter;
+        @Inject
+        Gear gear;
+        @Inject
+        Lever lever;
     }
 
     @Test
@@ -233,6 +334,60 @@ class OneResolutionPathTest {
             assertInstanceOf(Circle.class, context.getBean(Injected.class).shape);
             assertInstanceOf(Circle.class, container.createInstance().select(Shape.class).get());
             assertEquals(Set.of(Circle.class), beanClasses(container, Shape.class));
+        }
+    }
+
+    @Test
+    void aBeanOfTheSpecificationNoQualifierAdmitsIsNotReadmittedByMicronautsRules() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            // the bean of the specification is @Fancy, so the point is resolved among the beans of Micronaut's own
+            // alone, which the disqualified one is not among
+            assertInstanceOf(PlainFigure.class, context.getBean(Injected.class).figure);
+            assertInstanceOf(PlainFigure.class, container.createInstance().select(Figure.class).get());
+            assertEquals(Set.of(PlainFigure.class), beanClasses(container, Figure.class));
+            assertEquals(PlainFigure.class, container.resolve(container.getBeans(Figure.class)).getBeanClass());
+            // a shared bean of Micronaut's own resolved by Micronaut's rules is the instance its scope holds
+            assertSame(context.getBean(PlainMeter.class), context.getBean(Injected.class).meter);
+        }
+    }
+
+    @Test
+    void beansOfMicronautsOwnAreResolvedByMicronautsWholePrecedenceWhereverTheyAreResolved() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Injected injected = context.getBean(Injected.class);
+            // no primary one: the lowest order
+            assertInstanceOf(FastGear.class, injected.gear);
+            assertInstanceOf(FastGear.class, container.createInstance().select(Gear.class).get());
+            assertEquals(FastGear.class, container.resolve(container.getBeans(Gear.class)).getBeanClass());
+            // several primary ones: the lowest order among them, not among every candidate
+            assertInstanceOf(ShortLever.class, injected.lever);
+            assertInstanceOf(ShortLever.class, container.createInstance().select(Lever.class).get());
+            assertEquals(ShortLever.class, container.resolve(container.getBeans(Lever.class)).getBeanClass());
+        }
+    }
+
+    @Test
+    void aReplacedBeanIsNoBeanOfItsName() {
+        // the replaced bean shares a name with the one replacing it and has a dependency nothing satisfies, neither of
+        // which is a problem of the deployment, since it is not a bean of it
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Set<Class<?>> named = new java.util.HashSet<>();
+            for (jakarta.enterprise.inject.spi.Bean<?> bean : container.getBeans("namedService")) {
+                named.add(bean.getBeanClass());
+            }
+            assertEquals(Set.of(ReplacingNamedService.class), named);
+        }
+    }
+
+    @Test
+    void aPrimaryBeanOfMicronautsOwnIsWhatAPointOfMicronautsOwnResolvesBesideABeanOfTheSpecification() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            // the application's own primary bean decides, as it would without this module
+            assertInstanceOf(MainMotor.class, context.getBean(Garage.class).motor);
+            assertInstanceOf(MainMotor.class, context.getBean(Motor.class));
         }
     }
 

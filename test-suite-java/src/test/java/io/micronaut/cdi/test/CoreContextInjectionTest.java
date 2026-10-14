@@ -28,6 +28,9 @@ class CoreContextInjectionTest {
             assertSame(context, bean.beanLocator());
             assertSame(context, bean.propertyResolver());
             assertNotNull(context.getBean(NeedsInjectionPoint.class).injectionPoint);
+            NeedsResolvers resolvers = context.getBean(NeedsResolvers.class);
+            assertSame(context, resolvers.watchable);
+            assertNotNull(resolvers.dependencies);
         }
     }
 
@@ -57,6 +60,14 @@ class CoreContextInjectionTest {
         public PropertyResolver propertyResolver() {
             return propertyResolver;
         }
+    }
+
+    @Dependent
+    public static class NeedsResolvers {
+        @Inject
+        io.micronaut.context.WatchableBeanContext watchable;
+        @Inject
+        io.micronaut.context.BeanDependencyResolver dependencies;
     }
 
     @Dependent

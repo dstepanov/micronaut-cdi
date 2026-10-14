@@ -340,7 +340,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         }
         // not made primary here: a producer that declares no qualifier is primary already, as the default bean
         // of its type (DefaultQualifierVisitor)
-        Alternatives.select(producer, priority, false);
+        Alternatives.select(producer, priority);
     }
 
     /**

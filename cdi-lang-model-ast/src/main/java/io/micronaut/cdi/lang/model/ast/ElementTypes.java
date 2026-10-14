@@ -266,7 +266,12 @@ public final class ElementTypes {
         if (type instanceof Wildcard wildcard) {
             Type upper = wildcard.upperBound();
             Type lower = wildcard.lowerBound();
-            return new ComposedWildcard(elementOf(upper == null ? objectType(wildcard.context) : upper),
+            if (upper != null && lower == null && OBJECT.equals(elementOf(upper).getName())) {
+                // ? extends Object as it was written, which Micronaut's own composed wildcard takes for the bound
+                // of an unbounded one
+                return new ExplicitObjectWildcard(elementOf(upper));
+            }
+            return WildcardElement.of(List.of(elementOf(upper == null ? objectType(wildcard.context) : upper)),
                 lower == null ? List.of() : List.of(elementOf(lower)));
         }
         if (type instanceof Variable variable) {
@@ -589,12 +594,13 @@ public final class ElementTypes {
     }
 
     /**
-     * A composed wildcard keeps its AST bounds when used as an argument of another type.
+     * A wildcard composed as {@code ? extends Object}, whose upper bound was written: Micronaut's own composed
+     * wildcard ({@link WildcardElement#of}) takes an upper bound of {@code Object} for the implicit one of an
+     * unbounded wildcard.
      *
-     * @param upper The upper bound, Object for a lower-bounded wildcard
-     * @param lower The lower bound, or an empty list for an upper-bounded wildcard
+     * @param upper The upper bound, Object
      */
-    private record ComposedWildcard(ClassElement upper, List<ClassElement> lower) implements WildcardElement {
+    private record ExplicitObjectWildcard(ClassElement upper) implements WildcardElement {
         @Override
         public List<? extends ClassElement> getUpperBounds() {
             return List.of(upper);
@@ -602,12 +608,12 @@ public final class ElementTypes {
 
         @Override
         public List<? extends ClassElement> getLowerBounds() {
-            return lower;
+            return List.of();
         }
 
         @Override
         public boolean hasExplicitUpperBound() {
-            return lower.isEmpty();
+            return true;
         }
 
         @Override

@@ -129,12 +129,12 @@ class QualifierAsInterceptorBindingTest {
 
     private static void assertComparedAlike(AnnotationValue<?> one, AnnotationValue<?> other, boolean expected) {
         assertEquals(expected, BindingValues.matches(one, other), one + " and " + other);
-        assertEquals(expected, CdiQualifier.ofValue(one).matches(CdiQualifier.ofValue(other)), one + " and " + other);
+        assertEquals(expected, CdiQualifier.ofValue(null, one).matches(CdiQualifier.ofValue(null, other)), one + " and " + other);
         assertEquals(expected, InterceptorBindings.ofValues(List.of(one)).equals(InterceptorBindings.ofValues(
             List.of(other))), one + " and " + other);
         // what the container hands the interceptors implementation is compared there as the container compares it
-        AnnotationValue<?> written = CdiQualifier.ofValue(one).written();
-        AnnotationValue<?> otherWritten = CdiQualifier.ofValue(other).written();
+        AnnotationValue<?> written = CdiQualifier.ofValue(null, one).written();
+        AnnotationValue<?> otherWritten = CdiQualifier.ofValue(null, other).written();
         assertEquals(expected, BindingValues.matches(written, otherWritten), one + " and " + other);
         assertEquals(expected, InterceptorBindings.ofValues(List.of(written)).equals(InterceptorBindings.ofValues(
             List.of(otherWritten))), one + " and " + other);

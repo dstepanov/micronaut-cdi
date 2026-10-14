@@ -1,0 +1,53 @@
+/*
+ * Copyright 2017-2026 original authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.micronaut.cdi.test;
+
+import io.micronaut.context.ApplicationContext;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Micronaut injects a point of its {@code Qualifier} with the qualifier the bean is resolved by, without a bean
+ * definition of it: a bean of the specification declaring one is injected by Micronaut, as one of Micronaut's own is.
+ */
+class QualifierInjectionTest {
+
+    public interface Handler {
+    }
+
+    @Dependent
+    @Named("special")
+    public static class QualifiedHolder {
+        @Inject
+        io.micronaut.context.Qualifier<Handler> qualifier;
+    }
+
+    @Test
+    void aQualifierIsInjectedByMicronaut() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            QualifiedHolder holder = context.getBean(QualifiedHolder.class, Qualifiers.byName("special"));
+            // the qualifier of the lookup the bean was created for
+            assertNotNull(holder.qualifier);
+            assertTrue(holder.qualifier.contains(Qualifiers.byName("special")), holder.qualifier::toString);
+        }
+    }
+}

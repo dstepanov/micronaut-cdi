@@ -157,7 +157,39 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 }
             }
         }
+        BeanDefinition<T> specification = ofTheSpecification(qualifier, candidates);
+        if (specification != null) {
+            return java.util.Optional.of(specification);
+        }
         return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
+    }
+
+    /**
+     * The one bean the specification resolves among the candidates of a lookup Micronaut makes - a point of a bean of
+     * Micronaut's own, a program's {@code BeanContext.getBean} - where beans of the specification are among them and
+     * no primary bean decided: the beans of the specification outrank the beans of Micronaut's own, a lookup that
+     * names no qualifier looks for the default one (section 3.8), and the selected alternatives of the highest
+     * priority outrank the rest (section 2.4.2). That the bean is not declared Micronaut's primary leaves an
+     * application's own primary bean deciding, as it does without this module.
+     *
+     * @return The bean, or {@code null} where the rules do not pick one, or no bean of the specification is a candidate
+     */
+    private static <T> io.micronaut.inject.@org.jspecify.annotations.Nullable BeanDefinition<T> ofTheSpecification(
+        io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
+        java.util.Collection<BeanDefinition<T>> candidates) {
+        java.util.List<BeanDefinition<T>> eligible = new java.util.ArrayList<>(candidates.size());
+        for (BeanDefinition<T> candidate : candidates) {
+            if (CdiResolution.isBeanOfTheSpecification(candidate)
+                && (qualifier != null || CdiAssignability.areQualifiersMatching(
+                    CdiQualifier.declared(candidate.getAnnotationMetadata()), java.util.List.of()))) {
+                eligible.add(candidate);
+            }
+        }
+        if (eligible.isEmpty()) {
+            return null;
+        }
+        java.util.List<BeanDefinition<T>> narrowed = CdiResolution.narrow(eligible);
+        return narrowed.size() == 1 ? narrowed.get(0) : null;
     }
 
     @Override

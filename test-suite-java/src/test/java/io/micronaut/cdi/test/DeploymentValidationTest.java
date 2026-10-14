@@ -258,6 +258,38 @@ class DeploymentValidationTest {
         }
     }
 
+    @Test
+    void aBeanOfTheSpecificationAQualifierRejectsIsNotFoundByItsNameBesideABeanOfMicronautsOwn() {
+        // FancyEngine lacks @Fancy; Micronaut's qualifier would match it by the prefix of its name, but the point is
+        // left to Micronaut's rules among the beans of Micronaut's own alone
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                @Fancy
+                Engine engine;
+
+                @jakarta.inject.Qualifier
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                public @interface Fancy {
+                }
+
+                public interface Engine {
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class FancyEngine implements Engine {
+                }
+
+                @io.micronaut.context.annotation.Bean
+                public static class OrdinaryEngine implements Engine {
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
     static void assertRejected(String source, String expected) {
         assertRejected("invalid.Consumer", source, expected);
     }

@@ -173,6 +173,15 @@ public final class ReflectiveCdi implements CdiReflection {
             resolution.put(variable.getName(), declared);
             return;
         }
+        if (own instanceof java.lang.reflect.GenericArrayType ownArray) {
+            // an array of a variable, or of a type that uses one, T[] or List<T>[], is unified through its component
+            if (declared instanceof java.lang.reflect.GenericArrayType declaredArray) {
+                unify(ownArray.getGenericComponentType(), declaredArray.getGenericComponentType(), resolution);
+            } else if (declared instanceof Class<?> declaredClass && declaredClass.isArray()) {
+                unify(ownArray.getGenericComponentType(), declaredClass.getComponentType(), resolution);
+            }
+            return;
+        }
         if (own instanceof ParameterizedType ownParameterized
             && declared instanceof ParameterizedType declaredParameterized) {
             Type[] ownArguments = ownParameterized.getActualTypeArguments();

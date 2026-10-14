@@ -64,7 +64,7 @@ if `IN_PROGRESS`.
 
 ## Differences
 
-### The default qualifier is also written as Micronaut's primary bean
+### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
 Section 3.8 has an injection point that declares no qualifier looking for the default qualifier, and section
 2.3 has a bean that declares no qualifier having it. Both halves are applied by the container. The processor
@@ -75,13 +75,22 @@ the ones that have every qualifier the point requires, `@Default` where it names
 manager and the deployment validation select their beans the same way, so none of them can resolve a type
 differently from an injection point.
 
-The bean given the default qualifier is also declared Micronaut's `@Primary`. That serves the beans of
-Micronaut's own: their injection points are not resolved by the container, and one that names no qualifier
-where a bean of the specification and a qualified one are candidates resolves to the primary one, the bean with
-the default qualifier, rather than being ambiguous. A program's own `BeanContext.getBean` resolves the same way.
-The difference left is there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
+The injection points of a bean of Micronaut's own are not resolved by the container, and neither is a program's
+own `BeanContext.getBean`. Where several beans are candidates for one and no primary bean decides, Micronaut asks
+the container's resolution customizer (`CdiResolutionCustomizer.resolveNonUniqueBean`), which picks among the
+beans of the specification as the specification does: one that names no qualifier resolves to the bean with the
+default qualifier rather than being ambiguous, and a selected alternative of the highest priority outranks the
+rest. No bean is declared Micronaut's `@Primary` for it, so an application's own primary bean decides as it does
+without this module, a class written with the singleton pseudo-scope alone among them. The difference left is
+there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
 qualifier where every candidate is qualified, the specification has no bean to resolve, and Micronaut resolves
 one.
+
+A class written with the singleton pseudo-scope alone, `jakarta.inject.Singleton`, is given the default qualifier
+and its name as a bean of the specification is (`SpecificationBeans.isBean`), since the specification names the
+pseudo-scope a scope of its own and Micronaut writes the same annotation; the rules a bean of the specification is
+held to as it compiles, and the container's resolution of its injection points, are not applied to it, since
+Micronaut's own beans carry the same annotation.
 
 ### An unproxyable normal scoped bean is detected as it is compiled
 
@@ -104,11 +113,13 @@ its beans as it starts, from what they were compiled with, through the SE bootst
 alike, and with portable extensions before `AfterDeploymentValidation`. An injection point of a bean's fields,
 constructor, initializer methods, and observer and disposer methods that resolves to no bean, to more than one
 that cannot be told apart, or to a bean in a normal scope that cannot be proxied; two beans of one name; and a
-name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
+name that is the path prefix of another - each is a `DeploymentException`, every one found being reported. A bean another
+one replaces with Micronaut's `Replaces` is no bean of the deployment: its dependencies and its name are not
+validated, and neither a lookup by its types nor one by its name finds it.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
 by Micronaut's rules. A point is validated by the selection it is resolved by as the bean is created
-(`CdiBeanContainer.injectionCandidates`), and one that selection leaves to Micronaut's rules is validated by them. An
+(`CdiBeanContainer.selectionFor`), and one that selection leaves to Micronaut's rules is validated by them. An
 injection point is validated whatever package its type is in: what the container hands
 the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
 manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
@@ -128,6 +139,9 @@ classpath narrows each container to its own: the SE bootstrap's synthetic archiv
 a field of a bean that is neither injected nor a producer field qualifies nothing in the specification, whether
 it was written there or a build compatible extension added it, so it is taken off as the bean compiles and the
 field is left as it was initialized.
+Under KSP the exception is a Kotlin property that declares a qualifier and no `Inject`: Micronaut's Kotlin metadata
+reads the qualifier of a property as `Inject` on the property and its setter, so the processor cannot tell it from
+one written with `Inject`, and the property is injected.
 
 ### A private producer or observer is read reflectively
 
@@ -205,21 +219,35 @@ reflection module.
 
 *Sections 3.1, 5.2.1 and 9.1.* The type closure of a bean, the type an observer observes and the closure
 an event is matched by are properties of generic signatures, which the container does not read. The processor
-records each: the closure of a bean on the bean or on its producer; the observed type on the observer; and the
-closure and the type variables of every class a compilation compiles, on a class it generates in the package of
-the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+records each: the closure of a bean on the bean or on its producer - the class over its own type variables first,
+which is what the container also reads the generic hierarchy of the class of a bean from; the observed type on the
+observer; and the closure and the type variables of every other class a compilation compiles that has a
+parameterized type above it or declares type variables - the classes no definition describes, less an interface,
+an abstract class and an annotation literal, which are never the class of an event object - with the closure of
+every class a recorded type names as a type argument or a bound, a class of the JDK or of a library among them,
+which is what a bound is compared against, on definitions of a record it registers with Micronaut's
+`VisitorContext.registerBean` as each round finishes, with no source generated. What refers to public classes
+alone is recorded once for the compilation, registered from a class of it; the record of a class that refers to a
+class only its own package can name is registered from a class of that package, which places its definition
+there; a class of a library that refers to such a class is not recorded, since nothing the compilation writes is
+placed in a package of the library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
 The type of an event is the class of the event object with its type variables resolved from the
-type the event was fired as, worked out from that record, and an object whose class leaves a variable
+type the event was fired as, worked out from that record, through the type arguments and the components of the arrays the
+supertypes of the class use them in - `class Batch<T> implements Payload<T[]>` fired as `Payload<String[]>` is a
+`Batch<String>` - and an object whose class leaves a variable
 unresolved is refused from it.
 
 A class no compilation with this processor has seen has no record. With `micronaut-cdi-reflection` its generic
 signature is read, as the specification assumes. Without it a bean of such a class has its class and the raw
 types Micronaut exposes it as for bean types, and an event of such a class is of the type it was fired as where
-that names its class and of its raw class otherwise: it is observed by an observer of a raw type or of the type
-it was fired as, and not by an observer of another parameterized supertype. `MicronautEvent.select(Argument)`
+that names its class and of its raw class otherwise. Its closure is the closure of its raw class and that of the
+type it was fired as, which `Event<T>.fire(T)` makes a supertype of the class: an `ArrayList` fired through an
+`Event<List<Duck>>` is observed as a `List<Duck>`. It is observed by an observer of a raw type, of the type it was
+fired as or of a type above that, and not by an observer of a parameterized supertype between its class and the
+type it was fired as. `MicronautEvent.select(Argument)`
 states the event type in full and needs no record and no module.
 
 ### The API written in terms of reflection is an optional module
@@ -261,7 +289,20 @@ parameters of an observer and of a disposer method - is resolved by the containe
 selects Core's `@ResolveWith` provider hook for it as the bean compiles, and `CdiBeanInjectionProvider` resolves
 the full declared type with the qualifiers the container records of each bean. What Micronaut resolves itself is
 left to it and not marked: a lookup (`Instance`, `Provider`, `BeanProvider`), an `Event`, the injection point
-metadata, the context under the interfaces it hands itself out as, a value of the configuration.
+metadata, the context under the interfaces it hands itself out as, Micronaut's `Qualifier`, which it injects as the
+qualifier the bean is resolved by, a value of the configuration. A point the
+application marked with a `@ResolveWith` provider of its own is left to that provider and not validated: a field or
+a parameter of a bean's own is supplied by Micronaut from it, and a parameter of an observer or a disposer method
+by the container from it, through a resolution of its own that starts at the bean declaring the method - what the
+provider creates there is not a dependent of the invocation (`CdiResolution.fromApplicationProvider`).
+
+A point is marked by the class that declares it. Micronaut keeps the annotations of a field and of a parameter by
+the class declaring the member, so a mark written while a subclass is compiled would be read by every class that
+inherits the member - a bean of Micronaut's own that extends the same class would have its `List<Foo>` resolved as
+a bean of that type rather than collected. A superclass that is itself a bean of the specification marks its own
+points; the points a bean of the specification inherits from a class that is not one - an abstract class, a class
+with no scope, a superclass compiled without this processor - are resolved by Micronaut's rules, with the type rules
+of section 2.4.2.1 (`CdiResolutionCustomizer.isCandidateBean`), as a bean of Micronaut's own resolves them.
 
 There is one selection of candidates, `CdiBeanContainer.beansOf`, which the provider, an `Instance`, the bean
 manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make:
@@ -271,15 +312,25 @@ the ones a bean has; less a bean another one replaces with Micronaut's `Replaces
 class and the target a proxy stands in front of. Resolving one bean narrows them as section 2.4.2 has it: a
 bean of the specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank
 everything else (`CdiResolution.narrowToOne`). The beans are read from the definitions once per container, their
-types and qualifiers once per bean, and the beans of a class once per class asked for. Core's active resolution
+types and qualifiers once per bean, and the beans of a class once per class asked for. What an injection point resolves
+to is worked out once per point and container. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
 A bean of the specification may be injected with a bean of Micronaut's own: where no bean of the specification
 is of the class of the point, or none of them qualifies while beans of Micronaut's own are of it, the point is
-resolved by Micronaut's rules - its primary bean, the one that is not secondary, its name convention - as it
-would be in a bean of Micronaut's own, and validated by them. A lookup that resolves one bean among beans of
-Micronaut's own alone chooses the primary one, or the one that is not secondary, as well. A bean of Micronaut's
+resolved by Micronaut's rules - its qualifier, its primary bean, the one that is not secondary, its name
+convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selectionFor`), and validated by them. The point keeps
+its full declared type: a `List<Foo>` is resolved as a bean of that type, as the specification has it, rather than
+collected as Micronaut collects one at a point of a bean of its own. A
+bean of the specification the qualifiers of the point rejected is not admitted again by Micronaut's rules: an
+`@Inject @Fancy Engine` beside a bean of the specification of `Engine` that is not `@Fancy` and a bean of
+Micronaut's own is not injected with the first by the prefix of its name, and an `@Inject Shape` beside a `@Fancy`
+bean of the specification and a bean of Micronaut's own is injected with the bean of Micronaut's own, as an
+`Instance` and the bean manager resolve it. A lookup that resolves one bean among beans of
+Micronaut's own alone - `Instance.get()`, the bean manager's `resolve` - chooses by Micronaut's precedence as
+well: the primary ones where there are any, the choice of the resolution customizer, the ones that are not
+secondary, the lowest order, the default implementation and the exact type (`CdiResolution.amongMicronautsOwn`). A bean of Micronaut's
 own keeps Micronaut's resolution and aggregation for its own injection points, with the type rules of section
 2.4.2.1 for a parameterized type a bean of the specification has (`CdiResolutionCustomizer.isCandidateBean`).
 
@@ -290,6 +341,13 @@ type it was written as and keeps the two apart; the container compares a primiti
 one type wherever it selects beans - an injection point of a bean of the specification, a lookup, the bean
 manager. An injection point of a plain Micronaut bean is not rewritten, so it goes on
 resolving the way it did: a field of `Double` injected into one does not resolve a producer of `double`.
+
+A dependent producer that returns null satisfies a primitive injection point with the default value of the
+primitive (section 2.5.2.4) - a field, a parameter of a bean's own, and a parameter of an observer or a disposer
+method alike. The null product a callback parameter of a primitive type is resolved to is created on its own
+rather than as a dependent of the invocation and destroyed with it where it is not null: Micronaut destroys a
+dependent through its pre-destroy listeners, which may not answer a null bean (see
+[Open points in Micronaut Core](#open-points-in-micronaut-core)).
 
 ### Every phase of an extension runs while the application compiles
 
@@ -304,13 +362,15 @@ What the discovery phase says is recorded by name and applied as the named class
 A class `ScannedClasses.add` names is a bean even where it says nothing at all about itself. KSP and the Groovy
 compiler hand every class they compile to the bean machinery, which makes a scanned one a bean with the scope it
 was given as it was visited; a scanned class of a library, which no compilation of the application compiles, is
-put through the discovery, enhancement and registration phases and registered as a bean with Micronaut's
-`VisitorContext.registerBean` - a definition of its constructor and injection points, without what the other
-visitors of the processor record of a class they compile. javac hands the bean machinery only the classes that
+put through the discovery, enhancement and registration phases and the visitors of the processor that read a class
+- its scope, its injection points marked for the container, its bean types, its name, its default qualifier, its
+producers and observers - and registered as a bean with Micronaut's `VisitorContext.registerBean`, its producers
+with `produceBeans`: what the visitors recorded of a producer is given to the bean it produces, which the builder
+reads anew. The rules a class is held to as it compiles are not checked of it: they are its own compilation's to
+judge, and KSP reads less of a class from its bytes than of a source (a public field of a Java class reads as final). javac hands the bean machinery only the classes that
 carry an annotation it reacts to, and decides which of those are beans after the visitors have run, so a bean
 registered for a scanned class could stand beside the definition javac writes for it: under javac the processor
-generates a `@ClassImport` source naming the scanned classes, the one source left of the extensions besides the
-type index, and javac makes each of them a bean once. `MetaAnnotations.addContext` registers a bean of the
+generates a `@ClassImport` source naming the scanned classes, the one source left of the extensions, and javac makes each of them a bean once. `MetaAnnotations.addContext` registers a bean of the
 context class, recording the scope it serves, and the runtime obtains the context from that definition. The
 annotations registered as qualifiers are recorded on a bean registered for the purpose, of the type
 `CdiDeploymentRecord`, which is never created. An annotation registered as a qualifier, an interceptor binding or
@@ -713,13 +773,12 @@ own rather than the first one alone.
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
   that metadata reads. Under KSP they belong to the processor and last across its rounds. The Groovy compiler keeps
   them in one static map for every compilation in the process (`GroovyVisitorContext`), so under Groovy two
-  compilations running at once in one process share them as they would a static field; the records of the type
-  index are kept under the generated class's name, which differs between compilations, the visitor of the
-  compilation is not. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
+  compilations running at once in one process share them as they would a static field; the visitor of the
+  compilation is kept there. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
   the phases of the build compatible extensions run as a round finishes and their beans are registered without a
   source, so the visitor and the records of the components no longer wait on the attributes for a generated marker
-  or factory to come past; what is left there is the visitor the compilation started, read by the registration
-  visitor, and the records of the type index, which is still generated as source.
+  or factory to come past, and neither does the type index, registered the same way; what is left there is the
+  visitor the compilation started, read by the registration visitor.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
@@ -729,14 +788,37 @@ own rather than the first one alone.
   it describes or validates the injection points; a parameter of any other constructor or method so named is the
   author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
   remove the copy.
+- **A mark on an inherited member is a mark for every class that inherits it.** Micronaut builds the annotation
+  metadata of a field and of a parameter once, by the class declaring the member
+  (`AbstractElementAnnotationMetadataFactory`), so an annotation a visitor adds while one subclass is visited is
+  read through every other. The processor therefore marks the points a class declares alone
+  (`ContainerInjectionVisitor`), and the points a bean of the specification inherits from a class that is not one
+  keep Micronaut's rules; metadata of a member kept by the class it is read through would let the container
+  resolve them as well.
+- **A null dependent cannot be destroyed.** `DefaultBeanContext.triggerPreDestroyListeners` hands every
+  `BeanPreDestroyEventListener` the bean being destroyed and requires each to return a bean, so the registration of a
+  dependent a producer satisfied with null fails as it is destroyed with its owner, and the listener the container
+  disposes of a product with (`DisposerInvoker`) cannot answer it. A primitive parameter of an observer or a disposer
+  is therefore resolved outside the dependency group of the invocation; skipping the listeners for a null bean
+  would remove that.
+- **Micronaut chooses one bean among candidates in a private method.** `DefaultBeanContext.lastChanceResolve` -
+  the primary ones, `BeanResolutionCustomizer.resolveNonUniqueBean`, `@Secondary`, the order, `@DefaultImplementation`
+  and the exact type - is reached only through a lookup by a type and a qualifier, which selects the candidates
+  itself; the bean manager's `resolve` is handed a set of beans and no type. The container copies the precedence
+  into one method (`CdiResolution.amongMicronautsOwn`), which a public selection over a given collection of
+  definitions would replace; it asks the customizer the context was configured with, since Micronaut does not
+  publish the one it serves the context with.
 - **The context is injected under types no bean definition stands for.** `DefaultBeanContext` hands itself out as
-  `BeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`, `ExecutionHandleLocator`,
-  `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and `PropertyPlaceholderResolver`, listed in
-  its private `thisInterfaces`, and resolves `io.micronaut.inject.InjectionPoint` from the resolution under way;
-  none of them has a definition the container could see. The processor, which marks every other injection point
-  of a bean of the specification to be resolved by the definitions the container selects, therefore keeps a copy of
-  that list and leaves those to Micronaut (`ContainerInjectionVisitor.CONTEXT_TYPES`); a public list, or a
-  definition for each, would remove the copy.
+  `BeanContext`, `WatchableBeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`,
+  `ExecutionHandleLocator`, `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and
+  `PropertyPlaceholderResolver`, listed in its private `thisInterfaces`, makes a `BeanDependencyResolver` and an
+  `InterceptionTarget` for the bean being resolved, and resolves `io.micronaut.inject.InjectionPoint` and a
+  `Qualifier` from the resolution under way; none of them has a definition the container could see. A marked point
+  no bean of the specification answers is left to Micronaut as it is injected, which resolves these as well, so the
+  copy of the list the processor keeps (`ContainerInjectionVisitor.CONTEXT_TYPES`) is not what injects them: it
+  keeps them out of the deployment validation, which asks Micronaut for a definition of what such a point resolves
+  to, and keeps a bean of the specification that implements one of them from taking the context's place. A public
+  list, or a definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

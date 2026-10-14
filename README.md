@@ -175,14 +175,18 @@ qualifiers of the specification they have.
 
 ### Types without reflection
 
-The bean types of a bean, what an observer observes and the generic hierarchy of every class a compilation
-compiles are recorded by the processor, so a parameterized injection point or lookup, and an event, are matched
+The bean types of a bean, what an observer observes and the generic hierarchy of the classes a compilation
+compiles that have a parameterized type above them or declare type variables are recorded by the processor, so a parameterized injection point or lookup, and an event, are matched
 by their type arguments with nothing read from a class:
 
 - a bean's type closure is recorded on the bean, and on the producer that produces it;
 - an observed type is recorded on the observer, with its wildcards and type variables;
-- the closure of each compiled class that has a parameterized type above it, or declares type variables, is
-  recorded on a class generated in its package. An event of `OrderCreated implements DomainEvent<Order>` is
+- the closure of each compiled class that is no bean and could be the class of an event - not an interface, an
+  abstract class or an annotation literal - and that has a parameterized type above it, or declares type variables,
+  is recorded on a definition the compilation registers without a source, once for the compilation, and in the
+  package of the class where the record refers to a class only that package can name; and so is the closure of
+  each class a recorded type names as a type argument or a bound, the JDK's included, which is what the bound is
+  compared against (`Integer` is within `? extends Comparable<Integer>`). An event of `OrderCreated implements DomainEvent<Order>` is
   observed by an observer of `DomainEvent<Order>` and not by one of `DomainEvent<Invoice>`, however it was
   fired, and firing an object of a generic class through an event that leaves its type variables unresolved is
   the `IllegalArgumentException` of the specification.
@@ -196,9 +200,10 @@ events.select(Argument.of(Box.class, String.class)).fire(new Box<>("text"));
 
 What is left to `micronaut-cdi-reflection` is a class no compilation with this processor has seen: a bean
 compiled without it is resolvable by its class and the raw types Micronaut exposes it as, and an event of such a
-class is matched as the type it was fired as where that names its class, and as its raw class otherwise - so an
-observer of a parameterized supertype of it is only notified where the module is there to read the class, or
-where the event is fired through `select(Argument)`.
+class is matched as the type it was fired as where that names its class, and as its raw class otherwise, above
+which are the type it was fired as and what is above that - so an observer of a parameterized supertype between
+its class and the type it was fired as is only notified where the module is there to read the class, or where the
+event is fired through `select(Argument)`.
 
 That module also brings `io.micronaut:micronaut-reflection`, which answers the accessors of an interceptor's
 `InvocationContext` that return an object of the Java reflection API: `getMethod()`, `getConstructor()`,

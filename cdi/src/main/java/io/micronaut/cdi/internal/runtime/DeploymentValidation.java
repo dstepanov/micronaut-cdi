@@ -26,14 +26,11 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
-import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
-import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.DeploymentException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The validation of a deployment as the container starts: what the processor could not judge while one class
@@ -210,13 +207,13 @@ final class DeploymentValidation {
 
     /**
      * Resolves a point no bean of the specification is a candidate for the way Micronaut resolves it then, by its
-     * own rules, and reports it where they find no bean or more than one.
+     * own rules among the beans of Micronaut's own, and reports it where they find no bean or more than one.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
             if (container.beanContext().findBeanDefinition((Argument) argument,
-                Qualifiers.forArgument((Argument) argument)).isEmpty()) {
+                CdiBeanContainer.Selection.micronautQualifier((Argument) argument, null)).isEmpty()) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }
@@ -232,45 +229,42 @@ final class DeploymentValidation {
      * where that bean is in a normal scope and cannot be proxied.
      */
     private void validate(BeanDefinition<?> definition, Argument<?> argument) {
-        if (!argument.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class)) {
+        if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             // a point Micronaut resolves itself, which the processor left unmarked: a lookup, an event, the
-            // injection point metadata, the context, a value of the configuration
+            // injection point metadata, the context, a value of the configuration; or one a provider of the
+            // application's own supplies, which needs no bean
             return;
         }
         if (argument.isNullable()) {
             // An explicitly nullable injection point may have no bean.
             return;
         }
-        List<CdiQualifier> qualifiers = CdiQualifier.declared(argument.getAnnotationMetadata());
-        // the beans the point is resolved among as the bean is created
-        Set<Bean<?>> beans = container.injectionCandidates(argument);
-        if (beans == null) {
-            validateByMicronaut(definition, argument);
-            return;
-        }
-        Bean<?> resolved;
+        // what the point is resolved to as the bean is created
+        CdiBeanContainer.Selection selection;
         try {
-            resolved = container.resolve(beans);
+            selection = container.selectionFor(argument);
         } catch (AmbiguousResolutionException e) {
             problems.add(new DeploymentException("The injection point " + argument + " of "
                 + definition.getBeanType().getName() + " is ambiguous (CDI 4.1 section 5.2.2): "
                 + e.getMessage(), e));
             return;
         }
-        if (resolved == null) {
-            problems.add(new DeploymentException("The injection point " + argument + " of "
-                + definition.getBeanType().getName() + " has no bean to satisfy it, qualified " + qualifiers
-                + " (CDI 4.1 section 5.2.2)"));
+        if (selection == CdiBeanContainer.Selection.MICRONAUT) {
+            validateByMicronaut(definition, argument);
             return;
         }
-        if (resolved instanceof CdiBean<?> bean) {
-            String unproxyable = bean.definition().getAnnotationMetadata()
-                .stringValue(CdiUnproxyable.class).orElse(null);
-            if (unproxyable != null) {
-                problems.add(new DeploymentException("The injection point " + argument + " of "
-                    + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
-                    + unproxyable + " (CDI 4.1 section 5.4)"));
-            }
+        BeanDefinition<?> resolved = selection.definition();
+        if (resolved == null) {
+            problems.add(new DeploymentException("The injection point " + argument + " of "
+                + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
+                + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+            return;
+        }
+        String unproxyable = resolved.getAnnotationMetadata().stringValue(CdiUnproxyable.class).orElse(null);
+        if (unproxyable != null) {
+            problems.add(new DeploymentException("The injection point " + argument + " of "
+                + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
+                + unproxyable + " (CDI 4.1 section 5.4)"));
         }
     }
 }

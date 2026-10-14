@@ -17,7 +17,6 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.context.annotation.Primary;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -36,10 +35,11 @@ import java.util.Set;
  * particular one, and without it the two would be indistinguishable and every such pair ambiguous.</p>
  *
  * <p>Only the bean half of the rule is written onto the bean here. The injection point half is the container's:
- * a lookup of the specification resolves by the qualifiers of the bean, {@code Default} among them. The default
- * bean is declared primary as well, which is what keeps a bean of this specification injectable into one that is
- * not: Micronaut resolves an injection point of a plain Micronaut bean that names no qualifier to the primary bean
- * of the type where there is more than one, which is the bean the specification's rule picks.</p>
+ * a lookup of the specification resolves by the qualifiers of the bean, {@code Default} among them. A point of a
+ * bean of Micronaut's own that names no qualifier where several beans of the specification are candidates is
+ * resolved to the one with the default qualifier by the container's resolution customizer
+ * ({@code CdiResolutionCustomizer.resolveNonUniqueBean}), which Micronaut asks once no primary bean decided: the
+ * bean is not declared Micronaut's primary, which would stand beside an application's own.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -55,8 +55,8 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
         Cdi.ANY,
         CdiAny.class.getName(),
         Cdi.DEFAULT
-        // and what Micronaut writes of its own accord - this module's visitors write its primary on a selected
-        // alternative: a qualifier, but not the bean declaring one
+        // and what Micronaut writes of its own accord - its primary, which an application writes as well: a
+        // qualifier, but not the bean declaring one
     );
 
     @Override
@@ -87,12 +87,12 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
         if (!SpecificationBeans.isBean(element)) {
             return;
         }
-        qualifyByDefault(element, true, false);
+        qualifyByDefault(element, false);
         // a producer declares its own qualifiers, so the rule is applied to it in its own right
-        SpecificationBeans.producersOf(element).forEach(producer -> qualifyByDefault(producer, true, true));
+        SpecificationBeans.producersOf(element).forEach(producer -> qualifyByDefault(producer, true));
     }
 
-    private static void qualifyByDefault(Element element, boolean primary, boolean declaredOnly) {
+    private static void qualifyByDefault(Element element, boolean declaredOnly) {
         for (String qualifier : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
             if (NOT_A_DECLARED_QUALIFIER.contains(qualifier)) {
                 continue;
@@ -106,9 +106,5 @@ public final class DefaultQualifierVisitor implements TypeElementVisitor<Object,
             }
         }
         element.annotate(Cdi.DEFAULT);
-        if (primary) {
-            // and so an injection point that names no qualifier resolves to it rather than being ambiguous
-            element.annotate(Primary.class);
-        }
     }
 }

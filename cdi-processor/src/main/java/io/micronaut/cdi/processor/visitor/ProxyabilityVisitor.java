@@ -124,12 +124,17 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
      */
     private static @org.jspecify.annotations.Nullable String whyUnproxyable(ClassElement element,
                                                                                 boolean normalScoped) {
-        if (element.isFinal()) {
-            return "the class is final and a proxy extends it";
-        }
-        if (element.isSealed()) {
-            // a sealed class permits only the subclasses it names, and the proxy is none of them
-            return "the class is sealed and a proxy extends it";
+        // what Micronaut tells of the type itself; the constructors and the methods are the specification's to judge
+        io.micronaut.inject.ast.ProxyRestriction restriction = element.getProxyRestriction().orElse(null);
+        if (restriction != null) {
+            return switch (restriction) {
+                case FINAL -> "the class is final and a proxy extends it";
+                // a sealed class permits only the subclasses it names, and the proxy is none of them
+                case SEALED -> "the class is sealed and a proxy extends it";
+                case ENUM -> "the class is an enum and a proxy extends it";
+                case PRIMITIVE -> "the type is primitive and a proxy extends it";
+                case ARRAY -> "the type is an array and a proxy extends it";
+            };
         }
         ConstructorElement noArguments = null;
         boolean injectConstructor = false;
@@ -137,8 +142,7 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             if (constructor.getParameters().length == 0) {
                 noArguments = constructor;
             }
-            if (constructor.hasDeclaredAnnotation("jakarta.inject.Inject")
-                || constructor.hasDeclaredAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
+            if (SpecificationBeans.isInjected(constructor)) {
                 injectConstructor = true;
             }
         }

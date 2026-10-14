@@ -129,7 +129,7 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public BeanInfo bean() {
-        return new ElementBeanInfo(declaringClass, null, context);
+        return ElementBeanInfo.of(declaringClass, null, context);
     }
 
     @Override

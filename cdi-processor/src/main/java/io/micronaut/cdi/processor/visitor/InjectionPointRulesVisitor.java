@@ -111,9 +111,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 }
             }
         }
-        for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared())) {
+        // the points a bean inherits are injected as its own are, by Micronaut where the class declaring them is no
+        // bean of the specification, and are held to the same rules; a producer and a disposer are not inherited
+        for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
             if (isInjected(field)) {
-                if (SpecificationBeans.isProducer(field)) {
+                if (isDeclaredBy(field, element) && SpecificationBeans.isProducer(field)) {
                     // section 3.4.1: a field is a producer or an injection point, never both
                     context.fail("A field may not be annotated both Inject and Produces (section 3.4.1)",
                         field);
@@ -124,22 +126,29 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     // initialized rather than inject it
                     context.fail("An injected field may not be final (CDI 4.1 section 3.6)", field);
                 }
-                checkType(field.getGenericField(), field, normalScoped, false, false, genericClass,
-                    element, null, context);
+                checkType(field.getGenericField(), field, normalScoped, false, false,
+                    genericClass || resolvedByTheBean(field, element), element, null, context);
             }
         }
-        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             boolean injected = isInjected(method);
-            boolean producer = SpecificationBeans.isProducer(method);
+            boolean declared = isDeclaredBy(method, element);
+            boolean producer = declared && SpecificationBeans.isProducer(method);
             boolean disposer = false;
             boolean observer = false;
-            for (ParameterElement parameter : method.getParameters()) {
-                disposer |= parameter.hasDeclaredAnnotation(Cdi.DISPOSES);
-                observer |= parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
-                    || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC);
+            if (declared) {
+                for (ParameterElement parameter : method.getParameters()) {
+                    disposer |= parameter.hasDeclaredAnnotation(Cdi.DISPOSES);
+                    observer |= parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
+                        || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC);
+                }
             }
             if (!injected && !producer && !disposer && !observer) {
                 continue;
+            }
+            if (injected && method.isStatic()) {
+                // CDI 4.1 section 3.7.1: an initializer method is not static, and Micronaut would leave it uncalled
+                context.fail("An initializer method may not be static (CDI 4.1 section 3.7.1)", method);
             }
             if (injected && producer) {
                 // CDI 4.1 sections 3.2.2 and 3.7.1: a producer method is not an initializer method
@@ -176,7 +185,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     continue;
                 }
                 checkParameter(parameter, method, producer ? isNormalScopedProducer(method, context) : normalScoped,
-                    disposer, observer, genericClass, element, allowedMetadataType, context);
+                    disposer, observer, genericClass || resolvedByTheBean(method, element), element, allowedMetadataType,
+                    context);
             }
         }
     }
@@ -316,7 +326,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return;
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
-            if (field.isStatic() || field.isFinal() || isInjectedField(field)
+            if (field.isStatic() || field.isFinal() || SpecificationBeans.isInjected(field)
                 || SpecificationBeans.isProducer(field)
                 || field.hasStereotype("io.micronaut.context.annotation.Value")
                 || field.hasStereotype("io.micronaut.context.annotation.Property")) {
@@ -329,10 +339,6 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
     }
 
-    private static boolean isInjectedField(FieldElement field) {
-        return field.hasDeclaredAnnotation(AnnotationUtil.INJECT) || field.hasDeclaredAnnotation("jakarta.inject.Inject");
-    }
-
     /**
      * Whether the class is a bean in its own right: it declares a bean defining annotation, a scope or a
      * stereotype, rather than being only a class beans extend.
@@ -343,9 +349,20 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             || element.hasStereotype(Cdi.STEREOTYPE);
     }
 
-    private boolean isInjected(io.micronaut.inject.ast.Element element) {
-        return element.hasDeclaredAnnotation(AnnotationUtil.INJECT)
-            || element.hasDeclaredAnnotation("jakarta.inject.Inject");
+    /**
+     * Whether the member is inherited from a generic class, whose variables the bean resolves: a point of such a
+     * variable is of the type the bean gives it.
+     */
+    private static boolean resolvedByTheBean(io.micronaut.inject.ast.MemberElement member, ClassElement element) {
+        return !isDeclaredBy(member, element) && !member.getDeclaringType().getDeclaredGenericPlaceholders().isEmpty();
+    }
+
+    private static boolean isDeclaredBy(io.micronaut.inject.ast.MemberElement member, ClassElement element) {
+        return member.getDeclaringType().getName().equals(element.getName());
+    }
+
+    private static boolean isInjected(io.micronaut.inject.ast.Element element) {
+        return SpecificationBeans.isInjected(element);
     }
 
     /**

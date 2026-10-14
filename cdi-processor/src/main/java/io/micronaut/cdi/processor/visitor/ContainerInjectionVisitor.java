@@ -18,7 +18,6 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.core.annotation.AnnotationClassValue;
-import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -62,20 +61,28 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
     );
 
     /**
-     * The interfaces Micronaut hands the context itself out as, without a bean definition for any of them: the
-     * private {@code thisInterfaces} of {@code DefaultBeanContext}, which Micronaut does not publish.
+     * The types Micronaut resolves without a bean definition: the interfaces it hands the context itself out as -
+     * the private {@code thisInterfaces} of {@code DefaultBeanContext}, which Micronaut does not publish - and the
+     * dependency resolver and the interception target it makes for the bean being resolved. A marked point no bean
+     * of the specification answers is left to Micronaut as it is injected, which would resolve these too; but the
+     * deployment validation asks Micronaut for a definition of what such a point resolves to, which none of these
+     * has, and a bean of the specification that implements one of them would take the context's place.
      */
     private static final Set<String> CONTEXT_TYPES = Set.of(
         "io.micronaut.context.BeanDefinitionRegistry",
         "io.micronaut.context.BeanContext",
+        "io.micronaut.context.WatchableBeanContext",
         "io.micronaut.core.annotation.AnnotationMetadataResolver",
         "io.micronaut.context.BeanLocator",
         "io.micronaut.context.ExecutionHandleLocator",
         "io.micronaut.context.ApplicationContext",
         "io.micronaut.core.value.PropertyResolver",
         "io.micronaut.core.value.ValueResolver",
-        "io.micronaut.context.env.PropertyPlaceholderResolver"
+        "io.micronaut.context.env.PropertyPlaceholderResolver",
+        "io.micronaut.context.BeanDependencyResolver",
+        "io.micronaut.context.InterceptionTarget"
     );
+
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
@@ -97,27 +104,39 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
         if (!SpecificationBeans.isBeanOfTheSpecification(bean)) {
             return;
         }
-        bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
+        // what the class itself declares: Micronaut keeps the annotations of a field and of a parameter by the class
+        // declaring it, so a mark written while an inheriting class is visited would be read by every class that
+        // inherits the member, a bean of Micronaut's own among them. A superclass that is a bean of the
+        // specification marks its own as it is visited; the points of one that is not are Micronaut's
+        bean.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared()).stream()
             .filter(ContainerInjectionVisitor::isInjected)
-            .forEach(field -> {
-                mark(field, field.getGenericType());
-                if (field.getModifiers().contains(io.micronaut.inject.ast.ElementModifier.TRANSIENT)) {
-                    // InjectionPoint.isTransient() answers from the record rather than from the field itself
-                    field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class);
-                }
-            });
+            .forEach(field -> mark(field, field.getGenericType()));
+        bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
+            .filter(field -> isInjected(field)
+                && field.getModifiers().contains(io.micronaut.inject.ast.ElementModifier.TRANSIENT))
+            // InjectionPoint.isTransient() answers from the record rather than from the field itself; the record is
+            // the same whatever class inherits the field, so it is written of an inherited one as well
+            .forEach(field -> field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class));
         for (io.micronaut.inject.ast.PropertyElement property : bean.getSyntheticBeanProperties()) {
             // a property a compiler describes as one - a Kotlin property under KSP - is injected through its setter,
-            // with the metadata of the property
-            if (isInjected(property)) {
-                property.getWriteMethod().ifPresent(ContainerInjectionVisitor::markParameters);
+            // with the metadata of the property; one whose setter alone is annotated, @set:Inject, as well
+            MethodElement setter = property.getWriteMethod().orElse(null);
+            if (setter != null && (isInjected(property) || isInjected(setter))) {
+                // the declaration is the same whatever class inherits the setter
+                recordDeclaration(setter);
+                if (property.getDeclaringType().getName().equals(bean.getName())) {
+                    markParameters(setter);
+                }
             }
         }
         BeanInjectionUtils.findBeanConstructor(bean).ifPresent(ContainerInjectionVisitor::markParameters);
         for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             if (isInjected(method)) {
+                // the same whatever class inherits the method, so it is written of an inherited one as well
                 recordDeclaration(method);
             }
+        }
+        for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
             if (isInjected(method) || method.hasAnnotation(Cdi.PRODUCES)
                 || java.util.Arrays.stream(method.getParameters()).anyMatch(parameter ->
                     parameter.hasAnnotation(Cdi.OBSERVES) || parameter.hasAnnotation(Cdi.OBSERVES_ASYNC)
@@ -152,7 +171,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
     }
 
     private static boolean isInjected(Element element) {
-        return element.hasAnnotation(AnnotationUtil.INJECT) || element.hasAnnotation("jakarta.inject.Inject");
+        return SpecificationBeans.isInjected(element);
     }
 
     private static void mark(Element element, ClassElement type) {
@@ -165,7 +184,8 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
 
     /**
      * Whether Micronaut resolves the point itself rather than by a bean of its type: a value of the configuration,
-     * a registration, the context itself, or one of the kinds resolved late - a lookup, an event, the injection
+     * a registration, the context itself, its own injection point, the qualifier the bean is resolved by, or one of
+     * the kinds resolved late - a lookup, an event, the injection
      * point metadata - whose beans are built-in ones that read the point they are injected into.
      */
     private static boolean isResolvedByMicronaut(Element element, ClassElement type) {
@@ -180,7 +200,10 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
                 .orElse(false)) {
             return true;
         }
+        // Micronaut injects its InjectionPoint from the resolution under way, and its Qualifier as the qualifier the
+        // bean is resolved by, without a bean definition of either
         return LATE_KINDS.contains(type.getName()) || CONTEXT_TYPES.contains(type.getName())
-            || type.isAssignable("io.micronaut.inject.InjectionPoint");
+            || type.isAssignable("io.micronaut.inject.InjectionPoint")
+            || type.isAssignable("io.micronaut.context.Qualifier");
     }
 }

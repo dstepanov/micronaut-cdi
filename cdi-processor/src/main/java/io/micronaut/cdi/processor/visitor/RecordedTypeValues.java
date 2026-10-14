@@ -122,27 +122,35 @@ public final class RecordedTypeValues {
             member(record, CdiRecordedType.LOWER_BOUNDS, wildcard.getLowerBounds(), bindings, variables, erasedBounds, true);
             return record.build();
         }
-        if (type instanceof GenericPlaceholderElement placeholder && !type.isArray()) {
+        int dimensions = 0;
+        ClassElement component = type;
+        while (component.isArray()) {
+            dimensions++;
+            component = component.fromArray();
+        }
+        if (component instanceof GenericPlaceholderElement placeholder) {
+            // a variable, or an array of one, T[]: the array is recorded as the variable and its dimensions
             String name = placeholder.getVariableName();
             ClassElement bound = bindings.get(name);
             if (bound != null && !(bound instanceof GenericPlaceholderElement other
                 && other.getVariableName().equals(name))) {
                 // what the inheriting class gives the variable: a type, or a variable of its own
-                return of(bound, Map.of(), variables, erasedBounds);
+                ClassElement given = bound;
+                for (int i = 0; i < dimensions; i++) {
+                    given = given.toArray();
+                }
+                return of(given, Map.of(), variables, erasedBounds);
             }
             record.member("kind", "VARIABLE").member("name", name);
+            if (dimensions > 0) {
+                record.member("dimensions", dimensions);
+            }
             if (variables.add(name)) {
                 // a variable bounded by itself, as T extends Comparable<T> is, names itself within its bound
                 member(record, CdiRecordedType.BOUNDS, placeholder.getBounds(), bindings, variables, erasedBounds, true);
                 variables.remove(name);
             }
             return record.build();
-        }
-        int dimensions = 0;
-        ClassElement component = type;
-        while (component.isArray()) {
-            dimensions++;
-            component = component.fromArray();
         }
         if (dimensions > 0) {
             record.member("dimensions", dimensions);

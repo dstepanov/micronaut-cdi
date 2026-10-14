@@ -59,6 +59,12 @@ class SynthesisUnderGroovyTest {
             CdiBeanContainer container = context.getBean(CdiBeanContainer)
             assertEquals(1, container.getBeans(ScannedLibraryBean).size())
             assertEquals("library", container.createInstance().select(ScannedLibraryBean).get().name())
+            // its injection point is resolved by the container, and its producer is a bean, as of a class compiled here
+            def field = context.getBeanDefinition(ScannedLibraryBean).injectedFields.find { it.name == 'manager' }
+            assertTrue(field.annotationMetadata.hasStereotype(io.micronaut.context.annotation.ResolveWith))
+            assertTrue(container.createInstance().select(ScannedLibraryBean).get().manager != null)
+            assertEquals("produced by the library", container.createInstance()
+                .select(io.micronaut.cdi.test.extension.ScannedLibraryProduct).get().name())
         } finally {
             context.close()
         }

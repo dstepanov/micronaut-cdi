@@ -74,6 +74,33 @@ class GeneratedClassNamesTest {
         }, source);
     }
 
+    /**
+     * The generic hierarchy of a class no definition describes is recorded on a definition the compilation registers,
+     * not on a source it generates.
+     */
+    @Test
+    void theTypeIndexIsNoGeneratedSource() {
+        String source = """
+            package collide;
+
+            public class Payload implements java.util.function.Supplier<String> {
+                public String get() {
+                    return "";
+                }
+            }
+            """;
+        List<String> classes = new ArrayList<>();
+        try (JavaParser parser = new JavaParser()) {
+            for (JavaFileObject file : parser.generate("collide.Payload", source)) {
+                String name = file.getName();
+                if (name.contains("CdiTypeIndex")) {
+                    classes.add(name);
+                }
+            }
+        }
+        assertTrue(classes.isEmpty(), "a source or a class of the type index was generated: " + classes);
+    }
+
     private static void assertNoneTaken(JavaParser compilation, String source) {
         List<String> generated = new ArrayList<>();
         String className = source.substring(source.indexOf("public class ") + "public class ".length(),

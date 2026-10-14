@@ -67,7 +67,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
         if (element instanceof AnnotationElement || element.isEnum()) {
             return;
         }
-        if (!element.isInterface() && !element.isAbstract()) {
+        if (!element.isInterface() && !element.isAbstract() && isBeanClass(element)) {
             record(element, element);
         }
         for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
@@ -77,6 +77,19 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
                 record(field.getGenericType(), field);
             }
         }
+    }
+
+    /**
+     * Whether the class is one a definition is written for, which its type closure is recorded on: a bean of the
+     * specification, or of Micronaut's own. A class that is neither has no definition to carry the record, and the
+     * type index records what of it is needed.
+     */
+    private static boolean isBeanClass(ClassElement element) {
+        return element.hasStereotype(io.micronaut.cdi.internal.metadata.CdiScope.class)
+            || element.hasStereotype(io.micronaut.core.annotation.AnnotationUtil.SCOPE)
+            || element.hasStereotype("io.micronaut.context.annotation.Bean")
+            || element.hasStereotype("io.micronaut.context.annotation.Context")
+            || SpecificationBeans.isBean(element);
     }
 
     private static void record(ClassElement type, Element on) {
@@ -112,11 +125,16 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
                                 List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds,
                                 boolean erased) {
         walk(type, bindings, erased, (member, memberBindings, memberErased) -> {
+            AnnotationValue<CdiRecordedType> recorded;
             if (memberErased) {
-                closure.add(RecordedTypeValues.ofErasure(member));
+                recorded = RecordedTypeValues.ofErasure(member);
             } else {
-                closure.add(erasedBounds ? RecordedTypeValues.ofBeanType(member, memberBindings)
-                    : RecordedTypeValues.of(member, memberBindings));
+                recorded = erasedBounds ? RecordedTypeValues.ofBeanType(member, memberBindings)
+                    : RecordedTypeValues.of(member, memberBindings);
+            }
+            // an interface reached along two paths of a diamond is one type of the closure
+            if (!closure.contains(recorded)) {
+                closure.add(recorded);
             }
         });
     }

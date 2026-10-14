@@ -182,6 +182,18 @@ public final class CompiledAnnotationTypes {
         return recorded == null ? null : Set.copyOf(recorded.nonbinding);
     }
 
+    /**
+     * The defaults of the members of an annotation type the application was compiled with, as Micronaut registered
+     * them, which the metadata of a bean that uses it answers.
+     *
+     * @param name The name of the annotation type
+     * @return The defaults, none where the build recorded nothing of it
+     */
+    public Map<CharSequence, Object> defaultsOf(String name) {
+        Recorded recorded = recorded(name);
+        return recorded == null ? Map.of() : recorded.defaults;
+    }
+
     private @Nullable Recorded recorded(String name) {
         Recorded recorded = fromClasses().get(name);
         if (recorded != null) {
@@ -319,6 +331,7 @@ public final class CompiledAnnotationTypes {
         private boolean repeatable;
         private @Nullable RetentionPolicy retention;
         private boolean defaultsRead;
+        private Map<CharSequence, Object> defaults = Map.of();
 
         Recorded(String name) {
             this.name = name;
@@ -339,7 +352,8 @@ public final class CompiledAnnotationTypes {
             if (!defaultsRead) {
                 // a member left at its default is written nowhere, and is a member all the same
                 defaultsRead = true;
-                for (CharSequence member : metadata.getDefaultValues(name).keySet()) {
+                defaults = metadata.getDefaultValues(name);
+                for (CharSequence member : defaults.keySet()) {
                     members.add(member.toString());
                 }
             }

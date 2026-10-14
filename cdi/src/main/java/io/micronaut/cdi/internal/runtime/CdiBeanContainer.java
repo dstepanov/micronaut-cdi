@@ -85,6 +85,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");
     private static final Set<String> PSEUDO_SCOPES = Set.of(
         "jakarta.enterprise.context.Dependent", "jakarta.inject.Singleton");
+    /**
+     * The number of injection points what they resolve to is kept for.
+     */
+    private static final int MAX_SELECTIONS = 16_384;
 
     private final BeanContext beanContext;
     private final RequestScope requestScope;
@@ -99,6 +103,18 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * the beans are read again.
      */
     private volatile Map<Class<?>, List<CdiBean<?>>> byClass = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * The beans less the replaced ones ({@link #beans}), with the beans they were narrowed from.
+     */
+    private volatile @Nullable Deployed deployed;
+    /**
+     * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
+     * compiled definition are constants, and two points of one type and name may declare different qualifiers.
+     * Emptied whenever the beans are read again.
+     */
+    private volatile Map<PointKey, Selection> selections = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile @Nullable RecordedTypeIndex typeIndex;
+    private volatile @Nullable CompiledAnnotationTypes types;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -210,7 +226,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                  io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
-        all.add(CdiQualifier.ofValue(qualifier));
+        all.add(CdiQualifier.ofValue(types(), qualifier));
         all.addAll(qualifiersOf(qualifiers));
         return beansOf((Type) beanType, wellFormed(all));
     }
@@ -252,26 +268,48 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * The beans an injection point of a bean of the specification is resolved among: a bean's own - a field, a
-     * parameter of its constructor, of an initializer or of a producer - an observer's or a disposer's, which the
-     * processor marks for this container to resolve ({@code ResolveWith}). They are the beans of {@link #beansOf}
-     * for the full declared type of the point and the qualifiers it declares, the ones of the specification alone
-     * where any of those qualifies: section 5.2 resolves among the beans of the specification, and a bean of
-     * Micronaut's own of the same type is no more than one Micronaut also has.
+     * What an injection point of a bean of the specification resolves to: a bean's own - a field, a parameter of
+     * its constructor, of an initializer or of a producer - an observer's or a disposer's, which the processor
+     * marks for this container to resolve ({@code ResolveWith}). The beans it is resolved among are the beans of
+     * {@link #beansOf} for the full declared type of the point and the qualifiers it declares, and one is chosen
+     * among them as {@link #resolve} chooses: section 5.2 resolves among the beans of the specification, and a
+     * bean of Micronaut's own of the same type is no more than one Micronaut also has.
      *
-     * <p>Where no bean of the specification is of the class of the point, or none qualifies while beans of
-     * Micronaut's own are of the class, the point is left to Micronaut's rules - a primary bean, a secondary one,
-     * a name - which is what lets a bean of the specification be injected with a bean of Micronaut's own as a bean
-     * of Micronaut's would be. So is a type with a type variable among its arguments, which no bean type is.</p>
+     * <p>Where none of those beans is a bean of the specification - none is of the class of the point, or none of
+     * the ones that are qualifies - the point is left to Micronaut's rules among the beans of Micronaut's own
+     * ({@link Selection#MICRONAUT}, resolved by {@link Selection#micronautQualifier}): a bean of the specification
+     * the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its name or by
+     * being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
      *
      * @param point The injection point
-     * @return The beans, the alternatives not yet narrowed, or {@code null} where Micronaut's rules resolve it
+     * @return What it resolves to
+     * @throws AmbiguousResolutionException Where more than one bean remains
      */
-    @Nullable Set<Bean<?>> injectionCandidates(Argument<?> point) {
+    Selection selectionFor(Argument<?> point) {
+        Map<PointKey, Selection> cache = selections;
+        PointKey key = new PointKey(point);
+        Selection known = cache.get(key);
+        if (known != null) {
+            return known;
+        }
+        Selection selection = select(point);
+        if (cache.size() < MAX_SELECTIONS) {
+            // a point made anew for each injection - one Micronaut wraps to evaluate an expression - is not kept
+            // beyond a bound
+            cache.putIfAbsent(key, selection);
+        }
+        return selection;
+    }
+
+    private Selection select(Argument<?> point) {
         boolean specification = false;
         boolean micronaut = false;
         for (CdiBean<?> bean : candidatesOfType(point)) {
-            // an interceptor is a bean of the specification of its class, though never one a point is injected with
+            if (isInterceptor(bean)) {
+                // a bean of the specification of its class, though never one a point is injected with: it says
+                // nothing of which rules the point is resolved by
+                continue;
+            }
             if (CdiResolution.isBeanOfTheSpecification(bean.definition())) {
                 specification = true;
             } else {
@@ -282,32 +320,22 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
         }
         if (!specification) {
-            return null;
+            return Selection.MICRONAUT;
         }
         Set<Bean<?>> eligible;
         try {
             eligible = beansOf(point, CdiQualifier.declared(point.getAnnotationMetadata()));
         } catch (IllegalArgumentException e) {
             // a type with a variable the declaring class gives a value the definition does not carry
-            return null;
+            return Selection.MICRONAUT;
         }
-        Set<Bean<?>> ofTheSpecification = ofTheSpecification(eligible);
-        if (ofTheSpecification.isEmpty() && micronaut) {
-            return null;
+        if (micronaut && ofTheSpecification(eligible).isEmpty()) {
+            // the beans of the specification of the class are not among the ones the qualifiers admit, and the
+            // beans of Micronaut's own of it are left to Micronaut's rules
+            return Selection.MICRONAUT;
         }
-        return ofTheSpecification;
-    }
-
-    /**
-     * The definition of the one bean among the candidates of an injection point, narrowed by {@link #resolve}.
-     *
-     * @param candidates The candidates {@link #injectionCandidates} answered
-     * @return The definition, or {@code null} where there is none
-     * @throws AmbiguousResolutionException Where more than one bean remains
-     */
-    @Nullable BeanDefinition<?> definitionAmong(Set<Bean<?>> candidates) {
-        Bean<?> selected = resolve(candidates);
-        return selected == null ? null : ((CdiBean<?>) selected).definition();
+        Bean<?> selected = resolve(eligible);
+        return selected == null ? Selection.NONE : new Selection(((CdiBean<?>) selected).definition());
     }
 
     /**
@@ -471,10 +499,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return required;
     }
 
-    private static List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    private List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length);
         for (io.micronaut.core.annotation.AnnotationValue<?> qualifier : qualifiers) {
-            all.add(CdiQualifier.ofValue(qualifier));
+            all.add(CdiQualifier.ofValue(types(), qualifier));
         }
         return all;
     }
@@ -492,14 +520,25 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * The generic hierarchies of the classes the application was compiled with, which types are compared by.
      */
     private RecordedTypeIndex typeIndex() {
-        return RecordedTypeIndex.of(beanContext);
+        RecordedTypeIndex index = typeIndex;
+        if (index == null) {
+            // a bean of the context, the same for as long as it runs: looked up once rather than for each type compared
+            index = RecordedTypeIndex.of(beanContext);
+            typeIndex = index;
+        }
+        return index;
     }
 
     /**
      * What the application was compiled with of each qualifier and interceptor binding type.
      */
     private CompiledAnnotationTypes types() {
-        return CompiledAnnotationTypes.of(beanContext);
+        CompiledAnnotationTypes compiled = types;
+        if (compiled == null) {
+            compiled = CompiledAnnotationTypes.of(beanContext);
+            types = compiled;
+        }
+        return compiled;
     }
 
     /**
@@ -524,6 +563,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         return described;
     }
+
     /**
      * Forgets the beans already read, so that beans registered while the container starts — the synthetic
      * ones of section 2.10.5 — are seen by the next lookup.
@@ -533,6 +573,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             beans = null;
             canonical = null;
             byClass = new java.util.concurrent.ConcurrentHashMap<>();
+            selections = new java.util.concurrent.ConcurrentHashMap<>();
         }
     }
 
@@ -554,12 +595,20 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * The beans the container knows.
+     * The beans of the deployment: the beans the container knows, less the ones another among them replaces with
+     * Micronaut's {@code Replaces}, which are no beans of it - not of their name, and not with dependencies to
+     * validate - as they are none of their types.
      *
      * @return The beans
      */
     List<CdiBean<?>> beans() {
-        return candidates();
+        List<CdiBean<?>> all = candidates();
+        Deployed known = deployed;
+        if (known == null || known.from() != all) {
+            known = new Deployed(all, List.copyOf(withoutReplaced(new LinkedHashSet<>(all))));
+            deployed = known;
+        }
+        return known.beans();
     }
 
     /**
@@ -645,7 +694,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     @Override
     public Set<Bean<?>> getBeans(String name) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (CdiBean<?> bean : candidates()) {
+        for (CdiBean<?> bean : beans()) {
             if (name.equals(bean.getName())) {
                 beans.add(bean);
             }
@@ -662,11 +711,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             return beans.iterator().next();
         }
         // more than one bean qualifies: a bean of the specification outranks a bean of Micronaut's own of the
-        // same type, as at an injection point - among beans of Micronaut's own alone its primary one does - the
+        // same type, as at an injection point - among beans of Micronaut's own alone Micronaut's precedence chooses - the
         // alternatives outrank everything else, and among them the one of the highest priority wins. Anything short
         // of a single winner is the ambiguity of section 2.4.2
         List<Bean<? extends X>> narrowed = CdiResolution.narrow(
-            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf),
+            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, beanContext),
             Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);
@@ -696,7 +745,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                                      io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
-        all.add(CdiQualifier.ofValue(qualifier));
+        all.add(CdiQualifier.ofValue(types(), qualifier));
         all.addAll(qualifiersOf(qualifiers));
         return resolveObserverMethods(event, wellFormed(all));
     }
@@ -1121,5 +1170,75 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private static UnsupportedOperationException belongsToFull(String what) {
         return new UnsupportedOperationException(what + " belongs to CDI Full, which this module does not "
             + "implement. See Conformance");
+    }
+
+    /**
+     * An injection point as the key of what it resolves to: the point itself, compared by identity.
+     *
+     * @param point The injection point
+     */
+    private record PointKey(Argument<?> point) {
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof PointKey key && key.point == point;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(point);
+        }
+    }
+
+    /**
+     * What an injection point resolves to: the definition of the one bean the container selected, no bean at all,
+     * or whatever Micronaut's rules resolve among the beans of Micronaut's own.
+     */
+    static final class Selection {
+        /**
+         * No bean the container selects satisfies the point.
+         */
+        static final Selection NONE = new Selection(null);
+        /**
+         * The point is resolved by Micronaut's rules among the beans of Micronaut's own.
+         */
+        static final Selection MICRONAUT = new Selection(null);
+
+        private final @Nullable BeanDefinition<?> definition;
+
+        private Selection(@Nullable BeanDefinition<?> definition) {
+            this.definition = definition;
+        }
+
+        /**
+         * The definition of the bean selected.
+         *
+         * @return The definition, or {@code null} where there is none, or Micronaut's rules resolve the point
+         */
+        @Nullable BeanDefinition<?> definition() {
+            return definition;
+        }
+
+        /**
+         * The qualifier Micronaut's rules resolve a point {@link #MICRONAUT} leaves to them by: the one Micronaut
+         * reads off the point, among the beans of Micronaut's own alone.
+         *
+         * @param point     The injection point
+         * @param qualifier The qualifier Micronaut handed over for the point, or {@code null} to read it off it
+         * @param <T>       The bean type
+         * @return The qualifier
+         */
+        static <T> io.micronaut.context.Qualifier<T> micronautQualifier(
+            Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
+            return NotOfTheSpecification.forPoint(point, qualifier);
+        }
+    }
+
+    /**
+     * The beans of the deployment, and the beans the container knows they were narrowed from.
+     *
+     * @param from  The beans the container knows
+     * @param beans The beans of the deployment
+     */
+    private record Deployed(List<CdiBean<?>> from, List<CdiBean<?>> beans) {
     }
 }

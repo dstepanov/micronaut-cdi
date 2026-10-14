@@ -130,7 +130,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type, and(valuesOf(qualifier, qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type, and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
     }
 
     @Override
@@ -138,14 +138,14 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, Argument.of(subtype),
-            and(valuesOf(qualifier, qualifiers)));
+            and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, subtype,
-            and(valuesOf(null, qualifiers)));
+            and(valuesOf(CompiledAnnotationTypes.of(beanContext), null, qualifiers)));
     }
 
     @Override
@@ -179,14 +179,14 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         return qualifiers.isEmpty() && narrowedBy != null ? List.of(CdiQualifier.ANY) : qualifiers;
     }
 
-    static List<CdiQualifier> valuesOf(io.micronaut.core.annotation.@Nullable AnnotationValue<?> first,
+    static List<CdiQualifier> valuesOf(CompiledAnnotationTypes types, io.micronaut.core.annotation.@Nullable AnnotationValue<?> first,
                                        io.micronaut.core.annotation.AnnotationValue<?>... more) {
         List<CdiQualifier> all = new ArrayList<>(more.length + 1);
         if (first != null) {
-            all.add(CdiQualifier.ofValue(first));
+            all.add(CdiQualifier.ofValue(types, first));
         }
         for (io.micronaut.core.annotation.AnnotationValue<?> value : more) {
-            all.add(CdiQualifier.ofValue(value));
+            all.add(CdiQualifier.ofValue(types, value));
         }
         return all;
     }
@@ -337,7 +337,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * The one definition the lookup resolves to, narrowed the way section 2.4.2 narrows several candidates.
      */
     private BeanDefinition<T> one() {
-        java.util.List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions());
+        java.util.List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions(), type, beanContext);
         if (candidates.isEmpty()) {
             throw new UnsatisfiedResolutionException("No bean of type " + type.getTypeName() + " qualifies");
         }
@@ -366,7 +366,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
     @Override
     public boolean isAmbiguous() {
-        return CdiResolution.narrowToOne(definitions()).size() > 1;
+        return CdiResolution.narrowToOne(definitions(), type, beanContext).size() > 1;
     }
 
     @Override

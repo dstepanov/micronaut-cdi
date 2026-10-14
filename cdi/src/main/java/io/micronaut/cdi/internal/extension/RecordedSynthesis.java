@@ -164,7 +164,8 @@ public final class RecordedSynthesis {
                 create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
                     creationContext));
         List<AnnotationValue<Annotation>> qualifiers = record.getAnnotations(CdiSyntheticBean.QUALIFIERS);
-        Qualifier<T> qualifier = CdiQualifiers.declaredQualifierOf(qualifiers);
+        Qualifier<T> qualifier = CdiQualifiers.declaredQualifierOf(
+            io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes.of(beanContext), qualifiers);
         String name = record.stringValue("name").filter(given -> !given.isEmpty()).orElse(null);
         if (name != null) {
             // the name is a qualifier beside the others, not in their place: naming the builder would replace
@@ -275,7 +276,6 @@ public final class RecordedSynthesis {
                 Map.of(AnnotationMetadata.VALUE_MEMBER, priority[0]));
             metadata.addDeclaredAnnotation("io.micronaut.core.annotation.Order",
                 Map.of(AnnotationMetadata.VALUE_MEMBER, -priority[0]));
-            metadata.addDeclaredAnnotation("io.micronaut.context.annotation.Primary", Map.of());
         }
         // the effective scope, a stereotype-carried one included: the runtime reads this to know whether the bean
         // is dependent, and that it is a bean of the specification at all, which a dependent one is as much as any

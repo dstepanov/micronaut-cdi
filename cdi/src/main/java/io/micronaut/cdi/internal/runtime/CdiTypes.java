@@ -263,6 +263,12 @@ public final class CdiTypes {
         if (arguments.isEmpty()) {
             return type;
         }
+        Argument<?> component = type.componentType();
+        if (component != null) {
+            // an array of a variable, or of a type that uses one, is the array of the substituted component
+            Argument<?> substituted = substitute(component, arguments, intoWildcards);
+            return substituted == component ? type : substituted.arrayType();
+        }
         if (type.isUnresolvedTypeVariable()) {
             Argument<?> argument = arguments.get(((GenericPlaceholder<?>) type).getVariableName());
             return argument != null ? argument : type;
@@ -453,6 +459,35 @@ public final class CdiTypes {
      */
     public static Argument<?> eventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass,
                                           Argument<?> declaredType) {
+        return eventTypeAndClosureOf(index, runtimeClass, declaredType).type();
+    }
+
+    /**
+     * The type of an event of the given runtime class that was fired as the given type, as
+     * {@link #eventTypeOf(RecordedTypeIndex, Class, Argument)} has it, with the type above it its closure is known by
+     * where nothing was recorded of the class: the type it was fired as. {@code Event<T>.fire} takes a {@code T}, so
+     * the class is that type by construction, and an event of a class of the JDK fired as {@code List<Duck>} is a
+     * {@code List<Duck>} whatever list it is; what is strictly between the class and that type is not known.
+     *
+     * @param index        The generic hierarchies of the container asking, or {@code null}
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
+     * @return The event type, and the type its closure also holds, or {@code null} for none
+     */
+    public static EventType eventTypeAndClosureOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass,
+                                                  Argument<?> declaredType) {
+        if (recordOf(index, runtimeClass) == null && reflection(index) == null) {
+            Argument<?> type = rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
+            Class<?> declaredRaw = rawClassOf(declaredType);
+            boolean above = declaredRaw != null && declaredRaw != runtimeClass && !isObject(declaredType)
+                && declaredRaw.isAssignableFrom(runtimeClass);
+            return new EventType(type, above ? declaredType : null);
+        }
+        return new EventType(resolvedEventTypeOf(index, runtimeClass, declaredType), null);
+    }
+
+    private static Argument<?> resolvedEventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass,
+                                                   Argument<?> declaredType) {
         RecordedTypeIndex.Entry recorded = recordOf(index, runtimeClass);
         if (recorded == null) {
             CdiReflection reflection = reflection(index);
@@ -497,6 +532,15 @@ public final class CdiTypes {
     }
 
     private static void unify(Argument<?> own, Argument<?> declared, Map<String, Argument<?>> resolution) {
+        Argument<?> ownComponent = own.componentType();
+        if (ownComponent != null) {
+            // an array of a variable, or of a type that uses one, T[] or List<T>[], is unified through its component
+            Argument<?> declaredComponent = declared.componentType();
+            if (declaredComponent != null) {
+                unify(ownComponent, declaredComponent, resolution);
+            }
+            return;
+        }
         if (own.isUnresolvedTypeVariable()) {
             resolution.put(((GenericPlaceholder<?>) own).getVariableName(), declared);
             return;
@@ -508,5 +552,14 @@ public final class CdiTypes {
                 unify(ownArguments[i], declaredArguments[i], resolution);
             }
         }
+    }
+
+    /**
+     * The type of an event, and the type above it its closure also holds where nothing was recorded of its class.
+     *
+     * @param type  The event type
+     * @param above The type the event was fired as, which its closure holds as well, or {@code null}
+     */
+    public record EventType(Argument<?> type, @Nullable Argument<?> above) {
     }
 }
