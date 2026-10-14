@@ -216,9 +216,10 @@ reflection module.
 
 *Sections 3.1, 5.2.1 and 9.1.* The type closure of a bean, the type an observer observes and the closure
 an event is matched by are properties of generic signatures, which the container does not read. The processor
-records each: the closure of a bean on the bean or on its producer; the observed type on the observer; and the
-closure and the type variables of every class a compilation compiles that has a parameterized type above it or
-declares type variables, on definitions of a record it registers with Micronaut's `VisitorContext.registerBean`
+records each: the closure of a bean on the bean or on its producer - the class over its own type variables first,
+which is what the container also reads the generic hierarchy of the class of a bean from; the observed type on the
+observer; and the closure and the type variables of every other class a compilation compiles that has a
+parameterized type above it or declares type variables - the classes no definition describes - on definitions of a record it registers with Micronaut's `VisitorContext.registerBean`
 as each round finishes, with no source generated. The record of a package is registered from a class of the
 package, which places its definition there and lets it refer to a class only that package can name; a class of a
 library the discovery phase scanned is recorded from a class of the compilation where everything its record names

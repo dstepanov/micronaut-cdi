@@ -171,7 +171,19 @@ final class TypeIndexCollector {
             return;
         }
         List<Recorded> foreign = new ArrayList<>();
-        byPackage.forEach((packageName, entries) -> {
+        byPackage.forEach((packageName, gathered) -> {
+            // a bean of the specification is described by its definition, which records its type closure
+            // (CdiBeanTypes), the class over its own variables first: the index holds what no definition describes.
+            // Whether a class is one is known once every visitor of the round has seen it
+            List<Recorded> entries = new ArrayList<>(gathered.size());
+            for (Recorded recorded : gathered) {
+                if (!isDescribedByItsDefinition(recorded.element())) {
+                    entries.add(recorded);
+                }
+            }
+            if (entries.isEmpty()) {
+                return;
+            }
             List<ClassElement> owned = new ArrayList<>(entries.size());
             for (Recorded recorded : entries) {
                 if (recorded.owned()) {
@@ -200,6 +212,16 @@ final class TypeIndexCollector {
             register(context, record, first, foreign);
         }
         byPackage.clear();
+    }
+
+    /**
+     * Whether the class is a bean of the specification whose definition records its type closure.
+     */
+    private static boolean isDescribedByItsDefinition(ClassElement element) {
+        return !element.isAbstract() && !element.isInterface()
+            && element.hasStereotype(io.micronaut.cdi.internal.metadata.CdiScope.class)
+            && element.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiBeanTypes.class)
+            && !io.micronaut.cdi.processor.visitor.SpecificationBeans.isVetoed(element);
     }
 
     private static void register(VisitorContext context, ClassElement record, ClassElement origin,
