@@ -34,16 +34,16 @@ class QualifierDefaultsTest {
             .member("level", "DEBUG")
             .defaultValues(Map.of("level", "INFO"))
             .build();
-        assertTrue(CdiQualifier.ofValue(defaulted).matches(CdiQualifier.ofValue(written)));
-        assertTrue(CdiQualifier.ofValue(written).matches(CdiQualifier.ofValue(defaulted)));
-        assertFalse(CdiQualifier.ofValue(defaulted).matches(CdiQualifier.ofValue(other)));
+        assertTrue(CdiQualifier.ofValue(null, defaulted).matches(CdiQualifier.ofValue(null, written)));
+        assertTrue(CdiQualifier.ofValue(null, written).matches(CdiQualifier.ofValue(null, defaulted)));
+        assertFalse(CdiQualifier.ofValue(null, defaulted).matches(CdiQualifier.ofValue(null, other)));
     }
 
     @Test
     void anEmptyStringWithoutADefaultIsTheMemberLeftOut() {
         AnnotationValue<?> empty = AnnotationValue.builder(UNREGISTERED).member("name", "").build();
         AnnotationValue<?> none = AnnotationValue.builder(UNREGISTERED).build();
-        assertTrue(CdiQualifier.ofValue(empty).matches(CdiQualifier.ofValue(none)));
+        assertTrue(CdiQualifier.ofValue(null, empty).matches(CdiQualifier.ofValue(null, none)));
     }
 
     @Test
@@ -55,7 +55,7 @@ class QualifierDefaultsTest {
         AnnotationValue<?> defaulted = AnnotationValue.builder(UNREGISTERED)
             .defaultValues(Map.of("level", "INFO"))
             .build();
-        assertFalse(CdiQualifier.ofValue(empty).matches(CdiQualifier.ofValue(defaulted)));
+        assertFalse(CdiQualifier.ofValue(null, empty).matches(CdiQualifier.ofValue(null, defaulted)));
     }
 
     @Test
@@ -69,9 +69,9 @@ class QualifierDefaultsTest {
             .member("level", "INFO")
             .member("note", "b")
             .build();
-        assertTrue(CdiQualifier.ofValue(listed).matches(CdiQualifier.ofValue(other)));
+        assertTrue(CdiQualifier.ofValue(null, listed).matches(CdiQualifier.ofValue(null, other)));
         AnnotationValue<?> dollar = AnnotationValue.builder(UNREGISTERED).member("$level", "a").build();
         AnnotationValue<?> otherDollar = AnnotationValue.builder(UNREGISTERED).member("$level", "b").build();
-        assertFalse(CdiQualifier.ofValue(dollar).matches(CdiQualifier.ofValue(otherDollar)));
+        assertFalse(CdiQualifier.ofValue(null, dollar).matches(CdiQualifier.ofValue(null, otherDollar)));
     }
 }

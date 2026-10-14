@@ -214,7 +214,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                  io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
-        all.add(CdiQualifier.ofValue(qualifier));
+        all.add(CdiQualifier.ofValue(types(), qualifier));
         all.addAll(qualifiersOf(qualifiers));
         return beansOf((Type) beanType, wellFormed(all));
     }
@@ -510,10 +510,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return required;
     }
 
-    private static List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    private List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length);
         for (io.micronaut.core.annotation.AnnotationValue<?> qualifier : qualifiers) {
-            all.add(CdiQualifier.ofValue(qualifier));
+            all.add(CdiQualifier.ofValue(types(), qualifier));
         }
         return all;
     }
@@ -749,7 +749,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                                      io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
-        all.add(CdiQualifier.ofValue(qualifier));
+        all.add(CdiQualifier.ofValue(types(), qualifier));
         all.addAll(qualifiersOf(qualifiers));
         return resolveObserverMethods(event, wellFormed(all));
     }

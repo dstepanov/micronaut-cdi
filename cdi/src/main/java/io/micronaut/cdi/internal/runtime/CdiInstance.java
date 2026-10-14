@@ -130,7 +130,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type, and(valuesOf(qualifier, qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type, and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
     }
 
     @Override
@@ -138,14 +138,14 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, Argument.of(subtype),
-            and(valuesOf(qualifier, qualifiers)));
+            and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, subtype,
-            and(valuesOf(null, qualifiers)));
+            and(valuesOf(CompiledAnnotationTypes.of(beanContext), null, qualifiers)));
     }
 
     @Override
@@ -179,14 +179,14 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         return qualifiers.isEmpty() && narrowedBy != null ? List.of(CdiQualifier.ANY) : qualifiers;
     }
 
-    static List<CdiQualifier> valuesOf(io.micronaut.core.annotation.@Nullable AnnotationValue<?> first,
+    static List<CdiQualifier> valuesOf(CompiledAnnotationTypes types, io.micronaut.core.annotation.@Nullable AnnotationValue<?> first,
                                        io.micronaut.core.annotation.AnnotationValue<?>... more) {
         List<CdiQualifier> all = new ArrayList<>(more.length + 1);
         if (first != null) {
-            all.add(CdiQualifier.ofValue(first));
+            all.add(CdiQualifier.ofValue(types, first));
         }
         for (io.micronaut.core.annotation.AnnotationValue<?> value : more) {
-            all.add(CdiQualifier.ofValue(value));
+            all.add(CdiQualifier.ofValue(types, value));
         }
         return all;
     }

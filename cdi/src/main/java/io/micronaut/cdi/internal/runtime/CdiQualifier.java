@@ -22,7 +22,6 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.inject.annotation.AnnotationMetadataSupport;
 import io.micronaut.interceptor.spi.BindingValues;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
@@ -325,18 +324,20 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        return of(written, metadata, null);
+        return of(written, metadata, null, null);
     }
 
     /**
      * A qualifier as it was recorded for a synthetic component, its non-binding members listed under
      * {@code $nonBinding} as on a compiled one.
      *
+     * @param types   What the application was compiled with of each qualifier type
      * @param written The annotation, every member among its values
      * @param type    The annotation class, where the record refers to it
      * @return The qualifier
      */
-    public static CdiQualifier ofRecorded(AnnotationValue<?> written, @Nullable Class<? extends Annotation> type) {
+    public static CdiQualifier ofRecorded(CompiledAnnotationTypes types, AnnotationValue<?> written,
+                                          @Nullable Class<? extends Annotation> type) {
         String name = written.getAnnotationName();
         if (DEFAULT_NAME.equals(name)) {
             return DEFAULT;
@@ -344,16 +345,17 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        return of(written, type == null ? null : new KnownType(type), null);
+        return of(written, type == null ? null : new KnownType(type), null, types);
     }
 
     /**
      * A qualifier a program handed over as the values it is written with.
      *
+     * @param types What the application was compiled with of each qualifier type, or {@code null} for nothing
      * @param value The annotation value
      * @return The qualifier
      */
-    public static CdiQualifier ofValue(AnnotationValue<?> value) {
+    public static CdiQualifier ofValue(@Nullable CompiledAnnotationTypes types, AnnotationValue<?> value) {
         String name = value.getAnnotationName();
         if (DEFAULT_NAME.equals(name)) {
             return DEFAULT;
@@ -361,7 +363,7 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        return of(value, null, null);
+        return of(value, null, null, types);
     }
 
     /**
@@ -406,12 +408,12 @@ public final class CdiQualifier {
             return new CdiQualifier(new AnnotationValue<>(name), null, null, annotation);
         }
         if (annotation instanceof io.micronaut.core.annotation.AnnotationValueProvider<?> provider) {
-            return of(withNonbinding(provider.annotationValue(), types.nonbindingOf(name)), null, annotation);
+            return of(withNonbinding(provider.annotationValue(), types.nonbindingOf(name)), null, annotation, types);
         }
         CdiReflection reflection = CdiReflection.require(types.beanContext(),
             "Reading the members of the annotation instance "
             + annotation + " (" + SELECT_BY_VALUE + ")");
-        return of(reflection.valuesOf(annotation), null, annotation);
+        return of(reflection.valuesOf(annotation), null, annotation, types);
     }
 
     /**
@@ -434,23 +436,30 @@ public final class CdiQualifier {
     /**
      * The value carrying the defaults of its annotation, which {@link BindingValues} fills a member left out
      * from: the ones it carries, which compiled metadata hands every value it holds, and otherwise the ones
-     * Micronaut registered for the type of a qualifier the application was compiled with - a value a program
+     * Micronaut registered for the type of a qualifier the application was compiled with, as the metadata the value
+     * was read from, or the record of the qualifier types, answers them ({@code AnnotationMetadata.getDefaultValues})
+     * - a value a program
      * built, as {@code AnnotationValue.builder(Shelf.class).build()} is, carries none, and would not otherwise
      * select the bean compiled with {@code @Shelf}. An annotation such a value holds is compared with the
      * defaults it carries alone, as {@link BindingValues} compares it.
      */
-    private static AnnotationValue<?> withDefaults(AnnotationValue<?> value) {
+    private static AnnotationValue<?> withDefaults(AnnotationValue<?> value, @Nullable AnnotationMetadata source,
+                                                   @Nullable CompiledAnnotationTypes types) {
         Map<CharSequence, Object> carried = value.getDefaultValues();
         if (carried != null && !carried.isEmpty()) {
             return value;
         }
-        Map<CharSequence, Object> registered = AnnotationMetadataSupport.getDefaultValues(value.getAnnotationName());
+        String name = value.getAnnotationName();
+        Map<CharSequence, Object> registered = source != null ? source.getDefaultValues(name) : Map.of();
+        if (registered.isEmpty() && types != null) {
+            registered = types.defaultsOf(name);
+        }
         if (registered.isEmpty()) {
             return value;
         }
         // built anew rather than mutated: the builder of a mutated value adds the defaults to the value's own map,
         // which is immutable where the value carries none
-        return new AnnotationValue<>(value.getAnnotationName(), value.getValues(), registered);
+        return new AnnotationValue<>(name, value.getValues(), registered);
     }
 
     private static CdiQualifier scoped(Class<? extends Annotation> type, Class<? extends Annotation> scope,
@@ -643,8 +652,8 @@ public final class CdiQualifier {
      * part in resolution.
      */
     private static CdiQualifier of(AnnotationValue<?> given, @Nullable AnnotationMetadata source,
-                                   @Nullable Annotation instance) {
-        AnnotationValue<?> written = withDefaults(given);
+                                   @Nullable Annotation instance, @Nullable CompiledAnnotationTypes types) {
+        AnnotationValue<?> written = withDefaults(given, source, types);
         String name = written.getAnnotationName();
         Map<CharSequence, Object> values = written.getValues();
         if (values.isEmpty()) {

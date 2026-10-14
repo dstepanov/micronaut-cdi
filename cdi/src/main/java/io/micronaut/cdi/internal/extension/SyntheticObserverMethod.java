@@ -96,7 +96,8 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
             Class<?>[] types = record.classValues("qualifierTypes");
             List<CdiQualifier> all = new java.util.ArrayList<>(recorded.size());
             for (int i = 0; i < recorded.size(); i++) {
-                all.add(CdiQualifier.ofRecorded(recorded.get(i),
+                all.add(CdiQualifier.ofRecorded(io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes.of(beanContext),
+                    recorded.get(i),
                     i < types.length ? annotationType(types[i]) : null));
             }
             resolved = List.copyOf(all);

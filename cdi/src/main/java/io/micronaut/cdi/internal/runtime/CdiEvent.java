@@ -137,14 +137,14 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     @Override
     public io.micronaut.cdi.MicronautEvent<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                      io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiEvent<>(registry, type, and(CdiInstance.valuesOf(qualifier, qualifiers)), injectedAt, exact);
+        return new CdiEvent<>(registry, type, and(CdiInstance.valuesOf(registry.types(), qualifier, qualifiers)), injectedAt, exact);
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiEvent<>(registry, Argument.of(subtype), and(CdiInstance.valuesOf(qualifier, qualifiers)),
+        return new CdiEvent<>(registry, Argument.of(subtype), and(CdiInstance.valuesOf(registry.types(), qualifier, qualifiers)),
             injectedAt);
     }
 
@@ -152,7 +152,7 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
         requireNoTypeVariable(subtype);
-        return new CdiEvent<>(registry, subtype, and(CdiInstance.valuesOf(null, qualifiers)), injectedAt, true);
+        return new CdiEvent<>(registry, subtype, and(CdiInstance.valuesOf(registry.types(), null, qualifiers)), injectedAt, true);
     }
 
     private static void requireNoTypeVariable(Argument<?> selected) {
