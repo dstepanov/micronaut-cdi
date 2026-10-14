@@ -762,13 +762,16 @@ own rather than the first one alone.
   definitions would replace; it asks the customizer the context was configured with, since Micronaut does not
   publish the one it serves the context with.
 - **The context is injected under types no bean definition stands for.** `DefaultBeanContext` hands itself out as
-  `BeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`, `ExecutionHandleLocator`,
-  `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and `PropertyPlaceholderResolver`, listed in
-  its private `thisInterfaces`, and resolves `io.micronaut.inject.InjectionPoint` from the resolution under way;
-  none of them has a definition the container could see. The processor, which marks every other injection point
-  of a bean of the specification to be resolved by the definitions the container selects, therefore keeps a copy of
-  that list and leaves those to Micronaut (`ContainerInjectionVisitor.CONTEXT_TYPES`); a public list, or a
-  definition for each, would remove the copy.
+  `BeanContext`, `WatchableBeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`,
+  `ExecutionHandleLocator`, `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and
+  `PropertyPlaceholderResolver`, listed in its private `thisInterfaces`, makes a `BeanDependencyResolver` and an
+  `InterceptionTarget` for the bean being resolved, and resolves `io.micronaut.inject.InjectionPoint` and a
+  `Qualifier` from the resolution under way; none of them has a definition the container could see. A marked point
+  no bean of the specification answers is left to Micronaut as it is injected, which resolves these as well, so the
+  copy of the list the processor keeps (`ContainerInjectionVisitor.CONTEXT_TYPES`) is not what injects them: it
+  keeps them out of the deployment validation, which asks Micronaut for a definition of what such a point resolves
+  to, and keeps a bean of the specification that implements one of them from taking the context's place. A public
+  list, or a definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

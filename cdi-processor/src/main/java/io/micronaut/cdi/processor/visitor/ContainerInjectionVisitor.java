@@ -62,20 +62,28 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
     );
 
     /**
-     * The interfaces Micronaut hands the context itself out as, without a bean definition for any of them: the
-     * private {@code thisInterfaces} of {@code DefaultBeanContext}, which Micronaut does not publish.
+     * The types Micronaut resolves without a bean definition: the interfaces it hands the context itself out as -
+     * the private {@code thisInterfaces} of {@code DefaultBeanContext}, which Micronaut does not publish - and the
+     * dependency resolver and the interception target it makes for the bean being resolved. A marked point no bean
+     * of the specification answers is left to Micronaut as it is injected, which would resolve these too; but the
+     * deployment validation asks Micronaut for a definition of what such a point resolves to, which none of these
+     * has, and a bean of the specification that implements one of them would take the context's place.
      */
     private static final Set<String> CONTEXT_TYPES = Set.of(
         "io.micronaut.context.BeanDefinitionRegistry",
         "io.micronaut.context.BeanContext",
+        "io.micronaut.context.WatchableBeanContext",
         "io.micronaut.core.annotation.AnnotationMetadataResolver",
         "io.micronaut.context.BeanLocator",
         "io.micronaut.context.ExecutionHandleLocator",
         "io.micronaut.context.ApplicationContext",
         "io.micronaut.core.value.PropertyResolver",
         "io.micronaut.core.value.ValueResolver",
-        "io.micronaut.context.env.PropertyPlaceholderResolver"
+        "io.micronaut.context.env.PropertyPlaceholderResolver",
+        "io.micronaut.context.BeanDependencyResolver",
+        "io.micronaut.context.InterceptionTarget"
     );
+
     @Override
     public io.micronaut.inject.visitor.TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
