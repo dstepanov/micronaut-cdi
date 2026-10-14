@@ -104,7 +104,9 @@ its beans as it starts, from what they were compiled with, through the SE bootst
 alike, and with portable extensions before `AfterDeploymentValidation`. An injection point of a bean's fields,
 constructor, initializer methods, and observer and disposer methods that resolves to no bean, to more than one
 that cannot be told apart, or to a bean in a normal scope that cannot be proxied; two beans of one name; and a
-name that is the path prefix of another - each is a `DeploymentException`, every one found being reported.
+name that is the path prefix of another - each is a `DeploymentException`, every one found being reported. A bean another
+one replaces with Micronaut's `Replaces` is no bean of the deployment: its dependencies and its name are not
+validated, and neither a lookup by its types nor one by its name finds it.
 
 Only the beans of the specification are validated; a bean of Micronaut's own that shares the context is resolved
 by Micronaut's rules. A point is validated by the selection it is resolved by as the bean is created

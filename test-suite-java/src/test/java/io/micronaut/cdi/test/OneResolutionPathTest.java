@@ -71,6 +71,24 @@ class OneResolutionPathTest {
     public static class ReplacingService implements Service {
     }
 
+    // -- a named bean Micronaut's Replaces replaced, with a dependency nothing satisfies
+
+    public interface Unsatisfiable {
+    }
+
+    @Dependent
+    @jakarta.inject.Named("namedService")
+    public static class OriginalNamedService {
+        @Inject
+        Unsatisfiable missing;
+    }
+
+    @Dependent
+    @jakarta.inject.Named("namedService")
+    @Replaces(OriginalNamedService.class)
+    public static class ReplacingNamedService {
+    }
+
     // -- a definition Micronaut only indexes under a type it is not of
 
     public interface IndexMarker {
@@ -327,6 +345,20 @@ class OneResolutionPathTest {
             assertInstanceOf(ShortLever.class, injected.lever);
             assertInstanceOf(ShortLever.class, container.createInstance().select(Lever.class).get());
             assertEquals(ShortLever.class, container.resolve(container.getBeans(Lever.class)).getBeanClass());
+        }
+    }
+
+    @Test
+    void aReplacedBeanIsNoBeanOfItsName() {
+        // the replaced bean shares a name with the one replacing it and has a dependency nothing satisfies, neither of
+        // which is a problem of the deployment, since it is not a bean of it
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Set<Class<?>> named = new java.util.HashSet<>();
+            for (jakarta.enterprise.inject.spi.Bean<?> bean : container.getBeans("namedService")) {
+                named.add(bean.getBeanClass());
+            }
+            assertEquals(Set.of(ReplacingNamedService.class), named);
         }
     }
 

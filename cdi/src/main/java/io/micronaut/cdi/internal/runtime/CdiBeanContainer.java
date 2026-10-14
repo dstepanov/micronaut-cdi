@@ -99,6 +99,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * the beans are read again.
      */
     private volatile Map<Class<?>, List<CdiBean<?>>> byClass = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * The beans less the replaced ones ({@link #beans}), with the beans they were narrowed from.
+     */
+    private volatile @Nullable Deployed deployed;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -589,12 +593,26 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * The beans the container knows.
+     * The beans of the deployment: the beans the container knows, less the ones another among them replaces with
+     * Micronaut's {@code Replaces}, which are no beans of it - not of their name, and not with dependencies to
+     * validate - as they are none of their types.
      *
      * @return The beans
      */
     List<CdiBean<?>> beans() {
-        return candidates();
+        List<CdiBean<?>> all = candidates();
+        Deployed known = deployed;
+        if (known == null || known.from() != all) {
+            known = new Deployed(all, List.copyOf(withoutReplaced(new LinkedHashSet<>(all))));
+            deployed = known;
+        }
+        return known.beans();
+    }
+
+    /**
+     * The beans of the deployment, and the beans the container knows they were narrowed from.
+     */
+    private record Deployed(List<CdiBean<?>> from, List<CdiBean<?>> beans) {
     }
 
     /**
@@ -680,7 +698,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     @Override
     public Set<Bean<?>> getBeans(String name) {
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (CdiBean<?> bean : candidates()) {
+        for (CdiBean<?> bean : beans()) {
             if (name.equals(bean.getName())) {
                 beans.add(bean);
             }
