@@ -182,7 +182,8 @@ by their type arguments with nothing read from a class:
 - a bean's type closure is recorded on the bean, and on the producer that produces it;
 - an observed type is recorded on the observer, with its wildcards and type variables;
 - the closure of each compiled class that has a parameterized type above it, or declares type variables, is
-  recorded on a class generated in its package. An event of `OrderCreated implements DomainEvent<Order>` is
+  recorded on a definition the compilation registers without a source, in the package of the class where the
+  record refers to a class only that package can name. An event of `OrderCreated implements DomainEvent<Order>` is
   observed by an observer of `DomainEvent<Order>` and not by one of `DomainEvent<Invoice>`, however it was
   fired, and firing an object of a generic class through an event that leaves its type variables unresolved is
   the `IllegalArgumentException` of the specification.

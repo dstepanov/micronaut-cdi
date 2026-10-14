@@ -218,7 +218,12 @@ reflection module.
 an event is matched by are properties of generic signatures, which the container does not read. The processor
 records each: the closure of a bean on the bean or on its producer; the observed type on the observer; and the
 closure and the type variables of every class a compilation compiles that has a parameterized type above it or
-declares type variables, on a class it generates in the package of the classes. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+declares type variables, on definitions of a record it registers with Micronaut's `VisitorContext.registerBean`
+as each round finishes, with no source generated. The record of a package is registered from a class of the
+package, which places its definition there and lets it refer to a class only that package can name; a class of a
+library the discovery phase scanned is recorded from a class of the compilation where everything its record names
+is public, and is not recorded otherwise, since nothing the compilation writes is placed in a package of the
+library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
@@ -355,8 +360,7 @@ reads anew. The rules a class is held to as it compiles are not checked of it: t
 judge, and KSP reads less of a class from its bytes than of a source (a public field of a Java class reads as final). javac hands the bean machinery only the classes that
 carry an annotation it reacts to, and decides which of those are beans after the visitors have run, so a bean
 registered for a scanned class could stand beside the definition javac writes for it: under javac the processor
-generates a `@ClassImport` source naming the scanned classes, the one source left of the extensions besides the
-type index, and javac makes each of them a bean once. `MetaAnnotations.addContext` registers a bean of the
+generates a `@ClassImport` source naming the scanned classes, the one source left of the extensions, and javac makes each of them a bean once. `MetaAnnotations.addContext` registers a bean of the
 context class, recording the scope it serves, and the runtime obtains the context from that definition. The
 annotations registered as qualifiers are recorded on a bean registered for the purpose, of the type
 `CdiDeploymentRecord`, which is never created. An annotation registered as a qualifier, an interceptor binding or
@@ -759,13 +763,12 @@ own rather than the first one alone.
   extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
   that metadata reads. Under KSP they belong to the processor and last across its rounds. The Groovy compiler keeps
   them in one static map for every compilation in the process (`GroovyVisitorContext`), so under Groovy two
-  compilations running at once in one process share them as they would a static field; the records of the type
-  index are kept under the generated class's name, which differs between compilations, the visitor of the
-  compilation is not. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
+  compilations running at once in one process share them as they would a static field; the visitor of the
+  compilation is kept there. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
   the phases of the build compatible extensions run as a round finishes and their beans are registered without a
   source, so the visitor and the records of the components no longer wait on the attributes for a generated marker
-  or factory to come past; what is left there is the visitor the compilation started, read by the registration
-  visitor, and the records of the type index, which is still generated as source.
+  or factory to come past, and neither does the type index, registered the same way; what is left there is the
+  visitor the compilation started, read by the registration visitor.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
