@@ -272,6 +272,14 @@ a parameter of a bean's own is supplied by Micronaut from it, and a parameter of
 by the container from it, through a resolution of its own that starts at the bean declaring the method - what the
 provider creates there is not a dependent of the invocation (`CdiResolution.fromApplicationProvider`).
 
+A point is marked by the class that declares it. Micronaut keeps the annotations of a field and of a parameter by
+the class declaring the member, so a mark written while a subclass is compiled would be read by every class that
+inherits the member - a bean of Micronaut's own that extends the same class would have its `List<Foo>` resolved as
+a bean of that type rather than collected. A superclass that is itself a bean of the specification marks its own
+points; the points a bean of the specification inherits from a class that is not one - an abstract class, a class
+with no scope, a superclass compiled without this processor - are resolved by Micronaut's rules, with the type rules
+of section 2.4.2.1 (`CdiResolutionCustomizer.isCandidateBean`), as a bean of Micronaut's own resolves them.
+
 There is one selection of candidates, `CdiBeanContainer.beansOf`, which the provider, an `Instance`, the bean
 manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make:
 the beans one of whose recorded bean types matches by the rules of section 2.4.2.1 - a type Micronaut only indexes
@@ -752,6 +760,13 @@ own rather than the first one alone.
   it describes or validates the injection points; a parameter of any other constructor or method so named is the
   author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
   remove the copy.
+- **A mark on an inherited member is a mark for every class that inherits it.** Micronaut builds the annotation
+  metadata of a field and of a parameter once, by the class declaring the member
+  (`AbstractElementAnnotationMetadataFactory`), so an annotation a visitor adds while one subclass is visited is
+  read through every other. The processor therefore marks the points a class declares alone
+  (`ContainerInjectionVisitor`), and the points a bean of the specification inherits from a class that is not one
+  keep Micronaut's rules; metadata of a member kept by the class it is read through would let the container
+  resolve them as well.
 - **A null dependent cannot be destroyed.** `DefaultBeanContext.triggerPreDestroyListeners` hands every
   `BeanPreDestroyEventListener` the bean being destroyed and requires each to return a bean, so the registration of a
   dependent a producer satisfied with null fails as it is destroyed with its owner, and the listener the container
