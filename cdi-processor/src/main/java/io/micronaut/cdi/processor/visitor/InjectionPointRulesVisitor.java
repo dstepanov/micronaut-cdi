@@ -326,7 +326,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return;
         }
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
-            if (field.isStatic() || field.isFinal() || isInjectedField(field)
+            if (field.isStatic() || field.isFinal() || SpecificationBeans.isInjected(field)
                 || SpecificationBeans.isProducer(field)
                 || field.hasStereotype("io.micronaut.context.annotation.Value")
                 || field.hasStereotype("io.micronaut.context.annotation.Property")) {
@@ -337,10 +337,6 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 field.removeAnnotation(qualifier);
             }
         }
-    }
-
-    private static boolean isInjectedField(FieldElement field) {
-        return field.hasDeclaredAnnotation(AnnotationUtil.INJECT) || field.hasDeclaredAnnotation("jakarta.inject.Inject");
     }
 
     /**
@@ -365,9 +361,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         return member.getDeclaringType().getName().equals(element.getName());
     }
 
-    private boolean isInjected(io.micronaut.inject.ast.Element element) {
-        return element.hasDeclaredAnnotation(AnnotationUtil.INJECT)
-            || element.hasDeclaredAnnotation("jakarta.inject.Inject");
+    private static boolean isInjected(io.micronaut.inject.ast.Element element) {
+        return SpecificationBeans.isInjected(element);
     }
 
     /**

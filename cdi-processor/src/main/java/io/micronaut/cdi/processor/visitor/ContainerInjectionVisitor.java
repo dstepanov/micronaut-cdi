@@ -18,7 +18,6 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.core.annotation.AnnotationClassValue;
-import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -172,7 +171,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
     }
 
     private static boolean isInjected(Element element) {
-        return element.hasAnnotation(AnnotationUtil.INJECT) || element.hasAnnotation("jakarta.inject.Inject");
+        return SpecificationBeans.isInjected(element);
     }
 
     private static void mark(Element element, ClassElement type) {

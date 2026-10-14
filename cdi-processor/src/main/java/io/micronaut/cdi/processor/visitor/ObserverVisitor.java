@@ -183,7 +183,7 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
             context.fail("A method cannot be both a producer method and an observer method", method);
             return false;
         }
-        if (method.hasDeclaredAnnotation("jakarta.inject.Inject")) {
+        if (SpecificationBeans.isInjected(method)) {
             context.fail("A method cannot be both an initializer method and an observer method", method);
             return false;
         }

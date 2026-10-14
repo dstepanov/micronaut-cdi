@@ -104,6 +104,18 @@ public final class SpecificationBeans {
     }
 
     /**
+     * Whether the element - a field, a constructor, a method, a property - is annotated {@code Inject}, written on
+     * it or through an annotation that stands for it, as Micronaut tells the members it injects: inherited from an
+     * overridden method it is not.
+     *
+     * @param element The element
+     * @return Whether it is injected
+     */
+    public static boolean isInjected(io.micronaut.inject.ast.Element element) {
+        return element.hasDeclaredStereotype(io.micronaut.core.annotation.AnnotationUtil.INJECT);
+    }
+
+    /**
      * Whether the class is vetoed (section 2.12.2), by itself or by the package it is in: no bean, and declaring
      * no producer or observer.
      *
@@ -235,7 +247,7 @@ public final class SpecificationBeans {
         }
         for (ConstructorElement constructor : constructors) {
             if (constructor.getParameters().length == 0
-                || constructor.hasDeclaredAnnotation("jakarta.inject.Inject")) {
+                || isInjected(constructor)) {
                 return true;
             }
         }

@@ -130,6 +130,9 @@ classpath narrows each container to its own: the SE bootstrap's synthetic archiv
 a field of a bean that is neither injected nor a producer field qualifies nothing in the specification, whether
 it was written there or a build compatible extension added it, so it is taken off as the bean compiles and the
 field is left as it was initialized.
+Under KSP the exception is a Kotlin property that declares a qualifier and no `Inject`: Micronaut's Kotlin metadata
+reads the qualifier of a property as `Inject` on the property and its setter, so the processor cannot tell it from
+one written with `Inject`, and the property is injected.
 
 ### A private producer or observer is read reflectively
 

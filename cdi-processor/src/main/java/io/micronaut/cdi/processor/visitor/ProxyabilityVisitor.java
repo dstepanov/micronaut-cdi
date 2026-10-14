@@ -137,8 +137,7 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             if (constructor.getParameters().length == 0) {
                 noArguments = constructor;
             }
-            if (constructor.hasDeclaredAnnotation("jakarta.inject.Inject")
-                || constructor.hasDeclaredAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
+            if (SpecificationBeans.isInjected(constructor)) {
                 injectConstructor = true;
             }
         }
