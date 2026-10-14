@@ -106,6 +106,13 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
                     field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class);
                 }
             });
+        for (io.micronaut.inject.ast.PropertyElement property : bean.getSyntheticBeanProperties()) {
+            // a property a compiler describes as one - a Kotlin property under KSP - is injected through its setter,
+            // with the metadata of the property
+            if (isInjected(property)) {
+                property.getWriteMethod().ifPresent(ContainerInjectionVisitor::markParameters);
+            }
+        }
         BeanInjectionUtils.findBeanConstructor(bean).ifPresent(ContainerInjectionVisitor::markParameters);
         for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             if (isInjected(method)) {
