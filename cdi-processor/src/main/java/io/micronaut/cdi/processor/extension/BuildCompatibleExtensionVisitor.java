@@ -412,7 +412,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (visited.add(name) && owned) {
             contributors.add(element);
         }
-        typeIndex.collect(element, owned);
+        typeIndex.collect(element, owned, context);
         applyWhatWasDiscovered(element);
         enhance(element, context);
     }

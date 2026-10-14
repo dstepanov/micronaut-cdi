@@ -58,34 +58,167 @@ import java.util.Map;
 final class TypeIndexCollector {
 
     private static final int ENTRIES_PER_RECORD = 25;
+    private static final int MAX_REFERENCE_DEPTH = 8;
 
     private final Map<String, List<Recorded>> byPackage = new LinkedHashMap<>();
+
     private final java.util.Set<String> seen = new java.util.HashSet<>();
+    private final java.util.Set<String> ownedSeen = new java.util.HashSet<>();
+    /**
+     * The classes a recorded type named, which are recorded for that.
+     */
+    private final java.util.Set<String> referenced = new java.util.HashSet<>();
+    private final java.util.Set<String> referencedVariables = new java.util.HashSet<>();
+    /**
+     * The classes a record was made of, and whether as a class the compilation compiles: one recorded as a class a
+     * type named is recorded again as its own once the compilation is seen to compile it.
+     */
+    private final Map<String, Boolean> recordedNames = new java.util.HashMap<>();
 
     /**
-     * Gathers what the class says of the types above it, where it says anything a raw class does not.
+     * Gathers what the class says of the types above it, where it says anything a raw class does not, and of the
+     * classes it names as the type arguments and the bounds of its supertypes, of the types it observes and of the
+     * types it produces.
      *
      * @param element The class
      * @param owned   Whether the compilation compiles it, rather than reading it from a library
      */
-    void collect(ClassElement element, boolean owned) {
+    void collect(ClassElement element, boolean owned, VisitorContext context) {
         if (!seen.add(element.getName())) {
             return;
         }
-        collectOne(element, owned);
+        if (owned) {
+            ownedSeen.add(element.getName());
+        }
+        // an interface, an abstract class and an annotation literal are never the class of an event object: they are
+        // recorded where a recorded type names them, which is where their closure is compared
+        if ((!element.isInterface() && !element.isAbstract() && !isAnnotationLiteral(element))
+            || referenced.contains(element.getName())) {
+            record(element, owned);
+        }
+        referencesOf(element, context);
         // a class nested in another is a class of the compilation like any other, and is not visited on its own
         // unless something is written on it
         for (ClassElement nested : element.getEnclosedElements(
             io.micronaut.inject.ast.ElementQuery.of(ClassElement.class).onlyDeclared())) {
             if (nested.getName().startsWith(element.getName() + "$")) {
-                collect(nested, owned);
+                collect(nested, owned, context);
             }
         }
     }
 
-    private void collectOne(ClassElement element, boolean owned) {
+    private static boolean isAnnotationLiteral(ClassElement element) {
+        return element.isAssignable("jakarta.enterprise.util.AnnotationLiteral");
+    }
+
+    /**
+     * Gathers the classes the class names as the type arguments and the bounds of its supertypes, of the types its
+     * observers observe and of the types its producers produce: a bound is compared with the closure of the class an
+     * argument names - an {@code Integer} is within {@code ? extends Comparable<Integer>} because it is a
+     * {@code Comparable<Integer>} - and the class of a library or of the JDK is recorded for that alone.
+     */
+    private void referencesOf(ClassElement element, VisitorContext context) {
+        List<ClassElement> named = new ArrayList<>();
+        try {
+            BeanTypesVisitor.walkClosure(element, (type, bindings, erased) -> {
+                if (!erased) {
+                    named.addAll(type.getTypeArguments().values());
+                }
+            });
+            for (io.micronaut.inject.ast.MethodElement method
+                : element.getEnclosedElements(io.micronaut.inject.ast.ElementQuery.ALL_METHODS.onlyDeclared())) {
+                if (method.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.PRODUCES)) {
+                    named.addAll(argumentsOf(method.getGenericReturnType()));
+                }
+                for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
+                    if (parameter.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.OBSERVES)
+                        || parameter.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.OBSERVES_ASYNC)) {
+                        named.addAll(argumentsOf(parameter.getGenericType()));
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            // a hierarchy the compiler cannot resolve is a broken compilation of its own
+            return;
+        }
+        for (ClassElement type : named) {
+            reference(type, 0, context);
+        }
+    }
+
+    /**
+     * The type arguments of a type, of the component of an array: what a bound is compared against.
+     */
+    private static java.util.Collection<ClassElement> argumentsOf(ClassElement type) {
+        ClassElement component = type;
+        while (component.isArray()) {
+            component = component.fromArray();
+        }
+        return component.getTypeArguments().values();
+    }
+
+    /**
+     * Records a class a recorded type names, with the classes its own arguments and bounds name in turn.
+     */
+    private void reference(ClassElement type, int depth, VisitorContext context) {
+        if (depth > MAX_REFERENCE_DEPTH) {
+            return;
+        }
+        ClassElement unwrapped = type;
+        while (unwrapped.isArray()) {
+            unwrapped = unwrapped.fromArray();
+        }
+        ClassElement component = unwrapped;
+        if (component instanceof io.micronaut.inject.ast.WildcardElement wildcard) {
+            wildcard.getUpperBounds().forEach(bound -> reference(bound, depth + 1, context));
+            wildcard.getLowerBounds().forEach(bound -> reference(bound, depth + 1, context));
+            return;
+        }
+        if (component instanceof GenericPlaceholderElement placeholder) {
+            if (referencedVariables.add(placeholder.getVariableName() + "@" + depth)) {
+                placeholder.getBounds().forEach(bound -> reference(bound, depth + 1, context));
+            }
+            return;
+        }
+        if (component.isPrimitive() || "java.lang.Object".equals(component.getName())) {
+            return;
+        }
+        component.getTypeArguments().values().forEach(argument -> reference(argument, depth + 1, context));
+        if (!referenced.add(component.getName())) {
+            return;
+        }
+        // the class as it declares itself, over its own variables, rather than as the type that names it gives them
+        ClassElement declaration = context.getClassElement(component.getName()).orElse(null);
+        if (declaration == null) {
+            return;
+        }
+        // a class the compilation compiles is recorded as its own when it is visited, which may come later
+        record(declaration, seen.contains(component.getName()) && ownedSeen.contains(component.getName()));
+        try {
+            BeanTypesVisitor.walkClosure(declaration, (supertype, bindings, erased) -> {
+                if (!erased && supertype != declaration) {
+                    supertype.getTypeArguments().values().forEach(argument -> reference(argument, depth + 1, context));
+                }
+            });
+        } catch (RuntimeException e) {
+            // a hierarchy the compiler cannot resolve is left to the compiler to report
+        }
+    }
+
+    private void record(ClassElement element, boolean owned) {
         if (element instanceof AnnotationElement || element.isPrivate() || element.getPackageName().isEmpty()) {
             return;
+        }
+        Boolean recordedAsOwned = recordedNames.get(element.getName());
+        if (recordedAsOwned != null && (recordedAsOwned || !owned)) {
+            return;
+        }
+        recordedNames.put(element.getName(), owned);
+        if (recordedAsOwned != null) {
+            List<Recorded> ofThePackage = byPackage.get(element.getPackageName());
+            if (ofThePackage != null) {
+                ofThePackage.removeIf(recorded -> recorded.element().getName().equals(element.getName()));
+            }
         }
         List<String> variables = new ArrayList<>();
         element.getTypeArguments().forEach((name, argument) -> {
@@ -115,7 +248,7 @@ final class TypeIndexCollector {
             .member("supertypes", supertypes.toArray(new AnnotationValue<?>[0]))
             .build();
         byPackage.computeIfAbsent(element.getPackageName(), name -> new ArrayList<>())
-            .add(new Recorded(element, entry, owned, owned || refersToPublicClassesAlone(element)));
+            .add(new Recorded(element, entry, owned, refersToPublicClassesAlone(element)));
     }
 
     /**
@@ -145,71 +278,73 @@ final class TypeIndexCollector {
     /**
      * Registers the records of what was gathered since the last time, and forgets it.
      *
-     * <p>The record of a package the compilation compiles classes of is registered from the first of them, which
-     * places its definition in the package, with the classes it records as the other origins. What was gathered
-     * of a package of a library that refers to public classes alone is registered from a class of the compilation.
-     * Micronaut numbers the definitions registered from one class in the order of a round, so a class another round
-     * registered a record from is not the origin of one again.</p>
+     * <p>What refers to public classes alone is recorded once for the compilation, registered from a class of it.
+     * The record of a class that refers to a class only its package can name is registered from a class of that
+     * package, which places its definition there, with the other classes of the package that need it. What the
+     * compilation does not compile and refers to such a class is not recorded. Micronaut numbers the definitions
+     * registered from one class in the order of a round, so a class another round registered a record from is not
+     * the origin of one again.</p>
      *
      * @param context The visitor context
      * @param origins The records registered so far, by the name of the class each was registered from, where the
      *                ones of this round are added
-     * @param classes The classes the compilation compiles, which a record of a library is registered from
+     * @param classes The classes the compilation compiles
      */
     void write(VisitorContext context, RecordOrigins origins, List<ClassElement> classes) {
-        ClassElement first = origins.available(classes);
-        if (byPackage.isEmpty() || first == null) {
-            byPackage.clear();
+        if (byPackage.isEmpty()) {
             return;
         }
         ClassElement record = context.getClassElement(CdiDeploymentRecord.class.getName()).orElse(null);
         if (record == null) {
             context.fail("The generic hierarchies of the compiled classes cannot be recorded: "
                 + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
-                + "compilation", first);
+                + "compilation", classes.isEmpty() ? null : classes.get(0));
             byPackage.clear();
             return;
         }
-        List<Recorded> foreign = new ArrayList<>();
+        List<Recorded> shared = new ArrayList<>();
+        List<ClassElement> sharedOwned = new ArrayList<>();
         byPackage.forEach((packageName, gathered) -> {
-            // a bean of the specification is described by its definition, which records its type closure
-            // (CdiBeanTypes), the class over its own variables first: the index holds what no definition describes.
-            // Whether a class is one is known once every visitor of the round has seen it
-            List<Recorded> entries = new ArrayList<>(gathered.size());
+            List<Recorded> ofThePackage = new ArrayList<>();
+            List<ClassElement> owned = new ArrayList<>();
             for (Recorded recorded : gathered) {
-                if (!isDescribedByItsDefinition(recorded.element())) {
-                    entries.add(recorded);
+                // a bean of the specification is described by its definition, which records its type closure
+                // (CdiBeanTypes), the class over its own variables first: the index holds what no definition
+                // describes. Whether a class is one is known once every visitor of the round has seen it
+                if (isDescribedByItsDefinition(recorded.element())) {
+                    continue;
                 }
-            }
-            if (entries.isEmpty()) {
-                return;
-            }
-            List<ClassElement> owned = new ArrayList<>(entries.size());
-            for (Recorded recorded : entries) {
-                if (recorded.owned()) {
+                if (recorded.placeable()) {
+                    shared.add(recorded);
+                    if (recorded.owned()) {
+                        sharedOwned.add(recorded.element());
+                    }
+                } else if (recorded.owned()) {
+                    ofThePackage.add(recorded);
                     owned.add(recorded.element());
                 }
             }
-            ClassElement origin = origins.available(owned);
-            if (origin == null) {
-                if (!owned.isEmpty()) {
-                    // every class of the package was the origin of a record of an earlier round, which cannot be
-                    // the case of a class first gathered in this one
-                    throw new IllegalStateException("No class of " + packageName + " can be the origin of its record");
-                }
-                for (Recorded recorded : entries) {
-                    if (recorded.placeable()) {
-                        foreign.add(recorded);
-                    }
-                }
+            if (ofThePackage.isEmpty()) {
                 return;
             }
+            ClassElement origin = origins.available(owned);
+            if (origin == null) {
+                // every class of it was the origin of a record of an earlier round, which a class first gathered in
+                // this one cannot have been
+                throw new IllegalStateException("No class of " + packageName + " can be the origin of its record");
+            }
             origins.use(origin);
-            register(context, record, origin, entries);
+            register(context, record, origin, ofThePackage);
         });
-        if (!foreign.isEmpty()) {
-            origins.use(first);
-            register(context, record, first, foreign);
+        if (!shared.isEmpty()) {
+            ClassElement origin = origins.available(sharedOwned);
+            if (origin == null) {
+                origin = origins.available(classes);
+            }
+            if (origin != null) {
+                origins.use(origin);
+                register(context, record, origin, shared);
+            }
         }
         byPackage.clear();
     }

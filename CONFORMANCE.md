@@ -219,12 +219,15 @@ an event is matched by are properties of generic signatures, which the container
 records each: the closure of a bean on the bean or on its producer - the class over its own type variables first,
 which is what the container also reads the generic hierarchy of the class of a bean from; the observed type on the
 observer; and the closure and the type variables of every other class a compilation compiles that has a
-parameterized type above it or declares type variables - the classes no definition describes - on definitions of a record it registers with Micronaut's `VisitorContext.registerBean`
-as each round finishes, with no source generated. The record of a package is registered from a class of the
-package, which places its definition there and lets it refer to a class only that package can name; a class of a
-library the discovery phase scanned is recorded from a class of the compilation where everything its record names
-is public, and is not recorded otherwise, since nothing the compilation writes is placed in a package of the
-library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+parameterized type above it or declares type variables - the classes no definition describes, less an interface,
+an abstract class and an annotation literal, which are never the class of an event object - with the closure of
+every class a recorded type names as a type argument or a bound, a class of the JDK or of a library among them,
+which is what a bound is compared against, on definitions of a record it registers with Micronaut's
+`VisitorContext.registerBean` as each round finishes, with no source generated. What refers to public classes
+alone is recorded once for the compilation, registered from a class of it; the record of a class that refers to a
+class only its own package can name is registered from a class of that package, which places its definition
+there; a class of a library that refers to such a class is not recorded, since nothing the compilation writes is
+placed in a package of the library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
