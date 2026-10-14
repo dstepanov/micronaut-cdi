@@ -30,7 +30,7 @@ import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
+import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
 import jakarta.enterprise.inject.build.compatible.spi.ScopeInfo;
@@ -61,7 +61,7 @@ import java.util.List;
  * @since 1.0
  */
 @Internal
-public final class ElementBeanInfo implements InterceptorInfo {
+public sealed class ElementBeanInfo implements BeanInfo permits ElementInterceptorInfo {
 
     /**
      * The qualifiers a bean is not qualified by as far as the specification goes: what Micronaut writes on a
@@ -73,9 +73,9 @@ public final class ElementBeanInfo implements InterceptorInfo {
         io.micronaut.cdi.internal.metadata.CdiAny.class.getName()
     );
 
-    private final ClassElement declaringClass;
+    final ClassElement declaringClass;
+    final VisitorContext context;
     private final @Nullable MemberElement producer;
-    private final VisitorContext context;
 
     ElementBeanInfo(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
         this.declaringClass = declaringClass;
@@ -83,49 +83,24 @@ public final class ElementBeanInfo implements InterceptorInfo {
         this.context = context;
     }
 
+    /**
+     * The description of the bean the class or a producer it declares is: an interceptor where the class is one,
+     * which an extension may view as one ({@code asInterceptor()}), and any other bean otherwise, which it may not.
+     *
+     * @param declaringClass The class
+     * @param producer       The producer, or {@code null} for the class itself
+     * @param context        The visitor context
+     * @return The description
+     */
+    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
+        return producer == null && declaringClass.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
+            ? new ElementInterceptorInfo(declaringClass, context)
+            : new ElementBeanInfo(declaringClass, producer, context);
+    }
+
     @Override
     public boolean isInterceptor() {
-        return producer == null && declaringClass.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
-    }
-
-    @Override
-    public java.util.Collection<jakarta.enterprise.lang.model.AnnotationInfo> interceptorBindings() {
-        java.util.List<jakarta.enterprise.lang.model.AnnotationInfo> bindings = new java.util.ArrayList<>();
-        io.micronaut.core.annotation.AnnotationMetadata metadata = declaringClass.getAnnotationMetadata();
-        for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
-            // every occurrence of a repeatable binding, as the container reports them
-            List<io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation>> occurrences =
-                metadata.getAnnotationValuesByName(name);
-            if (!occurrences.isEmpty()) {
-                for (io.micronaut.core.annotation.AnnotationValue<?> occurrence : occurrences) {
-                    bindings.add(new ElementAnnotationInfo(occurrence, context));
-                }
-                continue;
-            }
-            // a binding only a stereotype carries
-            io.micronaut.core.annotation.AnnotationValue<?> value = metadata.getAnnotation(name);
-            if (value != null) {
-                bindings.add(new ElementAnnotationInfo(value, context));
-            }
-        }
-        return bindings;
-    }
-
-    @Override
-    public boolean intercepts(jakarta.enterprise.inject.spi.InterceptionType interceptionType) {
-        String marker = switch (interceptionType) {
-            case AROUND_INVOKE -> "jakarta.interceptor.AroundInvoke";
-            case AROUND_CONSTRUCT -> "jakarta.interceptor.AroundConstruct";
-            case POST_CONSTRUCT -> "jakarta.annotation.PostConstruct";
-            case PRE_DESTROY -> "jakarta.annotation.PreDestroy";
-            default -> null;
-        };
-        if (marker == null) {
-            return false;
-        }
-        return declaringClass.getEnclosedElements(
-                io.micronaut.inject.ast.ElementQuery.ALL_METHODS).stream()
-            .anyMatch(method -> method.hasDeclaredAnnotation(marker));
+        return false;
     }
 
     /**

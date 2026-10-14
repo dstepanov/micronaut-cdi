@@ -128,6 +128,9 @@ class RegistrationDescriptionTest {
         assertEquals(List.of("Child 7"), extension.observers);
         assertTrue(extension.qualifiers.get("Parent#parentWord").contains("Default"));
         assertFalse(extension.qualifiers.get("Parent#parentWord").contains("Primary"));
+        // a bean that is not an interceptor cannot be viewed as one
+        assertEquals(Boolean.FALSE, extension.interceptorViews.get("Child"));
+        assertEquals(Boolean.FALSE, extension.interceptorViews.get("Parent#parentWord"));
     }
 
     @Test
@@ -369,6 +372,7 @@ class RegistrationDescriptionTest {
         final Map<String, String> types = new LinkedHashMap<>();
         final Map<String, String> qualifiers = new LinkedHashMap<>();
         final List<String> observers = new ArrayList<>();
+        final Map<String, Boolean> interceptorViews = new LinkedHashMap<>();
 
         @Registration(types = Object.class)
         public void bean(BeanInfo bean) {
@@ -392,6 +396,14 @@ class RegistrationDescriptionTest {
                 qualifierNames.add(qualifier.name());
             }
             qualifiers.put(key, qualifierNames.toString());
+            boolean viewed;
+            try {
+                bean.asInterceptor();
+                viewed = true;
+            } catch (IllegalStateException e) {
+                viewed = false;
+            }
+            interceptorViews.put(key, viewed || bean instanceof jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo);
         }
 
         @Registration(types = Object.class)
