@@ -87,7 +87,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                 // reported; the scopes — and what the mappers read them into — are taken off, so that the
                 // proxy writer does not report the same mistake in different words
                 for (String name : member.getDeclaredAnnotationNames()) {
-                    if (Cdi.isScope(name)) {
+                    if (isWrittenScope(name, context)) {
                         member.removeAnnotation(name);
                     }
                 }
@@ -113,7 +113,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                                  VisitorContext context) {
         List<String> declared = new ArrayList<>();
         for (String name : element.getDeclaredAnnotationNames()) {
-            if (Cdi.isScope(name)) {
+            if (isWrittenScope(name, context)) {
                 declared.add(name);
             }
         }
@@ -123,6 +123,15 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             return false;
         }
         return true;
+    }
+
+    /**
+     * Whether the annotation is a scope an application writes: one of the specification's, or one meta-annotated
+     * {@code Scope} or {@code NormalScope} that the application declares. What Micronaut's mappers add beside a scope
+     * - its own scopes, the markers of this module - is not one the bean declared.
+     */
+    private static boolean isWrittenScope(String name, VisitorContext context) {
+        return Cdi.isScope(name) || (!name.startsWith("io.micronaut.") && isDeclaredScopeAnnotation(name, context));
     }
 
     /**

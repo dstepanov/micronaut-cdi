@@ -56,6 +56,24 @@ class InjectionDefinitionErrorTest {
     }
 
     @Test
+    void aBeanDeclaringAScopeOfTheSpecificationAndOneOfItsOwnIsRefused() {
+        // section 2.3.2: a bean declares at most one scope, whichever declares them
+        assertRefused("""
+            package broken;
+
+            @jakarta.enterprise.context.ApplicationScoped
+            @Subject.Custom
+            public class Subject {
+                @jakarta.enterprise.context.NormalScope
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE)
+                public @interface Custom {
+                }
+            }
+            """, "declares more than one scope");
+    }
+
+    @Test
     void aStaticInitializerMethodIsRefused() {
         // CDI 4.1 section 3.7.1: an initializer method is a non-abstract, non-static method; Micronaut would skip it
         assertRefused("""
