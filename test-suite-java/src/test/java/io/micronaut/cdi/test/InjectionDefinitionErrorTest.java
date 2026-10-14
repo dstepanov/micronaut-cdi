@@ -35,6 +35,46 @@ class InjectionDefinitionErrorTest {
     }
 
     @Test
+    void aFinalInjectedFieldABeanInheritsIsRefused() {
+        // Micronaut injects the points a bean inherits from a class that is no bean, so they are held to the rules
+        assertRefused("""
+            package broken;
+
+            import jakarta.enterprise.context.Dependent;
+            import jakarta.enterprise.inject.spi.BeanManager;
+            import jakarta.inject.Inject;
+
+            @Dependent
+            public class Subject extends Base {
+            }
+
+            abstract class Base {
+                @Inject
+                final BeanManager manager = null;
+            }
+            """, "An injected field may not be final");
+    }
+
+    @Test
+    void aStaticInitializerMethodIsRefused() {
+        // CDI 4.1 section 3.7.1: an initializer method is a non-abstract, non-static method; Micronaut would skip it
+        assertRefused("""
+            package broken;
+
+            import jakarta.enterprise.context.Dependent;
+            import jakarta.enterprise.inject.spi.BeanManager;
+            import jakarta.inject.Inject;
+
+            @Dependent
+            public class Subject {
+                @Inject
+                static void initialize(BeanManager manager) {
+                }
+            }
+            """, "An initializer method may not be static");
+    }
+
+    @Test
     void anInjectionPointOfATypeVariableOfAGenericBeanIsRefused() {
         // CDI 4.1 section 5.2.3: an injection point whose type is a type variable is a definition error. A
         // generic bean class has nothing to resolve its variable: only an abstract class's is resolved, by the
