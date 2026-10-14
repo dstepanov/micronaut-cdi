@@ -17,7 +17,6 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.inject.ast.Element;
@@ -45,16 +44,14 @@ final class Alternatives {
     }
 
     /**
-     * Selects an alternative by its priority.
+     * Selects an alternative by its priority: a point of Micronaut's own prefers it through the container's
+     * resolution customizer, which narrows candidates to the alternatives of the highest priority as a lookup of the
+     * specification does.
      *
      * @param element  The bean class or the producer
      * @param priority The priority that selects it
-     * @param primary  Whether it is made primary as well, so that an injection point Micronaut resolves prefers it
      */
-    static void select(Element element, int priority, boolean primary) {
-        if (primary) {
-            element.annotate(Primary.class);
-        }
+    static void select(Element element, int priority) {
         int order = -priority;
         element.removeAnnotation(ORDER);
         element.annotate(ORDER, builder -> builder.value(order));

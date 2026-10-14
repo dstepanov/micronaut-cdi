@@ -64,7 +64,7 @@ if `IN_PROGRESS`.
 
 ## Differences
 
-### The default qualifier is also written as Micronaut's primary bean
+### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
 Section 3.8 has an injection point that declares no qualifier looking for the default qualifier, and section
 2.3 has a bean that declares no qualifier having it. Both halves are applied by the container. The processor
@@ -75,11 +75,14 @@ the ones that have every qualifier the point requires, `@Default` where it names
 manager and the deployment validation select their beans the same way, so none of them can resolve a type
 differently from an injection point.
 
-The bean given the default qualifier is also declared Micronaut's `@Primary`. That serves the beans of
-Micronaut's own: their injection points are not resolved by the container, and one that names no qualifier
-where a bean of the specification and a qualified one are candidates resolves to the primary one, the bean with
-the default qualifier, rather than being ambiguous. A program's own `BeanContext.getBean` resolves the same way.
-The difference left is there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
+The injection points of a bean of Micronaut's own are not resolved by the container, and neither is a program's
+own `BeanContext.getBean`. Where several beans are candidates for one and no primary bean decides, Micronaut asks
+the container's resolution customizer (`CdiResolutionCustomizer.resolveNonUniqueBean`), which picks among the
+beans of the specification as the specification does: one that names no qualifier resolves to the bean with the
+default qualifier rather than being ambiguous, and a selected alternative of the highest priority outranks the
+rest. No bean is declared Micronaut's `@Primary` for it, so an application's own primary bean decides as it does
+without this module, a class written with the singleton pseudo-scope alone among them. The difference left is
+there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
 qualifier where every candidate is qualified, the specification has no bean to resolve, and Micronaut resolves
 one.
 

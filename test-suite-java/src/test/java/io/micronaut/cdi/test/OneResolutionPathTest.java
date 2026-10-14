@@ -207,6 +207,26 @@ class OneResolutionPathTest {
     public static class PlainMeter extends Meter {
     }
 
+    // -- a primary bean of Micronaut's own beside a bean of the specification, at a point of Micronaut's own
+
+    public interface Motor {
+    }
+
+    @Bean
+    @Primary
+    public static class MainMotor implements Motor {
+    }
+
+    @Dependent
+    public static class CdiMotor implements Motor {
+    }
+
+    @Bean
+    public static class Garage {
+        @Inject
+        Motor motor;
+    }
+
     @Bean
     public static class Drawer {
         @Inject
@@ -359,6 +379,15 @@ class OneResolutionPathTest {
                 named.add(bean.getBeanClass());
             }
             assertEquals(Set.of(ReplacingNamedService.class), named);
+        }
+    }
+
+    @Test
+    void aPrimaryBeanOfMicronautsOwnIsWhatAPointOfMicronautsOwnResolvesBesideABeanOfTheSpecification() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            // the application's own primary bean decides, as it would without this module
+            assertInstanceOf(MainMotor.class, context.getBean(Garage.class).motor);
+            assertInstanceOf(MainMotor.class, context.getBean(Motor.class));
         }
     }
 

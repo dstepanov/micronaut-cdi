@@ -139,10 +139,9 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
             return;
         }
         // a selected alternative is preferred over what it is an alternative to, and preferred over another
-        // alternative of a lower priority: it is primary, so an unqualified injection point Micronaut resolves
-        // prefers it, and it is ordered by its priority, so that of several candidates the one the highest
-        // priority wins — which is the resolution rule of section 2.4.2
-        Alternatives.select(element, priority, true);
+        // alternative of a lower priority: it is ordered by its priority, so that of several candidates the one of
+        // the highest priority wins — which is the resolution rule of section 2.4.2
+        Alternatives.select(element, priority);
     }
 
     /**
