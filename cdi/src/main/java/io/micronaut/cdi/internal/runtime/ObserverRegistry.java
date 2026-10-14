@@ -57,6 +57,8 @@ public final class ObserverRegistry {
     private static final int MAX_CACHED_RESOLUTIONS = 1024;
 
     private final BeanContext beanContext;
+    private volatile @Nullable CompiledAnnotationTypes types;
+    private volatile @Nullable RecordedTypeIndex typeIndex;
     private final List<ObserverMethod<?>> synthetic = new ArrayList<>();
     private volatile @Nullable List<ObserverMethod<?>> observers;
     /**
@@ -77,7 +79,13 @@ public final class ObserverRegistry {
      * @return The record
      */
     CompiledAnnotationTypes types() {
-        return CompiledAnnotationTypes.of(beanContext);
+        CompiledAnnotationTypes compiled = types;
+        if (compiled == null) {
+            // a bean of the context, the same for as long as it runs: looked up once
+            compiled = CompiledAnnotationTypes.of(beanContext);
+            types = compiled;
+        }
+        return compiled;
     }
 
     /**
@@ -105,7 +113,12 @@ public final class ObserverRegistry {
      * @return The index of this container
      */
     RecordedTypeIndex typeIndex() {
-        return RecordedTypeIndex.of(beanContext);
+        RecordedTypeIndex index = typeIndex;
+        if (index == null) {
+            index = RecordedTypeIndex.of(beanContext);
+            typeIndex = index;
+        }
+        return index;
     }
 
     /**

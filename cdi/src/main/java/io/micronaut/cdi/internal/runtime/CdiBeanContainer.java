@@ -85,6 +85,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");
     private static final Set<String> PSEUDO_SCOPES = Set.of(
         "jakarta.enterprise.context.Dependent", "jakarta.inject.Singleton");
+    /**
+     * The number of injection points what they resolve to is kept for.
+     */
+    private static final int MAX_SELECTIONS = 16_384;
 
     private final BeanContext beanContext;
     private final RequestScope requestScope;
@@ -103,6 +107,14 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * The beans less the replaced ones ({@link #beans}), with the beans they were narrowed from.
      */
     private volatile @Nullable Deployed deployed;
+    /**
+     * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
+     * compiled definition are constants, and two points of one type and name may declare different qualifiers.
+     * Emptied whenever the beans are read again.
+     */
+    private volatile Map<PointKey, Selection> selections = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile @Nullable RecordedTypeIndex typeIndex;
+    private volatile @Nullable CompiledAnnotationTypes types;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -274,6 +286,39 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * @throws AmbiguousResolutionException Where more than one bean remains
      */
     Selection selectionFor(Argument<?> point) {
+        Map<PointKey, Selection> cache = selections;
+        PointKey key = new PointKey(point);
+        Selection known = cache.get(key);
+        if (known != null) {
+            return known;
+        }
+        Selection selection = select(point);
+        if (cache.size() < MAX_SELECTIONS) {
+            // a point made anew for each injection - one Micronaut wraps to evaluate an expression - is not kept
+            // beyond a bound
+            cache.putIfAbsent(key, selection);
+        }
+        return selection;
+    }
+
+    /**
+     * An injection point as the key of what it resolves to: the point itself, compared by identity.
+     *
+     * @param point The injection point
+     */
+    private record PointKey(Argument<?> point) {
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof PointKey key && key.point == point;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(point);
+        }
+    }
+
+    private Selection select(Argument<?> point) {
         boolean specification = false;
         boolean micronaut = false;
         for (CdiBean<?> bean : candidatesOfType(point)) {
@@ -536,14 +581,25 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * The generic hierarchies of the classes the application was compiled with, which types are compared by.
      */
     private RecordedTypeIndex typeIndex() {
-        return RecordedTypeIndex.of(beanContext);
+        RecordedTypeIndex index = typeIndex;
+        if (index == null) {
+            // a bean of the context, the same for as long as it runs: looked up once rather than for each type compared
+            index = RecordedTypeIndex.of(beanContext);
+            typeIndex = index;
+        }
+        return index;
     }
 
     /**
      * What the application was compiled with of each qualifier and interceptor binding type.
      */
     private CompiledAnnotationTypes types() {
-        return CompiledAnnotationTypes.of(beanContext);
+        CompiledAnnotationTypes compiled = types;
+        if (compiled == null) {
+            compiled = CompiledAnnotationTypes.of(beanContext);
+            types = compiled;
+        }
+        return compiled;
     }
 
     /**
@@ -577,6 +633,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             beans = null;
             canonical = null;
             byClass = new java.util.concurrent.ConcurrentHashMap<>();
+            selections = new java.util.concurrent.ConcurrentHashMap<>();
         }
     }
 

@@ -288,7 +288,8 @@ the ones a bean has; less a bean another one replaces with Micronaut's `Replaces
 class and the target a proxy stands in front of. Resolving one bean narrows them as section 2.4.2 has it: a
 bean of the specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank
 everything else (`CdiResolution.narrowToOne`). The beans are read from the definitions once per container, their
-types and qualifiers once per bean, and the beans of a class once per class asked for. Core's active resolution
+types and qualifiers once per bean, and the beans of a class once per class asked for. What an injection point resolves
+to is worked out once per point and container. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
