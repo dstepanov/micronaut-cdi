@@ -662,10 +662,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             return beans.iterator().next();
         }
         // more than one bean qualifies: a bean of the specification outranks a bean of Micronaut's own of the
-        // same type, as at an injection point, the alternatives outrank everything else, and among them the one
-        // of the highest priority wins. Anything short of a single winner is the ambiguity of section 2.4.2
+        // same type, as at an injection point - among beans of Micronaut's own alone its primary one does - the
+        // alternatives outrank everything else, and among them the one of the highest priority wins. Anything short
+        // of a single winner is the ambiguity of section 2.4.2
         List<Bean<? extends X>> narrowed = CdiResolution.narrow(
-            CdiResolution.ofTheSpecificationWhereAny(beans, CdiBeanContainer::isOfTheSpecification),
+            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf),
             Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);
@@ -673,9 +674,10 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         throw new AmbiguousResolutionException("More than one bean qualifies: " + beans);
     }
 
-    private static boolean isOfTheSpecification(Bean<?> bean) {
-        // a bean the container did not describe - one a program handed in - is taken as one of the specification
-        return !(bean instanceof CdiBean<?> cdiBean) || CdiResolution.isBeanOfTheSpecification(cdiBean.definition());
+    private static @Nullable BeanDefinition<?> definitionOf(Bean<?> bean) {
+        // a bean the container did not describe - one a program handed in - has none, and is taken as one of the
+        // specification
+        return bean instanceof CdiBean<?> cdiBean ? cdiBean.definition() : null;
     }
 
     private static int priorityOf(Bean<?> bean) {
