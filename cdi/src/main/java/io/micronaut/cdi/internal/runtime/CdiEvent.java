@@ -77,7 +77,8 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public void fire(T event) {
-        registry.notifyObservers(event, eventTypeOf(event), qualifiers, false, injectedAt);
+        CdiTypes.EventType eventType = eventTypeOf(event);
+        registry.notifyObservers(event, eventType.type(), eventType.above(), qualifiers, false, injectedAt);
     }
 
     /**
@@ -86,8 +87,9 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
      * runtime class declares type variables the event's own type does not resolve has no event types, and firing
      * it is an error: resolving is what checks it.
      */
-    private Argument<?> eventTypeOf(Object event) {
-        return exact ? type : CdiTypes.eventTypeOf(registry.typeIndex(), event.getClass(), type);
+    private CdiTypes.EventType eventTypeOf(Object event) {
+        return exact ? new CdiTypes.EventType(type, null)
+            : CdiTypes.eventTypeAndClosureOf(registry.typeIndex(), event.getClass(), type);
     }
 
     @Override
@@ -97,13 +99,13 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
 
     @Override
     public <U extends T> CompletionStage<U> fireAsync(U event, NotificationOptions options) {
-        Argument<?> eventType = eventTypeOf(event);
+        CdiTypes.EventType eventType = eventTypeOf(event);
         Executor executor = options.getExecutor();
         return CompletableFuture.supplyAsync(() -> {
             // every asynchronous observer is notified, and what any of them threw arrives together, as the
             // suppressed exceptions of one completion failure (section 2.8.5)
             java.util.List<Throwable> thrown = registry.notifyObserversCollecting(
-                event, eventType, qualifiers, injectedAt);
+                event, eventType.type(), eventType.above(), qualifiers, injectedAt);
             if (!thrown.isEmpty()) {
                 java.util.concurrent.CompletionException failure =
                     new java.util.concurrent.CompletionException(thrown.get(0));

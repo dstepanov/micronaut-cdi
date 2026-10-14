@@ -200,9 +200,10 @@ events.select(Argument.of(Box.class, String.class)).fire(new Box<>("text"));
 
 What is left to `micronaut-cdi-reflection` is a class no compilation with this processor has seen: a bean
 compiled without it is resolvable by its class and the raw types Micronaut exposes it as, and an event of such a
-class is matched as the type it was fired as where that names its class, and as its raw class otherwise - so an
-observer of a parameterized supertype of it is only notified where the module is there to read the class, or
-where the event is fired through `select(Argument)`.
+class is matched as the type it was fired as where that names its class, and as its raw class otherwise, above
+which are the type it was fired as and what is above that - so an observer of a parameterized supertype between
+its class and the type it was fired as is only notified where the module is there to read the class, or where the
+event is fired through `select(Argument)`.
 
 That module also brings `io.micronaut:micronaut-reflection`, which answers the accessors of an interceptor's
 `InvocationContext` that return an object of the Java reflection API: `getMethod()`, `getConstructor()`,

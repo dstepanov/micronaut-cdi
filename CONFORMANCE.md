@@ -240,8 +240,11 @@ unresolved is refused from it.
 A class no compilation with this processor has seen has no record. With `micronaut-cdi-reflection` its generic
 signature is read, as the specification assumes. Without it a bean of such a class has its class and the raw
 types Micronaut exposes it as for bean types, and an event of such a class is of the type it was fired as where
-that names its class and of its raw class otherwise: it is observed by an observer of a raw type or of the type
-it was fired as, and not by an observer of another parameterized supertype. `MicronautEvent.select(Argument)`
+that names its class and of its raw class otherwise. Its closure is the closure of its raw class and that of the
+type it was fired as, which `Event<T>.fire(T)` makes a supertype of the class: an `ArrayList` fired through an
+`Event<List<Duck>>` is observed as a `List<Duck>`. It is observed by an observer of a raw type, of the type it was
+fired as or of a type above that, and not by an observer of a parameterized supertype between its class and the
+type it was fired as. `MicronautEvent.select(Argument)`
 states the event type in full and needs no record and no module.
 
 ### The API written in terms of reflection is an optional module

@@ -182,8 +182,24 @@ public final class ObserverRegistry {
      */
     public List<ObserverMethod<?>> resolve(Argument<?> eventType, java.util.Collection<CdiQualifier> eventQualifiers,
                                            boolean async) {
+        return resolve(eventType, null, eventQualifiers, async);
+    }
+
+    /**
+     * The observer methods an event of the given type and qualifiers notifies, where the closure of its type also
+     * holds the given type above it: the type it was fired as, where nothing was recorded of its class
+     * ({@link CdiTypes#eventTypeAndClosureOf}).
+     *
+     * @param eventType       The type the event was fired as
+     * @param above           The type the closure of the event type also holds, or {@code null}
+     * @param eventQualifiers The qualifiers it was fired with
+     * @param async           Whether the event was fired asynchronously
+     * @return The observer methods, in the order they are notified
+     */
+    public List<ObserverMethod<?>> resolve(Argument<?> eventType, @Nullable Argument<?> above,
+                                           java.util.Collection<CdiQualifier> eventQualifiers, boolean async) {
         List<ObserverMethod<?>> all = observers();
-        Resolution key = new Resolution(eventType, List.copyOf(eventQualifiers), async);
+        Resolution key = new Resolution(eventType, above, List.copyOf(eventQualifiers), async);
         Map<Resolution, List<ObserverMethod<?>>> cache = resolved;
         List<ObserverMethod<?>> cached = cache.get(key);
         if (cached != null) {
@@ -191,6 +207,12 @@ public final class ObserverRegistry {
         }
         // the closure of the event's type is the same for every observer it is matched against
         List<Argument<?>> closure = CdiAssignability.eventTypeClosureOf(typeIndex(), eventType);
+        if (above != null) {
+            closure = new ArrayList<>(closure);
+            for (Argument<?> type : CdiAssignability.eventTypeClosureOf(typeIndex(), above)) {
+                CdiTypes.addDistinct(closure, type);
+            }
+        }
         List<ObserverMethod<?>> notified = new ArrayList<>();
         for (ObserverMethod<?> observer : all) {
             if (observer.isAsync() != async) {
@@ -224,8 +246,9 @@ public final class ObserverRegistry {
                                 Argument<?> declaredType,
                                 Set<Annotation> eventQualifiers,
                                 boolean async) {
-        notifyObservers(event, CdiTypes.eventTypeOf(typeIndex(), event.getClass(), declaredType),
-            CdiQualifier.ofInstances(types(), eventQualifiers), async, null);
+        CdiTypes.EventType eventType = CdiTypes.eventTypeAndClosureOf(typeIndex(), event.getClass(), declaredType);
+        notifyObservers(event, eventType.type(), eventType.above(), CdiQualifier.ofInstances(types(), eventQualifiers),
+            async, null);
     }
 
     /**
@@ -237,16 +260,37 @@ public final class ObserverRegistry {
      * @param async           Whether the event was fired asynchronously
      * @param firedFrom       The injection point the event was fired through, when it was fired through one
      */
-    @SuppressWarnings("unchecked")
     public void notifyObservers(Object event,
                                 Argument<?> eventType,
                                 List<CdiQualifier> eventQualifiers,
                                 boolean async,
                                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
                                     InjectionPoint firedFrom) {
+        notifyObservers(event, eventType, null, eventQualifiers, async, firedFrom);
+    }
+
+    /**
+     * Notifies the observer methods an event notifies, in order, telling each where the event came from, where the
+     * closure of its type also holds the given type above it.
+     *
+     * @param event           The event
+     * @param eventType       The type of the event
+     * @param above           The type the closure of the event type also holds, or {@code null}
+     * @param eventQualifiers The qualifiers the event was fired with
+     * @param async           Whether the event was fired asynchronously
+     * @param firedFrom       The injection point the event was fired through, when it was fired through one
+     */
+    @SuppressWarnings("unchecked")
+    public void notifyObservers(Object event,
+                                Argument<?> eventType,
+                                @Nullable Argument<?> above,
+                                List<CdiQualifier> eventQualifiers,
+                                boolean async,
+                                jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
+                                    InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
             new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
-        for (ObserverMethod<?> observer : resolve(eventType, eventQualifiers, async)) {
+        for (ObserverMethod<?> observer : resolve(eventType, above, eventQualifiers, async)) {
             ((CdiNotifiable) observer).notifyWith(event, metadata);
         }
     }
@@ -257,20 +301,21 @@ public final class ObserverRegistry {
      *
      * @param event           The event
      * @param eventType       The type of the event
+     * @param above           The type the closure of the event type also holds, or {@code null}
      * @param eventQualifiers The qualifiers the event was fired with
      * @param firedFrom       The injection point the event was fired through, when it was fired through one
      * @return What the observers threw, in notification order
      */
     @SuppressWarnings("unchecked")
     public java.util.List<Throwable> notifyObserversCollecting(
-        Object event, Argument<?> eventType, List<CdiQualifier> eventQualifiers,
+        Object event, Argument<?> eventType, @Nullable Argument<?> above, List<CdiQualifier> eventQualifiers,
         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint firedFrom) {
         jakarta.enterprise.inject.spi.EventMetadata metadata =
             new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         java.util.List<Throwable> thrown = new java.util.ArrayList<>(0);
         io.micronaut.cdi.internal.context.RequestScope requestScope =
             beanContext.findBean(io.micronaut.cdi.internal.context.RequestScope.class).orElse(null);
-        for (ObserverMethod<?> observer : resolve(eventType, eventQualifiers, true)) {
+        for (ObserverMethod<?> observer : resolve(eventType, above, eventQualifiers, true)) {
             try {
                 if (requestScope == null) {
                     ((CdiNotifiable) observer).notifyWith(event, metadata);
@@ -297,20 +342,24 @@ public final class ObserverRegistry {
      * qualifiers it was fired with, and whether it was fired asynchronously.
      *
      * @param eventType  The type of the event
+     * @param above      The type its closure also holds, or {@code null}
      * @param qualifiers The qualifiers of the event
      * @param async      Whether it was fired asynchronously
      */
-    private record Resolution(Argument<?> eventType, List<CdiQualifier> qualifiers, boolean async) {
+    private record Resolution(Argument<?> eventType, @Nullable Argument<?> above, List<CdiQualifier> qualifiers,
+                              boolean async) {
 
         @Override
         public boolean equals(Object o) {
             return o instanceof Resolution other && async == other.async
-                && eventType.equalsStructure(other.eventType) && qualifiers.equals(other.qualifiers);
+                && eventType.equalsStructure(other.eventType) && qualifiers.equals(other.qualifiers)
+                && (above == null ? other.above == null : other.above != null && above.equalsStructure(other.above));
         }
 
         @Override
         public int hashCode() {
-            return (eventType.structureHashCode() * 31 + qualifiers.hashCode()) * 31 + Boolean.hashCode(async);
+            return ((eventType.structureHashCode() * 31 + qualifiers.hashCode()) * 31 + Boolean.hashCode(async)) * 31
+                + (above == null ? 0 : above.structureHashCode());
         }
     }
 }
