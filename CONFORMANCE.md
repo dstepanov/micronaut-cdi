@@ -347,9 +347,12 @@ What the discovery phase says is recorded by name and applied as the named class
 A class `ScannedClasses.add` names is a bean even where it says nothing at all about itself. KSP and the Groovy
 compiler hand every class they compile to the bean machinery, which makes a scanned one a bean with the scope it
 was given as it was visited; a scanned class of a library, which no compilation of the application compiles, is
-put through the discovery, enhancement and registration phases and registered as a bean with Micronaut's
-`VisitorContext.registerBean` - a definition of its constructor and injection points, without what the other
-visitors of the processor record of a class they compile. javac hands the bean machinery only the classes that
+put through the discovery, enhancement and registration phases and the visitors of the processor that read a class
+- its scope, its injection points marked for the container, its bean types, its name, its default qualifier, its
+producers and observers - and registered as a bean with Micronaut's `VisitorContext.registerBean`, its producers
+with `produceBeans`: what the visitors recorded of a producer is given to the bean it produces, which the builder
+reads anew. The rules a class is held to as it compiles are not checked of it: they are its own compilation's to
+judge, and KSP reads less of a class from its bytes than of a source (a public field of a Java class reads as final). javac hands the bean machinery only the classes that
 carry an annotation it reacts to, and decides which of those are beans after the visitors have run, so a bean
 registered for a scanned class could stand beside the definition javac writes for it: under javac the processor
 generates a `@ClassImport` source naming the scanned classes, the one source left of the extensions besides the

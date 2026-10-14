@@ -18,9 +18,24 @@ package io.micronaut.cdi.test.extension;
 /**
  * A class of a library that says nothing about itself, compiled without the processor, which the extension adds
  * to the scanned classes of every application compiled with it: no compilation of the application compiles it,
- * and it is a bean all the same.
+ * and it is a bean all the same, with its injection point and its producer.
  */
 public class ScannedLibraryBean {
+
+    /**
+     * An injection point, which the container resolves as it resolves one of a class the application compiles.
+     */
+    @jakarta.inject.Inject
+    public jakarta.enterprise.inject.spi.BeanManager manager;
+
+    /**
+     * @return What the bean produces
+     */
+    @jakarta.enterprise.inject.Produces
+    @jakarta.enterprise.context.Dependent
+    public ScannedLibraryProduct product() {
+        return new ScannedLibraryProduct("produced by the library");
+    }
 
     /**
      * @return What the bean says

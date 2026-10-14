@@ -8,6 +8,7 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ScanAndChangeTest {
 
@@ -43,6 +44,13 @@ class ScanAndChangeTest {
             BeanManager manager = context.getBean(BeanManager.class);
             assertEquals(1, manager.getBeans(io.micronaut.cdi.test.extension.ScannedLibraryBean.class).size(),
                 "the class of a library the extension scanned is a bean");
+            // its injection point is resolved by the container, and its producer is a bean, as of a class compiled here
+            io.micronaut.inject.FieldInjectionPoint<?, ?> field = context.getBeanDefinition(
+                io.micronaut.cdi.test.extension.ScannedLibraryBean.class).getInjectedFields().stream()
+                .filter(point -> point.getName().equals("manager")).findFirst().orElseThrow();
+            assertTrue(field.getAnnotationMetadata().hasStereotype(io.micronaut.context.annotation.ResolveWith.class));
+            assertEquals("produced by the library", manager.createInstance()
+                .select(io.micronaut.cdi.test.extension.ScannedLibraryProduct.class).get().name());
         }
     }
 

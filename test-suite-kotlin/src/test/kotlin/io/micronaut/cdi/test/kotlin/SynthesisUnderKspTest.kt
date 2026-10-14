@@ -61,6 +61,12 @@ class SynthesisUnderKspTest {
             val container = context.getBean(CdiBeanContainer::class.java)
             assertEquals(1, container.getBeans(ScannedLibraryBean::class.java).size)
             assertEquals("library", container.createInstance().select(ScannedLibraryBean::class.java).get().name())
+            // its injection point is resolved by the container, and its producer is a bean, as of a class compiled here
+            val field = context.getBeanDefinition(ScannedLibraryBean::class.java).injectedFields.single { it.name == "manager" }
+            assertTrue(field.annotationMetadata.hasStereotype(io.micronaut.context.annotation.ResolveWith::class.java))
+            assertTrue(container.createInstance().select(ScannedLibraryBean::class.java).get().manager != null)
+            assertEquals("produced by the library", container.createInstance()
+                .select(io.micronaut.cdi.test.extension.ScannedLibraryProduct::class.java).get().name())
         }
     }
 

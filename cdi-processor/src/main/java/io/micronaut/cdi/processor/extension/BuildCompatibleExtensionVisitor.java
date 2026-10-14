@@ -514,9 +514,81 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             }
             applyWhatWasDiscovered(element);
             enhance(element, context);
+            // what each class of the compilation is put through as it is visited: its scope, its injection points
+            // marked for the container, its bean types, its producers and observers, its default qualifier
+            for (io.micronaut.inject.visitor.TypeElementVisitor<?, ?> visitor : classVisitors()) {
+                if (!(visitor instanceof io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor)) {
+                    // the rules a class is held to as it compiles are its own compilation's to judge; and a compiler
+                    // that reads a class of a library from its bytes reads less of it than of a source
+                    visitor.visitClass(element, context);
+                }
+            }
             register(element, messages, context);
-            context.registerBean(element, contributors()).inject();
+            java.util.Map<String, io.micronaut.inject.ast.MemberElement> producers = new java.util.HashMap<>();
+            for (io.micronaut.inject.ast.MemberElement producer
+                : io.micronaut.cdi.processor.visitor.SpecificationBeans.producersOf(element)) {
+                producers.put(producerKey(producer), producer);
+            }
+            context.registerBean(element, contributors()).inject()
+                .produceBeans(ElementQuery.ALL_METHODS.onlyDeclared()
+                    .annotated(metadata -> metadata.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.PRODUCES)),
+                    produced -> describedAsVisited(produced, producers))
+                .produceBeans(ElementQuery.ALL_FIELDS.onlyDeclared()
+                    .annotated(metadata -> metadata.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.PRODUCES)),
+                    produced -> describedAsVisited(produced, producers));
         }
+    }
+
+    /**
+     * Gives the bean a producer of a scanned class of a library produces what the visitors recorded of the producer:
+     * the builder reads the member anew, without what they wrote on it.
+     */
+    private static void describedAsVisited(io.micronaut.inject.ast.beans.BeanElementBuilder produced,
+                                           java.util.Map<String, io.micronaut.inject.ast.MemberElement> producers) {
+        if (!(produced.getProducingElement() instanceof io.micronaut.inject.ast.MemberElement member)) {
+            return;
+        }
+        io.micronaut.inject.ast.MemberElement visited = producers.get(producerKey(member));
+        if (visited == null) {
+            return;
+        }
+        io.micronaut.core.annotation.AnnotationMetadata recorded = visited.getAnnotationMetadata().getDeclaredMetadata();
+        for (String name : recorded.getAnnotationNames()) {
+            io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation> value = recorded.getAnnotation(name);
+            if (value != null && !produced.hasDeclaredAnnotation(name)) {
+                produced.annotate(value);
+            }
+        }
+    }
+
+    private static String producerKey(io.micronaut.inject.ast.MemberElement member) {
+        if (member instanceof io.micronaut.inject.ast.MethodElement method) {
+            StringBuilder key = new StringBuilder(method.getName()).append('(');
+            for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
+                key.append(parameter.getType().getName()).append(',');
+            }
+            return key.append(')').toString();
+        }
+        return member.getName();
+    }
+
+    /**
+     * The visitors of this module that read one class at a time, in the order Micronaut runs them in.
+     */
+    private static List<io.micronaut.inject.visitor.TypeElementVisitor<?, ?>> classVisitors() {
+        List<io.micronaut.inject.visitor.TypeElementVisitor<?, ?>> visitors = new ArrayList<>(List.of(
+            new io.micronaut.cdi.processor.visitor.CdiScopeVisitor(),
+            new io.micronaut.cdi.processor.visitor.ContainerInjectionVisitor(),
+            new io.micronaut.cdi.processor.visitor.BeanNameVisitor(),
+            new io.micronaut.cdi.processor.visitor.BeanDiscoveryVisitor(),
+            new io.micronaut.cdi.processor.visitor.ProducerVisitor(),
+            new io.micronaut.cdi.processor.visitor.ObserverVisitor(),
+            new io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor(),
+            new io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor(),
+            new io.micronaut.cdi.processor.visitor.ProxyabilityVisitor(),
+            new io.micronaut.cdi.processor.visitor.BeanTypesVisitor()));
+        io.micronaut.core.order.OrderUtil.reverseSort(visitors);
+        return visitors;
     }
 
     /**
