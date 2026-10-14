@@ -524,20 +524,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         return described;
     }
-
-    /**
-     * The Micronaut qualifier a lookup of this container resolves by: a definition qualifies when the bean it
-     * describes has every one of the given qualifiers - with what a portable extension added to the bean class
-     * - by the rules {@link #beansOf} applies.
-     *
-     * @param required The qualifiers a lookup requires, none at all requiring the default qualifier
-     * @param <T>      The bean type
-     * @return The qualifier
-     */
-    public <T> CdiBeanQualifier<T> qualifierFor(List<CdiQualifier> required) {
-        return new CdiBeanQualifier<>(required, definition -> canonicalBean(definition).qualifiers());
-    }
-
     /**
      * Forgets the beans already read, so that beans registered while the container starts — the synthetic
      * ones of section 2.10.5 — are seen by the next lookup.

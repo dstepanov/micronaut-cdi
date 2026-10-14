@@ -33,9 +33,12 @@ import io.micronaut.inject.QualifiedBeanType;
  * type arguments, the specification's own matching gets the last word. Arrays also use that matching,
  * including raw array lookups, since their element types must be identical.</p>
  *
- * <p>Only the beans of the specification are resolved by its rules: a lookup whose candidates include a bean of
- * Micronaut's own is left to the customizer this one was installed over, Micronaut's default where there was
- * none, so that adding this module to an application leaves the resolution of its own beans as it was.</p>
+ * <p>The injection points of a bean of the specification are not resolved here: the container selects their beans
+ * itself ({@link CdiBeanInjectionProvider}). What this adjusts are the lookups Micronaut makes on its own - the
+ * points of a bean of Micronaut's own, a program's {@code BeanContext.getBean} - and the creation of what the
+ * container selected. Only the beans of the specification are matched by its rules: a candidate of Micronaut's
+ * own is left to the customizer this one was installed over, Micronaut's default where there was none, so that
+ * adding this module to an application leaves the resolution of its own beans as it was.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -154,25 +157,6 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                 }
             }
         }
-        if (qualifier != null || !candidates.stream().allMatch(CdiResolution::isBeanOfTheSpecification)) {
-            // a lookup that names its qualifiers, or one among beans of Micronaut's own - which are not given
-            // the default qualifier - is resolved by Micronaut's rules: a primary bean, a secondary one, order
-            return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
-        }
-        // an injection point with no qualifier asks for the default one (section 2.1.3): among candidates of
-        // which some are qualified — a synthetic bean an extension qualified, say — the default-qualified one
-        // is the one asked for
-        java.util.List<io.micronaut.inject.BeanDefinition<T>> defaulted = new java.util.ArrayList<>(2);
-        for (io.micronaut.inject.BeanDefinition<T> candidate : candidates) {
-            if (candidate.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Default")
-                || CdiQualifier.declared(candidate.getAnnotationMetadata()).stream()
-                    .allMatch(declared -> declared.isDefault() || declared.isAny())) {
-                defaulted.add(candidate);
-            }
-        }
-        if (defaulted.size() == 1) {
-            return java.util.Optional.of(defaulted.get(0));
-        }
         return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
     }
 
@@ -230,7 +214,10 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // a parameterized lookup of a bean of the specification is answered by the rules of section
             // 2.4.2.1 in both directions: they admit what Micronaut's own matching would not — a variable
             // matched by its bounds — and refuse what it would let through — a variable whose other bounds
-            // the required argument does not satisfy
+            // the required argument does not satisfy. The injection points of a bean of the specification are
+            // selected by the container; what reaches this is a lookup Micronaut makes itself - a point of a bean
+            // of Micronaut's own, BeanContext.getBean - and the creation of a definition the container selected,
+            // which Micronaut checks against the type it is asked as
             RecordedTypeIndex index = typeIndex();
             try {
                 java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(definition, key -> {

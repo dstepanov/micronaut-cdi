@@ -31,8 +31,8 @@ import java.util.Set;
  * The qualifiers of a bean in the two other shapes they are asked for in: the Micronaut qualifier a definition the
  * container registers is declared with, and the annotation instances the specification's interfaces report.
  *
- * <p>A lookup does not resolve by what is made here: it resolves by {@link CdiBeanQualifier}, which compares the
- * qualifiers of the specification by its own rules.</p>
+ * <p>A lookup does not resolve by what is made here: the container selects its beans by the qualifiers it records
+ * of each, compared by the rules of the specification ({@link CdiBeanContainer#beansOf}).</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -46,7 +46,7 @@ public final class CdiQualifiers {
     /**
      * The Micronaut qualifier a definition the container registers for a synthetic bean is declared with, from the
      * values its qualifiers were recorded with while the application compiled. It describes the bean, the way
-     * Micronaut keys a registration by it; a lookup of the bean resolves by {@link CdiBeanQualifier}.
+     * Micronaut keys a registration by it; a lookup of the bean resolves by the qualifiers the container records.
      *
      * @param qualifiers The qualifiers, each as the values it was written with, the members that take no part in
      *                   resolution listed under {@code $nonBinding}
