@@ -128,25 +128,6 @@ public final class OwnedDependents implements AutoCloseable {
     }
 
     /**
-     * The registration of the bean of the given definition for a parameter of a primitive type, which a dependent
-     * producer may satisfy with null: it is created on its own and belongs to the owner only where it is not null.
-     * Micronaut destroys a dependent it owns through its pre-destroy listeners, which may not answer a null bean,
-     * so a null one is not handed to it.
-     *
-     * @param definition The definition
-     * @param type       The type it is asked for as
-     * @param <T>        The bean type
-     * @return The registration
-     */
-    public <T> BeanRegistration<T> registrationOfAPrimitive(BeanDefinition<? extends T> definition, Argument<T> type) {
-        BeanRegistration<T> registration = beanContext.getBeanRegistration(definition, type);
-        if (registration.bean() != null) {
-            keep(registration, false);
-        }
-        return registration;
-    }
-
-    /**
      * The registration of the bean of the given definition, created for the point already current rather than for
      * an injection point of the lookup's own - the injection point metadata, which describes that point. Within a
      * creation under way (see {@link #within}) the bean is resolved within it, by

@@ -353,10 +353,8 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for observer parameter "
                     + argument);
             }
-            Argument<Object> askedAs = CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition);
-            registration = argument.getType().isPrimitive()
-                ? dependents.registrationOfAPrimitive(definition, askedAs)
-                : dependents.registration(definition, askedAs);
+            registration = dependents.registration(definition,
+                CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
         } else {
             // one Micronaut resolves itself - a lookup, the event metadata - or one no bean of the specification is
             // a candidate for: Micronaut's rules, among the beans of Micronaut's own where the point is marked

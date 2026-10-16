@@ -344,10 +344,9 @@ resolving the way it did: a field of `Double` injected into one does not resolve
 
 A dependent producer that returns null satisfies a primitive injection point with the default value of the
 primitive (section 2.5.2.4) - a field, a parameter of a bean's own, and a parameter of an observer or a disposer
-method alike. The null product a callback parameter of a primitive type is resolved to is created on its own
-rather than as a dependent of the invocation and destroyed with it where it is not null: Micronaut destroys a
-dependent through its pre-destroy listeners, which may not answer a null bean (see
-[Open points in Micronaut Core](#open-points-in-micronaut-core)).
+method alike. The null product a callback parameter of a primitive type is resolved to is a dependent of the
+invocation like any other: since Micronaut Core 5.3 a null registration is destroyed without its pre-destroy
+listeners, and what its producer was injected with is released with it.
 
 ### Every phase of an extension runs while the application compiles
 
@@ -795,12 +794,6 @@ own rather than the first one alone.
   (`ContainerInjectionVisitor`), and the points a bean of the specification inherits from a class that is not one
   keep Micronaut's rules; metadata of a member kept by the class it is read through would let the container
   resolve them as well.
-- **A null dependent cannot be destroyed.** `DefaultBeanContext.triggerPreDestroyListeners` hands every
-  `BeanPreDestroyEventListener` the bean being destroyed and requires each to return a bean, so the registration of a
-  dependent a producer satisfied with null fails as it is destroyed with its owner, and the listener the container
-  disposes of a product with (`DisposerInvoker`) cannot answer it. A primitive parameter of an observer or a disposer
-  is therefore resolved outside the dependency group of the invocation; skipping the listeners for a null bean
-  would remove that.
 - **Micronaut chooses one bean among candidates in a private method.** `DefaultBeanContext.lastChanceResolve` -
   the primary ones, `BeanResolutionCustomizer.resolveNonUniqueBean`, `@Secondary`, the order, `@DefaultImplementation`
   and the exact type - is reached only through a lookup by a type and a qualifier, which selects the candidates
