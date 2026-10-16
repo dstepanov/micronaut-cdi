@@ -354,8 +354,9 @@ public final class OwnedDependents implements AutoCloseable {
     }
 
     private void keep(BeanRegistration<?> registration, boolean owned) {
-        if (!CdiResolution.isDependent(registration.getBeanDefinition())) {
-            // a bean of a scope is the scope's
+        if (!registration.hasOwnLifecycle()) {
+            // a bean of a scope is the scope's, a singleton the context's: only an instance created for the lookup
+            // lives until its registration is closed
             return;
         }
         synchronized (this) {
