@@ -96,11 +96,10 @@ public final class ReflectiveCdi implements CdiReflection {
             return closure;
         }
         // Micronaut's reading of the generic signatures above the type, which keeps a wildcard a wildcard and a
-        // variable a variable, with what a subtype says about its parameters carried into its supertypes. The type
-        // is read as the container reads one handed in: the container hands over the ones it rendered itself, whose
-        // variables carry their bounds but no annotated bounds
-        java.util.List<Argument<?>> supertypes =
-            ReflectionArguments.typeClosureOf(io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(type));
+        // variable a variable, with what a subtype says about its parameters carried into its supertypes. The
+        // container hands over the types it rendered itself, whose variables carry their bounds but no annotated
+        // bounds, which Micronaut reads the variable through
+        java.util.List<Argument<?>> supertypes = ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type));
         for (Argument<?> supertype : supertypes.subList(1, supertypes.size())) {
             if (supertype.getType() != Object.class) {
                 closure.add(ReflectionArguments.toExactType(supertype));

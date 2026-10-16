@@ -78,7 +78,7 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
         compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
         ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
         if (declaration != null) {
-            // the members as the compiler answers them, which KSP does as properties rather than methods
+            // the members the interface declares, as Micronaut answers them under every compiler
             for (String member : NonbindingMembersRemapper.membersOf(declaration).keySet()) {
                 if (!values.containsKey(member)) {
                     throw new IllegalStateException("The member " + member + " of " + annotation

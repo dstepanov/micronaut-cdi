@@ -255,9 +255,8 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
-     * The names of the members an annotation interface declares, as the compilation sees the interface: KSP
-     * answers them as properties, which {@link NonbindingMembersRemapper#membersOf} reads where there are no
-     * methods.
+     * The names of the members an annotation interface declares, as the compilation sees the interface
+     * ({@link NonbindingMembersRemapper#membersOf}).
      */
     private List<String> memberNamesOf(String annotation) {
         List<String> names = new ArrayList<>();

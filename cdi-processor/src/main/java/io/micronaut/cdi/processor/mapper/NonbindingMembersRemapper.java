@@ -25,7 +25,8 @@ import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.AnnotationRemapper;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.AnnotationElement;
+import io.micronaut.inject.ast.AnnotationMemberElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
@@ -194,10 +195,6 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
     /**
      * The members an annotation interface declares, each with its annotation metadata.
      *
-     * <p>Javac and the Groovy compiler answer them as the methods of the interface. KSP answers an annotation's
-     * members as its properties and no methods, a Java annotation on the classpath included, so those are read
-     * where there are no methods.</p>
-     *
      * @param declaration The annotation interface
      * @return The members, by name, in the order they are declared
      */
@@ -208,14 +205,19 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
     }
 
     /**
-     * The members an annotation interface declares, as the elements the compiler answers them as: methods under
-     * javac and the Groovy compiler, properties under KSP.
+     * The members an annotation interface declares, as Micronaut answers them under every compiler
+     * ({@link AnnotationElement#getMembers()}).
      *
      * @param declaration The annotation interface
      * @return The members, by name, in the order they are declared
      */
-    public static Map<String, Element> memberElementsOf(ClassElement declaration) {
-        // enumerated where the language model enumerates them, so that the two agree under every compiler
-        return io.micronaut.cdi.lang.model.ast.ElementMembers.annotationMembersOf(declaration);
+    public static Map<String, AnnotationMemberElement> memberElementsOf(ClassElement declaration) {
+        Map<String, AnnotationMemberElement> members = new LinkedHashMap<>();
+        if (declaration instanceof AnnotationElement annotation) {
+            for (AnnotationMemberElement member : annotation.getMembers()) {
+                members.put(member.getName(), member);
+            }
+        }
+        return members;
     }
 }

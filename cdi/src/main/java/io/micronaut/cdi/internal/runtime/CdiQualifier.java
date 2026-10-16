@@ -457,9 +457,7 @@ public final class CdiQualifier {
         if (registered.isEmpty()) {
             return value;
         }
-        // built anew rather than mutated: the builder of a mutated value adds the defaults to the value's own map,
-        // which is immutable where the value carries none
-        return new AnnotationValue<>(name, value.getValues(), registered);
+        return value.mutate().defaultValues(registered).build();
     }
 
     private static CdiQualifier scoped(Class<? extends Annotation> type, Class<? extends Annotation> scope,

@@ -344,10 +344,9 @@ resolving the way it did: a field of `Double` injected into one does not resolve
 
 A dependent producer that returns null satisfies a primitive injection point with the default value of the
 primitive (section 2.5.2.4) - a field, a parameter of a bean's own, and a parameter of an observer or a disposer
-method alike. The null product a callback parameter of a primitive type is resolved to is created on its own
-rather than as a dependent of the invocation and destroyed with it where it is not null: Micronaut destroys a
-dependent through its pre-destroy listeners, which may not answer a null bean (see
-[Open points in Micronaut Core](#open-points-in-micronaut-core)).
+method alike. The null product a callback parameter of a primitive type is resolved to is a dependent of the
+invocation like any other: since Micronaut Core 5.3 a null registration is destroyed without its pre-destroy
+listeners, and what its producer was injected with is released with it.
 
 ### Every phase of an extension runs while the application compiles
 
@@ -707,13 +706,9 @@ own rather than the first one alone.
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
-  annotation interface as its properties rather than its methods, which is where the processor and the language
-  model read them from there (`ElementMembers.annotationMembersOf`).
-- **`AnnotationElement` cannot list the members of an annotation interface.** There is no query of Micronaut's AST
-  that answers the members of an annotation interface under every compiler: javac and the Groovy compiler answer
-  them as methods, KSP as properties and no methods. The members are enumerated one way or the other in one place
-  (`ElementMembers.annotationMembersOf`), which the processor's non-binding members and the language model's
-  annotation members and methods read; a member query on `AnnotationElement` would remove it.
+  annotation interface as its properties rather than its methods: since Micronaut Core 5.3 the processor and the
+  language model read the members through `AnnotationElement.getMembers()`, which answers them under every
+  compiler, and the language model's methods of a Kotlin annotation interface are the accessors of its properties.
 - **Micronaut's annotation qualifiers compare the qualifiers a bean was compiled with.** Since Micronaut Core 5.3
   `Qualifiers.byAnnotation(Annotation)` and `byAnnotation(AnnotationMetadata, AnnotationValue)` select by the
   annotation alone; the qualifiers read off an injection point (`byAnnotation(AnnotationMetadata, Class)` and its
@@ -747,9 +742,9 @@ own rather than the first one alone.
   implements, which `typeClosureOf` does not list. They are in `micronaut-reflection`, which reads classes back,
   and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
   `Argument`, and one the specification's API reports made from one, in `io.micronaut.cdi.internal.type`, by the
-  accessors of the type alone. That reading is also what the reflection module reads the type it is handed with,
-  since the container hands over the types it rendered there: `ofExact` reads a variable by its annotated bounds,
-  which a variable the container renders, holding no annotations, has none of. A variable `toExactType` renders has
+  accessors of the type alone. The reflection module reads a type it is handed with `ofExact` itself, the ones the
+  container rendered there as well: since Micronaut Core 5.3 `ofExact` reads a variable with no annotated bounds,
+  as a variable the container renders is, through its bounds. A variable `toExactType` renders has
   no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
   module tells the variables of an event's class apart by their names.
 - **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
@@ -795,12 +790,6 @@ own rather than the first one alone.
   (`ContainerInjectionVisitor`), and the points a bean of the specification inherits from a class that is not one
   keep Micronaut's rules; metadata of a member kept by the class it is read through would let the container
   resolve them as well.
-- **A null dependent cannot be destroyed.** `DefaultBeanContext.triggerPreDestroyListeners` hands every
-  `BeanPreDestroyEventListener` the bean being destroyed and requires each to return a bean, so the registration of a
-  dependent a producer satisfied with null fails as it is destroyed with its owner, and the listener the container
-  disposes of a product with (`DisposerInvoker`) cannot answer it. A primitive parameter of an observer or a disposer
-  is therefore resolved outside the dependency group of the invocation; skipping the listeners for a null bean
-  would remove that.
 - **Micronaut chooses one bean among candidates in a private method.** `DefaultBeanContext.lastChanceResolve` -
   the primary ones, `BeanResolutionCustomizer.resolveNonUniqueBean`, `@Secondary`, the order, `@DefaultImplementation`
   and the exact type - is reached only through a lookup by a type and a qualifier, which selects the candidates

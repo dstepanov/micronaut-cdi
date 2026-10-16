@@ -1,7 +1,9 @@
 package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.reflection.ReflectiveCdi;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.util.TypeLiteral;
 import org.junit.jupiter.api.Test;
 
@@ -79,6 +81,23 @@ class ReflectiveTypeClosureTest {
     void aVariableStaysAVariable() {
         Set<String> closure = described(reflection.typeClosureOf(reflection.declaredTypeOf(Holder.class), true));
         assertTrue(closure.contains("java.util.function.Supplier<T>"), closure::toString);
+    }
+
+    @Test
+    void aVariableTheContainerRenderedIsReadThroughItsBounds() {
+        // the container renders a variable from its argument with bounds but no annotated bounds, and hands it
+        // back to the reflection module as it is
+        Type bounded = SpecificationTypes.typeOf(Argument.of(Holder.class,
+            Argument.ofTypeVariable(Number.class, null, "U", null, Argument.ZERO_ARGUMENTS,
+                new Argument<?>[] {Argument.of(Number.class)})));
+        TypeVariable<?> rendered = (TypeVariable<?>) ((ParameterizedType) bounded).getActualTypeArguments()[0];
+        assertEquals(0, rendered.getAnnotatedBounds().length);
+        Set<String> closure = described(reflection.typeClosureOf(bounded, true));
+        assertTrue(closure.contains("java.util.function.Supplier<U>"), closure::toString);
+
+        Type unbounded = SpecificationTypes.typeOf(Argument.of(Holder.class, Argument.ofTypeVariable(Object.class, null, "V")));
+        Set<String> unboundedClosure = described(reflection.typeClosureOf(unbounded, true));
+        assertTrue(unboundedClosure.contains("java.util.function.Supplier<V>"), unboundedClosure::toString);
     }
 
     @Test
