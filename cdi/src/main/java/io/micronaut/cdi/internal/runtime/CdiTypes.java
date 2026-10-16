@@ -250,6 +250,76 @@ public final class CdiTypes {
     }
 
     /**
+     * The type as a bean type is compared in typesafe resolution: a type variable and a wildcard among its
+     * arguments have their bounds erased to their classes, a variable or a wildcard among the bounds kept as such
+     * with its own bounds erased in turn.
+     *
+     * @param type The type
+     * @return The type with the bounds of its arguments erased
+     */
+    public static Argument<?> withErasedBounds(Argument<?> type) {
+        Argument<?>[] arguments = type.getTypeParameters();
+        if (arguments.length == 0 || type.isRawType() || isUnresolved(type) || type.isWildcard()) {
+            return type;
+        }
+        Argument<?>[] erased = new Argument<?>[arguments.length];
+        boolean changed = false;
+        for (int i = 0; i < arguments.length; i++) {
+            erased[i] = argumentWithErasedBounds(arguments[i], new java.util.HashSet<>());
+            changed |= erased[i] != arguments[i];
+        }
+        return changed ? type.withTypeParameters(erased) : type;
+    }
+
+    private static Argument<?> argumentWithErasedBounds(Argument<?> argument, java.util.Set<String> variables) {
+        if (argument instanceof WildcardArgument<?> wildcard) {
+            Argument<?>[] uppers = boundsErased(wildcard.getUpperBounds(), variables);
+            Argument<?>[] lowers = boundsErased(wildcard.getLowerBounds(), variables);
+            Argument<?> first = uppers.length == 0 ? Argument.OBJECT_ARGUMENT : uppers[0];
+            return Argument.ofWildcard(first.getType(), null, null, first.getTypeParameters(), uppers, lowers);
+        }
+        if (isUnresolved(argument) && argument instanceof GenericPlaceholder<?> placeholder) {
+            String name = placeholder.getVariableName();
+            Argument<?> variable;
+            if (variables.add(name)) {
+                // a variable bounded by itself, as T extends Comparable<T> is, names itself within its bound
+                variable = variable(name, boundsErased(placeholder.getBounds(), variables));
+                variables.remove(name);
+            } else {
+                variable = variable(name);
+            }
+            // an array of a variable, T[], is the variable with the dimensions of the array
+            for (Class<?> level = argument.getType(); level.isArray(); level = level.getComponentType()) {
+                variable = variable.arrayType();
+            }
+            return variable;
+        }
+        Argument<?>[] arguments = argument.getTypeParameters();
+        if (arguments.length == 0 || argument.isRawType()) {
+            return argument;
+        }
+        Argument<?>[] erased = new Argument<?>[arguments.length];
+        for (int i = 0; i < arguments.length; i++) {
+            erased[i] = argumentWithErasedBounds(arguments[i], variables);
+        }
+        return argument.withTypeParameters(erased);
+    }
+
+    private static Argument<?>[] boundsErased(List<Argument<?>> bounds, java.util.Set<String> variables) {
+        Argument<?>[] erased = new Argument<?>[bounds.size()];
+        for (int i = 0; i < erased.length; i++) {
+            Argument<?> bound = bounds.get(i);
+            if (bound.isWildcard() || isUnresolved(bound) || bound.getType().isPrimitive()) {
+                erased[i] = argumentWithErasedBounds(bound, variables);
+            } else {
+                // the class of the bound alone, an array of it with its dimensions
+                erased[i] = Argument.of(bound.getType());
+            }
+        }
+        return erased;
+    }
+
+    /**
      * The type with each type variable named among the given arguments replaced by the argument, so that what
      * a subtype says about its parameters carries into the supertypes it collects.
      *
