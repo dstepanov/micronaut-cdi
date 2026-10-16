@@ -15,52 +15,43 @@
  */
 package io.micronaut.cdi.test.index;
 
-import io.micronaut.cdi.internal.metadata.CdiTypeIndex;
-import io.micronaut.context.ApplicationContext;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.qualifiers.Qualifiers;
+import io.micronaut.cdi.test.index.hidden.HiddenPayload;
+import io.micronaut.core.type.Argument;
+import io.micronaut.core.type.TypeHierarchies;
+import io.micronaut.core.type.TypeHierarchy;
 import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The generic hierarchy of a class no definition describes is recorded on a definition of the compilation, placed
- * where the classes it refers to can be referred to: a package-private supertype from its own package.
+ * The generic hierarchy of a class no definition describes is recorded as Micronaut's type hierarchy record of the
+ * class, which Micronaut places where the classes it refers to can be referred to: a package-private supertype from
+ * its own package. A class of the JDK named as a type argument is recorded too, in the package of the class naming
+ * it.
  */
 class TypeIndexRecordTest {
 
     @Test
     void aPackagePrivateSupertypeIsRecordedAsItsClass() {
-        try (ApplicationContext context = ApplicationContext.run()) {
-            AnnotationValue<Annotation> entry = entryOf(context,
-                "io.micronaut.cdi.test.index.hidden.HiddenPayload");
-            assertNotNull(entry, "the payload is recorded");
-            List<AnnotationValue<Annotation>> supertypes = entry.getAnnotations("supertypes");
-            assertEquals("io.micronaut.cdi.test.index.hidden.HiddenBase",
-                supertypes.get(0).stringValue("value").orElse(null));
-            assertTrue(supertypes.get(0).classValue("value").isPresent(),
-                "the package-private supertype is recorded as a class, from its own package");
-        }
+        TypeHierarchy hierarchy = TypeHierarchies.find(HiddenPayload.class).orElse(null);
+        assertTrue(hierarchy != null, "the payload is recorded");
+        List<Argument<?>> closure = hierarchy.getTypeClosure(hierarchy.getDeclaration());
+        Argument<?> base = closure.get(1);
+        assertEquals("io.micronaut.cdi.test.index.hidden.HiddenBase", base.getType().getName(),
+            "the package-private supertype is recorded as a class, from its own package");
+        assertEquals(Integer.class, base.getTypeParameters()[0].getType());
     }
 
-    static AnnotationValue<Annotation> entryOf(ApplicationContext context, String className) {
-        for (BeanDefinition<?> definition : context.getBeanDefinitions(Qualifiers.byStereotype(CdiTypeIndex.class))) {
-            AnnotationValue<CdiTypeIndex> index = definition.getAnnotationMetadata().getAnnotation(CdiTypeIndex.class);
-            if (index == null) {
-                continue;
-            }
-            for (AnnotationValue<Annotation> entry : index.getAnnotations("value")) {
-                if (className.equals(entry.stringValue("name").orElse(null))) {
-                    return entry;
-                }
-            }
-        }
-        return null;
+    @Test
+    void aClassOfTheJdkNamedAsATypeArgumentIsRecorded() {
+        TypeHierarchy integer = TypeHierarchies.find(Integer.class).orElse(null);
+        assertTrue(integer != null, "the class named as the argument of a recorded supertype is recorded");
+        assertTrue(integer.getSuperTypes().stream()
+                .anyMatch(type -> type.getType() == Comparable.class
+                    && type.getTypeParameters()[0].getType() == Integer.class),
+            "the JDK class is recorded with its generic interfaces");
     }
 }

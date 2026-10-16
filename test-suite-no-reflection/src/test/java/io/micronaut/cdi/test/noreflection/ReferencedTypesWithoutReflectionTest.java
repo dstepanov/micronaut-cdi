@@ -1,10 +1,7 @@
 package io.micronaut.cdi.test.noreflection;
 
-import io.micronaut.cdi.internal.metadata.CdiTypeIndex;
+import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.context.ApplicationContext;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
@@ -14,13 +11,10 @@ import jakarta.inject.Inject;
 import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -77,16 +71,9 @@ class ReferencedTypesWithoutReflectionTest {
         try (ApplicationContext context = ApplicationContext.run()) {
             context.getBean(Shipper.class).crates.fire(new Crate<>());
             assertEquals(List.of("comparable"), context.getBean(Inspector.class).heard());
-            Set<String> recorded = new HashSet<>();
-            for (BeanDefinition<?> definition : context.getBeanDefinitions(Qualifiers.byStereotype(CdiTypeIndex.class))) {
-                for (AnnotationValue<Annotation> entry : definition.getAnnotationMetadata()
-                    .getAnnotation(CdiTypeIndex.class).getAnnotations("value")) {
-                    recorded.add(entry.stringValue("name").orElse(""));
-                }
-            }
-            assertTrue(recorded.contains(Integer.class.getName()), "a class a bound names is recorded");
-            assertFalse(recorded.contains(Stamp.class.getName()), "an interface is no class of an event object");
-            assertFalse(recorded.contains(SealedLiteral.class.getName()), "an annotation literal is no event");
+            assertTrue(TypeHierarchies.find(Integer.class).isPresent(), "a class a bound names is recorded");
+            assertFalse(TypeHierarchies.find(Stamp.class).isPresent(), "an interface is no class of an event object");
+            assertFalse(TypeHierarchies.find(SealedLiteral.class).isPresent(), "an annotation literal is no event");
         }
     }
 }

@@ -15,12 +15,13 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
-import io.micronaut.cdi.internal.metadata.CdiTypeIndex;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
-import io.micronaut.inject.BeanDefinition;
+import io.micronaut.core.type.GenericPlaceholder;
+import io.micronaut.core.type.TypeHierarchies;
+import io.micronaut.core.type.TypeHierarchy;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -29,14 +30,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The generic hierarchies of the classes the application was compiled with, as the processor recorded them:
- * what an event of a class is matched by, read from compiled metadata rather than from the class's generic
- * signature, and held as the arguments the container works with.
+ * what an event of a class is matched by and what the types of a bean are, read from compiled records rather than
+ * from the class's generic signature, and held as the arguments the container works with.
  *
- * <p>A class the application was not compiled with has no record. The module that reads classes answers for
- * it where it is there, and otherwise a class is matched as its raw class and the raw classes above it.</p>
+ * <p>A class is recorded as Micronaut's type hierarchy record of it ({@link TypeHierarchies}); a bean whose closure
+ * such a record cannot say in full records its type closure on its definition instead. A class the application was
+ * not compiled with has no record. The module that reads classes answers for it where it is there, and otherwise a
+ * class is matched as its raw class and the raw classes above it.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -46,7 +51,7 @@ import java.util.Map;
 public final class RecordedTypeIndex {
 
     private final BeanContext beanContext;
-    private volatile @Nullable Map<String, Entry> entries;
+    private final Map<Class<?>, Optional<Entry>> hierarchies = new ConcurrentHashMap<>();
     /**
      * What the definitions of the beans of the specification recorded of their classes, by class name.
      */
@@ -77,39 +82,19 @@ public final class RecordedTypeIndex {
     }
 
     /**
-     * What was recorded of the class of the given name.
+     * What was recorded of the given class.
      *
-     * @param className The class name
+     * @param type The class
      * @return The record, or {@code null} where the application was not compiled with the class
      */
-    @Nullable Entry of(String className) {
-        // a bean of the specification records its own type closure on its definition, the class over its own variables
-        // first, which is what the index would record of its class; the index holds the classes no definition describes
-        Entry bean = beans().get(className);
+    @Nullable Entry of(Class<?> type) {
+        // a bean whose closure no type hierarchy record could say in full records it on its definition
+        Entry bean = beans().get(type.getName());
         if (bean != null) {
             return bean;
         }
-        Map<String, Entry> resolved = entries;
-        if (resolved == null) {
-            resolved = new HashMap<>();
-            // the classes that hold an index are found by the annotation on their references: only theirs are loaded
-            for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(
-                io.micronaut.inject.qualifiers.Qualifiers.byStereotype(CdiTypeIndex.class))) {
-                AnnotationValue<CdiTypeIndex> index = definition.getAnnotationMetadata().getAnnotation(CdiTypeIndex.class);
-                if (index == null) {
-                    continue;
-                }
-                for (AnnotationValue<Annotation> entry : index.getAnnotations("value")) {
-                    String name = entry.stringValue("name").orElse(null);
-                    if (name != null) {
-                        resolved.putIfAbsent(name, new Entry(List.of(entry.stringValues("variables")),
-                            entry.getAnnotations("supertypes")));
-                    }
-                }
-            }
-            entries = resolved;
-        }
-        return resolved.get(className);
+        return hierarchies.computeIfAbsent(type,
+            recorded -> TypeHierarchies.find(recorded).map(HierarchyEntry::new)).orElse(null);
     }
 
     /**
@@ -143,7 +128,7 @@ public final class RecordedTypeIndex {
                         variables.add(argument.stringValue("name").orElse("T"));
                     }
                 }
-                resolved.putIfAbsent(name, new Entry(List.copyOf(variables), closure.subList(1, closure.size())));
+                resolved.putIfAbsent(name, new RecordedEntry(List.copyOf(variables), closure.subList(1, closure.size())));
             }
             beans = resolved;
         }
@@ -152,20 +137,73 @@ public final class RecordedTypeIndex {
 
     /**
      * What was recorded of one class.
-     *
-     * @param variables  The names of the type variables the class declares
-     * @param supertypes The classes and interfaces above it, as the hierarchy parameterizes them
      */
-    record Entry(List<String> variables, List<AnnotationValue<Annotation>> supertypes) {
+    sealed interface Entry permits RecordedEntry, HierarchyEntry {
+
+        /**
+         * @return The names of the type variables the class declares
+         */
+        List<String> variables();
 
         /**
          * The type closure of the class as the given type names it: the type, and every recorded supertype
-         * with the variables of the class replaced by the type arguments given.
+         * with the variables of the class replaced by the type arguments given, {@code Object} left out.
          *
          * @param type The class, or a parameterization of it
          * @return The closure, or {@code null} where the record refers to a class that is not there
          */
-        @Nullable List<Argument<?>> closureOf(Argument<?> type) {
+        @Nullable List<Argument<?>> closureOf(Argument<?> type);
+
+        /**
+         * The class over its own type variables, which is the type a bean of a generic class has.
+         *
+         * @param type The class
+         * @return The class, or its parameterization over its variables
+         */
+        Argument<?> declaredTypeOf(Class<?> type);
+    }
+
+    /**
+     * Micronaut's type hierarchy record of a class.
+     *
+     * @param hierarchy The record
+     */
+    record HierarchyEntry(TypeHierarchy hierarchy) implements Entry {
+
+        @Override
+        public List<String> variables() {
+            List<String> variables = new ArrayList<>();
+            for (Argument<?> variable : hierarchy.getTypeVariables()) {
+                variables.add(variable instanceof GenericPlaceholder<?> placeholder
+                    ? placeholder.getVariableName() : variable.getName());
+            }
+            return variables;
+        }
+
+        @Override
+        public List<Argument<?>> closureOf(Argument<?> type) {
+            List<Argument<?>> closure = new ArrayList<>(hierarchy.getTypeClosure(type));
+            // every closure ends in Object, which the reader adds once
+            closure.removeIf(CdiTypes::isObject);
+            return closure;
+        }
+
+        @Override
+        public Argument<?> declaredTypeOf(Class<?> type) {
+            return hierarchy.getDeclaration();
+        }
+    }
+
+    /**
+     * The type closure a definition recorded of the class of its bean.
+     *
+     * @param variables  The names of the type variables the class declares
+     * @param supertypes The classes and interfaces above it, as the hierarchy parameterizes them
+     */
+    record RecordedEntry(List<String> variables, List<AnnotationValue<Annotation>> supertypes) implements Entry {
+
+        @Override
+        public @Nullable List<Argument<?>> closureOf(Argument<?> type) {
             Map<String, Argument<?>> arguments = argumentsOf(type);
             List<Argument<?>> closure = new ArrayList<>(supertypes.size() + 1);
             closure.add(type);
@@ -179,13 +217,8 @@ public final class RecordedTypeIndex {
             return closure;
         }
 
-        /**
-         * The class over its own type variables, which is the type a bean of a generic class has.
-         *
-         * @param type The class
-         * @return The class, or its parameterization over its variables
-         */
-        Argument<?> declaredTypeOf(Class<?> type) {
+        @Override
+        public Argument<?> declaredTypeOf(Class<?> type) {
             if (variables.isEmpty()) {
                 return Argument.of(type);
             }
