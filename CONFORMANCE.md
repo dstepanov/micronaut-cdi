@@ -831,7 +831,9 @@ own rather than the first one alone.
   specification's test kit in one process: the extensions of one compiled deployment
   (`BuildCompatibleExtensionVisitor.overrideExtensions`), since a compilation is handed nothing but options, and
   the classpath a test's SE container sees (`MicronautSeContainerInitializer`), since the kit builds the container
-  itself through `SeContainerInitializer.newInstance()`.
+  itself through `SeContainerInitializer.newInstance()`. Beside them the type hierarchy record a class has is kept
+  with the class once it is found (`RecordedTypeIndex`), since a record is compiled data that says the same to every
+  container; a class with none is asked again by the next container, whose class loader may see one.
 
 ## What other implementations' tests found
 

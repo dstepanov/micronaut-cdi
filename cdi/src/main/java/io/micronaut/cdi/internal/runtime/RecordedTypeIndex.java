@@ -93,9 +93,34 @@ public final class RecordedTypeIndex {
         if (bean != null) {
             return bean;
         }
-        return hierarchies.computeIfAbsent(type,
-            recorded -> TypeHierarchies.find(recorded).map(HierarchyEntry::new)).orElse(null);
+        return hierarchies.computeIfAbsent(type, RecordedTypeIndex::recordOf).orElse(null);
     }
+
+    /**
+     * The record of a class, found once for the class whichever container asks: a record is generated with the
+     * classes and says the same to every one of them.
+     */
+    private static Optional<Entry> recordOf(Class<?> type) {
+        java.util.concurrent.atomic.AtomicReference<Entry> found = FOUND.get(type);
+        Entry known = found.get();
+        if (known != null) {
+            return Optional.of(known);
+        }
+        Optional<Entry> entry = TypeHierarchies.find(type).map(HierarchyEntry::new);
+        entry.ifPresent(found::set);
+        return entry;
+    }
+
+    /**
+     * The records found so far, kept with each class. A class without one is asked again by the next container,
+     * whose class loader may see records this one did not.
+     */
+    private static final ClassValue<java.util.concurrent.atomic.AtomicReference<Entry>> FOUND = new ClassValue<>() {
+        @Override
+        protected java.util.concurrent.atomic.AtomicReference<Entry> computeValue(Class<?> type) {
+            return new java.util.concurrent.atomic.AtomicReference<>();
+        }
+    };
 
     /**
      * What the definitions of the classes that are beans recorded of them: the type closure of the class, which a
