@@ -747,9 +747,9 @@ own rather than the first one alone.
   implements, which `typeClosureOf` does not list. They are in `micronaut-reflection`, which reads classes back,
   and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
   `Argument`, and one the specification's API reports made from one, in `io.micronaut.cdi.internal.type`, by the
-  accessors of the type alone. That reading is also what the reflection module reads the type it is handed with,
-  since the container hands over the types it rendered there: `ofExact` reads a variable by its annotated bounds,
-  which a variable the container renders, holding no annotations, has none of. A variable `toExactType` renders has
+  accessors of the type alone. The reflection module reads a type it is handed with `ofExact` itself, the ones the
+  container rendered there as well: since Micronaut Core 5.3 `ofExact` reads a variable with no annotated bounds,
+  as a variable the container renders is, through its bounds. A variable `toExactType` renders has
   no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
   module tells the variables of an event's class apart by their names.
 - **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
