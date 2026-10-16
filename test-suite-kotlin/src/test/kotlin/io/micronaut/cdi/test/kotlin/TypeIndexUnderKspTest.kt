@@ -1,12 +1,8 @@
 package io.micronaut.cdi.test.kotlin
 
-import io.micronaut.cdi.internal.metadata.CdiTypeIndex
-import io.micronaut.context.ApplicationContext
-import io.micronaut.core.annotation.AnnotationValue
-import io.micronaut.inject.qualifiers.Qualifiers
+import io.micronaut.core.type.TypeHierarchies
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -20,27 +16,18 @@ open class KotlinBox<T>
 class KotlinStringBox : KotlinBox<String>()
 
 /**
- * The generic hierarchy of a class no definition describes is recorded on a definition KSP registers, with no
- * source generated for it. Kotlin has no package-private class a public one may extend: a class private to its
- * file is the only one, and a public class may not expose it as its supertype.
+ * The generic hierarchy of a class no definition describes is recorded as Micronaut's type hierarchy record of the
+ * class under KSP as well. Kotlin has no package-private class a public one may extend: a class private to its file
+ * is the only one, and a public class may not expose it as its supertype.
  */
 class TypeIndexUnderKspTest {
 
     @Test
     fun theHierarchyOfAPayloadIsRecorded() {
-        ApplicationContext.run().use { context ->
-            var entry: AnnotationValue<*>? = null
-            for (definition in context.getBeanDefinitions(Qualifiers.byStereotype<Any>(CdiTypeIndex::class.java))) {
-                for (candidate in definition.annotationMetadata.getAnnotation(CdiTypeIndex::class.java)!!.getAnnotations<Annotation>("value")) {
-                    if (candidate.stringValue("name").orElse(null) == KotlinStringBox::class.java.name) {
-                        entry = candidate
-                    }
-                }
-            }
-            assertNotNull(entry, "the payload is recorded")
-            val supertype = entry!!.getAnnotations<Annotation>("supertypes")[0]
-            assertEquals(KotlinBox::class.java.name, supertype.stringValue("value").orElse(null))
-            assertTrue(supertype.classValue("value").isPresent)
-        }
+        val hierarchy = TypeHierarchies.find(KotlinStringBox::class.java).orElse(null)
+        assertNotNull(hierarchy, "the payload is recorded")
+        val supertype = hierarchy!!.getTypeClosure(hierarchy.declaration)[1]
+        assertEquals(KotlinBox::class.java, supertype.type)
+        assertEquals(String::class.java, supertype.typeParameters[0].type)
     }
 }

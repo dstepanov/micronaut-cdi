@@ -395,7 +395,7 @@ public final class CdiTypes {
     }
 
     private static RecordedTypeIndex.@Nullable Entry recordOf(@Nullable RecordedTypeIndex index, Class<?> type) {
-        return index == null ? null : index.of(type.getName());
+        return index == null ? null : index.of(type);
     }
 
     private static @Nullable CdiReflection reflection(@Nullable RecordedTypeIndex index) {

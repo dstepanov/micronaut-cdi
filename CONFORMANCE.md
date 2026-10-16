@@ -225,12 +225,14 @@ observer; and the closure and the type variables of every other class a compilat
 parameterized type above it or declares type variables - the classes no definition describes, less an interface,
 an abstract class and an annotation literal, which are never the class of an event object - with the closure of
 every class a recorded type names as a type argument or a bound, a class of the JDK or of a library among them,
-which is what a bound is compared against, on definitions of a record it registers with Micronaut's
-`VisitorContext.registerBean` as each round finishes, with no source generated. What refers to public classes
-alone is recorded once for the compilation, registered from a class of it; the record of a class that refers to a
-class only its own package can name is registered from a class of that package, which places its definition
-there; a class of a library that refers to such a class is not recorded, since nothing the compilation writes is
-placed in a package of the library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+which is what a bound is compared against, as Micronaut's type hierarchy record of the class
+(`VisitorContext.importTypeHierarchy`, found at run time with `TypeHierarchies.find`). Micronaut writes the record
+of a class into the package of the class it is made from, a class of the JDK or of a library into a sub-package of
+that one named after the class's (`com.example.$$java.lang.$Integer$TypeHierarchy`), and the record of a class that
+refers to a class only its own package can name into that package. A class a record could not say in full - one
+with a supertype that is not public and of a third package, which Micronaut leaves out of the record - and a class
+of a library whose record would have to be written into the library's package are not recorded
+(`TypeHierarchyRecords`), since nothing the compilation writes is placed in a package of the library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
@@ -772,7 +774,8 @@ own rather than the first one alone.
   compilation is kept there. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
   the phases of the build compatible extensions run as a round finishes and their beans are registered without a
   source, so the visitor and the records of the components no longer wait on the attributes for a generated marker
-  or factory to come past, and neither does the type index, registered the same way; what is left there is the
+  or factory to come past, and neither do the type hierarchy records, written as each class is visited and kept
+  apart per visitor context rather than among its attributes; what is left there is the
   visitor the compilation started, read by the registration visitor.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
