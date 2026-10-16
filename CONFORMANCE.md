@@ -753,6 +753,14 @@ own rather than the first one alone.
   as a variable the container renders is, through its bounds. A variable `toExactType` renders has
   no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
   module tells the variables of an event's class apart by their names.
+- **A type hierarchy record cannot say every closure.** Micronaut's record of a class (`importTypeHierarchy`)
+  leaves out a supertype that is not public and of a third package, which no record can name, and is written into
+  the package of the class where the class's closure names a class of that package that is not public: for a class
+  of the JDK such as `StringBuilder`, whose superclass `AbstractStringBuilder` is package-private, that is
+  `java.lang`, and the compilation fails ("cannot access io.micronaut.core.type.GeneratedTypeHierarchy"). The
+  processor records neither (`TypeHierarchyRecords`): a bean of such a class, or produced as one, has its closure
+  written on its definition (`CdiBeanTypes`), and an event of such a class is typed as one nothing was recorded of.
+  A record that named such a supertype by name, loaded where it is read, would remove the fallback.
 - **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
   definition chosen within a creation is resolved within it (`RuntimeBeanDefinition.LookupContext.getBeanRegistration`
   and `BeanResolutionContext.getBeanRegistration`): the lookup a synthetic bean's creation function is handed

@@ -9,7 +9,12 @@ declares becomes the Micronaut scope of the same meaning, a producer becomes a f
 resolved to the method that will be invoked, and Micronaut generates the bean definition. There is no deployment
 step and no scanning of classes at startup, and by default nothing about a bean or an event is resolved by
 reflection: a bean's types and qualifiers, what an observer observes, and how the class of an event relates to
-the types above it are read from what the processor recorded. The one member the container invokes reflectively
+the types above it are read from what the processor recorded. The generic hierarchy of a bean class, of a class a
+producer produces and of a class an event can be of is Micronaut's type hierarchy record of the class, a small
+generated class named `$<Class>$TypeHierarchy` beside it - a class of the JDK or of a library a compilation needs
+one of gets it in a sub-package of the class needing it, as `com.example.$$java.util.$List$TypeHierarchy` - found
+through the `META-INF/micronaut` service entries and loaded when its class is first asked about; a bean whose
+closure such a record cannot say in full carries it on its definition. The one member the container invokes reflectively
 is a private producer or observer, which the specification allows and Micronaut marks `@ReflectiveAccess`. The
 parts of the specification's API that hand out reflection objects are an optional module, described under
 [Reflection](#reflection).
