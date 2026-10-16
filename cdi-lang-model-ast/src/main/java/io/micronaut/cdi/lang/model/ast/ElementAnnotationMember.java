@@ -225,16 +225,16 @@ public final class ElementAnnotationMember implements AnnotationMember {
             return null;
         }
         ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation, context);
-        if (declaration == null) {
+        if (!(declaration instanceof io.micronaut.inject.ast.AnnotationElement annotationElement)) {
             return null;
         }
-        // the members as the compiler answers them: KSP answers them as properties
-        io.micronaut.inject.ast.Element declared = ElementMembers.annotationMembersOf(declaration).get(member);
-        if (declared == null) {
-            return null;
+        for (io.micronaut.inject.ast.AnnotationMemberElement declared : annotationElement.getMembers()) {
+            if (declared.getName().equals(member)) {
+                ClassElement type = declared.getType();
+                return type.isArray() ? type.fromArray() : type;
+            }
         }
-        ClassElement type = ElementMembers.annotationMemberTypeOf(declared);
-        return type.isArray() ? type.fromArray() : type;
+        return null;
     }
 
     /**
