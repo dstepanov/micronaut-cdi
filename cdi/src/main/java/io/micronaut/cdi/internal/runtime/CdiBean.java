@@ -149,6 +149,21 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
+     * The type a producer declared, as the definition of its bean holds it. The definition of the client proxy of a
+     * produced bean in a normal scope is of the subclass Micronaut generates, and holds the type arguments of the
+     * type the bean was produced as under that type.
+     */
+    private static Argument<?> producedTypeOf(BeanDefinition<?> definition) {
+        Argument<?> declared = definition.getDeclaredBeanType();
+        if (definition instanceof ProxyBeanDefinition<?> proxy && proxy.getTargetType() != declared.getType()) {
+            Class<?> target = proxy.getTargetType();
+            return Argument.of(target, (String) null,
+                definition.getTypeArguments(target).toArray(Argument.ZERO_ARGUMENTS));
+        }
+        return declared;
+    }
+
+    /**
      * The bean types of the bean the given definition describes, without an instance of this class around.
      *
      * @param index      The generic hierarchies the processor recorded, or {@code null}
@@ -172,19 +187,24 @@ public class CdiBean<T> implements Bean<T> {
         java.util.List<Argument<?>> closure = new java.util.ArrayList<>();
         java.util.List<Argument<?>> recorded = recordedClosureOf(definition);
         if (recorded != null) {
-            // what the processor recorded of the bean as it compiled it
+            // the closure the processor recorded of the bean as it compiled it, where the type hierarchy record of
+            // its class could not say it in full
             closure.addAll(recorded);
         } else if (definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
             // a produced bean is a bean of the type the producer declared — with the arguments it was written
             // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
             // class's own declaration
-            closure.addAll(CdiTypes.beanTypeClosureOf(index, definition.getDeclaredBeanType()));
+            for (Argument<?> type : CdiTypes.beanTypeClosureOf(index, producedTypeOf(definition))) {
+                closure.add(CdiTypes.withErasedBounds(type));
+            }
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
             // rather than of its erasure
             if (CdiTypes.knowsClosureOf(index, beanClass)) {
-                closure.addAll(CdiTypes.beanTypeClosureOf(index, beanClass));
+                for (Argument<?> type : CdiTypes.beanTypeClosureOf(index, beanClass)) {
+                    closure.add(CdiTypes.withErasedBounds(type));
+                }
             } else {
                 // a bean compiled without this processor, of which nothing was recorded: it is resolvable by
                 // its class and by the raw types Micronaut exposes it as

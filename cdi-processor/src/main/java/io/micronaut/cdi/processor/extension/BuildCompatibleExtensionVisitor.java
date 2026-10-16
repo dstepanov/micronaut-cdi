@@ -412,7 +412,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (visited.add(name) && owned) {
             contributors.add(element);
         }
-        typeIndex.collect(element, owned, context);
+        typeIndex.collect(element, owned, contributors.isEmpty() ? null : contributors.get(0), context);
         applyWhatWasDiscovered(element);
         enhance(element, context);
     }
@@ -433,8 +433,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * Runs what waits for every class of the compilation to have been registered, as the compiler finishes the
      * first round that visited any: the registration of the scanned classes the compiler does not make beans of,
      * of the context classes and of the registered qualifiers, and the synthesis of section 2.10.5, the registration
-     * of what it described, and the validation of section 2.10.6. The generic hierarchies of the classes of each round
-     * are recorded as that round finishes.
+     * of what it described, and the validation of section 2.10.6.
      *
      * <p>A round is finished once every visitor has visited every class of it, the registration visitor - which
      * runs last - included, and before the beans of the round are written, in javac, KSP and Groovy alike: what is
@@ -457,9 +456,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     private void finishThisRound(VisitorContext context) {
         if (synthesized) {
-            // the generic hierarchies of the classes a later round brought - sources another processor generated -
-            // are recorded as that round finishes
-            typeIndex.write(context, recordOrigins, contributors);
             return;
         }
         if (!scannedClassesHandled) {
@@ -474,10 +470,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         synthesized = true;
         registerContexts(context);
         registerQualifiers(context);
-        // the generic hierarchies of the classes so far, the scanned classes javac imported among them: recorded in
-        // the round the records of the deployment are registered in, which numbers the definitions registered from
-        // one class, rather than in an earlier one
-        typeIndex.write(context, recordOrigins, contributors);
         synthesise(context);
     }
 
@@ -763,7 +755,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         if (!synthesized && !contributors.isEmpty()) {
-            context.fail("The generic hierarchies of the compiled classes were not recorded, and the synthesis and "
+            context.fail("The synthesis and "
                 + "validation phases of the build compatible extensions did not run: the compiler finished no "
                 + "round of the compilation", null);
         }
