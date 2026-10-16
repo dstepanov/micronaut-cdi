@@ -36,8 +36,12 @@ import java.util.List;
  *
  * <p>The bean types of a bean are its class, or the type its producer returns, and everything above that with
  * the type arguments the hierarchy gives it. The compiler knows all of it; the runtime would have to read the
- * generic signatures of the classes to work it out again. So it is written here, on the class and on the
- * producer, and the container reads the record.</p>
+ * generic signatures of the classes to work it out again. So the hierarchy of the bean class, and of the class a
+ * producer produces, is recorded as Micronaut's type hierarchy record of the class ({@link TypeHierarchyRecords}),
+ * which the container reads the closure from for the class over its own variables, or for the type the producer
+ * declared as its definition holds it. Where no such record can say the closure in full - a supertype that is not
+ * public and of another package, a class of a library whose record would belong in the library's package - the
+ * closure is written on the class or on the producer instead ({@link CdiBeanTypes}).</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -67,16 +71,29 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
         if (element instanceof AnnotationElement || element.isEnum()) {
             return;
         }
-        if (!element.isInterface() && !element.isAbstract() && isBeanClass(element)) {
+        if (!element.isInterface() && !element.isAbstract() && isBeanClass(element)
+            && !TypeHierarchyRecords.record(element, element, true, context)) {
             record(element, element);
         }
         for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
-            if (producer instanceof MethodElement method) {
-                record(method.getGenericReturnType(), method);
-            } else if (producer instanceof FieldElement field) {
-                record(field.getGenericType(), field);
+            ClassElement produced = producer instanceof MethodElement method ? method.getGenericReturnType()
+                : producer instanceof FieldElement field ? field.getGenericType() : null;
+            if (produced != null && !answeredWithoutRecord(produced)
+                && !TypeHierarchyRecords.record(produced, producer, false, context)) {
+                record(produced, producer);
             }
         }
+    }
+
+    /**
+     * Whether the closure of a produced type is said without a record of its class: an array and a primitive have
+     * none beyond themselves (section 2.2.1), and a type variable none of its own.
+     */
+    private static boolean answeredWithoutRecord(ClassElement produced) {
+        return produced.isArray() || produced.isPrimitive()
+            || produced instanceof io.micronaut.inject.ast.GenericPlaceholderElement
+            || produced instanceof io.micronaut.inject.ast.WildcardElement
+            || "java.lang.Object".equals(produced.getName());
     }
 
     /**

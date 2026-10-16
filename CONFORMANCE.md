@@ -219,10 +219,12 @@ reflection module.
 
 *Sections 3.1, 5.2.1 and 9.1.* The type closure of a bean, the type an observer observes and the closure
 an event is matched by are properties of generic signatures, which the container does not read. The processor
-records each: the closure of a bean on the bean or on its producer - the class over its own type variables first,
-which is what the container also reads the generic hierarchy of the class of a bean from; the observed type on the
+records each: the hierarchy of the class of a bean and of the class a producer produces, whose closure the
+container reads for the class over its own type variables, or for the type the producer declared as its
+definition holds it (`BeanDefinition.getDeclaredBeanType`), with the bounds of the variables and wildcards among
+its arguments erased to their classes, as typesafe resolution compares them; the observed type on the
 observer; and the closure and the type variables of every other class a compilation compiles that has a
-parameterized type above it or declares type variables - the classes no definition describes, less an interface,
+parameterized type above it or declares type variables - less an interface,
 an abstract class and an annotation literal, which are never the class of an event object - with the closure of
 every class a recorded type names as a type argument or a bound, a class of the JDK or of a library among them,
 which is what a bound is compared against, as Micronaut's type hierarchy record of the class
@@ -232,7 +234,9 @@ that one named after the class's (`com.example.$$java.lang.$Integer$TypeHierarch
 refers to a class only its own package can name into that package. A class a record could not say in full - one
 with a supertype that is not public and of a third package, which Micronaut leaves out of the record - and a class
 of a library whose record would have to be written into the library's package are not recorded
-(`TypeHierarchyRecords`), since nothing the compilation writes is placed in a package of the library. Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
+(`TypeHierarchyRecords`), since nothing the compilation writes is placed in a package of the library; a bean of
+such a class, or produced as one, has its closure written on the bean or on its producer instead (`CdiBeanTypes`).
+Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
 module that reads classes (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
