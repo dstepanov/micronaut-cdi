@@ -123,19 +123,6 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     }
 
     /**
-     * The records of the type closure of a type, the type first.
-     *
-     * @param type         The type
-     * @param erasedBounds Whether the bounds of a variable and of a wildcard are recorded as classes alone
-     * @return The records
-     */
-    public static List<AnnotationValue<CdiRecordedType>> closureOf(ClassElement type, boolean erasedBounds) {
-        List<AnnotationValue<CdiRecordedType>> closure = new ArrayList<>();
-        collect(type, java.util.Map.of(), closure, erasedBounds, false);
-        return closure;
-    }
-
-    /**
      * Collects the type closure of a type, as {@link #walkClosure} walks it.
      */
     private static void collect(ClassElement type, java.util.Map<String, ClassElement> bindings,
