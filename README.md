@@ -238,6 +238,15 @@ under `io.micronaut` is checked, each is `@NullMarked`, and a value that may be 
 nullness annotations, so what it hands in is taken as it comes, and a method of it that may return null is
 declared `@Nullable` where it is implemented.
 
+No source here holds state per thread. A request, a resolution and a lookup keep what they need in Micronaut's
+`PropagatedContext`, which follows the work to whichever thread it is carried to, or in the resolution context,
+and never in a `ThreadLocal`. The build's own Error Prone check `ThreadLocalForbidden`, in the unpublished
+`cdi-errorprone-checks` project, reports a field, variable or parameter of `ThreadLocal` or a subtype, an
+instance created of either and `ThreadLocal.withInitial`, beside Error Prone's `ThreadLocalUsage`. It fails the
+compilation of the main sources of every project of this build and warns in the test sources
+(`io.micronaut.build.internal.convention-thread-local`). Micronaut Jakarta Interceptors is a build of its own,
+compiled by its own conventions, and is not checked here.
+
 ## Conformance
 
 What is implemented, and every place where this module differs from the specification, is recorded in
