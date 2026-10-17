@@ -636,8 +636,10 @@ Lite, and a program that needs the destruction can look the bean up and destroy 
 factory wrapped with `wrapExpressionFactory` do have that moment, each call of one being an evaluation, and
 there the dependent bean is shared by every appearance of its name and destroyed as the call returns. Ending a request begun with
 `RequestContextController.activate()` from a different thread than began it silently does nothing — the
-controller's bookkeeping is per-thread, as the specification's enter-and-exit shape assumes; the `run`/`supply`
-/`call` forms are safe across threads. And a creation that waits for another thread can, in principle, deadlock
+activation, which travels with the propagated context, is ended only by the thread that began it, which is the
+one that brought it into scope, as the specification's enter-and-exit shape assumes
+(`RequestContextTest.anActivationReachesTheThreadsItsContextIsCarriedToAndNoOther`); the `run`/`supply`/`call`
+forms are safe across threads. And a creation that waits for another thread can, in principle, deadlock
 when that thread needs to create the same bean — a bean is created under a lock of its own, one for every context
 of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
@@ -858,9 +860,15 @@ own rather than the first one alone.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
-  compilation starts; the request context and `RequestContextController` follow the specification's per-thread
-  model with thread locals of each container's own. Two seams are left for the harnesses that run the
-  specification's test kit in one process: the extensions of one compiled deployment
+  compilation starts. Thread state is held by Micronaut's `PropagatedContext` and by the resolution context, never
+  by a `ThreadLocal`: a request begun by `RequestContextController` is an activation in the propagated context
+  beside the request's beans, with the scope that ends it, the thread it was begun on and who began it
+  (`RequestScope.activate(Object)`), so work the context is carried to sees the request and does not end it; the
+  injection point a dependent instance obtained through a lookup is given is a segment of its resolution path
+  (`LookupSegment`); and the processor's remapping of an occurrence reads nothing that comes back to it
+  (`NonbindingMembersRemapper`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
+  main source that declares, creates or initializes a thread local, and warns in the tests. Two seams are left for
+  the harnesses that run the specification's test kit in one process: the extensions of one compiled deployment
   (`BuildCompatibleExtensionVisitor.overrideExtensions`), since a compilation is handed nothing but options, and
   the classpath a test's SE container sees (`MicronautSeContainerInitializer`), since the kit builds the container
   itself through `SeContainerInitializer.newInstance()`. Beside them the type hierarchy record a class has is kept
