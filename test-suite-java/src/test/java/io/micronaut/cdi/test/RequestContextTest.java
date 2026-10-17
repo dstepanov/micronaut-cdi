@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -226,6 +227,47 @@ class RequestContextTest {
             } finally {
                 executor.shutdown();
             }
+        }
+    }
+
+    @Test
+    void anActivationReachesTheThreadsItsContextIsCarriedToAndNoOther() throws Exception {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            RequestContextController controller = context.getBean(RequestContextController.class);
+            RequestBean bean = context.getBean(RequestBean.class);
+
+            assertTrue(controller.activate());
+            try {
+                int here = bean.id();
+                int[] carried = new int[1];
+                boolean[] endedThere = new boolean[1];
+                Thread withTheContext = new Thread(PropagatedContext.getOrEmpty().wrap(() -> {
+                    carried[0] = bean.id();
+                    // the request was begun on the other thread, and ending it is that thread's
+                    controller.deactivate();
+                    endedThere[0] = !context.getBean(RequestScope.class).isActive();
+                }));
+                withTheContext.start();
+                withTheContext.join();
+                assertEquals(here, carried[0], "the same request, where the propagated context was carried");
+                assertFalse(endedThere[0], "a thread the context was carried to does not end the activation");
+
+                Throwable[] bare = new Throwable[1];
+                Thread without = new Thread(() -> {
+                    try {
+                        bean.id();
+                    } catch (Throwable t) {
+                        bare[0] = t;
+                    }
+                });
+                without.start();
+                without.join();
+                assertInstanceOf(ContextNotActiveException.class, bare[0], "no request on a bare thread");
+                assertEquals(here, bean.id(), "the request is still active where it was begun");
+            } finally {
+                controller.deactivate();
+            }
+            assertThrows(ContextNotActiveException.class, bean::id);
         }
     }
 

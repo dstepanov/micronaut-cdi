@@ -26,8 +26,6 @@ import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,7 +44,9 @@ import java.util.function.Supplier;
  * <p>Holding the instances in the propagated context rather than in a thread local of this class is what lets a
  * request outlive the thread it began on: work handed to an executor, a reactive operator or a virtual thread
  * carries the context with it, and reaches the same request scoped instances there. A thread local would have
- * given that work a different request, or none.</p>
+ * given that work a different request, or none. A request begun and ended in two calls, as
+ * {@code RequestContextController} begins one, is held the same way: the activation is an element of the propagated
+ * context beside the beans, with the scope that ends it, and the scope keeps nothing per thread of its own.</p>
  *
  * <p>Asking for a request scoped bean while no request is being handled is the error the specification calls a
  * {@link ContextNotActiveException}, and is reported as one. The client proxy of a request scoped bean is what
@@ -58,20 +58,6 @@ import java.util.function.Supplier;
 @Singleton
 @Internal
 public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequestScope> {
-
-    /**
-     * The activations begun by {@link #activate()} on this thread, innermost first, each holding what it has to
-     * undo. Only the enter-and-exit form needs this: it has nowhere else to keep the handle that ends the
-     * propagation, since the caller returns between the two halves. The instances themselves are in the
-     * propagated context either way.
-     */
-    private final ThreadLocal<Deque<Activation>> activations = ThreadLocal.withInitial(ArrayDeque::new);
-
-    /**
-     * The requests suspended on this thread, innermost first: a request the kit set inactive keeps everything
-     * it holds and waits here until it is set active again.
-     */
-    private final ThreadLocal<Deque<Instances>> suspended = ThreadLocal.withInitial(ArrayDeque::new);
 
     private final io.micronaut.context.BeanContext beanContext;
 
@@ -262,38 +248,33 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     /**
      * Makes the request context inactive on the calling thread without destroying what it holds, so that it
-     * can be resumed: what the kit's harness calls setting a context inactive.
+     * can be resumed: what the kit's harness calls setting a context inactive. The activation is taken out of the
+     * propagated context, and a suspended one that holds the same request is propagated in its place.
      */
     @SuppressWarnings("deprecation")
     public void suspend() {
-        Deque<Activation> stack = activations.get();
-        Activation activation = stack.poll();
-        if (stack.isEmpty()) {
-            activations.remove();
-        }
+        Activation activation = currentActivation();
         if (activation == null) {
             return;
         }
-        activation.scope().close();
-        suspended.get().push(activation.instances());
+        activation.end();
+        Activation suspended = new Activation(activation.instances(), activation.initiator(), true);
+        suspended.begin(PropagatedContext.getOrEmpty().plus(suspended).propagate());
     }
 
     /**
      * Resumes the request context last suspended on the calling thread, with everything it held.
      */
-    @SuppressWarnings("deprecation")
     public void resume() {
-        Deque<Instances> stack = suspended.get();
-        Instances instances = stack.poll();
-        if (stack.isEmpty()) {
-            suspended.remove();
-        }
-        if (instances == null) {
+        Activation suspended = PropagatedContext.getOrEmpty().findOrNull(Activation.class,
+            activation -> activation.suspended() && activation.instances().owner() == this
+                && activation.isOfTheCallingThread());
+        if (suspended == null) {
             activate();
             return;
         }
-        PropagatedContext.Scope scope = PropagatedContext.getOrEmpty().plus(instances).propagate();
-        activations.get().push(new Activation(instances, scope));
+        suspended.end();
+        propagate(suspended.instances(), suspended.initiator());
     }
 
     /**
@@ -302,31 +283,44 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * <p>This is the enter-and-exit form the specification's
      * {@code jakarta.enterprise.context.control.RequestContextController} is written as, and the one form that
      * cannot be expressed as work to run: the caller returns between beginning the request and ending it. It
-     * therefore needs {@link PropagatedContext#propagate()}, which holds the context in a thread local, and so
-     * needs Micronaut's propagation to be in its thread-local mode. {@link #run}, {@link #supply} and
-     * {@link #call} are the forms that work in either mode, and are what to reach for where the work is a
-     * lambda.</p>
+     * therefore needs {@link PropagatedContext#propagate()}, which brings the context into scope until the scope it
+     * returns is closed, and so needs Micronaut's propagation to be in its thread-local mode. {@link #run},
+     * {@link #supply} and {@link #call} are the forms that work in either mode, and are what to reach for where the
+     * work is a lambda.</p>
      *
      * @return Whether this call is what began it, and so is the one that has to end it
      */
-    @SuppressWarnings("deprecation")
     public boolean activate() {
+        return activate(null);
+    }
+
+    /**
+     * Begins a request on the calling thread on behalf of the given initiator, if one is not under way already: the
+     * initiator is the one that ends it ({@link #deactivate(Object)}).
+     *
+     * <p>The activation is an element of the propagated context, beside the beans of the request, and holds the
+     * scope that ends its propagation. The caller returns between beginning the request and ending it, and the
+     * propagated context is where the request is found again when it is ended: what began it, on which thread, and
+     * what to undo. Work the context is carried to sees the request, and is not where it is ended.</p>
+     *
+     * @param initiator Who begins the request, or {@code null} for whoever ends it with {@link #deactivate()}
+     * @return Whether this call is what began it, and so is the one that has to end it
+     */
+    public boolean activate(@Nullable Object initiator) {
         if (isActive()) {
             return false;
         }
         Instances instances = newInstances();
-        PropagatedContext.Scope scope = PropagatedContext.getOrEmpty().plus(instances).propagate();
-        activations.get().push(new Activation(instances, scope));
+        Activation activation = propagate(instances, initiator);
         try {
             initializedEvent();
         } catch (RuntimeException | Error e) {
             // an observer that threw must not leave a phantom request active on the thread forever: the
             // activation is unwound and the failure comes out
-            activations.get().poll();
             try {
                 destroy(instances);
             } finally {
-                scope.close();
+                activation.end();
             }
             throw e;
         }
@@ -336,32 +330,34 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     /**
      * Ends the request begun on the calling thread by {@link #activate()}, destroying the beans that belong to it.
      *
-     * <p>A request that is being handled but was not begun that way is left alone: a caller that did not begin a
-     * request is not the one to end it.</p>
+     * <p>A request that is being handled but was not begun that way, or was begun on another thread and reached this
+     * one with the propagated context, is left alone: a caller that did not begin a request is not the one to end
+     * it.</p>
      */
     public void deactivate() {
         if (!isActive()) {
             throw new ContextNotActiveException("The request scope is not active on the current thread");
         }
-        Deque<Activation> stack = activations.get();
-        Activation activation = stack.poll();
-        if (activation == null) {
-            // active, but begun by run/supply/call rather than by activate, so not this caller's to end
-            activations.remove();
-            return;
+        Activation activation = currentActivation();
+        if (activation != null) {
+            end(activation);
         }
-        if (stack.isEmpty()) {
-            activations.remove();
+    }
+
+    /**
+     * Ends the request the given initiator began on the calling thread ({@link #activate(Object)}), destroying the
+     * beans that belong to it. A request being handled that the initiator did not begin is left alone.
+     *
+     * @param initiator Who began the request
+     * @return Whether the request was the initiator's, and has ended
+     */
+    public boolean deactivate(Object initiator) {
+        Activation activation = currentActivation();
+        if (activation == null || activation.initiator() != initiator) {
+            return false;
         }
-        try {
-            endWhileActive(activation.instances());
-        } finally {
-            try {
-                activation.scope().close();
-            } finally {
-                destroyedEvent();
-            }
-        }
+        end(activation);
+        return true;
     }
 
     /**
@@ -380,13 +376,55 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     @Override
     public void close() {
-        activations.remove();
-        suspended.remove();
+        // the activations of this scope the calling thread still has in scope, the innermost first, are taken out
+        // of its propagated context, which would otherwise keep them in scope past the container
+        java.util.List<PropagatedContextElement> elements = PropagatedContext.getOrEmpty().getAllElements();
+        while (!elements.isEmpty() && elements.getLast() instanceof Activation activation
+            && activation.instances().owner() == this && activation.isOfTheCallingThread()) {
+            activation.end();
+            elements = PropagatedContext.getOrEmpty().getAllElements();
+        }
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
         // are the container's to destroy as it goes down
         for (Instances instances : java.util.List.copyOf(live)) {
             // each as the request it is: whichever thread it was left on, its beans reach one another as they go
             PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroy(instances));
+        }
+    }
+
+    /**
+     * Brings a request into scope on the calling thread as one {@link #activate(Object)} began: the beans of the
+     * request, and the activation that ends it.
+     */
+    @SuppressWarnings("deprecation")
+    private Activation propagate(Instances instances, @Nullable Object initiator) {
+        Activation activation = new Activation(instances, initiator, false);
+        activation.begin(PropagatedContext.getOrEmpty().plus(instances).plus(activation).propagate());
+        return activation;
+    }
+
+    /**
+     * The activation of the request being handled, where {@link #activate(Object)} began it on the calling thread.
+     */
+    private @Nullable Activation currentActivation() {
+        Instances current = currentInstances();
+        if (current == null) {
+            return null;
+        }
+        return PropagatedContext.getOrEmpty().findOrNull(Activation.class,
+            activation -> activation.instances() == current && !activation.suspended()
+                && activation.isOfTheCallingThread());
+    }
+
+    private void end(Activation activation) {
+        try {
+            endWhileActive(activation.instances());
+        } finally {
+            try {
+                activation.end();
+            } finally {
+                destroyedEvent();
+            }
         }
     }
 
@@ -484,12 +522,61 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     /**
-     * One request begun by {@link #activate()}, and what ending it takes.
+     * One request begun by {@link #activate(Object)}, or suspended after it was, as an element of the propagated
+     * context: who began it, on which thread, and the scope that ends its propagation, which only that thread
+     * closes. A thread the context is carried to sees the activation, and leaves it alone.
      *
-     * @param instances The beans of the request
-     * @param scope     The handle that ends the propagation
+     * <p>One activation is one object: two are never equal, whatever they hold.</p>
      */
-    private record Activation(Instances instances, PropagatedContext.Scope scope) {
-    }
+    private static final class Activation implements PropagatedContextElement {
 
+        private final Instances instances;
+        private final @Nullable Object initiator;
+        private final boolean suspended;
+        private final Thread thread = Thread.currentThread();
+        private PropagatedContext.@Nullable Scope scope;
+
+        Activation(Instances instances, @Nullable Object initiator, boolean suspended) {
+            this.instances = instances;
+            this.initiator = initiator;
+            this.suspended = suspended;
+        }
+
+        Instances instances() {
+            return instances;
+        }
+
+        @Nullable Object initiator() {
+            return initiator;
+        }
+
+        /**
+         * @return Whether the request is suspended rather than active
+         */
+        boolean suspended() {
+            return suspended;
+        }
+
+        /**
+         * @return Whether the activation was propagated on the calling thread, which is the one to end it
+         */
+        boolean isOfTheCallingThread() {
+            return thread == Thread.currentThread();
+        }
+
+        void begin(PropagatedContext.Scope propagation) {
+            scope = propagation;
+        }
+
+        /**
+         * Takes the activation out of the propagated context of its thread, once.
+         */
+        void end() {
+            PropagatedContext.Scope propagation = scope;
+            scope = null;
+            if (propagation != null) {
+                propagation.close();
+            }
+        }
+    }
 }

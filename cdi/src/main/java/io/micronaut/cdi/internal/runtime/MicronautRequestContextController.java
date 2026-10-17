@@ -20,22 +20,22 @@ import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.control.RequestContextController;
-import org.jspecify.annotations.Nullable;
 
 /**
  * The built-in bean of section 2.9.1 that an application begins and ends a request with itself.
  *
- * <p>It is dependent scoped, as the specification asks, and holds only what tells it apart from another caller:
- * whether the request being handled is the one this controller began. A controller that did not begin the request
- * being handled does not end it, which is what the specification says of {@link #deactivate()}. That is per
- * thread rather than per controller, because one dependent instance injected into a bean of a wider scope is
- * reached from every thread that bean is.</p>
+ * <p>It is dependent scoped, as the specification asks, and holds nothing: whether the request being handled is the
+ * one this controller began is said by the activation itself, which the request scope keeps in the propagated
+ * context with the controller that began it and the thread it was begun on. A controller that did not begin the
+ * request being handled does not end it, which is what the specification says of {@link #deactivate()}, and
+ * neither does the controller that began it on a thread the propagated context was only carried to: one dependent
+ * instance injected into a bean of a wider scope is reached from every thread that bean is.</p>
  *
- * <p>Beginning a request and returning, then ending it in a later call, is a shape that needs the request to be
- * held in a thread local while the caller is away, so this route needs Micronaut's propagation in its
- * thread-local mode. {@link RequestScope#run}, {@link RequestScope#supply} and {@link RequestScope#call} are the
- * forms that hold in either mode, and {@code jakarta.enterprise.context.control.ActivateRequestContext} is
- * written in terms of them.</p>
+ * <p>Beginning a request and returning, then ending it in a later call, is a shape that needs the request to stay
+ * in scope while the caller is away, so this route needs Micronaut's propagation in its thread-local mode.
+ * {@link RequestScope#run}, {@link RequestScope#supply} and {@link RequestScope#call} are the forms that hold in
+ * either mode, and {@code jakarta.enterprise.context.control.ActivateRequestContext} is written in terms of
+ * them.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -45,7 +45,6 @@ import org.jspecify.annotations.Nullable;
 public final class MicronautRequestContextController implements RequestContextController {
 
     private final RequestScope requestScope;
-    private final ThreadLocal<@Nullable Boolean> begunHere = new ThreadLocal<>();
 
     public MicronautRequestContextController(RequestScope requestScope) {
         this.requestScope = requestScope;
@@ -53,11 +52,7 @@ public final class MicronautRequestContextController implements RequestContextCo
 
     @Override
     public boolean activate() {
-        if (!requestScope.activate()) {
-            return false;
-        }
-        begunHere.set(Boolean.TRUE);
-        return true;
+        return requestScope.activate(this);
     }
 
     @Override
@@ -65,11 +60,7 @@ public final class MicronautRequestContextController implements RequestContextCo
         if (!requestScope.isActive()) {
             throw new ContextNotActiveException("The request scope is not active on the current thread");
         }
-        if (begunHere.get() == null) {
-            // the request being handled is not the one this controller began, so not this controller's to end
-            return;
-        }
-        begunHere.remove();
-        requestScope.deactivate();
+        // the request being handled is ended only where it is the one this controller began, on this thread
+        requestScope.deactivate(this);
     }
 }

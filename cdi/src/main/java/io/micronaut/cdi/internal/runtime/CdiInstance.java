@@ -55,6 +55,12 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     private final List<CdiQualifier> qualifiers;
     private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
     /**
+     * The segment of the resolution path the lookup was injected at, which a dependent instance the lookup creates
+     * is created under, as the lookup narrowed it ({@link LookupSegment}): the instance reads its injection point off
+     * the path of its own creation. A lookup injected nowhere has none.
+     */
+    private final io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment;
+    /**
      * What the lookup creates of dependent instances, shared by every lookup selected from it: the instances of
      * the bean it was injected into, or its own.
      */
@@ -73,23 +79,26 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @param qualifiers  The qualifiers
      */
     public CdiInstance(BeanContext beanContext, Argument<T> type, Annotation... qualifiers) {
-        this(beanContext, null, OwnedDependents.of(beanContext), type,
+        this(beanContext, null, null, OwnedDependents.of(beanContext), type,
             CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers));
     }
 
     CdiInstance(BeanContext beanContext,
                 jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
+                io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment,
                 OwnedDependents dependents, Argument<T> type, List<CdiQualifier> qualifiers) {
-        this(beanContext, injectedAt, dependents, null, type, qualifiers);
+        this(beanContext, injectedAt, injectionSegment, dependents, null, type, qualifiers);
     }
 
     private CdiInstance(BeanContext beanContext,
                         jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
+                        io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment,
                         OwnedDependents dependents,
                         io.micronaut.context.@Nullable Qualifier<?> narrowedBy,
                         Argument<T> type, List<CdiQualifier> qualifiers) {
         this.beanContext = beanContext;
         this.injectedAt = injectedAt;
+        this.injectionSegment = injectionSegment;
         this.dependents = dependents;
         this.narrowedBy = narrowedBy;
         this.type = type;
@@ -105,46 +114,46 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @return The lookup
      */
     public static CdiInstance<Object> ownedBy(BeanContext beanContext, OwnedDependents dependents) {
-        return new CdiInstance<>(beanContext, null, dependents, Argument.OBJECT_ARGUMENT, List.of());
+        return new CdiInstance<>(beanContext, null, null, dependents, Argument.OBJECT_ARGUMENT, List.of());
     }
 
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type,
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, type,
             and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, Argument.of(subtype),
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, Argument.of(subtype),
             and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype,
                                                                       Annotation... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy,
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy,
             CdiTypes.argumentOf(subtype.getType()), and(CdiQualifier.ofInstances(CompiledAnnotationTypes.of(beanContext), qualifiers)));
     }
 
     @Override
     public io.micronaut.cdi.MicronautInstance<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
                                                         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, type, and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, type, and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
         io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, Argument.of(subtype),
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, Argument.of(subtype),
             and(valuesOf(CompiledAnnotationTypes.of(beanContext), qualifier, qualifiers)));
     }
 
     @Override
     public <U extends T> io.micronaut.cdi.MicronautInstance<U> select(
         Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, subtype,
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, subtype,
             and(valuesOf(CompiledAnnotationTypes.of(beanContext), null, qualifiers)));
     }
 
@@ -153,7 +162,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
                                                                       io.micronaut.context.Qualifier<U> qualifier) {
         // a predicate over definitions rather than an annotation: none of the rules of the specification for a
         // qualifier given to select applies to it
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy(qualifier), subtype,
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy(qualifier), subtype,
             qualifiers);
     }
 
@@ -201,7 +210,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @return The lookup
      */
     <U> CdiInstance<U> selectArgument(Argument<U> argument, List<CdiQualifier> qualifiers) {
-        return new CdiInstance<>(beanContext, injectedAt, dependents, narrowedBy, argument, qualifiers);
+        return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, argument, qualifiers);
     }
 
     private List<CdiQualifier> and(List<CdiQualifier> more) {
@@ -225,8 +234,8 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
     private T dependent(BeanDefinition<T> definition) {
         // a dependent instance obtained through this lookup belongs to the bean the lookup was injected
         // into, and is destroyed with it, or to the lookup, and is destroyed as it is closed. Section 2.5.2.5
-        // gives it the lookup's own injection point as its metadata, which is left out for its creation
-        return createDependent(dependents, beanContext, type, definition, lookupPoint()).bean();
+        // gives it the lookup's own injection point as its metadata, which its creation's path says
+        return createDependent(dependents, beanContext, type, definition, lookupPoint(), injectionSegment).bean();
     }
 
     /**
@@ -237,32 +246,29 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
      * @param beanContext The bean context
      * @param selected    The type the lookup selected
      * @param definition  The bean
-     * @param lookedUpAt  The injection point of the lookup, which the instance is given as its own, or {@code null}
+     * @param lookedUpAt  The injection point of the lookup, or {@code null} for a lookup of the point already current
+     * @param injectionSegment The segment of the resolution path the lookup was injected at, or {@code null} for a
+     *                    lookup injected nowhere
      * @param <U>         The bean type
      * @return The registration that created the instance, which knows the dependents to destroy with it
      */
     static <U> io.micronaut.context.BeanRegistration<U> createDependent(
         OwnedDependents dependents, BeanContext beanContext, Argument<U> selected, BeanDefinition<U> definition,
-        jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookedUpAt) {
-        if (lookedUpAt != null) {
-            CurrentInjectionPoint.enter(lookedUpAt);
-        }
+        jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookedUpAt,
+        io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment) {
         try {
             // the definition is the one the lookup chose: resolved as it is, with no candidate lookup of its own. One
             // created for the point already current - the injection point metadata - is resolved within the creation
-            // the lookup is made in, where there is one, whose path says what that point is
+            // the lookup is made in, where there is one, whose path says what that point is. Any other is created on a
+            // path that says what the lookup's injection point is
             Argument<U> asked = askedAs(beanContext, selected, definition);
             return lookedUpAt == null
                 ? dependents.registrationAtCurrentPoint(definition, asked)
-                : dependents.registration(definition, asked);
+                : dependents.registrationAt(injectionSegment, lookedUpAt, definition, asked);
         } catch (io.micronaut.context.exceptions.BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
             throw CdiBean.translated(e);
-        } finally {
-            if (lookedUpAt != null) {
-                CurrentInjectionPoint.leave();
-            }
         }
     }
 
@@ -430,7 +436,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
     @Override
     public Handle<T> getHandle() {
-        return new CdiHandle<>(beanContext, type, one(), lookupPoint(), dependents);
+        return new CdiHandle<>(beanContext, type, one(), lookupPoint(), injectionSegment, dependents);
     }
 
     @Override
@@ -439,7 +445,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         // one pass must not be what a second pass hands out
         return () -> CdiResolution.narrow(definitions()).stream()
             .map(definition -> (Handle<T>) new CdiHandle<>(beanContext, type, definition, lookupPoint(),
-                dependents))
+                injectionSegment, dependents))
             .iterator();
     }
 
@@ -483,6 +489,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         private final Argument<T> selected;
         private final BeanDefinition<T> definition;
         private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookupPoint;
+        private final io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment;
         private final OwnedDependents dependents;
         private io.micronaut.context.@Nullable BeanRegistration<T> registration;
         private @Nullable T instance;
@@ -490,11 +497,13 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
         private CdiHandle(BeanContext beanContext, Argument<T> selected, BeanDefinition<T> definition,
                           jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint lookupPoint,
+                          io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment,
                           OwnedDependents dependents) {
             this.beanContext = beanContext;
             this.selected = selected;
             this.definition = definition;
             this.lookupPoint = lookupPoint;
+            this.injectionSegment = injectionSegment;
             this.dependents = dependents;
         }
 
@@ -510,7 +519,8 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
                     // a dependent obtained through a handle is a dependent of the lookup like any other, and
                     // goes when the lookup goes — unless the handle destroys it first
                     io.micronaut.context.BeanRegistration<T> created =
-                        createDependent(dependents, beanContext, selected, definition, lookupPoint);
+                        createDependent(dependents, beanContext, selected, definition, lookupPoint,
+                            injectionSegment);
                     registration = created;
                     resolved = created.bean();
                 } else {

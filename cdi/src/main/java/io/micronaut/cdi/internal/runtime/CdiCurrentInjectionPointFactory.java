@@ -27,9 +27,10 @@ import java.util.Iterator;
  * Builds the {@code InjectionPoint} of section 2.5.2.5: a dependent bean may be told where it was injected.
  *
  * <p>The answer is on the resolution path: the metadata is being injected into a bean, and the segment above
- * that bean's own is the injection point the bean is being created for. A bean that is not being injected
- * anywhere — obtained programmatically — has no such segment; if a lookup left the injection point it was
- * itself injected into, that is the answer, and otherwise the metadata is null, which is what the
+ * that bean's own is the injection point the bean is being created for. A bean an injected {@code Instance}
+ * creates is created on the path of the point the lookup was injected into, under a segment that carries that
+ * point as the lookup was narrowed ({@link LookupSegment}). A bean that is not being injected anywhere — obtained
+ * through a lookup injected nowhere — has no such segment, and the metadata is null, which is what the
  * specification says a non-contextual object sees.</p>
  *
  * @author Denis Stepanov
@@ -72,20 +73,20 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
             }
             while (segments.hasNext()) {
                 BeanResolutionContext.Segment<?, ?> outer = segments.next();
-                if (!outer.getDeclaringType().equals(self.getDeclaringType())) {
+                // a lookup's segment is where the bean is going even where the lookup belongs to a bean of the
+                // same class: a dependent bean may look another instance of its own class up
+                if (outer instanceof LookupSegment<?, ?> || !outer.getDeclaringType().equals(self.getDeclaringType())) {
                     return of(context, outer);
                 }
             }
         }
-        // a bean obtained through a lookup that stands on its own is created in a resolution of its own, whose path
-        // does not say what the lookup was injected into
-        return CurrentInjectionPoint.current();
+        // a bean obtained through a lookup injected nowhere is created in a resolution of its own, whose path is
+        // the bean's alone
+        return null;
     }
 
     private static InjectionPoint of(BeanContext context, BeanResolutionContext.Segment<?, ?> segment) {
-        CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-        return CdiInjectionPoint.of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()),
-            segment);
+        return CdiInjectionPoint.of(context.getBean(CdiBeanContainer.class), segment);
     }
 
     /**

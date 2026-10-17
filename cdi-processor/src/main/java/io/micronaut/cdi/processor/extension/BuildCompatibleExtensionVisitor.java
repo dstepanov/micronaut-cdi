@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
+import io.micronaut.cdi.internal.metadata.CdiNonbindingMembers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
@@ -902,11 +903,20 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             discovered().memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
             // the members of an annotation interface, as Micronaut answers them under every compiler
+            List<String> nonbinding = new ArrayList<>(members.size());
             NonbindingMembersRemapper.memberElementsOf(element).forEach((name, member) -> {
                 for (AnnotationValue<?> annotation : members.getOrDefault(name, List.of())) {
                     member.annotate(annotation);
+                    if (NonbindingMembersRemapper.isNonbinding(annotation.getAnnotationName())) {
+                        nonbinding.add(name);
+                    }
                 }
             });
+            if (!nonbinding.isEmpty()) {
+                // listed on the interface too, which is what an occurrence of the annotation is completed from
+                element.annotate(AnnotationValue.builder(CdiNonbindingMembers.class)
+                    .values(nonbinding.toArray(new String[0])).build());
+            }
         }
     }
 
