@@ -429,6 +429,48 @@ its processor path runs it, so a synthetic component is recorded by each; the re
 the order it described the component in, and the container registers a component once however many
 compilations recorded it.
 
+### Compile-time aggregation
+
+Every visitor of the processor is isolating and writes what it records of a class from that class alone: the
+scope, the injection points, the name, the producers and observers, the default qualifier, the proxyability, the
+bean types and the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`), none of which keeps
+anything from one class to the next, on itself, in a static field or on the attributes of the `VisitorContext`. The
+remapping that lists the non-binding members of a qualifier reads the occurrence and its annotation interface, and
+keeps only a guard on the thread against two interfaces whose members are annotated with each other. What the
+whole deployment knows is the container's, read as it starts from the metadata the classes were compiled with.
+
+What still aggregates is the build compatible extensions, whose phases the specification defines over the whole
+deployment, and it is confined to the one visitor that runs them (`BuildCompatibleExtensionVisitor`), made as the
+compilation starts it, read as its rounds finish, and read by no other visitor:
+
+- `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
+  `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
+  contexts it registered - which section 2.10.2 has said before any class is processed and which is applied by name
+  as each named class comes past; and the classes the compiler visited, by name, which the registration phase of
+  section 2.10.3 is told about as their round finishes, and of which the ones of the compilation are the origins
+  of what is written for the deployment as a whole (the import of the scanned classes, the record of the registered
+  qualifiers, the definitions of the contexts and of the synthetic components). Two flags say whether the scanned
+  classes were seen to and whether synthesis ran, which happen once.
+- `SynthesisPhase`: the synthetic beans and observers the synthesis phase of section 2.10.5 described, made and
+  consumed as the round finishes, after every bean is known, followed by the registration of what it described and
+  the validation of section 2.10.6, which are told about the deployment as a whole.
+- The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
+  saw for a later one, as the specification allows and the kit's extensions do.
+- The handing of the extensions of one deployment to the visitor by a harness that compiles a deployment at a
+  time (`BuildCompatibleExtensionVisitor.overrideExtensions`, a static field read as the visitor is made), and the
+  specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as it starts.
+
+The alternative is to run the registration, synthesis and validation phases as the container starts, from the
+extension classes the compilation recorded, as the portable extensions are already run (`A portable extension is
+run over what was compiled`). The visitor would then keep what the discovery phase said and nothing about the
+classes. It costs: the extensions and an implementation of the language model over compiled metadata on the
+runtime class path, where the processor's model reads the compiler's elements; the registration and validation
+methods run at every start rather than once per build, over every bean; a synthetic bean or observer becomes a
+runtime definition (`RuntimeBeanDefinition`) rather than a compiled one; an `InvokerFactory` would have to find the
+methods it invokes executable already, which is decided as the class compiles; and a problem an extension reports
+fails the start of the application rather than its compilation. Discovery and enhancement stay at compile time
+either way: what they say changes the metadata the definitions are compiled with.
+
 ### A portable extension is run over what was compiled
 
 *Sections 23, 24.2 and 25.1.* A portable extension - a class that implements `Extension` and observes the

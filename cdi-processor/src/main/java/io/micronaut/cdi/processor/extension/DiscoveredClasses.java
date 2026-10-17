@@ -48,6 +48,12 @@ import java.util.function.Predicate;
  * extension is running in. An annotation from a library that is already compiled cannot be told that it is a
  * qualifier, because there is no moment at which to tell it.</p>
  *
+ * <p>Beside it are the classes of the deployment the compiler visited: the ones the registration phase is told
+ * about as their round finishes, and the ones of the compilation what is written for the deployment as a whole is
+ * written from. With the synthesis of section 2.10.5 ({@link SynthesisPhase}) this is all the processor keeps from
+ * one class to the next; it is made as the compilation starts the extension visitor and is read as its rounds
+ * finish, and no other visitor reads it.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
@@ -69,6 +75,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private final List<ClassElement> contributors = new ArrayList<>();
     private final List<ClassElement> unregistered = new ArrayList<>();
     private final java.util.Set<String> registered = new java.util.HashSet<>();
+    private boolean roundFinished;
     private @org.jspecify.annotations.Nullable VisitorContext context;
 
     /**
@@ -111,18 +118,26 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
-     * Notes a class the compiler visited, which the registration phase is told about as the round finishes.
+     * Notes a class the compiler visited, which the registration phase is told about as the round finishes. A
+     * scanned class the generated import brought in after a round finished is a class of a library: nothing the
+     * compilation writes for the deployment is named after it or placed in its package.
      *
      * @param element The class
-     * @param owned   Whether the compilation compiles it, rather than reading it from a library
      */
-    void visited(ClassElement element, boolean owned) {
+    void visited(ClassElement element) {
         if (visited.add(element.getName())) {
-            if (owned) {
+            if (!(roundFinished && scanned.contains(element.getName()))) {
                 contributors.add(element);
             }
             unregistered.add(element);
         }
+    }
+
+    /**
+     * Notes that a round of the compilation finished.
+     */
+    void roundFinished() {
+        roundFinished = true;
     }
 
     /**

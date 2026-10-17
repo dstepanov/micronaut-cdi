@@ -98,16 +98,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private @org.jspecify.annotations.Nullable DiscoveredClasses discovered;
     /**
-     * Whether the scanned classes have been seen to: imported, under javac, or registered.
+     * Which of the phases that wait for the whole deployment have run, which run once: the scanned classes have
+     * been seen to - imported, under javac, or registered - and the synthesis and validation phases have run.
      */
     private boolean scannedClassesHandled;
     private boolean synthesized;
-    /**
-     * Whether a round of the compilation has finished: a scanned class visited after that is one the generated
-     * import named, of a library rather than of the compilation.
-     */
-    private boolean roundFinished;
-    private @org.jspecify.annotations.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
@@ -380,9 +375,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             // a class this visitor generated: the import of the scanned classes
             return;
         }
-        // a scanned class the generated import brought in a later round is a class of a library: nothing the
-        // compilation writes is named after it or placed in its package
-        started.visited(element, !(roundFinished && started.scannedClasses().contains(name)));
+        started.visited(element);
         applyWhatWasDiscovered(element);
         enhance(element, context);
     }
@@ -426,7 +419,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (started.contributors().isEmpty()) {
             return;
         }
-        roundFinished = true;
+        started.roundFinished();
         finishThisRound(context);
     }
 
@@ -660,15 +653,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * What the classes this compilation generates are named with, chosen as they are first generated.
+     * What the class this compilation generates is named with: the import of the scanned classes, which is generated
+     * once.
      */
     private String suffix(VisitorContext context) {
-        String chosen = suffix;
-        if (chosen == null) {
-            chosen = suffixOf(discovered().contributors().get(0).getName(), context);
-            suffix = chosen;
-        }
-        return chosen;
+        return suffixOf(discovered().contributors().get(0).getName(), context);
     }
 
     /**
