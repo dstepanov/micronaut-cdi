@@ -1,7 +1,6 @@
 package io.micronaut.cdi.test.bce;
 
 import io.micronaut.annotation.processing.test.JavaParser;
-import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Discovery;
@@ -11,10 +10,8 @@ import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -40,11 +37,6 @@ class ExtensionParametersTest {
             }
         }
         """;
-
-    @AfterEach
-    void restoreServiceLoading() {
-        BuildCompatibleExtensionVisitor.overrideExtensions(null);
-    }
 
     public static final class DiscoveryMessages implements BuildCompatibleExtension {
         static volatile boolean invoked;
@@ -78,8 +70,7 @@ class ExtensionParametersTest {
     @Test
     void aDiscoveryMethodIsHandedMessages() {
         DiscoveryMessages.invoked = false;
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(new DiscoveryMessages()));
-        compile();
+        compile(DiscoveryMessages.class);
 
         assertTrue(DiscoveryMessages.invoked, "the discovery method ran");
         assertNotNull(DiscoveryMessages.messages, "the discovery method is handed a Messages");
@@ -88,8 +79,7 @@ class ExtensionParametersTest {
     @Test
     void anEnhancementMethodIsHandedTypes() {
         EnhancementTypes.types = null;
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(new EnhancementTypes()));
-        assertDoesNotThrow(ExtensionParametersTest::compile);
+        assertDoesNotThrow(() -> compile(EnhancementTypes.class));
 
         assertNotNull(EnhancementTypes.types, "the enhancement method is handed a Types");
     }
@@ -97,14 +87,13 @@ class ExtensionParametersTest {
     @Test
     void anObserverRegistrationMethodIsHandedAnInvokerFactory() {
         ObserverInvokerFactory.invokers = null;
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(new ObserverInvokerFactory()));
-        assertDoesNotThrow(ExtensionParametersTest::compile);
+        assertDoesNotThrow(() -> compile(ObserverInvokerFactory.class));
 
         assertNotNull(ObserverInvokerFactory.invokers, "the registration method is handed an InvokerFactory");
     }
 
-    private static void compile() {
-        try (JavaParser parser = new JavaParser()) {
+    private static void compile(Class<? extends BuildCompatibleExtension> extension) {
+        try (JavaParser parser = ExtensionCompilation.of(extension)) {
             parser.generate("bce.Subject", SOURCE);
         }
     }

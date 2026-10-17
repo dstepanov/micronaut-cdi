@@ -56,6 +56,12 @@ class ExtensionOptionsTest {
         assertEquals(List.of(), ranWith(null, "true"));
     }
 
+    @Test
+    void theOptionsOfOneCompilationAreNotTheNextOnes() {
+        assertEquals(List.of("Named ran"), ranWith(Named.class.getName(), "true"));
+        assertEquals(List.of("Registered ran"), ranWith(null, null));
+    }
+
     /**
      * Compiles the subject with the given options and returns what the discovery phases of the extensions that
      * ran reported, in the order they reported it.
@@ -84,6 +90,12 @@ class ExtensionOptionsTest {
             }
             ran.sort(null);
             return ran;
+        } finally {
+            // Micronaut's processor copies every micronaut.* option into the system properties as it initializes
+            // and reads them back as a compilation's options: cleared, so that one compilation's options are not
+            // the next one's
+            System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION);
+            System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION);
         }
     }
 

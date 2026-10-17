@@ -16,7 +16,6 @@
 package io.micronaut.cdi.test.bce;
 
 import io.micronaut.annotation.processing.test.JavaParser;
-import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
@@ -24,7 +23,6 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -37,16 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class SyntheticObserverTypesTest {
 
-    @AfterEach
-    void restoreServiceLoading() {
-        BuildCompatibleExtensionVisitor.overrideExtensions(null);
-    }
-
     @Test
     void aSyntheticObserverOfAWildcardTypeIsRecorded() {
-        Observing extension = new Observing();
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-        try (JavaParser parser = new JavaParser()) {
+        Observing.added = false;
+        try (JavaParser parser = ExtensionCompilation.of(Observing.class)) {
             parser.generate("observed.Subject", """
                 package observed;
 
@@ -55,11 +47,11 @@ public class SyntheticObserverTypesTest {
                 }
                 """);
         }
-        assertTrue(extension.added, "The synthesis phase has to have run");
+        assertTrue(Observing.added, "The synthesis phase has to have run");
     }
 
     public static class Observing implements BuildCompatibleExtension {
-        boolean added;
+        static volatile boolean added;
 
         @Synthesis
         public void synthesise(SyntheticComponents components, Types types) {
