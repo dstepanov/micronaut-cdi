@@ -804,14 +804,15 @@ own rather than the first one alone.
   as a variable the container renders is, through its bounds. A variable `toExactType` renders has
   no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
   module tells the variables of an event's class apart by their names.
-- **A type hierarchy record cannot say every closure.** Micronaut's record of a class (`importTypeHierarchy`)
-  leaves out a supertype that is not public and of a third package, which no record can name, and is written into
-  the package of the class where the class's closure names a class of that package that is not public: for a class
-  of the JDK such as `StringBuilder`, whose superclass `AbstractStringBuilder` is package-private, that is
-  `java.lang`, and the compilation fails ("cannot access io.micronaut.core.type.GeneratedTypeHierarchy"). The
-  processor records neither (`TypeHierarchyRecords`): a bean of such a class, or produced as one, has its closure
-  written on its definition (`CdiBeanTypes`), and an event of such a class is typed as one nothing was recorded of.
-  A record that named such a supertype by name, loaded where it is read, would remove the fallback.
+- **What a type hierarchy record left out is told at run time alone.** Since Micronaut Core 5.3 a record is
+  written into the package of the element it is made from, a class of the JDK's included, and a supertype it cannot
+  name from there is left out and named in `TypeHierarchy.getOmittedSuperTypeNames()`; `importTypeHierarchy`
+  answers the name of the record and not what it left out. So the processor writes the closure of a bean on its
+  definition (`CdiBeanTypes`) where a supertype of its class is a class that is not public and of another package,
+  which it tells from the names of the supertypes alone, and the container reads it where the record it finds left
+  something out. A supertype left out because its arguments name such a class is missing from the bean's types; the
+  omitted names answered as the record is written would let the processor write the closure exactly where the
+  record needs it.
 - **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
   definition chosen within a creation is resolved within it (`RuntimeBeanDefinition.LookupContext.getBeanRegistration`
   and `BeanResolutionContext.getBeanRegistration`): the lookup a synthetic bean's creation function is handed
