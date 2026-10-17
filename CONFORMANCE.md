@@ -781,10 +781,16 @@ own rather than the first one alone.
   whose members are annotated with each other (`MutuallyAnnotatedQualifierMembersTest` holds the shape). What it
   cannot see is a member a build compatible extension marked during discovery, which the source does not, and a
   qualifier an extension composed for a synthetic component, which is no occurrence it reads: the processor lists
-  those (`NonbindingMembersRemapper`), reading the members of the annotation interface as the compilation holds it,
-  where the discovery phase marked them, for each occurrence, and the comparison leaves out a member either side
-  lists. Micronaut reads the members from the source, and caches what it read per annotation name for the process;
-  reading them through the compilation's view of the interface instead would remove the remapping.
+  those (`NonbindingMembersRemapper`), and the comparison leaves out a member either side lists. The discovery phase
+  lists the members it marked on the annotation interface itself (`CdiNonbindingMembers`), which Micronaut reads into
+  every occurrence among the interface's meta-annotations, and the remapping of an occurrence reads that list and
+  nothing else: reading the members' metadata, or the interface's, from the remapping would come back to it for the
+  annotations on them, and two interfaces whose members, or which themselves, are annotated with each other would
+  read each other without end (`MutuallyAnnotatedQualifierMembersTest`, `MutuallyAnnotatedBindingTypesTest`). Under
+  KSP Micronaut hands a remapper an occurrence without its meta-annotations, so there the interface alone is read,
+  and a synthetic qualifier is completed from the members of its interface outside any remapping. Micronaut reads
+  the members from the source, and caches what it read per annotation name for the process; reading them through
+  the compilation's view of the interface instead would remove the remapping.
 - **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
