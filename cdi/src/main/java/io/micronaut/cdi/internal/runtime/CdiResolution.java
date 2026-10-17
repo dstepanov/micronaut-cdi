@@ -208,8 +208,7 @@ public final class CdiResolution {
         for (T candidate : candidates) {
             byDefinition.putIfAbsent(java.util.Objects.requireNonNull(definitionOf.apply(candidate)), candidate);
         }
-        List<BeanDefinition<?>> chosen = amongMicronautsOwn(new ArrayList<>(byDefinition.keySet()), type,
-            beanContext.getContextConfiguration().beanResolutionCustomizer());
+        List<BeanDefinition<?>> chosen = amongMicronautsOwn(new ArrayList<>(byDefinition.keySet()), type, beanContext);
         if (chosen.size() == byDefinition.size()) {
             return candidates;
         }
@@ -221,84 +220,24 @@ public final class CdiResolution {
     }
 
     /**
-     * Micronaut's choice of one bean among several beans of Micronaut's own, in the order Micronaut makes it: the
-     * primary ones where there are any, the choice of the resolution customizer, the ones that are not secondary,
-     * the one of the lowest order, the default implementation, and the one of exactly the type looked up. It is
-     * the selection of {@code DefaultBeanContext} after the qualifier has narrowed the candidates, which Micronaut
-     * does not offer for a collection already chosen - the bean manager's {@code resolve} is handed one without a
-     * type - and is kept to that one method so that it can become a call of Micronaut's once Micronaut offers one.
-     * The customizer is the one the context was configured with.
+     * Micronaut's choice of one bean among several beans of Micronaut's own, as Micronaut makes it after a qualifier
+     * has narrowed the candidates ({@code BeanDefinitionRegistry.selectAmong}): the primary ones where there are any,
+     * the choice of the resolution customizer of the context, the ones that are not secondary, the one of the lowest
+     * order, the default implementation, and the one of exactly the type looked up.
      *
-     * @param candidates The definitions, more than one
-     * @param type       The type looked up, or {@code null} where it is not known
-     * @param customizer The resolution customizer the context was configured with
+     * @param candidates  The definitions, more than one
+     * @param type        The type looked up, or {@code null} where it is not known
+     * @param beanContext The context, whose resolution customizer has a say
      * @return The one definition chosen, or the candidates nothing chose among
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     static List<BeanDefinition<?>> amongMicronautsOwn(List<BeanDefinition<?>> candidates,
                                                        io.micronaut.core.type.@Nullable Argument<?> type,
-                                                       io.micronaut.context.BeanResolutionCustomizer customizer) {
+                                                       io.micronaut.context.BeanContext beanContext) {
         if (candidates.size() < 2) {
             return candidates;
         }
-        List<BeanDefinition<?>> remaining = candidates;
-        List<BeanDefinition<?>> primary = new ArrayList<>(remaining.size());
-        for (BeanDefinition<?> candidate : remaining) {
-            if (candidate.isPrimary()) {
-                primary.add(candidate);
-            }
-        }
-        if (!primary.isEmpty()) {
-            remaining = primary;
-        }
-        if (remaining.size() == 1) {
-            return remaining;
-        }
-        if (type != null) {
-            java.util.Optional<BeanDefinition<Object>> custom = customizer.resolveNonUniqueBean(
-                (io.micronaut.core.type.Argument) type, null, (Collection) remaining);
-            if (custom.isPresent()) {
-                return List.of(custom.get());
-            }
-        }
-        List<BeanDefinition<?>> notSecondary = new ArrayList<>(remaining.size());
-        for (BeanDefinition<?> candidate : remaining) {
-            if (!candidate.getAnnotationMetadata().hasDeclaredStereotype(io.micronaut.context.annotation.Secondary.class)) {
-                notSecondary.add(candidate);
-            }
-        }
-        if (notSecondary.size() == 1) {
-            return notSecondary;
-        }
-        if (!notSecondary.isEmpty()) {
-            // where every one is secondary none is preferred to another, and the order still has its say
-            remaining = notSecondary;
-        }
-        List<BeanDefinition<?>> ordered = new ArrayList<>(remaining);
-        ordered.sort(io.micronaut.core.order.OrderUtil.ORDERED_COMPARATOR);
-        if (ordered.get(0).getOrder() != ordered.get(1).getOrder()) {
-            return List.of(ordered.get(0));
-        }
-        Class<?> defaultImplementation = remaining.get(0).getDefaultImplementation();
-        if (defaultImplementation != null) {
-            for (BeanDefinition<?> candidate : remaining) {
-                if (candidate.getBeanType().equals(defaultImplementation)) {
-                    return List.of(candidate);
-                }
-            }
-        }
-        if (type != null) {
-            List<BeanDefinition<?>> exact = new ArrayList<>(1);
-            for (BeanDefinition<?> candidate : remaining) {
-                if (candidate.getBeanType() == type.getType()) {
-                    exact.add(candidate);
-                }
-            }
-            if (exact.size() == 1) {
-                return exact;
-            }
-        }
-        return remaining;
+        return (List) beanContext.selectAmong((io.micronaut.core.type.Argument) type, (Collection) candidates);
     }
 
     /**

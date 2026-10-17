@@ -343,7 +343,8 @@ bean of the specification and a bean of Micronaut's own is injected with the bea
 `Instance` and the bean manager resolve it. A lookup that resolves one bean among beans of
 Micronaut's own alone - `Instance.get()`, the bean manager's `resolve` - chooses by Micronaut's precedence as
 well: the primary ones where there are any, the choice of the resolution customizer, the ones that are not
-secondary, the lowest order, the default implementation and the exact type (`CdiResolution.amongMicronautsOwn`). A bean of Micronaut's
+secondary, the lowest order, the default implementation and the exact type, as Micronaut selects among a given
+collection of definitions (`BeanDefinitionRegistry.selectAmong`, since Micronaut Core 5.3). A bean of Micronaut's
 own keeps Micronaut's resolution and aggregation for its own injection points, with the type rules of section
 2.4.2.1 for a parameterized type a bean of the specification has (`CdiResolutionCustomizer.isCandidateBean`).
 
@@ -842,13 +843,6 @@ own rather than the first one alone.
   (`ContainerInjectionVisitor`), and the points a bean of the specification inherits from a class that is not one
   keep Micronaut's rules; metadata of a member kept by the class it is read through would let the container
   resolve them as well.
-- **Micronaut chooses one bean among candidates in a private method.** `DefaultBeanContext.lastChanceResolve` -
-  the primary ones, `BeanResolutionCustomizer.resolveNonUniqueBean`, `@Secondary`, the order, `@DefaultImplementation`
-  and the exact type - is reached only through a lookup by a type and a qualifier, which selects the candidates
-  itself; the bean manager's `resolve` is handed a set of beans and no type. The container copies the precedence
-  into one method (`CdiResolution.amongMicronautsOwn`), which a public selection over a given collection of
-  definitions would replace; it asks the customizer the context was configured with, since Micronaut does not
-  publish the one it serves the context with.
 - **The context is injected under types no bean definition stands for.** `DefaultBeanContext` hands itself out as
   `BeanContext`, `WatchableBeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`,
   `ExecutionHandleLocator`, `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and
