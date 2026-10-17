@@ -207,32 +207,54 @@ def prepareTckLibrary = tasks.register('prepareTckLibrary') {
     }
 }
 
-def tckSuite = tasks.register('tckSuite', Test) {
-    description = 'Runs the technology compatibility kit through the Arquillian adapter.'
-    group = 'verification'
-    dependsOn prepareTckLibrary
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    useTestNG {
+// What a kit run is, whichever classpath it runs on.
+def kitRun = { Test task ->
+    task.group = 'verification'
+    task.dependsOn prepareTckLibrary
+    task.testClassesDirs = sourceSets.test.output.classesDirs
+    task.useTestNG {
         suites file('src/test/resources/tck-suite.xml')
     }
     // core mode is what the kit calls running against CDI Lite: the properties of the full profile — a data
     // source, JMS — are not required and the suite holds the implementation to Lite
-    systemProperty 'org.jboss.cdi.tck.cdiCoreMode', 'true'
-    systemProperty 'org.jboss.cdi.tck.libraryDirectory', tckLibraryDir.get().asFile.absolutePath
-    systemProperty 'org.jboss.cdi.tck.testTimeoutFactor', '100'
+    task.systemProperty 'org.jboss.cdi.tck.cdiCoreMode', 'true'
+    task.systemProperty 'org.jboss.cdi.tck.libraryDirectory', tckLibraryDir.get().asFile.absolutePath
+    task.systemProperty 'org.jboss.cdi.tck.testTimeoutFactor', '100'
     // deployment is compilation: the adapter compiles a broken archive's sources as the kit deploys it
-    dependsOn deployableTckSources
-    systemProperty 'io.micronaut.cdi.tck.deployableSources',
+    task.dependsOn deployableTckSources
+    task.systemProperty 'io.micronaut.cdi.tck.deployableSources',
         layout.buildDirectory.dir('generated/tck-deployable').get().asFile.absolutePath
-    systemProperty 'io.micronaut.cdi.tck.brokenScenarios', brokenScenarios.join(',')
+    task.systemProperty 'io.micronaut.cdi.tck.brokenScenarios', brokenScenarios.join(',')
     // every deployment the suite makes is one container starting and stopping; they are quick, but there are many
-    maxHeapSize = '2g'
+    task.maxHeapSize = '2g'
+    // the tests come from the suite file rather than from scanning the compiled classes, which hold none
+    task.failOnNoDiscoveredTests = false
+    task.scanForTestClasses = false
+}
+
+def tckSuite = tasks.register('tckSuite', Test) {
+    description = 'Runs the technology compatibility kit through the Arquillian adapter.'
+    kitRun(it)
+    classpath = sourceSets.test.runtimeClasspath
     // the whole suite passes: a failing test is a broken build now, not a finding
     ignoreFailures = false
-    // the tests come from the suite file rather than from scanning the compiled classes, which hold none
-    failOnNoDiscoveredTests = false
-    scanForTestClasses = false
+}
+
+// The kit without the module that reads classes: what the container answers from what was compiled alone. It
+// is a measure rather than a gate — the kit asks for the reflective parts of the specification's API, which
+// fail without the module by design — so it reports its failures rather than fail the build, and is run by
+// hand: `tckSuiteNoReflection --tests 'org.jboss.cdi.tck.tests.event.*'` for one part of the kit
+tasks.register('tckSuiteNoReflection', Test) {
+    description = 'Runs the technology compatibility kit without the reflection modules, reporting what fails.'
+    kitRun(it)
+    classpath = sourceSets.test.runtimeClasspath.filter { file ->
+        // this build's reflection module, by the directory it is built in or the jar it is packed as, and
+        // Micronaut's own, which it brings
+        !file.path.contains("${File.separator}cdi-reflection${File.separator}")
+            && !file.name.startsWith('micronaut-cdi-reflection')
+            && !file.name.startsWith('micronaut-reflection')
+    }
+    ignoreFailures = true
 }
 
 // the kit is the measure of done, so the build is not done without it
