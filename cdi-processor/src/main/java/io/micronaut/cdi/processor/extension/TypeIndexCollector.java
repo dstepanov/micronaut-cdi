@@ -221,7 +221,7 @@ final class TypeIndexCollector {
             return;
         }
         if (generic) {
-            TypeHierarchyRecords.record(element, origin, owned, context);
+            TypeHierarchyRecords.record(element, origin, context);
         }
     }
 

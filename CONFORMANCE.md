@@ -228,14 +228,17 @@ parameterized type above it or declares type variables - less an interface,
 an abstract class and an annotation literal, which are never the class of an event object - with the closure of
 every class a recorded type names as a type argument or a bound, a class of the JDK or of a library among them,
 which is what a bound is compared against, as Micronaut's type hierarchy record of the class
-(`VisitorContext.importTypeHierarchy`, found at run time with `TypeHierarchies.find`). Micronaut writes the record
-of a class into the package of the class it is made from, a class of the JDK or of a library into a sub-package of
-that one named after the class's (`com.example.$$java.lang.$Integer$TypeHierarchy`), and the record of a class that
-refers to a class only its own package can name into that package. A class a record could not say in full - one
-with a supertype that is not public and of a third package, which Micronaut leaves out of the record - and a class
-of a library whose record would have to be written into the library's package are not recorded
-(`TypeHierarchyRecords`), since nothing the compilation writes is placed in a package of the library; a bean of
-such a class, or produced as one, has its closure written on the bean or on its producer instead (`CdiBeanTypes`).
+(`VisitorContext.importTypeHierarchy`, found at run time with `TypeHierarchies.find`). The class is recorded from
+the element being visited, every time it is, and nothing is remembered from one class to the next
+(`TypeHierarchyRecords`): Micronaut writes the record into the package of that element - a class of another package,
+of the JDK or of a library, into a sub-package of it named after the class's
+(`com.example.$$java.lang.$Integer$TypeHierarchy`) - once per package however often it is asked, leaves out a
+supertype it cannot name from there and names it in `TypeHierarchy.getOmittedSuperTypeNames()`, and refuses a
+class whose variables are bounded by such a class or that is an inner class of a generic class. A bean whose class,
+or the class its producer produces, Micronaut refused, or that has a supertype that is not public and of another
+package, has its closure written on the bean or on its producer as well (`CdiBeanTypes`), and the container reads
+that where the record it finds of the class names a supertype it left out (`RecordedTypeIndex`, `CdiBean`). A
+supertype left out because its arguments name such a class is not looked for, and is missing from that bean's types.
 Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a

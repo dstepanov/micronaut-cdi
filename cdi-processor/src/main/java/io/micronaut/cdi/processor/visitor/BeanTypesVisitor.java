@@ -39,9 +39,10 @@ import java.util.List;
  * generic signatures of the classes to work it out again. So the hierarchy of the bean class, and of the class a
  * producer produces, is recorded as Micronaut's type hierarchy record of the class ({@link TypeHierarchyRecords}),
  * which the container reads the closure from for the class over its own variables, or for the type the producer
- * declared as its definition holds it. Where no such record can say the closure in full - a supertype that is not
- * public and of another package, a class of a library whose record would belong in the library's package - the
- * closure is written on the class or on the producer instead ({@link CdiBeanTypes}).</p>
+ * declared as its definition holds it. Where the record may not say the closure in full - Micronaut refused the
+ * hierarchy, or a supertype is a class that is not public and of another package, which the record leaves out - the
+ * closure is written on the class or on the producer as well ({@link CdiBeanTypes}), and the container reads it where
+ * the record it finds names a supertype it left out.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -72,14 +73,14 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
             return;
         }
         if (!element.isInterface() && !element.isAbstract() && isBeanClass(element)
-            && !TypeHierarchyRecords.record(element, element, true, context)) {
+            && !TypeHierarchyRecords.record(element, element, context)) {
             record(element, element);
         }
         for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
             ClassElement produced = producer instanceof MethodElement method ? method.getGenericReturnType()
                 : producer instanceof FieldElement field ? field.getGenericType() : null;
             if (produced != null && !answeredWithoutRecord(produced)
-                && !TypeHierarchyRecords.record(produced, producer, false, context)) {
+                && !TypeHierarchyRecords.record(produced, producer, context)) {
                 record(produced, producer);
             }
         }
