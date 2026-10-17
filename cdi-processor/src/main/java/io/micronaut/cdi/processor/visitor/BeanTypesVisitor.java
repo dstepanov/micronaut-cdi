@@ -100,7 +100,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     /**
      * Whether the class is one a definition is written for, which its type closure is recorded on: a bean of the
      * specification, or of Micronaut's own. A class that is neither has no definition to carry the record, and the
-     * type index records what of it is needed.
+     * type hierarchy visitor records what of it is needed ({@link TypeHierarchyVisitor}).
      */
     private static boolean isBeanClass(ClassElement element) {
         return element.hasStereotype(io.micronaut.cdi.internal.metadata.CdiScope.class)

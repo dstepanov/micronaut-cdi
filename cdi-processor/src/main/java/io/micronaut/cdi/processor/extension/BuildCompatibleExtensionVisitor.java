@@ -113,11 +113,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * it is compiled and again as the generated import names it.
      */
     private final java.util.Set<String> registered = new java.util.HashSet<>();
-    private final TypeIndexCollector typeIndex = new TypeIndexCollector();
-    /**
-     * The classes the records of the deployment were registered from, which a later round does not register one from.
-     */
-    private final TypeIndexCollector.RecordOrigins recordOrigins = new TypeIndexCollector.RecordOrigins();
     /**
      * The classes of the compilation this visitor has visited, in the order it visited them: what it registers and
      * generates is written from them, and the first names it.
@@ -412,7 +407,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (visited.add(name) && owned) {
             contributors.add(element);
         }
-        typeIndex.collect(element, owned, contributors.isEmpty() ? null : contributors.get(0), context);
         applyWhatWasDiscovered(element);
         enhance(element, context);
     }
@@ -447,11 +441,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         roundFinished = true;
-        try {
-            finishThisRound(context);
-        } finally {
-            recordOrigins.roundFinished();
-        }
+        finishThisRound(context);
     }
 
     private void finishThisRound(VisitorContext context) {
@@ -608,7 +598,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             new io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor(),
             new io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor(),
             new io.micronaut.cdi.processor.visitor.ProxyabilityVisitor(),
-            new io.micronaut.cdi.processor.visitor.BeanTypesVisitor()));
+            new io.micronaut.cdi.processor.visitor.BeanTypesVisitor(),
+            new io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor()));
         io.micronaut.core.order.OrderUtil.reverseSort(visitors);
         return visitors;
     }
@@ -660,19 +651,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + "compilation", contributors.get(0));
             return;
         }
-        ClassElement origin = recordOrigins.available(contributors);
-        if (origin == null) {
-            throw new IllegalStateException("Every class of the compilation is the origin of an earlier record");
-        }
-        recordOrigins.use(origin);
-        List<io.micronaut.inject.ast.Element> origins = new ArrayList<>(contributors.size());
-        origins.add(origin);
-        for (ClassElement contributor : contributors) {
-            if (contributor != origin) {
-                origins.add(contributor);
-            }
-        }
-        context.registerBean(record, origins.toArray(new io.micronaut.inject.ast.Element[0]))
+        context.registerBean(record, contributors())
             .annotate(AnnotationValue.builder(CdiExtensionComponents.class).build())
             .annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
                 .values(discovered.registeredQualifiers().toArray(new String[0]))
