@@ -1,0 +1,32 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-base"
+    id "java-library"
+}
+
+// The Error Prone checks this build holds its own sources to, compiled into every Java compilation of the build
+// through the conventions (io.micronaut.build.internal.convention-thread-local). The project is not published: the
+// checks are the build's, not part of what it ships.
+
+dependencies {
+    compileOnly libs.error.prone.check.api
+
+    testImplementation libs.error.prone.test.helpers
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+// Error Prone reaches into the compiler, whose packages the module system keeps to itself: the check is compiled
+// against them, and the test, which runs the compiler with the check, opens them to it
+def compilerPackages = ['api', 'code', 'comp', 'file', 'main', 'model', 'parser', 'processing', 'tree', 'util']
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.addAll(compilerPackages.collect { "--add-exports=jdk.compiler/com.sun.tools.javac.${it}=ALL-UNNAMED" })
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    jvmArgs(compilerPackages.collect { "--add-exports=jdk.compiler/com.sun.tools.javac.${it}=ALL-UNNAMED" })
+    jvmArgs('--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED',
+        '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED')
+}

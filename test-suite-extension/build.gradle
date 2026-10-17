@@ -1,6 +1,7 @@
 plugins {
     id "io.micronaut.build.internal.cdi-base"
     id 'java-library'
+    id 'io.micronaut.build.internal.convention-thread-local'
 }
 
 // A build compatible extension, and the annotations it looks for. It is a library rather than a test suite
@@ -8,4 +9,9 @@ plugins {
 // it goes on the annotation processor path of the project that uses it rather than on its classpath.
 dependencies {
     api libs.managed.jakarta.cdi.api
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // held to the build's own checks alone, as a suite is
+    options.errorprone.disableAllChecks = true
 }
