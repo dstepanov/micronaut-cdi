@@ -316,8 +316,8 @@ public final class RecordedSynthesis {
 
     /**
      * Whether a synthetic bean is being created for an injection point, which is what its injection point metadata
-     * then describes: the creation under way reports the segment of the resolution that asked for it, absent for a
-     * lookup made directly rather than for an injection point.
+     * then describes: the creation under way reports the segment of the resolution that asked for it - the lookup's
+     * own for a bean a lookup creates - and none for a bean asked of Micronaut directly.
      */
     private static boolean isCreatedForAnInjectionPoint(Class<?> implementation,
                                                         @Nullable Class<? extends Annotation> scope,
