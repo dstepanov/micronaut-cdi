@@ -455,9 +455,11 @@ compilation starts it, read as its rounds finish, and read by no other visitor:
   the validation of section 2.10.6, which are told about the deployment as a whole.
 - The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
   saw for a later one, as the specification allows and the kit's extensions do.
-- The handing of the extensions of one deployment to the visitor by a harness that compiles a deployment at a
-  time (`BuildCompatibleExtensionVisitor.overrideExtensions`, a static field read as the visitor is made), and the
-  specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as it starts.
+- The specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as it starts. The
+  extensions themselves are found as the compilation starts the visitor: the ones the service loader finds on
+  the processor path, and the ones the compiler options name (`-Amicronaut.cdi.extensions=a.B,c.D`, which
+  `-Amicronaut.cdi.extensions.only=true` makes all of them), which is how a harness that compiles a deployment at
+  a time hands each compilation the extensions of its deployment, and nothing else.
 
 The alternative is to run the registration, synthesis and validation phases as the container starts, from the
 extension classes the compilation recorded, as the portable extensions are already run (`A portable extension is
@@ -867,11 +869,18 @@ own rather than the first one alone.
   injection point a dependent instance obtained through a lookup is given is a segment of its resolution path
   (`LookupSegment`); and the processor's remapping of an occurrence reads nothing that comes back to it
   (`NonbindingMembersRemapper`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
-  main source that declares, creates or initializes a thread local, and warns in the tests. Two seams are left for
-  the harnesses that run the specification's test kit in one process: the extensions of one compiled deployment
-  (`BuildCompatibleExtensionVisitor.overrideExtensions`), since a compilation is handed nothing but options, and
-  the classpath a test's SE container sees (`MicronautSeContainerInitializer`), since the kit builds the container
-  itself through `SeContainerInitializer.newInstance()`. Beside them the type hierarchy record a class has is kept
+  main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
+  language model over the compiler's elements hold no static state that is not a constant: a harness that
+  compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
+  options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
+  handed, and reads the classes their discovery phase scanned from what the compilation generated
+  (`CdiScannedClasses`, on the import of them), since compiled classes are what it hands back. Micronaut's
+  processor copies every `micronaut.*` option into the system properties as it initializes and reads them back
+  as the options of any compilation, so such a harness clears the two once each compilation is done, or the
+  extensions of one deployment would have their say in every deployment compiled after it. One seam is left
+  for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
+  sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
+  `SeContainerInitializer.newInstance()`. Beside it the type hierarchy record a class has is kept
   with the class once it is found (`RecordedTypeIndex`), since a record is compiled data that says the same to every
   container; a class with none is asked again by the next container, whose class loader may see one.
 
