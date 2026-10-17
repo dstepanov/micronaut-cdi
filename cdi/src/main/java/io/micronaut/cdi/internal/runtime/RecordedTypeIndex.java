@@ -88,12 +88,32 @@ public final class RecordedTypeIndex {
      * @return The record, or {@code null} where the application was not compiled with the class
      */
     @Nullable Entry of(Class<?> type) {
-        // a bean whose closure no type hierarchy record could say in full records it on its definition
+        Entry hierarchy = hierarchies.computeIfAbsent(type, RecordedTypeIndex::recordOf).orElse(null);
+        if (hierarchy instanceof HierarchyEntry entry && entry.hierarchy().getOmittedSuperTypeNames().isEmpty()) {
+            return hierarchy;
+        }
+        // a bean whose type hierarchy record left a supertype out, or that has none, may record its closure on its
+        // definition
         Entry bean = beans().get(type.getName());
         if (bean != null) {
             return bean;
         }
-        return hierarchies.computeIfAbsent(type, RecordedTypeIndex::recordOf).orElse(null);
+        // a record that left a supertype out says less than the module that reads classes, where it is there
+        return hierarchy != null && reflection() != null ? null : hierarchy;
+    }
+
+    /**
+     * Whether the type hierarchy record of the class says its whole closure: it was found, and left no supertype
+     * out.
+     *
+     * @param type The class
+     * @return Whether it does
+     */
+    boolean hasCompleteRecord(Class<?> type) {
+        return hierarchies.computeIfAbsent(type, RecordedTypeIndex::recordOf)
+            .filter(entry -> entry instanceof HierarchyEntry hierarchy
+                && hierarchy.hierarchy().getOmittedSuperTypeNames().isEmpty())
+            .isPresent();
     }
 
     /**
