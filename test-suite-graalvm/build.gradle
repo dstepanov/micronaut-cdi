@@ -1,0 +1,27 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-native-test-suite"
+}
+
+// The container's matching of types inside a GraalVM native image, with micronaut-cdi alone.
+//
+// The suite has neither micronaut-cdi-reflection nor Micronaut's reflection module on its classpath, as
+// test-suite-no-reflection does not: what the tests resolve and observe by a type argument is answered by the
+// records the processor wrote while the tests compiled, found at run time through core's service loading, and
+// nothing else. Each test is run twice, on the JVM by `test` and in a native image by `nativeTest`, and asserts
+// the same answers in both.
+dependencies {
+    testAnnotationProcessor platform(libs.micronaut.core)
+    testAnnotationProcessor projects.micronautCdiProcessor
+    testAnnotationProcessor mn.micronaut.inject.java
+    // turns the @ReflectiveAccess and @ReflectionConfig the processors declare into the reachability metadata of the image
+    testAnnotationProcessor mn.micronaut.graal
+
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}
