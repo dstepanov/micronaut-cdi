@@ -819,13 +819,16 @@ own rather than the first one alone.
   resolves the injection point metadata so (`OwnedDependents.registrationAtCurrentPoint`), and the `InjectionPoint`
   bean finds the point the dependent synthetic bean is created for on the path of the resolution, as it does for a
   bean injected there. What is left is `Instance.get()` and its handles: they create the dependent bean they
-  selected by its definition (`getBeanRegistration(definition, argument)`) in a resolution of their own, since the
-  lookup is not made within the creation of a bean and `BeanContext` has no resolution context to resolve within,
-  while section 2.5.2.5 gives the bean the injection point the `Instance` was injected into, or the lookup itself.
-  That injection point is left on a thread local around the creation (`CurrentInjectionPoint`), where the
-  `InjectionPoint` bean reads it when the path has nothing to say; a definition-keyed lookup that took the
-  injection point to report, or an attribute the new resolution starts with, would let it travel with the
-  resolution instead.
+  selected by its definition later, outside the creation of a bean, while section 2.5.2.5 gives the bean the
+  injection point the `Instance` was injected into, as the lookup narrowed it, or the lookup itself.
+  `BeanDependencyResolver.getBeanRegistration(definition, argument)` starts a resolution whose path begins at the
+  new bean and cannot be told which injection point the lookup is made for, so the container opens the
+  resolution on behalf of the owner itself, through `BeanDependencies.resolveDependencies` (reached by an
+  `instanceof` on the resolver, the interface being internal), and pushes a segment of its own that is the lookup's
+  injection point (`LookupSegment`) before it resolves the definition in it (`OwnedDependents.registrationAt`): the
+  `InjectionPoint` bean, Micronaut's own `io.micronaut.inject.InjectionPoint` and the creation context of a
+  synthetic bean all read the point off the path. A `getBeanRegistration(definition, argument, injectionPoint)` on
+  the resolver would remove the cast.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
