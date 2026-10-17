@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.mapper;
 
+import io.micronaut.cdi.internal.metadata.CdiNonbindingMembers;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
@@ -45,11 +46,15 @@ import java.util.Set;
  * written or left at their defaults, and on the qualifier stereotype of the occurrence, which is where its own
  * resolution reads them from; it reads them from the source of the interface. A member a build compatible extension
  * marked while the compilation was discovering its classes is marked on the members of the interface as the
- * compilation holds it, which the source does not say: so the members are read from the interface the compilation
- * holds, as the occurrence comes past and from nothing else, and merged with what Micronaut wrote, on the occurrence
- * and on its qualifier stereotype. A qualifier an extension composes for a synthetic component is no occurrence
- * Micronaut reads, and is given the members its interface marks the same way
- * ({@link #complete(AnnotationValue, VisitorContext)}).</p>
+ * compilation holds it, which the source does not say, and listed on the interface itself
+ * ({@link CdiNonbindingMembers}), which Micronaut reads into every occurrence among the meta-annotations of the
+ * interface as the compilation holds it: so the list is read from the occurrence as it comes past and from nothing
+ * else, and merged with what Micronaut wrote, on the occurrence and on its qualifier stereotype. Nothing else is
+ * read for an occurrence, neither the interface nor its members: building their metadata reads the annotations on
+ * them, which come past here in turn, and two interfaces whose members, or which themselves, are annotated with each
+ * other would read each other without end. A qualifier an extension composes for a synthetic component is no
+ * occurrence Micronaut reads, and is given every member its interface marks, read off the members
+ * ({@link #complete(AnnotationValue, VisitorContext)}), which is not done while an occurrence is read.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -59,13 +64,7 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
 
     private static final String BINDING = "jakarta.interceptor.InterceptorBinding";
     private static final String MICRONAUT_NONBINDING = "io.micronaut.context.annotation.NonBinding";
-
-    /**
-     * The annotation interfaces being read on this thread: reading one builds the metadata of its members, which
-     * comes back here for the annotations on them, and an annotation interface that is read further up the stack is
-     * not read again. It belongs to the call stack, and is empty between two reads; nothing is cached.
-     */
-    private static final ThreadLocal<Set<String>> READING = ThreadLocal.withInitial(java.util.HashSet::new);
+    private static final String MARKED = CdiNonbindingMembers.class.getName();
 
     @Override
     public String getPackageName() {
@@ -78,8 +77,47 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
         if (visitorContext == null || isNeverABindingType(name)) {
             return List.of(annotation);
         }
-        return List.of(complete(annotation,
-            declaredNonbindingMembersOf(name, visitorContext, isBindingType(annotation))));
+        AnnotationValue<?> marked = null;
+        boolean bindingType = false;
+        List<AnnotationValue<?>> stereotypes = annotation.getStereotypes();
+        if (stereotypes != null && !stereotypes.isEmpty()) {
+            // the meta-annotations Micronaut read into the occurrence: those of the interface as the compilation
+            // holds it, with what the discovery phase put on it, the list of the members it marked among them
+            for (AnnotationValue<?> stereotype : stereotypes) {
+                String stereotypeName = stereotype.getAnnotationName();
+                if (MARKED.equals(stereotypeName)) {
+                    marked = stereotype;
+                } else if (Cdi.QUALIFIER.equals(stereotypeName) || BINDING.equals(stereotypeName)) {
+                    bindingType = true;
+                }
+            }
+        } else {
+            // an occurrence that carries no meta-annotations - under KSP Micronaut hands a remapper an occurrence
+            // without them - is completed from the interface as the compilation holds it: the interface alone, not
+            // its members. Under the other compilers an interface read so is one annotated with nothing that comes
+            // past here, and reading it does not come back
+            ClassElement declaration = declarationOf(name, visitorContext);
+            if (declaration != null) {
+                marked = declaration.getAnnotation(MARKED);
+                bindingType = declaration.hasStereotype(Cdi.QUALIFIER) || declaration.hasStereotype(BINDING);
+            }
+        }
+        if (marked == null || !bindingType) {
+            return List.of(annotation);
+        }
+        return List.of(complete(annotation, new LinkedHashSet<>(Arrays.asList(marked.stringValues()))));
+    }
+
+    /**
+     * The annotation interface of the given name as the compilation holds it.
+     */
+    private static @Nullable ClassElement declarationOf(String name, VisitorContext context) {
+        // a nested annotation is recorded by its binary name, and asked of the compiler by its canonical one
+        Optional<ClassElement> found = context.getClassElement(name);
+        if (found.isEmpty() && name.indexOf('$') >= 0) {
+            found = context.getClassElement(name.replace('$', '.'));
+        }
+        return found.orElse(null);
     }
 
     /**
@@ -97,7 +135,7 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
         if (isNeverABindingType(name)) {
             return qualifier;
         }
-        return complete(qualifier, declaredNonbindingMembersOf(name, context, true));
+        return complete(qualifier, declaredNonbindingMembersOf(name, context));
     }
 
     private static AnnotationValue<?> complete(AnnotationValue<?> annotation, Set<String> members) {
@@ -141,61 +179,34 @@ public final class NonbindingMembersRemapper implements AnnotationRemapper {
     }
 
     /**
-     * Whether the annotation is a qualifier or an interceptor binding, from the meta-annotations Micronaut read
-     * into the occurrence: those of the annotation interface as the compilation holds it, what the discovery phase
-     * registered among them where the compiler reads them from there. An occurrence that carries no meta-annotations
-     * to say is read as one.
+     * Every member the annotation interface of the given name marks as taking no part in resolution, as the
+     * compilation holds the interface: the ones its source marks and the ones the discovery phase marked, read off
+     * the members. Reading them builds the metadata of the members, whose annotations come past this remapper, which
+     * reads nothing for them, so the reading ends.
      */
-    private static boolean isBindingType(AnnotationValue<?> annotation) {
-        List<AnnotationValue<?>> stereotypes = annotation.getStereotypes();
-        if (stereotypes == null) {
-            return true;
+    private static Set<String> declaredNonbindingMembersOf(String name, VisitorContext context) {
+        ClassElement declaration = declarationOf(name, context);
+        if (declaration == null) {
+            return Set.of();
         }
-        for (AnnotationValue<?> stereotype : stereotypes) {
-            String name = stereotype.getAnnotationName();
-            if (Cdi.QUALIFIER.equals(name) || BINDING.equals(name)) {
-                return true;
+        Set<String> members = new LinkedHashSet<>();
+        membersOf(declaration).forEach((member, metadata) -> {
+            if (metadata.hasAnnotation(Cdi.NONBINDING) || metadata.hasAnnotation(MICRONAUT_NONBINDING)) {
+                members.add(member);
             }
-        }
-        return false;
+        });
+        return members;
     }
 
     /**
-     * The members the annotation interface of the given name marks as taking no part in resolution, as the
-     * compilation holds the interface. Reading them builds the metadata of the members, which comes back here for
-     * the annotations on them: an interface that is being read further up the stack answers none. Where the occurrence
-     * did not say the annotation is a qualifier or a binding, the interface as the compilation holds it is asked,
-     * which carries what the discovery phase registered where the compiler reads the occurrence from its source.
+     * Whether the annotation of the given name marks a member of an annotation interface as taking no part in
+     * resolution.
+     *
+     * @param annotationName The name of the annotation
+     * @return Whether it is {@code Nonbinding}, of the specification or of Micronaut
      */
-    private static Set<String> declaredNonbindingMembersOf(String name, VisitorContext context, boolean bindingType) {
-        Set<String> reading = READING.get();
-        if (!reading.add(name)) {
-            return Set.of();
-        }
-        try {
-            // a nested annotation is recorded by its binary name, and asked of the compiler by its canonical one
-            Optional<ClassElement> found = context.getClassElement(name);
-            if (found.isEmpty() && name.indexOf('$') >= 0) {
-                found = context.getClassElement(name.replace('$', '.'));
-            }
-            ClassElement declaration = found.orElse(null);
-            if (declaration == null || (!bindingType && !declaration.hasStereotype(Cdi.QUALIFIER)
-                && !declaration.hasStereotype(BINDING))) {
-                return Set.of();
-            }
-            Set<String> members = new LinkedHashSet<>();
-            membersOf(declaration).forEach((member, metadata) -> {
-                if (metadata.hasAnnotation(Cdi.NONBINDING) || metadata.hasAnnotation(MICRONAUT_NONBINDING)) {
-                    members.add(member);
-                }
-            });
-            return members;
-        } finally {
-            reading.remove(name);
-            if (reading.isEmpty()) {
-                READING.remove();
-            }
-        }
+    public static boolean isNonbinding(String annotationName) {
+        return Cdi.NONBINDING.equals(annotationName) || MICRONAUT_NONBINDING.equals(annotationName);
     }
 
     /**
