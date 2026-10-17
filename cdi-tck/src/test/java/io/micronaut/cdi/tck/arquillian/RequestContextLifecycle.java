@@ -30,8 +30,6 @@ import org.jboss.arquillian.test.spi.event.suite.Before;
  */
 public final class RequestContextLifecycle {
 
-    private final ThreadLocal<Boolean> begunHere = ThreadLocal.withInitial(() -> false);
-
     /**
      * Begins the request the test method runs in.
      *
@@ -40,21 +38,21 @@ public final class RequestContextLifecycle {
     public void beforeTest(@Observes Before event) {
         RequestScope requestScope = requestScope();
         if (requestScope != null) {
-            begunHere.set(requestScope.activate());
+            // begun on behalf of this lifecycle, which the request scope keeps with the activation
+            requestScope.activate(this);
         }
     }
 
     /**
-     * Ends the request, where the method has not ended it itself.
+     * Ends the request, where the method has not ended it itself: the request being handled is ended only where it
+     * is the one this lifecycle began, on this thread.
      *
      * @param event The event after the method
      */
     public void afterTest(@Observes After event) {
-        boolean ours = begunHere.get();
-        begunHere.remove();
         RequestScope requestScope = requestScope();
-        if (ours && requestScope != null && requestScope.isActive()) {
-            requestScope.deactivate();
+        if (requestScope != null) {
+            requestScope.deactivate(this);
         }
     }
 
