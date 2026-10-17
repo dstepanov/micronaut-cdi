@@ -58,10 +58,17 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         new java.util.LinkedHashMap<>();
     private final java.util.Set<String> scanned = new java.util.LinkedHashSet<>();
     private final java.util.Set<String> registeredQualifiers = new java.util.LinkedHashSet<>();
-    private final java.util.Set<String> registeredBindings = new java.util.LinkedHashSet<>();
     private final Map<String, List<String>> contexts = new java.util.LinkedHashMap<>();
     private final Map<String, Boolean> normalContexts = new java.util.LinkedHashMap<>();
     private final Map<String, List<AnnotationValue<?>>> metaAnnotations = new LinkedHashMap<>();
+    /**
+     * The classes the compiler visited, by name; those of the compilation in the order it visited them; those the
+     * registration phase has not been told about yet; and those it has.
+     */
+    private final java.util.Set<String> visited = new java.util.HashSet<>();
+    private final List<ClassElement> contributors = new ArrayList<>();
+    private final List<ClassElement> unregistered = new ArrayList<>();
+    private final java.util.Set<String> registered = new java.util.HashSet<>();
     private @org.jspecify.annotations.Nullable VisitorContext context;
 
     /**
@@ -71,35 +78,6 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      */
     public java.util.Set<String> registeredQualifiers() {
         return registeredQualifiers;
-    }
-
-    /**
-     * Whether an extension made the annotation of the given name a qualifier or an interceptor binding.
-     *
-     * @param annotation The annotation name
-     * @return Whether it did
-     */
-    public boolean isRegisteredBindingType(String annotation) {
-        return registeredQualifiers.contains(annotation) || registeredBindings.contains(annotation);
-    }
-
-    /**
-     * The members of the annotation of the given name an extension marked {@code Nonbinding}, which leaves them
-     * out of the comparison of two annotations of the type as though the annotation interface marked them.
-     *
-     * @param annotation The annotation name
-     * @return The member names
-     */
-    public java.util.Set<String> nonbindingMembersOf(String annotation) {
-        java.util.Set<String> nonbinding = new java.util.LinkedHashSet<>();
-        for (Map.Entry<String, List<AnnotationValue<?>>> member : memberAnnotationsFor(annotation).entrySet()) {
-            for (AnnotationValue<?> added : member.getValue()) {
-                if ("jakarta.enterprise.util.Nonbinding".equals(added.getAnnotationName())) {
-                    nonbinding.add(member.getKey());
-                }
-            }
-        }
-        return nonbinding;
     }
 
     /**
@@ -130,6 +108,63 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      */
     void compilation(VisitorContext context) {
         this.context = context;
+    }
+
+    /**
+     * Notes a class the compiler visited, which the registration phase is told about as the round finishes.
+     *
+     * @param element The class
+     * @param owned   Whether the compilation compiles it, rather than reading it from a library
+     */
+    void visited(ClassElement element, boolean owned) {
+        if (visited.add(element.getName())) {
+            if (owned) {
+                contributors.add(element);
+            }
+            unregistered.add(element);
+        }
+    }
+
+    /**
+     * Whether the compiler visited the class of the given name.
+     *
+     * @param className The name of the class
+     * @return Whether it did
+     */
+    boolean wasVisited(String className) {
+        return visited.contains(className);
+    }
+
+    /**
+     * The classes of the compilation the compiler visited, in the order it visited them: what is registered and
+     * generated for the deployment as a whole is written from them, and the first names it.
+     *
+     * @return The classes
+     */
+    List<ClassElement> contributors() {
+        return contributors;
+    }
+
+    /**
+     * Takes the classes visited since this was last asked, which the registration phase has not been told about.
+     *
+     * @return The classes, in the order they were visited
+     */
+    List<ClassElement> takeUnregistered() {
+        List<ClassElement> taken = List.copyOf(unregistered);
+        unregistered.clear();
+        return taken;
+    }
+
+    /**
+     * Notes that the registration phase is told about the class of the given name.
+     *
+     * @param className The name of the class
+     * @return Whether it was not told about it already: a class the discovery phase scanned is visited as it is
+     *     compiled and again as the generated import names it
+     */
+    boolean registering(String className) {
+        return registered.add(className);
     }
 
     /**
@@ -244,8 +279,6 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private ClassConfig register(Class<? extends Annotation> annotation, String metaAnnotation) {
         if ("jakarta.inject.Qualifier".equals(metaAnnotation)) {
             registeredQualifiers.add(annotation.getName());
-        } else if ("jakarta.interceptor.InterceptorBinding".equals(metaAnnotation)) {
-            registeredBindings.add(annotation.getName());
         }
         List<AnnotationValue<?>> annotations = metaAnnotations
             .computeIfAbsent(annotation.getName(), name -> new ArrayList<>());

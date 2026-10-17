@@ -165,9 +165,13 @@ The members that do not bind are recorded once, the way Micronaut records its ow
 under `$nonBinding` in the values of the qualifier. Since Micronaut Core 5.3 Micronaut lists every member the
 annotation interface marks on every occurrence it compiles, one that leaves the member at its default among them,
 and on its qualifier stereotype. The processor adds what Micronaut cannot know (`NonbindingMembersRemapper`): a
-member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes, on every
-occurrence of the qualifier or binding; and the members a qualifier the processor records for a synthetic
-component excludes, which an extension composed rather than the compiler reading it. A qualifier the program
+member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes, which the
+discovery phase marks on the members of the annotation interface as the compilation holds it and the remapping of
+each occurrence reads from there, from the interface alone, on every occurrence of the qualifier or binding; and the
+members a qualifier the processor records for a synthetic component excludes, which an extension composed rather
+than the compiler reading it. The interceptor bindings are compared by the Jakarta Interceptors implementation from
+what its processor recorded of each occurrence, so a member an extension marked has to be listed as the class
+compiles, and is not added at run time. A qualifier the program
 composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
 marks, so a member is left out of a comparison when either side lists it. An injection point, a programmatic lookup
 and the bean manager select their beans by these and nothing else (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
@@ -359,9 +363,9 @@ listeners, and what its producer was injected with is released with it.
 
 ### Every phase of an extension runs while the application compiles
 
-*Section 12.* Discovery runs as the compilation starts. Enhancement and registration run as each class is
-compiled. Synthesis, the registration of what it described, and validation run once every class of the
-compilation has been registered. An extension therefore goes on the annotation processor path of the project it
+*Section 12.* Discovery runs as the compilation starts. Enhancement runs as each class is compiled, and
+registration as the round that compiled it finishes. Synthesis, the registration of what it described, and
+validation run once every class of the compilation has been registered. An extension therefore goes on the annotation processor path of the project it
 is written for rather than on its classpath, and is still found through the service loader as the specification
 says. The running application does not load it, and an extension that is only on the runtime classpath does
 nothing.
@@ -409,9 +413,9 @@ compilation is where the application is put together.
 
 The phases run the same way whichever language the application is compiled in - by javac, by the Groovy
 compiler, or by KSP - with no source generated for them. Micronaut calls `TypeElementVisitor.finishRound` once
-every visitor has visited every class of a round, the registration visitor included, and before the beans of the
-round are written, in all three; the first round that visits a class of the compilation is the moment every class
-has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
+every visitor has visited every class of a round, and before the beans of the round are written, in all three: the
+registration phase is told about each class the round visited then, and the first round that visits a class of the
+compilation is the moment every class has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
 javac, where the scanned classes are imported, they wait for the next round, which visits the imported classes.
 Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
 `VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
@@ -736,7 +740,10 @@ own rather than the first one alone.
   whose members are annotated with each other (`MutuallyAnnotatedQualifierMembersTest` holds the shape). What it
   cannot see is a member a build compatible extension marked during discovery, which the source does not, and a
   qualifier an extension composed for a synthetic component, which is no occurrence it reads: the processor lists
-  those (`NonbindingMembersRemapper`), and the comparison leaves out a member either side lists.
+  those (`NonbindingMembersRemapper`), reading the members of the annotation interface as the compilation holds it,
+  where the discovery phase marked them, for each occurrence, and the comparison leaves out a member either side
+  lists. Micronaut reads the members from the source, and caches what it read per annotation name for the process;
+  reading them through the compilation's view of the interface instead would remove the remapping.
 - **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
@@ -777,21 +784,6 @@ own rather than the first one alone.
   `InjectionPoint` bean reads it when the path has nothing to say; a definition-keyed lookup that took the
   injection point to report, or an attribute the new resolution starts with, would let it travel with the
   resolution instead.
-- **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
-  visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
-  (`CompilationState`) rather than in static fields. Under javac they belong to one
-  processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
-  definition processor is remapped with that processor's attributes, so there a remapper does not see the
-  extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
-  that metadata reads. Under KSP they belong to the processor and last across its rounds. The Groovy compiler keeps
-  them in one static map for every compilation in the process (`GroovyVisitorContext`), so under Groovy two
-  compilations running at once in one process share them as they would a static field; the visitor of the
-  compilation is kept there. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
-  the phases of the build compatible extensions run as a round finishes and their beans are registered without a
-  source, so the visitor and the records of the components no longer wait on the attributes for a generated marker
-  or factory to come past, and neither do the type hierarchy records, written as each class is visited and kept
-  apart per visitor context rather than among its attributes; what is left there is the
-  visitor the compilation started, read by the registration visitor.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names

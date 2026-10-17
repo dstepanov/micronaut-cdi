@@ -283,12 +283,12 @@ final class SynthesisPhase {
     /**
      * The qualifiers an extension gave a component, each with the members that take no part in resolution listed
      * under {@code $nonBinding}, as the compiler lists them on a qualifier it reads: the members the annotation
-     * interface marks, and the ones an extension marked during discovery.
+     * interface marks as the compilation holds it, the ones an extension marked during discovery among them.
      */
     private List<AnnotationValue<?>> completed(List<AnnotationValue<?>> qualifiers) {
         List<AnnotationValue<?>> completed = new ArrayList<>(qualifiers.size());
         for (AnnotationValue<?> qualifier : qualifiers) {
-            completed.add(NonbindingMembersRemapper.complete(qualifier, context, discovered));
+            completed.add(NonbindingMembersRemapper.complete(qualifier, context));
         }
         return completed;
     }
