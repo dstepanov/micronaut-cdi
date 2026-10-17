@@ -51,12 +51,19 @@ class DeploymentClassLoaderTest {
         assertTrue(TypeHierarchies.find("tck.loader.StringList", parent).isEmpty(),
             "the parent was not compiled with the class");
         DeploymentClassLoader loader = new DeploymentClassLoader(generated, parent);
-        List<URL> serviceDirectories = Collections.list(loader.getResources(TYPE_HIERARCHY_SERVICE));
-        assertTrue(serviceDirectories.stream().anyMatch(url -> url.getPath().contains("cdi-tck-deployment")),
-            "the loader serves the service directory it compiled, beside its parent's: " + serviceDirectories);
+        try {
+            List<URL> serviceDirectories = Collections.list(loader.getResources(TYPE_HIERARCHY_SERVICE));
+            assertTrue(serviceDirectories.stream().anyMatch(url -> url.getPath().contains("cdi-tck-deployment")),
+                "the loader serves the service directory it compiled, beside its parent's: " + serviceDirectories);
 
-        Optional<TypeHierarchy> record = TypeHierarchies.find("tck.loader.StringList", loader);
-        assertTrue(record.isPresent(), "the record of the compilation is found through the loader");
-        assertEquals("tck.loader.StringList", record.get().getDeclaration().getType().getName());
+            Optional<TypeHierarchy> record = TypeHierarchies.find("tck.loader.StringList", loader);
+            assertTrue(record.isPresent(), "the record of the compilation is found through the loader");
+            assertEquals("tck.loader.StringList", record.get().getDeclaration().getType().getName());
+        } finally {
+            loader.dispose();
+        }
+        assertTrue(Collections.list(loader.getResources(TYPE_HIERARCHY_SERVICE)).stream()
+                .noneMatch(url -> url.getPath().contains("cdi-tck-deployment")),
+            "what the loader wrote is deleted with it");
     }
 }

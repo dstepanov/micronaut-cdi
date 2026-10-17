@@ -238,6 +238,13 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         }
         Set<String> deployedBeans = classes;
         DeploymentClassLoader loader = new DeploymentClassLoader(generated, getClass().getClassLoader());
+        // the deployment's loader is the context loader of the thread for as long as the deployment is up, as
+        // a container makes its deployment's loader the context loader: it is where core looks for the record
+        // of a class the loader's parent defines but this compilation recorded
+        Thread thread = Thread.currentThread();
+        contextClassLoaderBefore = thread.getContextClassLoader();
+        thread.setContextClassLoader(loader);
+        deployedLoader = loader;
         // every phase of the deployment's extensions ran as it compiled, the synthesis and the validation of
         // section 2.10 included: the container that starts here reads what they recorded, and runs none
         try {
@@ -272,6 +279,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             CurrentDeployment.started(context);
             return new ProtocolMetaData();
         } catch (RuntimeException e) {
+            releaseDeployedLoader();
             for (Throwable cause = e; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
                 if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
                     || cause instanceof jakarta.enterprise.inject.spi.DeploymentException) {
@@ -282,6 +290,27 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 new jakarta.enterprise.inject.spi.DeploymentException(
                     "The deployment could not be started", e));
         }
+    }
+
+    /**
+     * The loader of the compiled deployment that is up, and the context loader of the thread before it was.
+     */
+    private @org.jspecify.annotations.Nullable DeploymentClassLoader deployedLoader;
+    private @org.jspecify.annotations.Nullable ClassLoader contextClassLoaderBefore;
+
+    /**
+     * Gives the thread its context loader back and deletes what the deployment's loader wrote, once the
+     * deployment is down or never came up.
+     */
+    private void releaseDeployedLoader() {
+        DeploymentClassLoader loader = deployedLoader;
+        if (loader == null) {
+            return;
+        }
+        deployedLoader = null;
+        Thread.currentThread().setContextClassLoader(contextClassLoaderBefore);
+        contextClassLoaderBefore = null;
+        loader.dispose();
     }
 
     /**
@@ -329,6 +358,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             // the deployment never came up, and there is nothing to close
         } finally {
             CurrentDeployment.stopped();
+            releaseDeployedLoader();
         }
     }
 
