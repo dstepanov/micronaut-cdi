@@ -165,9 +165,13 @@ The members that do not bind are recorded once, the way Micronaut records its ow
 under `$nonBinding` in the values of the qualifier. Since Micronaut Core 5.3 Micronaut lists every member the
 annotation interface marks on every occurrence it compiles, one that leaves the member at its default among them,
 and on its qualifier stereotype. The processor adds what Micronaut cannot know (`NonbindingMembersRemapper`): a
-member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes, on every
-occurrence of the qualifier or binding; and the members a qualifier the processor records for a synthetic
-component excludes, which an extension composed rather than the compiler reading it. A qualifier the program
+member a build compatible extension marked `@Nonbinding` while the compilation discovered its classes, which the
+discovery phase marks on the members of the annotation interface as the compilation holds it and the remapping of
+each occurrence reads from there, from the interface alone, on every occurrence of the qualifier or binding; and the
+members a qualifier the processor records for a synthetic component excludes, which an extension composed rather
+than the compiler reading it. The interceptor bindings are compared by the Jakarta Interceptors implementation from
+what its processor recorded of each occurrence, so a member an extension marked has to be listed as the class
+compiles, and is not added at run time. A qualifier the program
 composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
 marks, so a member is left out of a comparison when either side lists it. An injection point, a programmatic lookup
 and the bean manager select their beans by these and nothing else (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
@@ -228,14 +232,17 @@ parameterized type above it or declares type variables - less an interface,
 an abstract class and an annotation literal, which are never the class of an event object - with the closure of
 every class a recorded type names as a type argument or a bound, a class of the JDK or of a library among them,
 which is what a bound is compared against, as Micronaut's type hierarchy record of the class
-(`VisitorContext.importTypeHierarchy`, found at run time with `TypeHierarchies.find`). Micronaut writes the record
-of a class into the package of the class it is made from, a class of the JDK or of a library into a sub-package of
-that one named after the class's (`com.example.$$java.lang.$Integer$TypeHierarchy`), and the record of a class that
-refers to a class only its own package can name into that package. A class a record could not say in full - one
-with a supertype that is not public and of a third package, which Micronaut leaves out of the record - and a class
-of a library whose record would have to be written into the library's package are not recorded
-(`TypeHierarchyRecords`), since nothing the compilation writes is placed in a package of the library; a bean of
-such a class, or produced as one, has its closure written on the bean or on its producer instead (`CdiBeanTypes`).
+(`VisitorContext.importTypeHierarchy`, found at run time with `TypeHierarchies.find`). The class is recorded from
+the element being visited, every time it is, and nothing is remembered from one class to the next
+(`TypeHierarchyRecords`): Micronaut writes the record into the package of that element - a class of another package,
+of the JDK or of a library, into a sub-package of it named after the class's
+(`com.example.$$java.lang.$Integer$TypeHierarchy`) - once per package however often it is asked, leaves out a
+supertype it cannot name from there and names it in `TypeHierarchy.getOmittedSuperTypeNames()`, and refuses a
+class whose variables are bounded by such a class or that is an inner class of a generic class. A bean whose class,
+or the class its producer produces, Micronaut refused, or that has a supertype that is not public and of another
+package, has its closure written on the bean or on its producer as well (`CdiBeanTypes`), and the container reads
+that where the record it finds of the class names a supertype it left out (`RecordedTypeIndex`, `CdiBean`). A
+supertype left out because its arguments name such a class is not looked for, and is missing from that bean's types.
 Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
@@ -302,13 +309,11 @@ a parameter of a bean's own is supplied by Micronaut from it, and a parameter of
 by the container from it, through a resolution of its own that starts at the bean declaring the method - what the
 provider creates there is not a dependent of the invocation (`CdiResolution.fromApplicationProvider`).
 
-A point is marked by the class that declares it. Micronaut keeps the annotations of a field and of a parameter by
-the class declaring the member, so a mark written while a subclass is compiled would be read by every class that
-inherits the member - a bean of Micronaut's own that extends the same class would have its `List<Foo>` resolved as
-a bean of that type rather than collected. A superclass that is itself a bean of the specification marks its own
-points; the points a bean of the specification inherits from a class that is not one - an abstract class, a class
-with no scope, a superclass compiled without this processor - are resolved by Micronaut's rules, with the type rules
-of section 2.4.2.1 (`CdiResolutionCustomizer.isCandidateBean`), as a bean of Micronaut's own resolves them.
+A point is marked by each bean of the specification that has it, declared or inherited (section 4.2) - from an
+abstract class, a class with no scope, or a superclass compiled without this processor among them. Since Micronaut
+Core 5.3 the mark a visitor writes on an inherited field or parameter is kept by the class it was written through,
+so a bean of Micronaut's own that extends the same class keeps Micronaut's resolution and aggregation of the point:
+its `List<Foo>` is collected rather than resolved as a bean of that type.
 
 There is one selection of candidates, `CdiBeanContainer.beansOf`, which the provider, an `Instance`, the bean
 manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make:
@@ -336,7 +341,8 @@ bean of the specification and a bean of Micronaut's own is injected with the bea
 `Instance` and the bean manager resolve it. A lookup that resolves one bean among beans of
 Micronaut's own alone - `Instance.get()`, the bean manager's `resolve` - chooses by Micronaut's precedence as
 well: the primary ones where there are any, the choice of the resolution customizer, the ones that are not
-secondary, the lowest order, the default implementation and the exact type (`CdiResolution.amongMicronautsOwn`). A bean of Micronaut's
+secondary, the lowest order, the default implementation and the exact type, as Micronaut selects among a given
+collection of definitions (`BeanDefinitionRegistry.selectAmong`, since Micronaut Core 5.3). A bean of Micronaut's
 own keeps Micronaut's resolution and aggregation for its own injection points, with the type rules of section
 2.4.2.1 for a parameterized type a bean of the specification has (`CdiResolutionCustomizer.isCandidateBean`).
 
@@ -356,9 +362,9 @@ listeners, and what its producer was injected with is released with it.
 
 ### Every phase of an extension runs while the application compiles
 
-*Section 12.* Discovery runs as the compilation starts. Enhancement and registration run as each class is
-compiled. Synthesis, the registration of what it described, and validation run once every class of the
-compilation has been registered. An extension therefore goes on the annotation processor path of the project it
+*Section 12.* Discovery runs as the compilation starts. Enhancement runs as each class is compiled, and
+registration as the round that compiled it finishes. Synthesis, the registration of what it described, and
+validation run once every class of the compilation has been registered. An extension therefore goes on the annotation processor path of the project it
 is written for rather than on its classpath, and is still found through the service loader as the specification
 says. The running application does not load it, and an extension that is only on the runtime classpath does
 nothing.
@@ -406,9 +412,9 @@ compilation is where the application is put together.
 
 The phases run the same way whichever language the application is compiled in - by javac, by the Groovy
 compiler, or by KSP - with no source generated for them. Micronaut calls `TypeElementVisitor.finishRound` once
-every visitor has visited every class of a round, the registration visitor included, and before the beans of the
-round are written, in all three; the first round that visits a class of the compilation is the moment every class
-has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
+every visitor has visited every class of a round, and before the beans of the round are written, in all three: the
+registration phase is told about each class the round visited then, and the first round that visits a class of the
+compilation is the moment every class has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
 javac, where the scanned classes are imported, they wait for the next round, which visits the imported classes.
 Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
 `VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
@@ -421,6 +427,48 @@ Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
 the order it described the component in, and the container registers a component once however many
 compilations recorded it.
+
+### Compile-time aggregation
+
+Every visitor of the processor is isolating and writes what it records of a class from that class alone: the
+scope, the injection points, the name, the producers and observers, the default qualifier, the proxyability, the
+bean types and the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`), none of which keeps
+anything from one class to the next, on itself, in a static field or on the attributes of the `VisitorContext`. The
+remapping that lists the non-binding members of a qualifier reads the occurrence and its annotation interface, and
+keeps only a guard on the thread against two interfaces whose members are annotated with each other. What the
+whole deployment knows is the container's, read as it starts from the metadata the classes were compiled with.
+
+What still aggregates is the build compatible extensions, whose phases the specification defines over the whole
+deployment, and it is confined to the one visitor that runs them (`BuildCompatibleExtensionVisitor`), made as the
+compilation starts it, read as its rounds finish, and read by no other visitor:
+
+- `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
+  `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
+  contexts it registered - which section 2.10.2 has said before any class is processed and which is applied by name
+  as each named class comes past; and the classes the compiler visited, by name, which the registration phase of
+  section 2.10.3 is told about as their round finishes, and of which the ones of the compilation are the origins
+  of what is written for the deployment as a whole (the import of the scanned classes, the record of the registered
+  qualifiers, the definitions of the contexts and of the synthetic components). Two flags say whether the scanned
+  classes were seen to and whether synthesis ran, which happen once.
+- `SynthesisPhase`: the synthetic beans and observers the synthesis phase of section 2.10.5 described, made and
+  consumed as the round finishes, after every bean is known, followed by the registration of what it described and
+  the validation of section 2.10.6, which are told about the deployment as a whole.
+- The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
+  saw for a later one, as the specification allows and the kit's extensions do.
+- The handing of the extensions of one deployment to the visitor by a harness that compiles a deployment at a
+  time (`BuildCompatibleExtensionVisitor.overrideExtensions`, a static field read as the visitor is made), and the
+  specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as it starts.
+
+The alternative is to run the registration, synthesis and validation phases as the container starts, from the
+extension classes the compilation recorded, as the portable extensions are already run (`A portable extension is
+run over what was compiled`). The visitor would then keep what the discovery phase said and nothing about the
+classes. It costs: the extensions and an implementation of the language model over compiled metadata on the
+runtime class path, where the processor's model reads the compiler's elements; the registration and validation
+methods run at every start rather than once per build, over every bean; a synthetic bean or observer becomes a
+runtime definition (`RuntimeBeanDefinition`) rather than a compiled one; an `InvokerFactory` would have to find the
+methods it invokes executable already, which is decided as the class compiles; and a problem an extension reports
+fails the start of the application rather than its compilation. Discovery and enhancement stay at compile time
+either way: what they say changes the metadata the definitions are compiled with.
 
 ### A portable extension is run over what was compiled
 
@@ -733,7 +781,10 @@ own rather than the first one alone.
   whose members are annotated with each other (`MutuallyAnnotatedQualifierMembersTest` holds the shape). What it
   cannot see is a member a build compatible extension marked during discovery, which the source does not, and a
   qualifier an extension composed for a synthetic component, which is no occurrence it reads: the processor lists
-  those (`NonbindingMembersRemapper`), and the comparison leaves out a member either side lists.
+  those (`NonbindingMembersRemapper`), reading the members of the annotation interface as the compilation holds it,
+  where the discovery phase marked them, for each occurrence, and the comparison leaves out a member either side
+  lists. Micronaut reads the members from the source, and caches what it read per annotation name for the process;
+  reading them through the compilation's view of the interface instead would remove the remapping.
 - **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
@@ -753,14 +804,15 @@ own rather than the first one alone.
   as a variable the container renders is, through its bounds. A variable `toExactType` renders has
   no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
   module tells the variables of an event's class apart by their names.
-- **A type hierarchy record cannot say every closure.** Micronaut's record of a class (`importTypeHierarchy`)
-  leaves out a supertype that is not public and of a third package, which no record can name, and is written into
-  the package of the class where the class's closure names a class of that package that is not public: for a class
-  of the JDK such as `StringBuilder`, whose superclass `AbstractStringBuilder` is package-private, that is
-  `java.lang`, and the compilation fails ("cannot access io.micronaut.core.type.GeneratedTypeHierarchy"). The
-  processor records neither (`TypeHierarchyRecords`): a bean of such a class, or produced as one, has its closure
-  written on its definition (`CdiBeanTypes`), and an event of such a class is typed as one nothing was recorded of.
-  A record that named such a supertype by name, loaded where it is read, would remove the fallback.
+- **What a type hierarchy record left out is told at run time alone.** Since Micronaut Core 5.3 a record is
+  written into the package of the element it is made from, a class of the JDK's included, and a supertype it cannot
+  name from there is left out and named in `TypeHierarchy.getOmittedSuperTypeNames()`; `importTypeHierarchy`
+  answers the name of the record and not what it left out. So the processor writes the closure of a bean on its
+  definition (`CdiBeanTypes`) where a supertype of its class is a class that is not public and of another package,
+  which it tells from the names of the supertypes alone, and the container reads it where the record it finds left
+  something out. A supertype left out because its arguments name such a class is missing from the bean's types; the
+  omitted names answered as the record is written would let the processor write the closure exactly where the
+  record needs it.
 - **A lookup that stands on its own cannot carry the injection point it stands for.** Since Micronaut Core 5.3 a
   definition chosen within a creation is resolved within it (`RuntimeBeanDefinition.LookupContext.getBeanRegistration`
   and `BeanResolutionContext.getBeanRegistration`): the lookup a synthetic bean's creation function is handed
@@ -774,21 +826,6 @@ own rather than the first one alone.
   `InjectionPoint` bean reads it when the path has nothing to say; a definition-keyed lookup that took the
   injection point to report, or an attribute the new resolution starts with, would let it travel with the
   resolution instead.
-- **The attributes of a visitor context are kept differently by each compiler.** The processor keeps what one
-  visitor decides for another, or for a later round, on the attributes of the compilation's `VisitorContext`
-  (`CompilationState`) rather than in static fields. Under javac they belong to one
-  processor and last for its compilation: the visitors share them, but annotation metadata built for the bean
-  definition processor is remapped with that processor's attributes, so there a remapper does not see the
-  extensions' discovery phase — what the phase registered is also put on the annotation types themselves, which
-  that metadata reads. Under KSP they belong to the processor and last across its rounds. The Groovy compiler keeps
-  them in one static map for every compilation in the process (`GroovyVisitorContext`), so under Groovy two
-  compilations running at once in one process share them as they would a static field; the visitor of the
-  compilation is kept there. Since Micronaut Core 5.3 (`TypeElementVisitor.finishRound` and `VisitorContext.registerBean`)
-  the phases of the build compatible extensions run as a round finishes and their beans are registered without a
-  source, so the visitor and the records of the components no longer wait on the attributes for a generated marker
-  or factory to come past, and neither do the type hierarchy records, written as each class is visited and kept
-  apart per visitor context rather than among its attributes; what is left there is the
-  visitor the compilation started, read by the registration visitor.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
@@ -798,20 +835,6 @@ own rather than the first one alone.
   it describes or validates the injection points; a parameter of any other constructor or method so named is the
   author's. A public list of the names, or the intercepted constructor's own arguments on the definition, would
   remove the copy.
-- **A mark on an inherited member is a mark for every class that inherits it.** Micronaut builds the annotation
-  metadata of a field and of a parameter once, by the class declaring the member
-  (`AbstractElementAnnotationMetadataFactory`), so an annotation a visitor adds while one subclass is visited is
-  read through every other. The processor therefore marks the points a class declares alone
-  (`ContainerInjectionVisitor`), and the points a bean of the specification inherits from a class that is not one
-  keep Micronaut's rules; metadata of a member kept by the class it is read through would let the container
-  resolve them as well.
-- **Micronaut chooses one bean among candidates in a private method.** `DefaultBeanContext.lastChanceResolve` -
-  the primary ones, `BeanResolutionCustomizer.resolveNonUniqueBean`, `@Secondary`, the order, `@DefaultImplementation`
-  and the exact type - is reached only through a lookup by a type and a qualifier, which selects the candidates
-  itself; the bean manager's `resolve` is handed a set of beans and no type. The container copies the precedence
-  into one method (`CdiResolution.amongMicronautsOwn`), which a public selection over a given collection of
-  definitions would replace; it asks the customizer the context was configured with, since Micronaut does not
-  publish the one it serves the context with.
 - **The context is injected under types no bean definition stands for.** `DefaultBeanContext` hands itself out as
   `BeanContext`, `WatchableBeanContext`, `ApplicationContext`, `BeanLocator`, `BeanDefinitionRegistry`,
   `ExecutionHandleLocator`, `AnnotationMetadataResolver`, `PropertyResolver`, `ValueResolver` and

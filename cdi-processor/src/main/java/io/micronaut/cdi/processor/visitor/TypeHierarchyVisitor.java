@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.cdi.processor.extension;
+package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.processor.visitor.BeanTypesVisitor;
-import io.micronaut.cdi.processor.visitor.TypeHierarchyRecords;
+import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
+import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.WildcardElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
+import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Records the generic hierarchies of the classes an event can be of, and of the classes a recorded type names, as
@@ -39,59 +46,65 @@ import java.util.List;
  * a class of a library or of the JDK among them, since a bound is compared with the closure of the class an
  * argument names.</p>
  *
- * <p>Micronaut places a record where the classes it refers to can be referred to. A class the compilation does not
- * compile - a class of a library the discovery phase scanned, a class a recorded type names - is recorded from a
- * class of the compilation, and not at all where its record would have to be written into the library's package,
- * nothing the compilation writes belonging there.</p>
+ * <p>Every record is made from the class being visited, and nothing is kept from one class to the next: a class two
+ * classes of the compilation name is recorded from each, into the package of each, and Micronaut writes one record
+ * per package and finds one of them at run time.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Internal
-final class TypeIndexCollector {
+public final class TypeHierarchyVisitor implements TypeElementVisitor<Object, Object> {
 
+    private static final String GENERATED = "io.micronaut.cdi.generated.";
     private static final int MAX_REFERENCE_DEPTH = 8;
 
-    private final java.util.Set<String> seen = new java.util.HashSet<>();
-    private final java.util.Set<String> ownedSeen = new java.util.HashSet<>();
-    /**
-     * The classes a recorded type named, which are recorded for that.
-     */
-    private final java.util.Set<String> referenced = new java.util.HashSet<>();
-    private final java.util.Set<String> referencedVariables = new java.util.HashSet<>();
+    @Override
+    public TypeElementQuery query() {
+        // only the class is visited: what it declares is read from it, and core need not walk its members
+        return TypeElementQuery.onlyClass();
+    }
+
+    @Override
+    public VisitorKind getVisitorKind() {
+        return VisitorKind.ISOLATING;
+    }
+
+    @Override
+    public int getOrder() {
+        // beside the bean types: neither reads what the other writes
+        return LOWEST_PRECEDENCE - 360;
+    }
+
+    @Override
+    public void visitClass(ClassElement element, VisitorContext context) {
+        if (element.getName().startsWith(GENERATED)) {
+            return;
+        }
+        collect(element, new HashSet<>(), context);
+    }
 
     /**
      * Records what the class says of the types above it, where it says anything a raw class does not, and of the
      * classes it names as the type arguments and the bounds of its supertypes, of the types it observes and of the
-     * types it produces.
+     * types it produces; and the same of the classes nested in it.
      *
-     * @param element The class
-     * @param owned   Whether the compilation compiles it, rather than reading it from a library
-     * @param origin  The class of the compilation a record is made from, where the class is not one; {@code null}
-     *                where the compilation has none
-     * @param context The visitor context
+     * @param element  The class, which every record is made from
+     * @param recorded The classes recorded from the class visited so far, which are not recorded again from it
+     * @param context  The visitor context
      */
-    void collect(ClassElement element, boolean owned, @Nullable ClassElement origin, VisitorContext context) {
-        ClassElement from = owned ? element : origin;
-        if (from == null || !seen.add(element.getName())) {
-            return;
-        }
-        if (owned) {
-            ownedSeen.add(element.getName());
-        }
+    private static void collect(ClassElement element, Set<String> recorded, VisitorContext context) {
         // an interface, an abstract class and an annotation literal are never the class of an event object: they are
         // recorded where a recorded type names them, which is where their closure is compared
-        if ((!element.isInterface() && !element.isAbstract() && !isAnnotationLiteral(element))
-            || referenced.contains(element.getName())) {
-            record(element, owned, from, context);
+        if (!element.isInterface() && !element.isAbstract() && !isAnnotationLiteral(element)) {
+            record(element, element, recorded, context);
         }
-        referencesOf(element, from, context);
+        referencesOf(element, recorded, context);
         // a class nested in another is a class of the compilation like any other, and is not visited on its own
         // unless something is written on it
-        for (ClassElement nested : element.getEnclosedElements(
-            io.micronaut.inject.ast.ElementQuery.of(ClassElement.class).onlyDeclared())) {
+        for (ClassElement nested : element.getEnclosedElements(ElementQuery.of(ClassElement.class).onlyDeclared())) {
             if (nested.getName().startsWith(element.getName() + "$")) {
-                collect(nested, owned, origin, context);
+                collect(nested, recorded, context);
             }
         }
     }
@@ -106,7 +119,7 @@ final class TypeIndexCollector {
      * argument names - an {@code Integer} is within {@code ? extends Comparable<Integer>} because it is a
      * {@code Comparable<Integer>} - and the class of a library or of the JDK is recorded for that alone.
      */
-    private void referencesOf(ClassElement element, ClassElement origin, VisitorContext context) {
+    private static void referencesOf(ClassElement element, Set<String> recorded, VisitorContext context) {
         List<ClassElement> named = new ArrayList<>();
         try {
             BeanTypesVisitor.walkClosure(element, (type, bindings, erased) -> {
@@ -114,14 +127,13 @@ final class TypeIndexCollector {
                     named.addAll(type.getTypeArguments().values());
                 }
             });
-            for (io.micronaut.inject.ast.MethodElement method
-                : element.getEnclosedElements(io.micronaut.inject.ast.ElementQuery.ALL_METHODS.onlyDeclared())) {
-                if (method.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.PRODUCES)) {
+            for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+                if (method.hasDeclaredAnnotation(Cdi.PRODUCES)) {
                     named.addAll(argumentsOf(method.getGenericReturnType()));
                 }
-                for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
-                    if (parameter.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.OBSERVES)
-                        || parameter.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.OBSERVES_ASYNC)) {
+                for (ParameterElement parameter : method.getParameters()) {
+                    if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
+                        || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)) {
                         named.addAll(argumentsOf(parameter.getGenericType()));
                     }
                 }
@@ -130,15 +142,16 @@ final class TypeIndexCollector {
             // a hierarchy the compiler cannot resolve is a broken compilation of its own
             return;
         }
+        Set<String> variables = new HashSet<>();
         for (ClassElement type : named) {
-            reference(type, 0, origin, context);
+            reference(type, 0, element, recorded, variables, context);
         }
     }
 
     /**
      * The type arguments of a type, of the component of an array: what a bound is compared against.
      */
-    private static java.util.Collection<ClassElement> argumentsOf(ClassElement type) {
+    private static Collection<ClassElement> argumentsOf(ClassElement type) {
         ClassElement component = type;
         while (component.isArray()) {
             component = component.fromArray();
@@ -149,7 +162,8 @@ final class TypeIndexCollector {
     /**
      * Records a class a recorded type names, with the classes its own arguments and bounds name in turn.
      */
-    private void reference(ClassElement type, int depth, ClassElement origin, VisitorContext context) {
+    private static void reference(ClassElement type, int depth, ClassElement origin, Set<String> recorded,
+                                  Set<String> variables, VisitorContext context) {
         if (depth > MAX_REFERENCE_DEPTH) {
             return;
         }
@@ -157,22 +171,23 @@ final class TypeIndexCollector {
         while (component.isArray()) {
             component = component.fromArray();
         }
-        if (component instanceof io.micronaut.inject.ast.WildcardElement wildcard) {
-            wildcard.getUpperBounds().forEach(bound -> reference(bound, depth + 1, origin, context));
-            wildcard.getLowerBounds().forEach(bound -> reference(bound, depth + 1, origin, context));
+        if (component instanceof WildcardElement wildcard) {
+            wildcard.getUpperBounds().forEach(bound -> reference(bound, depth + 1, origin, recorded, variables, context));
+            wildcard.getLowerBounds().forEach(bound -> reference(bound, depth + 1, origin, recorded, variables, context));
             return;
         }
         if (component instanceof GenericPlaceholderElement placeholder) {
-            if (referencedVariables.add(placeholder.getVariableName() + "@" + depth)) {
-                placeholder.getBounds().forEach(bound -> reference(bound, depth + 1, origin, context));
+            if (variables.add(placeholder.getVariableName() + "@" + depth)) {
+                placeholder.getBounds().forEach(bound -> reference(bound, depth + 1, origin, recorded, variables, context));
             }
             return;
         }
         if (component.isPrimitive() || "java.lang.Object".equals(component.getName())) {
             return;
         }
-        component.getTypeArguments().values().forEach(argument -> reference(argument, depth + 1, origin, context));
-        if (!referenced.add(component.getName())) {
+        component.getTypeArguments().values()
+            .forEach(argument -> reference(argument, depth + 1, origin, recorded, variables, context));
+        if (recorded.contains(component.getName())) {
             return;
         }
         // the class as it declares itself, over its own variables, rather than as the type that names it gives them
@@ -180,15 +195,12 @@ final class TypeIndexCollector {
         if (declaration == null) {
             return;
         }
-        // a class the compilation compiles is recorded from itself, and one of a library from the class naming it; a
-        // class of the compilation not visited yet is recorded from itself when it is
-        boolean owned = ownedSeen.contains(declaration.getName());
-        record(declaration, owned, owned ? declaration : origin, context);
+        record(declaration, origin, recorded, context);
         try {
             BeanTypesVisitor.walkClosure(declaration, (supertype, bindings, erased) -> {
                 if (!erased && supertype != declaration) {
                     supertype.getTypeArguments().values()
-                        .forEach(argument -> reference(argument, depth + 1, origin, context));
+                        .forEach(argument -> reference(argument, depth + 1, origin, recorded, variables, context));
                 }
             });
         } catch (RuntimeException e) {
@@ -200,8 +212,9 @@ final class TypeIndexCollector {
      * Records the hierarchy of a class that says more of the types above it than its raw class does: it declares
      * type variables, or a type above it is parameterized.
      */
-    private static void record(ClassElement element, boolean owned, ClassElement origin, VisitorContext context) {
-        if (element.isPrivate() || element.getPackageName().isEmpty()) {
+    private static void record(ClassElement element, ClassElement origin, Set<String> recorded,
+                               VisitorContext context) {
+        if (!recorded.add(element.getName()) || element.isPrivate() || element.getPackageName().isEmpty()) {
             return;
         }
         boolean generic;
@@ -221,49 +234,7 @@ final class TypeIndexCollector {
             return;
         }
         if (generic) {
-            TypeHierarchyRecords.record(element, origin, owned, context);
-        }
-    }
-
-    /**
-     * The classes the records of a compilation were registered from, by round: Micronaut names a definition
-     * registered from a class after it, numbered in the order of the round, so one registered in a later round from
-     * the same class would take the name of one an earlier round wrote.
-     */
-    static final class RecordOrigins {
-        private final java.util.Set<String> earlier = new java.util.HashSet<>();
-        private final java.util.Set<String> current = new java.util.HashSet<>();
-
-        /**
-         * The first of the classes no record of an earlier round was registered from.
-         *
-         * @param classes The classes
-         * @return The class, or {@code null} where there is none
-         */
-        @Nullable ClassElement available(List<? extends ClassElement> classes) {
-            for (ClassElement candidate : classes) {
-                if (!earlier.contains(candidate.getName())) {
-                    return candidate;
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Notes that a record of this round is registered from the class.
-         *
-         * @param origin The class
-         */
-        void use(ClassElement origin) {
-            current.add(origin.getName());
-        }
-
-        /**
-         * Ends the round: the classes records were registered from are no origins of the next round's.
-         */
-        void roundFinished() {
-            earlier.addAll(current);
-            current.clear();
+            TypeHierarchyRecords.record(element, origin, context);
         }
     }
 }

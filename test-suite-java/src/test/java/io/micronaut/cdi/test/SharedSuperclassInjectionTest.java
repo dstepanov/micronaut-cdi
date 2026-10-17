@@ -27,10 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
- * The injection points a superclass declares are marked for the container by the class that declares them, not by
- * a bean of the specification that inherits them: the annotations of a field or a parameter are kept once, by the
- * class declaring it, so marking them for one subclass would mark them for a bean of Micronaut's own that extends
- * the same class as well, and its list would no longer be Micronaut's aggregation.
+ * The injection points a bean of the specification inherits are marked for the container as it is visited, and the
+ * mark stays with it: Micronaut keeps a mark written on an inherited field or parameter by the class it was written
+ * through, so a bean of Micronaut's own that extends the same class keeps Micronaut's aggregation for its list.
  */
 class SharedSuperclassInjectionTest {
 
@@ -43,6 +42,14 @@ class SharedSuperclassInjectionTest {
 
     @Dependent
     public static class Saw implements Tool {
+    }
+
+    @Dependent
+    public static class Toolbox {
+        @jakarta.enterprise.inject.Produces
+        List<Tool> tools() {
+            return List.of();
+        }
     }
 
     public abstract static class Workshop {
@@ -72,6 +79,7 @@ class SharedSuperclassInjectionTest {
             assertEquals(2, micronaut.tools.size(), micronaut.tools::toString);
             SpecificationWorkshop specification = context.getBean(SpecificationWorkshop.class);
             assertInstanceOf(Hammer.class, specification.hammer);
+            assertEquals(0, specification.tools.size(), specification.tools::toString);
         }
     }
 }
