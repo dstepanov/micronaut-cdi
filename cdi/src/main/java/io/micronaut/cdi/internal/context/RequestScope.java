@@ -179,7 +179,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         try {
             PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initializedEvent();
+                initialized(instances);
                 try {
                     work.run();
                 } finally {
@@ -206,7 +206,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         try {
             return PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initializedEvent();
+                initialized(instances);
                 try {
                     return work.get();
                 } finally {
@@ -234,7 +234,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         try {
             return PropagatedContext.getOrEmpty().plus(instances).propagateCall(() -> {
-                initializedEvent();
+                initialized(instances);
                 try {
                     return work.call();
                 } finally {
@@ -313,18 +313,32 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         Activation activation = propagate(instances, initiator);
         try {
-            initializedEvent();
+            initialized(instances);
         } catch (RuntimeException | Error e) {
             // an observer that threw must not leave a phantom request active on the thread forever: the
             // activation is unwound and the failure comes out
-            try {
-                destroy(instances);
-            } finally {
-                activation.end();
-            }
+            activation.end();
             throw e;
         }
         return true;
+    }
+
+    /**
+     * Tells the observers that the request was initialized, from inside it. An observer that throws ends the
+     * request: what it created in the request is destroyed, while the request is still active, and the failure
+     * comes out, rather than the request staying open until the container stops.
+     */
+    private void initialized(Instances instances) {
+        try {
+            initializedEvent();
+        } catch (RuntimeException | Error e) {
+            try {
+                destroy(instances);
+            } catch (RuntimeException | Error destruction) {
+                e.addSuppressed(destruction);
+            }
+            throw e;
+        }
     }
 
     /**
