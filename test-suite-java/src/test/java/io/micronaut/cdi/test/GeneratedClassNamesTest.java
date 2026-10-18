@@ -75,11 +75,12 @@ class GeneratedClassNamesTest {
     }
 
     /**
-     * The generic hierarchy of a class no definition describes is recorded on a definition the compilation registers,
-     * not on a source it generates.
+     * The generic hierarchy of a class no definition describes is Micronaut's type hierarchy record of the class,
+     * and of the class of the JDK it names as a type argument, which is written into the package of the class naming
+     * it: no source, no definition of a record of the container's own.
      */
     @Test
-    void theTypeIndexIsNoGeneratedSource() {
+    void theTypeIndexIsMicronautsTypeHierarchyRecords() {
         String source = """
             package collide;
 
@@ -92,13 +93,20 @@ class GeneratedClassNamesTest {
         List<String> classes = new ArrayList<>();
         try (JavaParser parser = new JavaParser()) {
             for (JavaFileObject file : parser.generate("collide.Payload", source)) {
-                String name = file.getName();
-                if (name.contains("CdiTypeIndex")) {
-                    classes.add(name);
+                if (file.getKind() == JavaFileObject.Kind.CLASS) {
+                    String name = file.getName();
+                    classes.add(name.substring(name.indexOf("/CLASS_OUTPUT/") + "/CLASS_OUTPUT/".length(),
+                        name.length() - ".class".length()).replace('/', '.'));
                 }
             }
         }
-        assertTrue(classes.isEmpty(), "a source or a class of the type index was generated: " + classes);
+        assertTrue(classes.contains("collide.$Payload$TypeHierarchy"), "the payload is recorded: " + classes);
+        assertTrue(classes.contains("collide.$$java.lang.$String$TypeHierarchy"),
+            "the class of the JDK it names is recorded in its package: " + classes);
+        // the extensions of the suite register qualifiers, which a record of the deployment holds: one, not one per
+        // package of recorded hierarchies
+        assertTrue(classes.stream().filter(name -> name.contains("CdiDeploymentRecord")).count() <= 1,
+            "a record of the container's own was generated for the hierarchies: " + classes);
     }
 
     private static void assertNoneTaken(JavaParser compilation, String source) {

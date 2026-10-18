@@ -73,10 +73,6 @@ final class ScenarioContexts {
             if (producer != null) {
                 return producer;
             }
-            if (definition.getAnnotationMetadata().hasAnnotation("io.micronaut.cdi.internal.metadata.CdiTypeIndex")) {
-                // what the processor recorded of the classes of a package: data of the compilation
-                return "";
-            }
         }
         Class<?> type = bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
         return type.getName();

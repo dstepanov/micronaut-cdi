@@ -1,10 +1,7 @@
 package io.micronaut.cdi.test.noreflection;
 
-import io.micronaut.cdi.internal.metadata.CdiTypeIndex;
+import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.context.ApplicationContext;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
@@ -12,17 +9,16 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The generic hierarchy of the class of an event that is a bean of the specification is what its definition
- * recorded of its bean types: the type index records the classes no definition describes, and a bean's own record
- * answers the rest.
+ * recorded of its bean types: Micronaut's type hierarchy record of the class, which a bean class has as any other
+ * class an event can be of.
  */
 class BeanClassEventWithoutReflectionTest {
 
@@ -75,15 +71,9 @@ class BeanClassEventWithoutReflectionTest {
             sender.anything.fire(new OrderSignal());
             sender.orders.fire(new AnySignal<>());
             assertEquals(List.of("order OrderSignal", "order AnySignal"), context.getBean(Listener.class).heard());
-            // the bean classes are not in the index, which holds the classes no definition describes
-            for (BeanDefinition<?> definition : context.getBeanDefinitions(Qualifiers.byStereotype(CdiTypeIndex.class))) {
-                for (AnnotationValue<Annotation> entry : definition.getAnnotationMetadata()
-                    .getAnnotation(CdiTypeIndex.class).getAnnotations("value")) {
-                    String name = entry.stringValue("name").orElse("");
-                    assertFalse(name.equals(OrderSignal.class.getName()) || name.equals(AnySignal.class.getName()),
-                        name + " is a bean, and recorded on its definition");
-                }
-            }
+            // a bean class is recorded as any other class an event can be of
+            assertTrue(TypeHierarchies.find(OrderSignal.class).isPresent());
+            assertTrue(TypeHierarchies.find(AnySignal.class).isPresent());
         }
     }
 }

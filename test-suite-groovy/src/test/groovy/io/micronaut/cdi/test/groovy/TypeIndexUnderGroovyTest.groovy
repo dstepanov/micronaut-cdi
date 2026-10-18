@@ -1,38 +1,26 @@
 package io.micronaut.cdi.test.groovy
 
-import io.micronaut.cdi.internal.metadata.CdiTypeIndex
-import io.micronaut.context.ApplicationContext
-import io.micronaut.core.annotation.AnnotationValue
-import io.micronaut.inject.qualifiers.Qualifiers
+import io.micronaut.core.type.TypeHierarchies
+import io.micronaut.core.type.TypeHierarchy
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
- * The generic hierarchy of a class no definition describes is recorded on a definition the Groovy compilation
- * registers, placed where the classes it refers to can be referred to: a package-private supertype from its own
- * package.
+ * The generic hierarchy of a class no definition describes is recorded as Micronaut's type hierarchy record of the
+ * class under the Groovy compiler as well, which Micronaut places where the classes it refers to can be referred to:
+ * a package-private supertype from its own package.
  */
 class TypeIndexUnderGroovyTest {
 
     @Test
     void aPackagePrivateSupertypeIsRecordedAsItsClass() {
-        try (ApplicationContext context = ApplicationContext.run()) {
-            AnnotationValue<?> entry = null
-            for (def definition : context.getBeanDefinitions(Qualifiers.byStereotype(CdiTypeIndex))) {
-                for (def candidate : definition.getAnnotationMetadata().getAnnotation(CdiTypeIndex).getAnnotations('value')) {
-                    if (candidate.stringValue('name').orElse(null) == 'io.micronaut.cdi.test.groovy.hidden.HiddenPayload') {
-                        entry = candidate
-                    }
-                }
-            }
-            assertNotNull(entry, 'the payload is recorded')
-            def supertype = entry.getAnnotations('supertypes')[0]
-            assertEquals('io.micronaut.cdi.test.groovy.hidden.HiddenBase', supertype.stringValue('value').orElse(null))
-            assertTrue(supertype.classValue('value').isPresent(),
-                'the package-private supertype is recorded as a class, from its own package')
-        }
+        Class<?> payload = Class.forName('io.micronaut.cdi.test.groovy.hidden.HiddenPayload')
+        TypeHierarchy hierarchy = TypeHierarchies.find(payload).orElse(null)
+        assertNotNull(hierarchy, 'the payload is recorded')
+        def base = hierarchy.getTypeClosure(hierarchy.declaration)[1]
+        assertEquals('io.micronaut.cdi.test.groovy.hidden.HiddenBase', base.type.name,
+            'the package-private supertype is recorded as a class, from its own package')
     }
 }
