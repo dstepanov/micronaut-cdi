@@ -68,6 +68,7 @@ final class DeploymentCompiler {
         JavaFileObject[] sources = sourcesByClassName.entrySet().stream()
             .map(entry -> sourceFile(entry.getKey(), entry.getValue()))
             .toArray(JavaFileObject[]::new);
+        Map<String, String> incoming = extensionOptions();
         try (JavaParser parser = new JavaParser() {
             @Override
             protected Set<String> getCompilerOptions() {
@@ -84,20 +85,36 @@ final class DeploymentCompiler {
                 return parser.generate(sources);
             } catch (RuntimeException e) {
                 throw classified(parser.getDiagnosticCollector().getDiagnostics(), e);
-            } finally {
-                forgetExtensionOptions();
             }
+        } finally {
+            restoreExtensionOptions(incoming);
         }
     }
 
     /**
-     * Clears the extension options from the system properties, where Micronaut's processor copies every
-     * {@code micronaut.*} option as it initializes and reads them back as a compilation's options: left there,
-     * the extensions of one deployment would have their say in every deployment compiled after it in this process.
+     * The extension options as the system properties hold them before a compilation, {@code null} for an absent
+     * one: Micronaut's processor copies every {@code micronaut.*} option there as it initializes, reads them back as
+     * a compilation's options, and restores what was there as its processing is over. A compilation that fails
+     * before then would leave the extensions of one deployment to have their say in every deployment compiled after
+     * it in this process, so the harness restores the same values itself, whichever way the compilation ends.
      */
-    static void forgetExtensionOptions() {
-        System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION);
-        System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION);
+    private static Map<String, String> extensionOptions() {
+        Map<String, String> options = new java.util.HashMap<>(2);
+        for (String key : List.of(BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION,
+            BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION)) {
+            options.put(key, System.getProperty(key));
+        }
+        return options;
+    }
+
+    private static void restoreExtensionOptions(Map<String, String> options) {
+        options.forEach((key, value) -> {
+            if (value == null) {
+                System.clearProperty(key);
+            } else {
+                System.setProperty(key, value);
+            }
+        });
     }
 
     private static JavaFileObject sourceFile(String className, String source) {

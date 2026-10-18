@@ -875,9 +875,12 @@ own rather than the first one alone.
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated
   (`CdiScannedClasses`, on the import of them), since compiled classes are what it hands back. Micronaut's
-  processor copies every `micronaut.*` option into the system properties as it initializes and reads them back
-  as the options of any compilation, so such a harness clears the two once each compilation is done, or the
-  extensions of one deployment would have their say in every deployment compiled after it. One seam is left
+  processor copies every `micronaut.*` option into the system properties as it initializes, reads them back as
+  the options of any compilation, and restores the values that were there before once its processing is over
+  (`ProcessorOptionsSystemProperties`); such a harness takes the two values before each compilation and puts them
+  back however the compilation ends (`DeploymentCompiler`, `ExtensionCompilation`), so that a compilation that
+  fails before its processing is over does not leave the extensions of one deployment to have their say in every
+  deployment compiled after it, and a value set before the compilation is kept. One seam is left
   for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
   sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
   `SeContainerInitializer.newInstance()`. The type hierarchy record of a class is found
