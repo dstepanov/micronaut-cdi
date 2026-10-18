@@ -90,15 +90,11 @@ public final class ReflectiveCdi implements CdiReflection {
         if (arrayStops && (raw.isArray() || raw.isPrimitive())) {
             return closure;
         }
-        if (raw.isArray()) {
-            // what every array implements, which Micronaut's closure of an array does not list
-            closure.addAll(java.util.List.of(raw.getInterfaces()));
-            return closure;
-        }
         // Micronaut's reading of the generic signatures above the type, which keeps a wildcard a wildcard and a
-        // variable a variable, with what a subtype says about its parameters carried into its supertypes. The
-        // container hands over the types it rendered itself, whose variables carry their bounds but no annotated
-        // bounds, which Micronaut reads the variable through
+        // variable a variable, with what a subtype says about its parameters carried into its supertypes; of an
+        // array, the arrays of the supertypes of its component, the arrays of fewer dimensions it is an array of,
+        // and what every array implements. The container hands over the types it rendered itself, whose variables
+        // carry their bounds but no annotated bounds, which Micronaut reads the variable through
         java.util.List<Argument<?>> supertypes = ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type));
         for (Argument<?> supertype : supertypes.subList(1, supertypes.size())) {
             if (supertype.getType() != Object.class) {

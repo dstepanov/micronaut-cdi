@@ -110,6 +110,19 @@ class ReflectiveTypeClosureTest {
     }
 
     @Test
+    void anArrayIsAnArrayOfTheSupertypesOfItsComponentAndOfFewerDimensions() {
+        // as the processor lists the closure of an array: what the component's supertypes make it an array of, and
+        // the arrays of fewer dimensions an array of arrays is
+        Set<String> closure = described(reflection.typeClosureOf(String[][].class, false));
+        assertTrue(closure.contains(CharSequence[][].class.getName()), closure::toString);
+        assertTrue(closure.contains(Object[][].class.getName()), closure::toString);
+        assertTrue(closure.contains(Object[].class.getName()), closure::toString);
+        assertTrue(closure.contains(Serializable.class.getName()) && closure.contains(Cloneable.class.getName()),
+            closure::toString);
+        assertFalse(closure.contains(Object.class.getName()), "Object is left out");
+    }
+
+    @Test
     void aVariableOfTheEventClassIsResolvedThroughItsSupertype() {
         Type declared = CdiParameterizedType.of(Foo.class, new Type[] {Integer.class});
         assertEquals(Bar.class.getName() + "<java.lang.Integer>",
