@@ -49,6 +49,22 @@ class PrimitiveCallbackParameterTest {
     }
 
     @Dependent
+    public static class Resource {
+        static final java.util.concurrent.atomic.AtomicInteger created = new java.util.concurrent.atomic.AtomicInteger();
+        static final java.util.concurrent.atomic.AtomicInteger destroyed = new java.util.concurrent.atomic.AtomicInteger();
+
+        @jakarta.annotation.PostConstruct
+        void start() {
+            created.incrementAndGet();
+        }
+
+        @jakarta.annotation.PreDestroy
+        void stop() {
+            destroyed.incrementAndGet();
+        }
+    }
+
+    @Dependent
     public static class Producers {
         static volatile int observed = -1;
         static volatile int disposed = -1;
@@ -56,7 +72,7 @@ class PrimitiveCallbackParameterTest {
         @Produces
         @Dependent
         @Absent
-        Integer absent() {
+        Integer absent(Resource resource) {
             return null;
         }
 
@@ -97,6 +113,25 @@ class PrimitiveCallbackParameterTest {
             handle.get();
             handle.destroy();
             assertEquals(0, Producers.disposed);
+        }
+    }
+
+    @Test
+    void theNullProductOfACallbackParameterIsDestroyedWithTheInvocation() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Client client = context.getBean(Client.class);
+            int created = Resource.created.get();
+            int destroyed = Resource.destroyed.get();
+            client.knocks.fire(new Knock());
+            assertEquals(created + 1, Resource.created.get());
+            // what the producer was injected with to produce null is released after the observer returns
+            assertEquals(destroyed + 1, Resource.destroyed.get());
+
+            Instance.Handle<Gadget> handle = client.gadgets.getHandle();
+            handle.get();
+            handle.destroy();
+            assertEquals(created + 2, Resource.created.get());
+            assertEquals(destroyed + 2, Resource.destroyed.get());
         }
     }
 }

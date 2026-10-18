@@ -130,15 +130,10 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         int disposedParameter = disposer.disposedParameter();
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
-        java.util.List<io.micronaut.context.BeanRegistration<?>> primitives = new java.util.ArrayList<>(0);
         for (int i = 0; i < arguments.length; i++) {
-            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies, primitives);
+            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
-        try {
-            invoke(method, null, parameters);
-        } finally {
-            destroy(primitives);
-        }
+        invoke(method, null, parameters);
     }
 
     private void invoke(Disposer disposer, Object bean, BeanDependencyGroup dependencies) {
@@ -146,26 +141,15 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         int disposedParameter = disposer.disposedParameter();
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
-        java.util.List<io.micronaut.context.BeanRegistration<?>> primitives = new java.util.ArrayList<>(0);
         for (int i = 0; i < arguments.length; i++) {
-            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies, primitives);
+            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
-        try {
-            Object host = resolveDefinition(disposer.declaring(), dependencies);
-            if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !disposer.publicMethod()) {
-                // A non-public disposer is invoked on the contextual target; public methods retain interception.
-                host = proxy.interceptedTarget();
-            }
-            invoke(method, host, parameters);
-        } finally {
-            destroy(primitives);
+        Object host = resolveDefinition(disposer.declaring(), dependencies);
+        if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !disposer.publicMethod()) {
+            // A non-public disposer is invoked on the contextual target; public methods retain interception.
+            host = proxy.interceptedTarget();
         }
-    }
-
-    private void destroy(java.util.List<io.micronaut.context.BeanRegistration<?>> primitives) {
-        for (int i = primitives.size() - 1; i >= 0; i--) {
-            beanContext.destroyBean(primitives.get(i));
-        }
+        invoke(method, host, parameters);
     }
 
     /**
@@ -194,8 +178,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     }
 
     @SuppressWarnings("unchecked")
-    private @Nullable Object resolve(Argument<?> argument, BeanDependencyGroup dependencies,
-                                     java.util.List<io.micronaut.context.BeanRegistration<?>> primitives) {
+    private @Nullable Object resolve(Argument<?> argument, BeanDependencyGroup dependencies) {
         if (CdiResolution.isSuppliedByAnApplicationProvider(argument.getAnnotationMetadata())) {
             // a provider of the application's own supplies it, as it does a field of a bean
             return CdiResolution.fromApplicationProvider(beanContext, null, argument);
@@ -223,19 +206,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
         }
         Argument<Object> askedAs = CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition);
-        Object bean;
-        if (argument.getType().isPrimitive()) {
-            // a dependent producer may satisfy it with null, which Micronaut cannot destroy as a dependent of the
-            // disposal: it is created on its own, and destroyed after the disposer where it is not null
-            io.micronaut.context.BeanRegistration<Object> registration =
-                beanContext.getBeanRegistration(definition, askedAs);
-            bean = registration.bean();
-            if (bean != null && CdiResolution.isDependent(definition)) {
-                primitives.add(registration);
-            }
-        } else {
-            bean = dependencies.getBean(definition, askedAs);
-        }
+        // a dependent producer may satisfy it with null, which the disposal destroys as it does any other dependent
+        Object bean = dependencies.getBeanRegistration(definition, askedAs).bean();
         if (bean == null && argument.getType().isPrimitive()) {
             // section 2.5.2.4: a producer that returns null satisfies a primitive parameter with its default value,
             // as it does a field

@@ -958,7 +958,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         java.util.Map<String, List<AnnotationValue<?>>> members =
             discovered.memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
-            // the members of an annotation interface as the compiler answers them, which KSP does as properties
+            // the members of an annotation interface, as Micronaut answers them under every compiler
             NonbindingMembersRemapper.memberElementsOf(element).forEach((name, member) -> {
                 for (AnnotationValue<?> annotation : members.getOrDefault(name, List.of())) {
                     member.annotate(annotation);
