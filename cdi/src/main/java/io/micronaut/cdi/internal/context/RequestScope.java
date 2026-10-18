@@ -377,11 +377,12 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     @Override
     public void close() {
         // the activations of this scope the calling thread still has in scope, the innermost first, are taken out
-        // of its propagated context, which would otherwise keep them in scope past the container
+        // of its propagated context, which would otherwise keep them in scope past the container. An activation that
+        // has ended already is in scope only because a context captured while it was under way was propagated again,
+        // by a scope this one did not open and does not close: the unwinding stops there
         java.util.List<PropagatedContextElement> elements = PropagatedContext.getOrEmpty().getAllElements();
         while (!elements.isEmpty() && elements.getLast() instanceof Activation activation
-            && activation.instances().owner() == this && activation.isOfTheCallingThread()) {
-            activation.end();
+            && activation.instances().owner() == this && activation.isOfTheCallingThread() && activation.end()) {
             elements = PropagatedContext.getOrEmpty().getAllElements();
         }
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
@@ -570,13 +571,18 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
         /**
          * Takes the activation out of the propagated context of its thread, once.
+         *
+         * @return Whether this call took it out, which a second call, or one for an activation a propagated context
+         *     captured before it ended and brought back into scope, does not
          */
-        void end() {
+        boolean end() {
             PropagatedContext.Scope propagation = scope;
             scope = null;
             if (propagation != null) {
                 propagation.close();
+                return true;
             }
+            return false;
         }
     }
 }
