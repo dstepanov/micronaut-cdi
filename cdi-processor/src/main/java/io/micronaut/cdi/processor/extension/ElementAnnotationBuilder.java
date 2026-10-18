@@ -18,7 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationMember;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
-import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
+import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -79,7 +79,7 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
         ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
         if (declaration != null) {
             // the members the interface declares, as Micronaut answers them under every compiler
-            for (String member : NonbindingMembersRemapper.memberElementsOf(declaration).keySet()) {
+            for (String member : NonbindingMembers.memberElementsOf(declaration).keySet()) {
                 if (!values.containsKey(member)) {
                     throw new IllegalStateException("The member " + member + " of " + annotation
                         + " was not composed and has no default");

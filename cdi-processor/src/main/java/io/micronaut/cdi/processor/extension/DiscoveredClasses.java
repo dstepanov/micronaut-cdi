@@ -16,7 +16,7 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
-import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
+import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -304,12 +304,12 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
     /**
      * The names of the members an annotation interface declares, as the compilation sees the interface
-     * ({@link NonbindingMembersRemapper#memberElementsOf}).
+     * ({@link NonbindingMembers#memberElementsOf}).
      */
     private List<String> memberNamesOf(String annotation) {
         List<String> names = new ArrayList<>();
         declarationOf(annotation).ifPresent(declaration ->
-            names.addAll(NonbindingMembersRemapper.memberElementsOf(declaration).keySet()));
+            names.addAll(NonbindingMembers.memberElementsOf(declaration).keySet()));
         return names;
     }
 
