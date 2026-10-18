@@ -880,9 +880,11 @@ own rather than the first one alone.
   extensions of one deployment would have their say in every deployment compiled after it. One seam is left
   for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
   sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
-  `SeContainerInitializer.newInstance()`. Beside it the type hierarchy record a class has is kept
-  with the class once it is found (`RecordedTypeIndex`), since a record is compiled data that says the same to every
-  container; a class with none is asked again by the next container, whose class loader may see one.
+  `SeContainerInitializer.newInstance()`. The type hierarchy record of a class is found
+  through the class loader of the container, and the class's own where that one finds none, and kept by that
+  container alone (`RecordedTypeIndex`): two deployments whose loaders see different records of a class of a loader
+  they share each read their own, and no record, nor the deployment loader it was found through, is kept with the
+  shared class.
 
 ## What other implementations' tests found
 

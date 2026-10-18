@@ -88,7 +88,7 @@ public final class RecordedTypeIndex {
      * @return The record, or {@code null} where the application was not compiled with the class
      */
     @Nullable Entry of(Class<?> type) {
-        Entry hierarchy = hierarchies.computeIfAbsent(type, RecordedTypeIndex::recordOf).orElse(null);
+        Entry hierarchy = hierarchies.computeIfAbsent(type, this::recordOf).orElse(null);
         if (hierarchy instanceof HierarchyEntry entry && entry.hierarchy().getOmittedSuperTypeNames().isEmpty()) {
             return hierarchy;
         }
@@ -110,37 +110,35 @@ public final class RecordedTypeIndex {
      * @return Whether it does
      */
     boolean hasCompleteRecord(Class<?> type) {
-        return hierarchies.computeIfAbsent(type, RecordedTypeIndex::recordOf)
+        return hierarchies.computeIfAbsent(type, this::recordOf)
             .filter(entry -> entry instanceof HierarchyEntry hierarchy
                 && hierarchy.hierarchy().getOmittedSuperTypeNames().isEmpty())
             .isPresent();
     }
 
     /**
-     * The record of a class, found once for the class whichever container asks: a record is generated with the
-     * classes and says the same to every one of them.
+     * The record of a class as the class loader of this container finds it, or the loader of the class where that one
+     * finds none: a record of that very class, not of another loader's class of the same name. Two containers whose
+     * loaders see different records of a class they share - a class of a parent loader, a record of each deployment -
+     * each find their own, and what one found is kept by it alone ({@link #hierarchies}), so that no record, nor the
+     * loader of a deployment it was found through, is kept with the shared class.
      */
-    private static Optional<Entry> recordOf(Class<?> type) {
-        java.util.concurrent.atomic.AtomicReference<Entry> found = FOUND.get(type);
-        Entry known = found.get();
-        if (known != null) {
-            return Optional.of(known);
+    private Optional<Entry> recordOf(Class<?> type) {
+        ClassLoader containerLoader = beanContext.getClassLoader();
+        Optional<TypeHierarchy> found = findRecord(type, containerLoader);
+        ClassLoader typeLoader = type.getClassLoader();
+        if (found.isEmpty() && typeLoader != null && typeLoader != containerLoader) {
+            found = findRecord(type, typeLoader);
         }
-        Optional<Entry> entry = TypeHierarchies.find(type).map(HierarchyEntry::new);
-        entry.ifPresent(found::set);
-        return entry;
+        return found.map(HierarchyEntry::new);
     }
 
-    /**
-     * The records found so far, kept with each class. A class without one is asked again by the next container,
-     * whose class loader may see records this one did not.
-     */
-    private static final ClassValue<java.util.concurrent.atomic.AtomicReference<Entry>> FOUND = new ClassValue<>() {
-        @Override
-        protected java.util.concurrent.atomic.AtomicReference<Entry> computeValue(Class<?> type) {
-            return new java.util.concurrent.atomic.AtomicReference<>();
+    private static Optional<TypeHierarchy> findRecord(Class<?> type, @Nullable ClassLoader loader) {
+        if (loader == null) {
+            return Optional.empty();
         }
-    };
+        return TypeHierarchies.find(type.getName(), loader).filter(hierarchy -> hierarchy.getType() == type);
+    }
 
     /**
      * What the definitions of the classes that are beans recorded of them: the type closure of the class, which a
