@@ -85,46 +85,24 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static final String SCANNED_CLASSES = "ScannedClassesImport";
     private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
-    /**
-     * What the visitor that started a compilation is kept under, on the compilation (see {@link CompilationState}).
-     */
-    private static final String VISITOR = "visitor";
-
     private final List<Enhancer> enhancers = new ArrayList<>();
     private final List<Registrar> registrars = new ArrayList<>();
     private final List<ExtensionMethod> discoveries = new ArrayList<>();
     private final List<ExtensionMethod> synthesizers = new ArrayList<>();
     private final List<ExtensionMethod> validators = new ArrayList<>();
     private final @org.jspecify.annotations.Nullable Deployment deployment;
-    private final DiscoveredClasses discovered = new DiscoveredClasses();
-    private boolean discoveryRan;
     /**
-     * Whether the scanned classes have been seen to: imported, under javac, or registered.
+     * What the discovery phase said and which classes the compiler visited: the one thing this visitor keeps from
+     * one class to the next, made as the compilation starts the visitor and read as its rounds finish. A visitor a
+     * compiler constructs and never starts has none.
+     */
+    private @org.jspecify.annotations.Nullable DiscoveredClasses discovered;
+    /**
+     * Which of the phases that wait for the whole deployment have run, which run once: the scanned classes have
+     * been seen to - imported, under javac, or registered - and the synthesis and validation phases have run.
      */
     private boolean scannedClassesHandled;
     private boolean synthesized;
-    /**
-     * Whether a round of the compilation has finished: a scanned class visited after that is one the generated
-     * import named, of a library rather than of the compilation.
-     */
-    private boolean roundFinished;
-    /**
-     * The classes described to the registration phase already: a class the discovery phase scanned is visited as
-     * it is compiled and again as the generated import names it.
-     */
-    private final java.util.Set<String> registered = new java.util.HashSet<>();
-    private final TypeIndexCollector typeIndex = new TypeIndexCollector();
-    /**
-     * The classes the records of the deployment were registered from, which a later round does not register one from.
-     */
-    private final TypeIndexCollector.RecordOrigins recordOrigins = new TypeIndexCollector.RecordOrigins();
-    /**
-     * The classes of the compilation this visitor has visited, in the order it visited them: what it registers and
-     * generates is written from them, and the first names it.
-     */
-    private final List<ClassElement> contributors = new ArrayList<>();
-    private final java.util.Set<String> visited = new java.util.HashSet<>();
-    private @org.jspecify.annotations.Nullable String suffix;
 
     public BuildCompatibleExtensionVisitor() {
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
@@ -215,30 +193,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         overriddenDeployment = extensions == null ? null : new Deployment(List.copyOf(extensions), scannedClasses);
     }
 
-    /**
-     * The visitor that started the given compilation, so that the registration visitor — which runs last, after
-     * every other visitor has had its say — describes the beans with the same extensions and state.
-     *
-     * @param context The compilation
-     * @return The visitor, or {@code null} where none started it
-     */
-    static @org.jspecify.annotations.Nullable BuildCompatibleExtensionVisitor of(VisitorContext context) {
-        return CompilationState.get(context, VISITOR, BuildCompatibleExtensionVisitor.class);
-    }
-
-    /**
-     * What the discovery phase of the given compilation said, for the annotation remapping that records the
-     * non-binding members of a qualifier or binding an extension configured: it runs as the metadata of each
-     * element is built, outside any visitor, and is handed the compilation it builds it for.
-     *
-     * @param context The compilation
-     * @return What was discovered, or {@code null} where no visitor of this kind started the compilation
-     */
-    public static @org.jspecify.annotations.Nullable DiscoveredClasses discoveryOf(VisitorContext context) {
-        BuildCompatibleExtensionVisitor visitor = of(context);
-        return visitor == null ? null : visitor.discovered;
-    }
-
     private static void validateDiscovery(Method method) {
         for (Class<?> parameterType : method.getParameterTypes()) {
             if (!parameterType.equals(ScannedClasses.class) && !parameterType.equals(MetaAnnotations.class)
@@ -301,7 +255,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         Object[] arguments = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i].equals(ScannedClasses.class) || parameterTypes[i].equals(MetaAnnotations.class)) {
-                arguments[i] = discovered;
+                arguments[i] = discovered();
             } else if (Phase.DISCOVERY.hands(parameterTypes[i])) {
                 arguments[i] = Phase.DISCOVERY.argument(parameterTypes[i], new VisitorMessages(context), context);
             } else {
@@ -347,7 +301,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * from.
      */
     io.micronaut.inject.ast.Element[] contributors() {
-        return contributors.toArray(new io.micronaut.inject.ast.Element[0]);
+        return discovered().contributors().toArray(new io.micronaut.inject.ast.Element[0]);
+    }
+
+    /**
+     * What the discovery phase said and which classes the compiler visited, which the compilation made as it
+     * started this visitor.
+     */
+    private DiscoveredClasses discovered() {
+        DiscoveredClasses started = discovered;
+        if (started == null) {
+            throw new IllegalStateException("The build compatible extension visitor was not started");
+        }
+        return started;
     }
 
     /**
@@ -378,23 +344,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver.setBuildServices(
             new ElementBuildServices(context));
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
-        // others that it never starts
-        CompilationState.keep(context, VISITOR, this);
-        if (!discoveryRan) {
-            discoveryRan = true;
-            discovered.compilation(context);
+        // others that it never starts. The discovery phase runs once, as it is first started
+        DiscoveredClasses started = discovered;
+        if (started == null) {
+            started = new DiscoveredClasses();
+            discovered = started;
+            started.compilation(context);
             for (ExtensionMethod discovery : discoveries) {
                 discover(discovery.extension(), discovery.method(), context);
             }
             Deployment overridden = deployment;
             if (overridden != null) {
-                overridden.scannedClasses().accept(java.util.Set.copyOf(discovered.scannedClasses()));
+                overridden.scannedClasses().accept(java.util.Set.copyOf(started.scannedClasses()));
             }
         }
         // what the discovery phase said about annotations is put on the annotation types before any class is
         // visited: a class's metadata folds its annotations' metadata in as it is built, and a qualifier or
-        // binding registered by an extension has to be one by then
-        for (String describedClass : discovered.describedClassNames()) {
+        // binding registered by an extension has to be one by then. What it marked on the members of an
+        // annotation interface is read from there by the remapping of each occurrence
+        for (String describedClass : started.describedClassNames()) {
             context.getClassElement(describedClass).ifPresent(this::applyWhatWasDiscovered);
         }
     }
@@ -402,17 +370,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         String name = element.getName();
-        if (name.startsWith(GENERATED + ".")) {
+        DiscoveredClasses started = discovered;
+        if (started == null || name.startsWith(GENERATED + ".")) {
             // a class this visitor generated: the import of the scanned classes
             return;
         }
-        // a scanned class the generated import brought in a later round is a class of a library: nothing the
-        // compilation writes is named after it or placed in its package
-        boolean owned = !(roundFinished && discovered.scannedClasses().contains(name));
-        if (visited.add(name) && owned) {
-            contributors.add(element);
-        }
-        typeIndex.collect(element, owned, contributors.isEmpty() ? null : contributors.get(0), context);
+        started.visited(element);
         applyWhatWasDiscovered(element);
         enhance(element, context);
     }
@@ -430,28 +393,34 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * Runs what waits for every class of the compilation to have been registered, as the compiler finishes the
-     * first round that visited any: the registration of the scanned classes the compiler does not make beans of,
-     * of the context classes and of the registered qualifiers, and the synthesis of section 2.10.5, the registration
-     * of what it described, and the validation of section 2.10.6.
+     * Runs the registration phase of section 2.10.3 for each class the round visited, and then what waits for every
+     * class of the compilation to have been registered, as the compiler finishes the first round that visited any:
+     * the registration of the scanned classes the compiler does not make beans of, of the context classes and of the
+     * registered qualifiers, and the synthesis of section 2.10.5, the registration of what it described, and the
+     * validation of section 2.10.6.
      *
-     * <p>A round is finished once every visitor has visited every class of it, the registration visitor - which
-     * runs last - included, and before the beans of the round are written, in javac, KSP and Groovy alike: what is
-     * registered here is written with them, and needs no source. Under javac, where the scanned classes are imported
-     * rather than registered, the phases wait for the round that visits them. They run once: a later round finds them
-     * run.</p>
+     * <p>A round is finished once every visitor has visited every class of it, and before the beans of the round
+     * are written, in javac, KSP and Groovy alike: what the registration phase is told about a class is the bean as
+     * everything else - the enhancements included - has left it, and what is registered here is written with the
+     * beans of the round, and needs no source. Under javac, where the scanned classes are imported rather than
+     * registered, the phases that follow wait for the round that visits them. They run once: a later round finds
+     * them run.</p>
      */
     @Override
     public void finishRound(VisitorContext context) {
-        if (contributors.isEmpty() || of(context) != this) {
+        DiscoveredClasses started = discovered;
+        if (started == null) {
             return;
         }
-        roundFinished = true;
-        try {
-            finishThisRound(context);
-        } finally {
-            recordOrigins.roundFinished();
+        Messages messages = new VisitorMessages(context);
+        for (ClassElement element : started.takeUnregistered()) {
+            register(element, messages, context);
         }
+        if (started.contributors().isEmpty()) {
+            return;
+        }
+        started.roundFinished();
+        finishThisRound(context);
     }
 
     private void finishThisRound(VisitorContext context) {
@@ -486,11 +455,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * @return Whether the import was written, and the classes it names are visited in the next round
      */
     private boolean importScannedClasses(VisitorContext context) {
-        if (context.getLanguage() != VisitorContext.Language.JAVA || discovered.scannedClasses().isEmpty()) {
+        if (context.getLanguage() != VisitorContext.Language.JAVA || discovered().scannedClasses().isEmpty()) {
             return false;
         }
         List<String> literals = new ArrayList<>();
-        for (String scanned : discovered.scannedClasses()) {
+        for (String scanned : discovered().scannedClasses()) {
             // a class literal names a nested class by its canonical name, never by its binary one
             literals.add(context.getClassElement(scanned).map(ClassElement::getCanonicalName).orElse(scanned)
                 + ".class");
@@ -525,9 +494,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private void registerScannedClasses(VisitorContext context) {
         Messages messages = new VisitorMessages(context);
-        for (String scanned : discovered.scannedClasses()) {
+        for (String scanned : discovered().scannedClasses()) {
             int nested = scanned.indexOf('$');
-            if (visited.contains(scanned) || (nested > 0 && visited.contains(scanned.substring(0, nested)))) {
+            if (discovered().wasVisited(scanned) || (nested > 0 && discovered().wasVisited(scanned.substring(0, nested)))) {
                 continue;
             }
             ClassElement element = context.getClassElement(scanned).orElse(null);
@@ -608,7 +577,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             new io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor(),
             new io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor(),
             new io.micronaut.cdi.processor.visitor.ProxyabilityVisitor(),
-            new io.micronaut.cdi.processor.visitor.BeanTypesVisitor()));
+            new io.micronaut.cdi.processor.visitor.BeanTypesVisitor(),
+            new io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor()));
         io.micronaut.core.order.OrderUtil.reverseSort(visitors);
         return visitors;
     }
@@ -629,17 +599,17 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * it serves: the container obtains the context from the bean as it starts.
      */
     private void registerContexts(VisitorContext context) {
-        discovered.contexts().forEach((scopeName, contextClasses) -> {
+        discovered().contexts().forEach((scopeName, contextClasses) -> {
             for (String contextClass : contextClasses) {
                 try {
                     registerComponent(context, new SynthesisPhase.Component(
                         SyntheticRecords.classElement(context, contextClass, "context"),
                         AnnotationValue.builder(CdiRegisteredContext.class)
                             .member("scope", new io.micronaut.core.annotation.AnnotationClassValue<>(scopeName))
-                            .member("normal", discovered.isNormalContext(scopeName))
+                            .member("normal", discovered().isNormalContext(scopeName))
                             .build()));
                 } catch (IllegalArgumentException e) {
-                    context.fail(String.valueOf(e.getMessage()), contributors.get(0));
+                    context.fail(String.valueOf(e.getMessage()), discovered().contributors().get(0));
                 }
             }
         });
@@ -650,32 +620,20 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * may use such an annotation, so the record is the one witness of it the container has.
      */
     private void registerQualifiers(VisitorContext context) {
-        if (discovered.registeredQualifiers().isEmpty()) {
+        if (discovered().registeredQualifiers().isEmpty()) {
             return;
         }
         ClassElement record = context.getClassElement(CdiDeploymentRecord.class.getName()).orElse(null);
         if (record == null) {
             context.fail("The qualifiers the build compatible extensions registered cannot be recorded: "
                 + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
-                + "compilation", contributors.get(0));
+                + "compilation", discovered().contributors().get(0));
             return;
         }
-        ClassElement origin = recordOrigins.available(contributors);
-        if (origin == null) {
-            throw new IllegalStateException("Every class of the compilation is the origin of an earlier record");
-        }
-        recordOrigins.use(origin);
-        List<io.micronaut.inject.ast.Element> origins = new ArrayList<>(contributors.size());
-        origins.add(origin);
-        for (ClassElement contributor : contributors) {
-            if (contributor != origin) {
-                origins.add(contributor);
-            }
-        }
-        context.registerBean(record, origins.toArray(new io.micronaut.inject.ast.Element[0]))
+        context.registerBean(record, contributors())
             .annotate(AnnotationValue.builder(CdiExtensionComponents.class).build())
             .annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
-                .values(discovered.registeredQualifiers().toArray(new String[0]))
+                .values(discovered().registeredQualifiers().toArray(new String[0]))
                 .build());
     }
 
@@ -695,15 +653,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * What the classes this compilation generates are named with, chosen as they are first generated.
+     * What the class this compilation generates is named with: the import of the scanned classes, which is generated
+     * once.
      */
     private String suffix(VisitorContext context) {
-        String chosen = suffix;
-        if (chosen == null) {
-            chosen = suffixOf(contributors.get(0).getName(), context);
-            suffix = chosen;
-        }
-        return chosen;
+        return suffixOf(discovered().contributors().get(0).getName(), context);
     }
 
     /**
@@ -750,18 +704,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     @Override
     public void finish(VisitorContext context) {
         // a Java compilation finishes every round
-        if (context.getLanguage() == VisitorContext.Language.JAVA
-            || CompilationState.get(context, VISITOR, BuildCompatibleExtensionVisitor.class) != this) {
+        DiscoveredClasses started = discovered;
+        if (context.getLanguage() == VisitorContext.Language.JAVA || started == null) {
             return;
         }
-        if (!synthesized && !contributors.isEmpty()) {
+        if (!synthesized && !started.contributors().isEmpty()) {
             context.fail("The synthesis and "
                 + "validation phases of the build compatible extensions did not run: the compiler finished no "
                 + "round of the compilation", null);
         }
-        // the Groovy compiler keeps the attributes of every compilation in one static map, which would hold
-        // the visitor, and everything it read, for as long as the process runs
-        CompilationState.take(context, VISITOR, BuildCompatibleExtensionVisitor.class);
     }
 
     /**
@@ -776,7 +727,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // what an extension reports from here on is about the deployment as a whole rather than about a
         // definition the compiler is looking at
         Messages messages = VisitorMessages.ofTheDeployment(context);
-        SynthesisPhase synthesis = new SynthesisPhase(context, discovered);
+        SynthesisPhase synthesis = new SynthesisPhase(context, discovered());
         for (ExtensionMethod synthesizer : synthesizers) {
             Class<?>[] parameterTypes = synthesizer.method().getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
@@ -869,7 +820,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * producer it declares.
      *
      * <p>The phase is invoked once per bean rather than once for the container, which is what the specification
-     * says it is and what a compiler can give. It runs last, so that what it describes is the bean as everything
+     * says it is and what a compiler can give. It runs as the round finishes, so that what it describes is the bean as everything
      * else has left it. A class that cannot be a bean - one vetoed, an abstract class, an interface, one with no
      * bean constructor (section 3.1.1) - declares none, and a producer is described by the class that declares
      * it: one a superclass declares is the superclass's bean (section 4.2).</p>
@@ -879,7 +830,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             || io.micronaut.cdi.processor.visitor.SpecificationBeans.isVetoed(element)) {
             return;
         }
-        if (!registered.add(element.getName())) {
+        if (!discovered().registering(element.getName())) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
@@ -930,10 +881,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * scanned classes.
      */
     private void applyWhatWasDiscovered(ClassElement element) {
-        if (discovered.isEmpty()) {
+        if (discovered().isEmpty()) {
             return;
         }
-        if (discovered.isScanned(element.getName())
+        if (discovered().isScanned(element.getName())
             && !element.getAnnotationMetadata().hasStereotype("jakarta.inject.Scope")
             && !element.getAnnotationMetadata().hasStereotype(CdiScope.class)) {
             // added to the scanned classes during discovery: a bean as though it declared the dependent scope,
@@ -944,11 +895,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 element.annotate(annotation);
             }
         }
-        for (AnnotationValue<?> annotation : discovered.annotationsFor(element.getName())) {
+        for (AnnotationValue<?> annotation : discovered().annotationsFor(element.getName())) {
             element.annotate(annotation);
         }
         java.util.Map<String, List<AnnotationValue<?>>> members =
-            discovered.memberAnnotationsFor(element.getName());
+            discovered().memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
             // the members of an annotation interface, as Micronaut answers them under every compiler
             NonbindingMembersRemapper.memberElementsOf(element).forEach((name, member) -> {

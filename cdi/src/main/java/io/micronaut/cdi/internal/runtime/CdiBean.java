@@ -185,12 +185,15 @@ public class CdiBean<T> implements Bean<T> {
         Class<?>[] narrowed = definition.getAnnotationMetadata()
             .classValues("jakarta.enterprise.inject.Typed");
         java.util.List<Argument<?>> closure = new java.util.ArrayList<>();
-        java.util.List<Argument<?>> recorded = recordedClosureOf(definition);
+        boolean produced = definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class);
+        java.util.List<Argument<?>> recorded = index != null
+            && index.hasCompleteRecord(produced ? producedTypeOf(definition).getType() : beanClass)
+            ? null : recordedClosureOf(definition);
         if (recorded != null) {
             // the closure the processor recorded of the bean as it compiled it, where the type hierarchy record of
-            // its class could not say it in full
+            // its class left a supertype out, or there is none
             closure.addAll(recorded);
-        } else if (definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
+        } else if (produced) {
             // a produced bean is a bean of the type the producer declared — with the arguments it was written
             // with, its variables kept (section 3.3.2), or raw if it was written raw — not of the produced
             // class's own declaration

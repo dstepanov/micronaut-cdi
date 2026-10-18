@@ -104,11 +104,10 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
         if (!SpecificationBeans.isBeanOfTheSpecification(bean)) {
             return;
         }
-        // what the class itself declares: Micronaut keeps the annotations of a field and of a parameter by the class
-        // declaring it, so a mark written while an inheriting class is visited would be read by every class that
-        // inherits the member, a bean of Micronaut's own among them. A superclass that is a bean of the
-        // specification marks its own as it is visited; the points of one that is not are Micronaut's
-        bean.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared()).stream()
+        // what the class declares and what it inherits (section 4.2): since Micronaut Core 5.3 a mark written on an
+        // inherited field or parameter while the class is visited is kept by this class, and a bean of Micronaut's
+        // own that inherits the same member keeps Micronaut's resolution
+        bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
             .filter(ContainerInjectionVisitor::isInjected)
             .forEach(field -> mark(field, field.getGenericType()));
         bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
@@ -124,9 +123,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
             if (setter != null && (isInjected(property) || isInjected(setter))) {
                 // the declaration is the same whatever class inherits the setter
                 recordDeclaration(setter);
-                if (property.getDeclaringType().getName().equals(bean.getName())) {
-                    markParameters(setter);
-                }
+                markParameters(setter);
             }
         }
         BeanInjectionUtils.findBeanConstructor(bean).ifPresent(ContainerInjectionVisitor::markParameters);
@@ -135,12 +132,12 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
                 // the same whatever class inherits the method, so it is written of an inherited one as well
                 recordDeclaration(method);
             }
-        }
-        for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
-            if (isInjected(method) || method.hasAnnotation(Cdi.PRODUCES)
-                || java.util.Arrays.stream(method.getParameters()).anyMatch(parameter ->
-                    parameter.hasAnnotation(Cdi.OBSERVES) || parameter.hasAnnotation(Cdi.OBSERVES_ASYNC)
-                        || parameter.hasAnnotation(Cdi.DISPOSES))) {
+            // an initializer and an observer are inherited (section 4.2), a producer and a disposer are the beans
+            // of the class declaring them
+            boolean declared = method.getDeclaringType().getName().equals(bean.getName());
+            if (isInjected(method)
+                || (declared && (method.hasAnnotation(Cdi.PRODUCES) || hasParameterAnnotated(method, Cdi.DISPOSES)))
+                || hasParameterAnnotated(method, Cdi.OBSERVES) || hasParameterAnnotated(method, Cdi.OBSERVES_ASYNC)) {
                 markParameters(method);
             }
         }
@@ -168,6 +165,15 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
                 mark(parameter, parameter.getGenericType());
             }
         }
+    }
+
+    private static boolean hasParameterAnnotated(MethodElement method, String annotation) {
+        for (ParameterElement parameter : method.getParameters()) {
+            if (parameter.hasAnnotation(annotation)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isInjected(Element element) {
