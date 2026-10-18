@@ -393,7 +393,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // what the discovery phase said about annotations is put on the annotation types before any class is
         // visited: a class's metadata folds its annotations' metadata in as it is built, and a qualifier or
         // binding registered by an extension has to be one by then. What it marked on the members of an
-        // annotation interface is read from there by the remapping of each occurrence
+        // annotation interface is read from there by Micronaut as it reads each occurrence
         for (String describedClass : started.describedClassNames()) {
             context.getClassElement(describedClass).ifPresent(this::applyWhatWasDiscovered);
         }
