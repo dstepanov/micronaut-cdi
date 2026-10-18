@@ -19,6 +19,7 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
@@ -136,6 +137,11 @@ public final class TypeHierarchyVisitor implements TypeElementVisitor<Object, Ob
                         || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)) {
                         named.addAll(argumentsOf(parameter.getGenericType()));
                     }
+                }
+            }
+            for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared())) {
+                if (field.hasDeclaredAnnotation(Cdi.PRODUCES)) {
+                    named.addAll(argumentsOf(field.getGenericType()));
                 }
             }
         } catch (RuntimeException e) {
