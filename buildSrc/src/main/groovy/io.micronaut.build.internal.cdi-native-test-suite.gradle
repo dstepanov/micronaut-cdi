@@ -1,0 +1,19 @@
+// A test suite whose tests also run inside a GraalVM native image: `nativeTest` compiles the tests and everything
+// they reach into a native binary and runs them there, after `test` has run the same tests on the JVM. It is what
+// holds the records the container matches types by - Micronaut's type hierarchy records of the compiled classes,
+// and the bean types recorded on a definition - to being reachable in an image: a record the image was not told
+// about would be missing there and the match would fall back to a raw class, rather than pass unnoticed on the JVM.
+// What the processors ask for is declared by the `@ReflectiveAccess` and `@ReflectionConfig` they write out,
+// which micronaut-graal turns into metadata, and the service entries of the records are read by core's own
+// build-time feature. Nothing is declared by hand.
+plugins {
+    id 'io.micronaut.build.internal.cdi-test-suite'
+    id 'org.graalvm.buildtools.native'
+}
+
+graalvmNative {
+    toolchainDetection = false
+    binaries.configureEach {
+        buildArgs.add('--initialize-at-build-time=org.junit.platform.commons.logging.LoggerFactory$DelegatingLogger')
+    }
+}

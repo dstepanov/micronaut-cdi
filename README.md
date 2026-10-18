@@ -73,6 +73,7 @@ public class Connections {
 | `test-suite-kotlin` | A Kotlin class compiled through KSP, read by a build compatible extension through the same language model |
 | `test-suite-groovy` | The same, for a Groovy class compiled by the Groovy compiler |
 | `test-suite-no-reflection` | What works with `micronaut-cdi` alone, and what names the module to add when it does not |
+| `test-suite-graalvm` | The matching of types by the processor's records inside a GraalVM native image, with `micronaut-cdi` alone; its `nativeTest` is run on its own |
 | `micronaut-cdi-reflection` | Optional. Answers the parts of the specification's API that hand out reflection objects, which is the one thing here that reads a class back |
 
 ## Build compatible extensions
@@ -275,6 +276,18 @@ the place of the repository or of the release:
 Micronaut itself comes from Maven Central and, while this builds on a snapshot of Micronaut Core, from the
 snapshot repository. The local Maven repository is not consulted: a stale local publication of a snapshot would
 shadow the published one.
+
+The records the container matches types by are verified inside a GraalVM native image by `test-suite-graalvm`,
+whose tests run on the JVM with every `check` and in an image with
+
+```
+JAVA_HOME=/path/to/graalvm ./gradlew :test-suite-graalvm:nativeTest
+```
+
+which is not part of `check`: the image takes some four minutes to build. No reachability metadata is declared
+here for it. Micronaut's type hierarchy records and the bean definitions are `META-INF/micronaut` services, which
+Core's own build-time feature registers in the image, and the `@ReflectiveAccess` the processors declare is turned
+into metadata by `micronaut-graal`, which the suite has on its annotation processor path.
 
 `./gradlew fetchSpec` downloads the specification the implementation is read against; it is not kept in this
 repository.
