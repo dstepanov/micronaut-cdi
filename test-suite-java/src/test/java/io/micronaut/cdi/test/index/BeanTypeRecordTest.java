@@ -15,22 +15,34 @@
  */
 package io.micronaut.cdi.test.index;
 
+import io.micronaut.annotation.processing.test.JavaParser;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.index.hidden.PublicMid;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.BeanDefinitionReference;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.util.TypeLiteral;
 import org.junit.jupiter.api.Test;
 
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -115,5 +127,76 @@ class BeanTypeRecordTest {
             List<Type> types = new ArrayList<>(bean.getTypes());
             assertTrue(types.contains(Object.class));
         }
+    }
+
+    @Test
+    void aPublicSupertypeWhoseArgumentNoRecordCanNameIsRecordedOnTheDefinition() throws Exception {
+        // compiled apart: a definition Micronaut writes for such a class names the package-private argument among
+        // the type arguments of the bean and cannot be loaded, so the bean cannot be in this suite's compilation
+        Map<String, byte[]> classes = compile(Map.of(
+            "hidden.PublicSupplier", """
+                package hidden;
+                public abstract class PublicSupplier implements java.util.function.Supplier<HiddenSupplied> {
+                    public HiddenSupplied get() { return new HiddenSupplied(); }
+                }
+                """,
+            "hidden.HiddenSupplied", """
+                package hidden;
+                final class HiddenSupplied {
+                }
+                """,
+            "feeding.Feeder", """
+                package feeding;
+                @jakarta.enterprise.context.Dependent
+                public class Feeder extends hidden.PublicSupplier {
+                }
+                """));
+        ClassLoader loader = new ClassLoader(BeanTypeRecordTest.class.getClassLoader()) {
+            @Override
+            protected Class<?> findClass(String name) throws ClassNotFoundException {
+                byte[] bytes = classes.get(name);
+                if (bytes == null) {
+                    throw new ClassNotFoundException(name);
+                }
+                return defineClass(name, bytes, 0, bytes.length);
+            }
+        };
+        BeanDefinitionReference<?> reference = (BeanDefinitionReference<?>) loader
+            .loadClass("feeding.$Feeder$Definition").getDeclaredConstructor().newInstance();
+        assertTrue(reference.getAnnotationMetadata().hasAnnotation(BEAN_TYPES),
+            "the closure of a class whose public supertype names a package-private class of another package is on "
+                + "its definition, the record of the class leaving that supertype out");
+        List<AnnotationValue<Annotation>> closure = reference.getAnnotationMetadata().findAnnotation(BEAN_TYPES)
+            .orElseThrow().getAnnotations("value");
+        assertTrue(closure.stream().anyMatch(type -> "java.util.function.Supplier".equals(type.stringValue().orElse(null))),
+            "the supplier is in the closure: " + closure);
+    }
+
+    private static Map<String, byte[]> compile(Map<String, String> sources) {
+        JavaFileObject[] files = sources.entrySet().stream()
+            .map(entry -> new SimpleJavaFileObject(URI.create("string:///" + entry.getKey().replace('.', '/') + ".java"),
+                JavaFileObject.Kind.SOURCE) {
+                @Override
+                public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+                    return entry.getValue();
+                }
+            })
+            .toArray(JavaFileObject[]::new);
+        Map<String, byte[]> classes = new LinkedHashMap<>();
+        try (JavaParser parser = new JavaParser()) {
+            for (JavaFileObject file : parser.generate(files)) {
+                if (file.getKind() == JavaFileObject.Kind.CLASS) {
+                    String name = file.getName();
+                    name = name.substring(name.indexOf("/CLASS_OUTPUT/") + "/CLASS_OUTPUT/".length(),
+                        name.length() - ".class".length()).replace('/', '.');
+                    try (InputStream in = file.openInputStream()) {
+                        classes.put(name, in.readAllBytes());
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
+            }
+        }
+        return classes;
     }
 }
