@@ -216,6 +216,23 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
     }
 
     /**
+     * Describes the injection point a resolution segment stands for, in the container given: the lookup's own
+     * where the segment is the one a lookup created a bean under ({@link LookupSegment}), and otherwise the argument
+     * being injected, into the member of the bean the segment declares.
+     *
+     * @param container The container resolving it
+     * @param segment   The segment
+     * @return The injection point
+     */
+    static jakarta.enterprise.inject.spi.InjectionPoint of(CdiBeanContainer container,
+                                                           io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
+        if (segment instanceof LookupSegment<?, ?> lookup) {
+            return lookup.selected();
+        }
+        return of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()), segment);
+    }
+
+    /**
      * Describes the injection point a resolution segment stands for: the argument being injected, into the
      * member of the bean the segment declares.
      *

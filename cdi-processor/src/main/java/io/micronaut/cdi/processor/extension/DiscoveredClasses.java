@@ -304,12 +304,12 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
     /**
      * The names of the members an annotation interface declares, as the compilation sees the interface
-     * ({@link NonbindingMembersRemapper#membersOf}).
+     * ({@link NonbindingMembersRemapper#memberElementsOf}).
      */
     private List<String> memberNamesOf(String annotation) {
         List<String> names = new ArrayList<>();
         declarationOf(annotation).ifPresent(declaration ->
-            names.addAll(NonbindingMembersRemapper.membersOf(declaration).keySet()));
+            names.addAll(NonbindingMembersRemapper.memberElementsOf(declaration).keySet()));
         return names;
     }
 

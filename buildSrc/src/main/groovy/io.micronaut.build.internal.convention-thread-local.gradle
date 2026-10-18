@@ -1,0 +1,25 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+// No thread state in this build's sources, checked as each Java compilation runs. A thread local reaches neither the
+// thread work is carried to nor the container that comes after the one that set it: what a request, a resolution or
+// a lookup needs is held in Micronaut's PropagatedContext, which follows the work, or in the resolution context.
+// The check is this build's own (micronaut-cdi-errorprone-checks), and reports every thread local, static or not;
+// Error Prone's ThreadLocalUsage, which reports one that is not static, runs beside it. A main source set fails to
+// compile on one; the tests are warned.
+plugins {
+    id 'io.micronaut.build.internal.cdi-base'
+    id 'net.ltgt.errorprone'
+}
+
+dependencies {
+    errorprone libs.error.prone.core
+    errorprone project(':micronaut-cdi-errorprone-checks')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    CheckSeverity severity = name == 'compileJava' ? CheckSeverity.ERROR : CheckSeverity.WARN
+    options.errorprone {
+        check("ThreadLocalForbidden", severity)
+        check("ThreadLocalUsage", severity)
+    }
+}

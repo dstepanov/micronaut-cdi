@@ -79,7 +79,7 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
         ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
         if (declaration != null) {
             // the members the interface declares, as Micronaut answers them under every compiler
-            for (String member : NonbindingMembersRemapper.membersOf(declaration).keySet()) {
+            for (String member : NonbindingMembersRemapper.memberElementsOf(declaration).keySet()) {
                 if (!values.containsKey(member)) {
                     throw new IllegalStateException("The member " + member + " of " + annotation
                         + " was not composed and has no default");

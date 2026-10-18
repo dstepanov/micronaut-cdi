@@ -636,8 +636,10 @@ Lite, and a program that needs the destruction can look the bean up and destroy 
 factory wrapped with `wrapExpressionFactory` do have that moment, each call of one being an evaluation, and
 there the dependent bean is shared by every appearance of its name and destroyed as the call returns. Ending a request begun with
 `RequestContextController.activate()` from a different thread than began it silently does nothing — the
-controller's bookkeeping is per-thread, as the specification's enter-and-exit shape assumes; the `run`/`supply`
-/`call` forms are safe across threads. And a creation that waits for another thread can, in principle, deadlock
+activation, which travels with the propagated context, is ended only by the thread that began it, which is the
+one that brought it into scope, as the specification's enter-and-exit shape assumes
+(`RequestContextTest.anActivationReachesTheThreadsItsContextIsCarriedToAndNoOther`); the `run`/`supply`/`call`
+forms are safe across threads. And a creation that waits for another thread can, in principle, deadlock
 when that thread needs to create the same bean — a bean is created under a lock of its own, one for every context
 of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
@@ -781,10 +783,16 @@ own rather than the first one alone.
   whose members are annotated with each other (`MutuallyAnnotatedQualifierMembersTest` holds the shape). What it
   cannot see is a member a build compatible extension marked during discovery, which the source does not, and a
   qualifier an extension composed for a synthetic component, which is no occurrence it reads: the processor lists
-  those (`NonbindingMembersRemapper`), reading the members of the annotation interface as the compilation holds it,
-  where the discovery phase marked them, for each occurrence, and the comparison leaves out a member either side
-  lists. Micronaut reads the members from the source, and caches what it read per annotation name for the process;
-  reading them through the compilation's view of the interface instead would remove the remapping.
+  those (`NonbindingMembersRemapper`), and the comparison leaves out a member either side lists. The discovery phase
+  lists the members it marked on the annotation interface itself (`CdiNonbindingMembers`), which Micronaut reads into
+  every occurrence among the interface's meta-annotations, and the remapping of an occurrence reads that list and
+  nothing else: reading the members' metadata, or the interface's, from the remapping would come back to it for the
+  annotations on them, and two interfaces whose members, or which themselves, are annotated with each other would
+  read each other without end (`MutuallyAnnotatedQualifierMembersTest`, `MutuallyAnnotatedBindingTypesTest`). Under
+  KSP Micronaut hands a remapper an occurrence without its meta-annotations, so there the interface alone is read,
+  and a synthetic qualifier is completed from the members of its interface outside any remapping. Micronaut reads
+  the members from the source, and caches what it read per annotation name for the process; reading them through
+  the compilation's view of the interface instead would remove the remapping.
 - **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
   then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
   holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
@@ -819,13 +827,16 @@ own rather than the first one alone.
   resolves the injection point metadata so (`OwnedDependents.registrationAtCurrentPoint`), and the `InjectionPoint`
   bean finds the point the dependent synthetic bean is created for on the path of the resolution, as it does for a
   bean injected there. What is left is `Instance.get()` and its handles: they create the dependent bean they
-  selected by its definition (`getBeanRegistration(definition, argument)`) in a resolution of their own, since the
-  lookup is not made within the creation of a bean and `BeanContext` has no resolution context to resolve within,
-  while section 2.5.2.5 gives the bean the injection point the `Instance` was injected into, or the lookup itself.
-  That injection point is left on a thread local around the creation (`CurrentInjectionPoint`), where the
-  `InjectionPoint` bean reads it when the path has nothing to say; a definition-keyed lookup that took the
-  injection point to report, or an attribute the new resolution starts with, would let it travel with the
-  resolution instead.
+  selected by its definition later, outside the creation of a bean, while section 2.5.2.5 gives the bean the
+  injection point the `Instance` was injected into, as the lookup narrowed it, or the lookup itself.
+  `BeanDependencyResolver.getBeanRegistration(definition, argument)` starts a resolution whose path begins at the
+  new bean and cannot be told which injection point the lookup is made for, so the container opens the
+  resolution on behalf of the owner itself, through `BeanDependencies.resolveDependencies` (reached by an
+  `instanceof` on the resolver, the interface being internal), and pushes a segment of its own that is the lookup's
+  injection point (`LookupSegment`) before it resolves the definition in it (`OwnedDependents.registrationAt`): the
+  `InjectionPoint` bean, Micronaut's own `io.micronaut.inject.InjectionPoint` and the creation context of a
+  synthetic bean all read the point off the path. A `getBeanRegistration(definition, argument, injectionPoint)` on
+  the resolver would remove the cast.
 - **The parameters Micronaut generates for the constructor of an intercepted subclass are named only in private
   constants.** The subclass Micronaut generates for an intercepted bean takes the resolution context, the bean
   context, the qualifier, the interceptors and the interceptor registry after the author's parameters, under names
@@ -849,9 +860,15 @@ own rather than the first one alone.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
-  compilation starts; the request context and `RequestContextController` follow the specification's per-thread
-  model with thread locals of each container's own. Two seams are left for the harnesses that run the
-  specification's test kit in one process: the extensions of one compiled deployment
+  compilation starts. Thread state is held by Micronaut's `PropagatedContext` and by the resolution context, never
+  by a `ThreadLocal`: a request begun by `RequestContextController` is an activation in the propagated context
+  beside the request's beans, with the scope that ends it, the thread it was begun on and who began it
+  (`RequestScope.activate(Object)`), so work the context is carried to sees the request and does not end it; the
+  injection point a dependent instance obtained through a lookup is given is a segment of its resolution path
+  (`LookupSegment`); and the processor's remapping of an occurrence reads nothing that comes back to it
+  (`NonbindingMembersRemapper`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
+  main source that declares, creates or initializes a thread local, and warns in the tests. Two seams are left for
+  the harnesses that run the specification's test kit in one process: the extensions of one compiled deployment
   (`BuildCompatibleExtensionVisitor.overrideExtensions`), since a compilation is handed nothing but options, and
   the classpath a test's SE container sees (`MicronautSeContainerInitializer`), since the kit builds the container
   itself through `SeContainerInitializer.newInstance()`. Beside them the type hierarchy record a class has is kept

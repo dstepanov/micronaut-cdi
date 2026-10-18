@@ -1,10 +1,16 @@
 plugins {
     id 'io.micronaut.build.internal.cdi-base'
     id 'java'
+    id 'io.micronaut.build.internal.convention-thread-local'
 }
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // a suite is held to the build's own checks alone, not to the rest of Error Prone's
+    options.errorprone.disableAllChecks = true
 }
 
 configurations.all {
