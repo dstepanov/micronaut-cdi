@@ -3,7 +3,6 @@ package io.micronaut.cdi.test.bce;
 import io.micronaut.annotation.processing.test.JavaParser;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
-import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
@@ -11,7 +10,6 @@ import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.WildcardType;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -23,16 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests composed wildcards against the language model of Java source during enhancement. */
 class WildcardTypesTest {
-    @AfterEach
-    void restoreServiceLoading() {
-        BuildCompatibleExtensionVisitor.overrideExtensions(null);
-    }
-
     @Test
     void wildcardsComposeWithBoundsAndParameterizedTypes() {
-        Checking extension = new Checking();
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-        try (JavaParser parser = new JavaParser()) {
+        Checking.checked = false;
+        try (JavaParser parser = ExtensionCompilation.of(Checking.class)) {
             parser.generate("wildcards.Subject", """
                 package wildcards;
                 import java.util.List;
@@ -49,11 +41,11 @@ class WildcardTypesTest {
                 }
                 """);
         }
-        assertTrue(extension.checked, "The extension must exercise the factories during compilation");
+        assertTrue(Checking.checked, "The extension must exercise the factories during compilation");
     }
 
     public static class Checking implements BuildCompatibleExtension {
-        boolean checked;
+        static volatile boolean checked;
 
         @Enhancement(types = Object.class, withSubtypes = true)
         public void check(ClassConfig config, Types types) {

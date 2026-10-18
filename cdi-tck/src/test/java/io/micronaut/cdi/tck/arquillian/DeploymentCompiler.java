@@ -16,6 +16,7 @@
 package io.micronaut.cdi.tck.arquillian;
 
 import io.micronaut.annotation.processing.test.JavaParser;
+import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
 import jakarta.enterprise.inject.spi.DefinitionException;
 import jakarta.enterprise.inject.spi.DeploymentException;
 
@@ -23,8 +24,10 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import java.net.URI;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Compiles the classes of one deployment, the way the whole classpath was compiled: deployment is compilation.
@@ -49,16 +52,52 @@ final class DeploymentCompiler {
      * @return The compiler's output
      */
     static Iterable<? extends JavaFileObject> compile(Map<String, String> sourcesByClassName) {
+        return compile(sourcesByClassName, List.of());
+    }
+
+    /**
+     * Compiles the given sources with the given build compatible extensions having their say, and only those:
+     * the extensions of the deployment, named to the compilation through the processor's options.
+     *
+     * @param sourcesByClassName  The source of each class
+     * @param extensionClassNames The extensions, by class name; none to leave the service loading as it is
+     * @return The compiler's output
+     */
+    static Iterable<? extends JavaFileObject> compile(Map<String, String> sourcesByClassName,
+                                                      List<String> extensionClassNames) {
         JavaFileObject[] sources = sourcesByClassName.entrySet().stream()
             .map(entry -> sourceFile(entry.getKey(), entry.getValue()))
             .toArray(JavaFileObject[]::new);
-        try (JavaParser parser = new JavaParser()) {
+        try (JavaParser parser = new JavaParser() {
+            @Override
+            protected Set<String> getCompilerOptions() {
+                Set<String> options = new LinkedHashSet<>(super.getCompilerOptions());
+                if (!extensionClassNames.isEmpty()) {
+                    options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION + "="
+                        + String.join(",", extensionClassNames));
+                    options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION + "=true");
+                }
+                return options;
+            }
+        }) {
             try {
                 return parser.generate(sources);
             } catch (RuntimeException e) {
                 throw classified(parser.getDiagnosticCollector().getDiagnostics(), e);
+            } finally {
+                forgetExtensionOptions();
             }
         }
+    }
+
+    /**
+     * Clears the extension options from the system properties, where Micronaut's processor copies every
+     * {@code micronaut.*} option as it initializes and reads them back as a compilation's options: left there,
+     * the extensions of one deployment would have their say in every deployment compiled after it in this process.
+     */
+    static void forgetExtensionOptions() {
+        System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION);
+        System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION);
     }
 
     private static JavaFileObject sourceFile(String className, String source) {

@@ -190,26 +190,11 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 compilable.put(name, source);
             }
         }
-        java.util.List<jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension> extensions =
-            new java.util.ArrayList<>(extensionClassNames.size());
-        for (String extensionClassName : extensionClassNames) {
-            try {
-                extensions.add((jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension)
-                    Class.forName(extensionClassName, true, getClass().getClassLoader())
-                        .getDeclaredConstructor().newInstance());
-            } catch (ReflectiveOperationException e) {
-                throw new DeploymentException("The extension " + extensionClassName + " could not be created", e);
-            }
-        }
         Iterable<? extends javax.tools.JavaFileObject> generated;
-        // the classes the discovery phase of the deployment's extensions added, reported by the visitor that ran it
-        Set<String> discovered = new HashSet<>();
         try {
-            if (!extensions.isEmpty()) {
-                io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor
-                    .overrideExtensions(extensions, discovered::addAll);
-            }
-            generated = DeploymentCompiler.compile(compilable);
+            // the deployment's extensions, and only those, are named to the compilation through the processor's
+            // options: a compilation is handed nothing else
+            generated = DeploymentCompiler.compile(compilable, extensionClassNames);
         } catch (jakarta.enterprise.inject.spi.DefinitionException
                  | jakarta.enterprise.inject.spi.DeploymentException e) {
             throw new DeploymentException("The deployment was rejected as it compiled", e);
@@ -223,21 +208,18 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 }
             }
             throw e;
-        } finally {
-            if (!extensions.isEmpty()) {
-                io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor.overrideExtensions(null);
-            }
         }
+        DeploymentClassLoader loader = new DeploymentClassLoader(generated, getClass().getClassLoader());
         if (!beanArchive) {
-            // only what the extensions scanned is a bean of an archive that is not a bean archive
+            // only what the extensions scanned is a bean of an archive that is not a bean archive: the classes
+            // the discovery phase added, read from the import of them the compilation generated
             Set<String> scanned = new HashSet<>();
-            for (String scannedClass : discovered) {
+            for (String scannedClass : scannedClassesOf(loader)) {
                 scanned.add(outerClassOf(scannedClass));
             }
             classes = scanned;
         }
         Set<String> deployedBeans = classes;
-        DeploymentClassLoader loader = new DeploymentClassLoader(generated, getClass().getClassLoader());
         // the deployment's loader is the context loader of the thread for as long as the deployment is up, as
         // a container makes its deployment's loader the context loader: it is where core looks for the record
         // of a class the loader's parent defines but this compilation recorded
@@ -376,6 +358,30 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
      * The classes the archive names, wherever in it they are named: the root of a Java archive, or the classes
      * directory of a web archive.
      */
+    /**
+     * The classes the discovery phase of the deployment's extensions added to the scanned ones, as recorded on the
+     * import of them the compilation generated ({@code io.micronaut.cdi.generated.ScannedClassesImport*}); none
+     * when it generated no import, which it does not when nothing was scanned.
+     */
+    private static Set<String> scannedClassesOf(DeploymentClassLoader loader) throws DeploymentException {
+        Set<String> scanned = new HashSet<>();
+        for (String name : loader.compiledClassNames()) {
+            if (!name.startsWith("io.micronaut.cdi.generated.ScannedClassesImport")) {
+                continue;
+            }
+            try {
+                io.micronaut.cdi.internal.metadata.CdiScannedClasses record = Class.forName(name, false, loader)
+                    .getAnnotation(io.micronaut.cdi.internal.metadata.CdiScannedClasses.class);
+                if (record != null) {
+                    scanned.addAll(java.util.Arrays.asList(record.value()));
+                }
+            } catch (ClassNotFoundException e) {
+                throw new DeploymentException("The import of the scanned classes " + name + " could not be read", e);
+            }
+        }
+        return scanned;
+    }
+
     private static boolean hasBeansXml(Archive<?> archive) {
         for (ArchivePath path : archive.getContent().keySet()) {
             String name = path.get();

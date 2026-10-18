@@ -16,14 +16,12 @@
 package io.micronaut.cdi.test.bce;
 
 import io.micronaut.annotation.processing.test.JavaParser;
-import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.types.Type;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -44,16 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class RegistrationDescriptionTest {
 
-    @AfterEach
-    void restoreServiceLoading() {
-        BuildCompatibleExtensionVisitor.overrideExtensions(null);
-    }
-
     @Test
     void theBeansAndObserversAreDescribedAsTheContainerResolvesThem() {
-        Recording extension = new Recording();
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-        try (JavaParser parser = new JavaParser()) {
+        Recording.clear();
+        try (JavaParser parser = ExtensionCompilation.of(Recording.class)) {
             parser.generate("registration.Subject", """
                 package registration;
 
@@ -115,29 +107,28 @@ class RegistrationDescriptionTest {
                 }
                 """);
         }
-        Map<String, String> beans = extension.beans;
+        Map<String, String> beans = Recording.beans;
         // the class beans, and the producer once, by the class that declares it
         assertEquals(Set.of("Parent", "Child", "Square", "Stub", "Listener", "Parent#parentWord"),
             beans.keySet());
         assertEquals("[registration.Subject$Child, registration.Subject$Shape, registration.Subject$Parent, "
-            + "java.lang.Object]", extension.types.get("Child"));
-        assertEquals("[registration.Subject$Square, java.lang.Object]", extension.types.get("Square"));
+            + "java.lang.Object]", Recording.types.get("Child"));
+        assertEquals("[registration.Subject$Square, java.lang.Object]", Recording.types.get("Square"));
         assertEquals("[jakarta.enterprise.inject.Any, jakarta.enterprise.inject.Default]",
-            extension.qualifiers.get("Child"));
+            Recording.qualifiers.get("Child"));
         assertEquals("alternative 5", beans.get("Stub"));
-        assertEquals(List.of("Child 7"), extension.observers);
-        assertTrue(extension.qualifiers.get("Parent#parentWord").contains("Default"));
-        assertFalse(extension.qualifiers.get("Parent#parentWord").contains("Primary"));
+        assertEquals(List.of("Child 7"), Recording.observers);
+        assertTrue(Recording.qualifiers.get("Parent#parentWord").contains("Default"));
+        assertFalse(Recording.qualifiers.get("Parent#parentWord").contains("Primary"));
         // a bean that is not an interceptor cannot be viewed as one
-        assertEquals(Boolean.FALSE, extension.interceptorViews.get("Child"));
-        assertEquals(Boolean.FALSE, extension.interceptorViews.get("Parent#parentWord"));
+        assertEquals(Boolean.FALSE, Recording.interceptorViews.get("Child"));
+        assertEquals(Boolean.FALSE, Recording.interceptorViews.get("Parent#parentWord"));
     }
 
     @Test
     void aBeanIsDescribedByWhatItDeclaresAndToTheRegistrationsItsTypesAndKindMatch() {
-        Selective extension = new Selective();
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-        try (JavaParser parser = new JavaParser()) {
+        Selective.clear();
+        try (JavaParser parser = ExtensionCompilation.of(Selective.class)) {
             parser.generate("selective.Subject", """
                 package selective;
 
@@ -228,25 +219,32 @@ class RegistrationDescriptionTest {
                 """);
         }
         // narrowed by Typed, a bean is not one of the types it leaves out
-        assertEquals(List.of("Circle"), extension.shapes);
+        assertEquals(List.of("Circle"), Selective.shapes);
         // and only an interceptor is described as one
-        assertEquals(List.of("Tagging [a, b]"), extension.interceptors);
+        assertEquals(List.of("Tagging [a, b]"), Selective.interceptors);
         // a producer is read off what the method declares, not what its class does
-        assertEquals("null [selective.Subject$Gadget, java.lang.Object]", extension.producers.get("gadget"));
+        assertEquals("null [selective.Subject$Gadget, java.lang.Object]", Selective.producers.get("gadget"));
         // the supertypes of a raw type are raw
         assertEquals("null [selective.Subject$Box, selective.Subject$View, java.lang.Object]",
-            extension.producers.get("rawBox"));
+            Selective.producers.get("rawBox"));
         // a producer field of an alternative class is an alternative
-        assertEquals("alternative", extension.producers.get("widget"));
+        assertEquals("alternative", Selective.producers.get("widget"));
         // the type an inherited observer observes is the one the subclass binds
-        assertEquals(List.of("Ping"), extension.pings);
+        assertEquals(List.of("Ping"), Selective.pings);
     }
 
     public static class Selective implements BuildCompatibleExtension {
-        final List<String> shapes = new ArrayList<>();
-        final List<String> interceptors = new ArrayList<>();
-        final Map<String, String> producers = new LinkedHashMap<>();
-        final List<String> pings = new ArrayList<>();
+        static final List<String> shapes = new ArrayList<>();
+        static final List<String> interceptors = new ArrayList<>();
+        static final Map<String, String> producers = new LinkedHashMap<>();
+        static final List<String> pings = new ArrayList<>();
+
+        static void clear() {
+            shapes.clear();
+            interceptors.clear();
+            producers.clear();
+            pings.clear();
+        }
 
         @Registration(types = Object.class)
         public void shapesOrNot(BeanInfo bean) {
@@ -298,9 +296,8 @@ class RegistrationDescriptionTest {
 
     @Test
     void aClassOfAVetoedPackageIsNoBeanToDescribe() {
-        Scanning extension = new Scanning(false);
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-        try (JavaParser parser = new JavaParser()) {
+        Scanning.described.clear();
+        try (JavaParser parser = ExtensionCompilation.of(Scanning.ScanningNothing.class)) {
             parser.generate(
                 source("vetoedpkg.package-info", """
                     @jakarta.enterprise.inject.Vetoed
@@ -314,14 +311,13 @@ class RegistrationDescriptionTest {
                     }
                     """));
         }
-        assertEquals(List.of(), extension.described);
+        assertEquals(List.of(), Scanning.described);
     }
 
     @Test
     void aClassTheDiscoveryPhaseScannedIsDescribedAsTheDependentBeanItIs() {
-        Scanning extension = new Scanning(true);
-        BuildCompatibleExtensionVisitor.overrideExtensions(List.of(extension));
-        try (JavaParser parser = new JavaParser()) {
+        Scanning.described.clear();
+        try (JavaParser parser = ExtensionCompilation.of(Scanning.ScanningPlain.class)) {
             parser.generate("scanned.Plain", """
                 package scanned;
 
@@ -329,7 +325,7 @@ class RegistrationDescriptionTest {
                 }
                 """);
         }
-        assertEquals(List.of("scanned.Plain jakarta.enterprise.context.Dependent"), extension.described);
+        assertEquals(List.of("scanned.Plain jakarta.enterprise.context.Dependent"), Scanning.described);
     }
 
     private static javax.tools.JavaFileObject source(String className, String code) {
@@ -343,36 +339,57 @@ class RegistrationDescriptionTest {
         };
     }
 
-    public static class Scanning implements BuildCompatibleExtension {
-        final List<String> described = new ArrayList<>();
-        private final boolean scans;
+    /**
+     * What the two scanning extensions describe: the phase methods of an extension are the ones its own class
+     * declares, so each extension declares its own and records here.
+     */
+    static final class Scanning {
+        static final List<String> described = new ArrayList<>();
 
-        Scanning(boolean scans) {
-            this.scans = scans;
+        private Scanning() {
         }
 
-        @jakarta.enterprise.inject.build.compatible.spi.Discovery
-        public void scan(jakarta.enterprise.inject.build.compatible.spi.ScannedClasses scanned) {
-            if (scans) {
-                scanned.add("scanned.Plain");
-            }
-        }
-
-        @Registration(types = Object.class)
-        public void bean(BeanInfo bean) {
+        static void describe(BeanInfo bean) {
             String name = bean.declaringClass().name();
             if (name.startsWith("vetoedpkg.") || name.startsWith("scanned.")) {
                 described.add(name + " " + bean.scope().name());
             }
         }
+
+        public static final class ScanningNothing implements BuildCompatibleExtension {
+            @Registration(types = Object.class)
+            public void bean(BeanInfo bean) {
+                describe(bean);
+            }
+        }
+
+        public static final class ScanningPlain implements BuildCompatibleExtension {
+            @jakarta.enterprise.inject.build.compatible.spi.Discovery
+            public void scan(jakarta.enterprise.inject.build.compatible.spi.ScannedClasses scanned) {
+                scanned.add("scanned.Plain");
+            }
+
+            @Registration(types = Object.class)
+            public void bean(BeanInfo bean) {
+                describe(bean);
+            }
+        }
     }
 
     public static class Recording implements BuildCompatibleExtension {
-        final Map<String, String> beans = new LinkedHashMap<>();
-        final Map<String, String> types = new LinkedHashMap<>();
-        final Map<String, String> qualifiers = new LinkedHashMap<>();
-        final List<String> observers = new ArrayList<>();
-        final Map<String, Boolean> interceptorViews = new LinkedHashMap<>();
+        static final Map<String, String> beans = new LinkedHashMap<>();
+        static final Map<String, String> types = new LinkedHashMap<>();
+        static final Map<String, String> qualifiers = new LinkedHashMap<>();
+        static final List<String> observers = new ArrayList<>();
+        static final Map<String, Boolean> interceptorViews = new LinkedHashMap<>();
+
+        static void clear() {
+            beans.clear();
+            types.clear();
+            qualifiers.clear();
+            observers.clear();
+            interceptorViews.clear();
+        }
 
         @Registration(types = Object.class)
         public void bean(BeanInfo bean) {

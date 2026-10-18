@@ -1,0 +1,71 @@
+/*
+ * Copyright 2017-2026 original authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.micronaut.cdi.test.bce;
+
+import io.micronaut.annotation.processing.test.JavaParser;
+import io.micronaut.cdi.processor.extension.BuildCompatibleExtensionVisitor;
+import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * A compilation that runs the given build compatible extensions, and only those, named to the processor through
+ * its compiler options the way a build names them: the extension is instantiated by the compilation, so what a
+ * test wants to know of it the extension keeps where the test can read it.
+ */
+final class ExtensionCompilation extends JavaParser {
+
+    private final List<String> extensions;
+
+    private ExtensionCompilation(List<String> extensions) {
+        this.extensions = extensions;
+    }
+
+    @SafeVarargs
+    static JavaParser of(Class<? extends BuildCompatibleExtension>... extensions) {
+        List<String> names = new ArrayList<>(extensions.length);
+        for (Class<? extends BuildCompatibleExtension> extension : extensions) {
+            names.add(extension.getName());
+        }
+        return new ExtensionCompilation(names);
+    }
+
+    /**
+     * Closes the compilation and clears its options from the system properties, where Micronaut's processor
+     * copies every {@code micronaut.*} option as it initializes and reads them back as a compilation's options:
+     * left there, the extensions would have their say in every compilation after this one in the process.
+     */
+    @Override
+    public void close() {
+        try {
+            super.close();
+        } finally {
+            System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION);
+            System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION);
+        }
+    }
+
+    @Override
+    protected Set<String> getCompilerOptions() {
+        Set<String> options = new LinkedHashSet<>(super.getCompilerOptions());
+        options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION + "=" + String.join(",", extensions));
+        options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION + "=true");
+        return options;
+    }
+}

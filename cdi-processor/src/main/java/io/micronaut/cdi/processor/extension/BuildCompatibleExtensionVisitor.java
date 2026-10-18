@@ -63,7 +63,10 @@ import java.util.ServiceLoader;
  *
  * <p>The extensions themselves are found the way the specification says, through the service loader — from the
  * annotation processor classpath, since that is the classpath of the build rather than of the application. An
- * extension therefore goes on the annotation processor path beside this module.</p>
+ * extension therefore goes on the annotation processor path beside this module. A build may name the extensions
+ * of a compilation instead, with the compiler options {@link #EXTENSIONS_OPTION} and
+ * {@link #EXTENSIONS_ONLY_OPTION}, which is how a harness that compiles a deployment at a time hands each
+ * compilation the extensions of its deployment.</p>
  *
  * <p>An enhancement method is invoked once for each of the declarations it asked for: once per matching class for
  * a method taking a {@link ClassConfig}, once per method of each matching class for one taking a
@@ -77,10 +80,19 @@ import java.util.ServiceLoader;
 public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor<Object, Object> {
 
     /**
-     * The extensions of one deployment, set by a harness that compiles a deployment at a time: the one seam a
-     * compilation run inside a test has for handing a visitor objects, where a compiler takes nothing but options.
+     * The compiler option that names the build compatible extensions the compilation runs, as a comma-separated
+     * list of class names, beside the ones the service loader finds: {@code -Amicronaut.cdi.extensions=a.B,c.D}.
+     * Each named class is instantiated through its constructor without parameters, as the specification has an
+     * extension be.
      */
-    private static volatile @org.jspecify.annotations.Nullable Deployment overriddenDeployment;
+    public static final String EXTENSIONS_OPTION = "micronaut.cdi.extensions";
+
+    /**
+     * The compiler option that, when {@code true}, has the compilation run the extensions named by
+     * {@link #EXTENSIONS_OPTION} and no others, with no service loading: what a harness that compiles a deployment
+     * at a time sets, so that the extensions of one deployment are the only ones to have their say.
+     */
+    public static final String EXTENSIONS_ONLY_OPTION = "micronaut.cdi.extensions.only";
 
     private static final String GENERATED = "io.micronaut.cdi.generated";
     private static final String SCANNED_CLASSES = "ScannedClassesImport";
@@ -91,7 +103,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private final List<ExtensionMethod> discoveries = new ArrayList<>();
     private final List<ExtensionMethod> synthesizers = new ArrayList<>();
     private final List<ExtensionMethod> validators = new ArrayList<>();
-    private final @org.jspecify.annotations.Nullable Deployment deployment;
     /**
      * What the discovery phase said and which classes the compiler visited: the one thing this visitor keeps from
      * one class to the next, made as the compilation starts the visitor and read as its rounds finish. A visitor a
@@ -105,15 +116,35 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean scannedClassesHandled;
     private boolean synthesized;
 
-    public BuildCompatibleExtensionVisitor() {
+    @Override
+    public java.util.Set<String> getSupportedOptions() {
+        return java.util.Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION);
+    }
+
+    /**
+     * Finds the extensions of the compilation and the methods of their phases, as the compilation starts this
+     * visitor: the ones the compiler options name, and the ones the service loader finds unless the options say
+     * the named ones are all of them.
+     */
+    private void loadExtensions(VisitorContext context) {
+        Map<String, String> options = context.getOptions();
         List<BuildCompatibleExtension> extensions = new ArrayList<>();
-        Deployment overridden = overriddenDeployment;
-        deployment = overridden;
-        if (overridden != null) {
-            extensions.addAll(overridden.extensions());
-        } else {
-            ServiceLoader.load(BuildCompatibleExtension.class, BuildCompatibleExtensionVisitor.class.getClassLoader())
-                .forEach(extensions::add);
+        String named = options.get(EXTENSIONS_OPTION);
+        if (named != null) {
+            for (String name : named.split(",")) {
+                if (!name.isBlank()) {
+                    extensions.add(instantiate(name.trim()));
+                }
+            }
+        }
+        if (!Boolean.parseBoolean(options.get(EXTENSIONS_ONLY_OPTION))) {
+            for (BuildCompatibleExtension loaded : ServiceLoader.load(BuildCompatibleExtension.class,
+                BuildCompatibleExtensionVisitor.class.getClassLoader())) {
+                // an extension both named and registered as a service runs once
+                if (extensions.stream().noneMatch(extension -> extension.getClass().equals(loaded.getClass()))) {
+                    extensions.add(loaded);
+                }
+            }
         }
         // the discovery phase runs once, as the compilation starts and before any class is visited: what it
         // says is about classes by name rather than about the class in front of the compiler, and is applied
@@ -170,28 +201,32 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * Hands this visitor the extensions of one deployment, in place of the service loading it does on its own:
-     * what a harness that compiles a deployment at a time — the kit's — sets around each compilation. Setting
-     * {@code null} puts the service loading back.
-     *
-     * @param extensions The extensions, or {@code null} to load them as usual
+     * Creates the extension a compiler option named, through the loader of this module, which the processor
+     * path's classes are visible to, or else through the loader of the thread the compilation runs on, which is
+     * what a compilation run inside a test sees its classes through.
      */
-    public static void overrideExtensions(@org.jspecify.annotations.Nullable List<BuildCompatibleExtension> extensions) {
-        overrideExtensions(extensions, scanned -> {
-        });
-    }
-
-    /**
-     * Hands this visitor the extensions of one deployment, and has it report the classes their discovery phase
-     * added to the scanned ones: an archive without a beans.xml has no discovered beans beyond these, which the
-     * harness that compiles it is the one to apply. Setting {@code null} puts the service loading back.
-     *
-     * @param extensions     The extensions, or {@code null} to load them as usual
-     * @param scannedClasses Handed the names of the classes the discovery phase added, once it has run
-     */
-    public static void overrideExtensions(@org.jspecify.annotations.Nullable List<BuildCompatibleExtension> extensions,
-                                          java.util.function.Consumer<java.util.Set<String>> scannedClasses) {
-        overriddenDeployment = extensions == null ? null : new Deployment(List.copyOf(extensions), scannedClasses);
+    private static BuildCompatibleExtension instantiate(String name) {
+        Class<?> type;
+        try {
+            type = Class.forName(name, true, BuildCompatibleExtensionVisitor.class.getClassLoader());
+        } catch (ClassNotFoundException e) {
+            try {
+                type = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
+            } catch (ClassNotFoundException | RuntimeException other) {
+                throw new IllegalStateException("The build compatible extension " + name + ", named by the option "
+                    + EXTENSIONS_OPTION + ", is not on the classpath of the compilation", e);
+            }
+        }
+        if (!BuildCompatibleExtension.class.isAssignableFrom(type)) {
+            throw new IllegalStateException("The class " + name + ", named by the option " + EXTENSIONS_OPTION
+                + ", is not a " + BuildCompatibleExtension.class.getName());
+        }
+        try {
+            return (BuildCompatibleExtension) type.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("The build compatible extension " + name + ", named by the option "
+                + EXTENSIONS_OPTION + ", could not be created through a constructor without parameters", e);
+        }
     }
 
     private static void validateDiscovery(Method method) {
@@ -348,15 +383,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // others that it never starts. The discovery phase runs once, as it is first started
         DiscoveredClasses started = discovered;
         if (started == null) {
+            loadExtensions(context);
             started = new DiscoveredClasses();
             discovered = started;
             started.compilation(context);
             for (ExtensionMethod discovery : discoveries) {
                 discover(discovery.extension(), discovery.method(), context);
-            }
-            Deployment overridden = deployment;
-            if (overridden != null) {
-                overridden.scannedClasses().accept(java.util.Set.copyOf(started.scannedClasses()));
             }
         }
         // what the discovery phase said about annotations is put on the annotation types before any class is
@@ -466,9 +498,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + ".class");
         }
         String className = SCANNED_CLASSES + suffix(context);
-        String source = "package " + GENERATED + ";\n\n"
-            + "@io.micronaut.context.annotation.ClassImport(classes = {" + String.join(", ", literals) + "})\n"
-            + "final class " + className + " {\n}\n";
+        StringBuilder source = new StringBuilder("package " + GENERATED + ";\n\n");
+        if (context.getClassElement(io.micronaut.cdi.internal.metadata.CdiScannedClasses.class.getName()).isPresent()) {
+            // the record of what was scanned, for whoever reads the compiled classes: the import itself says
+            // nothing once compiled
+            List<String> names = new ArrayList<>();
+            for (String scanned : discovered().scannedClasses()) {
+                names.add('"' + scanned + '"');
+            }
+            source.append("@" + io.micronaut.cdi.internal.metadata.CdiScannedClasses.class.getName()
+                + "({" + String.join(", ", names) + "})\n");
+        }
+        source.append("@io.micronaut.context.annotation.ClassImport(classes = {" + String.join(", ", literals) + "})\n")
+            .append("final class " + className + " {\n}\n");
         java.util.Optional<io.micronaut.inject.writer.GeneratedFile> file =
             generatedSource(context, GENERATED, className, contributors());
         if (file.isEmpty()) {
@@ -477,7 +519,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return false;
         }
         try {
-            file.get().write(writer -> writer.write(source));
+            file.get().write(writer -> writer.write(source.toString()));
         } catch (Exception e) {
             throw new IllegalStateException("The import of the scanned classes could not be written", e);
         }
@@ -1285,17 +1327,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + " declares a parameter of type " + parameterType.getName()
                 + ", which the phase does not hand to one (section " + section + ")");
         }
-    }
-
-    /**
-     * The extensions a harness handed in for one deployment, and where it wants to hear what their discovery
-     * phase added to the scanned classes.
-     *
-     * @param extensions     The extensions
-     * @param scannedClasses Handed the classes the discovery phase added
-     */
-    private record Deployment(List<BuildCompatibleExtension> extensions,
-                              java.util.function.Consumer<java.util.Set<String>> scannedClasses) {
     }
 
     /**
