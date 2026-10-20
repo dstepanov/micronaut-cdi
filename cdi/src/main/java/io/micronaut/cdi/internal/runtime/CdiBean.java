@@ -118,10 +118,10 @@ public class CdiBean<T> implements Bean<T> {
      * @return The bean types
      */
     public java.util.List<Argument<?>> types() {
-        // read once: resolution compares them for every lookup, and what the processor recorded does not change
+        // worked out once for the context, which Micronaut's own lookups of the bean compare too
         java.util.List<Argument<?>> resolved = types;
         if (resolved == null) {
-            resolved = java.util.List.copyOf(typesOf(RecordedTypeIndex.of(beanContext), definition, beanClass()));
+            resolved = RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
             types = resolved;
         }
         return resolved;

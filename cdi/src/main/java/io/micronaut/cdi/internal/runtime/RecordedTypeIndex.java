@@ -56,9 +56,43 @@ public final class RecordedTypeIndex {
      * What the definitions of the beans of the specification recorded of their classes, by class name.
      */
     private volatile @Nullable Map<String, Entry> beans;
+    /**
+     * The bean types of each definition, worked out once from what was recorded: the container compares them for
+     * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
+     * specification, and what the processor recorded does not change. A compiled definition is equal to another
+     * of its class and a runtime one only to itself, which is what tells the beans apart.
+     */
+    private final Map<io.micronaut.inject.BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
 
     public RecordedTypeIndex(BeanContext beanContext) {
         this.beanContext = beanContext;
+    }
+
+    /**
+     * The bean types of the bean a definition describes ({@link CdiBean#typesOf}).
+     *
+     * @param definition The definition
+     * @return The bean types
+     */
+    List<Argument<?>> beanTypesOf(io.micronaut.inject.BeanDefinition<?> definition) {
+        List<Argument<?>> known = beanTypes.get(definition);
+        if (known != null) {
+            return known;
+        }
+        List<Argument<?>> types = List.copyOf(CdiBean.typesOf(this, definition, beanClassOf(definition)));
+        List<Argument<?>> raced = beanTypes.putIfAbsent(definition, types);
+        return raced != null ? raced : types;
+    }
+
+    /**
+     * The class a bean was written as: for a bean in a normal scope, the class its client proxy stands in front of.
+     *
+     * @param definition The definition
+     * @return The class
+     */
+    static Class<?> beanClassOf(io.micronaut.inject.BeanDefinition<?> definition) {
+        return definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy
+            ? proxy.getTargetType() : definition.getBeanType();
     }
 
     /**
