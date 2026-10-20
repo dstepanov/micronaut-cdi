@@ -240,6 +240,12 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
 
     @Override
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
+        if (CdiMatching.isLookupOfTheContainer(beanType)
+            && candidate.getExposedTypes().contains(beanType.getType())) {
+            // the container asks for the beans that expose the class of a type, and decides itself which of them
+            // the type of the specification admits (CdiMatching)
+            return true;
+        }
         if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
             && candidate instanceof BeanDefinition<?> definition
             && CdiResolution.isBeanOfTheSpecification(definition)) {

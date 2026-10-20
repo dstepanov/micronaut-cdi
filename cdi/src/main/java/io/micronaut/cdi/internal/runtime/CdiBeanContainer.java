@@ -93,20 +93,11 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     private final BeanContext beanContext;
     private final RequestScope requestScope;
     private final io.micronaut.cdi.internal.context.ApplicationScope applicationScope;
-    private volatile @Nullable List<CdiBean<?>> beans;
     /**
-     * Each bean of {@link #beans} by itself, for finding the container's own bean of a definition.
+     * The container's own bean of each definition the bean context handed it, for everyone who describes the
+     * same bean to hold the same object, which reads the bean types of its definition once.
      */
-    private volatile @Nullable Map<CdiBean<?>, CdiBean<?>> canonical;
-    /**
-     * The beans narrowed by the class of a bean type, for each class a lookup has asked for: emptied whenever
-     * the beans are read again.
-     */
-    private volatile Map<Class<?>, List<CdiBean<?>>> byClass = new java.util.concurrent.ConcurrentHashMap<>();
-    /**
-     * The beans less the replaced ones ({@link #beans}), with the beans they were narrowed from.
-     */
-    private volatile @Nullable Deployed deployed;
+    private final Map<BeanDefinition<?>, CdiBean<?>> canonical = new java.util.concurrent.ConcurrentHashMap<>();
     /**
      * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
      * compiled definition are constants, and two points of one type and name may declare different qualifiers.
@@ -234,21 +225,15 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.context.Qualifier<?> qualifier) {
-        // the qualifier is handed every eligible definition at once and the type that was asked for, as Micronaut's
-        // own lookups hand it: a qualifier may choose among the candidates - the closest type arguments - rather
-        // than test each on its own
-        Map<BeanDefinition<?>, Bean<?>> byDefinition = new java.util.LinkedHashMap<>();
-        for (Bean<?> bean : beansOf(beanType, List.of(CdiQualifier.ANY))) {
-            byDefinition.putIfAbsent(((CdiBean<?>) bean).definition(), bean);
-        }
-        Collection kept = ((io.micronaut.context.Qualifier) qualifier)
-            .filter(beanType.getType(), (Collection) byDefinition.keySet());
+        // composed with the program's qualifier, which the bean context hands every eligible definition at once and
+        // the type that was asked for, as Micronaut's own lookups hand it: a qualifier may choose among the
+        // candidates - the closest type arguments - rather than test each on its own
+        CdiMatching<Object> matching = matching(beanType, List.of(CdiQualifier.ANY));
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (Object definition : kept) {
-            Bean<?> bean = byDefinition.get(definition);
-            if (bean != null) {
-                beans.add(bean);
-            }
+        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(),
+            io.micronaut.inject.qualifiers.Qualifiers.byQualifiers(matching,
+                (io.micronaut.context.Qualifier<Object>) qualifier))) {
+            beans.add(canonicalBean(definition));
         }
         return beans;
     }
@@ -301,16 +286,29 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return selection;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Selection select(Argument<?> point) {
+        CdiMatching<Object> matching;
+        try {
+            matching = matching(point, CdiQualifier.declared(point.getAnnotationMetadata()));
+        } catch (IllegalArgumentException e) {
+            // a type with a variable the declaring class gives a value the definition does not carry
+            return Selection.MICRONAUT;
+        }
+        // the candidates of the class of the point as the bean context enumerates them, which the qualifier of
+        // the specification is then applied to: the same as asking for the definitions with the qualifier
+        Collection<BeanDefinition<Object>> ofClass = beanContext.getBeanDefinitions(matching.lookupType());
+        Class<?> raw = CdiTypes.classOf(point);
         boolean specification = false;
         boolean micronaut = false;
-        for (CdiBean<?> bean : candidatesOfType(point)) {
-            if (isInterceptor(bean)) {
-                // a bean of the specification of its class, though never one a point is injected with: it says
-                // nothing of which rules the point is resolved by
+        for (BeanDefinition<?> definition : ofClass) {
+            if (!CdiMatching.isInjectable(definition) || !hasTypeOfClass(definition, raw)) {
+                // an interceptor is a bean of the specification of its class, though never one a point is
+                // injected with, and a definition the context only indexes under the class is no bean of it:
+                // neither says anything of which rules the point is resolved by
                 continue;
             }
-            if (CdiResolution.isBeanOfTheSpecification(bean.definition())) {
+            if (CdiResolution.isBeanOfTheSpecification(definition)) {
                 specification = true;
             } else {
                 micronaut = true;
@@ -322,12 +320,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (!specification) {
             return Selection.MICRONAUT;
         }
-        Set<Bean<?>> eligible;
-        try {
-            eligible = beansOf(point, CdiQualifier.declared(point.getAnnotationMetadata()));
-        } catch (IllegalArgumentException e) {
-            // a type with a variable the declaring class gives a value the definition does not carry
-            return Selection.MICRONAUT;
+        Set<Bean<?>> eligible = new LinkedHashSet<>();
+        for (BeanDefinition<Object> definition : matching.filterQualified(Object.class, ofClass)) {
+            eligible.add(canonicalBean(definition));
         }
         if (micronaut && ofTheSpecification(eligible).isEmpty()) {
             // the beans of the specification of the class are not among the ones the qualifiers admit, and the
@@ -336,6 +331,29 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         }
         Bean<?> selected = resolve(eligible);
         return selected == null ? Selection.NONE : new Selection(((CdiBean<?>) selected).definition());
+    }
+
+    /**
+     * Whether the definition is a bean with a bean type of the class, a primitive and its wrapper taken as one: what
+     * a bean type matching a class or a parameterized type of the class requires. The built-in event and lookup
+     * answer the classes they are built for, and a type that names no class - an array of a variable - and
+     * {@code Object}, which every bean has, are answered by every bean.
+     */
+    private boolean hasTypeOfClass(BeanDefinition<?> definition, @Nullable Class<?> raw) {
+        if (raw == null || raw == Object.class) {
+            return true;
+        }
+        if (definition instanceof CdiInjectionPointFactory<?> builtIn) {
+            return builtIn.isBeanType(raw);
+        }
+        Class<?> boxed = CdiTypes.boxedOf(raw);
+        for (Argument<?> type : canonicalBean(definition).types()) {
+            Class<?> own = CdiTypes.classOf(type);
+            if (own != null && CdiTypes.boxedOf(own) == boxed) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -349,30 +367,25 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * @return The definitions, the alternatives not yet narrowed
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    <T> List<BeanDefinition<T>> definitionsOf(Argument<T> type, List<CdiQualifier> required,
-                                              io.micronaut.context.@Nullable Qualifier<?> narrowedBy) {
-        List<BeanDefinition<T>> definitions = new ArrayList<>();
-        for (Bean<?> bean : beansOf(type, required)) {
-            BeanDefinition<T> definition = (BeanDefinition<T>) ((CdiBean<?>) bean).definition();
-            if (!definitions.contains(definition)) {
-                definitions.add(definition);
-            }
-        }
-        if (narrowedBy == null || definitions.isEmpty()) {
-            return definitions;
-        }
-        // the qualifier is handed every eligible definition at once, as Micronaut's own lookups hand it
-        Collection kept = ((io.micronaut.context.Qualifier) narrowedBy).filter(type.getType(), (Collection) definitions);
-        return kept.size() == definitions.size() ? definitions : new ArrayList<>((Collection<BeanDefinition<T>>) kept);
+    <T> Collection<BeanDefinition<T>> definitionsOf(Argument<T> type, List<CdiQualifier> required,
+                                                    io.micronaut.context.@Nullable Qualifier<?> narrowedBy) {
+        CdiMatching<T> matching = matching(type, required);
+        // the program's qualifier is handed every eligible definition at once, as Micronaut's own lookups hand it
+        io.micronaut.context.Qualifier<T> qualifier = narrowedBy == null ? matching
+            : io.micronaut.inject.qualifiers.Qualifiers.byQualifiers(matching,
+                (io.micronaut.context.Qualifier<T>) narrowedBy);
+        return beanContext.getBeanDefinitions(matching.lookupType(), qualifier);
     }
 
     /**
      * The beans of a type with the qualifiers, by the rules of section 2.4.2, before the alternatives have their
      * say: the one candidate selection of the container, which an injection point, an {@code Instance}, the bean
-     * manager and the validation of the deployment all make. A bean qualifies by the bean types its definition
-     * recorded - a type Micronaut only indexes the definition under is none of them - and by the qualifiers the
-     * container records of it, with what a portable extension added; a bean another one replaces with Micronaut's
-     * {@code Replaces} is left out, as Micronaut leaves it out, and so is an interceptor, which is never injected.
+     * manager and the validation of the deployment all make. The bean context enumerates the candidates of the
+     * class of the type, as it does for every lookup - less what is disabled, the targets of proxies, and a bean
+     * another one replaces with Micronaut's {@code Replaces} - and the {@link CdiMatching qualifier of the
+     * specification} keeps the ones it admits: one of whose recorded bean types matches the type - a type
+     * Micronaut only indexes the definition under is none of them - and that has the qualifiers, with what a
+     * portable extension added. An interceptor, which is never injected, is left out.
      *
      * @param beanType The required type
      * @param required The required qualifiers, none at all requiring the default qualifier
@@ -380,42 +393,17 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * @throws IllegalArgumentException For a type with a type variable among its arguments
      */
     Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
+        CdiMatching<Object> matching = matching(beanType, required);
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (CdiBean<?> bean : beansOfType(beanType)) {
-            if (bean.definition() instanceof CdiInjectionPointFactory<?>
-                || CdiAssignability.areQualifiersMatching(bean.qualifiers(), required)) {
-                beans.add(bean);
-            }
+        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(), matching)) {
+            beans.add(canonicalBean(definition));
         }
         return beans;
     }
 
-    /**
-     * The beans one of whose bean types matches the required one, less the ones another among them replaces.
-     */
-    private Set<CdiBean<?>> beansOfType(Argument<?> beanType) {
-        Set<CdiBean<?>> beans = new LinkedHashSet<>();
-        for (CdiBean<?> bean : candidatesOfType(beanType)) {
-            if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn) {
-                // the built-in event and lookup exist for whatever legal type an injection point asks them
-                // for, so the one bean of each answers every parameterization of its type — and the raw type
-                // itself
-                Class<?> raw = CdiTypes.classOf(beanType);
-                if (raw != null && builtIn.isBeanType(raw)) {
-                    beans.add(bean);
-                }
-                continue;
-            }
-            if (!isInterceptor(bean)
-                && CdiAssignability.isTypeMatching(typeIndex(), bean.types(), requireNoTypeVariable(beanType))) {
-                beans.add(bean);
-            }
-        }
-        return withoutReplaced(beans);
-    }
-
-    private static boolean isInterceptor(CdiBean<?> bean) {
-        return bean.definition().getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+    private <T> CdiMatching<T> matching(Argument<?> beanType, List<CdiQualifier> required) {
+        CdiAssignability.requireNoTypeVariable(beanType);
+        return CdiMatching.of(this, beanType, required);
     }
 
     private static Set<Bean<?>> ofTheSpecification(Set<Bean<?>> beans) {
@@ -426,77 +414,6 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
         }
         return kept;
-    }
-
-    /**
-     * The beans less the ones another among them replaces with Micronaut's {@code Replaces}, which Micronaut
-     * leaves out of the candidates of a lookup and an injection point alike.
-     */
-    private static Set<CdiBean<?>> withoutReplaced(Set<CdiBean<?>> beans) {
-        if (beans.size() < 2) {
-            return beans;
-        }
-        Map<BeanDefinition<?>, CdiBean<?>> byDefinition = new java.util.LinkedHashMap<>();
-        for (CdiBean<?> bean : beans) {
-            byDefinition.put(bean.definition(), bean);
-        }
-        java.util.Collection<BeanDefinition<?>> kept = CdiResolution.withoutReplaced(byDefinition.keySet());
-        if (kept == byDefinition.keySet()) {
-            return beans;
-        }
-        Set<CdiBean<?>> remaining = new LinkedHashSet<>();
-        for (BeanDefinition<?> definition : kept) {
-            remaining.add(byDefinition.get(definition));
-        }
-        return remaining;
-    }
-
-    /**
-     * The beans that may have a bean type matching the given one, in the order of {@link #candidates()}: a bean
-     * type matches a class or a parameterized type only where its own class is the same, a primitive and its
-     * wrapper taken as one, so the beans are narrowed by that class before the rules of the specification
-     * decide. The built-in event and lookup are kept where they answer the class. A type that names no class,
-     * an array, and {@code Object}, which every bean has, are compared against every bean.
-     */
-    private List<CdiBean<?>> candidatesOfType(Argument<?> beanType) {
-        List<CdiBean<?>> all = candidates();
-        Class<?> raw = CdiTypes.classOf(beanType);
-        if (raw == null || raw == Object.class) {
-            return all;
-        }
-        Class<?> key = CdiTypes.boxedOf(raw);
-        Map<Class<?>, List<CdiBean<?>>> index = byClass;
-        List<CdiBean<?>> narrowed = index.get(key);
-        if (narrowed == null) {
-            List<CdiBean<?>> found = new java.util.ArrayList<>();
-            for (CdiBean<?> bean : all) {
-                if (bean.definition() instanceof CdiInjectionPointFactory<?> builtIn
-                    ? builtIn.isBeanType(raw) : hasTypeOfClass(bean, key)) {
-                    found.add(bean);
-                }
-            }
-            narrowed = List.copyOf(found);
-            if (beans == all) {
-                // kept only while the beans it was narrowed from are the current ones
-                index.putIfAbsent(key, narrowed);
-            }
-        }
-        return narrowed;
-    }
-
-    private static boolean hasTypeOfClass(CdiBean<?> bean, Class<?> boxedClass) {
-        for (Argument<?> type : bean.types()) {
-            Class<?> raw = CdiTypes.classOf(type);
-            if (raw != null && CdiTypes.boxedOf(raw) == boxedClass) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static Argument<?> requireNoTypeVariable(Argument<?> required) {
-        CdiAssignability.requireNoTypeVariable(required);
-        return required;
     }
 
     private List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
@@ -518,6 +435,8 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     /**
      * The generic hierarchies of the classes the application was compiled with, which types are compared by.
+     *
+     * @return The index of this container
      */
     RecordedTypeIndex typeIndex() {
         RecordedTypeIndex index = typeIndex;
@@ -543,38 +462,51 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     /**
      * The container's own bean for the given definition, so that everyone who describes the same bean holds
-     * the same object: the one {@code getBeans} answers with.
+     * the same object: the one {@code getBeans} answers with. The definition of the class of a bean in a normal
+     * scope - what its client proxy stands in front of, which a resolution creating the instance names - is the
+     * bean of the proxy.
      *
      * @param definition The definition
      * @return The bean
      */
     public CdiBean<?> canonicalBean(io.micronaut.inject.BeanDefinition<?> definition) {
-        CdiBean<?> described = new CdiBean<>(beanContext, definition);
-        List<CdiBean<?>> all = candidates();
-        Map<CdiBean<?>, CdiBean<?>> index = canonical;
-        if (index != null) {
-            CdiBean<?> found = index.get(described);
-            return found != null ? found : described;
+        CdiBean<?> known = canonical.get(definition);
+        if (known != null) {
+            return known;
         }
-        for (CdiBean<?> candidate : all) {
-            if (candidate.equals(described)) {
-                return candidate;
-            }
+        BeanDefinition<?> described = proxyOf(definition);
+        CdiBean<?> bean = canonical.computeIfAbsent(described, key -> new CdiBean<>(beanContext, key));
+        if (described != definition) {
+            canonical.putIfAbsent(definition, bean);
         }
-        return described;
+        return bean;
     }
 
     /**
-     * Forgets the beans already read, so that beans registered while the container starts — the synthetic
-     * ones of section 2.10.5 — are seen by the next lookup.
+     * The definition of the client proxy that stands in front of the given definition, where it is the target of
+     * one, which the bean context does not enumerate: the bean is the proxy.
+     */
+    private BeanDefinition<?> proxyOf(BeanDefinition<?> definition) {
+        if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?>
+            || !CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
+            return definition;
+        }
+        for (BeanDefinition<?> candidate : beanContext.getBeanDefinitions(Argument.of(definition.getBeanType()))) {
+            if (candidate instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy
+                && proxy.getTargetDefinitionType() == definition.getClass()) {
+                return candidate;
+            }
+        }
+        return definition;
+    }
+
+    /**
+     * Forgets what the injection points were resolved to, so that beans registered while the container starts —
+     * the synthetic ones of section 2.10.5 — and qualifiers the portable extensions added are seen by the next
+     * resolution.
      */
     public void refreshCandidates() {
-        synchronized (this) {
-            beans = null;
-            canonical = null;
-            byClass = new java.util.concurrent.ConcurrentHashMap<>();
-            selections = new java.util.concurrent.ConcurrentHashMap<>();
-        }
+        selections = new java.util.concurrent.ConcurrentHashMap<>();
     }
 
     /**
@@ -595,100 +527,21 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     /**
-     * The beans of the deployment: the beans the container knows, less the ones another among them replaces with
-     * Micronaut's {@code Replaces}, which are no beans of it - not of their name, and not with dependencies to
-     * validate - as they are none of their types.
+     * The beans of the deployment: every bean the bean context enumerates - everything that was compiled, minus
+     * what is disabled, minus what an environment narrowed away, and minus the ones another one replaces with
+     * Micronaut's {@code Replaces}, which are no beans of it, not of their name and not with dependencies to
+     * validate - that is a {@linkplain CdiMatching#isBean bean of the container}.
      *
      * @return The beans
      */
     List<CdiBean<?>> beans() {
-        List<CdiBean<?>> all = candidates();
-        Deployed known = deployed;
-        if (known == null || known.from() != all) {
-            known = new Deployed(all, List.copyOf(withoutReplaced(new LinkedHashSet<>(all))));
-            deployed = known;
-        }
-        return known.beans();
-    }
-
-    /**
-     * Every bean of the container, read once from the compiled definitions.
-     *
-     * <p>The programmatic lookup of section 2.4.2 asks for the beans a type and some qualifiers make eligible,
-     * before anything is resolved among them: a selected alternative and the bean it outranks are both in the
-     * answer, and choosing between them is what {@link #resolve} is for. Micronaut's own lookups resolve as
-     * they go, so this reads the definition references directly — everything that was compiled, minus what is
-     * disabled and minus what an environment narrowed away — and lets the rules of the specification decide
-     * eligibility.</p>
-     */
-    private List<CdiBean<?>> candidates() {
-        List<CdiBean<?>> resolved = beans;
-        if (resolved != null) {
-            return resolved;
-        }
-        synchronized (this) {
-            if (beans == null) {
-                List<CdiBean<?>> loaded = loadCandidates();
-                Map<CdiBean<?>, CdiBean<?>> byItself = new java.util.HashMap<>();
-                for (CdiBean<?> bean : loaded) {
-                    byItself.putIfAbsent(bean, bean);
-                }
-                canonical = byItself;
-                beans = loaded;
-            }
-            return beans;
-        }
-    }
-
-    /**
-     * The definition of a reference where it is a bean here: one whose condition does not hold is not, as Micronaut
-     * has it, and neither is one that names a class absent from the classpath - an optional dependency the
-     * application does not have - which Micronaut reports as a definition that failed to initialize. Anything else
-     * that goes wrong reading a definition, a condition that throws among it, is a broken deployment, and is
-     * reported rather than taken for there being no bean.
-     */
-    private @Nullable BeanDefinition<?> enabledDefinitionOf(io.micronaut.inject.BeanDefinitionReference<Object> reference) {
-        try {
-            BeanDefinition<?> definition = reference.load(beanContext);
-            return definition.isEnabled(beanContext) ? definition : null;
-        } catch (NoClassDefFoundError | TypeNotPresentException e) {
-            return null;
-        } catch (io.micronaut.context.exceptions.BeanInstantiationException e) {
-            if (CdiResolution.isAbsentClass(e)) {
-                return null;
-            }
-            throw e;
-        }
-    }
-
-    private List<CdiBean<?>> loadCandidates() {
-        // the references are the ones the beans predicate of the context admits, so an environment that
-        // narrowed the context reports exactly the beans it narrowed it to
-        // a compiled definition is equal to every other of its class, and a runtime one only to itself, so the set
-        // holds each bean once
-        java.util.Set<BeanDefinition<?>> definitions = new LinkedHashSet<>();
-        for (io.micronaut.inject.BeanDefinitionReference<Object> reference
-            : beanContext.getBeanDefinitionReferences()) {
-            BeanDefinition<?> definition = enabledDefinitionOf(reference);
-            if (definition != null) {
-                definitions.add(definition);
+        List<CdiBean<?>> beans = new ArrayList<>();
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
+            if (CdiMatching.isBean(definition)) {
+                beans.add(canonicalBean(definition));
             }
         }
-        // a bean the container was handed at runtime — a synthetic bean an extension described — has a
-        // definition without a compiled reference
-        definitions.addAll(beanContext.getAllBeanDefinitions());
-        List<CdiBean<?>> loaded = new java.util.ArrayList<>();
-        // an abstract class is not a bean of the specification, however it is annotated, and a bean in a normal
-        // scope is two definitions, the proxy and its target, of which the proxy is the bean
-        for (BeanDefinition<?> definition : CdiResolution.beansAmong(definitions)) {
-            if (io.micronaut.cdi.internal.extension.ExtensionComponents.isComponent(definition.getAnnotationMetadata())) {
-                // the definition of a creator, a disposer, a synthetic observer or a context an extension
-                // named: what the container instantiates the class through, and not a bean of the application
-                continue;
-            }
-            loaded.add(new CdiBean<>(beanContext, definition));
-        }
-        return List.copyOf(loaded);
+        return beans;
     }
 
     @Override
@@ -1231,14 +1084,5 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
             return NotOfTheSpecification.forPoint(point, qualifier);
         }
-    }
-
-    /**
-     * The beans of the deployment, and the beans the container knows they were narrowed from.
-     *
-     * @param from  The beans the container knows
-     * @param beans The beans of the deployment
-     */
-    private record Deployed(List<CdiBean<?>> from, List<CdiBean<?>> beans) {
     }
 }

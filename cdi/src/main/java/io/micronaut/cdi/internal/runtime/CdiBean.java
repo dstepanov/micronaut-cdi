@@ -60,6 +60,7 @@ public class CdiBean<T> implements Bean<T> {
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
     private volatile java.util.@Nullable List<CdiQualifier> qualifiers;
+    private volatile java.util.@Nullable Optional<QualifierOverlay> overlay;
     private volatile java.util.@Nullable List<Argument<?>> types;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
@@ -260,14 +261,15 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
-     * The qualifiers of the bean as resolution compares them: the ones it was compiled with, and {@code Any},
-     * which every bean has.
+     * The qualifiers of the bean as resolution compares them: the ones it was compiled with, {@code Any}, which
+     * every bean has, and what a portable extension added to the bean class, read as they are asked for, so that
+     * an addition made after an earlier lookup is seen by the next one.
      *
      * @return The qualifiers
      */
     final java.util.List<CdiQualifier> qualifiers() {
-        java.util.List<CdiQualifier> resolved = qualifiers;
-        if (resolved == null) {
+        java.util.List<CdiQualifier> compiled = qualifiers;
+        if (compiled == null) {
             java.util.List<CdiQualifier> all = new java.util.ArrayList<>(3);
             all.add(CdiQualifier.ANY);
             for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
@@ -275,15 +277,16 @@ public class CdiBean<T> implements Bean<T> {
                     all.add(declared);
                 }
             }
-            resolved = java.util.List.copyOf(all);
-            QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
-            if (overlay != null) {
-                // what a portable extension added to the bean class as the container started
-                resolved = overlay.apply(definition, resolved);
-            }
-            qualifiers = resolved;
+            compiled = java.util.List.copyOf(all);
+            qualifiers = compiled;
         }
-        return resolved;
+        java.util.Optional<QualifierOverlay> found = overlay;
+        if (found == null) {
+            // a bean of the context, the same for as long as it runs
+            found = beanContext.findBean(QualifierOverlay.class);
+            overlay = found;
+        }
+        return found.isPresent() ? found.get().apply(definition, compiled) : compiled;
     }
 
     @Override

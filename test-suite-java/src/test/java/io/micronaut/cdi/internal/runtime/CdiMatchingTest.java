@@ -192,6 +192,39 @@ class CdiMatchingTest {
         }
     }
 
+    @SuppressWarnings("ClassExplicitlyAnnotation")
+    private static final class MatteLiteral extends jakarta.enterprise.util.AnnotationLiteral<Matte> implements Matte {
+    }
+
+    @Test
+    void aQualifierAnExtensionAddsAfterALookupIsSeenByTheNextOne() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            CompiledAnnotationTypes types = CompiledAnnotationTypes.of(context);
+            CdiQualifier matte = CdiQualifier.ofValue(types, AnnotationValue.builder(Matte.class).build());
+            // every path warmed first: the bean manager, a lookup, and the beans of the deployment
+            assertEquals(Set.of(BlueMatteSwatch.class), beanClassesOf(container.getBeans(Swatch.class, new MatteLiteral())));
+            assertEquals(Set.of(PlainSwatch.class), beanClassesOf(container.getBeans(Swatch.class)));
+            assertEquals(1, container.createInstance().select(Swatch.class, new MatteLiteral()).stream().count());
+
+            context.getBean(QualifierOverlay.class).add(PlainSwatch.class.getName(), matte);
+
+            assertEquals(Set.of(BlueMatteSwatch.class, PlainSwatch.class),
+                beanClassesOf(container.getBeans(Swatch.class, new MatteLiteral())));
+            // a qualifier other than Any and Named takes Default away
+            assertEquals(Set.of(), beanClassesOf(container.getBeans(Swatch.class)));
+            assertEquals(2, container.createInstance().select(Swatch.class, new MatteLiteral()).stream().count());
+        }
+    }
+
+    private static Set<Class<?>> beanClassesOf(Set<jakarta.enterprise.inject.spi.Bean<?>> beans) {
+        Set<Class<?>> classes = new LinkedHashSet<>();
+        for (jakarta.enterprise.inject.spi.Bean<?> bean : beans) {
+            classes.add(bean.getBeanClass());
+        }
+        return classes;
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void assertSelects(ApplicationContext context, CdiBeanContainer container, Argument<?> type,
                                       List<CdiQualifier> qualifiers, Class<?>... expected) {

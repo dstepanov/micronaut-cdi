@@ -62,14 +62,14 @@ class BrokenDefinitionReportsItsCauseTest {
 
     @Test
     void aConditionThatFailsIsReportedWithItsCause() {
-        try (ApplicationContext context = ApplicationContext.run()) {
-            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-            // the container reads its beans again, as it does once a portable extension has had its say, and
-            // the condition fails as it is read
-            BROKEN.set(true);
-            container.refreshCandidates();
-            Throwable failure = assertThrows(Throwable.class,
-                () -> container.getBeans(Object.class, Any.Literal.INSTANCE));
+        // the condition fails as the beans of the container are read, which the bean context does once
+        BROKEN.set(true);
+        try {
+            Throwable failure = assertThrows(Throwable.class, () -> {
+                try (ApplicationContext context = ApplicationContext.run()) {
+                    context.getBean(CdiBeanContainer.class).getBeans(Object.class, Any.Literal.INSTANCE);
+                }
+            });
             assertTrue(causedBy(failure, "the condition of Fragile cannot be evaluated"),
                 () -> "the cause is not among " + failure);
         } finally {
