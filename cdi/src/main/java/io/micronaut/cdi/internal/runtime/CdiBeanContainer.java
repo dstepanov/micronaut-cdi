@@ -519,7 +519,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     /**
      * The generic hierarchies of the classes the application was compiled with, which types are compared by.
      */
-    private RecordedTypeIndex typeIndex() {
+    RecordedTypeIndex typeIndex() {
         RecordedTypeIndex index = typeIndex;
         if (index == null) {
             // a bean of the context, the same for as long as it runs: looked up once rather than for each type compared
