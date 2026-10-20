@@ -61,12 +61,7 @@ class MicronautCoreIssuesTest {
     }
 
     @Factory
-    @io.micronaut.context.annotation.Requires(property = PartLists.ENABLED)
     static class PartLists {
-        // only in the context of the test that asks for it: the bean types the container reads of a factory's List
-        // of Micronaut's own are not those of a List<Part> (see Conformance)
-        static final String ENABLED = "core-issues.part-lists";
-
         @Bean
         @Prototype
         java.util.List<Part> parts() {
@@ -122,7 +117,7 @@ class MicronautCoreIssuesTest {
         + "bean of a container type stand for its elements, though it exposes the type. The container asks for "
         + "candidates by a named argument its resolution customizer admits on exposure alone (CdiMatching.LOOKUP)")
     void aRawLookupOfATypeAFactoryOfAListExposesFindsIt() {
-        try (ApplicationContext context = ApplicationContext.run(java.util.Map.of(PartLists.ENABLED, true))) {
+        try (ApplicationContext context = ApplicationContext.run()) {
             io.micronaut.inject.BeanDefinition<?> parts = context.getBeanDefinitions(java.util.List.class).stream()
                 .filter(definition -> definition.getTypeArguments(java.util.List.class).stream()
                     .anyMatch(argument -> argument.getType() == Part.class))
