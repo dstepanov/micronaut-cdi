@@ -134,11 +134,13 @@ public final class OwnedDependents implements AutoCloseable {
      * the lookup was injected into, as the lookup narrowed it, or the lookup itself where it was injected nowhere.
      *
      * <p>The instance is created on behalf of the owner as {@link #registration(BeanDefinition, Argument)} creates
-     * it, in a resolution of its own that Micronaut attaches to the owner, one per creation, so that two creations do
-     * not share a path; the segment is pushed onto that resolution's path before the instance is resolved in it.
-     * Where the owner can no longer resolve - the context stopping - the instance is created in a new resolution
-     * and held here. A built-in bean of Micronaut's reads the segment above it as the point it is built for, and
-     * is created as {@link #registration(BeanDefinition, Argument)} creates it, on a path of its own.</p>
+     * it, at the segment ({@link BeanDependencyResolver#getBeanRegistration(BeanDefinition, Argument,
+     * io.micronaut.context.BeanResolutionContext.Segment)}): Micronaut resolves it on a path of its own, one per
+     * creation, so that two creations do not share a path, with the segment pushed before the instance is resolved.
+     * Where the owner can no longer resolve - the context stopping - the instance is created at the segment in a new
+     * resolution and held here. A built-in bean of Micronaut's reads the current argument shape of the path, which a
+     * segment of this module's does not have, and is created as {@link #registration(BeanDefinition, Argument)}
+     * creates it, on a path of its own.</p>
      *
      * @param injectedAt The segment of the injection point the lookup was injected into, or {@code null} for a lookup
      *                   injected nowhere
@@ -158,25 +160,19 @@ public final class OwnedDependents implements AutoCloseable {
         LookupSegment<?, T> segment = injectedAt != null
             ? LookupSegment.injected(injectedAt, type, selected)
             : LookupSegment.standalone(beanContext.getBeanDefinition(CdiBeanContainer.class), type, selected);
-        java.util.function.Function<io.micronaut.context.BeanResolutionContext, BeanRegistration<T>> creation =
-            resolution -> {
-                resolution.getPath().push(segment);
-                return resolution.getBeanRegistration(definition, type);
-            };
-        if (owner() instanceof io.micronaut.context.BeanDependencies owner) {
+        BeanDependencyResolver owner = owner();
+        if (owner != null) {
             try {
-                BeanRegistration<T> registration = owner.resolveDependencies(beanContext, null, creation);
-                if (registration != null) {
-                    keep(registration, true);
-                    return registration;
-                }
+                BeanRegistration<T> registration = owner.getBeanRegistration(definition, type, segment);
+                keep(registration, true);
+                return registration;
             } catch (IllegalStateException e) {
                 // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
             }
         }
         try (io.micronaut.context.BeanResolutionContext resolution =
                  new io.micronaut.context.DefaultBeanResolutionContext(beanContext, null)) {
-            BeanRegistration<T> registration = creation.apply(resolution);
+            BeanRegistration<T> registration = resolution.getBeanRegistration(definition, type, segment);
             keep(registration, false);
             return registration;
         }

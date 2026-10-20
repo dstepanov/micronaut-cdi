@@ -179,7 +179,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         try {
             PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initializedEvent();
+                initialized(instances);
                 try {
                     work.run();
                 } finally {
@@ -206,7 +206,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         try {
             return PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initializedEvent();
+                initialized(instances);
                 try {
                     return work.get();
                 } finally {
@@ -234,7 +234,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         try {
             return PropagatedContext.getOrEmpty().plus(instances).propagateCall(() -> {
-                initializedEvent();
+                initialized(instances);
                 try {
                     return work.call();
                 } finally {
@@ -313,18 +313,32 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         Instances instances = newInstances();
         Activation activation = propagate(instances, initiator);
         try {
-            initializedEvent();
+            initialized(instances);
         } catch (RuntimeException | Error e) {
             // an observer that threw must not leave a phantom request active on the thread forever: the
             // activation is unwound and the failure comes out
-            try {
-                destroy(instances);
-            } finally {
-                activation.end();
-            }
+            activation.end();
             throw e;
         }
         return true;
+    }
+
+    /**
+     * Tells the observers that the request was initialized, from inside it. An observer that throws ends the
+     * request: what it created in the request is destroyed, while the request is still active, and the failure
+     * comes out, rather than the request staying open until the container stops.
+     */
+    private void initialized(Instances instances) {
+        try {
+            initializedEvent();
+        } catch (RuntimeException | Error e) {
+            try {
+                destroy(instances);
+            } catch (RuntimeException | Error destruction) {
+                e.addSuppressed(destruction);
+            }
+            throw e;
+        }
     }
 
     /**
@@ -377,11 +391,12 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     @Override
     public void close() {
         // the activations of this scope the calling thread still has in scope, the innermost first, are taken out
-        // of its propagated context, which would otherwise keep them in scope past the container
+        // of its propagated context, which would otherwise keep them in scope past the container. An activation that
+        // has ended already is in scope only because a context captured while it was under way was propagated again,
+        // by a scope this one did not open and does not close: the unwinding stops there
         java.util.List<PropagatedContextElement> elements = PropagatedContext.getOrEmpty().getAllElements();
         while (!elements.isEmpty() && elements.getLast() instanceof Activation activation
-            && activation.instances().owner() == this && activation.isOfTheCallingThread()) {
-            activation.end();
+            && activation.instances().owner() == this && activation.isOfTheCallingThread() && activation.end()) {
             elements = PropagatedContext.getOrEmpty().getAllElements();
         }
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
@@ -570,13 +585,18 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
         /**
          * Takes the activation out of the propagated context of its thread, once.
+         *
+         * @return Whether this call took it out, which a second call, or one for an activation a propagated context
+         *     captured before it ended and brought back into scope, does not
          */
-        void end() {
+        boolean end() {
             PropagatedContext.Scope propagation = scope;
             scope = null;
             if (propagation != null) {
                 propagation.close();
+                return true;
             }
+            return false;
         }
     }
 }

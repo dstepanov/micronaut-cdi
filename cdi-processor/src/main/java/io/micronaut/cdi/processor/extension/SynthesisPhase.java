@@ -20,7 +20,7 @@ import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
+import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -288,7 +288,7 @@ final class SynthesisPhase {
     private List<AnnotationValue<?>> completed(List<AnnotationValue<?>> qualifiers) {
         List<AnnotationValue<?>> completed = new ArrayList<>(qualifiers.size());
         for (AnnotationValue<?> qualifier : qualifiers) {
-            completed.add(NonbindingMembersRemapper.complete(qualifier, context));
+            completed.add(NonbindingMembers.complete(qualifier, context));
         }
         return completed;
     }

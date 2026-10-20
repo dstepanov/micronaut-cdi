@@ -18,10 +18,9 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
-import io.micronaut.cdi.internal.metadata.CdiNonbindingMembers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
-import io.micronaut.cdi.processor.mapper.NonbindingMembersRemapper;
+import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -394,7 +393,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // what the discovery phase said about annotations is put on the annotation types before any class is
         // visited: a class's metadata folds its annotations' metadata in as it is built, and a qualifier or
         // binding registered by an extension has to be one by then. What it marked on the members of an
-        // annotation interface is read from there by the remapping of each occurrence
+        // annotation interface is read from there by Micronaut as it reads each occurrence
         for (String describedClass : started.describedClassNames()) {
             context.getClassElement(describedClass).ifPresent(this::applyWhatWasDiscovered);
         }
@@ -944,21 +943,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         java.util.Map<String, List<AnnotationValue<?>>> members =
             discovered().memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
-            // the members of an annotation interface, as Micronaut answers them under every compiler
-            List<String> nonbinding = new ArrayList<>(members.size());
-            NonbindingMembersRemapper.memberElementsOf(element).forEach((name, member) -> {
+            // the members of an annotation interface, as Micronaut answers them under every compiler: a member
+            // marked Nonbinding here is read by Micronaut from the compilation's view of the member as it records
+            // the non-binding members on every occurrence read afterwards
+            NonbindingMembers.memberElementsOf(element).forEach((name, member) -> {
                 for (AnnotationValue<?> annotation : members.getOrDefault(name, List.of())) {
                     member.annotate(annotation);
-                    if (NonbindingMembersRemapper.isNonbinding(annotation.getAnnotationName())) {
-                        nonbinding.add(name);
-                    }
                 }
             });
-            if (!nonbinding.isEmpty()) {
-                // listed on the interface too, which is what an occurrence of the annotation is completed from
-                element.annotate(AnnotationValue.builder(CdiNonbindingMembers.class)
-                    .values(nonbinding.toArray(new String[0])).build());
-            }
         }
     }
 

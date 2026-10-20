@@ -185,14 +185,17 @@ The bean types of a bean, what an observer observes and the generic hierarchy of
 compiles that have a parameterized type above them or declare type variables are recorded by the processor, so a parameterized injection point or lookup, and an event, are matched
 by their type arguments with nothing read from a class:
 
-- a bean's type closure is recorded on the bean, and on the producer that produces it;
+- a bean's type closure is read from Micronaut's type hierarchy record of its class, or of the class its producer
+  produces, which the processor writes from the bean or the producer; where Micronaut reports that the record
+  leaves a supertype out - one only another package can name - the closure is written on the bean's definition
+  as well;
 - an observed type is recorded on the observer, with its wildcards and type variables;
-- the closure of each compiled class that is no bean and could be the class of an event - not an interface, an
-  abstract class or an annotation literal - and that has a parameterized type above it, or declares type variables,
-  is recorded on a definition the compilation registers without a source, once for the compilation, and in the
-  package of the class where the record refers to a class only that package can name; and so is the closure of
-  each class a recorded type names as a type argument or a bound, the JDK's included, which is what the bound is
-  compared against (`Integer` is within `? extends Comparable<Integer>`). An event of `OrderCreated implements DomainEvent<Order>` is
+- each compiled class that could be the class of an event - not an interface, an abstract class or an annotation
+  literal - and that has a parameterized type above it, or declares type variables, has a type hierarchy record,
+  written as the class is visited into its package; and so has each class it names as a type argument or a bound
+  of its supertypes, of the types it observes and of the types its producer methods and fields produce, the JDK's
+  included, written into the package of the class that names it, which is what the bound is compared against
+  (`Integer` is within `? extends Comparable<Integer>`). An event of `OrderCreated implements DomainEvent<Order>` is
   observed by an observer of `DomainEvent<Order>` and not by one of `DomainEvent<Invoice>`, however it was
   fired, and firing an object of a generic class through an event that leaves its type variables unresolved is
   the `IllegalArgumentException` of the specification.
