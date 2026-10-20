@@ -60,6 +60,33 @@ public class Connections {
 }
 ```
 
+## Architecture
+
+The container implements the API of the specification and leaves what Micronaut already does to Micronaut's bean
+context. A lookup - an injection point of a bean of the specification, an `Instance`, the bean manager - runs
+through four steps:
+
+1. **The API of the specification.** `CdiBeanContainer`, `CdiInstance` and `CdiEvent` read the type and the
+   qualifiers a lookup names into Micronaut's form of them: an `Argument` and the qualifiers as the values they
+   were compiled with (`CdiQualifier`).
+2. **Micronaut's candidate discovery, with a qualifier of the specification.** The bean context enumerates the
+   definitions of the raw class of the type (`BeanContext.getBeanDefinitions(Argument, Qualifier)`) - less what
+   is disabled, the targets of proxies and what another bean replaces - and a Micronaut `Qualifier` of the
+   container's own, `CdiMatching`, keeps the ones whose recorded bean types and qualifiers the rules of section
+   2.4.2 admit, with what a portable extension added.
+3. **A small selection policy of the specification.** Where one bean is wanted, `CdiResolution.narrowToOne`
+   chooses among the candidates: a bean of the specification over a bean of Micronaut's own, the alternatives of
+   the highest priority over the rest, and Micronaut's own precedence (`BeanContext.selectAmong`) among beans of
+   Micronaut's own.
+4. **Micronaut's creation and lifecycle.** The selected definition is created by the bean context as it is, in
+   the active resolution context, with Micronaut's scopes, dependency groups and destruction; the qualifier of the
+   specification takes no part in it.
+
+Decisions that do not depend on the whole deployment are made as a bean compiles and recorded in what Micronaut
+generates anyway - the annotation metadata of its bean definition, its type hierarchy record, `@ResolveWith` on
+the injection points the container resolves - rather than in classes of the container's own. What the container
+keeps at run time is listed under [Conformance](CONFORMANCE.md#container-injection-resolves-the-full-declared-bean-type).
+
 ## Modules
 
 | Module | What it is |
