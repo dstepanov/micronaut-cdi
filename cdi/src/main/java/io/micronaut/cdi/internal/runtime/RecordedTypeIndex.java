@@ -53,10 +53,6 @@ public final class RecordedTypeIndex {
     private final BeanContext beanContext;
     private final Map<Class<?>, Optional<Entry>> hierarchies = new ConcurrentHashMap<>();
     /**
-     * What the definitions of the beans of the specification recorded of their classes, by class name.
-     */
-    private volatile @Nullable Map<String, Entry> beans;
-    /**
      * The bean types of each definition, worked out once from what was recorded: the container compares them for
      * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
      * specification, and what the processor recorded does not change. A compiled definition is equal to another
@@ -128,7 +124,7 @@ public final class RecordedTypeIndex {
         }
         // a bean whose type hierarchy record left a supertype out, or that has none, may record its closure on its
         // definition
-        Entry bean = beans().get(type.getName());
+        Entry bean = recordedOf(type);
         if (bean != null) {
             return bean;
         }
@@ -175,41 +171,36 @@ public final class RecordedTypeIndex {
     }
 
     /**
-     * What the definitions of the classes that are beans recorded of them: the type closure of the class, which a
-     * definition of a producer records of what it produces rather than of a class. The definitions are not loaded:
-     * their references carry the metadata.
+     * What the definition of the bean of the class recorded of it, found among the definitions the bean context
+     * enumerates for the class.
      */
-    private Map<String, Entry> beans() {
-        Map<String, Entry> resolved = beans;
-        if (resolved == null) {
-            resolved = new HashMap<>();
-            for (io.micronaut.inject.BeanDefinitionReference<?> reference : beanContext.getBeanDefinitionReferences()) {
-                io.micronaut.core.annotation.AnnotationMetadata metadata = reference.getAnnotationMetadata();
-                if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
-                    continue;
-                }
-                List<AnnotationValue<Annotation>> closure = metadata
-                    .findAnnotation(io.micronaut.cdi.internal.metadata.CdiBeanTypes.class)
-                    .map(types -> types.getAnnotations("value")).orElse(List.of());
-                if (closure.isEmpty()) {
-                    continue;
-                }
-                AnnotationValue<Annotation> own = closure.get(0);
-                String name = own.stringValue().orElse(null);
-                if (name == null || "VARIABLE".equals(own.stringValue("kind").orElse(null))) {
-                    continue;
-                }
-                List<String> variables = new ArrayList<>();
-                for (AnnotationValue<Annotation> argument : own.getAnnotations(io.micronaut.cdi.internal.metadata.CdiRecordedType.ARGUMENTS)) {
-                    if ("VARIABLE".equals(argument.stringValue("kind").orElse(null))) {
-                        variables.add(argument.stringValue("name").orElse("T"));
-                    }
-                }
-                resolved.putIfAbsent(name, new RecordedEntry(List.copyOf(variables), closure.subList(1, closure.size())));
+    private @Nullable Entry recordedOf(Class<?> type) {
+        for (io.micronaut.inject.BeanDefinition<?> definition
+            : beanContext.getBeanDefinitions(Argument.of(type, CdiMatching.LOOKUP))) {
+            io.micronaut.core.annotation.AnnotationMetadata metadata = definition.getAnnotationMetadata();
+            if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
+                continue;
             }
-            beans = resolved;
+            List<AnnotationValue<Annotation>> closure = metadata
+                .findAnnotation(io.micronaut.cdi.internal.metadata.CdiBeanTypes.class)
+                .map(types -> types.getAnnotations("value")).orElse(List.of());
+            if (closure.isEmpty()) {
+                continue;
+            }
+            AnnotationValue<Annotation> own = closure.get(0);
+            String name = own.stringValue().orElse(null);
+            if (!type.getName().equals(name) || "VARIABLE".equals(own.stringValue("kind").orElse(null))) {
+                continue;
+            }
+            List<String> variables = new ArrayList<>();
+            for (AnnotationValue<Annotation> argument : own.getAnnotations(io.micronaut.cdi.internal.metadata.CdiRecordedType.ARGUMENTS)) {
+                if ("VARIABLE".equals(argument.stringValue("kind").orElse(null))) {
+                    variables.add(argument.stringValue("name").orElse("T"));
+                }
+            }
+            return new RecordedEntry(List.copyOf(variables), closure.subList(1, closure.size()));
         }
-        return resolved;
+        return null;
     }
 
     /**
