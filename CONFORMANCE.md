@@ -228,7 +228,10 @@ an event is matched by are properties of generic signatures, which the container
 records each: the hierarchy of the class of a bean and of the class a producer produces, whose closure the
 container reads for the class over its own type variables, or for the type the producer declared as its
 definition holds it (`BeanDefinition.getDeclaredBeanType`), with the bounds of the variables and wildcards among
-its arguments erased to their classes, as typesafe resolution compares them; the observed type on the
+its arguments erased to their classes, as typesafe resolution compares them - a bean a factory method or field of
+Micronaut's own produces, whose definition names the factory as its declaring type
+(`BeanDefinition.getDeclaringType`), the same way as a producer's: a `@Bean List<Part>` is a `Collection<Part>` and
+no `Collection<Long>`; the observed type on the
 observer; and the closure and the type variables of every other class a compilation compiles that has a
 parameterized type above it or declares type variables - less an interface,
 an abstract class and an annotation literal, which are never the class of an event object - with the closure of

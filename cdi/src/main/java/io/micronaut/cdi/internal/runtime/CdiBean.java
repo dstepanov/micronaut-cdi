@@ -165,6 +165,14 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
+     * Whether a factory method or field produces the bean of the definition: Micronaut names the class that
+     * declares what creates the bean, which is the bean class itself for a bean created by its constructor.
+     */
+    private static boolean isFactoryProduct(BeanDefinition<?> definition) {
+        return definition.getDeclaringType().filter(declaring -> declaring != definition.getBeanType()).isPresent();
+    }
+
+    /**
      * The bean types of the bean the given definition describes, without an instance of this class around.
      *
      * @param index      The generic hierarchies the processor recorded, or {@code null}
@@ -204,9 +212,13 @@ public class CdiBean<T> implements Bean<T> {
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
-            // rather than of its erasure
+            // rather than of its erasure. A bean a factory method or field of Micronaut's own produces is, like a
+            // producer's, a bean of the type the method declares, with the arguments it was written with
             if (CdiTypes.knowsClosureOf(index, beanClass)) {
-                for (Argument<?> type : CdiTypes.beanTypeClosureOf(index, beanClass)) {
+                java.util.List<Argument<?>> closureOfBean = isFactoryProduct(definition)
+                    ? CdiTypes.beanTypeClosureOf(index, producedTypeOf(definition))
+                    : CdiTypes.beanTypeClosureOf(index, beanClass);
+                for (Argument<?> type : closureOfBean) {
                     closure.add(CdiTypes.withErasedBounds(type));
                 }
             } else {
