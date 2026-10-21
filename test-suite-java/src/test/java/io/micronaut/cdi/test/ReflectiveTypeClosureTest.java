@@ -1,6 +1,5 @@
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.internal.runtime.CdiParameterizedType;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.reflection.ReflectiveCdi;
 import io.micronaut.core.type.Argument;
@@ -124,7 +123,7 @@ class ReflectiveTypeClosureTest {
 
     @Test
     void aVariableOfTheEventClassIsResolvedThroughItsSupertype() {
-        Type declared = CdiParameterizedType.of(Foo.class, new Type[] {Integer.class});
+        Type declared = SpecificationTypes.parameterized(Foo.class, new Type[] {Integer.class});
         assertEquals(Bar.class.getName() + "<java.lang.Integer>",
             describe(reflection.eventTypeOf(Bar.class, declared)));
     }
