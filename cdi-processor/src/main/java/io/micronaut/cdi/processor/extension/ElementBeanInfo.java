@@ -151,9 +151,10 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
     @Override
     public Collection<Type> types() {
         java.util.Set<Type> closure = new java.util.LinkedHashSet<>();
-        // the closure the container records, the supertypes of a raw type erased
-        io.micronaut.cdi.processor.visitor.BeanTypesVisitor.walkClosure(beanType(), (type, bindings, erased) ->
-            closure.add(erased ? ElementTypes.rawClassOf(type, List.of(), context) : ElementTypes.of(type, context)));
+        // the closure the container records, the supertypes of a raw type raw
+        for (ClassElement type : io.micronaut.cdi.processor.visitor.BeanTypesVisitor.closureOf(beanType())) {
+            closure.add(ElementTypes.of(type, context));
+        }
         java.util.Set<String> narrowed = new java.util.HashSet<>(java.util.Arrays.asList(
             declared().stringValues("jakarta.enterprise.inject.Typed")));
         boolean typed = declared().hasAnnotation("jakarta.enterprise.inject.Typed");

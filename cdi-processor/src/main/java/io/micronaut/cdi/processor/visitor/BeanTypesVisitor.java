@@ -113,7 +113,11 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     private static void record(ClassElement type, Element on) {
         List<AnnotationValue<CdiRecordedType>> closure = new ArrayList<>();
         try {
-            collect(type, java.util.Map.of(), closure, true, false);
+            // a type variable and a wildcard among the arguments are recorded with their bounds erased to their
+            // classes, which is what typesafe resolution compares a bound as; a raw type is its class alone
+            for (ClassElement member : closureOf(type)) {
+                closure.add(RecordedTypeValues.ofBeanType(member));
+            }
         } catch (RuntimeException e) {
             // a hierarchy the compiler cannot resolve is a broken compilation of its own, and is left to the
             // compiler to report
@@ -124,81 +128,25 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
     }
 
     /**
-     * Collects the type closure of a type, as {@link #walkClosure} walks it.
-     */
-    private static void collect(ClassElement type, java.util.Map<String, ClassElement> bindings,
-                                List<AnnotationValue<CdiRecordedType>> closure, boolean erasedBounds,
-                                boolean erased) {
-        walk(type, bindings, erased, (member, memberBindings, memberErased) -> {
-            AnnotationValue<CdiRecordedType> recorded;
-            if (memberErased) {
-                recorded = RecordedTypeValues.ofErasure(member);
-            } else {
-                recorded = erasedBounds ? RecordedTypeValues.ofBeanType(member, memberBindings)
-                    : RecordedTypeValues.of(member, memberBindings);
-            }
-            // an interface reached along two paths of a diamond is one type of the closure
-            if (!closure.contains(recorded)) {
-                closure.add(recorded);
-            }
-        });
-    }
-
-    /**
-     * Walks the type closure of a type: the type, the interfaces it implements and the class it extends, and
-     * theirs in turn, each with the variables it names bound to what the type below it gives them. An array
-     * and a primitive have no closure beyond themselves, and {@code Object}, which every closure ends in, is
-     * left for the reader to add once.
+     * The type closure of a type: the type and its supertypes as Micronaut lists them
+     * ({@link ClassElement#getAllSuperTypes()}), each with the type arguments the type below it gives it, and each
+     * once however many paths of the hierarchy reach it. An array and a primitive have no closure beyond themselves
+     * (section 2.2.1), and {@code Object}, which every closure ends in, is left for the reader to add once.
      *
-     * <p>The supertypes of a raw type are erased, as the language has them (JLS 4.8): a raw {@code Box} that
+     * <p>The supertypes of a raw type are raw, as the language has them (JLS 4.8): a raw {@code Box} that
      * implements {@code View<T>} is a {@code View}, not a {@code View<T>} that any lookup of a {@code View} would
      * match. What records the closure for the container and what describes it to the registration phase both
-     * walk it here, so that the two agree.</p>
+     * read it here, so that the two agree.</p>
      *
-     * @param type   The type
-     * @param member What is done with each type of the closure
+     * @param type The type
+     * @return The types of the closure, the type first and without {@code Object}
      */
-    public static void walkClosure(ClassElement type, ClosureMember member) {
-        walk(type, java.util.Map.of(), false, member);
-    }
-
-    private static void walk(ClassElement type, java.util.Map<String, ClassElement> bindings, boolean erased,
-                             ClosureMember member) {
-        if ("java.lang.Object".equals(type.getName()) && !type.isArray()) {
-            return;
-        }
-        member.accept(type, bindings, erased);
+    public static List<ClassElement> closureOf(ClassElement type) {
         if (type.isArray() || type.isPrimitive()) {
-            return;
+            return List.of(type);
         }
-        boolean raw = erased || type.isRawType() && !type.getTypeArguments().isEmpty();
-        // what this type gives its own variables: an argument written as a variable of the type below is what
-        // the type below was given
-        java.util.Map<String, ClassElement> own = new java.util.LinkedHashMap<>();
-        type.getTypeArguments().forEach((name, argument) -> {
-            ClassElement bound = argument instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder
-                ? bindings.get(placeholder.getVariableName()) : null;
-            own.put(name, bound != null ? bound : argument);
-        });
-        for (ClassElement anInterface : type.getInterfaces()) {
-            walk(anInterface, own, raw, member);
-        }
-        type.getSuperType().ifPresent(superType -> walk(superType, own, raw, member));
-    }
-
-    /**
-     * What is done with one type of a type closure.
-     */
-    @FunctionalInterface
-    public interface ClosureMember {
-
-        /**
-         * Takes one type of the closure.
-         *
-         * @param type     The type, as the type below it names it
-         * @param bindings What the type below it gives the variables the type names
-         * @param erased   Whether the type is erased, being a supertype of a raw type
-         */
-        void accept(ClassElement type, java.util.Map<String, ClassElement> bindings, boolean erased);
+        List<ClassElement> closure = new ArrayList<>(type.getAllSuperTypes());
+        closure.removeIf(member -> "java.lang.Object".equals(member.getName()) && !member.isArray());
+        return closure;
     }
 }

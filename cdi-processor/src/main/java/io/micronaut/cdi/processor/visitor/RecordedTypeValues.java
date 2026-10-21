@@ -71,24 +71,11 @@ public final class RecordedTypeValues {
      * The record of a bean type: a type variable and a wildcard among its arguments are recorded with their
      * bounds erased to their classes, which is what typesafe resolution compares a bound as.
      *
-     * @param type     The type
-     * @param bindings What the variables the type names are bound to, by name
+     * @param type The type
      * @return The record
      */
-    public static AnnotationValue<CdiRecordedType> ofBeanType(ClassElement type, Map<String, ClassElement> bindings) {
-        return of(type, bindings, new HashSet<>(), true);
-    }
-
-    /**
-     * The record of the erasure of a type: its class alone, without the arguments it was written with.
-     *
-     * @param type The type, a class or an interface
-     * @return The record
-     */
-    public static AnnotationValue<CdiRecordedType> ofErasure(ClassElement type) {
-        return AnnotationValue.builder(CdiRecordedType.class)
-            .member("value", new AnnotationClassValue<>(type.getName()))
-            .build();
+    public static AnnotationValue<CdiRecordedType> ofBeanType(ClassElement type) {
+        return of(type, Map.of(), new HashSet<>(), true);
     }
 
     /**
