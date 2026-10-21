@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -62,6 +63,18 @@ class GenericArrayBeanTypeTest {
             assertTrue(context.getBean(Consumer.class).objects.isUnsatisfied());
             Crate<?>[] throughObject = (Crate<?>[]) context.getBean(Consumer.class).integers.get();
             assertEquals(123, throughObject[0].value, "Object remains a bean type of a generic array producer");
+        }
+    }
+
+    @Test
+    void aLookupSelectsAnArrayOfAParameterizedTypeByItsArguments() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Instance<Object> lookup = context.getBean(CdiBeanContainer.class).createInstance();
+            Crate<String>[] selected = lookup.select(new TypeLiteral<Crate<String>[]>() { }).get();
+            assertEquals("produced", selected[0].value);
+            assertTrue(lookup.select(new TypeLiteral<Crate<Long>[]>() { }).isUnsatisfied());
+            // a wildcard is no more a lookup type in an array than outside one (section 5.6.1)
+            assertThrows(IllegalArgumentException.class, () -> lookup.select(new TypeLiteral<Crate<?>[]>() { }));
         }
     }
 

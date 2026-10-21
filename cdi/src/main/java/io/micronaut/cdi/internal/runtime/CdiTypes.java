@@ -154,7 +154,8 @@ public final class CdiTypes {
      * @param type The type
      * @param <T>  The type
      * @return The argument
-     * @throws IllegalArgumentException For a type that is neither a class nor a parameterized type of classes
+     * @throws IllegalArgumentException For a type that is neither a class, a parameterized type of classes nor an
+     *                                  array of one
      */
     public static <T> Argument<T> argumentOf(Type type) {
         return SpecificationTypes.lookupArgumentOf(type);
