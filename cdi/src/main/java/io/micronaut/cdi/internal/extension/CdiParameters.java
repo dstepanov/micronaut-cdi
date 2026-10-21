@@ -50,19 +50,38 @@ public final class CdiParameters implements Parameters {
     private final io.micronaut.context.BeanContext beanContext;
     private final Map<String, AnnotationValue<CdiSyntheticParameter>> parameters;
     /**
-     * The invokers of each parameter that holds them, read once: an invoker finds the method it invokes the first
-     * time it is invoked and keeps it, which a new one read for each {@code get} would do again every time.
+     * The invokers of each parameter that holds them, read with the parameters: an invoker finds the method it
+     * invokes the first time it is invoked and keeps it, which a new one read for each {@code get} would do again
+     * every time. Reading one names the method and resolves nothing.
      */
-    private final Map<String, RecordedInvoker[]> invokers = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, RecordedInvoker[]> invokers;
 
     CdiParameters(io.micronaut.context.BeanContext beanContext,
                   List<AnnotationValue<CdiSyntheticParameter>> recorded) {
         this.beanContext = beanContext;
         Map<String, AnnotationValue<CdiSyntheticParameter>> byName = new LinkedHashMap<>();
         for (AnnotationValue<CdiSyntheticParameter> parameter : recorded) {
+            // a key recorded twice is the last value recorded for it
             byName.put(parameter.stringValue("name").orElseThrow(), parameter);
         }
-        this.parameters = byName;
+        this.parameters = java.util.Collections.unmodifiableMap(byName);
+        Map<String, RecordedInvoker[]> read = new LinkedHashMap<>();
+        for (Map.Entry<String, AnnotationValue<CdiSyntheticParameter>> parameter : byName.entrySet()) {
+            if ("INVOKER".equals(parameter.getValue().stringValue("kind").orElse(null))) {
+                read.put(parameter.getKey(), readInvokers(beanContext, parameter.getValue()));
+            }
+        }
+        this.invokers = read.isEmpty() ? Map.of() : java.util.Collections.unmodifiableMap(read);
+    }
+
+    private static RecordedInvoker[] readInvokers(io.micronaut.context.BeanContext beanContext,
+                                                  AnnotationValue<CdiSyntheticParameter> parameter) {
+        List<AnnotationValue<Annotation>> records = parameter.getAnnotations(CdiSyntheticParameter.INVOKERS);
+        RecordedInvoker[] read = new RecordedInvoker[records.size()];
+        for (int i = 0; i < read.length; i++) {
+            read[i] = RecordedInvoker.of(beanContext, records.get(i));
+        }
+        return read;
     }
 
     /**
@@ -72,23 +91,10 @@ public final class CdiParameters implements Parameters {
      */
     List<RecordedInvoker> invokers() {
         List<RecordedInvoker> all = new java.util.ArrayList<>();
-        for (AnnotationValue<CdiSyntheticParameter> parameter : parameters.values()) {
-            if ("INVOKER".equals(parameter.stringValue("kind").orElse(null))) {
-                all.addAll(java.util.Arrays.asList(invokersOf(parameter)));
-            }
+        for (RecordedInvoker[] read : invokers.values()) {
+            all.addAll(java.util.Arrays.asList(read));
         }
         return all;
-    }
-
-    private RecordedInvoker[] invokersOf(AnnotationValue<CdiSyntheticParameter> parameter) {
-        return invokers.computeIfAbsent(parameter.stringValue("name").orElseThrow(), name -> {
-            List<AnnotationValue<Annotation>> records = parameter.getAnnotations(CdiSyntheticParameter.INVOKERS);
-            RecordedInvoker[] read = new RecordedInvoker[records.size()];
-            for (int i = 0; i < read.length; i++) {
-                read[i] = RecordedInvoker.of(beanContext, records.get(i));
-            }
-            return read;
-        });
     }
 
     @Override
@@ -141,7 +147,8 @@ public final class CdiParameters implements Parameters {
             }
             case "ANNOTATION" -> annotationsOf(parameter, array, type);
             case "INVOKER" -> {
-                RecordedInvoker[] read = invokersOf(parameter);
+                RecordedInvoker[] read = java.util.Objects.requireNonNull(
+                    invokers.get(parameter.stringValue("name").orElseThrow()), "the invokers read with the parameter");
                 // an array handed out is the caller's to change
                 yield array ? read.clone() : read[0];
             }

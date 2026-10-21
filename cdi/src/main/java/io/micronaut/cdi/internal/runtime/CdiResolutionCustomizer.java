@@ -55,13 +55,6 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         float.class, 0f,
         double.class, 0d,
         char.class, '\u0000');
-    // the bean types of a definition, worked out once: every parameterized lookup asks them of every candidate,
-    // and working them out walks the class's supertypes. A compiled definition is equal to another of its class
-    // and a runtime one only to itself, which is what tells the beans apart; the map lives as long as the context
-    // this customizer serves
-    private final java.util.concurrent.ConcurrentHashMap<BeanDefinition<?>, java.util.List<Argument<?>>> beanTypes =
-        new java.util.concurrent.ConcurrentHashMap<>();
-
     private final BeanResolutionCustomizer delegate;
     // the context this customizer serves, which Micronaut hands it before resolving anything (forContext); none for
     // the one installed on the builder, which only hands out the customizer of each context it builds
@@ -240,6 +233,12 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
 
     @Override
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
+        if (CdiMatching.isLookupOfTheContainer(beanType)
+            && candidate.getExposedTypes().contains(beanType.getType())) {
+            // the container asks for the beans that expose the class of a type, and decides itself which of them
+            // the type of the specification admits (CdiMatching)
+            return true;
+        }
         if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
             && candidate instanceof BeanDefinition<?> definition
             && CdiResolution.isBeanOfTheSpecification(definition)) {
@@ -252,11 +251,9 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // which Micronaut checks against the type it is asked as
             RecordedTypeIndex index = typeIndex();
             try {
-                java.util.List<Argument<?>> types = beanTypes.computeIfAbsent(definition, key -> {
-                    Class<?> beanClass = definition instanceof ProxyBeanDefinition<?> proxy
-                        ? proxy.getTargetType() : definition.getBeanType();
-                    return CdiBean.typesOf(index, definition, beanClass);
-                });
+                // the bean types the container compares too, worked out once for the context
+                java.util.List<Argument<?>> types = index != null ? index.beanTypesOf(definition)
+                    : CdiBean.typesOf(null, definition, RecordedTypeIndex.beanClassOf(definition));
                 return CdiAssignability.isTypeMatching(index, types, beanType);
             } catch (NoClassDefFoundError | TypeNotPresentException e) {
                 // a type the bean recorded is of a class absent from the classpath: what Micronaut matches it by

@@ -33,11 +33,11 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * What the application was compiled with of each qualifier and interceptor binding type, read from the compiled
@@ -69,7 +69,11 @@ public final class CompiledAnnotationTypes {
     private static final String STEREOTYPE = "jakarta.enterprise.inject.Stereotype";
 
     private final BeanContext beanContext;
-    private final Set<String> added = ConcurrentHashMap.newKeySet();
+    /**
+     * The annotations portable extensions made qualifiers, replaced as a whole by each addition: they are added
+     * while the extensions run and read by every question asked of a qualifier, without a lock.
+     */
+    private volatile Set<String> added = Set.of();
     private volatile @Nullable Map<String, Recorded> fromClasses;
     private volatile @Nullable Map<String, Recorded> fromMembers;
 
@@ -105,8 +109,14 @@ public final class CompiledAnnotationTypes {
      *
      * @param annotationName The name of the annotation
      */
-    public void addQualifier(String annotationName) {
-        added.add(annotationName);
+    public synchronized void addQualifier(String annotationName) {
+        Set<String> qualifiers = added;
+        if (qualifiers.contains(annotationName)) {
+            return;
+        }
+        Set<String> all = new HashSet<>(qualifiers);
+        all.add(annotationName);
+        added = Set.copyOf(all);
     }
 
     /**

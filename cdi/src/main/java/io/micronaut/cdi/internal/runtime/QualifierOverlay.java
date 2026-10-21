@@ -22,9 +22,9 @@ import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The qualifiers a portable extension added to a bean class as the container started, which the compiled
@@ -42,7 +42,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Internal
 public final class QualifierOverlay {
 
-    private final Map<String, List<CdiQualifier>> added = new ConcurrentHashMap<>();
+    /**
+     * The qualifiers added to each class, replaced as a whole by each addition: they are added while the portable
+     * extensions run, once, and read by every bean the container describes from then on, so a reader takes what
+     * is there without a lock.
+     */
+    private volatile Map<String, List<CdiQualifier>> added = Map.of();
 
     /**
      * Adds a qualifier to the beans of a class.
@@ -50,12 +55,12 @@ public final class QualifierOverlay {
      * @param beanClass The name of the bean class
      * @param qualifier The qualifier
      */
-    public void add(String beanClass, CdiQualifier qualifier) {
-        added.compute(beanClass, (name, qualifiers) -> {
-            List<CdiQualifier> all = qualifiers == null ? new ArrayList<>() : new ArrayList<>(qualifiers);
-            all.add(qualifier);
-            return List.copyOf(all);
-        });
+    public synchronized void add(String beanClass, CdiQualifier qualifier) {
+        Map<String, List<CdiQualifier>> all = new HashMap<>(added);
+        List<CdiQualifier> qualifiers = new ArrayList<>(all.getOrDefault(beanClass, List.of()));
+        qualifiers.add(qualifier);
+        all.put(beanClass, List.copyOf(qualifiers));
+        added = Map.copyOf(all);
     }
 
     /**
@@ -76,14 +81,15 @@ public final class QualifierOverlay {
      * @return The qualifiers
      */
     List<CdiQualifier> apply(BeanDefinition<?> definition, List<CdiQualifier> declared) {
-        if (added.isEmpty() || definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
+        Map<String, List<CdiQualifier>> snapshot = added;
+        if (snapshot.isEmpty() || definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
             // what a producer of the class produces is a bean of its own, which the class's annotations do
             // not qualify
             return declared;
         }
         Class<?> type = definition instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType()
             : definition.getBeanType();
-        List<CdiQualifier> extra = added.get(type.getName());
+        List<CdiQualifier> extra = snapshot.get(type.getName());
         if (extra == null) {
             return declared;
         }

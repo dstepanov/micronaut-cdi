@@ -25,9 +25,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -291,92 +289,11 @@ public final class CdiResolution {
     }
 
     /**
-     * The beans among the definitions a lookup resolved, one entry per bean.
-     *
-     * <p>The definition Micronaut compiles for an abstract class is not a bean: section 3.1.1 requires the class
-     * of a managed bean to be concrete, however it is annotated. And the definition a proxy stands in front of
-     * describes the same bean as the proxy, so it is dropped in favour of the proxy.</p>
-     *
-     * @param definitions The definitions
-     * @param <D>         The definition type
-     * @return The beans, the given collection itself where it has nothing to drop
-     */
-    public static <D extends BeanDefinition<?>> Collection<D> beansAmong(Collection<D> definitions) {
-        Set<String> proxied = new HashSet<>();
-        boolean abstractClasses = false;
-        for (D definition : definitions) {
-            if (definition instanceof ProxyBeanDefinition<?> proxy) {
-                proxied.add(proxy.getTargetDefinitionType().getName());
-            }
-            abstractClasses |= definition.isAbstract();
-        }
-        if (proxied.isEmpty() && !abstractClasses) {
-            return definitions;
-        }
-        List<D> beans = new ArrayList<>(definitions.size());
-        for (D definition : definitions) {
-            boolean target = !(definition instanceof ProxyBeanDefinition<?>)
-                && proxied.contains(definition.getClass().getName());
-            if (definition.isAbstract() || target) {
-                continue;
-            }
-            beans.add(definition);
-        }
-        return beans;
-    }
-
-    /**
-     * The definitions among the given ones that no other among them replaces with Micronaut's {@code Replaces}:
-     * what Micronaut leaves out of the candidates of a lookup, by the replacement each definition describes, so
-     * that the bean manager resolves a type to the beans a lookup or an injection point resolves it to.
-     *
-     * @param definitions The definitions a type resolved to
-     * @param <D>         The definition type
-     * @return The definitions that are not replaced, the given collection itself where none is
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <D extends BeanDefinition<?>> Collection<D> withoutReplaced(Collection<D> definitions) {
-        if (definitions.size() < 2) {
-            return definitions;
-        }
-        List<D> replacing = new ArrayList<>(1);
-        for (D definition : definitions) {
-            if (definition.getReplacesDefinition() != null) {
-                replacing.add(definition);
-            }
-        }
-        if (replacing.isEmpty()) {
-            return definitions;
-        }
-        List<D> kept = new ArrayList<>(definitions.size());
-        for (D definition : definitions) {
-            if (!isReplaced((BeanDefinition) definition, (List) replacing)) {
-                kept.add(definition);
-            }
-        }
-        return kept;
-    }
-
-    private static boolean isReplaced(BeanDefinition<Object> definition, List<BeanDefinition<Object>> replacing) {
-        if (!definition.isCanBeReplaced()) {
-            return false;
-        }
-        for (BeanDefinition<Object> replacement : replacing) {
-            io.micronaut.inject.ReplacesDefinition<Object> replaces = replacement.getReplacesDefinition();
-            boolean proxyOfIt = replacement instanceof ProxyBeanDefinition<?> proxy
-                && proxy.getTargetDefinitionType() == definition.getClass();
-            if (replacement != definition && !proxyOfIt && replaces != null && replaces.replaces(definition)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * The bean a class declares, which a disposer method or an invoker the class declares is invoked on: among the
      * beans of the given definitions, the one whose class is exactly the named class. A selected alternative that
      * extends the class is another bean, and so is one a producer makes of the class; a bean in a normal scope is
-     * its client proxy, which carries the executable methods of the class too.
+     * its client proxy, which carries the executable methods of the class too. The definitions are the ones the
+     * bean context enumerates, which hold no target of a proxy; the definition of an abstract class is no bean.
      *
      * @param candidates The definitions to look among, which may be every definition of the context
      * @param className  The name of the declaring class
@@ -386,7 +303,10 @@ public final class CdiResolution {
     public static @Nullable BeanDefinition<?> declaringBeanOf(Collection<? extends BeanDefinition<?>> candidates,
                                                               String className) {
         List<BeanDefinition<?>> found = new ArrayList<>(1);
-        for (BeanDefinition<?> candidate : beansAmong(new ArrayList<BeanDefinition<?>>(candidates))) {
+        for (BeanDefinition<?> candidate : candidates) {
+            if (candidate.isAbstract()) {
+                continue;
+            }
             Class<?> beanClass = candidate instanceof ProxyBeanDefinition<?> proxy
                 ? proxy.getTargetType() : candidate.getBeanType();
             if (beanClass.getName().equals(className)

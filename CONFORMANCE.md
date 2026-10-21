@@ -41,7 +41,7 @@ visible in a test report as what passes.
 | 2.2 | The bean types of a bean, including a produced array, interface and primitive, and narrowing with `@Typed` | `CdiBean` |
 | 2.2 | A primitive and the class that boxes it as one bean type | `CdiTypes`, `CdiInstance`, `CdiBeanContainer` |
 | 3.5 | A managed bean has a constructor taking no parameters or one annotated `@Inject` | `BeanDiscoveryVisitor` |
-| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembers`, `CompiledAnnotationTypes` |
+| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiMatching`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembers`, `CompiledAnnotationTypes` |
 | 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, and `Instance` and `BeanContainer.getBeans` narrowed by a Micronaut `Qualifier`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 12.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
@@ -175,7 +175,8 @@ what its processor recorded of each occurrence, so a member an extension marked 
 compiles, and is not added at run time. A qualifier the program
 composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
 marks, so a member is left out of a comparison when either side lists it. An injection point, a programmatic lookup
-and the bean manager select their beans by these and nothing else (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
+and the bean manager select their beans by these and nothing else: the container hands Micronaut a qualifier of its
+own, `CdiMatching`, which compares them (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
 annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotation(AnnotationMetadata,
 AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
 the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
@@ -227,7 +228,10 @@ an event is matched by are properties of generic signatures, which the container
 records each: the hierarchy of the class of a bean and of the class a producer produces, whose closure the
 container reads for the class over its own type variables, or for the type the producer declared as its
 definition holds it (`BeanDefinition.getDeclaredBeanType`), with the bounds of the variables and wildcards among
-its arguments erased to their classes, as typesafe resolution compares them; the observed type on the
+its arguments erased to their classes, as typesafe resolution compares them - a bean a factory method or field of
+Micronaut's own produces, whose definition names the factory as its declaring type
+(`BeanDefinition.getDeclaringType`), the same way as a producer's: a `@Bean List<Part>` is a `Collection<Part>` and
+no `Collection<Long>`; the observed type on the
 observer; and the closure and the type variables of every other class a compilation compiles that has a
 parameterized type above it or declares type variables - less an interface,
 an abstract class and an annotation literal, which are never the class of an event object - with the closure of
@@ -318,15 +322,35 @@ so a bean of Micronaut's own that extends the same class keeps Micronaut's resol
 its `List<Foo>` is collected rather than resolved as a bean of that type.
 
 There is one selection of candidates, `CdiBeanContainer.beansOf`, which the provider, an `Instance`, the bean
-manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make:
-the beans one of whose recorded bean types matches by the rules of section 2.4.2.1 - a type Micronaut only indexes
-a definition under is none of them - with every required qualifier, a qualifier a portable extension added among
-the ones a bean has; less a bean another one replaces with Micronaut's `Replaces`, an interceptor, an abstract
-class and the target a proxy stands in front of. Resolving one bean narrows them as section 2.4.2 has it: a
-bean of the specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank
-everything else (`CdiResolution.narrowToOne`). The beans are read from the definitions once per container, their
-types and qualifiers once per bean, and the beans of a class once per class asked for. What an injection point resolves
-to is worked out once per point and container. Core's active resolution
+manager's `getBeans` and `resolve`, the observer and disposer parameters and the deployment validation all make.
+The candidates are Micronaut's: the container asks the bean context for the definitions of the raw class of the
+required type (`BeanContext.getBeanDefinitions(Argument, Qualifier)`), so what Micronaut leaves out of every lookup
+is left out here too - what is disabled, what an environment narrowed away, the target a proxy stands in front of,
+and a bean another one replaces with Micronaut's `Replaces`, which Micronaut drops before any qualifier sees the
+candidates. The qualifier handed over with the class, `CdiMatching`, keeps the beans one of whose recorded bean
+types matches the full required type by the rules of section 2.4.2.1 - a type Micronaut only indexes a definition
+under is none of them - and that have every required qualifier, a qualifier a portable extension added among the
+ones a bean has; it leaves out an interceptor, an abstract class and the components an extension had the container
+instantiate. Micronaut is asked for the raw class rather than the type so that its own matching of type arguments,
+which is not the one of the specification, rejects nothing; the class is asked for under a name of the container's
+(`CdiMatching.LOOKUP`), which the resolution customizer admits every bean exposing the class for, since Micronaut's
+own test of a raw lookup has a factory's `List` stand for its elements and refuses it to a lookup of
+`Collection`; and a class that boxes a primitive is asked for as the primitive, which Micronaut's lookup argument of
+the customizer widens to both. The qualifier keeps nothing: the qualifiers of a bean are read as the lookup is made,
+so one a portable extension adds after an earlier lookup is seen by the next one, and Micronaut keeps the candidates
+of a class, never the result of a qualifier. It is never handed to the creation of a bean, where a qualifier would
+become part of the key a scope holds the instance under: the selected definition is created as it is
+(`resolutionContext.getBean(definition, argument)`).
+
+Resolving one bean narrows the candidates as section 2.4.2 has it, separately from finding them: a bean of the
+specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank everything else
+(`CdiResolution.narrowToOne`); an alternative is not made Micronaut's primary bean, and nothing is chosen while
+the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
+measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), the
+container's bean of each definition, once (`CdiBeanContainer.canonicalBean`), and what each injection point
+resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut forgets the candidates of every type a
+destroyed bean is an instance of, a dependent's included, so a dependent bean created over and over would have its
+points' candidates looked up again each time (see Open points in Micronaut Core). Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
@@ -788,7 +812,8 @@ own rather than the first one alone.
   qualifiers its metadata records, while the qualifiers of a bean of the specification are also the ones a portable
   extension added as the container started, and `@Default` where it declares none. An injection point of a bean
   of the specification, a lookup and the bean manager here select their beans by the container's own record of
-  each bean's qualifiers (`CdiBeanContainer.beansOf`) rather than through a Micronaut `Qualifier`.
+  each bean's qualifiers through a Micronaut `Qualifier` of the container's own (`CdiMatching`), handed to
+  `BeanContext.getBeanDefinitions(Argument, Qualifier)` with the raw class of the required type.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
   marker of its own (`CdiAny`) rather than into Micronaut's.
@@ -896,6 +921,26 @@ own rather than the first one alone.
   container alone (`RecordedTypeIndex`): two deployments whose loaders see different records of a class of a loader
   they share each read their own, and no record, nor the deployment loader it was found through, is kept with the
   shared class.
+- **Destroying a bean forgets the candidates of every type it is an instance of.** `DefaultBeanContext` purges its
+  candidate caches by the instance on every destruction, a prototype's included, and the candidates of a type are
+  kept for 30 types at most. A dependent bean created and destroyed over and over has the candidates of its types
+  looked up again each time, which is why the container keeps what each injection point resolves to
+  (`CdiBeanContainer.selectionFor`: without it, creating a dependent bean with two injected dependencies takes 11%
+  longer and allocates 22% more). `MicronautCoreIssuesTest.destroyingAPrototypeKeepsTheCandidatesOfItsTypes`.
+- **A raw lookup of a type a factory's `List` exposes leaves the factory out.** Micronaut has a bean of a container
+  type stand for its elements, so `getBeanDefinitions(Collection.class)` does not enumerate a `@Bean List<Part>`
+  although its definition exposes `Collection`. The container asks for its candidates under a name of its own that
+  the resolution customizer admits on exposure alone (`CdiMatching.LOOKUP`).
+  `MicronautCoreIssuesTest.aRawLookupOfATypeAFactoryOfAListExposesFindsIt`.
+- **`getBeanDefinitions(Qualifier)` drops a replaced bean after the qualifier.** `getBeanDefinitions(Argument,
+  Qualifier)` drops it before, as every lookup does; the untyped form lets a qualifier keep the replaced bean alone.
+  The container asks the typed form. `MicronautCoreIssuesTest.aReplacedBeanIsLeftOutBeforeTheQualifierWhicheverWayTheDefinitionsAreAskedFor`.
+- **`TypeHierarchies.find` loads the record anew each time.** It keeps the names of the records per class loader, not
+  the records, so `RecordedTypeIndex` keeps the ones it found (without, a container starts 35% slower).
+  `MicronautCoreIssuesTest.aTypeHierarchyRecordIsFoundOnce`.
+- **The lookup argument of the resolution customizer widens one way.** Section 2.1.2 counts a primitive and its
+  wrapper as one type; `resolveBeanLookupArgument` maps a lookup to one other argument, so a lookup of the primitive
+  finds both and a lookup of the wrapper only the wrapper's beans. The container asks for a wrapper as the primitive.
 
 ## What other implementations' tests found
 

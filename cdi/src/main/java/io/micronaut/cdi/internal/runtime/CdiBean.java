@@ -60,6 +60,7 @@ public class CdiBean<T> implements Bean<T> {
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
     private volatile java.util.@Nullable List<CdiQualifier> qualifiers;
+    private volatile java.util.@Nullable Optional<QualifierOverlay> overlay;
     private volatile java.util.@Nullable List<Argument<?>> types;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
@@ -117,10 +118,10 @@ public class CdiBean<T> implements Bean<T> {
      * @return The bean types
      */
     public java.util.List<Argument<?>> types() {
-        // read once: resolution compares them for every lookup, and what the processor recorded does not change
+        // worked out once for the context, which Micronaut's own lookups of the bean compare too
         java.util.List<Argument<?>> resolved = types;
         if (resolved == null) {
-            resolved = java.util.List.copyOf(typesOf(RecordedTypeIndex.of(beanContext), definition, beanClass()));
+            resolved = RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
             types = resolved;
         }
         return resolved;
@@ -164,6 +165,14 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
+     * Whether a factory method or field produces the bean of the definition: Micronaut names the class that
+     * declares what creates the bean, which is the bean class itself for a bean created by its constructor.
+     */
+    private static boolean isFactoryProduct(BeanDefinition<?> definition) {
+        return definition.getDeclaringType().filter(declaring -> declaring != definition.getBeanType()).isPresent();
+    }
+
+    /**
      * The bean types of the bean the given definition describes, without an instance of this class around.
      *
      * @param index      The generic hierarchies the processor recorded, or {@code null}
@@ -203,9 +212,13 @@ public class CdiBean<T> implements Bean<T> {
         } else {
             // the bean types of a bean are every class and interface its own type is assignable to, with the
             // parameters a generic type was written with: a generic class is a bean of its parameterized form
-            // rather than of its erasure
+            // rather than of its erasure. A bean a factory method or field of Micronaut's own produces is, like a
+            // producer's, a bean of the type the method declares, with the arguments it was written with
             if (CdiTypes.knowsClosureOf(index, beanClass)) {
-                for (Argument<?> type : CdiTypes.beanTypeClosureOf(index, beanClass)) {
+                java.util.List<Argument<?>> closureOfBean = isFactoryProduct(definition)
+                    ? CdiTypes.beanTypeClosureOf(index, producedTypeOf(definition))
+                    : CdiTypes.beanTypeClosureOf(index, beanClass);
+                for (Argument<?> type : closureOfBean) {
                     closure.add(CdiTypes.withErasedBounds(type));
                 }
             } else {
@@ -260,14 +273,15 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     /**
-     * The qualifiers of the bean as resolution compares them: the ones it was compiled with, and {@code Any},
-     * which every bean has.
+     * The qualifiers of the bean as resolution compares them: the ones it was compiled with, {@code Any}, which
+     * every bean has, and what a portable extension added to the bean class, read as they are asked for, so that
+     * an addition made after an earlier lookup is seen by the next one.
      *
      * @return The qualifiers
      */
     final java.util.List<CdiQualifier> qualifiers() {
-        java.util.List<CdiQualifier> resolved = qualifiers;
-        if (resolved == null) {
+        java.util.List<CdiQualifier> compiled = qualifiers;
+        if (compiled == null) {
             java.util.List<CdiQualifier> all = new java.util.ArrayList<>(3);
             all.add(CdiQualifier.ANY);
             for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
@@ -275,15 +289,16 @@ public class CdiBean<T> implements Bean<T> {
                     all.add(declared);
                 }
             }
-            resolved = java.util.List.copyOf(all);
-            QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
-            if (overlay != null) {
-                // what a portable extension added to the bean class as the container started
-                resolved = overlay.apply(definition, resolved);
-            }
-            qualifiers = resolved;
+            compiled = java.util.List.copyOf(all);
+            qualifiers = compiled;
         }
-        return resolved;
+        java.util.Optional<QualifierOverlay> found = overlay;
+        if (found == null) {
+            // a bean of the context, the same for as long as it runs
+            found = beanContext.findBean(QualifierOverlay.class);
+            overlay = found;
+        }
+        return found.isPresent() ? found.get().apply(definition, compiled) : compiled;
     }
 
     @Override
