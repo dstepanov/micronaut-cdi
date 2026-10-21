@@ -37,6 +37,43 @@ class ReplacedBeanTest {
         }
     }
 
+    /**
+     * The event the observers of the replaced and the replacing bean observe.
+     */
+    public static final class Signal {
+        final java.util.List<String> heardBy = new java.util.concurrent.CopyOnWriteArrayList<>();
+    }
+
+    @Dependent
+    public static class OriginalListener {
+        void hear(@jakarta.enterprise.event.Observes Signal signal) {
+            signal.heardBy.add("original");
+        }
+    }
+
+    @Dependent
+    @Replaces(OriginalListener.class)
+    public static class ReplacementListener extends OriginalListener {
+        @Override
+        void hear(Signal signal) {
+            // overridden without @Observes, which makes it no observer (section 4.2)
+            signal.heardBy.add("replacement");
+        }
+    }
+
+    @Test
+    void theObserverOfAReplacedBeanIsGoneWithIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            Set<Bean<?>> listeners = container.getBeans(OriginalListener.class);
+            assertEquals(1, listeners.size(), listeners::toString);
+            assertEquals(ReplacementListener.class, listeners.iterator().next().getBeanClass());
+            Signal signal = new Signal();
+            container.getEvent().select(Signal.class).fire(signal);
+            assertEquals(java.util.List.of(), signal.heardBy);
+        }
+    }
+
     @Test
     void theBeanManagerAndALookupAgreeThatTheReplacedBeanIsGone() {
         try (ApplicationContext context = ApplicationContext.run()) {

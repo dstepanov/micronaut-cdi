@@ -155,8 +155,10 @@ public final class ObserverRegistry {
     private List<ObserverMethod<?>> find() {
         List<ObserverMethod<?>> found = new ArrayList<>(synthetic);
         // the beans with observers are marked as they compile: the marker is read from each bean's reference, and
-        // only the definitions of those beans are loaded, rather than every definition of the application
-        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(
+        // only the definitions of those beans are loaded, rather than every definition of the application. The typed
+        // lookup drops a replaced bean before it narrows by the marker: a replacement that observes nothing still
+        // takes the observers of the bean it replaced with it
+        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT,
             io.micronaut.inject.qualifiers.Qualifiers.byStereotype(CdiObserving.class))) {
             for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
                 AnnotationValue<CdiObserver> observer = method.getAnnotation(CdiObserver.class);
