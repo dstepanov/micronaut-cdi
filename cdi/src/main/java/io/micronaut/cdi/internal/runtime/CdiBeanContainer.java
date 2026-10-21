@@ -549,10 +549,13 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Set<Bean<?>> getBeans(String name) {
+        // the definitions are read for the exact name the bean was recorded with, and only a bean of the name is
+        // described. Micronaut's lookup by name is no narrower: it falls back to the simple name of the class of an
+        // unnamed bean, and reads the name Micronaut materialized rather than one a stereotype gave (CdiName)
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (CdiBean<?> bean : beans()) {
-            if (name.equals(bean.getName())) {
-                beans.add(bean);
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
+            if (name.equals(CdiBean.nameOf(definition)) && CdiMatching.isBean(definition)) {
+                beans.add(canonicalBean(definition));
             }
         }
         return beans;

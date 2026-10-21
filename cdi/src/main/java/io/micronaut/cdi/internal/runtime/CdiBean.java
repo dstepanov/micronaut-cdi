@@ -334,10 +334,21 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public @Nullable String getName() {
+        return nameOf(definition);
+    }
+
+    /**
+     * The name of the bean of a definition (section 2.6), as it was recorded.
+     *
+     * @param definition The definition
+     * @return The name, or {@code null} for a bean that has none
+     */
+    static @Nullable String nameOf(BeanDefinition<?> definition) {
         // the stereotype-given name first: where one was recorded, the jakarta annotation beside it is only
         // the default Micronaut materialized, spelled by Micronaut's rules rather than the specification's
-        return definition.getAnnotationMetadata().stringValue(CdiName.class)
-            .or(() -> definition.getAnnotationMetadata().stringValue("jakarta.inject.Named"))
+        io.micronaut.core.annotation.AnnotationMetadata metadata = definition.getAnnotationMetadata();
+        return metadata.stringValue(CdiName.class)
+            .or(() -> metadata.stringValue("jakarta.inject.Named"))
             .orElse(null);
     }
 
