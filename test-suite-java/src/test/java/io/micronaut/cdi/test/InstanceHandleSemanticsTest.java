@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -48,6 +49,28 @@ class InstanceHandleSemanticsTest {
             // the specification has this do nothing: no reference was ever obtained
             handle.destroy();
             assertNotNull(handle.get());
+        }
+    }
+
+    @Test
+    void aHandleOnANullDependentProductCreatesItOnceAndDestroysItsDependents() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            int producedBefore = AbsentPartProducer.PRODUCED.get();
+            Instance.Handle<AbsentPart> handle = container.createInstance().select(AbsentPart.class).getHandle();
+            // null is a valid product of a dependent producer: obtained once, and the handle holds it
+            assertNull(handle.get());
+            assertNull(handle.get());
+            assertEquals(producedBefore + 1, AbsentPartProducer.PRODUCED.get());
+            int destroyedBefore = Bolt.DESTROYED.get();
+            // the dependent injected into the producer method is a dependent of the product, null or not
+            // (section 6.4.1), and goes when the handle destroys it
+            handle.destroy();
+            assertEquals(destroyedBefore + 1, Bolt.DESTROYED.get());
+            // the reference was obtained and destroyed: the handle has nothing more to give
+            assertThrows(IllegalStateException.class, handle::get);
+            handle.destroy();
+            assertEquals(destroyedBefore + 1, Bolt.DESTROYED.get());
         }
     }
 
@@ -122,6 +145,48 @@ class InstanceHandleSemanticsTest {
         @PreDestroy
         void done() {
             DESTROYED.incrementAndGet();
+        }
+    }
+
+    /**
+     * A type a dependent producer produces as null.
+     */
+    public static class AbsentPart {
+    }
+
+    /**
+     * A dependent bean injected into the producer of the absent part, which counts its destructions.
+     */
+    @Dependent
+    public static class Bolt {
+
+        /**
+         * How many bolts have been destroyed.
+         */
+        public static final AtomicInteger DESTROYED = new AtomicInteger();
+
+        @PreDestroy
+        void done() {
+            DESTROYED.incrementAndGet();
+        }
+    }
+
+    /**
+     * Produces the absent part as null, counting how often it is asked to.
+     */
+    @Dependent
+    public static class AbsentPartProducer {
+
+        /**
+         * How many times the producer ran.
+         */
+        public static final AtomicInteger PRODUCED = new AtomicInteger();
+
+        @jakarta.enterprise.inject.Produces
+        @Dependent
+        AbsentPart absent(Bolt bolt) {
+            PRODUCED.incrementAndGet();
+            return null;
         }
     }
 

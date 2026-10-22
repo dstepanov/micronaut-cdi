@@ -70,10 +70,59 @@ class ExpressionEvaluationTest {
         }
     }
 
+    /**
+     * A dependent bean injected into the producer of the absent name, which counts its destructions.
+     */
+    @Dependent
+    public static class Witness {
+        static final AtomicInteger DESTROYED = new AtomicInteger();
+
+        @PreDestroy
+        void destroyed() {
+            DESTROYED.incrementAndGet();
+        }
+    }
+
+    /**
+     * Produces a named dependent bean as null.
+     */
+    @Dependent
+    public static class AbsentProducer {
+        static final AtomicInteger PRODUCED = new AtomicInteger();
+
+        @jakarta.enterprise.inject.Produces
+        @Named("absent")
+        @Dependent
+        Object absent(Witness witness) {
+            PRODUCED.incrementAndGet();
+            return null;
+        }
+    }
+
     @BeforeEach
     void reset() {
         Visitor.CREATED.set(0);
         Visitor.DESTROYED.set(0);
+        AbsentProducer.PRODUCED.set(0);
+        Witness.DESTROYED.set(0);
+    }
+
+    @Test
+    void aDependentBeanProducedAsNullIsCreatedOnceForAnEvaluation() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
+            ELContext el = new StandardELContext(factory);
+
+            Object value = factory.createValueExpression(el, "${absent == null and absent == null}", Boolean.class)
+                .getValue(el);
+
+            assertEquals(Boolean.TRUE, value);
+            // null is the instance of the evaluation as any other is: one reference, and one creational context,
+            // whose release destroys what was injected into the producer once
+            assertEquals(1, AbsentProducer.PRODUCED.get(), "one reference for both appearances of the name");
+            assertEquals(1, Witness.DESTROYED.get(), "one creational context released as the evaluation completed");
+        }
     }
 
     @Test

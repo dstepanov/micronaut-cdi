@@ -493,6 +493,11 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         private final OwnedDependents dependents;
         private io.micronaut.context.@Nullable BeanRegistration<T> registration;
         private @Nullable T instance;
+        /**
+         * Whether the reference was obtained: null is a valid product of a dependent producer, so the instance
+         * alone cannot say.
+         */
+        private boolean obtained;
         private boolean destroyed;
 
         private CdiHandle(BeanContext beanContext, Argument<T> selected, BeanDefinition<T> definition,
@@ -508,12 +513,12 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
         }
 
         @Override
-        public T get() {
+        public @Nullable T get() {
             if (destroyed) {
                 throw new IllegalStateException("The handle on " + definition + " has been destroyed");
             }
             T resolved = instance;
-            if (resolved == null) {
+            if (!obtained) {
                 if (CdiResolution.isDependent(definition)) {
                     // held as the registration that created it, which knows the dependents to destroy with it
                     // a dependent obtained through a handle is a dependent of the lookup like any other, and
@@ -527,6 +532,7 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
                     resolved = resolve(beanContext, definition);
                 }
                 instance = resolved;
+                obtained = true;
             }
             return resolved;
         }
@@ -538,19 +544,20 @@ public final class CdiInstance<T> implements io.micronaut.cdi.MicronautInstance<
 
         @Override
         public void destroy() {
-            T resolved = instance;
-            if (resolved == null) {
+            if (!obtained) {
                 // destroying a handle whose reference was never obtained is a no-op, the specification says —
                 // and a no-op leaves the handle as it was, so a later get() still resolves lazily
                 return;
             }
+            T resolved = instance;
             if (!destroyed) {
                 io.micronaut.context.BeanRegistration<T> created = registration;
                 if (created != null) {
                     // destroyed only where the lookup still has it: if it does not the lookup destroyed it already,
-                    // and destroying it twice would run its @PreDestroy twice
+                    // and destroying it twice would run its @PreDestroy twice. A null product is destroyed too:
+                    // what was injected into its producer belongs to it (section 6.4.1)
                     dependents.destroy(created);
-                } else {
+                } else if (resolved != null) {
                     CdiInstance.destroyResolved(beanContext, definition, resolved);
                 }
             }

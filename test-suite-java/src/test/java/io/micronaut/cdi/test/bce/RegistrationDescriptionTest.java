@@ -111,7 +111,8 @@ class RegistrationDescriptionTest {
         // the class beans, and the producer once, by the class that declares it
         assertEquals(Set.of("Parent", "Child", "Square", "Stub", "Listener", "Parent#parentWord"),
             beans.keySet());
-        assertEquals("[registration.Subject$Child, registration.Subject$Shape, registration.Subject$Parent, "
+        // in the order Micronaut lists the supertypes: the superclass, then the interfaces
+        assertEquals("[registration.Subject$Child, registration.Subject$Parent, registration.Subject$Shape, "
             + "java.lang.Object]", Recording.types.get("Child"));
         assertEquals("[registration.Subject$Square, java.lang.Object]", Recording.types.get("Square"));
         assertEquals("[jakarta.enterprise.inject.Any, jakarta.enterprise.inject.Default]",

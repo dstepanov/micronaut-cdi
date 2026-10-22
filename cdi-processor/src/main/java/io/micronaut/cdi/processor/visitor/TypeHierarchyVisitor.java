@@ -123,11 +123,11 @@ public final class TypeHierarchyVisitor implements TypeElementVisitor<Object, Ob
     private static void referencesOf(ClassElement element, Set<String> recorded, VisitorContext context) {
         List<ClassElement> named = new ArrayList<>();
         try {
-            BeanTypesVisitor.walkClosure(element, (type, bindings, erased) -> {
-                if (!erased) {
+            for (ClassElement type : BeanTypesVisitor.closureOf(element)) {
+                if (!type.isRawType()) {
                     named.addAll(type.getTypeArguments().values());
                 }
-            });
+            }
             for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
                 if (method.hasDeclaredAnnotation(Cdi.PRODUCES)) {
                     named.addAll(argumentsOf(method.getGenericReturnType()));
@@ -203,12 +203,12 @@ public final class TypeHierarchyVisitor implements TypeElementVisitor<Object, Ob
         }
         record(declaration, origin, recorded, context);
         try {
-            BeanTypesVisitor.walkClosure(declaration, (supertype, bindings, erased) -> {
-                if (!erased && supertype != declaration) {
+            for (ClassElement supertype : BeanTypesVisitor.closureOf(declaration)) {
+                if (supertype != declaration && !supertype.isRawType()) {
                     supertype.getTypeArguments().values()
                         .forEach(argument -> reference(argument, depth + 1, origin, recorded, variables, context));
                 }
-            });
+            }
         } catch (RuntimeException e) {
             // a hierarchy the compiler cannot resolve is left to the compiler to report
         }

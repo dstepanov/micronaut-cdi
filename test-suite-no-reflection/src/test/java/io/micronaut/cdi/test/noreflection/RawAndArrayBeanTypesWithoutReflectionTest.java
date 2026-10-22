@@ -7,10 +7,12 @@ import io.micronaut.core.type.Argument;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.CDI;
+import jakarta.enterprise.util.TypeLiteral;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -51,6 +53,16 @@ class RawAndArrayBeanTypesWithoutReflectionTest {
             MicronautBeanContainer container = (MicronautBeanContainer) CDI.current().getBeanContainer();
             assertEquals(1, container.getBeans(Argument.of(Crate.class, String.class).arrayType()).size());
             assertTrue(container.getBeans(Argument.of(Crate.class, Integer.class).arrayType()).isEmpty());
+        }
+    }
+
+    @Test
+    void aLookupSelectsAnArrayOfAParameterizedTypeByItsArguments() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            assertFalse(context.findBean(CdiReflection.class).isPresent());
+            assertEquals(1, CDI.current().select(new TypeLiteral<Crate<String>[]>() { }).get().length);
+            assertTrue(CDI.current().select(new TypeLiteral<Crate<Integer>[]>() { }).isUnsatisfied());
+            assertThrows(IllegalArgumentException.class, () -> CDI.current().select(new TypeLiteral<Crate<?>[]>() { }));
         }
     }
 

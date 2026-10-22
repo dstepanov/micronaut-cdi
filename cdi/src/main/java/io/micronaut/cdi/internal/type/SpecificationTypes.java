@@ -114,7 +114,8 @@ public final class SpecificationTypes {
     }
 
     /**
-     * The argument a bean is looked up by for the given type: a class, or a parameterized type of them.
+     * The argument a bean is looked up by for the given type: a class, a parameterized type of them, or an array
+     * of either.
      *
      * @param type The type
      * @param <T>  The type
@@ -134,8 +135,13 @@ public final class SpecificationTypes {
             }
             return (Argument<T>) Argument.of((Class<?>) parameterized.getRawType(), resolved);
         }
-        throw new IllegalArgumentException("A bean cannot be looked up by the type " + type + ": only a class and "
-            + "a parameterized type describe a bean");
+        if (type instanceof GenericArrayType array) {
+            // an array of a parameterized type keeps the arguments of its component (section 2.1.2.1), which is
+            // a lookup type by the same rules
+            return (Argument<T>) lookupArgumentOf(array.getGenericComponentType()).arrayType();
+        }
+        throw new IllegalArgumentException("A bean cannot be looked up by the type " + type + ": only a class, "
+            + "a parameterized type and an array of one describe a bean");
     }
 
     private static Argument<?>[] argumentsOf(Type[] types, Map<String, Class<?>> converting) {

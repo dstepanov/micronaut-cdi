@@ -248,7 +248,10 @@ writes the record (`TypeHierarchyRecord.isComplete()`), and refuses a class whos
 class or that is an inner class of a generic class. A bean whose class, or the class its producer produces,
 Micronaut refused, or whose record it reports leaving a supertype out, has its closure written on the bean or on its
 producer as well (`CdiBeanTypes`), exactly then, and the container reads that where the record it finds of the class
-names a supertype it left out (`RecordedTypeIndex`, `CdiBean`).
+names a supertype it left out (`RecordedTypeIndex`, `CdiBean`). That closure, and the bean types the registration phase
+of an extension is told, are the supertypes Micronaut lists (`ClassElement.getAllSuperTypes()`), each once however many
+paths of a diamond reach it and those of a raw type raw, less `Object`, which the reader adds once, and an array or a
+primitive with none beyond itself.
 Inside the container each of these types is a Micronaut `Argument`; a `java.lang.reflect.Type` is
 read into one where a program hands it to the specification's API and made from one where that API reports it,
 in `io.micronaut.cdi.internal.type`, and not by Micronaut's `ReflectionArguments`, whose exact readings are in a
@@ -934,7 +937,9 @@ own rather than the first one alone.
   `MicronautCoreIssuesTest.aRawLookupOfATypeAFactoryOfAListExposesFindsIt`.
 - **`getBeanDefinitions(Qualifier)` drops a replaced bean after the qualifier.** `getBeanDefinitions(Argument,
   Qualifier)` drops it before, as every lookup does; the untyped form lets a qualifier keep the replaced bean alone.
-  The container asks the typed form. `MicronautCoreIssuesTest.aReplacedBeanIsLeftOutBeforeTheQualifierWhicheverWayTheDefinitionsAreAskedFor`.
+  The container asks the typed form, the observer methods of the beans marked as observing included
+  (`ObserverRegistry`; an observer of a bean replaced by one that observes nothing is gone with it, core #14063).
+  `MicronautCoreIssuesTest.aReplacedBeanIsLeftOutBeforeTheQualifierWhicheverWayTheDefinitionsAreAskedFor`.
 - **`TypeHierarchies.find` loads the record anew each time.** It keeps the names of the records per class loader, not
   the records, so `RecordedTypeIndex` keeps the ones it found (without, a container starts 35% slower).
   `MicronautCoreIssuesTest.aTypeHierarchyRecordIsFoundOnce`.

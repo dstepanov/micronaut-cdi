@@ -18,6 +18,7 @@ package io.micronaut.cdi.el;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanContainer;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +38,7 @@ import java.util.Map;
  */
 final class CdiEvaluation {
 
-    private final Map<Bean<?>, Object> instances = new HashMap<>();
+    private final Map<Bean<?>, @Nullable Object> instances = new HashMap<>();
     private final List<CreationalContext<?>> created = new ArrayList<>();
 
     /**
@@ -47,10 +48,10 @@ final class CdiEvaluation {
      * @param beans The container that creates it
      * @return The one instance of this evaluation
      */
-    Object instanceOf(Bean<?> bean, BeanContainer beans) {
-        Object existing = instances.get(bean);
-        if (existing != null) {
-            return existing;
+    @Nullable Object instanceOf(Bean<?> bean, BeanContainer beans) {
+        // null is a valid instance of a dependent producer, and is this evaluation's as any other is
+        if (instances.containsKey(bean)) {
+            return instances.get(bean);
         }
         CreationalContext<?> creationalContext = beans.createCreationalContext(bean);
         // registered before the reference is asked for, so that what a failed creation left behind is released
