@@ -21,8 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * The behaviour of Micronaut itself that this module runs into, written the way a plain Micronaut application
  * would write it, so that it is not mistaken for something this module does.
  *
- * <p>It is disabled rather than left out: a disabled test that says what is wrong is what will fail the moment it
- * is fixed, and it is the smallest reproduction of a difference recorded under Conformance.</p>
+ * <p>A test of a difference not yet fixed is disabled rather than left out: a disabled test that says what is wrong
+ * is what will fail the moment it is fixed, and it is the smallest reproduction of a difference recorded under
+ * Conformance. Once Micronaut fixes it, the test runs, and pins the behaviour this module now relies on instead of
+ * working around it.</p>
  */
 class MicronautCoreIssuesTest {
 
@@ -93,10 +95,11 @@ class MicronautCoreIssuesTest {
         }
     }
 
+    /**
+     * Destroying a prototype leaves the candidates Micronaut keeps of its types (micronaut-core #14063), so that a
+     * dependent bean created and destroyed over and over does not have the candidates of its types looked up again.
+     */
     @Test
-    @Disabled("Micronaut purges the candidates it keeps of every type a destroyed bean is an instance of, a prototype's "
-        + "included, so that a dependent bean created and destroyed over and over has the candidates of its types looked "
-        + "up again each time: the container keeps what each injection point resolves to (CdiBeanContainer.selections)")
     @SuppressWarnings("unchecked")
     void destroyingAPrototypeKeepsTheCandidatesOfItsTypes() throws Exception {
         try (ApplicationContext context = ApplicationContext.run()) {
@@ -112,10 +115,11 @@ class MicronautCoreIssuesTest {
         }
     }
 
+    /**
+     * A raw lookup of a type a factory's {@code List} exposes - {@code Collection} - finds the factory's bean
+     * (micronaut-core #14063): the container asks the bean context for the candidates of the raw class of a type.
+     */
     @Test
-    @Disabled("A raw lookup of a type a factory's List exposes - Collection - leaves the factory out: Micronaut has a "
-        + "bean of a container type stand for its elements, though it exposes the type. The container asks for "
-        + "candidates by a named argument its resolution customizer admits on exposure alone (CdiMatching.LOOKUP)")
     void aRawLookupOfATypeAFactoryOfAListExposesFindsIt() {
         try (ApplicationContext context = ApplicationContext.run()) {
             io.micronaut.inject.BeanDefinition<?> parts = context.getBeanDefinitions(java.util.List.class).stream()
@@ -128,10 +132,12 @@ class MicronautCoreIssuesTest {
         }
     }
 
+    /**
+     * {@code getBeanDefinitions(Qualifier)} drops a replaced definition before the qualifier, as
+     * {@code getBeanDefinitions(Argument, Qualifier)} does (micronaut-core #14063): a qualifier that keeps the replaced
+     * bean alone finds it through neither.
+     */
     @Test
-    @Disabled("BeanDefinitionRegistry.getBeanDefinitions(Qualifier) drops a replaced definition after the qualifier has "
-        + "chosen, getBeanDefinitions(Argument, Qualifier) before it: a qualifier that keeps the replaced bean alone "
-        + "finds it through the one and not through the other. The container asks the typed one")
     @SuppressWarnings({"unchecked", "rawtypes"})
     void aReplacedBeanIsLeftOutBeforeTheQualifierWhicheverWayTheDefinitionsAreAskedFor() {
         try (ApplicationContext context = ApplicationContext.run()) {

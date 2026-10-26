@@ -101,29 +101,9 @@ final class CdiMatching<T> implements Qualifier<T> {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type: asked for as the
         // primitive, the context also enumerates the beans of the boxed class (resolveBeanLookupArgument of the
         // resolution customizer), and the other way around it would not
-        Class<?> primitive = io.micronaut.core.reflect.ReflectionUtils.getPrimitiveType(raw);
-        return (Argument<T>) Argument.of(primitive, LOOKUP);
-    }
-
-    /**
-     * The name the type the container asks the bean context for candidates by is given, which tells the resolution
-     * customizer that the lookup is one of the container's, whose candidates are every bean that exposes the class:
-     * Micronaut's own test of a raw lookup has a bean of a container type - a producer of a {@code List} - stand for
-     * its elements and refuses it to a lookup of a supertype of its class, {@code Collection} say, which the type of
-     * the specification may well be. As part of the type, the name also keeps the candidates the bean context keeps
-     * for such a lookup apart from the ones it keeps for a lookup of its own of the class.
-     */
-    static final String LOOKUP = "$cdiLookup";
-
-    /**
-     * Whether the type a lookup is made by is one the container asked for the candidates of a type of the
-     * specification by ({@link #lookupType()}).
-     *
-     * @param type The type
-     * @return Whether it is the container's
-     */
-    static boolean isLookupOfTheContainer(Argument<?> type) {
-        return LOOKUP.equals(type.getName());
+        // a raw lookup has every bean that exposes the class among its candidates, a producer of a List for a
+        // Collection included
+        return (Argument<T>) Argument.of(io.micronaut.core.reflect.ReflectionUtils.getPrimitiveType(raw));
     }
 
     /**

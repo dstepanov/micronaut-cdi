@@ -176,7 +176,7 @@ public final class RecordedTypeIndex {
      */
     private @Nullable Entry recordedOf(Class<?> type) {
         for (io.micronaut.inject.BeanDefinition<?> definition
-            : beanContext.getBeanDefinitions(Argument.of(type, CdiMatching.LOOKUP))) {
+            : beanContext.getBeanDefinitions(Argument.of(type))) {
             io.micronaut.core.annotation.AnnotationMetadata metadata = definition.getAnnotationMetadata();
             if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
                 continue;

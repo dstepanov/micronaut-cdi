@@ -335,11 +335,9 @@ types matches the full required type by the rules of section 2.4.2.1 - a type Mi
 under is none of them - and that have every required qualifier, a qualifier a portable extension added among the
 ones a bean has; it leaves out an interceptor, an abstract class and the components an extension had the container
 instantiate. Micronaut is asked for the raw class rather than the type so that its own matching of type arguments,
-which is not the one of the specification, rejects nothing; the class is asked for under a name of the container's
-(`CdiMatching.LOOKUP`), which the resolution customizer admits every bean exposing the class for, since Micronaut's
-own test of a raw lookup has a factory's `List` stand for its elements and refuses it to a lookup of
-`Collection`; and a class that boxes a primitive is asked for as the primitive, which Micronaut's lookup argument of
-the customizer widens to both. The qualifier keeps nothing: the qualifiers of a bean are read as the lookup is made,
+which is not the one of the specification, rejects nothing; a raw lookup has every bean exposing the class among
+its candidates, a factory's `List` for `Collection` included (since Micronaut Core 5.3, #14063); and a class that
+boxes a primitive is asked for as the primitive, which Micronaut's lookup argument of the customizer widens to both. The qualifier keeps nothing: the qualifiers of a bean are read as the lookup is made,
 so one a portable extension adds after an earlier lookup is seen by the next one, and Micronaut keeps the candidates
 of a class, never the result of a qualifier. It is never handed to the creation of a bean, where a qualifier would
 become part of the key a scope holds the instance under: the selected definition is created as it is
@@ -351,9 +349,11 @@ specification outranks a bean of Micronaut's own of the same type, and the alter
 the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
 measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), the
 container's bean of each definition, once (`CdiBeanContainer.canonicalBean`), and what each injection point
-resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut forgets the candidates of every type a
-destroyed bean is an instance of, a dependent's included, so a dependent bean created over and over would have its
-points' candidates looked up again each time (see Open points in Micronaut Core). Core's active resolution
+resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type, and since
+Micronaut Core 5.3 (#14063) keeps them when a dependent bean is destroyed, but matching them by the rules of the
+specification and narrowing them is the container's own work, which a dependent bean created over and over would
+do again for each of its points (without it, creating a dependent bean with eight injected dependencies takes 28%
+longer and allocates 87% more). Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
@@ -924,22 +924,12 @@ own rather than the first one alone.
   container alone (`RecordedTypeIndex`): two deployments whose loaders see different records of a class of a loader
   they share each read their own, and no record, nor the deployment loader it was found through, is kept with the
   shared class.
-- **Destroying a bean forgets the candidates of every type it is an instance of.** `DefaultBeanContext` purges its
-  candidate caches by the instance on every destruction, a prototype's included, and the candidates of a type are
-  kept for 30 types at most. A dependent bean created and destroyed over and over has the candidates of its types
-  looked up again each time, which is why the container keeps what each injection point resolves to
-  (`CdiBeanContainer.selectionFor`: without it, creating a dependent bean with two injected dependencies takes 11%
-  longer and allocates 22% more). `MicronautCoreIssuesTest.destroyingAPrototypeKeepsTheCandidatesOfItsTypes`.
-- **A raw lookup of a type a factory's `List` exposes leaves the factory out.** Micronaut has a bean of a container
-  type stand for its elements, so `getBeanDefinitions(Collection.class)` does not enumerate a `@Bean List<Part>`
-  although its definition exposes `Collection`. The container asks for its candidates under a name of its own that
-  the resolution customizer admits on exposure alone (`CdiMatching.LOOKUP`).
-  `MicronautCoreIssuesTest.aRawLookupOfATypeAFactoryOfAListExposesFindsIt`.
-- **`getBeanDefinitions(Qualifier)` drops a replaced bean after the qualifier.** `getBeanDefinitions(Argument,
-  Qualifier)` drops it before, as every lookup does; the untyped form lets a qualifier keep the replaced bean alone.
-  The container asks the typed form, the observer methods of the beans marked as observing included
-  (`ObserverRegistry`; an observer of a bean replaced by one that observes nothing is gone with it, core #14063).
-  `MicronautCoreIssuesTest.aReplacedBeanIsLeftOutBeforeTheQualifierWhicheverWayTheDefinitionsAreAskedFor`.
+- **The candidates of a type are kept for 30 types at most.** `DefaultBeanContext.beanCandidateCache` is a
+  least-recently-used cache of 30 lookup types, which a deployment of the specification exceeds; core #14063 left a
+  larger or configurable bound for a separate decision. The fixes of #14063 itself - a destroyed dependent no
+  longer purges the candidates of its types, a raw lookup of `Collection` finds a factory's `List`, and the untyped
+  `getBeanDefinitions(Qualifier)` drops a replaced bean before the qualifier - are pinned by
+  `MicronautCoreIssuesTest`.
 - **`TypeHierarchies.find` loads the record anew each time.** It keeps the names of the records per class loader, not
   the records, so `RecordedTypeIndex` keeps the ones it found (without, a container starts 35% slower).
   `MicronautCoreIssuesTest.aTypeHierarchyRecordIsFoundOnce`.

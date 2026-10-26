@@ -102,9 +102,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
      * compiled definition are constants, and two points of one type and name may declare different qualifiers.
      * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}).
-     * Micronaut resolves a point of its own without a cache of this kind, but forgets the candidates of every type a
-     * destroyed bean is an instance of, so that a dependent bean created over and over would have the candidates of
-     * its points looked up again each time (see Conformance).
+     * Micronaut keeps the candidates of a type, a destroyed dependent's included, but matching them by the rules of
+     * the specification and narrowing them is this container's work, which a dependent bean created over and over
+     * would do again for each of its points (see Conformance).
      */
     private volatile Map<PointKey, Selection> selections = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile @Nullable RecordedTypeIndex typeIndex;
