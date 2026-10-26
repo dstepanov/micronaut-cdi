@@ -76,7 +76,7 @@ final class CdiEventMetadata implements EventMetadata {
     public Type getType() {
         Type resolved = type;
         if (resolved == null) {
-            resolved = CdiTypes.typeOf(eventType);
+            resolved = eventType.asType();
             type = resolved;
         }
         return resolved;

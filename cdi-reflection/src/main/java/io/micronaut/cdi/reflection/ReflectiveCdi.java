@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.reflection;
 
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
@@ -120,7 +119,7 @@ public final class ReflectiveCdi implements CdiReflection {
     @Override
     public Type declaredTypeOf(Class<?> type) {
         TypeVariable<?>[] variables = type.getTypeParameters();
-        return variables.length == 0 ? type : SpecificationTypes.parameterized(type, variables);
+        return variables.length == 0 ? type : io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(type, variables);
     }
 
     @Override
@@ -160,7 +159,7 @@ public final class ReflectiveCdi implements CdiReflection {
             }
             arguments[i] = resolved;
         }
-        return SpecificationTypes.parameterized(runtimeClass, arguments);
+        return io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(runtimeClass, arguments);
     }
 
     private static void unify(Type own, Type declared, Map<String, Type> resolution) {

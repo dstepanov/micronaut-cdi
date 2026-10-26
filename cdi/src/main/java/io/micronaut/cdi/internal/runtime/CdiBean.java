@@ -109,7 +109,11 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Type> getTypes() {
-        return new LinkedHashSet<>(io.micronaut.cdi.internal.type.SpecificationTypes.typesOf(types()));
+        Set<Type> types = new LinkedHashSet<>();
+        for (Argument<?> type : types()) {
+            types.add(type.asType());
+        }
+        return types;
     }
 
     /**

@@ -129,7 +129,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
 
     @Override
     public Type getType() {
-        return CdiTypes.typeOf(argument);
+        return argument.asType();
     }
 
     @Override

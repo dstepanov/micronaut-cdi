@@ -35,10 +35,11 @@ import java.util.Map;
  * {@link Argument} the container works with.
  *
  * <p>A type a program hands in - to a lookup, to the selection of an event, to the matching the bean container
- * offers - is read here, once, into the argument that describes it. A type the container hands out - a bean
- * type, an observed type, the type of an injection point or of an event - is made here from the argument it is
- * held as. Nothing else in the container reads a {@code Type} or makes one, and nothing here reads a class
- * back: a type that was handed in carries its arguments and bounds, and asking for them resolves nothing.</p>
+ * offers - is read here, once, into the argument that describes it. Nothing else in the container reads a
+ * {@code Type}, and nothing here reads a class back: a type that was handed in carries its arguments and bounds, and
+ * asking for them resolves nothing. A type the container hands out - a bean type, an observed type, the type of an
+ * injection point or of an event - is the one Micronaut renders the argument it is held as into
+ * ({@link Argument#asType()}), exactly as the declaration wrote it and equal to the type the JDK reflects.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -181,103 +182,6 @@ public final class SpecificationTypes {
             return erasureOf(array.getGenericComponentType(), depth + 1).arrayType();
         }
         return Object.class;
-    }
-
-    /**
-     * The type an argument describes, the way the declaration wrote it: a type variable left unresolved is the
-     * variable with its bounds, a wildcard keeps its bounds, a raw type is the class, and an array of a
-     * parameterized type or of a variable is a generic array. A type resolved in place of a variable is that type.
-     *
-     * @param argument The argument
-     * @return The type
-     */
-    public static Type typeOf(Argument<?> argument) {
-        return typeOf(argument, Map.of());
-    }
-
-    /**
-     * The types the given arguments describe, in order.
-     *
-     * @param arguments The arguments
-     * @return The types
-     */
-    public static List<Type> typesOf(Iterable<? extends Argument<?>> arguments) {
-        List<Type> types = new java.util.ArrayList<>();
-        for (Argument<?> argument : arguments) {
-            types.add(typeOf(argument));
-        }
-        return types;
-    }
-
-    /**
-     * The type an argument describes, inside the bounds of the given variables: a variable named again within
-     * its own bounds is that variable.
-     */
-    private static Type typeOf(Argument<?> argument, Map<String, TypeVariableValue> bounding) {
-        if (argument instanceof WildcardArgument<?> wildcard) {
-            return new WildcardValue(typesOf(wildcard.getUpperBounds(), bounding),
-                typesOf(wildcard.getLowerBounds(), bounding));
-        }
-        Class<?> type = argument.getType();
-        // a variable, or an array of one: the placeholder is asked rather than isUnresolvedTypeVariable(), which
-        // is the variable alone
-        if (argument instanceof GenericPlaceholder<?> placeholder && !placeholder.isResolved()) {
-            String name = placeholder.getVariableName();
-            TypeVariableValue variable = bounding.get(name);
-            if (variable == null) {
-                // created before its bounds, which may name it
-                variable = new TypeVariableValue(name, new Type[0]);
-                Map<String, TypeVariableValue> within = new HashMap<>(bounding);
-                within.put(name, variable);
-                variable.bounds(typesOf(placeholder.getBounds(), within));
-            }
-            // the placeholder of an array of a variable is an array of the variable
-            return arrayOf(variable, type);
-        }
-        Argument<?>[] typeParameters = argument.getTypeParameters();
-        if (typeParameters.length == 0 || argument.isRawType()) {
-            return type;
-        }
-        Type[] arguments = new Type[typeParameters.length];
-        for (int i = 0; i < typeParameters.length; i++) {
-            arguments[i] = typeOf(typeParameters[i], bounding);
-        }
-        Class<?> component = type;
-        while (component.isArray()) {
-            component = component.getComponentType();
-        }
-        // an array has the type arguments of its component
-        return arrayOf(new ParameterizedValue(component, arguments), type);
-    }
-
-    private static Type[] typesOf(List<Argument<?>> arguments, Map<String, TypeVariableValue> bounding) {
-        Type[] types = new Type[arguments.size()];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = typeOf(arguments.get(i), bounding);
-        }
-        return types;
-    }
-
-    /**
-     * The component wrapped in as many generic array levels as the class has dimensions.
-     */
-    private static Type arrayOf(Type component, Class<?> type) {
-        Type result = component;
-        for (Class<?> level = type; level.isArray(); level = level.getComponentType()) {
-            result = new GenericArrayValue(result);
-        }
-        return result;
-    }
-
-    /**
-     * The parameterized form of the given class over the given arguments, or the class where there are none.
-     *
-     * @param type      The raw class
-     * @param arguments The type arguments
-     * @return The parameterized type
-     */
-    public static Type parameterized(Class<?> type, Type[] arguments) {
-        return arguments.length == 0 ? type : new ParameterizedValue(type, arguments);
     }
 
     /**

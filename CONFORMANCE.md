@@ -276,8 +276,12 @@ states the event type in full and needs no record and no module.
 
 *Sections 5.5.7, 5.5.8, 5.6, 9.4.3, 11.1.4 and 11.1.8 to 11.1.10, and of CDI Full 23.1 and 23.3.10.*
 `micronaut-cdi` reads no class back, and the build holds it to that: the `NoReflection` check allows it nothing
-but the accessors of a `java.lang.reflect.Type` it was handed and the making of the value classes of
-`io.micronaut.cdi.internal.type`, which such a type is reported as. The
+but the accessors of a `java.lang.reflect.Type` it was handed. A type it reports - a bean type, the type of an
+injection point, of an observed event or of an event's metadata - is the one Micronaut renders the argument it holds
+into (`Argument.asType()`, since Micronaut Core 5.3, #14081), exactly as the declaration wrote it, which reads no
+class: a parameterized type, a wildcard and a generic array are equal to the ones the JDK reflects, with their hash
+codes and names, and a type variable has no declaration and is equal to another rendered with the same name and
+bounds. The
 methods of the specification that return a reflection object, or that can only be answered from one, are
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
 module: `InjectionPoint.getMember()` and `getAnnotated()`; the qualifiers and interceptor
@@ -848,12 +852,11 @@ own rather than the first one alone.
   which `typeClosureOf` lists as the processor does: the arrays of the supertypes of the component, the arrays of
   fewer dimensions, `Cloneable` and `Serializable`. They are in `micronaut-reflection`, which reads classes back,
   and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
-  `Argument`, and one the specification's API reports made from one, in `io.micronaut.cdi.internal.type`, by the
-  accessors of the type alone. The reflection module reads a type it is handed with `ofExact` itself, the ones the
-  container rendered there as well: since Micronaut Core 5.3 `ofExact` reads a variable with no annotated bounds,
-  as a variable the container renders is, through its bounds. A variable `toExactType` renders has
-  no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
-  module tells the variables of an event's class apart by their names.
+  `Argument` in `io.micronaut.cdi.internal.type`, by the accessors of the type alone, and one the specification's
+  API reports is rendered by Micronaut (`Argument.asType()`). The reflection module reads a type it is handed with
+  `ofExact` itself, the ones the container reported as well. A variable Micronaut renders has no declaration and
+  is equal to another so rendered, not to the variable the class declares, so the reflection module tells the
+  variables of an event's class apart by their names.
 - **A definition Micronaut writes names the arguments of every supertype of the bean.** Since Micronaut Core 5.3 a
   type hierarchy record leaves out a supertype it cannot name from its package and says so as it is written
   (`VisitorContext.tryRecordTypeHierarchy`, `TypeHierarchyRecord.isComplete()`), and the processor writes the

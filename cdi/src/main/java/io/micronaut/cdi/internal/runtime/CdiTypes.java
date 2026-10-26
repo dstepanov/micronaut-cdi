@@ -129,26 +129,6 @@ public final class CdiTypes {
     }
 
     /**
-     * The required type of the lookup, as the specification's API reports a type.
-     *
-     * @param beanType The compiled argument of the lookup
-     * @return The required type
-     */
-    public static Type requiredTypeOf(Argument<?> beanType) {
-        return SpecificationTypes.typeOf(beanType);
-    }
-
-    /**
-     * The type a compiled argument describes, as the specification's API reports a type.
-     *
-     * @param argument The argument
-     * @return The type
-     */
-    public static Type typeOf(Argument<?> argument) {
-        return SpecificationTypes.typeOf(argument);
-    }
-
-    /**
      * The argument a bean is looked up by for the given type.
      *
      * @param type The type
@@ -445,7 +425,7 @@ public final class CdiTypes {
         if (reflection != null) {
             // the module that reads classes speaks the types of the reflection API
             return SpecificationTypes.argumentsOf(
-                reflection.typeClosureOf(SpecificationTypes.typeOf(type), arrayStops));
+                reflection.typeClosureOf(type.asType(), arrayStops));
         }
         // nothing is known of what is above the type without reading it: the type itself is all there is,
         // and what is above a class is asked of the class by whoever compares against it
@@ -505,8 +485,7 @@ public final class CdiTypes {
      * @see #eventTypeOf(RecordedTypeIndex, Class, Argument)
      */
     public static Type eventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass, Type declaredType) {
-        return SpecificationTypes.typeOf(
-            eventTypeOf(index, runtimeClass, SpecificationTypes.argumentOf(declaredType)));
+        return eventTypeOf(index, runtimeClass, SpecificationTypes.argumentOf(declaredType)).asType();
     }
 
     /**
@@ -564,7 +543,7 @@ public final class CdiTypes {
             CdiReflection reflection = reflection(index);
             if (reflection != null) {
                 return SpecificationTypes.argumentOf(
-                    reflection.eventTypeOf(runtimeClass, SpecificationTypes.typeOf(declaredType)));
+                    reflection.eventTypeOf(runtimeClass, declaredType.asType()));
             }
             return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
         }
@@ -594,7 +573,7 @@ public final class CdiTypes {
             if (resolved == null || resolved.isUnresolvedTypeVariable()) {
                 throw new IllegalArgumentException("The type variable " + variables.get(i) + " of "
                     + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
-                    + SpecificationTypes.typeOf(declaredType).getTypeName()
+                    + declaredType.asType().getTypeName()
                     + ". MicronautEvent.select(Argument) states the type of an event in full");
             }
             arguments[i] = resolved;

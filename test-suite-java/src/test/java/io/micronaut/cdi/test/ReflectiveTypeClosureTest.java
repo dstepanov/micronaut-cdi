@@ -1,6 +1,5 @@
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.reflection.ReflectiveCdi;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.util.TypeLiteral;
@@ -84,17 +83,17 @@ class ReflectiveTypeClosureTest {
 
     @Test
     void aVariableTheContainerRenderedIsReadThroughItsBounds() {
-        // the container renders a variable from its argument with bounds but no annotated bounds, and hands it
-        // back to the reflection module as it is
-        Type bounded = SpecificationTypes.typeOf(Argument.of(Holder.class,
+        // Micronaut renders a variable from its argument with its bounds and no declaration, and the container
+        // hands it back to the reflection module as it is
+        Type bounded = Argument.of(Holder.class,
             Argument.ofTypeVariable(Number.class, null, "U", null, Argument.ZERO_ARGUMENTS,
-                new Argument<?>[] {Argument.of(Number.class)})));
+                new Argument<?>[] {Argument.of(Number.class)})).asType();
         TypeVariable<?> rendered = (TypeVariable<?>) ((ParameterizedType) bounded).getActualTypeArguments()[0];
-        assertEquals(0, rendered.getAnnotatedBounds().length);
+        assertEquals(List.of(Number.class), List.of(rendered.getBounds()));
         Set<String> closure = described(reflection.typeClosureOf(bounded, true));
         assertTrue(closure.contains("java.util.function.Supplier<U>"), closure::toString);
 
-        Type unbounded = SpecificationTypes.typeOf(Argument.of(Holder.class, Argument.ofTypeVariable(Object.class, null, "V")));
+        Type unbounded = Argument.of(Holder.class, Argument.ofTypeVariable(Object.class, null, "V")).asType();
         Set<String> unboundedClosure = described(reflection.typeClosureOf(unbounded, true));
         assertTrue(unboundedClosure.contains("java.util.function.Supplier<V>"), unboundedClosure::toString);
     }
@@ -123,7 +122,7 @@ class ReflectiveTypeClosureTest {
 
     @Test
     void aVariableOfTheEventClassIsResolvedThroughItsSupertype() {
-        Type declared = SpecificationTypes.parameterized(Foo.class, new Type[] {Integer.class});
+        Type declared = io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(Foo.class, new Type[] {Integer.class});
         assertEquals(Bar.class.getName() + "<java.lang.Integer>",
             describe(reflection.eventTypeOf(Bar.class, declared)));
     }

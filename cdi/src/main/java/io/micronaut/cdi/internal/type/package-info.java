@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 /**
- * The one place a {@code java.lang.reflect.Type} of the specification's API is read and made: what the container
- * is handed is turned into an {@link io.micronaut.core.type.Argument} here, and what it hands out is made from one.
+ * The one place a {@code java.lang.reflect.Type} of the specification's API is read: what the container is handed is
+ * turned into an {@link io.micronaut.core.type.Argument} here. What it hands out is the argument Micronaut renders
+ * ({@link io.micronaut.core.type.Argument#asType()}).
  */
 @Internal
 @NullMarked

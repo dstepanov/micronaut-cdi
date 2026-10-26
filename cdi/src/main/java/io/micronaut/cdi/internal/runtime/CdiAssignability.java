@@ -748,7 +748,7 @@ public final class CdiAssignability {
         // matching them — but a bare type variable names nothing to resolve
         if (type.isUnresolvedTypeVariable()) {
             throw new IllegalArgumentException("A type variable does not describe a bean or an event: "
-                + SpecificationTypes.typeOf(type).getTypeName());
+                + type.asType().getTypeName());
         }
     }
 }

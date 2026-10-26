@@ -1,7 +1,6 @@
 
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.util.TypeLiteral;
@@ -242,7 +241,7 @@ class AssignabilityRulesTest {
         assertFalse(bean(boxOfObject, boxOfString), "Box<Object> is not matched by Box<String>");
         assertTrue(bean(boxOfObject, boxOfObject), "Box<Object> is matched by itself");
         assertTrue(bean(Object.class, boxOfString), "the required type Object is matched by everything");
-        assertTrue(bean(SpecificationTypes.parameterized(Box.class, new Type[]{Object.class}), boxOfObject),
+        assertTrue(bean(io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(Box.class, new Type[]{Object.class}), boxOfObject),
             "a parameterized type made here equals one the language made");
     }
 

@@ -110,7 +110,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     public Type getObservedType() {
         Type resolved = observedType;
         if (resolved == null) {
-            resolved = CdiTypes.typeOf(observedArgument());
+            resolved = observedArgument().asType();
             observedType = resolved;
         }
         return resolved;
