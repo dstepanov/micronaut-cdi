@@ -51,7 +51,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RecordedTypeIndex {
 
     private final BeanContext beanContext;
-    private final Map<Class<?>, Optional<Entry>> hierarchies = new ConcurrentHashMap<>();
     /**
      * The bean types of each definition, worked out once from what was recorded: the container compares them for
      * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
@@ -118,8 +117,9 @@ public final class RecordedTypeIndex {
      * @return The record, or {@code null} where the application was not compiled with the class
      */
     @Nullable Entry of(Class<?> type) {
-        Entry hierarchy = hierarchies.computeIfAbsent(type, this::recordOf).orElse(null);
-        if (hierarchy instanceof HierarchyEntry entry && entry.hierarchy().getOmittedSuperTypeNames().isEmpty()) {
+        TypeHierarchy record = recordOf(type);
+        Entry hierarchy = record == null ? null : new HierarchyEntry(record);
+        if (record != null && record.getOmittedSuperTypeNames().isEmpty()) {
             return hierarchy;
         }
         // a bean whose type hierarchy record left a supertype out, or that has none, may record its closure on its
@@ -140,34 +140,22 @@ public final class RecordedTypeIndex {
      * @return Whether it does
      */
     boolean hasCompleteRecord(Class<?> type) {
-        return hierarchies.computeIfAbsent(type, this::recordOf)
-            .filter(entry -> entry instanceof HierarchyEntry hierarchy
-                && hierarchy.hierarchy().getOmittedSuperTypeNames().isEmpty())
-            .isPresent();
+        TypeHierarchy record = recordOf(type);
+        return record != null && record.getOmittedSuperTypeNames().isEmpty();
     }
 
     /**
      * The record of a class as the class loader of this container finds it, or the loader of the class where that one
      * finds none: a record of that very class, not of another loader's class of the same name. Two containers whose
      * loaders see different records of a class they share - a class of a parent loader, a record of each deployment -
-     * each find their own, and what one found is kept by it alone ({@link #hierarchies}), so that no record, nor the
-     * loader of a deployment it was found through, is kept with the shared class.
+     * each find their own. Micronaut finds a record once per class loader and keeps it with the class of the record,
+     * so that no record, nor the loader of a deployment it was found through, is kept with the shared class.
      */
-    private Optional<Entry> recordOf(Class<?> type) {
+    private @Nullable TypeHierarchy recordOf(Class<?> type) {
         ClassLoader containerLoader = beanContext.getClassLoader();
-        Optional<TypeHierarchy> found = findRecord(type, containerLoader);
-        ClassLoader typeLoader = type.getClassLoader();
-        if (found.isEmpty() && typeLoader != null && typeLoader != containerLoader) {
-            found = findRecord(type, typeLoader);
-        }
-        return found.map(HierarchyEntry::new);
-    }
-
-    private static Optional<TypeHierarchy> findRecord(Class<?> type, @Nullable ClassLoader loader) {
-        if (loader == null) {
-            return Optional.empty();
-        }
-        return TypeHierarchies.find(type.getName(), loader).filter(hierarchy -> hierarchy.getType() == type);
+        Optional<TypeHierarchy> found = containerLoader == null ? Optional.empty()
+            : TypeHierarchies.find(type.getName(), containerLoader).filter(hierarchy -> hierarchy.getType() == type);
+        return found.or(() -> TypeHierarchies.find(type)).orElse(null);
     }
 
     /**

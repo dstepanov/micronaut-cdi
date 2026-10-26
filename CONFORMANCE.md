@@ -920,19 +920,17 @@ own rather than the first one alone.
   for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
   sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
   `SeContainerInitializer.newInstance()`. The type hierarchy record of a class is found
-  through the class loader of the container, and the class's own where that one finds none, and kept by that
-  container alone (`RecordedTypeIndex`): two deployments whose loaders see different records of a class of a loader
-  they share each read their own, and no record, nor the deployment loader it was found through, is kept with the
-  shared class.
+  through the class loader of the container, and the class's own where that one finds none (`RecordedTypeIndex`):
+  two deployments whose loaders see different records of a class of a loader they share each read their own.
+  Micronaut finds a record once per class loader and keeps it with the class of the record (since Micronaut Core
+  5.3, #14064), so the container keeps none, and no record, nor the deployment loader it was found through, is kept
+  with the shared class.
 - **The candidates of a type are kept for 30 types at most.** `DefaultBeanContext.beanCandidateCache` is a
   least-recently-used cache of 30 lookup types, which a deployment of the specification exceeds; core #14063 left a
   larger or configurable bound for a separate decision. The fixes of #14063 itself - a destroyed dependent no
   longer purges the candidates of its types, a raw lookup of `Collection` finds a factory's `List`, and the untyped
   `getBeanDefinitions(Qualifier)` drops a replaced bean before the qualifier - are pinned by
   `MicronautCoreIssuesTest`.
-- **`TypeHierarchies.find` loads the record anew each time.** It keeps the names of the records per class loader, not
-  the records, so `RecordedTypeIndex` keeps the ones it found (without, a container starts 35% slower).
-  `MicronautCoreIssuesTest.aTypeHierarchyRecordIsFoundOnce`.
 - **The lookup argument of the resolution customizer widens one way.** Section 2.1.2 counts a primitive and its
   wrapper as one type; `resolveBeanLookupArgument` maps a lookup to one other argument, so a lookup of the primitive
   finds both and a lookup of the wrapper only the wrapper's beans. The container asks for a wrapper as the primitive.

@@ -7,7 +7,6 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Prototype;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Singleton;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Retention;
@@ -148,9 +147,11 @@ class MicronautCoreIssuesTest {
         }
     }
 
+    /**
+     * {@code TypeHierarchies.find} finds a record once per class loader (micronaut-core #14064), so the container
+     * keeps none of the records it found.
+     */
     @Test
-    @Disabled("TypeHierarchies.find loads the record anew each time it is asked: the names of the records are kept, "
-        + "the records are not, so the container keeps the records it found (RecordedTypeIndex.hierarchies)")
     void aTypeHierarchyRecordIsFoundOnce() throws ClassNotFoundException {
         // a bean class of this suite that has a record
         Class<?> type = Class.forName("io.micronaut.cdi.test.index.BeanTypeRecordTest$Shelf");
