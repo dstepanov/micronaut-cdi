@@ -665,9 +665,12 @@ observer bean, a dependent parameter - goes as the notification completes; one c
 `CreationalContext` goes as it is released; one a synthetic bean's creation function looks up goes with the bean
 it created, and one its disposal function looks up as the disposal returns. Micronaut owns them, through the
 resolver of the bean and through dependency groups (`OwnedDependents`), and destroys each set in the reverse of the
-order it was created in, every one of them attempted where one fails. As the context stops Micronaut opens a
-new group for a listener of its shutdown event alone; what a lookup that runs later creates - from a
-`@PreDestroy`, or on the thread of an executor - is held by the container and destroyed the same way.
+order it was created in, every one of them attempted where one fails. `Instance.destroy` finds the registration
+Micronaut holds for the instance by its identity (`BeanDependencyResolver.findRegistration`, since Micronaut Core
+5.3, #14079) and destroys it there; a handle keeps the registration it created, which a null product of a dependent
+producer cannot be found again by. As the context stops Micronaut opens a new group for a listener of its shutdown
+event alone; what a lookup that runs later creates - from a `@PreDestroy`, or on the thread of an executor - is held
+by the container and destroyed the same way.
 
 ### Known limitations a review has named
 

@@ -56,12 +56,9 @@ public final class OwnedDependents implements AutoCloseable {
     private @Nullable BeanDependencyGroup group;
     private boolean refused;
     /**
-     * The dependent instances created through the resolver or the group, by which one is found again from the
-     * instance it holds; Micronaut destroys them.
-     */
-    private final List<BeanRegistration<?>> created = new ArrayList<>(2);
-    /**
-     * What was created without Micronaut owning it, destroyed here.
+     * What was created without Micronaut owning it, destroyed here. What was created through the resolver or the
+     * group is Micronaut's, which finds it again from the instance it holds
+     * ({@link BeanDependencyResolver#findRegistration}).
      */
     private final List<CreatedBean<?>> held = new ArrayList<>(0);
     /**
@@ -115,15 +112,13 @@ public final class OwnedDependents implements AutoCloseable {
         BeanDependencyResolver owner = owner();
         if (owner != null) {
             try {
-                BeanRegistration<T> registration = owner.getBeanRegistration(definition, type);
-                keep(registration, true);
-                return registration;
+                return owner.getBeanRegistration(definition, type);
             } catch (IllegalStateException e) {
                 // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
             }
         }
         BeanRegistration<T> registration = beanContext.getBeanRegistration(definition, type);
-        keep(registration, false);
+        keep(registration);
         return registration;
     }
 
@@ -163,9 +158,7 @@ public final class OwnedDependents implements AutoCloseable {
         BeanDependencyResolver owner = owner();
         if (owner != null) {
             try {
-                BeanRegistration<T> registration = owner.getBeanRegistration(definition, type, segment);
-                keep(registration, true);
-                return registration;
+                return owner.getBeanRegistration(definition, type, segment);
             } catch (IllegalStateException e) {
                 // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
             }
@@ -173,7 +166,7 @@ public final class OwnedDependents implements AutoCloseable {
         try (io.micronaut.context.BeanResolutionContext resolution =
                  new io.micronaut.context.DefaultBeanResolutionContext(beanContext, null)) {
             BeanRegistration<T> registration = resolution.getBeanRegistration(definition, type, segment);
-            keep(registration, false);
+            keep(registration);
             return registration;
         }
     }
@@ -198,7 +191,9 @@ public final class OwnedDependents implements AutoCloseable {
             return registration(definition, type);
         }
         BeanRegistration<T> registration = within.getBeanRegistration(definition, type);
-        keep(registration, resolver != null);
+        if (resolver == null) {
+            keep(registration);
+        }
         return registration;
     }
 
@@ -241,15 +236,13 @@ public final class OwnedDependents implements AutoCloseable {
         BeanDependencyResolver owner = owner();
         if (owner != null) {
             try {
-                BeanRegistration<T> registration = owner.getBeanRegistration(type, qualifier);
-                keep(registration, true);
-                return registration;
+                return owner.getBeanRegistration(type, qualifier);
             } catch (IllegalStateException e) {
                 // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
             }
         }
         BeanRegistration<T> registration = beanContext.getBeanRegistration(type, qualifier);
-        keep(registration, false);
+        keep(registration);
         return registration;
     }
 
@@ -263,11 +256,7 @@ public final class OwnedDependents implements AutoCloseable {
     public <T> CreatedBean<T> fresh(BeanDefinition<T> definition) {
         BeanDependencyResolver owner = owner();
         if (owner instanceof BeanDependencyGroup own) {
-            BeanRegistration<T> registration = own.createBeanRegistration(definition);
-            synchronized (this) {
-                created.add(registration);
-            }
-            return registration;
+            return own.createBeanRegistration(definition);
         }
         CreatedBean<T> registration = beanContext.createBeanRegistration(definition);
         hold(registration);
@@ -284,29 +273,34 @@ public final class OwnedDependents implements AutoCloseable {
     }
 
     /**
-     * Whether the owner created anything.
+     * Whether the owner created anything: it opened a group of its own, or holds what Micronaut does not own.
      *
      * @return Whether it did
      */
     public synchronized boolean isEmpty() {
-        return created.isEmpty() && held.isEmpty();
+        return group == null && held.isEmpty();
     }
 
     /**
-     * The registration of a dependent instance the owner created and has not destroyed yet.
+     * The registration of a dependent instance the owner created and has not destroyed yet: the one Micronaut
+     * holds for it, by the identity of the instance, or the one held here.
      *
      * @param instance The instance
      * @return The registration, or {@code null}
      */
-    public synchronized @Nullable CreatedBean<?> registrationOf(Object instance) {
-        for (BeanRegistration<?> registration : created) {
-            if (registration.bean() == instance) {
-                return registration;
+    public @Nullable CreatedBean<?> registrationOf(Object instance) {
+        BeanDependencyResolver owner = resolver != null ? resolver : currentGroup();
+        if (owner != null) {
+            BeanRegistration<Object> owned = owner.findRegistration(instance).orElse(null);
+            if (owned != null) {
+                return owned;
             }
         }
-        for (CreatedBean<?> registration : held) {
-            if (registration.bean() == instance) {
-                return registration;
+        synchronized (this) {
+            for (CreatedBean<?> registration : held) {
+                if (registration.bean() == instance) {
+                    return registration;
+                }
             }
         }
         return null;
@@ -319,35 +313,15 @@ public final class OwnedDependents implements AutoCloseable {
      * @return Whether the owner still had it, which it does not once it was destroyed
      */
     public boolean destroy(CreatedBean<?> registration) {
-        boolean owned;
         synchronized (this) {
-            owned = removeSame(created, registration);
-            if (!owned) {
-                if (removeSame(held, registration)) {
-                    registration.close();
-                    return true;
-                }
-                return false;
-            }
-        }
-        BeanDependencyResolver owner = resolver != null ? resolver : currentGroup();
-        if (owner == null) {
-            registration.close();
-        } else {
-            // an owner that no longer has it destroyed it already, as its own owner was destroyed
-            owner.destroy((BeanRegistration<?>) registration);
-        }
-        return true;
-    }
-
-    private static boolean removeSame(List<? extends CreatedBean<?>> registrations, CreatedBean<?> registration) {
-        for (java.util.Iterator<? extends CreatedBean<?>> it = registrations.iterator(); it.hasNext();) {
-            if (it.next() == registration) {
-                it.remove();
+            if (held.removeIf(one -> one == registration)) {
+                registration.close();
                 return true;
             }
         }
-        return false;
+        BeanDependencyResolver owner = resolver != null ? resolver : currentGroup();
+        // an owner that no longer has it destroyed it already, as its own owner was destroyed
+        return owner != null && registration instanceof BeanRegistration<?> owned && owner.destroy(owned);
     }
 
     /**
@@ -365,9 +339,6 @@ public final class OwnedDependents implements AutoCloseable {
             refused = false;
             releasing = List.copyOf(held);
             held.clear();
-            if (resolver == null) {
-                created.clear();
-            }
         }
         Throwable failure = null;
         // in the reverse of the order they were created in, as Micronaut destroys the dependents of a bean: one
@@ -404,18 +375,14 @@ public final class OwnedDependents implements AutoCloseable {
         return failure;
     }
 
-    private void keep(BeanRegistration<?> registration, boolean owned) {
-        if (!registration.hasOwnLifecycle()) {
+    /**
+     * Holds an instance created for the owner that Micronaut does not own.
+     */
+    private void keep(BeanRegistration<?> registration) {
+        if (registration.hasOwnLifecycle()) {
             // a bean of a scope is the scope's, a singleton the context's: only an instance created for the lookup
             // lives until its registration is closed
-            return;
-        }
-        synchronized (this) {
-            if (owned) {
-                created.add(registration);
-            } else {
-                held.add(registration);
-            }
+            hold(registration);
         }
     }
 
