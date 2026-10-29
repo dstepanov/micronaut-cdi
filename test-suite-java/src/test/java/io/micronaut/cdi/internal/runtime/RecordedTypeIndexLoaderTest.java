@@ -73,7 +73,8 @@ public class RecordedTypeIndexLoaderTest {
      */
     private static URLClassLoader deployment(Path root, String recordPackage, Class<?> argument) throws IOException {
         String typeName = SharedPayload.class.getName();
-        String recordName = TypeHierarchies.recordClassName(typeName, recordPackage);
+        // named as Micronaut names a record now, after the top-level class of the deployment that recorded the type
+        String recordName = TypeHierarchies.recordClassName(typeName, recordPackage, "Deployment");
         int lastDot = recordName.lastIndexOf('.');
         String packageName = recordName.substring(0, lastDot);
         String simpleName = recordName.substring(lastDot + 1);
