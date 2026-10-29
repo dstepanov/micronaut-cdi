@@ -298,9 +298,9 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      *
      * <p>Where none of those beans is a bean of the specification - none is of the class of the point, or none of
      * the ones that are qualifies - the point is left to Micronaut's rules among the beans of Micronaut's own
-     * ({@link Selection#MICRONAUT}, resolved by {@link Selection#micronautQualifier}): a bean of the specification
-     * the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its name or by
-     * being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
+     * ({@link Selection.Unselected#MICRONAUT}, resolved by {@link NonCdiBeanQualifier#forPoint}): a bean of the
+     * specification the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its
+     * name or by being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
      *
      * @param point The injection point
      * @return What it resolves to
@@ -329,7 +329,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             matching = matching(point, CdiQualifier.declared(point.getAnnotationMetadata()));
         } catch (IllegalArgumentException e) {
             // a type with a variable the declaring class gives a value the definition does not carry
-            return Selection.MICRONAUT;
+            return Selection.Unselected.MICRONAUT;
         }
         // the candidates of the class of the point as the bean context enumerates them, which the qualifier of
         // the specification is then applied to: the same as asking for the definitions with the qualifier
@@ -354,7 +354,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             }
         }
         if (!specification) {
-            return Selection.MICRONAUT;
+            return Selection.Unselected.MICRONAUT;
         }
         Set<Bean<?>> eligible = new LinkedHashSet<>();
         for (BeanDefinition<Object> definition : matching.filterQualified(Object.class, ofClass)) {
@@ -363,10 +363,11 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         if (micronaut && ofTheSpecification(eligible).isEmpty()) {
             // the beans of the specification of the class are not among the ones the qualifiers admit, and the
             // beans of Micronaut's own of it are left to Micronaut's rules
-            return Selection.MICRONAUT;
+            return Selection.Unselected.MICRONAUT;
         }
         Bean<?> selected = resolve(eligible);
-        return selected == null ? Selection.NONE : new Selection(((CdiBean<?>) selected).definition());
+        return selected == null ? Selection.Unselected.UNSATISFIED
+            : new Selection.Selected(((CdiBean<?>) selected).definition());
     }
 
     /**
@@ -1082,46 +1083,34 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     }
 
     /**
-     * What an injection point resolves to: the definition of the one bean the container selected, no bean at all,
-     * or whatever Micronaut's rules resolve among the beans of Micronaut's own.
+     * What an injection point the container resolves resolves to: the definition of the one bean the container
+     * selected ({@link Selected}), no bean at all ({@link Unselected#UNSATISFIED}), or whatever Micronaut's rules
+     * resolve among the beans of Micronaut's own ({@link Unselected#MICRONAUT}, by the qualifier
+     * {@link NonCdiBeanQualifier#forPoint}). A point the processor left unmarked is not one the container selects
+     * for at all, and has no selection.
      */
-    static final class Selection {
-        /**
-         * No bean the container selects satisfies the point.
-         */
-        static final Selection NONE = new Selection(null);
-        /**
-         * The point is resolved by Micronaut's rules among the beans of Micronaut's own.
-         */
-        static final Selection MICRONAUT = new Selection(null);
+    sealed interface Selection permits Selection.Selected, Selection.Unselected {
 
-        private final @Nullable BeanDefinition<?> definition;
-
-        private Selection(@Nullable BeanDefinition<?> definition) {
-            this.definition = definition;
+        /**
+         * The one bean the container selected.
+         *
+         * @param definition Its definition
+         */
+        record Selected(BeanDefinition<?> definition) implements Selection {
         }
 
         /**
-         * The definition of the bean selected.
-         *
-         * @return The definition, or {@code null} where there is none, or Micronaut's rules resolve the point
+         * No bean the container selected.
          */
-        @Nullable BeanDefinition<?> definition() {
-            return definition;
-        }
-
-        /**
-         * The qualifier Micronaut's rules resolve a point {@link #MICRONAUT} leaves to them by: the one Micronaut
-         * reads off the point, among the beans of Micronaut's own alone.
-         *
-         * @param point     The injection point
-         * @param qualifier The qualifier Micronaut handed over for the point, or {@code null} to read it off it
-         * @param <T>       The bean type
-         * @return The qualifier
-         */
-        static <T> io.micronaut.context.Qualifier<T> micronautQualifier(
-            Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
-            return NonCdiBeanQualifier.forPoint(point, qualifier);
+        enum Unselected implements Selection {
+            /**
+             * No bean the container selects satisfies the point.
+             */
+            UNSATISFIED,
+            /**
+             * The point is resolved by Micronaut's rules among the beans of Micronaut's own.
+             */
+            MICRONAUT
         }
     }
 }

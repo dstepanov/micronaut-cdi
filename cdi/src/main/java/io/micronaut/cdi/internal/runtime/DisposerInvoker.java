@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.aop.InterceptedProxy;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanDependencyGroup;
@@ -85,11 +86,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
         Disposer disposer = found;
         return event.withDependencies(dependencies -> {
-            if (disposer.staticMethod()) {
-                invokeStatic(disposer, bean, dependencies);
-            } else {
-                invoke(disposer, bean, dependencies);
-            }
+            invoke(disposer, bean, dependencies);
             return bean;
         });
     }
@@ -129,17 +126,10 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             disposer.booleanValue("publicMethod").orElse(false));
     }
 
-    private void invokeStatic(Disposer disposer, Object bean, BeanDependencyGroup dependencies) {
-        ExecutableMethod<?, ?> method = disposer.method();
-        int disposedParameter = disposer.disposedParameter();
-        Argument<?>[] arguments = method.getArguments();
-        Object[] parameters = new Object[arguments.length];
-        for (int i = 0; i < arguments.length; i++) {
-            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
-        }
-        invoke(method, null, parameters);
-    }
-
+    /**
+     * Invokes the disposer: its parameters are resolved first, then the instance it is invoked on, where it is not
+     * static.
+     */
     private void invoke(Disposer disposer, Object bean, BeanDependencyGroup dependencies) {
         ExecutableMethod<?, ?> method = disposer.method();
         int disposedParameter = disposer.disposedParameter();
@@ -148,10 +138,13 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         for (int i = 0; i < arguments.length; i++) {
             parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
-        Object host = resolveDefinition(disposer.declaring(), dependencies);
-        if (host instanceof InterceptedProxy<?> proxy && !disposer.publicMethod()) {
-            // A non-public disposer is invoked on the contextual target; public methods retain interception.
-            host = proxy.interceptedTarget();
+        Object host = null;
+        if (!disposer.staticMethod()) {
+            host = resolveDefinition(disposer.declaring(), dependencies);
+            if (host instanceof InterceptedProxy<?> proxy && !disposer.publicMethod()) {
+                // A non-public disposer is invoked on the contextual target; public methods retain interception.
+                host = proxy.interceptedTarget();
+            }
         }
         invoke(method, host, parameters);
     }
@@ -195,29 +188,26 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             container = beanContext.getBean(CdiBeanContainer.class);
             this.container = container;
         }
-        CdiBeanContainer.Selection selection = container.selectionFor(argument);
-        if (selection == CdiBeanContainer.Selection.MICRONAUT) {
+        Argument<Object> point = (Argument<Object>) argument;
+        return switch (container.selectionFor(argument)) {
+            case Selection.Selected selected -> {
+                BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
+                Argument<Object> askedAs = CdiInstance.askedAs(beanContext, point, definition);
+                // a dependent producer may satisfy it with null, which the disposal destroys as it does any other
+                // dependent; section 2.5.2.4 as for a field
+                yield CdiResolution.orPrimitiveDefault(
+                    dependencies.getBeanRegistration(definition, askedAs).bean(), argument);
+            }
+            case Selection.Unselected.UNSATISFIED -> {
+                if (argument.isNullable()) {
+                    yield null;
+                }
+                throw new UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
+            }
             // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own, as
             // at a bean's own point
-            return dependencies.getBean((Argument<Object>) argument,
-                CdiBeanContainer.Selection.micronautQualifier((Argument<Object>) argument, null));
-        }
-        BeanDefinition<Object> definition = (BeanDefinition<Object>) selection.definition();
-        if (definition == null) {
-            if (argument.isNullable()) {
-                return null;
-            }
-            throw new UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
-        }
-        Argument<Object> askedAs = CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition);
-        // a dependent producer may satisfy it with null, which the disposal destroys as it does any other dependent
-        Object bean = dependencies.getBeanRegistration(definition, askedAs).bean();
-        if (bean == null && argument.getType().isPrimitive()) {
-            // section 2.5.2.4: a producer that returns null satisfies a primitive parameter with its default value,
-            // as it does a field
-            return CdiResolutionCustomizer.primitiveDefaultOf(argument.getType());
-        }
-        return bean;
+            case Selection.Unselected.MICRONAUT -> dependencies.getBean(point, NonCdiBeanQualifier.forPoint(point, null));
+        };
     }
 
     /**

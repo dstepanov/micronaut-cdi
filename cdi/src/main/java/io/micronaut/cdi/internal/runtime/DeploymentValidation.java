@@ -18,6 +18,7 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
@@ -218,7 +219,7 @@ final class DeploymentValidation {
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
             if (container.beanContext().findBeanDefinition((Argument) argument,
-                CdiBeanContainer.Selection.micronautQualifier((Argument) argument, null)).isEmpty()) {
+                NonCdiBeanQualifier.forPoint((Argument) argument, null)).isEmpty()) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }
@@ -245,7 +246,7 @@ final class DeploymentValidation {
             return;
         }
         // what the point is resolved to as the bean is created
-        CdiBeanContainer.Selection selection;
+        Selection selection;
         try {
             selection = container.selectionFor(argument);
         } catch (AmbiguousResolutionException e) {
@@ -254,22 +255,21 @@ final class DeploymentValidation {
                 + e.getMessage(), e));
             return;
         }
-        if (selection == CdiBeanContainer.Selection.MICRONAUT) {
-            validateByMicronaut(definition, argument);
-            return;
-        }
-        BeanDefinition<?> resolved = selection.definition();
-        if (resolved == null) {
-            problems.add(new DeploymentException("The injection point " + argument + " of "
-                + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
-                + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
-            return;
-        }
-        String unproxyable = resolved.getAnnotationMetadata().stringValue(CdiUnproxyable.class).orElse(null);
-        if (unproxyable != null) {
-            problems.add(new DeploymentException("The injection point " + argument + " of "
-                + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
-                + unproxyable + " (CDI 4.1 section 5.4)"));
+        switch (selection) {
+            case Selection.Selected selected -> {
+                String unproxyable = selected.definition().getAnnotationMetadata()
+                    .stringValue(CdiUnproxyable.class).orElse(null);
+                if (unproxyable != null) {
+                    problems.add(new DeploymentException("The injection point " + argument + " of "
+                        + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
+                        + unproxyable + " (CDI 4.1 section 5.4)"));
+                }
+            }
+            case Selection.Unselected.UNSATISFIED ->
+                problems.add(new DeploymentException("The injection point " + argument + " of "
+                    + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
+                    + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+            case Selection.Unselected.MICRONAUT -> validateByMicronaut(definition, argument);
         }
     }
 }

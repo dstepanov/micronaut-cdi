@@ -17,9 +17,9 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -347,38 +347,33 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             // a provider of the application's own supplies it, as it does a field of the bean
             return CdiResolution.fromApplicationProvider(beanContext, declaring, argument);
         }
+        Argument<Object> point = (Argument<Object>) argument;
         BeanRegistration<Object> registration;
-        CdiBeanContainer.Selection selection =
-            CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())
-                ? container().selectionFor(argument) : null;
-        if (selection != null && selection != CdiBeanContainer.Selection.MICRONAUT) {
+        if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
+            // one Micronaut resolves itself, which the processor left unmarked - a lookup, the event metadata
+            registration = dependents.registration(point, Qualifiers.forArgument(point));
+        } else {
             // a parameter the processor marked is resolved as a bean's own and a disposer's are: among the beans of
             // its full declared type the container selects
-            BeanDefinition<Object> definition = (BeanDefinition<Object>) selection.definition();
-            if (definition == null) {
-                if (argument.isNullable()) {
-                    return null;
+            switch (container().selectionFor(argument)) {
+                case Selection.Selected selected -> {
+                    BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
+                    registration = dependents.registration(definition,
+                        CdiInstance.askedAs(beanContext, point, definition));
                 }
-                throw new UnsatisfiedResolutionException("No bean for observer parameter "
-                    + argument);
+                case Selection.Unselected.UNSATISFIED -> {
+                    if (argument.isNullable()) {
+                        return null;
+                    }
+                    throw new UnsatisfiedResolutionException("No bean for observer parameter " + argument);
+                }
+                case Selection.Unselected.MICRONAUT ->
+                    // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own
+                    registration = dependents.registration(point, NonCdiBeanQualifier.forPoint(point, null));
             }
-            registration = dependents.registration(definition,
-                CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition));
-        } else {
-            // one Micronaut resolves itself - a lookup, the event metadata - or one no bean of the specification is
-            // a candidate for: Micronaut's rules, among the beans of Micronaut's own where the point is marked
-            Qualifier<Object> qualifier = selection == null
-                ? (Qualifier<Object>) Qualifiers.<Object>forArgument(argument)
-                : CdiBeanContainer.Selection.micronautQualifier((Argument<Object>) argument, null);
-            registration = dependents.registration((Argument<Object>) argument, qualifier);
         }
-        Object bean = registration.bean();
-        if (bean == null && argument.getType().isPrimitive()) {
-            // section 2.5.2.4: a producer that returns null satisfies a primitive parameter with its default value,
-            // as it does a field
-            return CdiResolutionCustomizer.primitiveDefaultOf(argument.getType());
-        }
-        return bean;
+        // section 2.5.2.4, as for a field
+        return CdiResolution.orPrimitiveDefault(registration.bean(), argument);
     }
 
     @Override

@@ -102,6 +102,21 @@ public final class CdiResolution {
     }
 
     /**
+     * What a point resolved to, or the default value of its primitive type where it resolved to {@code null}:
+     * section 2.5.2.4 has a producer that returns null satisfy a primitive point with its default value.
+     *
+     * @param bean  What the point resolved to
+     * @param point The point
+     * @return The bean, or the default of the point's primitive type
+     */
+    static @Nullable Object orPrimitiveDefault(@Nullable Object bean, Argument<?> point) {
+        if (bean == null && point.getType().isPrimitive()) {
+            return CdiResolutionCustomizer.primitiveDefaultOf(point.getType());
+        }
+        return bean;
+    }
+
+    /**
      * Supplies a parameter of an observer or a disposer method from the {@code ResolveWith} provider of the
      * application's own it was marked with, the way Micronaut supplies a field or a parameter of a bean's own from
      * it: the provider is a bean of the context, handed a resolution of its own that starts at the bean declaring

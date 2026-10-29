@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.context.BeanInjectionProvider;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
@@ -47,29 +48,27 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
     @Override
     public <T> @Nullable T get(BeanResolutionContext resolutionContext, Argument<T> argument,
                                @Nullable Qualifier<T> qualifier, boolean nullable) {
-        CdiBeanContainer.Selection selection = container.selectionFor(argument);
-        if (selection == CdiBeanContainer.Selection.MICRONAUT) {
-            // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own, with
-            // the qualifier Micronaut read off the point
-            Qualifier<T> micronaut = CdiBeanContainer.Selection.micronautQualifier(argument, qualifier);
-            return nullable ? resolutionContext.findBean(argument, micronaut).orElse(null)
-                : resolutionContext.getBean(argument, micronaut);
-        }
-        BeanDefinition<T> definition = (BeanDefinition<T>) selection.definition();
-        if (definition == null) {
-            if (nullable) {
-                return null;
+        return switch (container.selectionFor(argument)) {
+            case Selection.Selected selected -> {
+                BeanDefinition<T> definition = (BeanDefinition<T>) selected.definition();
+                // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
+                // narrowing the candidates to it would become part of the key its scope holds the instance under
+                yield (T) CdiResolution.orPrimitiveDefault(resolutionContext.getBean(definition,
+                    CdiInstance.askedAs(resolutionContext.getContext(), argument, definition)), argument);
             }
-            throw new NoSuchBeanException(argument, qualifier);
-        }
-        // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
-        // narrowing the candidates to it would become part of the key its scope holds the instance under
-        T bean = resolutionContext.getBean(definition,
-            CdiInstance.askedAs(resolutionContext.getContext(), argument, definition));
-        if (bean == null && argument.getType().isPrimitive()) {
-            // section 2.5.2.4: a producer that returns null satisfies a primitive point with its default value
-            return (T) CdiResolutionCustomizer.primitiveDefaultOf(argument.getType());
-        }
-        return bean;
+            case Selection.Unselected.UNSATISFIED -> {
+                if (nullable) {
+                    yield null;
+                }
+                throw new NoSuchBeanException(argument, qualifier);
+            }
+            case Selection.Unselected.MICRONAUT -> {
+                // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own,
+                // with the qualifier Micronaut read off the point
+                Qualifier<T> micronaut = NonCdiBeanQualifier.forPoint(argument, qualifier);
+                yield nullable ? resolutionContext.findBean(argument, micronaut).orElse(null)
+                    : resolutionContext.getBean(argument, micronaut);
+            }
+        };
     }
 }
