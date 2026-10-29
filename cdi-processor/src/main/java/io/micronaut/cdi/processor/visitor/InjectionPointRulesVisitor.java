@@ -96,6 +96,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         // its own; a bean has nothing to resolve its variable, and an injection point of it is the definition
         // error of CDI 4.1 section 5.2.3, as is one declared anywhere else
         boolean genericClass = !element.getDeclaredGenericPlaceholders().isEmpty() && !declaresABean(element);
+        // a constructor's parameters are a bean's own injection points, held to the rules of the class
+        InjectionSiteRules constructorRules = InjectionSiteRules.ofBean(element, normalScoped, genericClass);
         int injectedConstructors = 0;
         for (ConstructorElement constructor : element.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {
             for (ParameterElement parameter : constructor.getParameters()) {
@@ -115,8 +117,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                         + "(section 3.9)", constructor);
                 }
                 for (ParameterElement parameter : constructor.getParameters()) {
-                    checkParameter(parameter, constructor, normalScoped, false, false, genericClass,
-                        element, null, context);
+                    checkParameter(parameter, constructor, constructorRules, context);
                 }
             }
         }
@@ -135,8 +136,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     // initialized rather than inject it
                     context.fail("An injected field may not be final (CDI 4.1 section 3.6)", field);
                 }
-                checkType(field.getGenericField(), field, normalScoped, false, false,
-                    genericClass || resolvedByTheBean(field, element), element, null, context);
+                checkType(field.getGenericField(), field, InjectionSiteRules.ofBean(element, normalScoped,
+                    genericClass || resolvedByTheBean(field, element)), context);
             }
         }
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
@@ -185,6 +186,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     }
                 }
             }
+            // what a produced bean is told of its injection point depends on the scope the producer declares,
+            // rather than on the scope of the class
+            InjectionSiteRules rules = new InjectionSiteRules(element,
+                producer ? isNormalScopedProducer(method, context) : normalScoped,
+                genericClass || resolvedByTheBean(method, element), disposer, observer, allowedMetadataType);
             for (ParameterElement parameter : method.getParameters()) {
                 if (parameter.hasDeclaredAnnotation(Cdi.DISPOSES)
                     || parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
@@ -193,16 +199,12 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     // an injection point
                     continue;
                 }
-                checkParameter(parameter, method, producer ? isNormalScopedProducer(method, context) : normalScoped,
-                    disposer, observer, genericClass || resolvedByTheBean(method, element), element, allowedMetadataType,
-                    context);
+                checkParameter(parameter, method, rules, context);
             }
         }
     }
 
-    private void checkParameter(ParameterElement parameter, MethodElement method, boolean normalScoped,
-                                boolean disposer, boolean observer, boolean genericClass,
-                                ClassElement declaring, @Nullable String allowedMetadataType,
+    private void checkParameter(ParameterElement parameter, MethodElement method, InjectionSiteRules rules,
                                 VisitorContext context) {
         String named = null;
         if (parameter.hasDeclaredAnnotation(AnnotationUtil.NAMED)) {
@@ -216,15 +218,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 + method.getDescription(true), parameter);
             return;
         }
-        checkType(parameter.getGenericType(), parameter, normalScoped, disposer, observer, genericClass,
-            declaring, allowedMetadataType, context);
+        checkType(parameter.getGenericType(), parameter, rules, context);
     }
 
-    private void checkType(ClassElement type, Element at, boolean normalScoped,
-                           boolean disposer, boolean observer, boolean genericClass,
-                           ClassElement declaring, @Nullable String allowedMetadataType,
-                           VisitorContext context) {
-        if (type.isGenericPlaceholder() && !genericClass) {
+    private void checkType(ClassElement type, Element at, InjectionSiteRules rules, VisitorContext context) {
+        if (type.isGenericPlaceholder() && !rules.typeVariablesAllowed()) {
             context.fail("An injection point whose declared type is a type variable is a definition error "
                 + "(section 2.5.2.1)", at);
             return;
@@ -234,8 +232,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 + "carries", at);
             return;
         }
-        checkMetadataInjection(type, at, declaring, allowedMetadataType, context);
-        if (!observer && "jakarta.enterprise.inject.spi.EventMetadata".equals(type.getName())) {
+        checkMetadataInjection(type, at, rules.declaring(), rules.allowedMetadataType(), context);
+        if (!rules.observer() && "jakarta.enterprise.inject.spi.EventMetadata".equals(type.getName())) {
             // the metadata of an event exists only while an observer method is being notified: everywhere
             // else there is no event to describe
             context.fail("EventMetadata can only be injected into an observer method's parameter "
@@ -243,10 +241,10 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return;
         }
         if (INJECTION_POINT.equals(type.getName())) {
-            if (normalScoped) {
+            if (rules.normalScoped()) {
                 context.fail("A bean of a normal scope outlives any one injection point and cannot be told "
                     + "which it is at (section 2.5.2.5)", at);
-            } else if (disposer) {
+            } else if (rules.disposer()) {
                 context.fail("A disposer method destroys its parameter rather than being injected anywhere, "
                     + "and has no injection point to be told of", at);
             }
@@ -399,5 +397,33 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         AnnotationValue<CdiScope> resolved =
             CdiScopeVisitor.scopeRecordOf(producer, context);
         return resolved != null && resolved.booleanValue("normal").orElse(false);
+    }
+
+    /**
+     * The rules the injection points of one site - a constructor, a field, a method - are held to.
+     *
+     * <p>A disposer and an observer stay two flags rather than one role: a method that declares both a disposed
+     * and an observed parameter is reported for that by the visitors that read them, and each rule here still
+     * applies to it.</p>
+     *
+     * @param declaring            The bean class the points are injection points of
+     * @param normalScoped         Whether the bean they are injected into lives in a normal scope, and outlives any
+     *                             one injection point: for a producer method, the scope it produces in
+     * @param typeVariablesAllowed Whether a point may be of a type variable, which a class extending a generic
+     *                             one resolves
+     * @param disposer             Whether the site is a disposer method
+     * @param observer             Whether the site is an observer method
+     * @param allowedMetadataType  The type besides the declaring class whose {@code Bean} metadata the site may be
+     *                             told: what a producer produces or a disposer disposes of
+     */
+    private record InjectionSiteRules(ClassElement declaring, boolean normalScoped, boolean typeVariablesAllowed,
+                                      boolean disposer, boolean observer, @Nullable String allowedMetadataType) {
+
+        /**
+         * The rules of a bean's own injection points: a constructor's parameters, a field.
+         */
+        static InjectionSiteRules ofBean(ClassElement declaring, boolean normalScoped, boolean typeVariablesAllowed) {
+            return new InjectionSiteRules(declaring, normalScoped, typeVariablesAllowed, false, false, null);
+        }
     }
 }
