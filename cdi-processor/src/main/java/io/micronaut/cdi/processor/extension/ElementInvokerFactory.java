@@ -17,6 +17,7 @@ package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -120,7 +121,7 @@ final class ElementInvokerFactory implements InvokerFactory {
                 }
             }
             // marked executable so that the compiled definition carries the method for the invocation to read
-            method.annotate(io.micronaut.context.annotation.Executable.class);
+            method.annotate(Executable.class);
             String[] parameterTypeNames = new String[parameters.length];
             boolean[] lookups = new boolean[parameters.length];
             for (int i = 0; i < parameters.length; i++) {

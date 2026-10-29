@@ -21,7 +21,9 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementModifier;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -46,9 +48,8 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
     private static final String EXPRESSION_LANGUAGE = "io.micronaut.cdi.el.CdiExpressionLanguage";
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
-        // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    public TypeElementQuery query() {
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -82,7 +83,7 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
                     .forEach(method -> method.annotate("io.micronaut.context.annotation.Executable"));
             }
         }
-        for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
+        for (MemberElement producer : SpecificationBeans.producersOf(element)) {
             nameIfAskedFor(producer, producer instanceof MethodElement method
                 ? defaultMethodName(method) : producer.getName());
         }

@@ -24,6 +24,7 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -77,12 +78,12 @@ final class ReflectiveAnnotatedParameter<X> implements AnnotatedParameter<X> {
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return new LinkedHashSet<>(java.util.List.of(parameter().getAnnotationsByType(annotationType)));
+        return new LinkedHashSet<>(List.of(parameter().getAnnotationsByType(annotationType)));
     }
 
     @Override
     public Set<Annotation> getAnnotations() {
-        return new LinkedHashSet<>(java.util.List.of(parameter().getAnnotations()));
+        return new LinkedHashSet<>(List.of(parameter().getAnnotations()));
     }
 
     @Override

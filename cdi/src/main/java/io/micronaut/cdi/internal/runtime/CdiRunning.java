@@ -39,7 +39,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @since 1.0
  */
 @Internal
-public final class CdiRunning {
+final class CdiRunning {
 
     private static final List<CdiBeanContainer> RUNNING = new CopyOnWriteArrayList<>();
 
@@ -59,7 +59,7 @@ public final class CdiRunning {
      *
      * @return The most recently started container, or {@code null} when none is running
      */
-    public static @Nullable CdiBeanContainer current() {
+    static @Nullable CdiBeanContainer current() {
         // one snapshot: a container going down on another thread must not turn the read into an index error
         Object[] running = RUNNING.toArray();
         return running.length == 0 ? null : (CdiBeanContainer) running[running.length - 1];

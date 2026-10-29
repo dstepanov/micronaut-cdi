@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -93,10 +94,10 @@ final class SyntheticBeanInfo implements BeanInfo {
     public Collection<AnnotationInfo> qualifiers() {
         List<AnnotationInfo> qualifiers = new ArrayList<>();
         qualifiers.add(new ElementAnnotationInfo(
-            AnnotationValue.builder("jakarta.enterprise.inject.Any").build(), context));
+            AnnotationValue.builder(Cdi.ANY).build(), context));
         if (bean.qualifiers().isEmpty()) {
             qualifiers.add(new ElementAnnotationInfo(
-                AnnotationValue.builder("jakarta.enterprise.inject.Default").build(), context));
+                AnnotationValue.builder(Cdi.DEFAULT).build(), context));
         }
         for (AnnotationValue<?> qualifier : bean.qualifiers()) {
             qualifiers.add(new ElementAnnotationInfo(qualifier, context));

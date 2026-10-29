@@ -24,6 +24,7 @@ import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.runtime.QualifierOverlay;
 import io.micronaut.cdi.internal.extension.ExtensionContexts;
+import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
@@ -56,6 +57,7 @@ import jakarta.enterprise.inject.spi.ProcessBeanAttributes;
 import jakarta.enterprise.inject.spi.ProcessInjectionTarget;
 import jakarta.enterprise.inject.spi.ProcessManagedBean;
 import jakarta.inject.Singleton;
+import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -313,7 +315,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
     private record Observer(Extension extension, Method method, int eventIndex, Argument<?> observed, int priority,
                             CdiBeanContainer container) {
 
-        private static final int DEFAULT_PRIORITY = jakarta.interceptor.Interceptor.Priority.APPLICATION + 500;
+        private static final int DEFAULT_PRIORITY = Interceptor.Priority.APPLICATION + 500;
 
         static List<Observer> of(Extension extension, CdiBeanContainer container) {
             List<Observer> found = new ArrayList<>();
@@ -378,8 +380,8 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
 
         boolean observes(Argument<?> eventType) {
-            io.micronaut.cdi.internal.runtime.RecordedTypeIndex index =
-                io.micronaut.cdi.internal.runtime.RecordedTypeIndex.of(container.beanContext());
+            RecordedTypeIndex index =
+                RecordedTypeIndex.of(container.beanContext());
             if (CdiAssignability.isEventTypeMatching(index, observed, eventType)) {
                 return true;
             }

@@ -3,6 +3,7 @@ package io.micronaut.cdi.test;
 import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.Destroyed;
 import jakarta.enterprise.event.Event;
@@ -68,6 +69,34 @@ class ShutdownDependenciesTest {
         void onDestroyed(@Observes @Destroyed(ApplicationScoped.class) Object event, Note note) {
             if (SEEN.contains("armed")) {
                 SEEN.add("destroyed observed");
+            }
+        }
+    }
+
+    @Dependent
+    public static class Ticket {
+        @PreDestroy
+        void destroyed() {
+            if (SEEN.contains("armed")) {
+                SEEN.add("ticket destroyed");
+            }
+        }
+    }
+
+    @Singleton
+    public static class BeforeDestroyedObserver {
+        @Inject
+        Instance<Ticket> tickets;
+
+        void onBeforeDestroyed(@Observes @BeforeDestroyed(ApplicationScoped.class) Object event) {
+            if (SEEN.contains("armed")) {
+                Instance.Handle<Ticket> handle = tickets.getHandle();
+                handle.get();
+                SEEN.add("before destroyed looked up a ticket");
+                handle.destroy();
+                SEEN.add("before destroyed destroyed the ticket");
+                tickets.get();
+                SEEN.add("before destroyed kept a ticket");
             }
         }
     }
@@ -143,6 +172,20 @@ class ShutdownDependenciesTest {
         int observed = SEEN.indexOf("destroyed observed");
         assertTrue(observed > 0, SEEN.toString());
         assertEquals(observed + 1, SEEN.indexOf("note destroyed"), SEEN.toString());
+    }
+
+    @Test
+    void anObserverOfTheApplicationContextAboutToBeDestroyedLooksUpAndDestroysDependents() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            SEEN.add("armed");
+        }
+        int lookedUp = SEEN.indexOf("before destroyed looked up a ticket");
+        assertTrue(lookedUp > 0, SEEN.toString());
+        // the one destroyed through its handle goes at once, the one kept with the lookup's owner as it goes
+        assertEquals(List.of("before destroyed looked up a ticket", "ticket destroyed",
+            "before destroyed destroyed the ticket", "before destroyed kept a ticket"),
+            SEEN.subList(lookedUp, lookedUp + 4), SEEN.toString());
+        assertEquals(2, SEEN.stream().filter("ticket destroyed"::equals).count(), SEEN.toString());
     }
 
     @Test

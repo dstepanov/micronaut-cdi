@@ -45,15 +45,6 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
         this.declaringMethod = declaringMethod;
     }
 
-    /**
-     * The Micronaut parameter this describes.
-     *
-     * @return The parameter element
-     */
-    public ParameterElement parameterElement() {
-        return element;
-    }
-
     @Override
     public String name() {
         return element.getName();

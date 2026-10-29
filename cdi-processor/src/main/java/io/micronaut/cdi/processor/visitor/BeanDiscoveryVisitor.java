@@ -20,6 +20,7 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -48,9 +49,8 @@ import io.micronaut.inject.visitor.VisitorContext;
 public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
-        // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    public TypeElementQuery query() {
+        return TypeElementQuery.onlyClass();
     }
 
     @Override

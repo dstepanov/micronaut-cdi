@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.lang.model.ast;
 
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import org.jspecify.annotations.Nullable;
@@ -33,6 +34,9 @@ import java.util.ServiceLoader;
  * the specification's language model would report of the source; every registered filter must agree for an
  * annotation to be reported.</p>
  *
+ * <p>A filter is instantiated once per class loader and asked by every compilation that loader serves, so it
+ * decides from its arguments alone and keeps no state between calls.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
@@ -48,10 +52,12 @@ public interface LanguageModelAnnotationFilter {
     boolean isReported(String annotationName, Place place);
 
     /**
-     * The registered filters, loaded once.
+     * The registered filters, loaded once per class loader of this interface and shared by every compilation it
+     * serves.
      *
      * @return The filters, possibly none
      */
+    @Internal
     static List<LanguageModelAnnotationFilter> registered() {
         return Registered.FILTERS;
     }
@@ -69,6 +75,7 @@ public interface LanguageModelAnnotationFilter {
     /**
      * Holds the loaded filters.
      */
+    @Internal
     final class Registered {
 
         private static final List<LanguageModelAnnotationFilter> FILTERS = ServiceLoader

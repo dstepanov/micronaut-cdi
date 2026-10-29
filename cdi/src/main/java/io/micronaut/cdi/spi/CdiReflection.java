@@ -22,6 +22,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -40,10 +42,10 @@ import java.util.Set;
  *
  * <p>The implementation reads annotations with Micronaut's {@code io.micronaut.reflection.ReflectionAnnotations}
  * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The three questions about generic types -
- * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked here because Micronaut has
- * no counterpart that keeps what they need: {@code ReflectionArguments.of(Type)} reads a wildcard as its bound and
- * a type variable as its first bound, and Micronaut has no utility for the parameterized type closure of a
- * class.</p>
+ * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked through this interface so
+ * that reading a class's generic signatures stays in the optional module: the type closure is Micronaut's
+ * {@code ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type))}, which keeps a wildcard a wildcard
+ * and a variable a variable.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -92,7 +94,7 @@ public interface CdiReflection {
      * @param arrayStops Whether an array and a primitive have no closure beyond themselves, as a bean type has
      * @return The closure, the type first
      */
-    java.util.List<java.lang.reflect.Type> typeClosureOf(java.lang.reflect.Type type, boolean arrayStops);
+    List<Type> typeClosureOf(Type type, boolean arrayStops);
 
     /**
      * A class as the type a bean of it has: itself where it declares no type variable, and its
@@ -101,7 +103,7 @@ public interface CdiReflection {
      * @param type The class
      * @return The type
      */
-    java.lang.reflect.Type declaredTypeOf(Class<?> type);
+    Type declaredTypeOf(Class<?> type);
 
     /**
      * The type of an event of the given runtime class that was fired as the given type (section 2.8.1): the
@@ -113,7 +115,7 @@ public interface CdiReflection {
      * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
      *                                  unresolved
      */
-    java.lang.reflect.Type eventTypeOf(Class<?> runtimeClass, java.lang.reflect.Type declaredType);
+    Type eventTypeOf(Class<?> runtimeClass, Type declaredType);
 
     /**
      * The member an injection point injects into.

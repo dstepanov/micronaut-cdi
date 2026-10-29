@@ -28,11 +28,10 @@ import java.lang.annotation.Target;
  * Records, on a method, that it is an observer method, and what about it the container needs in order to notify
  * it.
  *
- * <p>What the method observes is not recorded here. The parameter it observes carries its own type and its own
- * qualifiers, and Micronaut has already compiled both of those into the executable method it generated: reading
- * them off the parameter at runtime is reading what the author wrote, and recording them again would be a second
- * copy to keep in step with the first. What is recorded is only what cannot be read off the parameter — which
- * parameter it is, and the three things the observer annotation itself says.</p>
+ * <p>What is recorded is what the executable method Micronaut generated cannot say: which parameter is observed,
+ * the observed type as it was written - with the wildcards and type variables the compiled argument erases - and
+ * what the observer annotation and the observer's priority say. The qualifiers of the observed parameter are read
+ * off the parameter's compiled metadata.</p>
  *
  * <p>The method is executable, so that notifying an observer is a direct invocation of the executable method
  * Micronaut generated for it rather than a reflective one.</p>
@@ -46,6 +45,41 @@ import java.lang.annotation.Target;
 @Executable
 @Internal
 public @interface CdiObserver {
+
+    /**
+     * The name of the member {@link #observedParameter()}.
+     */
+    String OBSERVED_PARAMETER = "observedParameter";
+
+    /**
+     * The name of the member {@link #observedType()}.
+     */
+    String OBSERVED_TYPE = "observedType";
+
+    /**
+     * The name of the member {@link #async()}.
+     */
+    String ASYNC = "async";
+
+    /**
+     * The name of the member {@link #ifExists()}.
+     */
+    String IF_EXISTS = "ifExists";
+
+    /**
+     * The name of the member {@link #staticMethod()}.
+     */
+    String STATIC_METHOD = "staticMethod";
+
+    /**
+     * The name of the member {@link #during()}.
+     */
+    String DURING = "during";
+
+    /**
+     * The name of the member {@link #priority()}.
+     */
+    String PRIORITY = "priority";
 
     /**
      * The position of the parameter the method observes, since an observer method may take injected parameters

@@ -15,6 +15,10 @@
  */
 package io.micronaut.cdi.el;
 
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanDefinitionRegistry;
+import io.micronaut.el.resolver.ELResolvers;
+import jakarta.el.CompositeELResolver;
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;
@@ -26,6 +30,7 @@ import jakarta.el.VariableMapper;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -48,10 +53,10 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
     private final ExpressionFactory delegate;
     private final ELResolver beans;
-    private final io.micronaut.context.BeanContext beanContext;
+    private final BeanContext beanContext;
 
     CdiExpressionFactory(ExpressionFactory delegate, ELResolver beans,
-                         io.micronaut.context.BeanContext beanContext) {
+                         BeanContext beanContext) {
         this.delegate = delegate;
         this.beans = beans;
         this.beanContext = beanContext;
@@ -123,21 +128,21 @@ final class CdiExpressionFactory extends ExpressionFactory {
 
         private final ELContext wrapped;
         private final ELResolver resolver;
-        private final io.micronaut.context.BeanContext beanContext;
+        private final BeanContext beanContext;
         @Nullable
         private final CdiEvaluation evaluation;
 
         BeanReachingContext(ELContext wrapped, ELResolver beans,
-                            io.micronaut.context.BeanContext beanContext, @Nullable CdiEvaluation evaluation) {
+                            BeanContext beanContext, @Nullable CdiEvaluation evaluation) {
             this.wrapped = wrapped;
             this.beanContext = beanContext;
             this.evaluation = evaluation;
             // the container's names first, then everything Micronaut's own chain resolves — which is what
             // reaches a bean's executable methods — and finally whatever the caller's context adds
-            this.resolver = new jakarta.el.CompositeELResolver();
-            ((jakarta.el.CompositeELResolver) resolver).add(beans);
-            ((jakarta.el.CompositeELResolver) resolver).add(io.micronaut.el.resolver.ELResolvers.standard());
-            ((jakarta.el.CompositeELResolver) resolver).add(wrapped.getELResolver());
+            this.resolver = new CompositeELResolver();
+            ((CompositeELResolver) resolver).add(beans);
+            ((CompositeELResolver) resolver).add(ELResolvers.standard());
+            ((CompositeELResolver) resolver).add(wrapped.getELResolver());
         }
 
         @Override
@@ -156,7 +161,7 @@ final class CdiExpressionFactory extends ExpressionFactory {
         }
 
         @Override
-        @org.jspecify.annotations.Nullable
+        @Nullable
         public Object getContext(Class<?> key) {
             if (key == CdiEvaluation.class) {
                 // the evaluation this context was made for, which is where the resolver of the container's
@@ -169,8 +174,8 @@ final class CdiExpressionFactory extends ExpressionFactory {
             }
             // resolving a method through the executable metadata a bean already carries needs the context that
             // compiled it, which the resolver reads from here rather than from a static holder
-            if (key == io.micronaut.context.BeanDefinitionRegistry.class
-                || key == io.micronaut.context.BeanContext.class) {
+            if (key == BeanDefinitionRegistry.class
+                || key == BeanContext.class) {
                 return beanContext;
             }
             return null;
@@ -182,12 +187,12 @@ final class CdiExpressionFactory extends ExpressionFactory {
         }
 
         @Override
-        public java.util.Locale getLocale() {
+        public Locale getLocale() {
             return wrapped.getLocale();
         }
 
         @Override
-        public void setLocale(java.util.Locale locale) {
+        public void setLocale(Locale locale) {
             wrapped.setLocale(locale);
         }
     }

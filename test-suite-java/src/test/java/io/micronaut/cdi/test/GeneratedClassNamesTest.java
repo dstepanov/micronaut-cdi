@@ -18,9 +18,9 @@ package io.micronaut.cdi.test;
 import io.micronaut.annotation.processing.test.JavaParser;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.JavaFileObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -90,18 +90,16 @@ class GeneratedClassNamesTest {
                 }
             }
             """;
-        List<String> classes = new ArrayList<>();
+        Set<String> classes;
         try (JavaParser parser = new JavaParser()) {
-            for (JavaFileObject file : parser.generate("collide.Payload", source)) {
-                if (file.getKind() == JavaFileObject.Kind.CLASS) {
-                    String name = file.getName();
-                    classes.add(name.substring(name.indexOf("/CLASS_OUTPUT/") + "/CLASS_OUTPUT/".length(),
-                        name.length() - ".class".length()).replace('/', '.'));
-                }
-            }
+            classes = CompiledClasses.of(parser.generate("collide.Payload", source)).names();
         }
-        assertTrue(classes.contains("collide.$Payload$TypeHierarchy"), "the payload is recorded: " + classes);
-        assertTrue(classes.contains("collide.$$java.lang.$String$TypeHierarchy"),
+        // a record is named by Micronaut after the type and the class that recorded it; read the type back from the name
+        assertTrue(classes.stream().anyMatch(name -> name.startsWith("collide.")
+                && "collide.Payload".equals(io.micronaut.core.type.TypeHierarchies.recordedTypeName(name))),
+            "the payload is recorded: " + classes);
+        assertTrue(classes.stream().anyMatch(name -> name.startsWith("collide.")
+                && "java.lang.String".equals(io.micronaut.core.type.TypeHierarchies.recordedTypeName(name))),
             "the class of the JDK it names is recorded in its package: " + classes);
         // the extensions of the suite register qualifiers, which a record of the deployment holds: one, not one per
         // package of recorded hierarchies
@@ -114,14 +112,9 @@ class GeneratedClassNamesTest {
         String className = source.substring(source.indexOf("public class ") + "public class ".length(),
             source.indexOf(" {")).trim();
         try (JavaParser parser = compilation) {
-            for (JavaFileObject file : parser.generate("collide." + className, source)) {
-                if (file.getKind() == JavaFileObject.Kind.CLASS) {
-                    String name = file.getName();
-                    name = name.substring(name.indexOf("/CLASS_OUTPUT/") + "/CLASS_OUTPUT/".length(),
-                        name.length() - ".class".length()).replace('/', '.');
-                    if (name.startsWith(GENERATED)) {
-                        generated.add(name);
-                    }
+            for (String name : CompiledClasses.of(parser.generate("collide." + className, source)).names()) {
+                if (name.startsWith(GENERATED)) {
+                    generated.add(name);
                 }
             }
         }

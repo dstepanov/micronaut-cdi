@@ -18,7 +18,10 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
+import io.micronaut.context.exceptions.NoSuchBeanException;
+import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -28,9 +31,12 @@ import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.interceptor.Interceptor;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The validation of a deployment as the container starts: what the processor could not judge while one class
@@ -124,12 +130,12 @@ final class DeploymentValidation {
         } catch (IllegalStateException e) {
             problems.add(new DeploymentException(e.getMessage(), e));
             return;
-        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
+        } catch (NonUniqueBeanException e) {
             // a subclass of the one below, and a problem rather than the absence of the declaring bean
             problems.add(new DeploymentException("The bean that declares the disposer method of "
                 + definition.getBeanType().getName() + " is not one bean: " + e.getMessage(), e));
             return;
-        } catch (io.micronaut.context.exceptions.NoSuchBeanException e) {
+        } catch (NoSuchBeanException e) {
             // the bean that declares it is not one of the deployment, and neither is what it produces
             return;
         }
@@ -154,7 +160,7 @@ final class DeploymentValidation {
             if (observer == null) {
                 continue;
             }
-            int observed = observer.intValue("observedParameter").orElse(0);
+            int observed = observer.intValue(CdiObserver.OBSERVED_PARAMETER).orElse(0);
             Argument<?>[] arguments = method.getArguments();
             for (int i = 0; i < arguments.length; i++) {
                 if (i != observed) {
@@ -173,7 +179,7 @@ final class DeploymentValidation {
         // the rules of the specification
         return CdiResolution.isBeanOfTheSpecification(definition)
             && !definition.hasAnnotation(CdiBuiltIn.class)
-            && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+            && !definition.getAnnotationMetadata().hasAnnotation(Interceptor.class);
     }
 
     /**
@@ -181,14 +187,14 @@ final class DeploymentValidation {
      * name of the form {@code x.y} where {@code x} is the name of another bean, is a deployment problem.
      */
     private void validateNames(List<CdiBean<?>> beans) {
-        java.util.Map<String, List<BeanDefinition<?>>> names = new java.util.LinkedHashMap<>();
+        Map<String, List<BeanDefinition<?>>> names = new LinkedHashMap<>();
         for (CdiBean<?> bean : beans) {
             String name = bean.getName();
             if (name != null && !name.isEmpty() && isOfTheSpecification(bean.definition())) {
                 names.computeIfAbsent(name, key -> new ArrayList<>()).add(bean.definition());
             }
         }
-        for (java.util.Map.Entry<String, List<BeanDefinition<?>>> entry : names.entrySet()) {
+        for (Map.Entry<String, List<BeanDefinition<?>>> entry : names.entrySet()) {
             List<BeanDefinition<?>> narrowed = CdiResolution.narrow(entry.getValue());
             if (narrowed.size() > 1) {
                 problems.add(new DeploymentException("The name " + entry.getKey()
@@ -213,11 +219,11 @@ final class DeploymentValidation {
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
             if (container.beanContext().findBeanDefinition((Argument) argument,
-                CdiBeanContainer.Selection.micronautQualifier((Argument) argument, null)).isEmpty()) {
+                NonCdiBeanQualifier.forPoint((Argument) argument, null)).isEmpty()) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }
-        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
+        } catch (NonUniqueBeanException e) {
             problems.add(new DeploymentException("The injection point " + argument + " of "
                 + definition.getBeanType().getName() + " is ambiguous (CDI 4.1 section 5.2.2): "
                 + e.getMessage(), e));
@@ -240,7 +246,7 @@ final class DeploymentValidation {
             return;
         }
         // what the point is resolved to as the bean is created
-        CdiBeanContainer.Selection selection;
+        Selection selection;
         try {
             selection = container.selectionFor(argument);
         } catch (AmbiguousResolutionException e) {
@@ -249,22 +255,21 @@ final class DeploymentValidation {
                 + e.getMessage(), e));
             return;
         }
-        if (selection == CdiBeanContainer.Selection.MICRONAUT) {
-            validateByMicronaut(definition, argument);
-            return;
-        }
-        BeanDefinition<?> resolved = selection.definition();
-        if (resolved == null) {
-            problems.add(new DeploymentException("The injection point " + argument + " of "
-                + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
-                + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
-            return;
-        }
-        String unproxyable = resolved.getAnnotationMetadata().stringValue(CdiUnproxyable.class).orElse(null);
-        if (unproxyable != null) {
-            problems.add(new DeploymentException("The injection point " + argument + " of "
-                + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
-                + unproxyable + " (CDI 4.1 section 5.4)"));
+        switch (selection) {
+            case Selection.Selected selected -> {
+                String unproxyable = selected.definition().getAnnotationMetadata()
+                    .stringValue(CdiUnproxyable.class).orElse(null);
+                if (unproxyable != null) {
+                    problems.add(new DeploymentException("The injection point " + argument + " of "
+                        + definition.getBeanType().getName() + " resolves to a bean that cannot be proxied: "
+                        + unproxyable + " (CDI 4.1 section 5.4)"));
+                }
+            }
+            case Selection.Unselected.UNSATISFIED ->
+                problems.add(new DeploymentException("The injection point " + argument + " of "
+                    + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
+                    + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+            case Selection.Unselected.MICRONAUT -> validateByMicronaut(definition, argument);
         }
     }
 }

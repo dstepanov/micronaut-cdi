@@ -15,22 +15,27 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.interceptor.metadata.InterceptionKind;
+import io.micronaut.interceptor.spi.InterceptorBindings;
 import io.micronaut.interceptor.spi.InterceptorMethods;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
+import jakarta.interceptor.InterceptorBinding;
 import jakarta.interceptor.InvocationContext;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -75,15 +80,15 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
      *
      * @return The bindings
      */
-    java.util.List<CdiQualifier> bindings() {
+    List<CdiQualifier> bindings() {
         AnnotationMetadata metadata = definition.getAnnotationMetadata();
-        java.util.List<CdiQualifier> bindings = new java.util.ArrayList<>(2);
-        for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
+        List<CdiQualifier> bindings = new ArrayList<>(2);
+        for (String name : metadata.getAnnotationNamesByStereotype(InterceptorBinding.class)) {
             if (!isBindingType(CompiledAnnotationTypes.of(beanContext), metadata, name)) {
                 continue;
             }
             // every occurrence of a repeatable binding, each of which the chains are resolved by
-            java.util.List<AnnotationValue<Annotation>> occurrences = metadata.getAnnotationValuesByName(name);
+            List<AnnotationValue<Annotation>> occurrences = metadata.getAnnotationValuesByName(name);
             if (!occurrences.isEmpty()) {
                 for (AnnotationValue<Annotation> occurrence : occurrences) {
                     bindings.add(CdiQualifier.ofCompiled(metadata, occurrence));
@@ -104,8 +109,8 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
      *
      * @return The recorded bindings
      */
-    io.micronaut.interceptor.spi.InterceptorBindings recordedBindings() {
-        return io.micronaut.interceptor.spi.InterceptorBindings.of(definition);
+    InterceptorBindings recordedBindings() {
+        return InterceptorBindings.of(definition);
     }
 
     private static boolean isBindingType(CompiledAnnotationTypes types, AnnotationMetadata metadata, String name) {
@@ -114,10 +119,10 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
             return recorded;
         }
         Class<? extends Annotation> type = metadata.getAnnotationType(name).orElse(null);
-        return type != null && io.micronaut.cdi.spi.CdiReflection.require(types.beanContext(),
+        return type != null && CdiReflection.require(types.beanContext(),
             "Whether " + name + ", an annotation the application was "
             + "not compiled with as an interceptor binding, is one")
-            .isAnnotated(type, jakarta.interceptor.InterceptorBinding.class);
+            .isAnnotated(type, InterceptorBinding.class);
     }
 
     @Override

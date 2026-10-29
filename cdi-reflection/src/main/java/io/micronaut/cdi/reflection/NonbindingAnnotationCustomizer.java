@@ -22,6 +22,7 @@ import jakarta.enterprise.util.Nonbinding;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public final class NonbindingAnnotationCustomizer implements ReflectionAnnotatio
     private static final ClassValue<String[]> MARKED = new ClassValue<>() {
         @Override
         protected String[] computeValue(Class<?> type) {
-            List<String> marked = new java.util.ArrayList<>(1);
+            List<String> marked = new ArrayList<>(1);
             for (Method member : type.getDeclaredMethods()) {
                 if (member.isAnnotationPresent(Nonbinding.class)) {
                     marked.add(member.getName());

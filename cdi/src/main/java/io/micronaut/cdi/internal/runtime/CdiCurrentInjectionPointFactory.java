@@ -20,8 +20,10 @@ import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.InjectionPoint;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Builds the {@code InjectionPoint} of section 2.5.2.5: a dependent bean may be told where it was injected.
@@ -37,7 +39,7 @@ import java.util.Iterator;
  * @since 1.0
  */
 @Internal
-public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFactory<InjectionPoint> {
+public final class CdiCurrentInjectionPointFactory extends AbstractCdiInjectionPointBeanDefinition<InjectionPoint> {
 
     public CdiCurrentInjectionPointFactory() {
         super(true);
@@ -49,17 +51,17 @@ public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFact
     }
 
     @Override
-    public java.util.List<Argument<?>> getTypeArguments() {
+    public List<Argument<?>> getTypeArguments() {
         // unlike the event and the lookup, the injection point metadata is not parameterized at all
-        return java.util.List.of();
+        return List.of();
     }
 
     @Override
-    @org.jspecify.annotations.Nullable
+    @Nullable
     protected InjectionPoint build(BeanResolutionContext resolutionContext,
                                    BeanContext context,
                                    Argument<?> type,
-                                   java.util.List<CdiQualifier> qualifiers) {
+                                   List<CdiQualifier> qualifiers) {
         Iterator<BeanResolutionContext.Segment<?, ?>> segments = resolutionContext.getPath().iterator();
         if (segments.hasNext()) {
             // the first segment is this metadata's own injection into the bean being created; the ones after

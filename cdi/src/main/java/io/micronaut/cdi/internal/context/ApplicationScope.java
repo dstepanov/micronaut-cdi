@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.context;
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
+import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanIdentifier;
@@ -51,8 +52,8 @@ public final class ApplicationScope extends AbstractConcurrentCustomScope<CdiApp
     }
 
     @Override
-    protected <T> io.micronaut.context.scope.CreatedBean<T> doCreate(
-        io.micronaut.context.scope.BeanCreationContext<T> creationContext) {
+    protected <T> CreatedBean<T> doCreate(
+        BeanCreationContext<T> creationContext) {
         // section 2.5.6: the request context is active during the @PostConstruct callback of any bean, and an
         // application scoped bean is created lazily, wherever its proxy was first reached through
         return requestScope.duringCreation(() -> super.doCreate(creationContext));

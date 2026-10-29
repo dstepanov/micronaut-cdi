@@ -16,6 +16,8 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
+import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -23,17 +25,30 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
+import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
+import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
+import jakarta.enterprise.inject.build.compatible.spi.ParameterConfig;
 import jakarta.enterprise.inject.build.compatible.spi.ScannedClasses;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.declarations.MethodInfo;
+import jakarta.enterprise.lang.model.declarations.ParameterInfo;
+import jakarta.enterprise.lang.model.types.Type;
+import jakarta.enterprise.lang.model.types.TypeVariable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -61,29 +76,29 @@ import java.util.function.Predicate;
 public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations {
 
     private final Map<String, Map<String, List<AnnotationValue<?>>>> memberAnnotations =
-        new java.util.LinkedHashMap<>();
-    private final java.util.Set<String> scanned = new java.util.LinkedHashSet<>();
-    private final java.util.Set<String> registeredQualifiers = new java.util.LinkedHashSet<>();
-    private final Map<String, List<String>> contexts = new java.util.LinkedHashMap<>();
-    private final Map<String, Boolean> normalContexts = new java.util.LinkedHashMap<>();
+        new LinkedHashMap<>();
+    private final Set<String> scanned = new LinkedHashSet<>();
+    private final Set<String> registeredQualifiers = new LinkedHashSet<>();
+    private final Map<String, List<String>> contexts = new LinkedHashMap<>();
+    private final Map<String, Boolean> normalContexts = new LinkedHashMap<>();
     private final Map<String, List<AnnotationValue<?>>> metaAnnotations = new LinkedHashMap<>();
     /**
      * The classes the compiler visited, by name; those of the compilation in the order it visited them; those the
      * registration phase has not been told about yet; and those it has.
      */
-    private final java.util.Set<String> visited = new java.util.HashSet<>();
+    private final Set<String> visited = new HashSet<>();
     private final List<ClassElement> contributors = new ArrayList<>();
     private final List<ClassElement> unregistered = new ArrayList<>();
-    private final java.util.Set<String> registered = new java.util.HashSet<>();
+    private final Set<String> registered = new HashSet<>();
     private boolean roundFinished;
-    private @org.jspecify.annotations.Nullable VisitorContext context;
+    private @Nullable VisitorContext context;
 
     /**
      * The annotations the extensions made qualifiers of.
      *
      * @return The annotation names
      */
-    public java.util.Set<String> registeredQualifiers() {
+    public Set<String> registeredQualifiers() {
         return registeredQualifiers;
     }
 
@@ -103,7 +118,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      *
      * @return The class names
      */
-    public java.util.Set<String> scannedClasses() {
+    public Set<String> scannedClasses() {
         return scanned;
     }
 
@@ -210,7 +225,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
     @Override
     public ClassConfig addQualifier(Class<? extends Annotation> annotation) {
-        return register(annotation, "jakarta.inject.Qualifier");
+        return register(annotation, Cdi.QUALIFIER);
     }
 
     @Override
@@ -220,7 +235,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
     @Override
     public ClassConfig addStereotype(Class<? extends Annotation> annotation) {
-        return register(annotation, "jakarta.enterprise.inject.Stereotype");
+        return register(annotation, Cdi.STEREOTYPE);
     }
 
     @Override
@@ -235,7 +250,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
                            Class<? extends AlterableContext> contextClass) {
         // whether the scope is normal is what its annotation says, read from the compilation's view of it
         boolean isNormal = declarationOf(scopeAnnotation.getName())
-            .map(scope -> scope.hasDeclaredAnnotation("jakarta.enterprise.context.NormalScope"))
+            .map(scope -> scope.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE))
             .orElse(false);
         registerContext(scopeAnnotation, isNormal, contextClass);
     }
@@ -261,7 +276,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         if (isNormal) {
             annotations.add(AnnotationValue.builder("io.micronaut.runtime.context.scope.ScopedProxy").build());
         }
-        annotations.add(io.micronaut.cdi.processor.CdiScopes.recordOf(scopeName, isNormal));
+        annotations.add(CdiScopes.recordOf(scopeName, isNormal));
         normalContexts.put(scopeName, isNormal);
     }
 
@@ -286,20 +301,20 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         return metaAnnotations.isEmpty() && scanned.isEmpty();
     }
 
-    private java.util.Optional<ClassElement> declarationOf(String name) {
+    private Optional<ClassElement> declarationOf(String name) {
         VisitorContext compilation = context;
-        return compilation == null ? java.util.Optional.empty() : compilation.getClassElement(name);
+        return compilation == null ? Optional.empty() : compilation.getClassElement(name);
     }
 
     private ClassConfig register(Class<? extends Annotation> annotation, String metaAnnotation) {
-        if ("jakarta.inject.Qualifier".equals(metaAnnotation)) {
+        if (Cdi.QUALIFIER.equals(metaAnnotation)) {
             registeredQualifiers.add(annotation.getName());
         }
         List<AnnotationValue<?>> annotations = metaAnnotations
             .computeIfAbsent(annotation.getName(), name -> new ArrayList<>());
         annotations.add(AnnotationValue.builder(metaAnnotation).build());
         return new Deferred(annotation.getName(), annotations, memberNamesOf(annotation.getName()),
-            memberAnnotations.computeIfAbsent(annotation.getName(), name -> new java.util.LinkedHashMap<>()));
+            memberAnnotations.computeIfAbsent(annotation.getName(), name -> new LinkedHashMap<>()));
     }
 
     /**
@@ -329,8 +344,8 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      *
      * @return The class names
      */
-    public java.util.Set<String> describedClassNames() {
-        java.util.Set<String> names = new java.util.LinkedHashSet<>(metaAnnotations.keySet());
+    public Set<String> describedClassNames() {
+        Set<String> names = new LinkedHashSet<>(metaAnnotations.keySet());
         names.addAll(memberAnnotations.keySet());
         names.addAll(contexts.keySet());
         return names;
@@ -390,16 +405,16 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         }
 
         @Override
-        public Collection<jakarta.enterprise.inject.build.compatible.spi.MethodConfig> constructors() {
+        public Collection<MethodConfig> constructors() {
             throw membersAreNotRead();
         }
 
         @Override
-        public Collection<jakarta.enterprise.inject.build.compatible.spi.MethodConfig> methods() {
+        public Collection<MethodConfig> methods() {
             // the annotation is registered during discovery, before any class is visited, so its members are
             // the ones the compilation's view of the interface declares: what an extension adds to them is
             // recorded and applied when the annotation type comes past the compiler
-            List<jakarta.enterprise.inject.build.compatible.spi.MethodConfig> configs = new ArrayList<>();
+            List<MethodConfig> configs = new ArrayList<>();
             for (String member : memberNames) {
                 configs.add(new DeferredMethod(member,
                     memberAnnotations.computeIfAbsent(member, name -> new ArrayList<>())));
@@ -408,7 +423,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         }
 
         @Override
-        public Collection<jakarta.enterprise.inject.build.compatible.spi.FieldConfig> fields() {
+        public Collection<FieldConfig> fields() {
             throw membersAreNotRead();
         }
 
@@ -426,22 +441,22 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      * @param annotations What to add to it
      */
     private record DeferredMethod(String name, List<AnnotationValue<?>> annotations)
-        implements jakarta.enterprise.inject.build.compatible.spi.MethodConfig {
+        implements MethodConfig {
 
         @Override
-        public jakarta.enterprise.lang.model.declarations.MethodInfo info() {
+        public MethodInfo info() {
             return new DeferredMethodInfo(name);
         }
 
         @Override
-        public jakarta.enterprise.inject.build.compatible.spi.MethodConfig addAnnotation(
+        public MethodConfig addAnnotation(
             Class<? extends Annotation> annotationType) {
             annotations.add(AnnotationValue.builder(annotationType.getName()).build());
             return this;
         }
 
         @Override
-        public jakarta.enterprise.inject.build.compatible.spi.MethodConfig addAnnotation(AnnotationInfo annotation) {
+        public MethodConfig addAnnotation(AnnotationInfo annotation) {
             if (annotation instanceof ElementAnnotationInfo info) {
                 annotations.add(info.annotationValue());
             } else {
@@ -451,26 +466,26 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         }
 
         @Override
-        public jakarta.enterprise.inject.build.compatible.spi.MethodConfig addAnnotation(Annotation annotation) {
+        public MethodConfig addAnnotation(Annotation annotation) {
             annotations.add(AnnotationValue.of(annotation));
             return this;
         }
 
         @Override
-        public jakarta.enterprise.inject.build.compatible.spi.MethodConfig removeAnnotation(
+        public MethodConfig removeAnnotation(
             Predicate<AnnotationInfo> predicate) {
             throw new UnsupportedOperationException("An annotation cannot be taken off a member that has not "
                 + "been compiled yet");
         }
 
         @Override
-        public jakarta.enterprise.inject.build.compatible.spi.MethodConfig removeAllAnnotations() {
+        public MethodConfig removeAllAnnotations() {
             throw new UnsupportedOperationException("An annotation cannot be taken off a member that has not "
                 + "been compiled yet");
         }
 
         @Override
-        public List<jakarta.enterprise.inject.build.compatible.spi.ParameterConfig> parameters() {
+        public List<ParameterConfig> parameters() {
             return List.of();
         }
     }
@@ -480,7 +495,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      *
      * @param name The member's name
      */
-    private record DeferredMethodInfo(String name) implements jakarta.enterprise.lang.model.declarations.MethodInfo {
+    private record DeferredMethodInfo(String name) implements MethodInfo {
 
         @Override
         public String name() {
@@ -488,27 +503,27 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         }
 
         @Override
-        public jakarta.enterprise.lang.model.types.Type returnType() {
+        public Type returnType() {
             throw notCompiledYet();
         }
 
         @Override
-        public jakarta.enterprise.lang.model.types.Type receiverType() {
+        public Type receiverType() {
             throw notCompiledYet();
         }
 
         @Override
-        public List<jakarta.enterprise.lang.model.declarations.ParameterInfo> parameters() {
+        public List<ParameterInfo> parameters() {
             return List.of();
         }
 
         @Override
-        public List<jakarta.enterprise.lang.model.types.Type> throwsTypes() {
+        public List<Type> throwsTypes() {
             return List.of();
         }
 
         @Override
-        public List<jakarta.enterprise.lang.model.types.TypeVariable> typeParameters() {
+        public List<TypeVariable> typeParameters() {
             return List.of();
         }
 
@@ -534,11 +549,11 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
         @Override
         public int modifiers() {
-            return java.lang.reflect.Modifier.PUBLIC | java.lang.reflect.Modifier.ABSTRACT;
+            return Modifier.PUBLIC | Modifier.ABSTRACT;
         }
 
         @Override
-        public jakarta.enterprise.lang.model.declarations.ClassInfo declaringClass() {
+        public ClassInfo declaringClass() {
             throw notCompiledYet();
         }
 
@@ -553,7 +568,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         }
 
         @Override
-        public <T extends Annotation> @org.jspecify.annotations.Nullable AnnotationInfo annotation(Class<T> annotationType) {
+        public <T extends Annotation> @Nullable AnnotationInfo annotation(Class<T> annotationType) {
             return null;
         }
 

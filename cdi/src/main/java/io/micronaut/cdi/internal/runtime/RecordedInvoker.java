@@ -16,14 +16,19 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.ProxyBeanDefinition;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.invoke.Invoker;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * One invoker an extension built (CDI 4.1, chapter 7), read from the record the registration phase wrote, and
@@ -76,7 +81,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         boolean[] lookups = record.booleanValues("argumentLookups");
         if (lookups.length != parameterTypes.length) {
             // an array of nothing but false is not written
-            lookups = java.util.Arrays.copyOf(lookups, parameterTypes.length);
+            lookups = Arrays.copyOf(lookups, parameterTypes.length);
         }
         return new RecordedInvoker(
             beanContext,
@@ -130,7 +135,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                 // resolved the way the specification's lookup resolves — the @Default bean of the class, by
                 // the rules of typesafe resolution — rather than by Micronaut's own null-qualifier rules
                 @SuppressWarnings("unchecked")
-                Object looked = lookup.selectArgument((Argument<Object>) Argument.of(beanClass), java.util.List.of()).get();
+                Object looked = lookup.selectArgument((Argument<Object>) Argument.of(beanClass), List.of()).get();
                 target = looked;
             } else {
                 if (instance == null) {
@@ -180,10 +185,10 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             method = executable(definition);
             cachedTarget = new Target(definition, method);
         } catch (IllegalStateException e) {
-            throw new jakarta.enterprise.inject.spi.DeploymentException(
+            throw new DeploymentException(
                 "The invoker of " + beanClassName + "#" + methodName + " names a class that is not there", e);
-        } catch (io.micronaut.context.exceptions.NonUniqueBeanException e) {
-            throw new jakarta.enterprise.inject.spi.DeploymentException(
+        } catch (NonUniqueBeanException e) {
+            throw new DeploymentException(
                 "The invoker of " + beanClassName + "#" + methodName + " names a class of more than one bean", e);
         }
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
@@ -203,11 +208,11 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         CdiInstance<?> selected = lookup.selectArgument(argument,
             CdiQualifier.declared(argument.getAnnotationMetadata()));
         if (selected.isUnsatisfied()) {
-            throw new jakarta.enterprise.inject.spi.DeploymentException(
+            throw new DeploymentException(
                 "The lookup of " + what + " has no bean to satisfy it");
         }
         if (selected.isAmbiguous()) {
-            throw new jakarta.enterprise.inject.spi.DeploymentException(
+            throw new DeploymentException(
                 "The lookup of " + what + " is ambiguous");
         }
     }

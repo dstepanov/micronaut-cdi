@@ -149,17 +149,6 @@ public final class NonbindingMembers {
     }
 
     /**
-     * Whether the annotation of the given name marks a member of an annotation interface as taking no part in
-     * resolution.
-     *
-     * @param annotationName The name of the annotation
-     * @return Whether it is {@code Nonbinding}, of the specification or of Micronaut
-     */
-    public static boolean isNonbinding(String annotationName) {
-        return Cdi.NONBINDING.equals(annotationName) || MICRONAUT_NONBINDING.equals(annotationName);
-    }
-
-    /**
      * The members an annotation interface declares, each with its annotation metadata.
      *
      * @param declaration The annotation interface

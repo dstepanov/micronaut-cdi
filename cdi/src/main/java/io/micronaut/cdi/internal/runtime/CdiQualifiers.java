@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -33,7 +34,7 @@ import java.util.Set;
  *
  * <p>A lookup of the container does not resolve by the Micronaut qualifier made here, which describes the bean the way
  * Micronaut keys a registration: the container asks the bean context for the candidates with a qualifier of its own,
- * {@link CdiMatching}, which compares the qualifiers of each bean by the rules of the specification
+ * {@link CdiBeanQualifier}, which compares the qualifiers of each bean by the rules of the specification
  * ({@link CdiBeanContainer#beansOf}).</p>
  *
  * @author Denis Stepanov
@@ -50,14 +51,15 @@ public final class CdiQualifiers {
      * values its qualifiers were recorded with while the application compiled. It describes the bean, the way
      * Micronaut keys a registration by it; a lookup of the bean resolves by the qualifiers the container records.
      *
-     * @param types      What the application was compiled with of each qualifier type
+     * <p>Each is handed to Micronaut as it was recorded, its {@code $nonBinding} list with it, which Micronaut leaves
+     * out of the comparison.</p>
+     *
      * @param qualifiers The qualifiers, each as the values it was written with, the members that take no part in
      *                   resolution listed under {@code $nonBinding}
      * @param <T>        The bean type
      * @return The qualifier, or {@code null} when every bean of the type qualifies
      */
-    public static <T> @Nullable Qualifier<T> declaredQualifierOf(CompiledAnnotationTypes types,
-                                                                List<? extends AnnotationValue<?>> qualifiers) {
+    public static <T> @Nullable Qualifier<T> declaredQualifierOf(List<? extends AnnotationValue<?>> qualifiers) {
         List<Qualifier<T>> resolved = new ArrayList<>(qualifiers.size());
         for (AnnotationValue<?> qualifier : qualifiers) {
             String name = qualifier.getAnnotationName();
@@ -69,8 +71,7 @@ public final class CdiQualifiers {
                 continue;
             }
             @SuppressWarnings("unchecked")
-            Qualifier<T> byValues = (Qualifier<T>) Qualifiers.byAnnotation(
-                AnnotationMetadata.EMPTY_METADATA, CdiQualifier.ofValue(types, qualifier).binding());
+            Qualifier<T> byValues = (Qualifier<T>) Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, qualifier);
             resolved.add(byValues);
         }
         if (resolved.isEmpty()) {
@@ -98,7 +99,7 @@ public final class CdiQualifiers {
      * @param annotationMetadata The metadata of the element
      * @return The qualifiers
      */
-    public static Set<Annotation> declared(io.micronaut.context.BeanContext beanContext,
+    public static Set<Annotation> declared(BeanContext beanContext,
                                            AnnotationMetadata annotationMetadata) {
         return CdiQualifier.instances(beanContext, CdiQualifier.declared(annotationMetadata));
     }

@@ -41,7 +41,7 @@ visible in a test report as what passes.
 | 2.2 | The bean types of a bean, including a produced array, interface and primitive, and narrowing with `@Typed` | `CdiBean` |
 | 2.2 | A primitive and the class that boxes it as one bean type | `CdiTypes`, `CdiInstance`, `CdiBeanContainer` |
 | 3.5 | A managed bean has a constructor taking no parameters or one annotated `@Inject` | `BeanDiscoveryVisitor` |
-| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiMatching`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembers`, `CompiledAnnotationTypes` |
+| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiBeanQualifier`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembers`, `CompiledAnnotationTypes` |
 | 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, and `Instance` and `BeanContainer.getBeans` narrowed by a Micronaut `Qualifier`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 12.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
@@ -176,36 +176,41 @@ compiles, and is not added at run time. A qualifier the program
 composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
 marks, so a member is left out of a comparison when either side lists it. An injection point, a programmatic lookup
 and the bean manager select their beans by these and nothing else: the container hands Micronaut a qualifier of its
-own, `CdiMatching`, which compares them (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
+own, `CdiBeanQualifier`, which compares them (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
 annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotation(AnnotationMetadata,
 AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
 the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
 specification are also the ones a portable extension added as the container started, a bean that declares
-none has `@Default` and `@Any`, and two values are compared by the members that bind as `BindingValues.matches`
-compares them (an enum constant by its name, a class as its `AnnotationClassValue`); so the container compares
-the qualifiers itself.
+none has `@Default` and `@Any`; so the container compares the qualifiers itself, each pair of values as Micronaut
+compares two annotations.
 
-A qualifier and an interceptor binding are compared by one rule, the Jakarta Interceptors implementation's
-`BindingValues.matches`, so that `areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer as the
-interceptor chains are built: the members a value leaves out filled in from the defaults it carries, the members
-either side lists under `$nonBinding` left out of both, an empty string compared as the member left out, only
-`$nonBinding` and `$stereotypes` of Micronaut's members left out, an enum constant by its name, a class as its
-`AnnotationClassValue`, an array element by element, and an annotation held by a member compared as a binding
-is - by the members it binds by rather than by every member, which section 5.2.6 leaves non-portable for a
-qualifier member that is an annotation and is not `@Nonbinding`. Two things the container does beside it:
+A qualifier and an interceptor binding are compared by one rule, Micronaut's `AnnotationValue.matches` (since
+Micronaut Core 5.3, #14147, the comparison Micronaut's own exact interceptor binding qualifier is built on), so that
+`areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer alike: the members a value leaves out
+filled in from the defaults it carries, or from the other side's where it carries none, the members either side
+lists under `$nonBinding` left out of both, only `$nonBinding` and `$stereotypes` of Micronaut's members left out,
+an array element by element, and an annotation held by a member compared the same way - by the members it binds
+by rather than by every member, which section 5.2.6 leaves non-portable for a qualifier member that is an
+annotation and is not `@Nonbinding` (`CdiQualifier.matches`). What the container does beside it, each for a value
+Micronaut has no compiled side to complete from:
 
-- **A value that carries no defaults is given the ones Micronaut registered for its type** before it is
-  compared. Compiled metadata hands every value its defaults; a qualifier a program composes, as
-  `AnnotationValue.builder(Shelf.class).build()`, carries none, and `BindingValues`, which fills defaults from the
-  value alone, would not match it with the bean compiled with `@Shelf`. An annotation such a value holds is
-  compared with the defaults it carries, as `BindingValues` compares it. The value with the defaults is also what
-  the container hands the interceptors implementation (`BeanManager.resolveInterceptors`), so the two still agree.
-- **`getQualifierHashCode` and `getInterceptorBindingHashCode` hash the members that bind.**
-  `BindingValues.hashCode` hashes the name alone, because the two values it compares may list different members
-  as non-binding; the container hashes an annotation instance, whose non-binding members are those of its type
-  whichever instance it is, and the specification's tests ask two qualifiers that differ by a binding member to
-  hash differently. The members are hashed as `BindingValues.normalize` shapes them, an annotation a member holds by
-  its name, so two annotations that match hash alike.
+- **A value a program composed is spelt as Micronaut records it**: an enum constant as its name, a class as its
+  `AnnotationClassValue`. `AnnotationValueBuilder.member(String, Enum)` keeps the constant, which
+  `AnnotationValue.matches` does not equate with the name compiled metadata holds (a gap of Micronaut's, listed
+  below).
+- **A member bound to the empty string that has no default is the member left out.** Micronaut records no default
+  of the empty string for an annotation compiled from Java, so `@Zone` on a bean carries neither the member nor its
+  default, and `AnnotationValue.matches` compares `@Zone("")` as a member the bean lacks. Where a default is known
+  the empty string is compared with it: `@Level("")` is not `@Level` when the member defaults to `"INFO"`.
+- **A value that carries no defaults is given the ones Micronaut registered for its type**, and **one read from an
+  annotation instance lists the members its type marks under `$nonBinding`**. Against a compiled qualifier neither
+  is needed, Micronaut taking both from the other side; they are for two values that both lack them - two
+  instances compared with each other - and for the hash code.
+- **`getQualifierHashCode` and `getInterceptorBindingHashCode` hash the members that bind.** Micronaut has no hash
+  code for `AnnotationValue.matches`; the container hashes an annotation instance, whose non-binding members are
+  those of its type whichever instance it is, and the specification's tests ask two qualifiers that differ by a
+  binding member to hash differently. The members are hashed at the defaults the value carries, an annotation a
+  member holds by its name and an empty string not at all, so two annotations that match hash alike.
 
 An annotation literal a program hands to `select`, `getBeans` and their like is a reflection object. The
 literals of the specification and a literal of a qualifier with no binding member are taken as they are; any
@@ -276,8 +281,12 @@ states the event type in full and needs no record and no module.
 
 *Sections 5.5.7, 5.5.8, 5.6, 9.4.3, 11.1.4 and 11.1.8 to 11.1.10, and of CDI Full 23.1 and 23.3.10.*
 `micronaut-cdi` reads no class back, and the build holds it to that: the `NoReflection` check allows it nothing
-but the accessors of a `java.lang.reflect.Type` it was handed and the making of the value classes of
-`io.micronaut.cdi.internal.type`, which such a type is reported as. The
+but the accessors of a `java.lang.reflect.Type` it was handed. A type it reports - a bean type, the type of an
+injection point, of an observed event or of an event's metadata - is the one Micronaut renders the argument it holds
+into (`Argument.asType()`, since Micronaut Core 5.3, #14081), exactly as the declaration wrote it, which reads no
+class: a parameterized type, a wildcard and a generic array are equal to the ones the JDK reflects, with their hash
+codes and names, and a type variable has no declaration and is equal to another rendered with the same name and
+bounds. The
 methods of the specification that return a reflection object, or that can only be answered from one, are
 answered by `micronaut-cdi-reflection`, and without it each throws an `UnsupportedOperationException` naming the
 module: `InjectionPoint.getMember()` and `getAnnotated()`; the qualifiers and interceptor
@@ -330,16 +339,14 @@ The candidates are Micronaut's: the container asks the bean context for the defi
 required type (`BeanContext.getBeanDefinitions(Argument, Qualifier)`), so what Micronaut leaves out of every lookup
 is left out here too - what is disabled, what an environment narrowed away, the target a proxy stands in front of,
 and a bean another one replaces with Micronaut's `Replaces`, which Micronaut drops before any qualifier sees the
-candidates. The qualifier handed over with the class, `CdiMatching`, keeps the beans one of whose recorded bean
+candidates. The qualifier handed over with the class, `CdiBeanQualifier`, keeps the beans one of whose recorded bean
 types matches the full required type by the rules of section 2.4.2.1 - a type Micronaut only indexes a definition
 under is none of them - and that have every required qualifier, a qualifier a portable extension added among the
 ones a bean has; it leaves out an interceptor, an abstract class and the components an extension had the container
 instantiate. Micronaut is asked for the raw class rather than the type so that its own matching of type arguments,
-which is not the one of the specification, rejects nothing; the class is asked for under a name of the container's
-(`CdiMatching.LOOKUP`), which the resolution customizer admits every bean exposing the class for, since Micronaut's
-own test of a raw lookup has a factory's `List` stand for its elements and refuses it to a lookup of
-`Collection`; and a class that boxes a primitive is asked for as the primitive, which Micronaut's lookup argument of
-the customizer widens to both. The qualifier keeps nothing: the qualifiers of a bean are read as the lookup is made,
+which is not the one of the specification, rejects nothing; a raw lookup has every bean exposing the class among
+its candidates, a factory's `List` for `Collection` included (since Micronaut Core 5.3, #14063); and a class that
+boxes a primitive is asked for as the primitive, which Micronaut's lookup argument of the customizer widens to both. The qualifier keeps nothing: the qualifiers of a bean are read as the lookup is made,
 so one a portable extension adds after an earlier lookup is seen by the next one, and Micronaut keeps the candidates
 of a class, never the result of a qualifier. It is never handed to the creation of a bean, where a qualifier would
 become part of the key a scope holds the instance under: the selected definition is created as it is
@@ -351,9 +358,11 @@ specification outranks a bean of Micronaut's own of the same type, and the alter
 the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
 measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), the
 container's bean of each definition, once (`CdiBeanContainer.canonicalBean`), and what each injection point
-resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut forgets the candidates of every type a
-destroyed bean is an instance of, a dependent's included, so a dependent bean created over and over would have its
-points' candidates looked up again each time (see Open points in Micronaut Core). Core's active resolution
+resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type, and since
+Micronaut Core 5.3 (#14063) keeps them when a dependent bean is destroyed, but matching them by the rules of the
+specification and narrowing them is the container's own work, which a dependent bean created over and over would
+do again for each of its points (without it, creating a dependent bean with eight injected dependencies takes 28%
+longer and allocates 87% more). Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
@@ -665,9 +674,21 @@ observer bean, a dependent parameter - goes as the notification completes; one c
 `CreationalContext` goes as it is released; one a synthetic bean's creation function looks up goes with the bean
 it created, and one its disposal function looks up as the disposal returns. Micronaut owns them, through the
 resolver of the bean and through dependency groups (`OwnedDependents`), and destroys each set in the reverse of the
-order it was created in, every one of them attempted where one fails. As the context stops Micronaut opens a
-new group for a listener of its shutdown event alone; what a lookup that runs later creates - from a
-`@PreDestroy`, or on the thread of an executor - is held by the container and destroyed the same way.
+order it was created in, every one of them attempted where one fails. `Instance.destroy` finds the registration
+Micronaut holds for the instance by its identity (`BeanDependencyResolver.findRegistration`, since Micronaut Core
+5.3, #14079) and destroys it there; a handle keeps the registration it created, which a null product of a dependent
+producer cannot be found again by. As the context stops Micronaut opens groups and resolves through them and
+through the resolver of a bean, on any thread, for as long as it runs the callbacks of its shutdown - the observers
+of `Shutdown`, `@BeforeDestroyed` and `@Destroyed` of the application context, the `@PreDestroy` methods of its beans
+and work they wait for on an executor - and destroys what they create before it completes (since Micronaut Core
+5.3, #13849; `ShutdownDependenciesTest`). Micronaut still resolves for a bean being destroyed on behalf of its own
+destruction callbacks on the destroying thread alone, so a lookup injected into the bean that its `@PreDestroy` uses
+from another thread creates through a dependency group of the lookup's own instead (`ShutdownLookupOffThreadTest`).
+A lookup that escaped the bean it was injected into and is used after that bean was destroyed creates the same way,
+through a group of its own; with no owner left to close it, the container closes that group as it stops
+(`CdiBeanContainer.closeAtShutdown`, `OwnerlessLookupTest`). Such an instance therefore lives until the container
+stops, not until the bean it escaped was destroyed, unless the program destroys it with `Instance.destroy` or closes
+the lookup.
 
 ### Known limitations a review has named
 
@@ -815,7 +836,7 @@ own rather than the first one alone.
   qualifiers its metadata records, while the qualifiers of a bean of the specification are also the ones a portable
   extension added as the container started, and `@Default` where it declares none. An injection point of a bean
   of the specification, a lookup and the bean manager here select their beans by the container's own record of
-  each bean's qualifiers through a Micronaut `Qualifier` of the container's own (`CdiMatching`), handed to
+  each bean's qualifiers through a Micronaut `Qualifier` of the container's own (`CdiBeanQualifier`), handed to
   `BeanContext.getBeanDefinitions(Argument, Qualifier)` with the raw class of the required type.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
@@ -831,12 +852,14 @@ own rather than the first one alone.
   qualifier an extension composed for a synthetic component, a value nested in the record of the component rather
   than an occurrence of the compilation: the processor lists its members from the interface's
   (`NonbindingMembers.complete`), and the comparison leaves out a member either side lists.
-- **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
-  then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
-  holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
-  one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
-  compares qualifiers and interceptor bindings through the Jakarta Interceptors implementation's
-  `BindingValues.matches` instead (`CdiQualifier.matches`), the comparison its chains are built from.
+- **`AnnotationValue.matches` does not equate a value with the way Micronaut records it.** Since Micronaut Core
+  5.3 (#14147) it leaves out the members either side lists under `$nonBinding`, takes the defaults of the other
+  side for a value that carries none and compares a nested annotation the same way, and the container compares
+  qualifiers with it (`CdiQualifier.matches`). It still compares member values with `equals`: an enum constant
+  `AnnotationValueBuilder.member(String, Enum)` keeps is not the name compiled metadata holds; and a member bound
+  to the empty string is not a member left out, while Micronaut records no default of the empty string for an
+  annotation compiled from Java. The container respells a value a program composed and leaves out an empty string
+  that has no default before it compares (`QualifierMemberValuesTest`, `QualifierDefaultsTest`).
 - **Micronaut's exact type arguments are in its reflection module.** Since Micronaut Core 5.3
   `ReflectionArguments.ofExact`, `toExactType` and `typeClosureOf` keep a wildcard a wildcard and a type variable
   a variable, as the rules of section 5.2.4 need, and answer the parameterized type closure of a class; the
@@ -845,12 +868,11 @@ own rather than the first one alone.
   which `typeClosureOf` lists as the processor does: the arrays of the supertypes of the component, the arrays of
   fewer dimensions, `Cloneable` and `Serializable`. They are in `micronaut-reflection`, which reads classes back,
   and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
-  `Argument`, and one the specification's API reports made from one, in `io.micronaut.cdi.internal.type`, by the
-  accessors of the type alone. The reflection module reads a type it is handed with `ofExact` itself, the ones the
-  container rendered there as well: since Micronaut Core 5.3 `ofExact` reads a variable with no annotated bounds,
-  as a variable the container renders is, through its bounds. A variable `toExactType` renders has
-  no declaration and is equal to another so rendered, not to the variable the class declares, so the reflection
-  module tells the variables of an event's class apart by their names.
+  `Argument` in `io.micronaut.cdi.internal.type`, by the accessors of the type alone, and one the specification's
+  API reports is rendered by Micronaut (`Argument.asType()`). The reflection module reads a type it is handed with
+  `ofExact` itself, the ones the container reported as well. A variable Micronaut renders has no declaration and
+  is equal to another so rendered, not to the variable the class declares, so the reflection module tells the
+  variables of an event's class apart by their names.
 - **A definition Micronaut writes names the arguments of every supertype of the bean.** Since Micronaut Core 5.3 a
   type hierarchy record leaves out a supertype it cannot name from its package and says so as it is written
   (`VisitorContext.tryRecordTypeHierarchy`, `TypeHierarchyRecord.isComplete()`), and the processor writes the
@@ -906,43 +928,35 @@ own rather than the first one alone.
   injection point a dependent instance obtained through a lookup is given is a segment of its resolution path
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
-  language model over the compiler's elements hold no static state that is not a constant: a harness that
+  language model over the compiler's elements hold no static state that is not a constant, beside the registered
+  `LanguageModelAnnotationFilter` services: those are loaded once per class loader of the language model and kept
+  as long as it is (`LanguageModelAnnotationFilter.registered()`), so one filter instance serves every compilation
+  that loader runs, and a provider is expected to decide from its arguments alone and keep no state between
+  calls. A harness that
   compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated
   (`CdiScannedClasses`, on the import of them), since compiled classes are what it hands back. Micronaut's
   processor copies every `micronaut.*` option into the system properties as it initializes, reads them back as
   the options of any compilation, and restores the values that were there before once its processing is over
-  (`ProcessorOptionsSystemProperties`); such a harness takes the two values before each compilation and puts them
-  back however the compilation ends (`DeploymentCompiler`, `ExtensionCompilation`), so that a compilation that
-  fails before its processing is over does not leave the extensions of one deployment to have their say in every
-  deployment compiled after it, and a value set before the compilation is kept. One seam is left
+  (`ProcessorOptionsSystemProperties`), a value set before the compilation included; a compilation that ends
+  without a final round, as one javac stops early does, has its values restored as the next compilation on its
+  thread starts (since Micronaut Core 5.3), so the extensions of one deployment do not have their say in the
+  deployments compiled after it, and the harnesses keep none of the values themselves. One seam is left
   for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
   sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
   `SeContainerInitializer.newInstance()`. The type hierarchy record of a class is found
-  through the class loader of the container, and the class's own where that one finds none, and kept by that
-  container alone (`RecordedTypeIndex`): two deployments whose loaders see different records of a class of a loader
-  they share each read their own, and no record, nor the deployment loader it was found through, is kept with the
-  shared class.
-- **Destroying a bean forgets the candidates of every type it is an instance of.** `DefaultBeanContext` purges its
-  candidate caches by the instance on every destruction, a prototype's included, and the candidates of a type are
-  kept for 30 types at most. A dependent bean created and destroyed over and over has the candidates of its types
-  looked up again each time, which is why the container keeps what each injection point resolves to
-  (`CdiBeanContainer.selectionFor`: without it, creating a dependent bean with two injected dependencies takes 11%
-  longer and allocates 22% more). `MicronautCoreIssuesTest.destroyingAPrototypeKeepsTheCandidatesOfItsTypes`.
-- **A raw lookup of a type a factory's `List` exposes leaves the factory out.** Micronaut has a bean of a container
-  type stand for its elements, so `getBeanDefinitions(Collection.class)` does not enumerate a `@Bean List<Part>`
-  although its definition exposes `Collection`. The container asks for its candidates under a name of its own that
-  the resolution customizer admits on exposure alone (`CdiMatching.LOOKUP`).
-  `MicronautCoreIssuesTest.aRawLookupOfATypeAFactoryOfAListExposesFindsIt`.
-- **`getBeanDefinitions(Qualifier)` drops a replaced bean after the qualifier.** `getBeanDefinitions(Argument,
-  Qualifier)` drops it before, as every lookup does; the untyped form lets a qualifier keep the replaced bean alone.
-  The container asks the typed form, the observer methods of the beans marked as observing included
-  (`ObserverRegistry`; an observer of a bean replaced by one that observes nothing is gone with it, core #14063).
-  `MicronautCoreIssuesTest.aReplacedBeanIsLeftOutBeforeTheQualifierWhicheverWayTheDefinitionsAreAskedFor`.
-- **`TypeHierarchies.find` loads the record anew each time.** It keeps the names of the records per class loader, not
-  the records, so `RecordedTypeIndex` keeps the ones it found (without, a container starts 35% slower).
-  `MicronautCoreIssuesTest.aTypeHierarchyRecordIsFoundOnce`.
+  through the class loader of the container, and the class's own where that one finds none (`RecordedTypeIndex`):
+  two deployments whose loaders see different records of a class of a loader they share each read their own.
+  Micronaut finds a record once per class loader and keeps it with the class of the record (since Micronaut Core
+  5.3, #14064), so the container keeps none, and no record, nor the deployment loader it was found through, is kept
+  with the shared class.
+- **The candidates of a type are kept for 30 types at most.** `DefaultBeanContext.beanCandidateCache` is a
+  least-recently-used cache of 30 lookup types, which a deployment of the specification exceeds; core #14063 left a
+  larger or configurable bound for a separate decision. The fixes of #14063 itself - a destroyed dependent no
+  longer purges the candidates of its types, a raw lookup of `Collection` finds a factory's `List`, and the untyped
+  `getBeanDefinitions(Qualifier)` drops a replaced bean before the qualifier - are pinned by
+  `MicronautCoreIssuesTest`.
 - **The lookup argument of the resolution customizer widens one way.** Section 2.1.2 counts a primitive and its
   wrapper as one type; `resolveBeanLookupArgument` maps a lookup to one other argument, so a lookup of the primitive
   finds both and a lookup of the wrapper only the wrapper's beans. The container asks for a wrapper as the primitive.

@@ -15,11 +15,16 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.MicronautEvent;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.event.Event;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -30,18 +35,18 @@ import jakarta.enterprise.event.Event;
  * @since 1.0
  */
 @Internal
-public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>> {
+public final class CdiEventFactory<T> extends AbstractCdiInjectionPointBeanDefinition<Event<T>> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public Class<Event<T>> getBeanType() {
         // the Micronaut event, so that an injection point may be declared with either type
-        return (Class) io.micronaut.cdi.MicronautEvent.class;
+        return (Class) MicronautEvent.class;
     }
 
     @Override
-    public java.util.Set<Class<?>> getExposedTypes() {
-        return java.util.Set.of(io.micronaut.cdi.MicronautEvent.class, Event.class);
+    public Set<Class<?>> getExposedTypes() {
+        return Set.of(MicronautEvent.class, Event.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -49,12 +54,12 @@ public final class CdiEventFactory<T> extends CdiInjectionPointFactory<Event<T>>
     protected Event<T> build(BeanResolutionContext resolutionContext,
                              BeanContext context,
                              Argument<?> type,
-                             java.util.List<CdiQualifier> qualifiers) {
+                             List<CdiQualifier> qualifiers) {
         // an injection point that named no qualifier has the default one, and the event carries the
         // qualifiers of the point it was injected into (section 10.2.1)
-        java.util.List<CdiQualifier> injected = qualifiers.isEmpty()
-            ? java.util.List.of(CdiQualifier.DEFAULT) : qualifiers;
-        jakarta.enterprise.inject.spi.InjectionPoint injectedAt = null;
+        List<CdiQualifier> injected = qualifiers.isEmpty()
+            ? List.of(CdiQualifier.DEFAULT) : qualifiers;
+        InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
             injectedAt = CdiInjectionPoint.of(context.getBean(CdiBeanContainer.class), segment);

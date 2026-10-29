@@ -19,16 +19,21 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.BeanDependencyResolver;
 import io.micronaut.context.BeanRegistration;
+import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * The dependent instances one owner creates - a lookup, a creational context, one notification of an observer -
@@ -39,11 +44,11 @@ import java.util.List;
  * own, opened as it creates its first instance and closed with it. A singleton or an instance of another scope
  * stays its scope's.</p>
  *
- * <p>As the context stops, Micronaut opens a new group for a listener of its shutdown event alone, and resolves
- * through a group or the resolver of a bean on the thread that stops it alone, so a lookup made from a
- * {@code @PreDestroy} that runs after it, or on another thread, gets neither. What such a lookup creates is held
- * here instead and destroyed the same way, as is an instance a context of an extension created, which Micronaut
- * did not.</p>
+ * <p>As the context stops, Micronaut opens groups and resolves through them and through the resolver of a bean, on
+ * any thread, for as long as it runs the callbacks of its shutdown - the observers of the events the container fires
+ * on its way down, the {@code @PreDestroy} methods of its beans and the work they wait for - and destroys what they
+ * create before it completes. What is held here is what Micronaut did not create for the owner: an instance a
+ * context of an extension created, or a fresh instance created for an owner that has no group of its own.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -54,14 +59,16 @@ public final class OwnedDependents implements AutoCloseable {
     private final BeanContext beanContext;
     private final @Nullable BeanDependencyResolver resolver;
     private @Nullable BeanDependencyGroup group;
-    private boolean refused;
     /**
-     * The dependent instances created through the resolver or the group, by which one is found again from the
-     * instance it holds; Micronaut destroys them.
+     * Whether the owner has destroyed what it held ({@link #close}): a group opened after that is closed by the
+     * container as it stops, and is the late one until the owner closes it after all.
      */
-    private final List<BeanRegistration<?>> created = new ArrayList<>(2);
+    private boolean closed;
+    private boolean lateGroup;
     /**
-     * What was created without Micronaut owning it, destroyed here.
+     * What was created without Micronaut owning it, destroyed here. What was created through the resolver or the
+     * group is Micronaut's, which finds it again from the instance it holds
+     * ({@link BeanDependencyResolver#findRegistration}).
      */
     private final List<CreatedBean<?>> held = new ArrayList<>(0);
     /**
@@ -112,19 +119,7 @@ public final class OwnedDependents implements AutoCloseable {
             // a bean of a scope is the scope's, and needs no group of the owner's opened for it
             return beanContext.getBeanRegistration(definition, type);
         }
-        BeanDependencyResolver owner = owner();
-        if (owner != null) {
-            try {
-                BeanRegistration<T> registration = owner.getBeanRegistration(definition, type);
-                keep(registration, true);
-                return registration;
-            } catch (IllegalStateException e) {
-                // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
-            }
-        }
-        BeanRegistration<T> registration = beanContext.getBeanRegistration(definition, type);
-        keep(registration, false);
-        return registration;
+        return resolve(owner -> owner.getBeanRegistration(definition, type));
     }
 
     /**
@@ -137,8 +132,7 @@ public final class OwnedDependents implements AutoCloseable {
      * it, at the segment ({@link BeanDependencyResolver#getBeanRegistration(BeanDefinition, Argument,
      * io.micronaut.context.BeanResolutionContext.Segment)}): Micronaut resolves it on a path of its own, one per
      * creation, so that two creations do not share a path, with the segment pushed before the instance is resolved.
-     * Where the owner can no longer resolve - the context stopping - the instance is created at the segment in a new
-     * resolution and held here. A built-in bean of Micronaut's reads the current argument shape of the path, which a
+     * A built-in bean of Micronaut's reads the current argument shape of the path, which a
      * segment of this module's does not have, and is created as {@link #registration(BeanDefinition, Argument)}
      * creates it, on a path of its own.</p>
      *
@@ -150,32 +144,17 @@ public final class OwnedDependents implements AutoCloseable {
      * @param <T>        The bean type
      * @return The registration
      */
-    public <T> BeanRegistration<T> registrationAt(io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectedAt,
-                                                  jakarta.enterprise.inject.spi.InjectionPoint selected,
+    public <T> BeanRegistration<T> registrationAt(BeanResolutionContext.@Nullable Segment<?, ?> injectedAt,
+                                                  InjectionPoint selected,
                                                   BeanDefinition<? extends T> definition, Argument<T> type) {
         if (!CdiResolution.isDependent(definition)
-            || definition instanceof io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition<?>) {
+            || definition instanceof AbstractInjectionPointBeanDefinition<?>) {
             return registration(definition, type);
         }
         LookupSegment<?, T> segment = injectedAt != null
             ? LookupSegment.injected(injectedAt, type, selected)
             : LookupSegment.standalone(beanContext.getBeanDefinition(CdiBeanContainer.class), type, selected);
-        BeanDependencyResolver owner = owner();
-        if (owner != null) {
-            try {
-                BeanRegistration<T> registration = owner.getBeanRegistration(definition, type, segment);
-                keep(registration, true);
-                return registration;
-            } catch (IllegalStateException e) {
-                // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
-            }
-        }
-        try (io.micronaut.context.BeanResolutionContext resolution =
-                 new io.micronaut.context.DefaultBeanResolutionContext(beanContext, null)) {
-            BeanRegistration<T> registration = resolution.getBeanRegistration(definition, type, segment);
-            keep(registration, false);
-            return registration;
-        }
+        return resolve(owner -> owner.getBeanRegistration(definition, type, segment));
     }
 
     /**
@@ -198,7 +177,9 @@ public final class OwnedDependents implements AutoCloseable {
             return registration(definition, type);
         }
         BeanRegistration<T> registration = within.getBeanRegistration(definition, type);
-        keep(registration, resolver != null);
+        if (resolver == null) {
+            keep(registration);
+        }
         return registration;
     }
 
@@ -212,7 +193,7 @@ public final class OwnedDependents implements AutoCloseable {
      * @param <R>             What the action returns
      * @return What the action returned
      */
-    public <R> R within(RuntimeBeanDefinition.LookupContext creationContext, java.util.function.Supplier<R> action) {
+    public <R> R within(RuntimeBeanDefinition.LookupContext creationContext, Supplier<R> action) {
         creation = creationContext;
         try {
             return action.get();
@@ -238,19 +219,7 @@ public final class OwnedDependents implements AutoCloseable {
                 return beanContext.getBeanRegistration(definition, type);
             }
         }
-        BeanDependencyResolver owner = owner();
-        if (owner != null) {
-            try {
-                BeanRegistration<T> registration = owner.getBeanRegistration(type, qualifier);
-                keep(registration, true);
-                return registration;
-            } catch (IllegalStateException e) {
-                // the context is stopping, and Micronaut resolves for its owner on the thread that stops it alone
-            }
-        }
-        BeanRegistration<T> registration = beanContext.getBeanRegistration(type, qualifier);
-        keep(registration, false);
-        return registration;
+        return resolve(owner -> owner.getBeanRegistration(type, qualifier));
     }
 
     /**
@@ -263,11 +232,7 @@ public final class OwnedDependents implements AutoCloseable {
     public <T> CreatedBean<T> fresh(BeanDefinition<T> definition) {
         BeanDependencyResolver owner = owner();
         if (owner instanceof BeanDependencyGroup own) {
-            BeanRegistration<T> registration = own.createBeanRegistration(definition);
-            synchronized (this) {
-                created.add(registration);
-            }
-            return registration;
+            return own.createBeanRegistration(definition);
         }
         CreatedBean<T> registration = beanContext.createBeanRegistration(definition);
         hold(registration);
@@ -284,29 +249,40 @@ public final class OwnedDependents implements AutoCloseable {
     }
 
     /**
-     * Whether the owner created anything.
+     * Whether the owner created anything: it opened a group of its own, or holds what Micronaut does not own.
      *
      * @return Whether it did
      */
     public synchronized boolean isEmpty() {
-        return created.isEmpty() && held.isEmpty();
+        return group == null && held.isEmpty();
     }
 
     /**
-     * The registration of a dependent instance the owner created and has not destroyed yet.
+     * The registration of a dependent instance the owner created and has not destroyed yet: the one Micronaut
+     * holds for it, by the identity of the instance, or the one held here.
      *
      * @param instance The instance
      * @return The registration, or {@code null}
      */
-    public synchronized @Nullable CreatedBean<?> registrationOf(Object instance) {
-        for (BeanRegistration<?> registration : created) {
-            if (registration.bean() == instance) {
-                return registration;
+    public @Nullable CreatedBean<?> registrationOf(Object instance) {
+        if (resolver != null) {
+            BeanRegistration<Object> owned = resolver.findRegistration(instance).orElse(null);
+            if (owned != null) {
+                return owned;
             }
         }
-        for (CreatedBean<?> registration : held) {
-            if (registration.bean() == instance) {
-                return registration;
+        BeanDependencyGroup own = currentGroup();
+        if (own != null) {
+            BeanRegistration<Object> owned = own.findRegistration(instance).orElse(null);
+            if (owned != null) {
+                return owned;
+            }
+        }
+        synchronized (this) {
+            for (CreatedBean<?> registration : held) {
+                if (registration.bean() == instance) {
+                    return registration;
+                }
             }
         }
         return null;
@@ -319,35 +295,21 @@ public final class OwnedDependents implements AutoCloseable {
      * @return Whether the owner still had it, which it does not once it was destroyed
      */
     public boolean destroy(CreatedBean<?> registration) {
-        boolean owned;
         synchronized (this) {
-            owned = removeSame(created, registration);
-            if (!owned) {
-                if (removeSame(held, registration)) {
-                    registration.close();
-                    return true;
-                }
-                return false;
-            }
-        }
-        BeanDependencyResolver owner = resolver != null ? resolver : currentGroup();
-        if (owner == null) {
-            registration.close();
-        } else {
-            // an owner that no longer has it destroyed it already, as its own owner was destroyed
-            owner.destroy((BeanRegistration<?>) registration);
-        }
-        return true;
-    }
-
-    private static boolean removeSame(List<? extends CreatedBean<?>> registrations, CreatedBean<?> registration) {
-        for (java.util.Iterator<? extends CreatedBean<?>> it = registrations.iterator(); it.hasNext();) {
-            if (it.next() == registration) {
-                it.remove();
+            if (held.removeIf(one -> one == registration)) {
+                registration.close();
                 return true;
             }
         }
-        return false;
+        if (!(registration instanceof BeanRegistration<?> owned)) {
+            return false;
+        }
+        // an owner that no longer has it destroyed it already, as its own owner was destroyed
+        if (resolver != null && resolver.destroy(owned)) {
+            return true;
+        }
+        BeanDependencyGroup own = currentGroup();
+        return own != null && own.destroy(owned);
     }
 
     /**
@@ -359,15 +321,19 @@ public final class OwnedDependents implements AutoCloseable {
     public void close() {
         BeanDependencyGroup closing;
         List<CreatedBean<?>> releasing;
+        boolean closingLate;
         synchronized (this) {
             closing = group;
+            closingLate = lateGroup;
             group = null;
-            refused = false;
+            lateGroup = false;
+            closed = true;
             releasing = List.copyOf(held);
             held.clear();
-            if (resolver == null) {
-                created.clear();
-            }
+        }
+        if (closing != null && closingLate) {
+            // closed by its owner after all: the container need not close it as it stops
+            beanContext.findBean(CdiBeanContainer.class).ifPresent(container -> container.forgetAtShutdown(closing));
         }
         Throwable failure = null;
         // in the reverse of the order they were created in, as Micronaut destroys the dependents of a bean: one
@@ -404,18 +370,14 @@ public final class OwnedDependents implements AutoCloseable {
         return failure;
     }
 
-    private void keep(BeanRegistration<?> registration, boolean owned) {
-        if (!registration.hasOwnLifecycle()) {
+    /**
+     * Holds an instance created for the owner that Micronaut does not own.
+     */
+    private void keep(BeanRegistration<?> registration) {
+        if (registration.hasOwnLifecycle()) {
             // a bean of a scope is the scope's, a singleton the context's: only an instance created for the lookup
             // lives until its registration is closed
-            return;
-        }
-        synchronized (this) {
-            if (owned) {
-                created.add(registration);
-            } else {
-                held.add(registration);
-            }
+            hold(registration);
         }
     }
 
@@ -424,23 +386,61 @@ public final class OwnedDependents implements AutoCloseable {
     }
 
     /**
-     * What creates for the owner: the resolver of the bean it belongs to, or its own group, opened now where
-     * Micronaut opens one - or nothing, where it refuses to as the context stops.
+     * What creates for the owner: the resolver of the bean it belongs to, or its own group, opened now. Micronaut
+     * opens one, and resolves through either, on any thread while the context runs the callbacks of its shutdown.
      */
-    private @Nullable BeanDependencyResolver owner() {
-        if (resolver != null) {
-            return resolver;
-        }
+    private BeanDependencyResolver owner() {
+        return resolver != null ? resolver : ownGroup();
+    }
+
+    private BeanDependencyGroup ownGroup() {
+        BeanDependencyGroup own;
+        boolean late;
         synchronized (this) {
-            if (group == null && !refused) {
-                try {
-                    group = beanContext.createDependencyGroup();
-                } catch (IllegalStateException | UnsupportedOperationException e) {
-                    // the context is stopping, and only a listener of its shutdown event opens a group
-                    refused = true;
-                }
+            own = group;
+            if (own != null) {
+                return own;
             }
-            return group;
+            own = beanContext.createDependencyGroup();
+            group = own;
+            lateGroup = closed;
+            late = closed;
+        }
+        if (late) {
+            // opened after the owner destroyed what it held - a lookup that escaped its owner - which nothing else
+            // closes: the container closes it as it stops
+            BeanDependencyGroup opened = own;
+            beanContext.findBean(CdiBeanContainer.class).ifPresent(container -> container.closeAtShutdown(opened));
+        }
+        return own;
+    }
+
+    /**
+     * Resolves through the owner, or through a group of the owner's own where the resolver of the bean it belongs to
+     * refuses: once the bean's destruction has begun, Micronaut refuses with an {@code IllegalStateException} any
+     * resolution outside the window it leaves its destruction callbacks.
+     *
+     * <p>Two kinds of lookup reach the group. One is made by the bean's {@code @PreDestroy} from another thread,
+     * the context stopping or not: the Micronaut Core this builds on resolves for a bean being destroyed on behalf of
+     * its destruction callbacks on the thread destroying it alone (Core #14194 accepts work they hand to another
+     * thread, and makes this case unnecessary once it is the Core built on). The group is closed with what the owner
+     * holds as the bean's destruction completes; one opened while the context stops is destroyed by Micronaut
+     * before the shutdown completes. The other is made through a reference that escaped the bean after it was
+     * destroyed: the owner has closed what it held by then, so the group opened for it is handed to the container, which
+     * closes it as it stops ({@link CdiBeanContainer#closeAtShutdown}, {@code OwnerlessLookupTest}): what it creates
+     * lives until then rather than until the bean was destroyed, unless {@code Instance.destroy} or closing the lookup
+     * destroys it first. Removing the retry would make both fail, so it stays.</p>
+     */
+    private <T> BeanRegistration<T> resolve(
+        Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {
+        BeanDependencyResolver owner = owner();
+        try {
+            return lookup.apply(owner);
+        } catch (IllegalStateException e) {
+            if (owner != resolver) {
+                throw e;
+            }
+            return lookup.apply(ownGroup());
         }
     }
 }

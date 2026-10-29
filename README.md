@@ -72,7 +72,7 @@ through four steps:
 2. **Micronaut's candidate discovery, with a qualifier of the specification.** The bean context enumerates the
    definitions of the raw class of the type (`BeanContext.getBeanDefinitions(Argument, Qualifier)`) - less what
    is disabled, the targets of proxies and what another bean replaces - and a Micronaut `Qualifier` of the
-   container's own, `CdiMatching`, keeps the ones whose recorded bean types and qualifiers the rules of section
+   container's own, `CdiBeanQualifier`, keeps the ones whose recorded bean types and qualifiers the rules of section
    2.4.2 admit, with what a portable extension added.
 3. **A small selection policy of the specification.** Where one bean is wanted, `CdiResolution.narrowToOne`
    chooses among the candidates: a bean of the specification over a bean of Micronaut's own, the alternatives of

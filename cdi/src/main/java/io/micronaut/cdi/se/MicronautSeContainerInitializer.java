@@ -23,14 +23,20 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.BeanType;
 import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.spi.DefinitionException;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.spi.Extension;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -62,7 +68,7 @@ import java.util.StringJoiner;
 @Internal
 public final class MicronautSeContainerInitializer extends SeContainerInitializer {
 
-    private static volatile @org.jspecify.annotations.Nullable Set<String> restrictedClasspath;
+    private static volatile @Nullable Set<String> restrictedClasspath;
 
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
@@ -72,8 +78,8 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     private final Set<String> enabledInterceptors = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
 
-    private final java.util.List<Extension> extensionInstances = new java.util.ArrayList<>();
-    private final java.util.List<Class<? extends Extension>> extensionClasses = new java.util.ArrayList<>();
+    private final List<Extension> extensionInstances = new ArrayList<>();
+    private final List<Class<? extends Extension>> extensionClasses = new ArrayList<>();
 
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -87,7 +93,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * @param classNames The application classes of the deployment, or {@code null} for no restriction
      */
     @Internal
-    public static void restrictClasspath(@org.jspecify.annotations.Nullable Set<String> classNames) {
+    public static void restrictClasspath(@Nullable Set<String> classNames) {
         restrictedClasspath = classNames == null ? null : Set.copyOf(classNames);
     }
 
@@ -129,14 +135,14 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     public SeContainerInitializer addExtensions(Extension... extensions) {
         // run as the container starts, by the optional module that reads classes; without it the bootstrap
         // fails, naming the module
-        extensionInstances.addAll(java.util.List.of(extensions));
+        extensionInstances.addAll(List.of(extensions));
         return this;
     }
 
     @SafeVarargs
     @Override
     public final SeContainerInitializer addExtensions(Class<? extends Extension>... extensions) {
-        extensionClasses.addAll(java.util.List.of(extensions));
+        extensionClasses.addAll(List.of(extensions));
         return this;
     }
 
@@ -221,8 +227,8 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             builder.beansPredicate(bean -> onClasspath(bean, classpath));
         }
         // what the portable extensions of this bootstrap are, for the container to run as it starts
-        builder.singletons(new PortableExtensions.Request(java.util.List.copyOf(extensionInstances),
-            java.util.List.copyOf(extensionClasses), classLoader,
+        builder.singletons(new PortableExtensions.Request(List.copyOf(extensionInstances),
+            List.copyOf(extensionClasses), classLoader,
             name -> classpath == null || classpath.contains(outerClassOf(name))));
         ApplicationContext context = builder.build();
         try {
@@ -245,10 +251,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * What a portable extension, or the container on its behalf, failed the bootstrap with, which Micronaut
      * wraps as the failure to create the bean that ran the extensions.
      */
-    private static @org.jspecify.annotations.Nullable RuntimeException whatAnExtensionSaid(Throwable failure) {
+    private static @Nullable RuntimeException whatAnExtensionSaid(Throwable failure) {
         for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
-            if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
-                || cause instanceof jakarta.enterprise.inject.spi.DeploymentException
+            if (cause instanceof DefinitionException
+                || cause instanceof DeploymentException
                 || cause instanceof UnsupportedOperationException) {
                 return (RuntimeException) cause;
             }
@@ -270,7 +276,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * classes or packages the program named, or the infrastructure of the container itself, which every
      * container has.
      */
-    private boolean belongsToSyntheticArchive(io.micronaut.inject.BeanType<?> bean) {
+    private boolean belongsToSyntheticArchive(BeanType<?> bean) {
         String producer = producerOf(bean);
         if (producer != null) {
             // a bean produced by a member of a class belongs to the archive its producer is in, whatever type it
@@ -298,7 +304,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         return isInfrastructure(name) || isSelected(name);
     }
 
-    private static boolean onClasspath(io.micronaut.inject.BeanType<?> bean, Set<String> classpath) {
+    private static boolean onClasspath(BeanType<?> bean, Set<String> classpath) {
         String producer = producerOf(bean);
         if (producer != null && classpath.contains(outerClassOf(producer))) {
             // what a producer produces, its client proxy included, is where the producer is
@@ -325,7 +331,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * The class a definition is declared by, as far as the archive it is in goes: the client proxy of a bean
      * declares itself, and is in the archive its bean class is in.
      */
-    private static @org.jspecify.annotations.Nullable Class<?> declaringClassOf(BeanDefinition<?> definition) {
+    private static @Nullable Class<?> declaringClassOf(BeanDefinition<?> definition) {
         return definition instanceof ProxyBeanDefinition<?> proxied
             ? proxied.getTargetType() : definition.getDeclaringType().orElse(null);
     }
@@ -333,7 +339,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     /**
      * The class of a bean, the class a client proxy stands in front of for a proxy.
      */
-    private static Class<?> classOf(io.micronaut.inject.BeanType<?> bean) {
+    private static Class<?> classOf(BeanType<?> bean) {
         return bean instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType() : bean.getBeanType();
     }
 
@@ -341,7 +347,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * The class that declares the producer of a produced bean, as the processor recorded it, or {@code null} for
      * a bean that is a class itself.
      */
-    private static @org.jspecify.annotations.Nullable String producerOf(io.micronaut.inject.BeanType<?> bean) {
+    private static @Nullable String producerOf(BeanType<?> bean) {
         if (!(bean instanceof BeanDefinition<?> definition)) {
             return null;
         }

@@ -25,9 +25,12 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.inject.spi.ObserverMethod;
 
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 
@@ -47,9 +50,8 @@ import java.util.Set;
 public final class ObserverVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
-        // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    public TypeElementQuery query() {
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -133,21 +135,21 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
             int position = observed;
             // an observer method a generic superclass declares observes what the bean class makes of the
             // superclass's variables
-            java.util.Map<String, ClassElement> inherited = element.getAllTypeArguments()
-                .getOrDefault(method.getDeclaringType().getName(), java.util.Map.of());
+            Map<String, ClassElement> inherited = element.getAllTypeArguments()
+                .getOrDefault(method.getDeclaringType().getName(), Map.of());
             boolean asynchronous = async;
             boolean isStatic = method.isStatic();
             String during = observes == null ? "IN_PROGRESS"
                 : observes.stringValue("during").orElse("IN_PROGRESS");
             method.annotate(CdiObserver.class, builder -> builder
-                .member("observedParameter", position)
+                .member(CdiObserver.OBSERVED_PARAMETER, position)
                 // what the observer observes keeps its written generics, which the compiled argument erases
-                .member("observedType", RecordedTypeValues.of(parameter.getGenericType(), inherited))
-                .member("async", asynchronous)
-                .member("ifExists", ifExists)
-                .member("staticMethod", isStatic)
-                .member("during", during)
-                .member("priority", priority));
+                .member(CdiObserver.OBSERVED_TYPE, RecordedTypeValues.of(parameter.getGenericType(), inherited))
+                .member(CdiObserver.ASYNC, asynchronous)
+                .member(CdiObserver.IF_EXISTS, ifExists)
+                .member(CdiObserver.STATIC_METHOD, isStatic)
+                .member(CdiObserver.DURING, during)
+                .member(CdiObserver.PRIORITY, priority));
             observing = true;
         }
         if (observing) {
@@ -175,7 +177,7 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
         // the method's own annotations: the metadata of a method carries its class's as well, and the priority that
         // selects an alternative class is not the priority of the observers it declares
         return method.getMethodAnnotationMetadata().intValue(Cdi.PRIORITY, "value")
-            .orElse(jakarta.enterprise.inject.spi.ObserverMethod.DEFAULT_PRIORITY);
+            .orElse(ObserverMethod.DEFAULT_PRIORITY);
     }
 
     private static boolean validate(MethodElement method, VisitorContext context) {

@@ -15,19 +15,26 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
+import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.core.type.TypeHierarchy;
+import io.micronaut.core.util.CollectionUtils;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,14 +58,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RecordedTypeIndex {
 
     private final BeanContext beanContext;
-    private final Map<Class<?>, Optional<Entry>> hierarchies = new ConcurrentHashMap<>();
     /**
      * The bean types of each definition, worked out once from what was recorded: the container compares them for
      * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
      * specification, and what the processor recorded does not change. A compiled definition is equal to another
      * of its class and a runtime one only to itself, which is what tells the beans apart.
      */
-    private final Map<io.micronaut.inject.BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
+    private final Map<BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
 
     public RecordedTypeIndex(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -70,7 +76,7 @@ public final class RecordedTypeIndex {
      * @param definition The definition
      * @return The bean types
      */
-    List<Argument<?>> beanTypesOf(io.micronaut.inject.BeanDefinition<?> definition) {
+    List<Argument<?>> beanTypesOf(BeanDefinition<?> definition) {
         List<Argument<?>> known = beanTypes.get(definition);
         if (known != null) {
             return known;
@@ -86,8 +92,8 @@ public final class RecordedTypeIndex {
      * @param definition The definition
      * @return The class
      */
-    static Class<?> beanClassOf(io.micronaut.inject.BeanDefinition<?> definition) {
-        return definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy
+    static Class<?> beanClassOf(BeanDefinition<?> definition) {
+        return definition instanceof ProxyBeanDefinition<?> proxy
             ? proxy.getTargetType() : definition.getBeanType();
     }
 
@@ -107,8 +113,8 @@ public final class RecordedTypeIndex {
      *
      * @return The module, or {@code null} where it is not on the classpath
      */
-    io.micronaut.cdi.spi.@Nullable CdiReflection reflection() {
-        return beanContext.findBean(io.micronaut.cdi.spi.CdiReflection.class).orElse(null);
+    @Nullable CdiReflection reflection() {
+        return beanContext.findBean(CdiReflection.class).orElse(null);
     }
 
     /**
@@ -118,8 +124,9 @@ public final class RecordedTypeIndex {
      * @return The record, or {@code null} where the application was not compiled with the class
      */
     @Nullable Entry of(Class<?> type) {
-        Entry hierarchy = hierarchies.computeIfAbsent(type, this::recordOf).orElse(null);
-        if (hierarchy instanceof HierarchyEntry entry && entry.hierarchy().getOmittedSuperTypeNames().isEmpty()) {
+        TypeHierarchy record = recordOf(type);
+        Entry hierarchy = record == null ? null : new HierarchyEntry(record);
+        if (record != null && record.getOmittedSuperTypeNames().isEmpty()) {
             return hierarchy;
         }
         // a bean whose type hierarchy record left a supertype out, or that has none, may record its closure on its
@@ -140,34 +147,22 @@ public final class RecordedTypeIndex {
      * @return Whether it does
      */
     boolean hasCompleteRecord(Class<?> type) {
-        return hierarchies.computeIfAbsent(type, this::recordOf)
-            .filter(entry -> entry instanceof HierarchyEntry hierarchy
-                && hierarchy.hierarchy().getOmittedSuperTypeNames().isEmpty())
-            .isPresent();
+        TypeHierarchy record = recordOf(type);
+        return record != null && record.getOmittedSuperTypeNames().isEmpty();
     }
 
     /**
      * The record of a class as the class loader of this container finds it, or the loader of the class where that one
      * finds none: a record of that very class, not of another loader's class of the same name. Two containers whose
      * loaders see different records of a class they share - a class of a parent loader, a record of each deployment -
-     * each find their own, and what one found is kept by it alone ({@link #hierarchies}), so that no record, nor the
-     * loader of a deployment it was found through, is kept with the shared class.
+     * each find their own. Micronaut finds a record once per class loader and keeps it with the class of the record,
+     * so that no record, nor the loader of a deployment it was found through, is kept with the shared class.
      */
-    private Optional<Entry> recordOf(Class<?> type) {
+    private @Nullable TypeHierarchy recordOf(Class<?> type) {
         ClassLoader containerLoader = beanContext.getClassLoader();
-        Optional<TypeHierarchy> found = findRecord(type, containerLoader);
-        ClassLoader typeLoader = type.getClassLoader();
-        if (found.isEmpty() && typeLoader != null && typeLoader != containerLoader) {
-            found = findRecord(type, typeLoader);
-        }
-        return found.map(HierarchyEntry::new);
-    }
-
-    private static Optional<TypeHierarchy> findRecord(Class<?> type, @Nullable ClassLoader loader) {
-        if (loader == null) {
-            return Optional.empty();
-        }
-        return TypeHierarchies.find(type.getName(), loader).filter(hierarchy -> hierarchy.getType() == type);
+        Optional<TypeHierarchy> found = containerLoader == null ? Optional.empty()
+            : TypeHierarchies.find(type.getName(), containerLoader).filter(hierarchy -> hierarchy.getType() == type);
+        return found.or(() -> TypeHierarchies.find(type)).orElse(null);
     }
 
     /**
@@ -175,27 +170,27 @@ public final class RecordedTypeIndex {
      * enumerates for the class.
      */
     private @Nullable Entry recordedOf(Class<?> type) {
-        for (io.micronaut.inject.BeanDefinition<?> definition
-            : beanContext.getBeanDefinitions(Argument.of(type, CdiMatching.LOOKUP))) {
-            io.micronaut.core.annotation.AnnotationMetadata metadata = definition.getAnnotationMetadata();
-            if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
+        for (BeanDefinition<?> definition
+            : beanContext.getBeanDefinitions(Argument.of(type))) {
+            AnnotationMetadata metadata = definition.getAnnotationMetadata();
+            if (metadata.hasAnnotation(CdiProducer.class)) {
                 continue;
             }
             List<AnnotationValue<Annotation>> closure = metadata
-                .findAnnotation(io.micronaut.cdi.internal.metadata.CdiBeanTypes.class)
+                .findAnnotation(CdiBeanTypes.class)
                 .map(types -> types.getAnnotations("value")).orElse(List.of());
             if (closure.isEmpty()) {
                 continue;
             }
             AnnotationValue<Annotation> own = closure.get(0);
             String name = own.stringValue().orElse(null);
-            if (!type.getName().equals(name) || "VARIABLE".equals(own.stringValue("kind").orElse(null))) {
+            if (!type.getName().equals(name) || "VARIABLE".equals(own.stringValue(CdiRecordedType.KIND).orElse(null))) {
                 continue;
             }
             List<String> variables = new ArrayList<>();
-            for (AnnotationValue<Annotation> argument : own.getAnnotations(io.micronaut.cdi.internal.metadata.CdiRecordedType.ARGUMENTS)) {
-                if ("VARIABLE".equals(argument.stringValue("kind").orElse(null))) {
-                    variables.add(argument.stringValue("name").orElse("T"));
+            for (AnnotationValue<Annotation> argument : own.getAnnotations(CdiRecordedType.ARGUMENTS)) {
+                if ("VARIABLE".equals(argument.stringValue(CdiRecordedType.KIND).orElse(null))) {
+                    variables.add(argument.stringValue(CdiRecordedType.NAME).orElse("T"));
                 }
             }
             return new RecordedEntry(List.copyOf(variables), closure.subList(1, closure.size()));
@@ -298,7 +293,7 @@ public final class RecordedTypeIndex {
         }
 
         private Map<String, Argument<?>> argumentsOf(Argument<?> type) {
-            Map<String, Argument<?>> arguments = new HashMap<>();
+            Map<String, Argument<?>> arguments = CollectionUtils.newHashMap(variables.size());
             if (CdiTypes.isParameterized(type)) {
                 Argument<?>[] actual = type.getTypeParameters();
                 for (int i = 0; i < actual.length && i < variables.size(); i++) {

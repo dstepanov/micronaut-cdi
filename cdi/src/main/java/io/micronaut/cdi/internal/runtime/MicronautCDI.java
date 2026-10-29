@@ -15,6 +15,9 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.MicronautInstance;
+import io.micronaut.context.Qualifier;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.Instance;
@@ -41,10 +44,10 @@ import java.util.Iterator;
  * @since 1.0
  */
 @Internal
-public final class MicronautCDI extends CDI<Object> implements io.micronaut.cdi.MicronautInstance<Object> {
+public final class MicronautCDI extends CDI<Object> implements MicronautInstance<Object> {
 
     private final CdiBeanContainer container;
-    private final io.micronaut.cdi.MicronautInstance<Object> lookup;
+    private final MicronautInstance<Object> lookup;
 
     MicronautCDI(CdiBeanContainer container) {
         this.container = container;
@@ -62,49 +65,49 @@ public final class MicronautCDI extends CDI<Object> implements io.micronaut.cdi.
     }
 
     @Override
-    public io.micronaut.cdi.MicronautInstance<Object> select(Annotation... qualifiers) {
+    public MicronautInstance<Object> select(Annotation... qualifiers) {
         return lookup.select(qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
+    public <U> MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
         return lookup.select(subtype, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public <U> MicronautInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
         return lookup.select(subtype, qualifiers);
     }
 
     @Override
-    public io.micronaut.cdi.MicronautInstance<Object> select(
-        io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public MicronautInstance<Object> select(
+        AnnotationValue<?> qualifier,
+        AnnotationValue<?>... qualifiers) {
         return lookup.select(qualifier, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(
-        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <U> MicronautInstance<U> select(
+        Class<U> subtype, AnnotationValue<?> qualifier,
+        AnnotationValue<?>... qualifiers) {
         return lookup.select(subtype, qualifier, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(
-        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <U> MicronautInstance<U> select(
+        Argument<U> subtype, AnnotationValue<?>... qualifiers) {
         return lookup.select(subtype, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(Argument<U> subtype,
-                                                            io.micronaut.context.Qualifier<U> qualifier) {
+    public <U> MicronautInstance<U> select(Argument<U> subtype,
+                                           Qualifier<U> qualifier) {
         return lookup.select(subtype, qualifier);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype,
-                                                            io.micronaut.context.Qualifier<U> qualifier) {
+    public <U> MicronautInstance<U> select(Class<U> subtype,
+                                           Qualifier<U> qualifier) {
         return lookup.select(subtype, qualifier);
     }
 

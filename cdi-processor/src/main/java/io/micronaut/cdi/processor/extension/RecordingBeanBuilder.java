@@ -27,6 +27,7 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.types.Type;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -144,7 +145,7 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
     }
 
     @Override
-    public SyntheticBeanBuilder<T> type(jakarta.enterprise.lang.model.types.Type type) {
+    public SyntheticBeanBuilder<T> type(Type type) {
         // a bean type is resolved by its class here, which is what the definition registered for the bean
         // exposes; the arguments of a parameterized type are not part of what it is resolved by
         types.add(ElementTypes.elementOf(type));

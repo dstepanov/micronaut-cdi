@@ -18,9 +18,11 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -111,8 +113,8 @@ public final class SpecificationBeans {
      * @param element The element
      * @return Whether it is injected
      */
-    public static boolean isInjected(io.micronaut.inject.ast.Element element) {
-        return element.hasDeclaredStereotype(io.micronaut.core.annotation.AnnotationUtil.INJECT);
+    public static boolean isInjected(Element element) {
+        return element.hasDeclaredStereotype(AnnotationUtil.INJECT);
     }
 
     /**
@@ -144,7 +146,7 @@ public final class SpecificationBeans {
      * @param member The method or field
      * @return Whether it is a producer
      */
-    public static boolean isProducer(io.micronaut.inject.ast.Element member) {
+    public static boolean isProducer(Element member) {
         return member.hasDeclaredAnnotation(Cdi.PRODUCES);
     }
 

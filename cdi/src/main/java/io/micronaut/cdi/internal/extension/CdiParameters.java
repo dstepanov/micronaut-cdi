@@ -18,16 +18,21 @@ package io.micronaut.cdi.internal.extension;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.internal.runtime.CdiAnnotations;
 import io.micronaut.cdi.internal.runtime.RecordedInvoker;
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;
+import io.micronaut.core.util.CollectionUtils;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * The parameters an extension attached to a synthetic bean or observer, handed back to whatever creates,
@@ -47,7 +52,7 @@ public final class CdiParameters implements Parameters {
 
     // the container the component was handed these by: its invokers invoke its beans, and an annotation asked
     // for as an instance is made by its reflection module
-    private final io.micronaut.context.BeanContext beanContext;
+    private final BeanContext beanContext;
     private final Map<String, AnnotationValue<CdiSyntheticParameter>> parameters;
     /**
      * The invokers of each parameter that holds them, read with the parameters: an invoker finds the method it
@@ -56,25 +61,25 @@ public final class CdiParameters implements Parameters {
      */
     private final Map<String, RecordedInvoker[]> invokers;
 
-    CdiParameters(io.micronaut.context.BeanContext beanContext,
+    CdiParameters(BeanContext beanContext,
                   List<AnnotationValue<CdiSyntheticParameter>> recorded) {
         this.beanContext = beanContext;
-        Map<String, AnnotationValue<CdiSyntheticParameter>> byName = new LinkedHashMap<>();
+        Map<String, AnnotationValue<CdiSyntheticParameter>> byName = CollectionUtils.newLinkedHashMap(recorded.size());
         for (AnnotationValue<CdiSyntheticParameter> parameter : recorded) {
             // a key recorded twice is the last value recorded for it
             byName.put(parameter.stringValue("name").orElseThrow(), parameter);
         }
-        this.parameters = java.util.Collections.unmodifiableMap(byName);
-        Map<String, RecordedInvoker[]> read = new LinkedHashMap<>();
+        this.parameters = Collections.unmodifiableMap(byName);
+        Map<String, RecordedInvoker[]> read = CollectionUtils.newLinkedHashMap(byName.size());
         for (Map.Entry<String, AnnotationValue<CdiSyntheticParameter>> parameter : byName.entrySet()) {
             if ("INVOKER".equals(parameter.getValue().stringValue("kind").orElse(null))) {
                 read.put(parameter.getKey(), readInvokers(beanContext, parameter.getValue()));
             }
         }
-        this.invokers = read.isEmpty() ? Map.of() : java.util.Collections.unmodifiableMap(read);
+        this.invokers = read.isEmpty() ? Map.of() : Collections.unmodifiableMap(read);
     }
 
-    private static RecordedInvoker[] readInvokers(io.micronaut.context.BeanContext beanContext,
+    private static RecordedInvoker[] readInvokers(BeanContext beanContext,
                                                   AnnotationValue<CdiSyntheticParameter> parameter) {
         List<AnnotationValue<Annotation>> records = parameter.getAnnotations(CdiSyntheticParameter.INVOKERS);
         RecordedInvoker[] read = new RecordedInvoker[records.size()];
@@ -90,9 +95,9 @@ public final class CdiParameters implements Parameters {
      * @return The invokers
      */
     List<RecordedInvoker> invokers() {
-        List<RecordedInvoker> all = new java.util.ArrayList<>();
+        List<RecordedInvoker> all = new ArrayList<>();
         for (RecordedInvoker[] read : invokers.values()) {
-            all.addAll(java.util.Arrays.asList(read));
+            all.addAll(Arrays.asList(read));
         }
         return all;
     }
@@ -147,7 +152,7 @@ public final class CdiParameters implements Parameters {
             }
             case "ANNOTATION" -> annotationsOf(parameter, array, type);
             case "INVOKER" -> {
-                RecordedInvoker[] read = java.util.Objects.requireNonNull(
+                RecordedInvoker[] read = Objects.requireNonNull(
                     invokers.get(parameter.stringValue("name").orElseThrow()), "the invokers read with the parameter");
                 // an array handed out is the caller's to change
                 yield array ? read.clone() : read[0];

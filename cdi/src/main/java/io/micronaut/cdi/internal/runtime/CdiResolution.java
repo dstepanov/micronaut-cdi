@@ -16,16 +16,38 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanInjectionProvider;
+import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.context.DefaultBeanResolutionContext;
+import io.micronaut.context.annotation.Prototype;
+import io.micronaut.context.annotation.ResolveWith;
+import io.micronaut.context.exceptions.NonUniqueBeanException;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
+import io.micronaut.core.util.CollectionUtils;
+import io.micronaut.inject.AdvisedBeanType;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.BeanType;
 import io.micronaut.inject.ProxyBeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -45,7 +67,7 @@ public final class CdiResolution {
      * the ones the author wrote: the resolution context, the bean context, the qualifier, the interceptors and
      * the interceptor registry.
      */
-    private static final java.util.Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = java.util.Set.of(
+    private static final Set<String> GENERATED_CONSTRUCTOR_PARAMETERS = Set.of(
         "$beanResolutionContext", "$beanContext", "$qualifier", "$interceptors", "$interceptorRegistry");
 
     /**
@@ -64,8 +86,8 @@ public final class CdiResolution {
      * @param point The annotation metadata of the injection point
      * @return Whether the container resolves it
      */
-    public static boolean isResolvedByTheContainer(io.micronaut.core.annotation.AnnotationMetadata point) {
-        return CONTAINER_PROVIDER.equals(point.stringValue(io.micronaut.context.annotation.ResolveWith.class).orElse(null));
+    public static boolean isResolvedByTheContainer(AnnotationMetadata point) {
+        return CONTAINER_PROVIDER.equals(point.stringValue(ResolveWith.class).orElse(null));
     }
 
     /**
@@ -75,8 +97,23 @@ public final class CdiResolution {
      * @param point The annotation metadata of the injection point
      * @return Whether an application's provider supplies it
      */
-    public static boolean isSuppliedByAnApplicationProvider(io.micronaut.core.annotation.AnnotationMetadata point) {
-        return point.hasStereotype(io.micronaut.context.annotation.ResolveWith.class) && !isResolvedByTheContainer(point);
+    public static boolean hasCustomInjectionProvider(AnnotationMetadata point) {
+        return point.hasStereotype(ResolveWith.class) && !isResolvedByTheContainer(point);
+    }
+
+    /**
+     * What a point resolved to, or the default value of its primitive type where it resolved to {@code null}:
+     * section 2.5.2.4 has a producer that returns null satisfy a primitive point with its default value.
+     *
+     * @param bean  What the point resolved to
+     * @param point The point
+     * @return The bean, or the default of the point's primitive type
+     */
+    static @Nullable Object orPrimitiveDefault(@Nullable Object bean, Argument<?> point) {
+        if (bean == null && point.getType().isPrimitive()) {
+            return CdiResolutionCustomizer.primitiveDefaultOf(point.getType());
+        }
+        return bean;
     }
 
     /**
@@ -94,20 +131,20 @@ public final class CdiResolution {
      *                                                                   is not nullable
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static @Nullable Object fromApplicationProvider(io.micronaut.context.BeanContext beanContext,
+    public static @Nullable Object fromApplicationProvider(BeanContext beanContext,
                                                            @Nullable BeanDefinition<?> declaring,
-                                                           io.micronaut.core.type.Argument<?> argument) {
+                                                           Argument<?> argument) {
         Class<?> providerType = argument.getAnnotationMetadata()
-            .classValue(io.micronaut.context.annotation.ResolveWith.class)
+            .classValue(ResolveWith.class)
             .orElseThrow(() -> new IllegalStateException("No provider is named for " + argument));
-        try (io.micronaut.context.BeanResolutionContext resolution =
-                 new io.micronaut.context.DefaultBeanResolutionContext(beanContext, declaring)) {
-            io.micronaut.context.BeanInjectionProvider provider = (io.micronaut.context.BeanInjectionProvider)
-                resolution.getBean((io.micronaut.core.type.Argument) io.micronaut.core.type.Argument.of(providerType), null);
-            Object value = provider.get(resolution, (io.micronaut.core.type.Argument) argument,
-                io.micronaut.inject.qualifiers.Qualifiers.forArgument(argument), argument.isNullable());
+        try (BeanResolutionContext resolution =
+                 new DefaultBeanResolutionContext(beanContext, declaring)) {
+            BeanInjectionProvider provider = (BeanInjectionProvider)
+                resolution.getBean((Argument) Argument.of(providerType), null);
+            Object value = provider.get(resolution, (Argument) argument,
+                Qualifiers.forArgument(argument), argument.isNullable());
             if (value == null && !argument.isNullable()) {
-                throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("The injection provider "
+                throw new UnsatisfiedResolutionException("The injection provider "
                     + providerType.getName() + " supplied nothing for " + argument);
             }
             return value;
@@ -123,7 +160,7 @@ public final class CdiResolution {
      * @param argument The argument of a constructor
      * @return Whether Micronaut generated it
      */
-    public static boolean isGeneratedConstructorParameter(io.micronaut.core.type.Argument<?> argument) {
+    public static boolean isGeneratedConstructorParameter(Argument<?> argument) {
         return GENERATED_CONSTRUCTOR_PARAMETERS.contains(argument.getName());
     }
 
@@ -135,8 +172,8 @@ public final class CdiResolution {
      * @param definition The definition
      * @return Whether it is the definition of a generated subclass
      */
-    public static boolean isProxyDefinition(io.micronaut.inject.BeanType<?> definition) {
-        return definition instanceof io.micronaut.inject.AdvisedBeanType<?>;
+    public static boolean isProxyDefinition(BeanType<?> definition) {
+        return definition instanceof AdvisedBeanType<?>;
     }
 
     /**
@@ -166,8 +203,8 @@ public final class CdiResolution {
      * @return The narrowed candidates
      */
     public static <T extends BeanDefinition<?>> List<T> narrowToOne(Collection<T> candidates,
-                                                                    io.micronaut.core.type.@Nullable Argument<?> type,
-                                                                    io.micronaut.context.BeanContext beanContext) {
+                                                                    @Nullable Argument<?> type,
+                                                                    BeanContext beanContext) {
         return narrow(resolvedAmong(candidates, definition -> definition, type, beanContext));
     }
 
@@ -187,8 +224,8 @@ public final class CdiResolution {
      */
     public static <T> Collection<T> resolvedAmong(Collection<T> candidates,
                                                    Function<? super T, @Nullable BeanDefinition<?>> definitionOf,
-                                                   io.micronaut.core.type.@Nullable Argument<?> type,
-                                                   io.micronaut.context.BeanContext beanContext) {
+                                                   @Nullable Argument<?> type,
+                                                   BeanContext beanContext) {
         if (candidates.size() < 2) {
             return candidates;
         }
@@ -202,9 +239,9 @@ public final class CdiResolution {
         if (!kept.isEmpty()) {
             return kept.size() == candidates.size() ? candidates : kept;
         }
-        java.util.Map<BeanDefinition<?>, T> byDefinition = new java.util.LinkedHashMap<>();
+        Map<BeanDefinition<?>, T> byDefinition = CollectionUtils.newLinkedHashMap(candidates.size());
         for (T candidate : candidates) {
-            byDefinition.putIfAbsent(java.util.Objects.requireNonNull(definitionOf.apply(candidate)), candidate);
+            byDefinition.putIfAbsent(Objects.requireNonNull(definitionOf.apply(candidate)), candidate);
         }
         List<BeanDefinition<?>> chosen = amongMicronautsOwn(new ArrayList<>(byDefinition.keySet()), type, beanContext);
         if (chosen.size() == byDefinition.size()) {
@@ -230,12 +267,12 @@ public final class CdiResolution {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     static List<BeanDefinition<?>> amongMicronautsOwn(List<BeanDefinition<?>> candidates,
-                                                       io.micronaut.core.type.@Nullable Argument<?> type,
-                                                       io.micronaut.context.BeanContext beanContext) {
+                                                       @Nullable Argument<?> type,
+                                                       BeanContext beanContext) {
         if (candidates.size() < 2) {
             return candidates;
         }
-        return (List) beanContext.selectAmong((io.micronaut.core.type.Argument) type, (Collection) candidates);
+        return (List) beanContext.selectAmong((Argument) type, (Collection) candidates);
     }
 
     /**
@@ -285,7 +322,7 @@ public final class CdiResolution {
      * @return Whether it is an alternative
      */
     public static boolean isAlternative(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasStereotype("jakarta.enterprise.inject.Alternative");
+        return definition.getAnnotationMetadata().hasStereotype(Alternative.class);
     }
 
     /**
@@ -310,7 +347,7 @@ public final class CdiResolution {
             Class<?> beanClass = candidate instanceof ProxyBeanDefinition<?> proxy
                 ? proxy.getTargetType() : candidate.getBeanType();
             if (beanClass.getName().equals(className)
-                && !candidate.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
+                && !candidate.hasAnnotation(CdiProducer.class)) {
                 found.add(candidate);
             }
         }
@@ -321,31 +358,10 @@ public final class CdiResolution {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static io.micronaut.context.exceptions.NonUniqueBeanException nonUnique(List<BeanDefinition<?>> found) {
+    private static NonUniqueBeanException nonUnique(List<BeanDefinition<?>> found) {
         List raw = found;
-        return new io.micronaut.context.exceptions.NonUniqueBeanException(found.get(0).getBeanType(),
+        return new NonUniqueBeanException(found.get(0).getBeanType(),
             ((List<BeanDefinition<Object>>) raw).iterator());
-    }
-
-    /**
-     * Whether a failure is a class absent from the classpath, anywhere in its causes: what reading a definition or
-     * the types it recorded fails with where it names a class of an optional dependency the application does not
-     * have, which is no bean rather than a broken one.
-     *
-     * @param failure The failure
-     * @return Whether a class is absent
-     */
-    public static boolean isAbsentClass(Throwable failure) {
-        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
-            if (cause instanceof NoClassDefFoundError || cause instanceof ClassNotFoundException
-                || cause instanceof TypeNotPresentException) {
-                return true;
-            }
-            if (cause.getCause() == cause) {
-                break;
-            }
-        }
-        return false;
     }
 
     /**
@@ -367,7 +383,7 @@ public final class CdiResolution {
      * @param metadata The annotation metadata of its definition
      * @return Whether its scope is normal
      */
-    public static boolean isNormalScoped(io.micronaut.core.annotation.AnnotationMetadata metadata) {
+    public static boolean isNormalScoped(AnnotationMetadata metadata) {
         return metadata.booleanValue(CdiScope.class, "normal").orElse(false);
     }
 
@@ -391,8 +407,8 @@ public final class CdiResolution {
         }
         // a bean of Micronaut's own held by a scope of Micronaut's - a custom scope - is shared by whoever looks it
         // up, and closing what a lookup of it returned would destroy the instance its scope holds
-        Class<? extends java.lang.annotation.Annotation> scope = definition.getScope().orElse(null);
-        if (scope != null && scope != io.micronaut.context.annotation.Prototype.class) {
+        Class<? extends Annotation> scope = definition.getScope().orElse(null);
+        if (scope != null && scope != Prototype.class) {
             return false;
         }
         return !definition.getAnnotationMetadata()
@@ -410,8 +426,8 @@ public final class CdiResolution {
     public static int priorityOf(BeanDefinition<?> definition) {
         // the priority itself where the metadata kept it — zero is a legal priority, which the order encoding
         // alone cannot say apart from none
-        java.util.OptionalInt priority = definition.getAnnotationMetadata()
-            .intValue("jakarta.annotation.Priority", io.micronaut.core.annotation.AnnotationMetadata.VALUE_MEMBER);
+        OptionalInt priority = definition.getAnnotationMetadata()
+            .intValue(Priority.class, AnnotationMetadata.VALUE_MEMBER);
         if (priority.isPresent()) {
             return priority.getAsInt();
         }

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -39,12 +40,12 @@ import java.util.stream.Stream;
  * @since 1.0
  */
 @Internal
-final class NotOfTheSpecification<T> implements Qualifier<T> {
+final class NonCdiBeanQualifier<T> implements Qualifier<T> {
 
     @SuppressWarnings("rawtypes")
-    private static final NotOfTheSpecification INSTANCE = new NotOfTheSpecification<>();
+    private static final NonCdiBeanQualifier INSTANCE = new NonCdiBeanQualifier<>();
 
-    private NotOfTheSpecification() {
+    private NonCdiBeanQualifier() {
     }
 
     /**
@@ -65,11 +66,11 @@ final class NotOfTheSpecification<T> implements Qualifier<T> {
     @Override
     public <B extends BeanType<T>> Stream<B> reduce(Class<T> beanType, Stream<B> candidates) {
         return candidates.filter(candidate -> !candidate.getAnnotationMetadata()
-            .hasStereotype(io.micronaut.cdi.internal.metadata.CdiScope.class));
+            .hasStereotype(CdiScope.class));
     }
 
     @Override
     public String toString() {
-        return "NotOfTheSpecification";
+        return "NonCdiBeanQualifier";
     }
 }

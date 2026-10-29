@@ -28,6 +28,7 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
+import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -54,7 +55,7 @@ final class RecordingObserverBuilder<T> implements SyntheticObserverBuilder<T> {
     private final List<AnnotationValue<?>> qualifiers = new ArrayList<>();
     private final Map<String, AnnotationValue<CdiSyntheticParameter>> parameters = new LinkedHashMap<>();
     private @Nullable ClassElement declaringClass;
-    private int priority = jakarta.interceptor.Interceptor.Priority.APPLICATION + 500;
+    private int priority = Interceptor.Priority.APPLICATION + 500;
     private boolean async;
     private TransactionPhase transactionPhase = TransactionPhase.IN_PROGRESS;
     private @Nullable ClassElement observer;

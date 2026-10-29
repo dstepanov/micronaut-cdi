@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.PrimitiveElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -28,6 +29,9 @@ import jakarta.enterprise.lang.model.types.PrimitiveType;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.VoidType;
 import jakarta.enterprise.lang.model.types.WildcardType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The {@code Types} an extension method asks for, answering from what the compiler can see.
@@ -59,7 +63,7 @@ final class VisitorTypes implements Types {
             return ofArray(of(component), dimensions);
         }
         if (clazz.isPrimitive()) {
-            return ElementTypes.of(io.micronaut.inject.ast.PrimitiveElement.valueOf(clazz.getName()), context);
+            return ElementTypes.of(PrimitiveElement.valueOf(clazz.getName()), context);
         }
         return element(clazz.getName());
     }
@@ -121,7 +125,7 @@ final class VisitorTypes implements Types {
     @Override
     public ParameterizedType parameterized(ClassType genericType, Type... typeArguments) {
         // composed from the generic class's own element, given the elements of the arguments
-        java.util.List<ClassElement> arguments = new java.util.ArrayList<>(typeArguments.length);
+        List<ClassElement> arguments = new ArrayList<>(typeArguments.length);
         for (Type typeArgument : typeArguments) {
             arguments.add(ElementTypes.elementOf(typeArgument));
         }
@@ -153,6 +157,6 @@ final class VisitorTypes implements Types {
             new IllegalArgumentException("The type " + name + " is not on the compilation's classpath"));
         // a class named by itself is the class type, whatever type parameters it declares: the arguments of a
         // parameterized type are given to parameterized
-        return ElementTypes.rawClassOf(element, java.util.List.of(), context);
+        return ElementTypes.rawClassOf(element, List.of(), context);
     }
 }

@@ -16,12 +16,26 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiProducer;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.BeanResolutionCustomizer;
+import io.micronaut.context.Qualifier;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.QualifiedBeanType;
+import io.micronaut.inject.provider.JakartaProviderBeanDefinition;
+import jakarta.enterprise.inject.IllegalProductException;
+import jakarta.inject.Provider;
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 
 /**
@@ -46,7 +60,7 @@ import io.micronaut.inject.QualifiedBeanType;
 @Internal
 public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
 
-    private static final java.util.Map<Class<?>, Object> PRIMITIVE_DEFAULTS = java.util.Map.of(
+    private static final Map<Class<?>, Object> PRIMITIVE_DEFAULTS = Map.of(
         boolean.class, false,
         byte.class, (byte) 0,
         short.class, (short) 0,
@@ -58,9 +72,9 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     private final BeanResolutionCustomizer delegate;
     // the context this customizer serves, which Micronaut hands it before resolving anything (forContext); none for
     // the one installed on the builder, which only hands out the customizer of each context it builds
-    private final io.micronaut.context.@org.jspecify.annotations.Nullable BeanContext beanContext;
+    private final @Nullable BeanContext beanContext;
     // the generic hierarchies of that context, read from it as the first parameterized lookup is made
-    private volatile @org.jspecify.annotations.Nullable RecordedTypeIndex typeIndex;
+    private volatile @Nullable RecordedTypeIndex typeIndex;
 
     /**
      * @param delegate The customizer installed before this one, which resolves what is not the specification's
@@ -70,7 +84,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     }
 
     private CdiResolutionCustomizer(BeanResolutionCustomizer delegate,
-                                    io.micronaut.context.@org.jspecify.annotations.Nullable BeanContext beanContext) {
+                                    @Nullable BeanContext beanContext) {
         this.delegate = delegate;
         this.beanContext = beanContext;
     }
@@ -85,7 +99,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      * @return The customizer that serves it
      */
     @Override
-    public BeanResolutionCustomizer forContext(io.micronaut.context.BeanContext beanContext) {
+    public BeanResolutionCustomizer forContext(BeanContext beanContext) {
         return new CdiResolutionCustomizer(delegate.forContext(beanContext), beanContext);
     }
 
@@ -94,7 +108,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      * parameterized lookup is made once the context is resolving beans, so they are read from it the first time
      * one is: from the first lookup on, it is matched by them.
      */
-    private @org.jspecify.annotations.Nullable RecordedTypeIndex typeIndex() {
+    private @Nullable RecordedTypeIndex typeIndex() {
         RecordedTypeIndex index = typeIndex;
         if (index == null && beanContext != null) {
             index = RecordedTypeIndex.of(beanContext);
@@ -109,7 +123,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      * @param type The primitive type
      * @return The default value, or {@code null} for a type that is not primitive
      */
-    static @org.jspecify.annotations.Nullable Object primitiveDefaultOf(Class<?> type) {
+    static @Nullable Object primitiveDefaultOf(Class<?> type) {
         return PRIMITIVE_DEFAULTS.get(type);
     }
 
@@ -134,25 +148,25 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     }
 
     @Override
-    public <T> java.util.Optional<io.micronaut.inject.BeanDefinition<T>> resolveNonUniqueBean(
+    public <T> Optional<BeanDefinition<T>> resolveNonUniqueBean(
         Argument<T> beanType,
-        io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
-        java.util.Collection<io.micronaut.inject.BeanDefinition<T>> candidates) {
-        if (beanType.getType() == jakarta.inject.Provider.class && candidates.size() == 2
+        @Nullable Qualifier<T> qualifier,
+        Collection<BeanDefinition<T>> candidates) {
+        if (beanType.getType() == Provider.class && candidates.size() == 2
             && candidates.stream().anyMatch(candidate ->
-                candidate instanceof io.micronaut.inject.provider.JakartaProviderBeanDefinition)) {
+                candidate instanceof JakartaProviderBeanDefinition)) {
             // Instance extends Provider. Its built-in factory captures the injection point and owns the
             // dependent instances it creates; Micronaut's ordinary Provider does not retain that metadata.
             // Resolve only this overlap between the two built-ins, leaving user-defined providers alone.
             for (BeanDefinition<T> candidate : candidates) {
                 if (candidate instanceof CdiInstanceFactory<?>) {
-                    return java.util.Optional.of(candidate);
+                    return Optional.of(candidate);
                 }
             }
         }
         BeanDefinition<T> specification = ofTheSpecification(qualifier, candidates);
         if (specification != null) {
-            return java.util.Optional.of(specification);
+            return Optional.of(specification);
         }
         return delegate.resolveNonUniqueBean(beanType, qualifier, candidates);
     }
@@ -167,39 +181,39 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      *
      * @return The bean, or {@code null} where the rules do not pick one, or no bean of the specification is a candidate
      */
-    private static <T> io.micronaut.inject.@org.jspecify.annotations.Nullable BeanDefinition<T> ofTheSpecification(
-        io.micronaut.context.@org.jspecify.annotations.Nullable Qualifier<T> qualifier,
-        java.util.Collection<BeanDefinition<T>> candidates) {
-        java.util.List<BeanDefinition<T>> eligible = new java.util.ArrayList<>(candidates.size());
+    private static <T> @Nullable BeanDefinition<T> ofTheSpecification(
+        @Nullable Qualifier<T> qualifier,
+        Collection<BeanDefinition<T>> candidates) {
+        List<BeanDefinition<T>> eligible = new ArrayList<>(candidates.size());
         for (BeanDefinition<T> candidate : candidates) {
             if (CdiResolution.isBeanOfTheSpecification(candidate)
                 && (qualifier != null || CdiAssignability.areQualifiersMatching(
-                    CdiQualifier.declared(candidate.getAnnotationMetadata()), java.util.List.of()))) {
+                    CdiQualifier.declared(candidate.getAnnotationMetadata()), List.of()))) {
                 eligible.add(candidate);
             }
         }
         if (eligible.isEmpty()) {
             return null;
         }
-        java.util.List<BeanDefinition<T>> narrowed = CdiResolution.narrow(eligible);
+        List<BeanDefinition<T>> narrowed = CdiResolution.narrow(eligible);
         return narrowed.size() == 1 ? narrowed.get(0) : null;
     }
 
     @Override
-    public java.util.Optional<?> resolveNullBean(Argument<?> requestedBeanType, Argument<?> resolvedBeanType,
-                                                 io.micronaut.inject.BeanDefinition<?> beanDefinition) {
+    public Optional<?> resolveNullBean(Argument<?> requestedBeanType, Argument<?> resolvedBeanType,
+                                       BeanDefinition<?> beanDefinition) {
         // section 2.5.2.4: a producer that returns null satisfies a primitive injection point with the
         // primitive's default value
         Object primitiveDefault = PRIMITIVE_DEFAULTS.get(requestedBeanType.getType());
         if (primitiveDefault != null) {
-            return java.util.Optional.of(primitiveDefault);
+            return Optional.of(primitiveDefault);
         }
-        io.micronaut.core.annotation.AnnotationMetadata metadata = beanDefinition.getAnnotationMetadata();
+        AnnotationMetadata metadata = beanDefinition.getAnnotationMetadata();
         if (metadata.hasAnnotation(CdiProducer.class)
             && (CdiResolution.isNormalScoped(metadata)
                 || beanDefinition.isSingleton())) {
             // section 3.2.2: an instance in any scope but dependent is shared, and a null cannot be
-            throw new jakarta.enterprise.inject.IllegalProductException(
+            throw new IllegalProductException(
                 "The producer of " + beanDefinition.getBeanType().getName() + " returned null, which only a "
                     + "producer of a dependent instance may");
         }
@@ -207,7 +221,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     }
 
     @Override
-    public boolean shouldInitializeBean(io.micronaut.context.BeanResolutionContext resolutionContext,
+    public boolean shouldInitializeBean(BeanResolutionContext resolutionContext,
                                         BeanDefinition<?> beanDefinition, Object bean) {
         // a client proxy delegates every call to the instance its context holds: injecting the proxy's own
         // fields would chase the dependencies the proxy exists to defer, which is how a circular chain of
@@ -221,7 +235,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
 
     @Override
     public boolean shouldPreserveLazyProxyTargetResolutionPath(
-        io.micronaut.context.BeanResolutionContext resolutionContext, BeanDefinition<?> proxyBeanDefinition) {
+        BeanResolutionContext resolutionContext, BeanDefinition<?> proxyBeanDefinition) {
         // when a client proxy finally resolves the instance its context holds, that resolution starts a fresh
         // dependency chain: carrying the path the proxy was injected on would read a legal circular chain of
         // normal-scoped beans — the one section 4.3 has the proxy break — as a circular dependency
@@ -233,12 +247,6 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
 
     @Override
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
-        if (CdiMatching.isLookupOfTheContainer(beanType)
-            && candidate.getExposedTypes().contains(beanType.getType())) {
-            // the container asks for the beans that expose the class of a type, and decides itself which of them
-            // the type of the specification admits (CdiMatching)
-            return true;
-        }
         if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
             && candidate instanceof BeanDefinition<?> definition
             && CdiResolution.isBeanOfTheSpecification(definition)) {
@@ -252,7 +260,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             RecordedTypeIndex index = typeIndex();
             try {
                 // the bean types the container compares too, worked out once for the context
-                java.util.List<Argument<?>> types = index != null ? index.beanTypesOf(definition)
+                List<Argument<?>> types = index != null ? index.beanTypesOf(definition)
                     : CdiBean.typesOf(null, definition, RecordedTypeIndex.beanClassOf(definition));
                 return CdiAssignability.isTypeMatching(index, types, beanType);
             } catch (NoClassDefFoundError | TypeNotPresentException e) {

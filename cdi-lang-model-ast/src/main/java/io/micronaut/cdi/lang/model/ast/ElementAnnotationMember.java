@@ -18,6 +18,8 @@ package io.micronaut.cdi.lang.model.ast;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.AnnotationElement;
+import io.micronaut.inject.ast.AnnotationMemberElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
@@ -225,10 +227,10 @@ public final class ElementAnnotationMember implements AnnotationMember {
             return null;
         }
         ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation, context);
-        if (!(declaration instanceof io.micronaut.inject.ast.AnnotationElement annotationElement)) {
+        if (!(declaration instanceof AnnotationElement annotationElement)) {
             return null;
         }
-        for (io.micronaut.inject.ast.AnnotationMemberElement declared : annotationElement.getMembers()) {
+        for (AnnotationMemberElement declared : annotationElement.getMembers()) {
             if (declared.getName().equals(member)) {
                 ClassElement type = declared.getType();
                 return type.isArray() ? type.fromArray() : type;

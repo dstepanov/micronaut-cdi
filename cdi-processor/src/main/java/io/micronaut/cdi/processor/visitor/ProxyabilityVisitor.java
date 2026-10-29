@@ -18,13 +18,18 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
+import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ProxyRestriction;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The unproxyable bean types of section 3.11, detected as the class compiles: a bean in a normal scope, and a
@@ -43,9 +48,8 @@ import io.micronaut.inject.visitor.VisitorContext;
 public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
-        // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+    public TypeElementQuery query() {
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -74,7 +78,7 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
         }
         String reached = normalScoped ? "its normal scope" : "the interception of its methods";
         if (normalScoped) {
-            for (io.micronaut.inject.ast.FieldElement field
+            for (FieldElement field
                 : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
                 if (field.isPublic() && !field.isStatic()) {
                     // section 2.7: a bean in a normal scope is reached only through its proxy, and a public
@@ -111,8 +115,8 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             .getAnnotationNamesByStereotype("io.micronaut.runtime.context.scope.ScopedProxy")) {
             element.removeAnnotation(proxying);
         }
-        element.removeAnnotation("jakarta.enterprise.context.RequestScoped");
-        element.removeAnnotation("jakarta.enterprise.context.ApplicationScoped");
+        element.removeAnnotation(Cdi.REQUEST_SCOPED);
+        element.removeAnnotation(Cdi.APPLICATION_SCOPED);
         element.removeAnnotation(CdiRequestScope.class);
         element.removeAnnotation(CdiApplicationScope.class);
         element.annotate("io.micronaut.context.annotation.Prototype");
@@ -122,10 +126,10 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
     /**
      * What of section 3.11 the class lacks, or {@code null} when a proxy can extend it.
      */
-    private static @org.jspecify.annotations.Nullable String whyUnproxyable(ClassElement element,
+    private static @Nullable String whyUnproxyable(ClassElement element,
                                                                                 boolean normalScoped) {
         // what Micronaut tells of the type itself; the constructors and the methods are the specification's to judge
-        io.micronaut.inject.ast.ProxyRestriction restriction = element.getProxyRestriction().orElse(null);
+        ProxyRestriction restriction = element.getProxyRestriction().orElse(null);
         if (restriction != null) {
             return switch (restriction) {
                 case FINAL -> "the class is final and a proxy extends it";

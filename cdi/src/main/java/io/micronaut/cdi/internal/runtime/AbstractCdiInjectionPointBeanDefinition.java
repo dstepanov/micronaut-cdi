@@ -27,6 +27,7 @@ import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -51,9 +52,10 @@ import java.util.Map;
  * @since 1.0
  */
 @Internal
-public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPointBeanDefinition.Disposable<B> {
+public abstract class AbstractCdiInjectionPointBeanDefinition<B>
+    extends AbstractInjectionPointBeanDefinition.Disposable<B> {
 
-    protected CdiInjectionPointFactory() {
+    protected AbstractCdiInjectionPointBeanDefinition() {
     }
 
     /**
@@ -61,7 +63,7 @@ public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPoint
      *                        object that is not being injected anywhere is null, and the specification says to
      *                        inject it that way
      */
-    protected CdiInjectionPointFactory(boolean mayBuildNothing) {
+    protected AbstractCdiInjectionPointBeanDefinition(boolean mayBuildNothing) {
         super(mayBuildNothing ? nullable() : AnnotationMetadata.EMPTY_METADATA);
     }
 
@@ -93,7 +95,7 @@ public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPoint
      * @param raw The raw required type
      * @return Whether it is a type of the bean
      */
-    final boolean isBeanType(java.lang.reflect.Type raw) {
+    final boolean isBeanType(Type raw) {
         return raw.equals(getBeanType()) || getExposedTypes().contains(raw);
     }
 

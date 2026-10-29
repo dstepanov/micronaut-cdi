@@ -16,7 +16,10 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.EventMetadata;
+
+import java.util.List;
 
 /**
  * What the registry notifies: an observer method that takes the event and the metadata of its firing.
@@ -40,12 +43,12 @@ public interface CdiNotifiable {
      *
      * @return The observed qualifiers
      */
-    java.util.List<CdiQualifier> observedQualifiers();
+    List<CdiQualifier> observedQualifiers();
 
     /**
      * The type the observer observes, as resolution compares it.
      *
      * @return The observed type
      */
-    io.micronaut.core.type.Argument<?> observedArgument();
+    Argument<?> observedArgument();
 }

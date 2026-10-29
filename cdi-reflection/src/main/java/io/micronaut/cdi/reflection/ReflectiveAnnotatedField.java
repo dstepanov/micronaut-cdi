@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -76,12 +77,12 @@ final class ReflectiveAnnotatedField<X> implements AnnotatedField<X> {
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return new LinkedHashSet<>(java.util.List.of(field.getAnnotationsByType(annotationType)));
+        return new LinkedHashSet<>(List.of(field.getAnnotationsByType(annotationType)));
     }
 
     @Override
     public Set<Annotation> getAnnotations() {
-        return new LinkedHashSet<>(java.util.List.of(field.getAnnotations()));
+        return new LinkedHashSet<>(List.of(field.getAnnotations()));
     }
 
     @Override

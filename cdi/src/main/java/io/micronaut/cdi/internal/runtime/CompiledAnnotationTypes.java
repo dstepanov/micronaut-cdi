@@ -15,7 +15,11 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanDefinitionRegistry;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -244,12 +248,12 @@ public final class CompiledAnnotationTypes {
     private Map<String, Recorded> readClasses() {
         Map<String, Recorded> types = new HashMap<>();
         Collection<BeanDefinitionReference<Object>> references = beanContext instanceof
-            io.micronaut.context.BeanDefinitionRegistry registry ? registry.getBeanDefinitionReferences() : List.of();
+            BeanDefinitionRegistry registry ? registry.getBeanDefinitionReferences() : List.of();
         for (BeanDefinitionReference<Object> reference : references) {
             AnnotationMetadata metadata = reference.getAnnotationMetadata();
             read(metadata, types);
-            AnnotationValue<io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers> registered =
-                metadata.getAnnotation(io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.class);
+            AnnotationValue<CdiExtensionQualifiers> registered =
+                metadata.getAnnotation(CdiExtensionQualifiers.class);
             if (registered != null) {
                 // an annotation an extension made a qualifier of, which no bean may use: its registration is
                 // the one witness of it
@@ -258,10 +262,10 @@ public final class CompiledAnnotationTypes {
                 }
             }
             // the qualifiers of a synthetic component are recorded as values nested in its record
-            readNested(metadata.getAnnotation(io.micronaut.cdi.internal.metadata.CdiSyntheticBean.class),
-                io.micronaut.cdi.internal.metadata.CdiSyntheticBean.QUALIFIERS, metadata, types);
-            readNested(metadata.getAnnotation(io.micronaut.cdi.internal.metadata.CdiSyntheticObserver.class),
-                io.micronaut.cdi.internal.metadata.CdiSyntheticObserver.QUALIFIERS, metadata, types);
+            readNested(metadata.getAnnotation(CdiSyntheticBean.class),
+                CdiSyntheticBean.QUALIFIERS, metadata, types);
+            readNested(metadata.getAnnotation(CdiSyntheticObserver.class),
+                CdiSyntheticObserver.QUALIFIERS, metadata, types);
         }
         return types;
     }

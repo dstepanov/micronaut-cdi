@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
@@ -100,7 +101,7 @@ final class SynthesisPhase {
             }
 
             private <T> SyntheticObserverBuilder<T> observer(
-                Type eventType, AnnotationValue<io.micronaut.cdi.internal.metadata.CdiRecordedType> recorded) {
+                Type eventType, AnnotationValue<CdiRecordedType> recorded) {
                 RecordingObserverBuilder<T> builder = new RecordingObserverBuilder<>(context,
                     nextId(extensionName), eventType, recorded,
                     // the class an observer is declared by is the extension's, unless the extension names one
@@ -224,7 +225,7 @@ final class SynthesisPhase {
         if (qualifiers.isEmpty()) {
             // a bean that names no qualifier has the default one, which the rule of section 2.1.3 says of a
             // bean an extension describes as much as of one a class declares
-            qualifiers.add(AnnotationValue.builder("jakarta.enterprise.inject.Default").build());
+            qualifiers.add(AnnotationValue.builder(Cdi.DEFAULT).build());
         }
         AnnotationValueBuilder<CdiSyntheticBean> record = AnnotationValue.builder(CdiSyntheticBean.class)
             .member("id", bean.id())

@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * section 2.4.2 select among the definitions the bean context enumerates for the raw class of the type, and
  * compares and composes like any other Micronaut qualifier.
  */
-class CdiMatchingTest {
+class CdiBeanQualifierTest {
 
     @jakarta.inject.Qualifier
     @Retention(RetentionPolicy.RUNTIME)
@@ -161,19 +161,19 @@ class CdiMatchingTest {
             CdiQualifier blueAgain = CdiQualifier.ofValue(types,
                 AnnotationValue.builder(Tinted.class).value("blue").build());
 
-            CdiMatching<Object> one = CdiMatching.of(container, Argument.of(Swatch.class), List.of(blue, matte));
-            CdiMatching<Object> other = CdiMatching.of(container, Argument.of(Swatch.class), List.of(matte, blueAgain));
+            CdiBeanQualifier<Object> one = CdiBeanQualifier.of(container, Argument.of(Swatch.class), List.of(blue, matte));
+            CdiBeanQualifier<Object> other = CdiBeanQualifier.of(container, Argument.of(Swatch.class), List.of(matte, blueAgain));
             assertEquals(one, other);
             assertEquals(one.hashCode(), other.hashCode());
-            assertNotEquals(one, CdiMatching.of(container, Argument.of(Finish.class), List.of(blue, matte)));
-            assertNotEquals(one, CdiMatching.of(container, Argument.of(Swatch.class), List.of(blue)));
-            assertNotEquals(CdiMatching.of(container, Argument.of(Tray.class, String.class), List.of()),
-                CdiMatching.of(container, Argument.of(Tray.class, Swatch.class), List.of()));
+            assertNotEquals(one, CdiBeanQualifier.of(container, Argument.of(Finish.class), List.of(blue, matte)));
+            assertNotEquals(one, CdiBeanQualifier.of(container, Argument.of(Swatch.class), List.of(blue)));
+            assertNotEquals(CdiBeanQualifier.of(container, Argument.of(Tray.class, String.class), List.of()),
+                CdiBeanQualifier.of(container, Argument.of(Tray.class, Swatch.class), List.of()));
 
-            CdiMatching<Object> fewer = CdiMatching.of(container, Argument.of(Swatch.class), List.of(blue));
+            CdiBeanQualifier<Object> fewer = CdiBeanQualifier.of(container, Argument.of(Swatch.class), List.of(blue));
             assertTrue(one.contains(fewer), "requiring more selects among what requiring less selects");
             assertFalse(fewer.contains(one));
-            assertFalse(one.contains(CdiMatching.of(container, Argument.of(Finish.class), List.of(blue))));
+            assertFalse(one.contains(CdiBeanQualifier.of(container, Argument.of(Finish.class), List.of(blue))));
         }
     }
 
@@ -182,7 +182,7 @@ class CdiMatchingTest {
     void composesWithTheQualifiersOfAnApplication() {
         try (ApplicationContext context = ApplicationContext.run()) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
-            CdiMatching<Object> any = CdiMatching.of(container, Argument.of(Swatch.class), List.of(CdiQualifier.ANY));
+            CdiBeanQualifier<Object> any = CdiBeanQualifier.of(container, Argument.of(Swatch.class), List.of(CdiQualifier.ANY));
             Qualifier<Object> byType = Qualifiers.byType(RedSwatch.class);
             Qualifier<Object> both = Qualifiers.byQualifiers(any, byType);
             Collection<BeanDefinition<Object>> found = context.getBeanDefinitions(any.lookupType(), both);
@@ -228,7 +228,7 @@ class CdiMatchingTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void assertSelects(ApplicationContext context, CdiBeanContainer container, Argument<?> type,
                                       List<CdiQualifier> qualifiers, Class<?>... expected) {
-        CdiMatching<Object> matching = CdiMatching.of(container, type, qualifiers);
+        CdiBeanQualifier<Object> matching = CdiBeanQualifier.of(container, type, qualifiers);
         Collection<BeanDefinition<Object>> found = context.getBeanDefinitions(matching.lookupType(), matching);
         Set<Class<?>> wanted = Set.of(expected);
         assertEquals(wanted, beanTypesOf((Collection) found), "the qualifier for " + matching);

@@ -18,10 +18,12 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
 import io.micronaut.inject.QualifiedBeanType;
+import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -55,13 +57,13 @@ import java.util.stream.Stream;
  * @since 1.0
  */
 @Internal
-final class CdiMatching<T> implements Qualifier<T> {
+final class CdiBeanQualifier<T> implements Qualifier<T> {
 
     private final CdiBeanContainer container;
     private final Argument<?> required;
     private final List<CdiQualifier> qualifiers;
 
-    private CdiMatching(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
+    private CdiBeanQualifier(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
         this.container = container;
         this.required = required;
         this.qualifiers = List.copyOf(qualifiers);
@@ -76,8 +78,8 @@ final class CdiMatching<T> implements Qualifier<T> {
      * @param <T>        The bean type
      * @return The qualifier
      */
-    static <T> CdiMatching<T> of(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
-        return new CdiMatching<>(container, required, qualifiers);
+    static <T> CdiBeanQualifier<T> of(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
+        return new CdiBeanQualifier<>(container, required, qualifiers);
     }
 
     /**
@@ -101,29 +103,9 @@ final class CdiMatching<T> implements Qualifier<T> {
         // section 2.1.2 counts a primitive and the class that boxes it as one bean type: asked for as the
         // primitive, the context also enumerates the beans of the boxed class (resolveBeanLookupArgument of the
         // resolution customizer), and the other way around it would not
-        Class<?> primitive = io.micronaut.core.reflect.ReflectionUtils.getPrimitiveType(raw);
-        return (Argument<T>) Argument.of(primitive, LOOKUP);
-    }
-
-    /**
-     * The name the type the container asks the bean context for candidates by is given, which tells the resolution
-     * customizer that the lookup is one of the container's, whose candidates are every bean that exposes the class:
-     * Micronaut's own test of a raw lookup has a bean of a container type - a producer of a {@code List} - stand for
-     * its elements and refuses it to a lookup of a supertype of its class, {@code Collection} say, which the type of
-     * the specification may well be. As part of the type, the name also keeps the candidates the bean context keeps
-     * for such a lookup apart from the ones it keeps for a lookup of its own of the class.
-     */
-    static final String LOOKUP = "$cdiLookup";
-
-    /**
-     * Whether the type a lookup is made by is one the container asked for the candidates of a type of the
-     * specification by ({@link #lookupType()}).
-     *
-     * @param type The type
-     * @return Whether it is the container's
-     */
-    static boolean isLookupOfTheContainer(Argument<?> type) {
-        return LOOKUP.equals(type.getName());
+        // a raw lookup has every bean that exposes the class among its candidates, a producer of a List for a
+        // Collection included
+        return (Argument<T>) Argument.of(ReflectionUtils.getPrimitiveType(raw));
     }
 
     /**
@@ -174,7 +156,7 @@ final class CdiMatching<T> implements Qualifier<T> {
         if (!(candidate instanceof BeanDefinition<?> definition) || !isInjectable(definition)) {
             return false;
         }
-        if (definition instanceof CdiInjectionPointFactory<?> builtIn) {
+        if (definition instanceof AbstractCdiInjectionPointBeanDefinition<?> builtIn) {
             // the built-in event and lookup exist for whatever legal type an injection point asks them for, so
             // the one bean of each answers every parameterization of its type, the raw type itself, and every
             // qualifier
@@ -216,7 +198,7 @@ final class CdiMatching<T> implements Qualifier<T> {
      * @return Whether it is one
      */
     static boolean isInterceptor(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+        return definition.getAnnotationMetadata().hasAnnotation(Interceptor.class);
     }
 
     /**
@@ -228,7 +210,7 @@ final class CdiMatching<T> implements Qualifier<T> {
      */
     @Override
     public boolean contains(Qualifier<T> qualifier) {
-        if (!(qualifier instanceof CdiMatching<T> other) || !required.equalsStructure(other.required)) {
+        if (!(qualifier instanceof CdiBeanQualifier<T> other) || !required.equalsStructure(other.required)) {
             return false;
         }
         for (CdiQualifier one : other.qualifiers) {
@@ -244,7 +226,7 @@ final class CdiMatching<T> implements Qualifier<T> {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof CdiMatching<?> other) || container != other.container
+        if (!(o instanceof CdiBeanQualifier<?> other) || container != other.container
             || qualifiers.size() != other.qualifiers.size() || !required.equalsStructure(other.required)) {
             return false;
         }

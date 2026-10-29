@@ -16,11 +16,19 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
+import jakarta.enterprise.inject.spi.InterceptionType;
+import jakarta.enterprise.lang.model.AnnotationInfo;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,21 +51,21 @@ final class ElementInterceptorInfo extends ElementBeanInfo implements Intercepto
     }
 
     @Override
-    public java.util.Collection<jakarta.enterprise.lang.model.AnnotationInfo> interceptorBindings() {
-        java.util.List<jakarta.enterprise.lang.model.AnnotationInfo> bindings = new java.util.ArrayList<>();
-        io.micronaut.core.annotation.AnnotationMetadata metadata = declaringClass.getAnnotationMetadata();
+    public Collection<AnnotationInfo> interceptorBindings() {
+        List<AnnotationInfo> bindings = new ArrayList<>();
+        AnnotationMetadata metadata = declaringClass.getAnnotationMetadata();
         for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
             // every occurrence of a repeatable binding, as the container reports them
-            List<io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation>> occurrences =
+            List<AnnotationValue<Annotation>> occurrences =
                 metadata.getAnnotationValuesByName(name);
             if (!occurrences.isEmpty()) {
-                for (io.micronaut.core.annotation.AnnotationValue<?> occurrence : occurrences) {
+                for (AnnotationValue<?> occurrence : occurrences) {
                     bindings.add(new ElementAnnotationInfo(occurrence, context));
                 }
                 continue;
             }
             // a binding only a stereotype carries
-            io.micronaut.core.annotation.AnnotationValue<?> value = metadata.getAnnotation(name);
+            AnnotationValue<?> value = metadata.getAnnotation(name);
             if (value != null) {
                 bindings.add(new ElementAnnotationInfo(value, context));
             }
@@ -66,7 +74,7 @@ final class ElementInterceptorInfo extends ElementBeanInfo implements Intercepto
     }
 
     @Override
-    public boolean intercepts(jakarta.enterprise.inject.spi.InterceptionType interceptionType) {
+    public boolean intercepts(InterceptionType interceptionType) {
         String marker = switch (interceptionType) {
             case AROUND_INVOKE -> "jakarta.interceptor.AroundInvoke";
             case AROUND_CONSTRUCT -> "jakarta.interceptor.AroundConstruct";
@@ -78,7 +86,7 @@ final class ElementInterceptorInfo extends ElementBeanInfo implements Intercepto
             return false;
         }
         return declaringClass.getEnclosedElements(
-                io.micronaut.inject.ast.ElementQuery.ALL_METHODS).stream()
+                ElementQuery.ALL_METHODS).stream()
             .anyMatch(method -> method.hasDeclaredAnnotation(marker));
     }
 }

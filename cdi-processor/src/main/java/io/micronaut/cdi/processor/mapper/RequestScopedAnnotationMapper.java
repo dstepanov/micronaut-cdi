@@ -23,6 +23,7 @@ import io.micronaut.inject.annotation.NamedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,7 +45,7 @@ public final class RequestScopedAnnotationMapper implements NamedAnnotationMappe
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         // the annotation of the specification is kept beside the Micronaut one it was read as, so that the scope
         // a bean was written with is still what the container reports for it
-        List<AnnotationValue<?>> mapped = new java.util.ArrayList<>();
+        List<AnnotationValue<?>> mapped = new ArrayList<>();
         mapped.add(annotation);
         mapped.addAll(CdiScopes.annotationsOf(Cdi.REQUEST_SCOPED, true));
         return mapped;

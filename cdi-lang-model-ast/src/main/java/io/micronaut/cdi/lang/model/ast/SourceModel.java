@@ -16,6 +16,7 @@
 package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
@@ -125,13 +126,13 @@ final class SourceModel {
         if (!present.contains(RETENTION) && retention != RetentionPolicy.CLASS
             && ExtensionAnnotations.isReported(annotation, RETENTION, context)) {
             found.add(new ElementAnnotationInfo(
-                AnnotationValue.builder(RETENTION).member("value", retention.name()).build(), context));
+                AnnotationValue.builder(RETENTION).member(AnnotationMetadata.VALUE_MEMBER, retention.name()).build(), context));
         }
         String container = annotation.getRepeatableContainer().orElse(null);
         if (container != null && !present.contains(REPEATABLE)
             && ExtensionAnnotations.isReported(annotation, REPEATABLE, context)) {
             found.add(new ElementAnnotationInfo(
-                AnnotationValue.builder(REPEATABLE).member("value", new AnnotationClassValue<>(container)).build(),
+                AnnotationValue.builder(REPEATABLE).member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(container)).build(),
                 context));
         }
     }

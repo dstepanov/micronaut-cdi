@@ -16,7 +16,9 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.context.ApplicationScope;
+import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.annotation.Context;
 import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.core.annotation.Internal;
@@ -31,7 +33,9 @@ import jakarta.enterprise.event.Shutdown;
 import jakarta.enterprise.event.Startup;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * @author Denis Stepanov
  * @since 1.0
  */
-@io.micronaut.context.annotation.Context
+@Context
 @Internal
 public final class ContainerLifecycle implements ApplicationEventListener<ShutdownEvent>, Ordered {
 
@@ -65,8 +69,8 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final BeanContext beanContext;
     private final ObserverRegistry observers;
     private final ApplicationScope applicationScope;
-    // what was obtained through the container itself and is released as it stops, see releaseAsTheContainerStops
-    private final java.util.List<Runnable> releases = new java.util.concurrent.CopyOnWriteArrayList<>();
+    // what was obtained through the container itself and is released as it stops, see addShutdownCallback
+    private final List<Runnable> releases = new CopyOnWriteArrayList<>();
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope) {
         this.beanContext = beanContext;
@@ -78,15 +82,15 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     void started() {
         // the portable extensions an SE bootstrap asked for run first: what they add - a context, an observer,
         // a qualifier - is there by the time the application is told the container has started
-        beanContext.findBean(io.micronaut.cdi.spi.PortableExtensions.Request.class)
+        beanContext.findBean(PortableExtensions.Request.class)
             .ifPresent(request -> {
-                io.micronaut.cdi.spi.PortableExtensions extensions = beanContext
-                    .findBean(io.micronaut.cdi.spi.PortableExtensions.class).orElse(null);
+                PortableExtensions extensions = beanContext
+                    .findBean(PortableExtensions.class).orElse(null);
                 if (extensions != null) {
                     extensions.run(beanContext, request);
                 } else if (request.namesExtensions()) {
                     throw new UnsupportedOperationException(
-                        io.micronaut.cdi.spi.PortableExtensions.MISSING);
+                        PortableExtensions.MISSING);
                 }
             });
         // the deployment is validated before the application is told it has started (chapter 13); an
@@ -106,7 +110,7 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
      *
      * @param release Releases them
      */
-    public void releaseAsTheContainerStops(Runnable release) {
+    public void addShutdownCallback(Runnable release) {
         releases.add(release);
     }
 

@@ -97,8 +97,8 @@ public final class CdiAssignability {
      * @param requiredQualifiers The qualifiers required
      * @return Whether the bean qualifies
      */
-    public static boolean areQualifiersMatching(java.util.Collection<CdiQualifier> beanQualifiers,
-                                                java.util.Collection<CdiQualifier> requiredQualifiers) {
+    public static boolean areQualifiersMatching(Collection<CdiQualifier> beanQualifiers,
+                                                Collection<CdiQualifier> requiredQualifiers) {
         boolean namesOne = false;
         for (CdiQualifier qualifier : beanQualifiers) {
             if (!qualifier.isAny() && !qualifier.isNamed()) {
@@ -211,8 +211,8 @@ public final class CdiAssignability {
      * @param observedEventQualifiers The qualifiers the observer observes
      * @return Whether the observer observes the event, as far as qualifiers go
      */
-    public static boolean areEventQualifiersMatching(java.util.Collection<CdiQualifier> specifiedQualifiers,
-                                                     java.util.Collection<CdiQualifier> observedEventQualifiers) {
+    public static boolean areEventQualifiersMatching(Collection<CdiQualifier> specifiedQualifiers,
+                                                     Collection<CdiQualifier> observedEventQualifiers) {
         for (CdiQualifier observed : observedEventQualifiers) {
             if (observed.isAny()) {
                 continue;
@@ -748,7 +748,7 @@ public final class CdiAssignability {
         // matching them — but a bare type variable names nothing to resolve
         if (type.isUnresolvedTypeVariable()) {
             throw new IllegalArgumentException("A type variable does not describe a bean or an event: "
-                + SpecificationTypes.typeOf(type).getTypeName());
+                + type.asType().getTypeName());
         }
     }
 }

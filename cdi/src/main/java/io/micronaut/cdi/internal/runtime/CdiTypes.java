@@ -23,13 +23,17 @@ import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.WildcardArgument;
 
 import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The types of the specification as the container holds them: each an {@link Argument}, which carries the type
@@ -108,8 +112,8 @@ public final class CdiTypes {
      * @param parameterTypes The {@link #erasedName erased names} of its parameter types
      * @return The method, or {@code null} where the definition has no executable method of the signature
      */
-    static io.micronaut.inject.@Nullable ExecutableMethod<?, ?> executableMethodOf(
-        io.micronaut.inject.BeanDefinition<?> definition, String name, String[] parameterTypes) {
+    static @Nullable ExecutableMethod<?, ?> executableMethodOf(
+        BeanDefinition<?> definition, String name, String[] parameterTypes) {
         return definition.findPossibleMethods(name)
             .filter(method -> hasParameterTypes(method.getArgumentTypes(), parameterTypes))
             .findFirst()
@@ -126,26 +130,6 @@ public final class CdiTypes {
             }
         }
         return true;
-    }
-
-    /**
-     * The required type of the lookup, as the specification's API reports a type.
-     *
-     * @param beanType The compiled argument of the lookup
-     * @return The required type
-     */
-    public static Type requiredTypeOf(Argument<?> beanType) {
-        return SpecificationTypes.typeOf(beanType);
-    }
-
-    /**
-     * The type a compiled argument describes, as the specification's API reports a type.
-     *
-     * @param argument The argument
-     * @return The type
-     */
-    public static Type typeOf(Argument<?> argument) {
-        return SpecificationTypes.typeOf(argument);
     }
 
     /**
@@ -266,13 +250,13 @@ public final class CdiTypes {
         Argument<?>[] erased = new Argument<?>[arguments.length];
         boolean changed = false;
         for (int i = 0; i < arguments.length; i++) {
-            erased[i] = argumentWithErasedBounds(arguments[i], new java.util.HashSet<>());
+            erased[i] = argumentWithErasedBounds(arguments[i], new HashSet<>());
             changed |= erased[i] != arguments[i];
         }
         return changed ? type.withTypeParameters(erased) : type;
     }
 
-    private static Argument<?> argumentWithErasedBounds(Argument<?> argument, java.util.Set<String> variables) {
+    private static Argument<?> argumentWithErasedBounds(Argument<?> argument, Set<String> variables) {
         if (argument instanceof WildcardArgument<?> wildcard) {
             Argument<?>[] uppers = boundsErased(wildcard.getUpperBounds(), variables);
             Argument<?>[] lowers = boundsErased(wildcard.getLowerBounds(), variables);
@@ -306,7 +290,7 @@ public final class CdiTypes {
         return argument.withTypeParameters(erased);
     }
 
-    private static Argument<?>[] boundsErased(List<Argument<?>> bounds, java.util.Set<String> variables) {
+    private static Argument<?>[] boundsErased(List<Argument<?>> bounds, Set<String> variables) {
         Argument<?>[] erased = new Argument<?>[bounds.size()];
         for (int i = 0; i < erased.length; i++) {
             Argument<?> bound = bounds.get(i);
@@ -445,7 +429,7 @@ public final class CdiTypes {
         if (reflection != null) {
             // the module that reads classes speaks the types of the reflection API
             return SpecificationTypes.argumentsOf(
-                reflection.typeClosureOf(SpecificationTypes.typeOf(type), arrayStops));
+                reflection.typeClosureOf(type.asType(), arrayStops));
         }
         // nothing is known of what is above the type without reading it: the type itself is all there is,
         // and what is above a class is asked of the class by whoever compares against it
@@ -505,8 +489,7 @@ public final class CdiTypes {
      * @see #eventTypeOf(RecordedTypeIndex, Class, Argument)
      */
     public static Type eventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass, Type declaredType) {
-        return SpecificationTypes.typeOf(
-            eventTypeOf(index, runtimeClass, SpecificationTypes.argumentOf(declaredType)));
+        return eventTypeOf(index, runtimeClass, SpecificationTypes.argumentOf(declaredType)).asType();
     }
 
     /**
@@ -564,7 +547,7 @@ public final class CdiTypes {
             CdiReflection reflection = reflection(index);
             if (reflection != null) {
                 return SpecificationTypes.argumentOf(
-                    reflection.eventTypeOf(runtimeClass, SpecificationTypes.typeOf(declaredType)));
+                    reflection.eventTypeOf(runtimeClass, declaredType.asType()));
             }
             return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
         }
@@ -594,7 +577,7 @@ public final class CdiTypes {
             if (resolved == null || resolved.isUnresolvedTypeVariable()) {
                 throw new IllegalArgumentException("The type variable " + variables.get(i) + " of "
                     + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
-                    + SpecificationTypes.typeOf(declaredType).getTypeName()
+                    + declaredType.asType().getTypeName()
                     + ". MicronautEvent.select(Argument) states the type of an event in full");
             }
             arguments[i] = resolved;

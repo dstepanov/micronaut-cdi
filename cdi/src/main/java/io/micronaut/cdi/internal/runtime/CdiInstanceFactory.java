@@ -15,11 +15,17 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.MicronautInstance;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Provider;
+
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -30,20 +36,20 @@ import jakarta.enterprise.inject.Instance;
  * @since 1.0
  */
 @Internal
-public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instance<T>> {
+public final class CdiInstanceFactory<T> extends AbstractCdiInjectionPointBeanDefinition<Instance<T>> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public Class<Instance<T>> getBeanType() {
         // the Micronaut lookup, so that an injection point may be declared with either type
-        return (Class) io.micronaut.cdi.MicronautInstance.class;
+        return (Class) MicronautInstance.class;
     }
 
     @Override
-    public java.util.Set<Class<?>> getExposedTypes() {
+    public Set<Class<?>> getExposedTypes() {
         // the built-in lookup has Provider among its bean types: Instance extends it
-        return java.util.Set.of(
-            io.micronaut.cdi.MicronautInstance.class, Instance.class, jakarta.inject.Provider.class);
+        return Set.of(
+            MicronautInstance.class, Instance.class, Provider.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -51,8 +57,8 @@ public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instan
     protected Instance<T> build(BeanResolutionContext resolutionContext,
                                 BeanContext context,
                                 Argument<?> type,
-                                java.util.List<CdiQualifier> qualifiers) {
-        jakarta.enterprise.inject.spi.InjectionPoint injectedAt = null;
+                                List<CdiQualifier> qualifiers) {
+        InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
             injectedAt = CdiInjectionPoint.of(context.getBean(CdiBeanContainer.class), segment);

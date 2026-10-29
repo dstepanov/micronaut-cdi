@@ -29,6 +29,7 @@ import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
@@ -53,13 +54,13 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
 
     private final String annotation;
     private final Map<CharSequence, Object> members = new LinkedHashMap<>();
-    private final @org.jspecify.annotations.Nullable VisitorContext context;
+    private final @Nullable VisitorContext context;
 
     /**
      * @param annotation The name of the annotation interface
      * @param context    The compilation its interface is read through, or {@code null} outside one
      */
-    ElementAnnotationBuilder(String annotation, @org.jspecify.annotations.Nullable VisitorContext context) {
+    ElementAnnotationBuilder(String annotation, @Nullable VisitorContext context) {
         this.annotation = annotation;
         this.context = context;
     }
