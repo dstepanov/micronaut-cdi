@@ -128,8 +128,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     private static final int MAX_SELECTIONS = 16_384;
 
     private final BeanContext beanContext;
-    private final RequestScope requestScope;
-    private final ApplicationScope applicationScope;
     /**
      * The container's own bean of each definition the bean context handed it, for everyone who describes the
      * same bean to hold the same object, which reads the bean types of its definition once.
@@ -166,8 +164,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
                             ApplicationScope applicationScope, ObserverRegistry observers) {
         this.beanContext = beanContext;
-        this.requestScope = requestScope;
-        this.applicationScope = applicationScope;
         this.observers = observers;
         this.requestContexts = List.of(
             CdiContext.ofRequest(RequestScoped.class, requestScope));
