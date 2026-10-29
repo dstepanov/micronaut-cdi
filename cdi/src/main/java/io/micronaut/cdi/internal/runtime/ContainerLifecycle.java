@@ -69,7 +69,7 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final BeanContext beanContext;
     private final ObserverRegistry observers;
     private final ApplicationScope applicationScope;
-    // what was obtained through the container itself and is released as it stops, see releaseAsTheContainerStops
+    // what was obtained through the container itself and is released as it stops, see addShutdownCallback
     private final List<Runnable> releases = new CopyOnWriteArrayList<>();
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope) {
@@ -110,7 +110,7 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
      *
      * @param release Releases them
      */
-    public void releaseAsTheContainerStops(Runnable release) {
+    public void addShutdownCallback(Runnable release) {
         releases.add(release);
     }
 

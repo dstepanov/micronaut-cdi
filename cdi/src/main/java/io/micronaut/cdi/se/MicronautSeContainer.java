@@ -58,7 +58,7 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
         // the dependent instances obtained through the container belong to it. They are released as the
         // container stops, once it has said so: section 2.8.6.2 has Shutdown observed as the container is about
         // to shut down, so its observers find them in place
-        context.getBean(ContainerLifecycle.class).releaseAsTheContainerStops(lookup::close);
+        context.getBean(ContainerLifecycle.class).addShutdownCallback(lookup::close);
     }
 
     @Override
