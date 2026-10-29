@@ -100,8 +100,12 @@ class GeneratedClassNamesTest {
                 }
             }
         }
-        assertTrue(classes.contains("collide.$Payload$TypeHierarchy"), "the payload is recorded: " + classes);
-        assertTrue(classes.contains("collide.$$java.lang.$String$TypeHierarchy"),
+        // a record is named by Micronaut after the type and the class that recorded it; read the type back from the name
+        assertTrue(classes.stream().anyMatch(name -> name.startsWith("collide.")
+                && "collide.Payload".equals(io.micronaut.core.type.TypeHierarchies.recordedTypeName(name))),
+            "the payload is recorded: " + classes);
+        assertTrue(classes.stream().anyMatch(name -> name.startsWith("collide.")
+                && "java.lang.String".equals(io.micronaut.core.type.TypeHierarchies.recordedTypeName(name))),
             "the class of the JDK it names is recorded in its package: " + classes);
         // the extensions of the suite register qualifiers, which a record of the deployment holds: one, not one per
         // package of recorded hierarchies

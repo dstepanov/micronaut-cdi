@@ -33,8 +33,10 @@ class ProducerFieldReferencesWithoutReflectionTest {
 
     @Test
     void theArgumentsOfAProducedFieldAreRecordedFromItsClass() {
+        // each top-level class that records a type writes its own record, named after it
         String record = TypeHierarchies.recordClassName(Short.class.getName(),
-            ProducerFieldReferencesWithoutReflectionTest.class.getPackageName());
+            ProducerFieldReferencesWithoutReflectionTest.class.getPackageName(),
+            ProducerFieldReferencesWithoutReflectionTest.class.getSimpleName());
         assertDoesNotThrow(() -> Class.forName(record),
             "Short, named by the produced field, is recorded into the package of the class declaring it");
         try (ApplicationContext context = ApplicationContext.run()) {
