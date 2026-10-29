@@ -13,6 +13,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,19 +29,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class OwnerlessLookupTest {
 
+    /**
+     * How long the work a {@code @PreDestroy} hands to another thread is waited for: a lookup that blocks on the
+     * destruction it runs within is reported as a failure rather than hanging the suite.
+     */
+    private static final long WAIT_SECONDS = 10;
+
     static final List<String> SEEN = new CopyOnWriteArrayList<>();
     static volatile boolean armed;
 
     @Dependent
     public static class Helper {
-        String help() {
-            return "helped";
+        private String tag = "";
+
+        String help(String tag) {
+            this.tag = tag;
+            return "helped " + tag;
         }
 
         @PreDestroy
         void destroyed() {
             if (armed) {
-                SEEN.add("helper destroyed");
+                SEEN.add("helper destroyed " + tag);
             }
         }
     }
@@ -61,12 +73,16 @@ class OwnerlessLookupTest {
             }
             SEEN.add("closing");
             ExecutorService executor = Executors.newSingleThreadExecutor();
+            Future<String> work = executor.submit(() -> helpers.get().help("off-thread"));
             try {
-                SEEN.add(executor.submit(() -> helpers.get().help()).get());
+                SEEN.add(work.get(WAIT_SECONDS, TimeUnit.SECONDS));
             } catch (ExecutionException e) {
                 SEEN.add("failed: " + e.getCause());
+            } catch (TimeoutException e) {
+                SEEN.add("timed out");
             } finally {
-                executor.shutdown();
+                work.cancel(true);
+                executor.shutdownNow();
             }
             SEEN.add("closed");
         }
@@ -80,10 +96,11 @@ class OwnerlessLookupTest {
             Instance<Owner> owners = CDI.current().select(Owner.class);
             Owner owner = owners.get();
             Instance<Helper> escaped = owner.helpers;
+            // a helper created through the owner, whose destruction shows the owner was destroyed
+            SEEN.add(escaped.get().help("owned"));
             owners.destroy(owner);
-            SEEN.add("owner destroyed");
             try {
-                SEEN.add(escaped.get().help());
+                SEEN.add(escaped.get().help("escaped"));
             } catch (RuntimeException e) {
                 SEEN.add("failed: " + e);
             }
@@ -91,8 +108,8 @@ class OwnerlessLookupTest {
         } finally {
             armed = false;
         }
-        // the helper is not destroyed: its group was opened after the owner had closed its dependents
-        assertEquals(List.of("owner destroyed", "helped", "stopping"), SEEN);
+        // the escaped helper is not destroyed: its group was opened after the owner had closed its dependents
+        assertEquals(List.of("helped owned", "helper destroyed owned", "helped escaped", "stopping"), SEEN);
     }
 
     @Test
@@ -106,6 +123,7 @@ class OwnerlessLookupTest {
         } finally {
             armed = false;
         }
-        assertEquals(List.of("closing", "helped", "closed", "helper destroyed", "owner destroyed"), SEEN);
+        assertEquals(List.of("closing", "helped off-thread", "closed", "helper destroyed off-thread",
+            "owner destroyed"), SEEN);
     }
 }
