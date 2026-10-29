@@ -181,31 +181,36 @@ annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotati
 AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
 the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
 specification are also the ones a portable extension added as the container started, a bean that declares
-none has `@Default` and `@Any`, and two values are compared by the members that bind as `BindingValues.matches`
-compares them (an enum constant by its name, a class as its `AnnotationClassValue`); so the container compares
-the qualifiers itself.
+none has `@Default` and `@Any`; so the container compares the qualifiers itself, each pair of values as Micronaut
+compares two annotations.
 
-A qualifier and an interceptor binding are compared by one rule, the Jakarta Interceptors implementation's
-`BindingValues.matches`, so that `areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer as the
-interceptor chains are built: the members a value leaves out filled in from the defaults it carries, the members
-either side lists under `$nonBinding` left out of both, an empty string compared as the member left out, only
-`$nonBinding` and `$stereotypes` of Micronaut's members left out, an enum constant by its name, a class as its
-`AnnotationClassValue`, an array element by element, and an annotation held by a member compared as a binding
-is - by the members it binds by rather than by every member, which section 5.2.6 leaves non-portable for a
-qualifier member that is an annotation and is not `@Nonbinding`. Two things the container does beside it:
+A qualifier and an interceptor binding are compared by one rule, Micronaut's `AnnotationValue.matches` (since
+Micronaut Core 5.3, #14147, the comparison Micronaut's own exact interceptor binding qualifier is built on), so that
+`areQualifiersEquivalent` and `areInterceptorBindingsEquivalent` answer alike: the members a value leaves out
+filled in from the defaults it carries, or from the other side's where it carries none, the members either side
+lists under `$nonBinding` left out of both, only `$nonBinding` and `$stereotypes` of Micronaut's members left out,
+an array element by element, and an annotation held by a member compared the same way - by the members it binds
+by rather than by every member, which section 5.2.6 leaves non-portable for a qualifier member that is an
+annotation and is not `@Nonbinding` (`CdiQualifier.matches`). What the container does beside it, each for a value
+Micronaut has no compiled side to complete from:
 
-- **A value that carries no defaults is given the ones Micronaut registered for its type** before it is
-  compared. Compiled metadata hands every value its defaults; a qualifier a program composes, as
-  `AnnotationValue.builder(Shelf.class).build()`, carries none, and `BindingValues`, which fills defaults from the
-  value alone, would not match it with the bean compiled with `@Shelf`. An annotation such a value holds is
-  compared with the defaults it carries, as `BindingValues` compares it. The value with the defaults is also what
-  the container hands the interceptors implementation (`BeanManager.resolveInterceptors`), so the two still agree.
-- **`getQualifierHashCode` and `getInterceptorBindingHashCode` hash the members that bind.**
-  `BindingValues.hashCode` hashes the name alone, because the two values it compares may list different members
-  as non-binding; the container hashes an annotation instance, whose non-binding members are those of its type
-  whichever instance it is, and the specification's tests ask two qualifiers that differ by a binding member to
-  hash differently. The members are hashed as `BindingValues.normalize` shapes them, an annotation a member holds by
-  its name, so two annotations that match hash alike.
+- **A value a program composed is spelt as Micronaut records it**: an enum constant as its name, a class as its
+  `AnnotationClassValue`. `AnnotationValueBuilder.member(String, Enum)` keeps the constant, which
+  `AnnotationValue.matches` does not equate with the name compiled metadata holds (a gap of Micronaut's, listed
+  below).
+- **A member bound to the empty string that has no default is the member left out.** Micronaut records no default
+  of the empty string for an annotation compiled from Java, so `@Zone` on a bean carries neither the member nor its
+  default, and `AnnotationValue.matches` compares `@Zone("")` as a member the bean lacks. Where a default is known
+  the empty string is compared with it: `@Level("")` is not `@Level` when the member defaults to `"INFO"`.
+- **A value that carries no defaults is given the ones Micronaut registered for its type**, and **one read from an
+  annotation instance lists the members its type marks under `$nonBinding`**. Against a compiled qualifier neither
+  is needed, Micronaut taking both from the other side; they are for two values that both lack them - two
+  instances compared with each other - and for the hash code.
+- **`getQualifierHashCode` and `getInterceptorBindingHashCode` hash the members that bind.** Micronaut has no hash
+  code for `AnnotationValue.matches`; the container hashes an annotation instance, whose non-binding members are
+  those of its type whichever instance it is, and the specification's tests ask two qualifiers that differ by a
+  binding member to hash differently. The members are hashed at the defaults the value carries, an annotation a
+  member holds by its name and an empty string not at all, so two annotations that match hash alike.
 
 An annotation literal a program hands to `select`, `getBeans` and their like is a reflection object. The
 literals of the specification and a literal of a qualifier with no binding member are taken as they are; any
@@ -672,9 +677,13 @@ resolver of the bean and through dependency groups (`OwnedDependents`), and dest
 order it was created in, every one of them attempted where one fails. `Instance.destroy` finds the registration
 Micronaut holds for the instance by its identity (`BeanDependencyResolver.findRegistration`, since Micronaut Core
 5.3, #14079) and destroys it there; a handle keeps the registration it created, which a null product of a dependent
-producer cannot be found again by. As the context stops Micronaut opens a new group for a listener of its shutdown
-event alone; what a lookup that runs later creates - from a `@PreDestroy`, or on the thread of an executor - is held
-by the container and destroyed the same way.
+producer cannot be found again by. As the context stops Micronaut opens groups and resolves through them and
+through the resolver of a bean, on any thread, for as long as it runs the callbacks of its shutdown - the observers
+of `Shutdown`, `@BeforeDestroyed` and `@Destroyed` of the application context, the `@PreDestroy` methods of its beans
+and work they wait for on an executor - and destroys what they create before it completes (since Micronaut Core
+5.3, #13849; `ShutdownDependenciesTest`). Micronaut still resolves for a bean being destroyed on behalf of its own
+destruction callbacks on the destroying thread alone, so a lookup injected into the bean that its `@PreDestroy` uses
+from another thread creates through a dependency group of the lookup's own instead (`ShutdownLookupOffThreadTest`).
 
 ### Known limitations a review has named
 
@@ -838,12 +847,14 @@ own rather than the first one alone.
   qualifier an extension composed for a synthetic component, a value nested in the record of the component rather
   than an occurrence of the compilation: the processor lists its members from the interface's
   (`NonbindingMembers.complete`), and the comparison leaves out a member either side lists.
-- **`AnnotationValue.matches` is not a full structural comparison.** It fills in the defaults of both sides, but
-  then compares what it holds with `equals`: an enum constant a program wrote is not the name compiled metadata
-  holds, a class is not its `AnnotationClassValue`, and a nested annotation value passes over a member the other
-  one does not have; nor does it leave out the members either side lists under `$nonBinding`. The container
-  compares qualifiers and interceptor bindings through the Jakarta Interceptors implementation's
-  `BindingValues.matches` instead (`CdiQualifier.matches`), the comparison its chains are built from.
+- **`AnnotationValue.matches` does not equate a value with the way Micronaut records it.** Since Micronaut Core
+  5.3 (#14147) it leaves out the members either side lists under `$nonBinding`, takes the defaults of the other
+  side for a value that carries none and compares a nested annotation the same way, and the container compares
+  qualifiers with it (`CdiQualifier.matches`). It still compares member values with `equals`: an enum constant
+  `AnnotationValueBuilder.member(String, Enum)` keeps is not the name compiled metadata holds; and a member bound
+  to the empty string is not a member left out, while Micronaut records no default of the empty string for an
+  annotation compiled from Java. The container respells a value a program composed and leaves out an empty string
+  that has no default before it compares (`QualifierMemberValuesTest`, `QualifierDefaultsTest`).
 - **Micronaut's exact type arguments are in its reflection module.** Since Micronaut Core 5.3
   `ReflectionArguments.ofExact`, `toExactType` and `typeClosureOf` keep a wildcard a wildcard and a type variable
   a variable, as the rules of section 5.2.4 need, and answer the parameterized type closure of a class; the
