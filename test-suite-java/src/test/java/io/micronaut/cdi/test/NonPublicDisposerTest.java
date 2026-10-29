@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Whether a disposer is public is read from what was compiled rather than by reflecting on the method. Note
  * that this test does not by itself distinguish the branch that decision feeds — the call arrives at an
  * instance with its state either way here — so it guards the disposal, not the choice between the client proxy
- * and the instance behind it. That choice has no test in this suite or in the kit.</p>
+ * and the instance behind it, which {@link DisposerInvocationTargetTest} tells apart through an interceptor.</p>
  */
 class NonPublicDisposerTest {
 
