@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.runtime.CdiBean;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.CdiContext;
 import io.micronaut.cdi.internal.runtime.CdiCreationalContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.scope.BeanCreationContext;
@@ -82,16 +83,7 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
     }
 
     private AlterableContext activeContext() {
-        AlterableContext active = null;
-        for (AlterableContext context : contexts) {
-            if (context.isActive()) {
-                if (active != null) {
-                    throw new IllegalStateException("More than one context of " + scopeAnnotation.getName()
-                        + " is active on the current thread");
-                }
-                active = context;
-            }
-        }
+        AlterableContext active = CdiContext.activeAmong(contexts, scopeAnnotation);
         if (active != null) {
             return active;
         }

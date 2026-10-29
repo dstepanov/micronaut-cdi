@@ -19,7 +19,6 @@ import io.micronaut.cdi.MicronautBeanContainer;
 import io.micronaut.cdi.MicronautEvent;
 import io.micronaut.cdi.MicronautInstance;
 import io.micronaut.cdi.internal.context.ApplicationScope;
-import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
@@ -37,12 +36,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
-import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.NormalScope;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -70,8 +64,6 @@ import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.inject.spi.ProducerFactory;
 import jakarta.inject.Inject;
-import jakarta.inject.Scope;
-import jakarta.inject.Singleton;
 import jakarta.interceptor.InterceptorBinding;
 import org.jspecify.annotations.Nullable;
 
@@ -83,7 +75,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -117,11 +108,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     /**
      * The annotations the specification declares, which are what they are whatever a build recorded.
      */
-    private static final Set<String> NORMAL_SCOPES = Set.of(
-        "jakarta.enterprise.context.ApplicationScoped", "jakarta.enterprise.context.RequestScoped",
-        "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");
-    private static final Set<String> PSEUDO_SCOPES = Set.of(
-        "jakarta.enterprise.context.Dependent", "jakarta.inject.Singleton");
     /**
      * The number of injection points what they resolve to is kept for.
      */
@@ -147,30 +133,16 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     private boolean validated;
     private final ObserverRegistry observers;
     /**
-     * The contexts of the built-in scopes, which hold no state of their own beyond the scope they read: made once
-     * rather than for each event an observer of a bean in one of them is notified of.
+     * The contexts of the scopes: the views of the built-in ones and the ones extensions registered.
      */
-    private final List<Context> requestContexts;
-    private final List<Context> applicationContexts;
-    private final List<Context> singletonContexts;
-    private final List<Context> dependentContexts;
-    /**
-     * The contexts extensions registered, a bean of the context created as it starts: looked up once.
-     */
-    private volatile @Nullable Optional<ExtensionContexts>
-        extensionContexts;
+    private final CdiContexts contexts;
 
     @Inject
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
                             ApplicationScope applicationScope, ObserverRegistry observers) {
         this.beanContext = beanContext;
         this.observers = observers;
-        this.requestContexts = List.of(
-            CdiContext.ofRequest(RequestScoped.class, requestScope));
-        this.applicationContexts = List.of(
-            CdiContext.ofApplication(ApplicationScoped.class, applicationScope));
-        this.singletonContexts = List.of(CdiContext.ofSingleton(Singleton.class, beanContext));
-        this.dependentContexts = List.of(CdiContext.holdingNothing(Dependent.class));
+        this.contexts = new CdiContexts(beanContext, requestScope, applicationScope);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
@@ -722,37 +694,12 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
 
     @Override
     public boolean isScope(Class<? extends Annotation> annotationType) {
-        String name = annotationType.getName();
-        if (NORMAL_SCOPES.contains(name) || PSEUDO_SCOPES.contains(name) || isRegisteredScope(annotationType)) {
-            return true;
-        }
-        CdiReflection reflection = reflection("BeanContainer.isScope", annotationType);
-        return reflection.isAnnotated(annotationType, Scope.class)
-            || reflection.isAnnotated(annotationType, NormalScope.class);
+        return contexts.isScope(annotationType);
     }
 
     @Override
     public boolean isNormalScope(Class<? extends Annotation> annotationType) {
-        String name = annotationType.getName();
-        if (NORMAL_SCOPES.contains(name)) {
-            return true;
-        }
-        if (PSEUDO_SCOPES.contains(name)) {
-            return false;
-        }
-        Optional<ExtensionContexts> extensionContexts =
-            beanContext.findBean(ExtensionContexts.class);
-        if (extensionContexts.isPresent() && !extensionContexts.get().contextsFor(annotationType).isEmpty()) {
-            // a scope an extension registered is normal where the extension registered it as one
-            return extensionContexts.get().isNormal(annotationType);
-        }
-        return reflection("BeanContainer.isNormalScope", annotationType).isAnnotated(annotationType, NormalScope.class);
-    }
-
-    private boolean isRegisteredScope(Class<? extends Annotation> annotationType) {
-        return beanContext.findBean(ExtensionContexts.class)
-            .map(contexts -> !contexts.contextsFor(annotationType).isEmpty())
-            .orElse(false);
+        return contexts.isNormalScope(annotationType);
     }
 
     @Override
@@ -806,52 +753,12 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * @throws IllegalArgumentException where no context of the scope is registered
      */
     @Nullable Context activeContext(Class<? extends Annotation> scopeType) {
-        Collection<Context> contexts = getContexts(scopeType);
-        if (contexts.isEmpty()) {
-            throw new IllegalArgumentException("There is no context for the scope " + scopeType.getName());
-        }
-        Context active = null;
-        for (Context context : contexts) {
-            if (context.isActive()) {
-                if (active != null) {
-                    throw new IllegalStateException("More than one context of " + scopeType.getName()
-                        + " is active on the current thread");
-                }
-                active = context;
-            }
-        }
-        return active;
+        return contexts.active(scopeType);
     }
 
     @Override
     public Collection<Context> getContexts(Class<? extends Annotation> scopeType) {
-        if (scopeType == Singleton.class) {
-            return singletonContexts;
-        }
-        if (scopeType == Dependent.class) {
-            return dependentContexts;
-        }
-        // a scope an extension registered a context for (section 2.10.1). A context a portable extension added
-        // for the request or the application scope takes the place of the container's own: the beans of the
-        // scope are held by it, so it is the context of the scope
-        Optional<ExtensionContexts> extensions = extensionContexts;
-        if (extensions == null) {
-            extensions = beanContext.findBean(ExtensionContexts.class);
-            extensionContexts = extensions;
-        }
-        if (extensions.isPresent()) {
-            List<AlterableContext> registered = extensions.get().contextsFor(scopeType);
-            if (!registered.isEmpty()) {
-                return new ArrayList<>(registered);
-            }
-        }
-        if (scopeType == RequestScoped.class) {
-            return requestContexts;
-        }
-        if (scopeType == ApplicationScoped.class) {
-            return applicationContexts;
-        }
-        return List.of();
+        return contexts.of(scopeType);
     }
 
     @Override

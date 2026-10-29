@@ -28,6 +28,7 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.AlterableContext;
+import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import org.jspecify.annotations.Nullable;
@@ -228,6 +229,29 @@ public final class CdiContext implements AlterableContext {
     @SuppressWarnings("unchecked")
     private static <T> @Nullable Held<T> existing(Map<Contextual<?>, Held<?>> store, Contextual<T> contextual) {
         return (Held<T>) store.get(contextual);
+    }
+
+    /**
+     * The one context among the contexts of a scope that is active on the current thread.
+     *
+     * @param contexts The contexts of the scope
+     * @param scope    The scope, for the message where more than one is active
+     * @param <C>      The kind of context
+     * @return The active context, or {@code null} where none is
+     * @throws IllegalStateException Where more than one is active
+     */
+    public static <C extends Context> @Nullable C activeAmong(Iterable<C> contexts, Class<?> scope) {
+        C active = null;
+        for (C context : contexts) {
+            if (context.isActive()) {
+                if (active != null) {
+                    throw new IllegalStateException("More than one context of " + scope.getName()
+                        + " is active on the current thread");
+                }
+                active = context;
+            }
+        }
+        return active;
     }
 
     @Override
