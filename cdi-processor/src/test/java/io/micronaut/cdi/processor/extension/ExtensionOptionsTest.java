@@ -15,6 +15,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The compiler options that name the build compatible extensions of a compilation: an extension the service
@@ -65,8 +66,10 @@ class ExtensionOptionsTest {
 
     @Test
     void theOptionsOfAFailedCompilationAreNotTheNextOnes() {
-        assertThrows(RuntimeException.class, () -> ranWith(Failing.class.getName(), "true"),
-            "the extension reports an error, which fails the compilation");
+        RuntimeException failed = assertThrows(RuntimeException.class,
+            () -> ranWith(Failing.class.getName(), "true"));
+        assertTrue(String.valueOf(failed.getMessage()).contains("Failing failed"),
+            "the compilation fails with the error the extension reported: " + failed.getMessage());
         assertEquals(List.of("Registered ran"), ranWith(null, null));
     }
 
