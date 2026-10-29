@@ -33,7 +33,6 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.order.OrderUtil;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -94,25 +93,6 @@ final class ScannedClassRegistrar {
     }
 
     /**
-     * Opens a source the visitor generates: the import of the scanned classes, written from what the classes of the
-     * compilation said rather than from one class.
-     *
-     * <p>Under javac the visitor stays isolating, because only the isolating processor runs it before the other
-     * visitors, as an enhancement has to be, and the source is written with no originating element: Gradle then
-     * recompiles the whole source set rather than part of it, which is what the source needs. Under KSP every
-     * class the compilation has visited so far is named as an origin: a source that names none is dropped as
-     * soon as any file is deleted, with nothing left to regenerate it, while one that names them is generated
-     * again, the other classes it names processed again with it, whenever one of them changes or goes.</p>
-     */
-    private static Optional<GeneratedFile> generatedSource(
-        VisitorContext context, String packageName, String className, Element[] origins) {
-        if (context.getLanguage() == VisitorContext.Language.KOTLIN) {
-            return context.visitGeneratedSourceFile(packageName, className, origins);
-        }
-        return context.visitGeneratedSourceFile(packageName, className);
-    }
-
-    /**
      * Under javac, writes an import of the classes the discovery phase added to the scanned ones.
      *
      * <p>A class the discovery phase added may say nothing at all about itself, and javac hands the bean machinery
@@ -148,8 +128,10 @@ final class ScannedClassRegistrar {
         }
         source.append("@io.micronaut.context.annotation.ClassImport(classes = {" + String.join(", ", literals) + "})\n")
             .append("final class " + className + " {\n}\n");
-        Optional<GeneratedFile> file =
-            generatedSource(context, GENERATED, className, visitor.contributors());
+        // written with no originating element: the visitor stays isolating, because only the isolating processor
+        // runs it before the other visitors, as an enhancement has to be, and Gradle then recompiles the whole
+        // source set rather than part of it, which is what the source needs
+        Optional<GeneratedFile> file = context.visitGeneratedSourceFile(GENERATED, className);
         if (file.isEmpty()) {
             context.fail("The import of the scanned classes could not be written: the compilation accepts no "
                 + "generated source", null);
