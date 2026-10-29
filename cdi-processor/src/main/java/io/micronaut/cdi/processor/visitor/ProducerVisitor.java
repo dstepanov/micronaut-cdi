@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
-import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
@@ -32,7 +31,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
@@ -42,17 +40,10 @@ import io.micronaut.inject.ast.WildcardElement;
 import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import org.jspecify.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Reads the producer methods and the producer fields of a class as the Micronaut factory it is.
@@ -74,14 +65,6 @@ import java.util.TreeMap;
  */
 @Internal
 public final class ProducerVisitor implements TypeElementVisitor<Object, Object> {
-
-    /**
-     * The qualifiers that take no part in matching a disposer to its producer.
-     */
-    private static final Set<String> NOT_COMPARED = Cdi.withMicronautQualifiers(
-        Cdi.DEFAULT,
-        Cdi.ANY
-    );
 
     /**
      * The Micronaut scopes a producer may carry, which is what the scope of the specification it declares has
@@ -153,6 +136,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
 
+        DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
         for (MemberElement producer : producers) {
             if (interceptorClass) {
@@ -206,8 +190,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // injected — the definition says so, so that resolution hands the null on instead of failing
             producer.annotate(AnnotationUtil.NULLABLE);
             allowReflectionIfNeeded(producer);
-            MethodElement disposer = findDisposer(producer, disposers, context);
-            if (disposer != null) {
+            DisposerMatcher.DisposerCandidate matched = disposerMatcher.find(producer, context);
+            if (matched != null) {
+                MethodElement disposer = matched.method();
                 matchedDisposers.add(disposer);
                 // the disposer is invoked through the executable method Micronaut generates for it — a
                 // static one included, which is invoked without an instance of the class declaring it
@@ -218,7 +203,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 producer.annotate(CdiDisposer.class, builder -> builder
                     .member("declaringType", new AnnotationClassValue<>(element.getName()))
                     .member("method", disposer.getName())
-                    .member("disposedParameter", disposedParameter(disposer))
+                    .member("disposedParameter", matched.disposedParameter())
                     .member("staticMethod", staticDisposer)
                     .member("publicMethod", publicDisposer)
                     .member("parameterTypes", erasedParameterTypes(disposer)));
@@ -405,6 +390,16 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         }
     }
 
+    /**
+     * The type a producer produces: the return type of a method, the type of a field.
+     */
+    static ClassElement producedType(MemberElement producer) {
+        if (producer instanceof MethodElement method) {
+            return method.getGenericReturnType();
+        }
+        return ((FieldElement) producer).getGenericType();
+    }
+
     private static boolean isDisposer(MethodElement method) {
         for (ParameterElement parameter : method.getParameters()) {
             if (parameter.hasDeclaredAnnotation(Cdi.DISPOSES)) {
@@ -425,127 +420,5 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             types[i] = RecordedTypeValues.erasedName(parameters[i].getType());
         }
         return types;
-    }
-
-    private static int disposedParameter(MethodElement disposer) {
-        ParameterElement[] parameters = disposer.getParameters();
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].hasDeclaredAnnotation(Cdi.DISPOSES)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Finds the disposer of a producer among the disposers the same class declares, which is where the
-     * specification has it declared.
-     *
-     * <p>A disposer disposes of a producer when the type of its disposed parameter is the type the producer
-     * produces and their qualifiers are the same, which is the resolution rule of the specification narrowed to
-     * the one class the two are declared on.</p>
-     */
-    /**
-     * Whether the produced type's arguments fit the disposed parameter's: a disposer of {@code List<String>}
-     * does not dispose of what a producer of {@code List<Integer>} produces, though the two erase alike. A
-     * raw side fits any parameterization, and a variable or wildcard on the disposer's side admits what the
-     * producer wrote.
-     */
-    private static boolean typeArgumentsCompatible(ClassElement produced, ClassElement disposed) {
-        Collection<ClassElement> producedArguments = produced.getTypeArguments().values();
-        Collection<ClassElement> disposedArguments = disposed.getTypeArguments().values();
-        if (producedArguments.isEmpty() || disposedArguments.isEmpty()
-            || producedArguments.size() != disposedArguments.size()) {
-            return true;
-        }
-        Iterator<ClassElement> producedEach = producedArguments.iterator();
-        Iterator<ClassElement> disposedEach = disposedArguments.iterator();
-        while (producedEach.hasNext()) {
-            ClassElement producedArgument = producedEach.next();
-            ClassElement disposedArgument = disposedEach.next();
-            if (disposedArgument.isGenericPlaceholder() || disposedArgument.isWildcard()
-                || producedArgument.isGenericPlaceholder() || producedArgument.isWildcard()) {
-                continue;
-            }
-            if (!producedArgument.getName().equals(disposedArgument.getName())
-                || !typeArgumentsCompatible(producedArgument, disposedArgument)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private @Nullable MethodElement findDisposer(MemberElement producer,
-                                                 List<MethodElement> disposers,
-                                                 VisitorContext context) {
-        ClassElement produced = producedType(producer);
-        MethodElement found = null;
-        for (MethodElement disposer : disposers) {
-            ParameterElement disposed = disposer.getParameters()[disposedParameter(disposer)];
-            // section 3.3.7 matches the disposed parameter by the rules of typesafe resolution: a disposer of
-            // the supertype disposes of what a producer of the subtype produces — and the type arguments take
-            // part, which Micronaut's erased assignability alone would miss
-            if (!produced.isAssignable(disposed.getGenericType())
-                || !typeArgumentsCompatible(produced, disposed.getGenericType())) {
-                continue;
-            }
-            // a disposed parameter qualified Any disposes of what every producer of the type produced, however
-            // those producers are qualified; anything else has to be qualified the same way the producer is
-            if (!disposed.hasDeclaredAnnotation(Cdi.ANY)
-                && !disposed.hasDeclaredAnnotation(CdiAny.class)
-                && !qualifiers(disposed).equals(qualifiers(producer))) {
-                continue;
-            }
-            if (found != null) {
-                context.fail("More than one disposer method disposes of what this producer produces", producer);
-                return null;
-            }
-            found = disposer;
-        }
-        return found;
-    }
-
-    private static ClassElement producedType(MemberElement producer) {
-        if (producer instanceof MethodElement method) {
-            return method.getGenericReturnType();
-        }
-        return ((FieldElement) producer).getGenericType();
-    }
-
-    /**
-     * The qualifiers an element declares, as the names of the qualifier annotations mapped to their members.
-     *
-     * <p>They are read into a sorted map so that two elements qualified the same way compare equal whichever
-     * order the qualifiers were written in. Only the qualifiers the element declares itself are read: the
-     * annotation metadata of a member carries what its class declares as well, and a disposer parameter is
-     * compared against a producer of another class as often as not.</p>
-     *
-     * <p>The default qualifier is left out of the comparison, along with the Micronaut annotation that goes with
-     * it. It is given to a bean rather than written on one, and a disposer parameter is not a bean, so counting
-     * it would have every disposer fail to match the producer it was written for.</p>
-     */
-    private static Map<String, Map<CharSequence, Object>> qualifiers(Element element) {
-        Map<String, Map<CharSequence, Object>> qualifiers = new TreeMap<>();
-        for (String name : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
-            if (NOT_COMPARED.contains(name) || !element.hasDeclaredAnnotation(name)) {
-                continue;
-            }
-            AnnotationValue<?> annotation = element.getAnnotation(name);
-            if (annotation != null) {
-                // a member that takes no part in resolution binds a disposer no more than it does a bean, and the
-                // list of them is not a member of the annotation
-                List<String> nonbinding =
-                    Arrays.asList(annotation.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE));
-                Map<CharSequence, Object> binding = new TreeMap<>(Comparator.comparing(CharSequence::toString));
-                annotation.getValues().forEach((member, value) -> {
-                    String memberName = member.toString();
-                    if (!memberName.startsWith("$") && !nonbinding.contains(memberName)) {
-                        binding.put(memberName, value);
-                    }
-                });
-                qualifiers.put(name, binding);
-            }
-        }
-        return qualifiers;
     }
 }
