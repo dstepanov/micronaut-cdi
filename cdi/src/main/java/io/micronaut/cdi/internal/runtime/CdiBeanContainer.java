@@ -1125,7 +1125,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
          */
         static <T> io.micronaut.context.Qualifier<T> micronautQualifier(
             Argument<T> point, io.micronaut.context.@Nullable Qualifier<T> qualifier) {
-            return NotOfTheSpecification.forPoint(point, qualifier);
+            return NonCdiBeanQualifier.forPoint(point, qualifier);
         }
     }
 }

@@ -40,12 +40,12 @@ import java.util.stream.Stream;
  * @since 1.0
  */
 @Internal
-final class NotOfTheSpecification<T> implements Qualifier<T> {
+final class NonCdiBeanQualifier<T> implements Qualifier<T> {
 
     @SuppressWarnings("rawtypes")
-    private static final NotOfTheSpecification INSTANCE = new NotOfTheSpecification<>();
+    private static final NonCdiBeanQualifier INSTANCE = new NonCdiBeanQualifier<>();
 
-    private NotOfTheSpecification() {
+    private NonCdiBeanQualifier() {
     }
 
     /**
@@ -71,6 +71,6 @@ final class NotOfTheSpecification<T> implements Qualifier<T> {
 
     @Override
     public String toString() {
-        return "NotOfTheSpecification";
+        return "NonCdiBeanQualifier";
     }
 }
