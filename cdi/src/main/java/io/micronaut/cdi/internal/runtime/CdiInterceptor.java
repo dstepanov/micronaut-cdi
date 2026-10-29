@@ -83,7 +83,7 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     List<CdiQualifier> bindings() {
         AnnotationMetadata metadata = definition.getAnnotationMetadata();
         List<CdiQualifier> bindings = new ArrayList<>(2);
-        for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
+        for (String name : metadata.getAnnotationNamesByStereotype(InterceptorBinding.class)) {
             if (!isBindingType(CompiledAnnotationTypes.of(beanContext), metadata, name)) {
                 continue;
             }

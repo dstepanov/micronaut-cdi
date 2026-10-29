@@ -48,6 +48,41 @@ import java.lang.annotation.Target;
 public @interface CdiObserver {
 
     /**
+     * The name of the member {@link #observedParameter()}.
+     */
+    String OBSERVED_PARAMETER = "observedParameter";
+
+    /**
+     * The name of the member {@link #observedType()}.
+     */
+    String OBSERVED_TYPE = "observedType";
+
+    /**
+     * The name of the member {@link #async()}.
+     */
+    String ASYNC = "async";
+
+    /**
+     * The name of the member {@link #ifExists()}.
+     */
+    String IF_EXISTS = "ifExists";
+
+    /**
+     * The name of the member {@link #staticMethod()}.
+     */
+    String STATIC_METHOD = "staticMethod";
+
+    /**
+     * The name of the member {@link #during()}.
+     */
+    String DURING = "during";
+
+    /**
+     * The name of the member {@link #priority()}.
+     */
+    String PRIORITY = "priority";
+
+    /**
      * The position of the parameter the method observes, since an observer method may take injected parameters
      * before and after it.
      *

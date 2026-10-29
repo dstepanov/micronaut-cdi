@@ -63,7 +63,7 @@ public final class RecordedTypes {
      * where it was compiled, or is not on the classpath
      */
     public static @Nullable Argument<?> find(AnnotationValue<?> record) {
-        return switch (record.stringValue("kind").orElse("CLASS")) {
+        return switch (record.stringValue(CdiRecordedType.KIND).orElse("CLASS")) {
             case "WILDCARD" -> {
                 Argument<?>[] upper = all(record.getAnnotations(CdiRecordedType.BOUNDS));
                 Argument<?>[] lower = all(record.getAnnotations(CdiRecordedType.LOWER_BOUNDS));
@@ -79,13 +79,13 @@ public final class RecordedTypes {
                     yield null;
                 }
                 // an array of a variable, T[], is the variable with the dimensions of the array
-                Argument<?> variable = CdiTypes.variable(record.stringValue("name").orElse("T"), bounds);
-                for (int i = record.intValue("dimensions").orElse(0); i > 0; i--) {
+                Argument<?> variable = CdiTypes.variable(record.stringValue(CdiRecordedType.NAME).orElse("T"), bounds);
+                for (int i = record.intValue(CdiRecordedType.DIMENSIONS).orElse(0); i > 0; i--) {
                     variable = variable.arrayType();
                 }
                 yield variable;
             }
-            case "PRIMITIVE" -> arrayOf(primitive(record.stringValue("name").orElse("")), record);
+            case "PRIMITIVE" -> arrayOf(primitive(record.stringValue(CdiRecordedType.NAME).orElse("")), record);
             default -> classOf(record);
         };
     }
@@ -105,7 +105,7 @@ public final class RecordedTypes {
         }
         // an array of a parameterized type, List<String>[], keeps the arguments of its element type
         Argument<?> type = Argument.of(raw, (String) null, typeArguments);
-        for (int i = record.intValue("dimensions").orElse(0); i > 0; i--) {
+        for (int i = record.intValue(CdiRecordedType.DIMENSIONS).orElse(0); i > 0; i--) {
             type = type.arrayType();
         }
         return type;
@@ -128,7 +128,7 @@ public final class RecordedTypes {
             return null;
         }
         Class<?> type = component;
-        for (int i = record.intValue("dimensions").orElse(0); i > 0; i--) {
+        for (int i = record.intValue(CdiRecordedType.DIMENSIONS).orElse(0); i > 0; i--) {
             type = type.arrayType();
         }
         return Argument.of(type);

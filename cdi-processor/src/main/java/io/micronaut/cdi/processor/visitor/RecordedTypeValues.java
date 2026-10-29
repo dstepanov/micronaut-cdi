@@ -17,6 +17,7 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -104,7 +105,7 @@ public final class RecordedTypeValues {
                                                        Set<String> variables, boolean erasedBounds) {
         AnnotationValueBuilder<CdiRecordedType> record = AnnotationValue.builder(CdiRecordedType.class);
         if (type instanceof WildcardElement wildcard) {
-            record.member("kind", "WILDCARD");
+            record.member(CdiRecordedType.KIND, "WILDCARD");
             member(record, CdiRecordedType.BOUNDS, wildcard.getUpperBounds(), bindings, variables, erasedBounds, true);
             member(record, CdiRecordedType.LOWER_BOUNDS, wildcard.getLowerBounds(), bindings, variables, erasedBounds, true);
             return record.build();
@@ -128,9 +129,9 @@ public final class RecordedTypeValues {
                 }
                 return of(given, Map.of(), variables, erasedBounds);
             }
-            record.member("kind", "VARIABLE").member("name", name);
+            record.member(CdiRecordedType.KIND, "VARIABLE").member(CdiRecordedType.NAME, name);
             if (dimensions > 0) {
-                record.member("dimensions", dimensions);
+                record.member(CdiRecordedType.DIMENSIONS, dimensions);
             }
             if (variables.add(name)) {
                 // a variable bounded by itself, as T extends Comparable<T> is, names itself within its bound
@@ -140,12 +141,12 @@ public final class RecordedTypeValues {
             return record.build();
         }
         if (dimensions > 0) {
-            record.member("dimensions", dimensions);
+            record.member(CdiRecordedType.DIMENSIONS, dimensions);
         }
         if (component.isPrimitive()) {
-            return record.member("kind", "PRIMITIVE").member("name", component.getName()).build();
+            return record.member(CdiRecordedType.KIND, "PRIMITIVE").member(CdiRecordedType.NAME, component.getName()).build();
         }
-        record.member("value", new AnnotationClassValue<>(component.getName()));
+        record.member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(component.getName()));
         if (!component.isRawType() && !component.getTypeArguments().isEmpty()) {
             member(record, CdiRecordedType.ARGUMENTS, component.getTypeArguments().values(), bindings, variables, erasedBounds, false);
         }
@@ -167,9 +168,9 @@ public final class RecordedTypeValues {
                     dimensions++;
                     component = component.fromArray();
                 }
-                erased.member("value", new AnnotationClassValue<>(component.getName()));
+                erased.member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(component.getName()));
                 if (dimensions > 0) {
-                    erased.member("dimensions", dimensions);
+                    erased.member(CdiRecordedType.DIMENSIONS, dimensions);
                 }
                 records.add(erased.build());
                 continue;

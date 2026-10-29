@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.visitor.ObserverVisitor;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -155,8 +156,8 @@ final class ElementObserverInfo implements ObserverInfo {
     @Override
     public Reception reception() {
         String value = async
-            ? observed.stringValue("jakarta.enterprise.event.ObservesAsync", "notifyObserver").orElse("ALWAYS")
-            : observed.stringValue("jakarta.enterprise.event.Observes", "notifyObserver").orElse("ALWAYS");
+            ? observed.stringValue(Cdi.OBSERVES_ASYNC, "notifyObserver").orElse("ALWAYS")
+            : observed.stringValue(Cdi.OBSERVES, "notifyObserver").orElse("ALWAYS");
         return Reception.valueOf(value);
     }
 
@@ -166,6 +167,6 @@ final class ElementObserverInfo implements ObserverInfo {
             return TransactionPhase.IN_PROGRESS;
         }
         return TransactionPhase.valueOf(
-            observed.stringValue("jakarta.enterprise.event.Observes", "during").orElse("IN_PROGRESS"));
+            observed.stringValue(Cdi.OBSERVES, "during").orElse("IN_PROGRESS"));
     }
 }

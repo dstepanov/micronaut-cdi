@@ -166,8 +166,8 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
             closure.add(ElementTypes.of(type, context));
         }
         Set<String> narrowed = new HashSet<>(Arrays.asList(
-            declared().stringValues("jakarta.enterprise.inject.Typed")));
-        boolean typed = declared().hasAnnotation("jakarta.enterprise.inject.Typed");
+            declared().stringValues(Cdi.TYPED)));
+        boolean typed = declared().hasAnnotation(Cdi.TYPED);
         List<Type> types = new ArrayList<>();
         for (Type type : closure) {
             if (typed && !narrowed.contains(nameOf(type))) {

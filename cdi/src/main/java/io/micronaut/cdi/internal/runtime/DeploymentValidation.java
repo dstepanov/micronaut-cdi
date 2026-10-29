@@ -30,6 +30,7 @@ import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.interceptor.Interceptor;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -158,7 +159,7 @@ final class DeploymentValidation {
             if (observer == null) {
                 continue;
             }
-            int observed = observer.intValue("observedParameter").orElse(0);
+            int observed = observer.intValue(CdiObserver.OBSERVED_PARAMETER).orElse(0);
             Argument<?>[] arguments = method.getArguments();
             for (int i = 0; i < arguments.length; i++) {
                 if (i != observed) {
@@ -177,7 +178,7 @@ final class DeploymentValidation {
         // the rules of the specification
         return CdiResolution.isBeanOfTheSpecification(definition)
             && !definition.hasAnnotation(CdiBuiltIn.class)
-            && !definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+            && !definition.getAnnotationMetadata().hasAnnotation(Interceptor.class);
     }
 
     /**

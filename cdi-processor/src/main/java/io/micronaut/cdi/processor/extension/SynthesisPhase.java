@@ -225,7 +225,7 @@ final class SynthesisPhase {
         if (qualifiers.isEmpty()) {
             // a bean that names no qualifier has the default one, which the rule of section 2.1.3 says of a
             // bean an extension describes as much as of one a class declares
-            qualifiers.add(AnnotationValue.builder("jakarta.enterprise.inject.Default").build());
+            qualifiers.add(AnnotationValue.builder(Cdi.DEFAULT).build());
         }
         AnnotationValueBuilder<CdiSyntheticBean> record = AnnotationValue.builder(CdiSyntheticBean.class)
             .member("id", bean.id())

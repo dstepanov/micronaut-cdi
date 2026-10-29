@@ -24,6 +24,7 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -193,7 +194,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
         if (element.hasStereotype(ResolveWith.class) || isResolvedByMicronaut(element, type)) {
             return;
         }
-        element.annotate(ResolveWith.class, builder -> builder.member("value", new AnnotationClassValue<>(
+        element.annotate(ResolveWith.class, builder -> builder.member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(
             "io.micronaut.cdi.internal.runtime.CdiBeanInjectionProvider")));
     }
 

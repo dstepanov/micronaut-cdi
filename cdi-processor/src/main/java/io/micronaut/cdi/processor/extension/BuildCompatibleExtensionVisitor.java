@@ -941,9 +941,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             ParameterElement observed = null;
             boolean async = false;
             for (ParameterElement parameter : method.getParameters()) {
-                if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.Observes")) {
+                if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES)) {
                     observed = parameter;
-                } else if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.ObservesAsync")) {
+                } else if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)) {
                     observed = parameter;
                     async = true;
                 }

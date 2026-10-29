@@ -528,7 +528,7 @@ public final class CdiQualifier {
     private static CdiQualifier scoped(Class<? extends Annotation> type, Class<? extends Annotation> scope,
                                        Annotation annotation) {
         return new CdiQualifier(AnnotationValue.builder(type)
-            .member("value", scope).build(), null, annotation);
+            .member(AnnotationMetadata.VALUE_MEMBER, scope).build(), null, annotation);
     }
 
     /**

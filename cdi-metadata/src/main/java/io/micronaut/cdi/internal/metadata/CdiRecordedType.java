@@ -55,6 +55,21 @@ public @interface CdiRecordedType {
     String LOWER_BOUNDS = "lowerBounds";
 
     /**
+     * The name of the member {@link #kind()}.
+     */
+    String KIND = "kind";
+
+    /**
+     * The name of the member {@link #name()}.
+     */
+    String NAME = "name";
+
+    /**
+     * The name of the member {@link #dimensions()}.
+     */
+    String DIMENSIONS = "dimensions";
+
+    /**
      * What the type is: {@code CLASS}, {@code PRIMITIVE}, {@code WILDCARD} or {@code VARIABLE}.
      *
      * @return The kind

@@ -88,14 +88,14 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         this.beanContext = beanContext;
         this.declaring = declaring;
         this.method = method;
-        this.observedParameter = observer.intValue("observedParameter").orElse(0);
-        List<AnnotationValue<Annotation>> recorded = observer.getAnnotations("observedType");
+        this.observedParameter = observer.intValue(CdiObserver.OBSERVED_PARAMETER).orElse(0);
+        List<AnnotationValue<Annotation>> recorded = observer.getAnnotations(CdiObserver.OBSERVED_TYPE);
         this.recordedType = recorded.isEmpty() ? null : recorded.get(0);
-        this.async = observer.booleanValue("async").orElse(false);
-        this.ifExists = observer.booleanValue("ifExists").orElse(false);
-        this.staticMethod = observer.booleanValue("staticMethod").orElse(false);
-        this.priority = observer.intValue("priority").orElse(DEFAULT_PRIORITY);
-        this.during = transactionPhaseNamed(observer.stringValue("during").orElse("IN_PROGRESS"));
+        this.async = observer.booleanValue(CdiObserver.ASYNC).orElse(false);
+        this.ifExists = observer.booleanValue(CdiObserver.IF_EXISTS).orElse(false);
+        this.staticMethod = observer.booleanValue(CdiObserver.STATIC_METHOD).orElse(false);
+        this.priority = observer.intValue(CdiObserver.PRIORITY).orElse(DEFAULT_PRIORITY);
+        this.during = transactionPhaseNamed(observer.stringValue(CdiObserver.DURING).orElse("IN_PROGRESS"));
     }
 
     /**

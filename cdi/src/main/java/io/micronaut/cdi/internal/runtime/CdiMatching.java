@@ -23,6 +23,7 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
 import io.micronaut.inject.QualifiedBeanType;
+import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -197,7 +198,7 @@ final class CdiMatching<T> implements Qualifier<T> {
      * @return Whether it is one
      */
     static boolean isInterceptor(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasAnnotation("jakarta.interceptor.Interceptor");
+        return definition.getAnnotationMetadata().hasAnnotation(Interceptor.class);
     }
 
     /**

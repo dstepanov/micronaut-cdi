@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
+import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
@@ -115,8 +116,8 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             .getAnnotationNamesByStereotype("io.micronaut.runtime.context.scope.ScopedProxy")) {
             element.removeAnnotation(proxying);
         }
-        element.removeAnnotation("jakarta.enterprise.context.RequestScoped");
-        element.removeAnnotation("jakarta.enterprise.context.ApplicationScoped");
+        element.removeAnnotation(Cdi.REQUEST_SCOPED);
+        element.removeAnnotation(Cdi.APPLICATION_SCOPED);
         element.removeAnnotation(CdiRequestScope.class);
         element.removeAnnotation(CdiApplicationScope.class);
         element.annotate("io.micronaut.context.annotation.Prototype");

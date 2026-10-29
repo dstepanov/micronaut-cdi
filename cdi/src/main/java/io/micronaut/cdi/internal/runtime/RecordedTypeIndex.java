@@ -184,13 +184,13 @@ public final class RecordedTypeIndex {
             }
             AnnotationValue<Annotation> own = closure.get(0);
             String name = own.stringValue().orElse(null);
-            if (!type.getName().equals(name) || "VARIABLE".equals(own.stringValue("kind").orElse(null))) {
+            if (!type.getName().equals(name) || "VARIABLE".equals(own.stringValue(CdiRecordedType.KIND).orElse(null))) {
                 continue;
             }
             List<String> variables = new ArrayList<>();
             for (AnnotationValue<Annotation> argument : own.getAnnotations(CdiRecordedType.ARGUMENTS)) {
-                if ("VARIABLE".equals(argument.stringValue("kind").orElse(null))) {
-                    variables.add(argument.stringValue("name").orElse("T"));
+                if ("VARIABLE".equals(argument.stringValue(CdiRecordedType.KIND).orElse(null))) {
+                    variables.add(argument.stringValue(CdiRecordedType.NAME).orElse("T"));
                 }
             }
             return new RecordedEntry(List.copyOf(variables), closure.subList(1, closure.size()));

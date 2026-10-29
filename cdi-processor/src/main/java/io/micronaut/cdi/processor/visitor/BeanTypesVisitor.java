@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.visitor;
 import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -130,7 +131,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
             return;
         }
         on.annotate(CdiBeanTypes.class, builder ->
-            builder.member("value", closure.toArray(new AnnotationValue<?>[0])));
+            builder.member(AnnotationMetadata.VALUE_MEMBER, closure.toArray(new AnnotationValue<?>[0])));
     }
 
     /**

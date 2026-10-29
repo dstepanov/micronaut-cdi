@@ -34,6 +34,8 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import org.jspecify.annotations.Nullable;
 
@@ -305,7 +307,7 @@ public final class CdiResolution {
      * @return Whether it is an alternative
      */
     public static boolean isAlternative(BeanDefinition<?> definition) {
-        return definition.getAnnotationMetadata().hasStereotype("jakarta.enterprise.inject.Alternative");
+        return definition.getAnnotationMetadata().hasStereotype(Alternative.class);
     }
 
     /**
@@ -431,7 +433,7 @@ public final class CdiResolution {
         // the priority itself where the metadata kept it — zero is a legal priority, which the order encoding
         // alone cannot say apart from none
         OptionalInt priority = definition.getAnnotationMetadata()
-            .intValue("jakarta.annotation.Priority", AnnotationMetadata.VALUE_MEMBER);
+            .intValue(Priority.class, AnnotationMetadata.VALUE_MEMBER);
         if (priority.isPresent()) {
             return priority.getAsInt();
         }

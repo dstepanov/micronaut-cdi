@@ -45,9 +45,13 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.CreationException;
+import jakarta.enterprise.inject.Stereotype;
+import jakarta.enterprise.inject.Typed;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -220,7 +224,7 @@ public class CdiBean<T> implements Bean<T> {
         // Micronaut's own set of exposed types: those are what Micronaut resolves the bean by, and it exposes an
         // array by its component type as well, which is not a bean type of the array
         Class<?>[] narrowed = definition.getAnnotationMetadata()
-            .classValues("jakarta.enterprise.inject.Typed");
+            .classValues(Typed.class);
         List<Argument<?>> closure = new ArrayList<>();
         boolean produced = definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class);
         List<Argument<?>> recorded = index != null
@@ -272,7 +276,7 @@ public class CdiBean<T> implements Bean<T> {
                 }
             }
         }
-        if (definition.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Typed")) {
+        if (definition.getAnnotationMetadata().hasAnnotation(Typed.class)) {
             // the types the bean named with Typed keep the parameters the closure gives them: an Emu typed
             // FlightlessBird is a bean of FlightlessBird<Australian>, which is what it extends
             Set<Class<?>> kept = new LinkedHashSet<>(Arrays.asList(narrowed));
@@ -376,7 +380,7 @@ public class CdiBean<T> implements Bean<T> {
         // the default Micronaut materialized, spelled by Micronaut's rules rather than the specification's
         AnnotationMetadata metadata = definition.getAnnotationMetadata();
         return metadata.stringValue(CdiName.class)
-            .or(() -> metadata.stringValue("jakarta.inject.Named"))
+            .or(() -> metadata.stringValue(Named.class))
             .orElse(null);
     }
 
@@ -384,7 +388,7 @@ public class CdiBean<T> implements Bean<T> {
     public Set<Class<? extends Annotation>> getStereotypes() {
         Set<Class<? extends Annotation>> stereotypes = new LinkedHashSet<>();
         for (String name : definition.getAnnotationMetadata()
-            .getAnnotationNamesByStereotype("jakarta.enterprise.inject.Stereotype")) {
+            .getAnnotationNamesByStereotype(Stereotype.class)) {
             Class<? extends Annotation> stereotype = annotationNamed(definition.getAnnotationMetadata(), name);
             if (stereotype != null) {
                 stereotypes.add(stereotype);
@@ -395,8 +399,8 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public boolean isAlternative() {
-        return definition.getAnnotationMetadata().hasAnnotation("jakarta.enterprise.inject.Alternative")
-            || definition.getAnnotationMetadata().hasStereotype("jakarta.enterprise.inject.Alternative");
+        return definition.getAnnotationMetadata().hasAnnotation(Alternative.class)
+            || definition.getAnnotationMetadata().hasStereotype(Alternative.class);
     }
 
     @Override

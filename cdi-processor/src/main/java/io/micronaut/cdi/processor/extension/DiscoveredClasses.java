@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
+import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -224,7 +225,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
     @Override
     public ClassConfig addQualifier(Class<? extends Annotation> annotation) {
-        return register(annotation, "jakarta.inject.Qualifier");
+        return register(annotation, Cdi.QUALIFIER);
     }
 
     @Override
@@ -234,7 +235,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
 
     @Override
     public ClassConfig addStereotype(Class<? extends Annotation> annotation) {
-        return register(annotation, "jakarta.enterprise.inject.Stereotype");
+        return register(annotation, Cdi.STEREOTYPE);
     }
 
     @Override
@@ -249,7 +250,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
                            Class<? extends AlterableContext> contextClass) {
         // whether the scope is normal is what its annotation says, read from the compilation's view of it
         boolean isNormal = declarationOf(scopeAnnotation.getName())
-            .map(scope -> scope.hasDeclaredAnnotation("jakarta.enterprise.context.NormalScope"))
+            .map(scope -> scope.hasDeclaredAnnotation(Cdi.NORMAL_SCOPE))
             .orElse(false);
         registerContext(scopeAnnotation, isNormal, contextClass);
     }
@@ -306,7 +307,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     private ClassConfig register(Class<? extends Annotation> annotation, String metaAnnotation) {
-        if ("jakarta.inject.Qualifier".equals(metaAnnotation)) {
+        if (Cdi.QUALIFIER.equals(metaAnnotation)) {
             registeredQualifiers.add(annotation.getName());
         }
         List<AnnotationValue<?>> annotations = metaAnnotations

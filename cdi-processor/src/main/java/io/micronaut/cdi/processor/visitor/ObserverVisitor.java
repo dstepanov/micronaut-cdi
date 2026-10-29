@@ -143,14 +143,14 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
             String during = observes == null ? "IN_PROGRESS"
                 : observes.stringValue("during").orElse("IN_PROGRESS");
             method.annotate(CdiObserver.class, builder -> builder
-                .member("observedParameter", position)
+                .member(CdiObserver.OBSERVED_PARAMETER, position)
                 // what the observer observes keeps its written generics, which the compiled argument erases
-                .member("observedType", RecordedTypeValues.of(parameter.getGenericType(), inherited))
-                .member("async", asynchronous)
-                .member("ifExists", ifExists)
-                .member("staticMethod", isStatic)
-                .member("during", during)
-                .member("priority", priority));
+                .member(CdiObserver.OBSERVED_TYPE, RecordedTypeValues.of(parameter.getGenericType(), inherited))
+                .member(CdiObserver.ASYNC, asynchronous)
+                .member(CdiObserver.IF_EXISTS, ifExists)
+                .member(CdiObserver.STATIC_METHOD, isStatic)
+                .member(CdiObserver.DURING, during)
+                .member(CdiObserver.PRIORITY, priority));
             observing = true;
         }
         if (observing) {
