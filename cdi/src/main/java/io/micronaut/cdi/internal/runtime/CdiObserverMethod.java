@@ -343,7 +343,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @SuppressWarnings("unchecked")
     private @Nullable Object resolve(Argument<?> argument, OwnedDependents dependents) {
-        if (CdiResolution.isSuppliedByAnApplicationProvider(argument.getAnnotationMetadata())) {
+        if (CdiResolution.hasCustomInjectionProvider(argument.getAnnotationMetadata())) {
             // a provider of the application's own supplies it, as it does a field of the bean
             return CdiResolution.fromApplicationProvider(beanContext, declaring, argument);
         }

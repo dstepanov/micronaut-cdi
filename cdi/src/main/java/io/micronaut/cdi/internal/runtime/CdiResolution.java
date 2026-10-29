@@ -97,7 +97,7 @@ public final class CdiResolution {
      * @param point The annotation metadata of the injection point
      * @return Whether an application's provider supplies it
      */
-    public static boolean isSuppliedByAnApplicationProvider(AnnotationMetadata point) {
+    public static boolean hasCustomInjectionProvider(AnnotationMetadata point) {
         return point.hasStereotype(ResolveWith.class) && !isResolvedByTheContainer(point);
     }
 

@@ -183,7 +183,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
 
     @SuppressWarnings("unchecked")
     private @Nullable Object resolve(Argument<?> argument, BeanDependencyGroup dependencies) {
-        if (CdiResolution.isSuppliedByAnApplicationProvider(argument.getAnnotationMetadata())) {
+        if (CdiResolution.hasCustomInjectionProvider(argument.getAnnotationMetadata())) {
             // a provider of the application's own supplies it, as it does a field of a bean
             return CdiResolution.fromApplicationProvider(beanContext, null, argument);
         }
