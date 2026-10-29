@@ -84,6 +84,38 @@ class QualifierMemberValuesTest {
     static class EastDepot implements Depot {
     }
 
+    @Qualifier
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Zone {
+        String value() default "";
+    }
+
+    interface Locker {
+    }
+
+    @Zone
+    @Dependent
+    static class PlainLocker implements Locker {
+    }
+
+    @Zone("north")
+    @Dependent
+    static class NorthLocker implements Locker {
+    }
+
+    @Test
+    void anEmptyStringWrittenDownIsTheDefaultOfTheEmptyStringLeftOut() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            MicronautBeanContainer container = (MicronautBeanContainer) CDI.current().getBeanContainer();
+            MicronautInstance<Locker> lockers = container.createInstance().select(Locker.class, Any.Literal.INSTANCE);
+            assertEquals(PlainLocker.class,
+                lockers.select(AnnotationValue.builder(Zone.class).value("").build()).get().getClass());
+            assertEquals(PlainLocker.class, lockers.select(AnnotationValue.builder(Zone.class).build()).get().getClass());
+            assertEquals(NorthLocker.class,
+                lockers.select(AnnotationValue.builder(Zone.class).value("north").build()).get().getClass());
+        }
+    }
+
     private static AnnotationValue<Area> area(String member, String value) {
         return AnnotationValue.builder(Area.class)
             .member("region", AnnotationValue.builder(Region.class).member(member, value).build())

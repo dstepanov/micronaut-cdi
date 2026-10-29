@@ -20,7 +20,6 @@ import io.micronaut.cdi.MicronautInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifier;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.interceptor.spi.BindingValues;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
@@ -44,7 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * An annotation compared as a qualifier is compared as the Jakarta Interceptors implementation compares it as an
  * interceptor binding: the container's answer for a qualifier, its answer for an interceptor binding and the
- * answer of {@link BindingValues} and {@link InterceptorBindings} are one, for the values a program composes and
+ * answer of Micronaut's {@link AnnotationValue#matches} and of {@link InterceptorBindings} are one, for the values a
+ * program composes and
  * for the literals it hands over.
  */
 class QualifierAsInterceptorBindingTest {
@@ -128,18 +128,16 @@ class QualifierAsInterceptorBindingTest {
     }
 
     private static void assertComparedAlike(AnnotationValue<?> one, AnnotationValue<?> other, boolean expected) {
-        assertEquals(expected, BindingValues.matches(one, other), one + " and " + other);
         assertEquals(expected, CdiQualifier.ofValue(null, one).matches(CdiQualifier.ofValue(null, other)), one + " and " + other);
         assertEquals(expected, InterceptorBindings.ofValues(List.of(one)).equals(InterceptorBindings.ofValues(
             List.of(other))), one + " and " + other);
-        // what the container hands the interceptors implementation is compared there as the container compares it
+        // what the container hands Micronaut and the interceptors implementation is compared there as the container
+        // compares it
         AnnotationValue<?> written = CdiQualifier.ofValue(null, one).written();
         AnnotationValue<?> otherWritten = CdiQualifier.ofValue(null, other).written();
-        assertEquals(expected, BindingValues.matches(written, otherWritten), one + " and " + other);
+        assertEquals(expected, written.matches(otherWritten), one + " and " + other);
         assertEquals(expected, InterceptorBindings.ofValues(List.of(written)).equals(InterceptorBindings.ofValues(
             List.of(otherWritten))), one + " and " + other);
-        // and the shape it is compared in is the binding again
-        assertTrue(BindingValues.matches(written, BindingValues.normalize(written)));
     }
 
     @Test
