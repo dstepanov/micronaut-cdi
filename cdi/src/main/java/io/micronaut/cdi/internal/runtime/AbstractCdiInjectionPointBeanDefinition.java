@@ -52,9 +52,10 @@ import java.util.Map;
  * @since 1.0
  */
 @Internal
-public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPointBeanDefinition.Disposable<B> {
+public abstract class AbstractCdiInjectionPointBeanDefinition<B>
+    extends AbstractInjectionPointBeanDefinition.Disposable<B> {
 
-    protected CdiInjectionPointFactory() {
+    protected AbstractCdiInjectionPointBeanDefinition() {
     }
 
     /**
@@ -62,7 +63,7 @@ public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPoint
      *                        object that is not being injected anywhere is null, and the specification says to
      *                        inject it that way
      */
-    protected CdiInjectionPointFactory(boolean mayBuildNothing) {
+    protected AbstractCdiInjectionPointBeanDefinition(boolean mayBuildNothing) {
         super(mayBuildNothing ? nullable() : AnnotationMetadata.EMPTY_METADATA);
     }
 

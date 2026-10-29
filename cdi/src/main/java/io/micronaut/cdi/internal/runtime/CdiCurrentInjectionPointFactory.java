@@ -39,7 +39,7 @@ import java.util.List;
  * @since 1.0
  */
 @Internal
-public final class CdiCurrentInjectionPointFactory extends CdiInjectionPointFactory<InjectionPoint> {
+public final class CdiCurrentInjectionPointFactory extends AbstractCdiInjectionPointBeanDefinition<InjectionPoint> {
 
     public CdiCurrentInjectionPointFactory() {
         super(true);

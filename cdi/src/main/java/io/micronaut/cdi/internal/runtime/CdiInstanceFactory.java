@@ -36,7 +36,7 @@ import java.util.Set;
  * @since 1.0
  */
 @Internal
-public final class CdiInstanceFactory<T> extends CdiInjectionPointFactory<Instance<T>> {
+public final class CdiInstanceFactory<T> extends AbstractCdiInjectionPointBeanDefinition<Instance<T>> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override

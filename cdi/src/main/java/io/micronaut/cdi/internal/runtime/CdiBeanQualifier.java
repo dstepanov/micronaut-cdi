@@ -156,7 +156,7 @@ final class CdiBeanQualifier<T> implements Qualifier<T> {
         if (!(candidate instanceof BeanDefinition<?> definition) || !isInjectable(definition)) {
             return false;
         }
-        if (definition instanceof CdiInjectionPointFactory<?> builtIn) {
+        if (definition instanceof AbstractCdiInjectionPointBeanDefinition<?> builtIn) {
             // the built-in event and lookup exist for whatever legal type an injection point asks them for, so
             // the one bean of each answers every parameterization of its type, the raw type itself, and every
             // qualifier

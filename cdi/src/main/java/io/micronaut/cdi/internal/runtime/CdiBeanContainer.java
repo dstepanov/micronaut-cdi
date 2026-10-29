@@ -383,7 +383,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         if (raw == null || raw == Object.class) {
             return true;
         }
-        if (definition instanceof CdiInjectionPointFactory<?> builtIn) {
+        if (definition instanceof AbstractCdiInjectionPointBeanDefinition<?> builtIn) {
             return builtIn.isBeanType(raw);
         }
         Class<?> boxed = CdiTypes.boxedOf(raw);
