@@ -42,10 +42,10 @@ import java.util.Set;
  *
  * <p>The implementation reads annotations with Micronaut's {@code io.micronaut.reflection.ReflectionAnnotations}
  * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The three questions about generic types -
- * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked here because Micronaut has
- * no counterpart that keeps what they need: {@code ReflectionArguments.of(Type)} reads a wildcard as its bound and
- * a type variable as its first bound, and Micronaut has no utility for the parameterized type closure of a
- * class.</p>
+ * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked through this interface so
+ * that reading a class's generic signatures stays in the optional module: the type closure is Micronaut's
+ * {@code ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type))}, which keeps a wildcard a wildcard
+ * and a variable a variable.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

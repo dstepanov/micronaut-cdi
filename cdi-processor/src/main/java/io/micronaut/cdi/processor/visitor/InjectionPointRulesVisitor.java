@@ -64,7 +64,6 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
 
     @Override
     public TypeElementQuery query() {
-        // only the class is visited: what it declares is read from it, and core need not walk its members
         return TypeElementQuery.onlyClass();
     }
 

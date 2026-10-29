@@ -95,7 +95,6 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
 
     @Override
     public TypeElementQuery query() {
-        // only the class is visited: what it declares is read from it, and core need not walk its members
         return TypeElementQuery.onlyClass();
     }
 

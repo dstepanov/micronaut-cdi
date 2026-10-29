@@ -99,9 +99,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>What CDI Lite asks for is the {@code BeanContainer}; the {@code BeanManager} of CDI Full extends it, and is
  * implemented here as far as CDI Lite can answer it. That is worth having even in a module that implements only
  * Lite: a program written against the specification reaches for the manager, and the parts of it that are about
- * Lite are ones this container knows. Everything on it that belongs to CDI Full — decorators, passivation,
- * portable extensions, the expression language, and building a bean out of an annotated type — says so rather
- * than answering with an empty result that would read as there being none.</p>
+ * Lite are ones this container knows. The expression language operations are delegated to the optional
+ * micronaut-cdi-el module, and fail with the name of that module where it is absent. Everything else on it that
+ * belongs to CDI Full — decorators, passivation, portable extensions and building a bean out of an annotated
+ * type — says so rather than answering with an empty result that would read as there being none.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
