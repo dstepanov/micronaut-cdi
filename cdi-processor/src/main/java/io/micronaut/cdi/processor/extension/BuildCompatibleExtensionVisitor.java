@@ -19,28 +19,14 @@ import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
-import io.micronaut.cdi.internal.metadata.CdiScannedClasses;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
-import io.micronaut.cdi.processor.visitor.BeanDiscoveryVisitor;
-import io.micronaut.cdi.processor.visitor.BeanNameVisitor;
-import io.micronaut.cdi.processor.visitor.BeanTypesVisitor;
-import io.micronaut.cdi.processor.visitor.CdiScopeVisitor;
-import io.micronaut.cdi.processor.visitor.ContainerInjectionVisitor;
-import io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor;
-import io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor;
-import io.micronaut.cdi.processor.visitor.ObserverVisitor;
-import io.micronaut.cdi.processor.visitor.ProducerVisitor;
-import io.micronaut.cdi.processor.visitor.ProxyabilityVisitor;
 import io.micronaut.cdi.processor.visitor.SpecificationBeans;
-import io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor;
 import io.micronaut.core.annotation.AnnotationClassValue;
-import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.order.OrderUtil;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
@@ -51,7 +37,6 @@ import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import io.micronaut.inject.writer.GeneratedFile;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
@@ -60,12 +45,9 @@ import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
 import org.jspecify.annotations.Nullable;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -108,10 +90,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * at a time sets, so that the extensions of one deployment are the only ones to have their say.
      */
     public static final String EXTENSIONS_ONLY_OPTION = "micronaut.cdi.extensions.only";
-
-    private static final String GENERATED = "io.micronaut.cdi.generated";
-    private static final String SCANNED_CLASSES = "ScannedClassesImport";
-    private static final int MAX_COMPILATIONS_OF_A_MODULE = 16;
 
     /**
      * The extensions of the compilation and the methods of their phases, loaded as the compilation starts the
@@ -181,25 +159,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         return started;
     }
 
-    /**
-     * Opens a source this visitor generates: the import of the scanned classes, written from what the classes of the
-     * compilation said rather than from one class.
-     *
-     * <p>Under javac the visitor stays isolating, because only the isolating processor runs it before the other
-     * visitors, as an enhancement has to be, and the source is written with no originating element: Gradle then
-     * recompiles the whole source set rather than part of it, which is what the source needs. Under KSP every
-     * class the compilation has visited so far is named as an origin: a source that names none is dropped as
-     * soon as any file is deleted, with nothing left to regenerate it, while one that names them is generated
-     * again, the other classes it names processed again with it, whenever one of them changes or goes.</p>
-     */
-    static Optional<GeneratedFile> generatedSource(
-        VisitorContext context, String packageName, String className, Element[] origins) {
-        if (context.getLanguage() == VisitorContext.Language.KOTLIN) {
-            return context.visitGeneratedSourceFile(packageName, className, origins);
-        }
-        return context.visitGeneratedSourceFile(packageName, className);
-    }
-
     @Override
     public void start(VisitorContext context) {
         // what AnnotationBuilder.of composes with, reading the annotation interfaces through this compilation. The
@@ -232,7 +191,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     public void visitClass(ClassElement element, VisitorContext context) {
         String name = element.getName();
         DiscoveredClasses started = discovered;
-        if (started == null || name.startsWith(GENERATED + ".")) {
+        if (started == null || ScannedClassRegistrar.isGenerated(name)) {
             // a class this visitor generated: the import of the scanned classes
             return;
         }
@@ -278,179 +237,18 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         if (!scannedClassesHandled) {
             scannedClassesHandled = true;
-            if (importScannedClasses(context)) {
+            ScannedClassRegistrar scanned = new ScannedClassRegistrar(this, discovered());
+            if (scanned.importScannedClasses(context)) {
                 // javac visits the imported classes in the next round, describes them to the registration phase,
                 // and finishes that round with the phases that follow
                 return;
             }
-            registerScannedClasses(context);
+            scanned.registerScannedClasses(context);
         }
         synthesized = true;
         registerContexts(context);
         registerQualifiers(context);
         synthesise(context);
-    }
-
-    /**
-     * Under javac, writes an import of the classes the discovery phase added to the scanned ones.
-     *
-     * <p>A class the discovery phase added may say nothing at all about itself, and javac hands the bean machinery
-     * the classes that carry an annotation it reacts to and no others. Which of the scanned classes it makes beans
-     * of on their own is decided after the visitors have run, so a bean registered for each here would stand
-     * beside the definition javac writes for some: the import names them all, and javac makes each a bean once,
-     * the whole bean machinery processing it, with the scope it was given as it was visited. KSP and Groovy hand
-     * the bean machinery every class they compile, and read no import (see {@link #registerScannedClasses}).</p>
-     *
-     * @return Whether the import was written, and the classes it names are visited in the next round
-     */
-    private boolean importScannedClasses(VisitorContext context) {
-        if (context.getLanguage() != VisitorContext.Language.JAVA || discovered().scannedClasses().isEmpty()) {
-            return false;
-        }
-        List<String> literals = new ArrayList<>();
-        for (String scanned : discovered().scannedClasses()) {
-            // a class literal names a nested class by its canonical name, never by its binary one
-            literals.add(context.getClassElement(scanned).map(ClassElement::getCanonicalName).orElse(scanned)
-                + ".class");
-        }
-        String className = SCANNED_CLASSES + suffix(context);
-        StringBuilder source = new StringBuilder("package " + GENERATED + ";\n\n");
-        if (context.getClassElement(CdiScannedClasses.class.getName()).isPresent()) {
-            // the record of what was scanned, for whoever reads the compiled classes: the import itself says
-            // nothing once compiled
-            List<String> names = new ArrayList<>();
-            for (String scanned : discovered().scannedClasses()) {
-                names.add('"' + scanned + '"');
-            }
-            source.append("@" + CdiScannedClasses.class.getName()
-                + "({" + String.join(", ", names) + "})\n");
-        }
-        source.append("@io.micronaut.context.annotation.ClassImport(classes = {" + String.join(", ", literals) + "})\n")
-            .append("final class " + className + " {\n}\n");
-        Optional<GeneratedFile> file =
-            generatedSource(context, GENERATED, className, contributors());
-        if (file.isEmpty()) {
-            context.fail("The import of the scanned classes could not be written: the compilation accepts no "
-                + "generated source", null);
-            return false;
-        }
-        try {
-            file.get().write(writer -> writer.write(source.toString()));
-        } catch (Exception e) {
-            throw new IllegalStateException("The import of the scanned classes could not be written", e);
-        }
-        return true;
-    }
-
-    /**
-     * Under KSP and Groovy, registers a bean of each class the discovery phase added to the scanned ones that the
-     * compilation does not compile and that has no definition of its own.
-     *
-     * <p>A class the compilation compiles is handed to the bean machinery as every class is, and is a bean with
-     * the scope it was given as it was visited. A class of a library is not, and is put through what a class of
-     * the compilation is put through here: what the discovery phase said of it, the enhancement and the
-     * registration phases, and then a bean registered for it, with its injection points.</p>
-     */
-    private void registerScannedClasses(VisitorContext context) {
-        Messages messages = new VisitorMessages(context);
-        for (String scanned : discovered().scannedClasses()) {
-            int nested = scanned.indexOf('$');
-            if (discovered().wasVisited(scanned) || (nested > 0 && discovered().wasVisited(scanned.substring(0, nested)))) {
-                continue;
-            }
-            ClassElement element = context.getClassElement(scanned).orElse(null);
-            if (element == null || element.isAbstract() || element.isInterface() || hasDefinition(element, context)) {
-                continue;
-            }
-            applyDiscovery(element);
-            extensions.enhance(element, context);
-            // what each class of the compilation is put through as it is visited: its scope, its injection points
-            // marked for the container, its bean types, its producers and observers, its default qualifier
-            for (TypeElementVisitor<?, ?> visitor : classVisitors()) {
-                if (!(visitor instanceof InjectionPointRulesVisitor)) {
-                    // the rules a class is held to as it compiles are its own compilation's to judge; and a compiler
-                    // that reads a class of a library from its bytes reads less of it than of a source
-                    visitor.visitClass(element, context);
-                }
-            }
-            register(element, messages, context);
-            Map<String, MemberElement> producers = new HashMap<>();
-            for (MemberElement producer
-                : SpecificationBeans.producersOf(element)) {
-                producers.put(producerKey(producer), producer);
-            }
-            context.registerBean(element, contributors()).inject()
-                .produceBeans(ElementQuery.ALL_METHODS.onlyDeclared()
-                    .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
-                    produced -> describedAsVisited(produced, producers))
-                .produceBeans(ElementQuery.ALL_FIELDS.onlyDeclared()
-                    .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
-                    produced -> describedAsVisited(produced, producers));
-        }
-    }
-
-    /**
-     * Gives the bean a producer of a scanned class of a library produces what the visitors recorded of the producer:
-     * the builder reads the member anew, without what they wrote on it.
-     */
-    private static void describedAsVisited(BeanElementBuilder produced,
-                                           Map<String, MemberElement> producers) {
-        if (!(produced.getProducingElement() instanceof MemberElement member)) {
-            return;
-        }
-        MemberElement visited = producers.get(producerKey(member));
-        if (visited == null) {
-            return;
-        }
-        AnnotationMetadata recorded = visited.getAnnotationMetadata().getDeclaredMetadata();
-        for (String name : recorded.getAnnotationNames()) {
-            AnnotationValue<Annotation> value = recorded.getAnnotation(name);
-            if (value != null && !produced.hasDeclaredAnnotation(name)) {
-                produced.annotate(value);
-            }
-        }
-    }
-
-    private static String producerKey(MemberElement member) {
-        if (member instanceof MethodElement method) {
-            StringBuilder key = new StringBuilder(method.getName()).append('(');
-            for (ParameterElement parameter : method.getParameters()) {
-                key.append(parameter.getType().getName()).append(',');
-            }
-            return key.append(')').toString();
-        }
-        return member.getName();
-    }
-
-    /**
-     * The visitors of this module that read one class at a time, in the order Micronaut runs them in.
-     */
-    private static List<TypeElementVisitor<?, ?>> classVisitors() {
-        List<TypeElementVisitor<?, ?>> visitors = new ArrayList<>(List.of(
-            new CdiScopeVisitor(),
-            new ContainerInjectionVisitor(),
-            new BeanNameVisitor(),
-            new BeanDiscoveryVisitor(),
-            new ProducerVisitor(),
-            new ObserverVisitor(),
-            new DefaultQualifierVisitor(),
-            new InjectionPointRulesVisitor(),
-            new ProxyabilityVisitor(),
-            new BeanTypesVisitor(),
-            new TypeHierarchyVisitor()));
-        OrderUtil.reverseSort(visitors);
-        return visitors;
-    }
-
-    /**
-     * Whether the class was compiled with Micronaut's bean definition of it beside it.
-     */
-    private static boolean hasDefinition(ClassElement element, VisitorContext context) {
-        String packageName = element.getPackageName();
-        String simpleName = packageName.isEmpty() ? element.getName()
-            : element.getName().substring(packageName.length() + 1);
-        return context.getClassElement((packageName.isEmpty() ? "" : packageName + ".") + "$" + simpleName
-            + "$Definition").isPresent();
     }
 
     /**
@@ -509,51 +307,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         BeanElementBuilder bean = context.registerBean(component.type(), contributors());
         component.type().getDefaultConstructor().ifPresent(bean::createWith);
         bean.annotate(component.record());
-    }
-
-    /**
-     * What the class this compilation generates is named with: the import of the scanned classes, which is generated
-     * once.
-     */
-    private String suffix(VisitorContext context) {
-        return suffixOf(discovered().contributors().get(0).getName(), context);
-    }
-
-    /**
-     * What the classes this compilation generates are named with, so that two compilations of one application -
-     * two modules, or the main and the test classes of one - do not generate the same class.
-     *
-     * <p>It has to be the same from one build to the next: an incremental build that generated the classes under
-     * another name would leave the definitions Micronaut wrote for the old ones behind, naming classes that are
-     * gone. Where the build names the module being compiled, as the Micronaut Gradle plugin does,
-     * the name is made from that, and from how many compilations of the same module are on the class path
-     * already - the main classes are, to the test classes. Otherwise it is made from the first class the
-     * compilation compiles, which a build that compiles everything at once comes to first every time.</p>
-     */
-    private static String suffixOf(String firstClass, VisitorContext context) {
-        Map<String, String> options = context.getOptions();
-        String group = options.get(VisitorContext.MICRONAUT_PROCESSING_GROUP);
-        String module = options.get(VisitorContext.MICRONAUT_PROCESSING_MODULE);
-        if (module == null || module.isEmpty()) {
-            return Integer.toHexString(firstClass.hashCode());
-        }
-        String compilation = group + ":" + module;
-        for (int taken = 0; taken < MAX_COMPILATIONS_OF_A_MODULE; taken++) {
-            String candidate = Integer.toHexString(
-                (taken == 0 ? compilation : compilation + "#" + taken).hashCode());
-            if (isUnused(candidate, context)) {
-                return candidate;
-            }
-        }
-        return Integer.toHexString(firstClass.hashCode());
-    }
-
-    /**
-     * Whether the class the compilation could generate under the suffix, the import of the scanned classes, is not
-     * on the class path already.
-     */
-    private static boolean isUnused(String suffix, VisitorContext context) {
-        return context.getClassElement(GENERATED + "." + SCANNED_CLASSES + suffix).isEmpty();
     }
 
     /**
@@ -668,6 +421,18 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             extensions.describeObserver(new ElementObserverInfo(element, method, observed, async, context), messages,
                 context);
         }
+    }
+
+    /**
+     * Puts a scanned class of a library the compiler does not visit through what visiting a class does here: what
+     * the discovery phase said about it, and the enhancement phase.
+     *
+     * @param element The class
+     * @param context The compilation
+     */
+    void prepareScanned(ClassElement element, VisitorContext context) {
+        applyDiscovery(element);
+        extensions.enhance(element, context);
     }
 
     /**
