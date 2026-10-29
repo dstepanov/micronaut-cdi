@@ -15,8 +15,10 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -25,13 +27,20 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.context.spi.Context;
+import jakarta.enterprise.event.ObserverException;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -69,7 +78,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private volatile @Nullable Type observedType;
     private volatile @Nullable Argument<?> observedArgument;
     private final @Nullable AnnotationValue<Annotation> recordedType;
-    private volatile java.util.@Nullable List<CdiQualifier> observedQualifiers;
+    private volatile @Nullable List<CdiQualifier> observedQualifiers;
     private volatile @Nullable Set<Annotation> observedQualifierInstances;
 
     CdiObserverMethod(BeanContext beanContext,
@@ -80,7 +89,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         this.declaring = declaring;
         this.method = method;
         this.observedParameter = observer.intValue("observedParameter").orElse(0);
-        java.util.List<AnnotationValue<Annotation>> recorded = observer.getAnnotations("observedType");
+        List<AnnotationValue<Annotation>> recorded = observer.getAnnotations("observedType");
         this.recordedType = recorded.isEmpty() ? null : recorded.get(0);
         this.async = observer.booleanValue("async").orElse(false);
         this.ifExists = observer.booleanValue("ifExists").orElse(false);
@@ -135,7 +144,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         Set<Annotation> resolved = observedQualifierInstances;
         if (resolved == null) {
             // kept unmodifiable: the set is shared by everyone who asks
-            resolved = java.util.Collections.unmodifiableSet(
+            resolved = Collections.unmodifiableSet(
                 CdiQualifier.instances(beanContext, observedQualifiers()));
             observedQualifierInstances = resolved;
         }
@@ -143,11 +152,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     @Override
-    public java.util.List<CdiQualifier> observedQualifiers() {
-        java.util.List<CdiQualifier> resolved = observedQualifiers;
+    public List<CdiQualifier> observedQualifiers() {
+        List<CdiQualifier> resolved = observedQualifiers;
         if (resolved == null) {
             // shared by every resolution rather than built for each
-            resolved = java.util.List.copyOf(CdiQualifier.declared(observed().getAnnotationMetadata()));
+            resolved = List.copyOf(CdiQualifier.declared(observed().getAnnotationMetadata()));
             observedQualifiers = resolved;
         }
         return resolved;
@@ -179,7 +188,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     @Override
-    public jakarta.enterprise.inject.spi.Bean<?> getDeclaringBean() {
+    public Bean<?> getDeclaringBean() {
         return beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
     }
 
@@ -206,11 +215,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void notifyWith(Object event, jakarta.enterprise.inject.spi.EventMetadata metadata) {
+    public void notifyWith(Object event, EventMetadata metadata) {
         notify((T) event, metadata);
     }
 
-    void notify(T event, jakarta.enterprise.inject.spi.EventMetadata metadata) {
+    void notify(T event, EventMetadata metadata) {
         // a dependent observer bean, and a dependent parameter, exist for the one notification: they are created
         // for it, and they and everything created along with them are destroyed when it completes, the last
         // created first
@@ -234,7 +243,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                     target = instanceOf(declaring, dependents);
                 } else {
                     target = beanContext.getBean(declaring);
-                    if (target instanceof io.micronaut.aop.InterceptedProxy<?> proxy) {
+                    if (target instanceof InterceptedProxy<?> proxy) {
                         // the observer method may be protected, which a client proxy does not delegate: the
                         // notification goes to the instance the context holds
                         target = proxy.interceptedTarget();
@@ -246,7 +255,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             for (int i = 0; i < arguments.length; i++) {
                 if (i == observedParameter) {
                     parameters[i] = event;
-                } else if (arguments[i].getType() == jakarta.enterprise.inject.spi.EventMetadata.class) {
+                } else if (arguments[i].getType() == EventMetadata.class) {
                     // the metadata of the firing is supplied by the notification rather than resolved
                     parameters[i] = metadata;
                 } else {
@@ -275,7 +284,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             throw e;
         } catch (Throwable e) {
             // section 2.8.5: a checked exception an observer throws is wrapped and rethrown
-            throw new jakarta.enterprise.event.ObserverException(e.getMessage(), e);
+            throw new ObserverException(e.getMessage(), e);
         }
     }
 
@@ -285,7 +294,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         // context is asked about the bean itself, so that an instance of a subclass bean, or a bean that could
         // be created, is not taken for one
         CdiBean<?> bean = declaringBean();
-        jakarta.enterprise.context.spi.Context context = activeContextOf(bean);
+        Context context = activeContextOf(bean);
         return context != null && context.get(bean) != null;
     }
 
@@ -306,7 +315,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         }
     }
 
-    private jakarta.enterprise.context.spi.@Nullable Context activeContextOf(CdiBean<?> bean) {
+    private @Nullable Context activeContextOf(CdiBean<?> bean) {
         try {
             return container().activeContext(bean.getScope());
         } catch (IllegalArgumentException e) {
@@ -338,7 +347,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             // a provider of the application's own supplies it, as it does a field of the bean
             return CdiResolution.fromApplicationProvider(beanContext, declaring, argument);
         }
-        io.micronaut.context.BeanRegistration<Object> registration;
+        BeanRegistration<Object> registration;
         CdiBeanContainer.Selection selection =
             CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())
                 ? container().selectionFor(argument) : null;
@@ -350,7 +359,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 if (argument.isNullable()) {
                     return null;
                 }
-                throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for observer parameter "
+                throw new UnsatisfiedResolutionException("No bean for observer parameter "
                     + argument);
             }
             registration = dependents.registration(definition,

@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -24,6 +26,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -38,15 +41,15 @@ import java.util.Set;
 final class CdiEventMetadata implements EventMetadata {
 
     // the container the event was fired in, which makes the qualifiers it was fired with annotation instances
-    private final io.micronaut.context.BeanContext beanContext;
-    private final java.util.List<CdiQualifier> firedWith;
+    private final BeanContext beanContext;
+    private final List<CdiQualifier> firedWith;
     private final @Nullable InjectionPoint injectionPoint;
-    private final io.micronaut.core.type.Argument<?> eventType;
+    private final Argument<?> eventType;
     private volatile @Nullable Type type;
     private volatile @Nullable Set<Annotation> qualifiers;
 
-    CdiEventMetadata(io.micronaut.context.BeanContext beanContext, java.util.List<CdiQualifier> firedWith,
-                     @Nullable InjectionPoint injectionPoint, io.micronaut.core.type.Argument<?> eventType) {
+    CdiEventMetadata(BeanContext beanContext, List<CdiQualifier> firedWith,
+                     @Nullable InjectionPoint injectionPoint, Argument<?> eventType) {
         this.beanContext = beanContext;
         this.firedWith = firedWith;
         this.injectionPoint = injectionPoint;

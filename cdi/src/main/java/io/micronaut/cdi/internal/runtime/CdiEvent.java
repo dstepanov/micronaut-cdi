@@ -15,14 +15,23 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.MicronautEvent;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.event.NotificationOptions;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.util.TypeLiteral;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 
@@ -38,35 +47,35 @@ import java.util.concurrent.Executor;
  * @since 1.0
  */
 @Internal
-public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
+public final class CdiEvent<T> implements MicronautEvent<T> {
 
     private final ObserverRegistry registry;
     private final Argument<?> type;
-    private final java.util.List<CdiQualifier> qualifiers;
+    private final List<CdiQualifier> qualifiers;
     /**
      * Whether the type is the type of the events fired, stated in full by whoever selected it as an
      * {@code Argument}: nothing is then derived from the class of the event object.
      */
     private final boolean exact;
-    private final jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt;
+    private final @Nullable InjectionPoint injectedAt;
 
     public CdiEvent(ObserverRegistry registry, Argument<T> type, Set<Annotation> qualifiers) {
         this(registry, type, CdiQualifier.ofInstances(registry.types(), qualifiers), null);
     }
 
-    public CdiEvent(ObserverRegistry registry, java.lang.reflect.Type type, Set<Annotation> qualifiers,
-                    jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
-        this(registry, io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(type),
+    public CdiEvent(ObserverRegistry registry, Type type, Set<Annotation> qualifiers,
+                    @Nullable InjectionPoint injectedAt) {
+        this(registry, SpecificationTypes.argumentOf(type),
             CdiQualifier.ofInstances(registry.types(), qualifiers), injectedAt);
     }
 
-    CdiEvent(ObserverRegistry registry, Argument<?> type, java.util.List<CdiQualifier> qualifiers,
-             jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt) {
+    CdiEvent(ObserverRegistry registry, Argument<?> type, List<CdiQualifier> qualifiers,
+             @Nullable InjectionPoint injectedAt) {
         this(registry, type, qualifiers, injectedAt, false);
     }
 
-    private CdiEvent(ObserverRegistry registry, Argument<?> type, java.util.List<CdiQualifier> qualifiers,
-                     jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint injectedAt,
+    private CdiEvent(ObserverRegistry registry, Argument<?> type, List<CdiQualifier> qualifiers,
+                     @Nullable InjectionPoint injectedAt,
                      boolean exact) {
         this.exact = exact;
         this.registry = registry;
@@ -104,11 +113,11 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
         return CompletableFuture.supplyAsync(() -> {
             // every asynchronous observer is notified, and what any of them threw arrives together, as the
             // suppressed exceptions of one completion failure (section 2.8.5)
-            java.util.List<Throwable> thrown = registry.notifyObserversCollecting(
+            List<Throwable> thrown = registry.notifyObserversCollecting(
                 event, eventType.type(), eventType.above(), qualifiers, injectedAt);
             if (!thrown.isEmpty()) {
-                java.util.concurrent.CompletionException failure =
-                    new java.util.concurrent.CompletionException(thrown.get(0));
+                CompletionException failure =
+                    new CompletionException(thrown.get(0));
                 for (Throwable each : thrown) {
                     failure.addSuppressed(each);
                 }
@@ -119,40 +128,40 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
     }
 
     @Override
-    public io.micronaut.cdi.MicronautEvent<T> select(Annotation... qualifiers) {
+    public MicronautEvent<T> select(Annotation... qualifiers) {
         // the type stays what it was selected as: a selection of qualifiers says nothing of the type
         return new CdiEvent<>(registry, type, and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt, exact);
     }
 
     @Override
-    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(Class<U> subtype, Annotation... qualifiers) {
+    public <U extends T> MicronautEvent<U> select(Class<U> subtype, Annotation... qualifiers) {
         return new CdiEvent<>(registry, Argument.of(subtype), and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt);
     }
 
     @Override
-    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        Argument<?> selected = io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(subtype.getType());
+    public <U extends T> MicronautEvent<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+        Argument<?> selected = SpecificationTypes.argumentOf(subtype.getType());
         requireNoTypeVariable(selected);
         return new CdiEvent<>(registry, selected, and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt);
     }
 
     @Override
-    public io.micronaut.cdi.MicronautEvent<T> select(io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-                                                     io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public MicronautEvent<T> select(AnnotationValue<?> qualifier,
+                                    AnnotationValue<?>... qualifiers) {
         return new CdiEvent<>(registry, type, and(CdiInstance.valuesOf(registry.types(), qualifier, qualifiers)), injectedAt, exact);
     }
 
     @Override
-    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
-        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <U extends T> MicronautEvent<U> select(
+        Class<U> subtype, AnnotationValue<?> qualifier,
+        AnnotationValue<?>... qualifiers) {
         return new CdiEvent<>(registry, Argument.of(subtype), and(CdiInstance.valuesOf(registry.types(), qualifier, qualifiers)),
             injectedAt);
     }
 
     @Override
-    public <U extends T> io.micronaut.cdi.MicronautEvent<U> select(
-        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <U extends T> MicronautEvent<U> select(
+        Argument<U> subtype, AnnotationValue<?>... qualifiers) {
         requireNoTypeVariable(subtype);
         return new CdiEvent<>(registry, subtype, and(CdiInstance.valuesOf(registry.types(), null, qualifiers)), injectedAt, true);
     }
@@ -168,9 +177,9 @@ public final class CdiEvent<T> implements io.micronaut.cdi.MicronautEvent<T> {
         }
     }
 
-    private java.util.List<CdiQualifier> and(java.util.List<CdiQualifier> more) {
+    private List<CdiQualifier> and(List<CdiQualifier> more) {
         CdiQualifier.requireWellFormed(registry.types(), qualifiers, more);
-        java.util.List<CdiQualifier> all = new java.util.ArrayList<>(qualifiers);
+        List<CdiQualifier> all = new ArrayList<>(qualifiers);
         for (CdiQualifier qualifier : more) {
             if (!CdiQualifier.isRetainedAtRuntime(registry.types(), qualifier)) {
                 throw new IllegalArgumentException("The qualifier " + qualifier.name()

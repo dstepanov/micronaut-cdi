@@ -17,23 +17,30 @@ package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
+import io.micronaut.cdi.internal.runtime.CdiNotifiable;
 import io.micronaut.cdi.internal.runtime.CdiQualifier;
+import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
 import io.micronaut.cdi.internal.runtime.RecordedTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import jakarta.enterprise.event.ObserverException;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -46,12 +53,12 @@ import org.jspecify.annotations.Nullable;
  */
 @Internal
 public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
-    io.micronaut.cdi.internal.runtime.CdiNotifiable {
+    CdiNotifiable {
 
     private final BeanContext beanContext;
     private final BeanDefinition<?> definition;
     private final AnnotationValue<CdiSyntheticObserver> record;
-    private final io.micronaut.core.type.Argument<?> eventArgument;
+    private final Argument<?> eventArgument;
     private final Type eventType;
     private final CdiParameters parameters;
     private volatile @Nullable List<CdiQualifier> qualifiers;
@@ -68,7 +75,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     }
 
     @Override
-    public io.micronaut.core.type.Argument<?> observedArgument() {
+    public Argument<?> observedArgument() {
         return eventArgument;
     }
 
@@ -94,9 +101,9 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
             // a qualifier is recorded as the values it was written with, which is what resolution compares
             List<AnnotationValue<Annotation>> recorded = record.getAnnotations(CdiSyntheticObserver.QUALIFIERS);
             Class<?>[] types = record.classValues("qualifierTypes");
-            List<CdiQualifier> all = new java.util.ArrayList<>(recorded.size());
+            List<CdiQualifier> all = new ArrayList<>(recorded.size());
             for (int i = 0; i < recorded.size(); i++) {
-                all.add(CdiQualifier.ofRecorded(io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes.of(beanContext),
+                all.add(CdiQualifier.ofRecorded(CompiledAnnotationTypes.of(beanContext),
                     recorded.get(i),
                     i < types.length ? annotationType(types[i]) : null));
             }
@@ -129,7 +136,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public int getPriority() {
-        return record.intValue("priority").orElse(jakarta.interceptor.Interceptor.Priority.APPLICATION + 500);
+        return record.intValue("priority").orElse(Interceptor.Priority.APPLICATION + 500);
     }
 
     @Override
@@ -161,7 +168,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         } catch (RuntimeException | Error e) {
             throw e;
         } catch (Exception e) {
-            throw new jakarta.enterprise.event.ObserverException(e.getMessage(), e);
+            throw new ObserverException(e.getMessage(), e);
         }
     }
 
@@ -181,7 +188,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         }
 
         @Override
-        public jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint getInjectionPoint() {
+        public @Nullable InjectionPoint getInjectionPoint() {
             return null;
         }
 

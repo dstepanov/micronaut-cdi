@@ -18,6 +18,7 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.core.type.Argument;
 import org.jspecify.annotations.Nullable;
 
@@ -134,6 +135,6 @@ public final class RecordedTypes {
     }
 
     private static @Nullable Class<?> primitive(String name) {
-        return io.micronaut.core.reflect.ClassUtils.getPrimitiveType(name).orElse(null);
+        return ClassUtils.getPrimitiveType(name).orElse(null);
     }
 }

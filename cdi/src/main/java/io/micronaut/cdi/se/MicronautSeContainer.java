@@ -15,9 +15,13 @@
  */
 package io.micronaut.cdi.se;
 
+import io.micronaut.cdi.MicronautInstance;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiInstance;
+import io.micronaut.cdi.internal.runtime.ContainerLifecycle;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.context.Qualifier;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.se.SeContainer;
@@ -42,7 +46,7 @@ import java.util.Iterator;
  * @since 1.0
  */
 @Internal
-final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.MicronautInstance<Object> {
+final class MicronautSeContainer implements SeContainer, MicronautInstance<Object> {
 
     private final ApplicationContext context;
     private final CdiInstance<Object> lookup;
@@ -54,7 +58,7 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
         // the dependent instances obtained through the container belong to it. They are released as the
         // container stops, once it has said so: section 2.8.6.2 has Shutdown observed as the container is about
         // to shut down, so its observers find them in place
-        context.getBean(io.micronaut.cdi.internal.runtime.ContainerLifecycle.class).releaseAsTheContainerStops(lookup::close);
+        context.getBean(ContainerLifecycle.class).releaseAsTheContainerStops(lookup::close);
     }
 
     @Override
@@ -90,49 +94,49 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
     }
 
     @Override
-    public io.micronaut.cdi.MicronautInstance<Object> select(Annotation... qualifiers) {
+    public MicronautInstance<Object> select(Annotation... qualifiers) {
         return active().select(qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
+    public <U> MicronautInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
         return active().select(subtype, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+    public <U> MicronautInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
         return active().select(subtype, qualifiers);
     }
 
     @Override
-    public io.micronaut.cdi.MicronautInstance<Object> select(
-        io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public MicronautInstance<Object> select(
+        AnnotationValue<?> qualifier,
+        AnnotationValue<?>... qualifiers) {
         return active().select(qualifier, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(
-        Class<U> subtype, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-        io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <U> MicronautInstance<U> select(
+        Class<U> subtype, AnnotationValue<?> qualifier,
+        AnnotationValue<?>... qualifiers) {
         return active().select(subtype, qualifier, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(
-        Argument<U> subtype, io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <U> MicronautInstance<U> select(
+        Argument<U> subtype, AnnotationValue<?>... qualifiers) {
         return active().select(subtype, qualifiers);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(Argument<U> subtype,
-                                                            io.micronaut.context.Qualifier<U> qualifier) {
+    public <U> MicronautInstance<U> select(Argument<U> subtype,
+                                           Qualifier<U> qualifier) {
         return active().select(subtype, qualifier);
     }
 
     @Override
-    public <U> io.micronaut.cdi.MicronautInstance<U> select(Class<U> subtype,
-                                                            io.micronaut.context.Qualifier<U> qualifier) {
+    public <U> MicronautInstance<U> select(Class<U> subtype,
+                                           Qualifier<U> qualifier) {
         return active().select(subtype, qualifier);
     }
 
@@ -171,7 +175,7 @@ final class MicronautSeContainer implements SeContainer, io.micronaut.cdi.Micron
         return active().iterator();
     }
 
-    private io.micronaut.cdi.MicronautInstance<Object> active() {
+    private MicronautInstance<Object> active() {
         if (!running) {
             throw new IllegalStateException("The container is not running");
         }

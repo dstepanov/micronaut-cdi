@@ -15,6 +15,13 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.MicronautBeanContainer;
+import io.micronaut.cdi.MicronautEvent;
+import io.micronaut.cdi.MicronautInstance;
+import io.micronaut.cdi.internal.context.ApplicationScope;
+import io.micronaut.cdi.internal.extension.ExtensionContexts;
+import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.ExpressionLanguageBridge;
@@ -25,31 +32,60 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ProxyBeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import io.micronaut.interceptor.spi.InterceptorBindings;
+import jakarta.el.ELResolver;
+import jakarta.el.ExpressionFactory;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.NormalScope;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.Stereotype;
+import jakarta.enterprise.inject.UnproxyableResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.AnnotatedField;
+import jakarta.enterprise.inject.spi.AnnotatedMember;
+import jakarta.enterprise.inject.spi.AnnotatedMethod;
+import jakarta.enterprise.inject.spi.AnnotatedParameter;
+import jakarta.enterprise.inject.spi.AnnotatedType;
+import jakarta.enterprise.inject.spi.BeanAttributes;
+import jakarta.enterprise.inject.spi.Decorator;
+import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.InjectionTargetFactory;
+import jakarta.enterprise.inject.spi.InterceptionFactory;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.inject.spi.ProducerFactory;
+import jakarta.inject.Inject;
+import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
+import jakarta.interceptor.InterceptorBinding;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The container itself, as a program reaches it: the object of section 2.9.1, through which a bean can be looked
@@ -71,11 +107,11 @@ import java.util.Set;
  * @since 1.0
  */
 @io.micronaut.context.annotation.Context
-@io.micronaut.cdi.internal.metadata.CdiBuiltIn
-@io.micronaut.cdi.internal.metadata.CdiScope("jakarta.enterprise.context.Dependent")
-@jakarta.enterprise.inject.Default
+@CdiBuiltIn
+@CdiScope("jakarta.enterprise.context.Dependent")
+@Default
 @Internal
-public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.MicronautBeanContainer {
+public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
 
     /**
      * The annotations the specification declares, which are what they are whatever a build recorded.
@@ -92,12 +128,12 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     private final BeanContext beanContext;
     private final RequestScope requestScope;
-    private final io.micronaut.cdi.internal.context.ApplicationScope applicationScope;
+    private final ApplicationScope applicationScope;
     /**
      * The container's own bean of each definition the bean context handed it, for everyone who describes the
      * same bean to hold the same object, which reads the bean types of its definition once.
      */
-    private final Map<BeanDefinition<?>, CdiBean<?>> canonical = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<BeanDefinition<?>, CdiBean<?>> canonical = new ConcurrentHashMap<>();
     /**
      * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
      * compiled definition are constants, and two points of one type and name may declare different qualifiers.
@@ -106,7 +142,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * the specification and narrowing them is this container's work, which a dependent bean created over and over
      * would do again for each of its points (see Conformance).
      */
-    private volatile Map<PointKey, Selection> selections = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile Map<PointKey, Selection> selections = new ConcurrentHashMap<>();
     private volatile @Nullable RecordedTypeIndex typeIndex;
     private volatile @Nullable CompiledAnnotationTypes types;
     private boolean validated;
@@ -122,20 +158,20 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     /**
      * The contexts extensions registered, a bean of the context created as it starts: looked up once.
      */
-    private volatile java.util.@Nullable Optional<io.micronaut.cdi.internal.extension.ExtensionContexts>
+    private volatile @Nullable Optional<ExtensionContexts>
         extensionContexts;
 
-    @jakarta.inject.Inject
+    @Inject
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
-                            io.micronaut.cdi.internal.context.ApplicationScope applicationScope, ObserverRegistry observers) {
+                            ApplicationScope applicationScope, ObserverRegistry observers) {
         this.beanContext = beanContext;
         this.requestScope = requestScope;
         this.applicationScope = applicationScope;
         this.observers = observers;
         this.requestContexts = List.of(
-            CdiContext.ofRequest(jakarta.enterprise.context.RequestScoped.class, requestScope));
+            CdiContext.ofRequest(RequestScoped.class, requestScope));
         this.applicationContexts = List.of(
-            CdiContext.ofApplication(jakarta.enterprise.context.ApplicationScoped.class, applicationScope));
+            CdiContext.ofApplication(ApplicationScoped.class, applicationScope));
         this.singletonContexts = List.of(CdiContext.ofSingleton(Singleton.class, beanContext));
         this.dependentContexts = List.of(CdiContext.holdingNothing(Dependent.class));
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
@@ -185,7 +221,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             if (unproxyable != null) {
                 // section 3.11: a contextual reference to a bean in a normal scope is its client proxy, and
                 // this bean cannot have one
-                throw new jakarta.enterprise.inject.UnproxyableResolutionException(unproxyable);
+                throw new UnproxyableResolutionException(unproxyable);
             }
             // the contextual reference to a bean in a normal scope is the client proxy, where creating the
             // bean — the Contextual contract — is creating the instance the proxy reaches for
@@ -217,8 +253,8 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     @Override
-    public Set<Bean<?>> getBeans(Argument<?> beanType, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-                                 io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public Set<Bean<?>> getBeans(Argument<?> beanType, AnnotationValue<?> qualifier,
+                                 AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
         all.add(CdiQualifier.ofValue(types(), qualifier));
         all.addAll(qualifiersOf(qualifiers));
@@ -234,7 +270,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         CdiMatching<Object> matching = matching(beanType, List.of(CdiQualifier.ANY));
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(),
-            io.micronaut.inject.qualifiers.Qualifiers.byQualifiers(matching,
+            Qualifiers.byQualifiers(matching,
                 (io.micronaut.context.Qualifier<Object>) qualifier))) {
             beans.add(canonicalBean(definition));
         }
@@ -375,7 +411,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         CdiMatching<T> matching = matching(type, required);
         // the program's qualifier is handed every eligible definition at once, as Micronaut's own lookups hand it
         io.micronaut.context.Qualifier<T> qualifier = narrowedBy == null ? matching
-            : io.micronaut.inject.qualifiers.Qualifiers.byQualifiers(matching,
+            : Qualifiers.byQualifiers(matching,
                 (io.micronaut.context.Qualifier<T>) narrowedBy);
         return beanContext.getBeanDefinitions(matching.lookupType(), qualifier);
     }
@@ -419,9 +455,9 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         return kept;
     }
 
-    private List<CdiQualifier> qualifiersOf(io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    private List<CdiQualifier> qualifiersOf(AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length);
-        for (io.micronaut.core.annotation.AnnotationValue<?> qualifier : qualifiers) {
+        for (AnnotationValue<?> qualifier : qualifiers) {
             all.add(CdiQualifier.ofValue(types(), qualifier));
         }
         return all;
@@ -472,7 +508,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * @param definition The definition
      * @return The bean
      */
-    public CdiBean<?> canonicalBean(io.micronaut.inject.BeanDefinition<?> definition) {
+    public CdiBean<?> canonicalBean(BeanDefinition<?> definition) {
         CdiBean<?> known = canonical.get(definition);
         if (known != null) {
             return known;
@@ -490,12 +526,12 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * one, which the bean context does not enumerate: the bean is the proxy.
      */
     private BeanDefinition<?> proxyOf(BeanDefinition<?> definition) {
-        if (definition instanceof io.micronaut.inject.ProxyBeanDefinition<?>
+        if (definition instanceof ProxyBeanDefinition<?>
             || !CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
             return definition;
         }
         for (BeanDefinition<?> candidate : beanContext.getBeanDefinitions(Argument.of(definition.getBeanType()))) {
-            if (candidate instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy
+            if (candidate instanceof ProxyBeanDefinition<?> proxy
                 && proxy.getTargetDefinitionType() == definition.getClass()) {
                 return candidate;
             }
@@ -509,7 +545,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * resolution.
      */
     public void refreshCandidates() {
-        selections = new java.util.concurrent.ConcurrentHashMap<>();
+        selections = new ConcurrentHashMap<>();
     }
 
     /**
@@ -601,8 +637,8 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     @Override
-    public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, io.micronaut.core.annotation.AnnotationValue<?> qualifier,
-                                                                     io.micronaut.core.annotation.AnnotationValue<?>... qualifiers) {
+    public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, AnnotationValue<?> qualifier,
+                                                                     AnnotationValue<?>... qualifiers) {
         List<CdiQualifier> all = new ArrayList<>(qualifiers.length + 1);
         all.add(CdiQualifier.ofValue(types(), qualifier));
         all.addAll(qualifiersOf(qualifiers));
@@ -631,7 +667,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (interceptorBindings.length == 0) {
             throw new IllegalArgumentException("An interceptor is resolved by at least one interceptor binding");
         }
-        Set<Class<? extends Annotation>> distinct = new java.util.HashSet<>();
+        Set<Class<? extends Annotation>> distinct = new HashSet<>();
         for (Annotation binding : interceptorBindings) {
             if (!isInterceptorBinding(binding.annotationType())) {
                 throw new IllegalArgumentException("The annotation " + binding.annotationType().getName()
@@ -645,14 +681,14 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             }
         }
         // compared as the interceptor chains compare them, so that what is reported here is what runs
-        io.micronaut.interceptor.spi.InterceptorBindings given = io.micronaut.interceptor.spi.InterceptorBindings
+        InterceptorBindings given = InterceptorBindings
             .ofValues(bindingValuesOf(CdiQualifier.ofInstances(types(), interceptorBindings)));
         // selected as the interceptors implementation selects the chain of an element bound by these bindings: the
         // enabled interceptor classes bound to them, by priority, then by class name, with the ones the SE bootstrap
         // listed after them in the order of the list (CdiInterceptorEnablement), so that what is reported here is
         // what is invoked
-        List<Interceptor<?>> resolved = new java.util.ArrayList<>();
-        for (BeanDefinition<?> definition : io.micronaut.interceptor.spi.InterceptorBindings
+        List<Interceptor<?>> resolved = new ArrayList<>();
+        for (BeanDefinition<?> definition : InterceptorBindings
             .boundInterceptors(beanContext, given)) {
             CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
             // a chain holds the interceptor classes whatever they interpose on; the question is asked for one kind
@@ -670,7 +706,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
      * instance, so nothing is read again here - core's own reading of an annotation instance would reflect.
      */
     private static List<AnnotationValue<?>> bindingValuesOf(List<CdiQualifier> bindings) {
-        List<AnnotationValue<?>> values = new java.util.ArrayList<>(bindings.size());
+        List<AnnotationValue<?>> values = new ArrayList<>(bindings.size());
         for (CdiQualifier binding : bindings) {
             values.add(binding.written());
         }
@@ -693,7 +729,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             return true;
         }
         CdiReflection reflection = reflection("BeanContainer.isScope", annotationType);
-        return reflection.isAnnotated(annotationType, jakarta.inject.Scope.class)
+        return reflection.isAnnotated(annotationType, Scope.class)
             || reflection.isAnnotated(annotationType, NormalScope.class);
     }
 
@@ -706,8 +742,8 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (PSEUDO_SCOPES.contains(name)) {
             return false;
         }
-        java.util.Optional<io.micronaut.cdi.internal.extension.ExtensionContexts> extensionContexts =
-            beanContext.findBean(io.micronaut.cdi.internal.extension.ExtensionContexts.class);
+        Optional<ExtensionContexts> extensionContexts =
+            beanContext.findBean(ExtensionContexts.class);
         if (extensionContexts.isPresent() && !extensionContexts.get().contextsFor(annotationType).isEmpty()) {
             // a scope an extension registered is normal where the extension registered it as one
             return extensionContexts.get().isNormal(annotationType);
@@ -716,7 +752,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     private boolean isRegisteredScope(Class<? extends Annotation> annotationType) {
-        return beanContext.findBean(io.micronaut.cdi.internal.extension.ExtensionContexts.class)
+        return beanContext.findBean(ExtensionContexts.class)
             .map(contexts -> !contexts.contextsFor(annotationType).isEmpty())
             .orElse(false);
     }
@@ -739,7 +775,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             return true;
         }
         return reflection("BeanContainer.isStereotype", annotationType)
-            .isAnnotated(annotationType, jakarta.enterprise.inject.Stereotype.class);
+            .isAnnotated(annotationType, Stereotype.class);
     }
 
     @Override
@@ -749,7 +785,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
             return recorded;
         }
         return reflection("BeanContainer.isInterceptorBinding", annotationType)
-            .isAnnotated(annotationType, jakarta.interceptor.InterceptorBinding.class);
+            .isAnnotated(annotationType, InterceptorBinding.class);
     }
 
     @Override
@@ -758,7 +794,7 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         if (active != null) {
             return active;
         }
-        throw new jakarta.enterprise.context.ContextNotActiveException("No context of "
+        throw new ContextNotActiveException("No context of "
             + scopeType.getName() + " is active on the current thread");
     }
 
@@ -800,21 +836,21 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
         // a scope an extension registered a context for (section 2.10.1). A context a portable extension added
         // for the request or the application scope takes the place of the container's own: the beans of the
         // scope are held by it, so it is the context of the scope
-        java.util.Optional<io.micronaut.cdi.internal.extension.ExtensionContexts> extensions = extensionContexts;
+        Optional<ExtensionContexts> extensions = extensionContexts;
         if (extensions == null) {
-            extensions = beanContext.findBean(io.micronaut.cdi.internal.extension.ExtensionContexts.class);
+            extensions = beanContext.findBean(ExtensionContexts.class);
             extensionContexts = extensions;
         }
         if (extensions.isPresent()) {
-            List<jakarta.enterprise.context.spi.AlterableContext> registered = extensions.get().contextsFor(scopeType);
+            List<AlterableContext> registered = extensions.get().contextsFor(scopeType);
             if (!registered.isEmpty()) {
-                return new java.util.ArrayList<>(registered);
+                return new ArrayList<>(registered);
             }
         }
-        if (scopeType == jakarta.enterprise.context.RequestScoped.class) {
+        if (scopeType == RequestScoped.class) {
             return requestContexts;
         }
-        if (scopeType == jakarta.enterprise.context.ApplicationScoped.class) {
+        if (scopeType == ApplicationScoped.class) {
             return applicationContexts;
         }
         return List.of();
@@ -838,12 +874,12 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     @Override
-    public io.micronaut.cdi.MicronautEvent<Object> getEvent() {
+    public MicronautEvent<Object> getEvent() {
         return new CdiEvent<>(observers, Argument.OBJECT_ARGUMENT, Set.of());
     }
 
     @Override
-    public io.micronaut.cdi.MicronautInstance<Object> createInstance() {
+    public MicronautInstance<Object> createInstance() {
         return new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
     }
 
@@ -875,13 +911,13 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
 
     @Override
     public Set<Annotation> getInterceptorBindingDefinition(Class<? extends Annotation> bindingType) {
-        return definitionOf(bindingType, jakarta.interceptor.InterceptorBinding.class,
+        return definitionOf(bindingType, InterceptorBinding.class,
             "BeanManager.getInterceptorBindingDefinition");
     }
 
     @Override
     public Set<Annotation> getStereotypeDefinition(Class<? extends Annotation> stereotype) {
-        return definitionOf(stereotype, jakarta.enterprise.inject.Stereotype.class,
+        return definitionOf(stereotype, Stereotype.class,
             "BeanManager.getStereotypeDefinition");
     }
 
@@ -934,18 +970,18 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     @Override
-    public List<jakarta.enterprise.inject.spi.Decorator<?>> resolveDecorators(Set<Type> types,
-                                                                              Annotation... qualifiers) {
+    public List<Decorator<?>> resolveDecorators(Set<Type> types,
+                                                Annotation... qualifiers) {
         throw belongsToFull("Decorators");
     }
 
     @Override
-    public jakarta.el.ELResolver getELResolver() {
+    public ELResolver getELResolver() {
         return expressionLanguage().resolver();
     }
 
     @Override
-    public jakarta.el.ExpressionFactory wrapExpressionFactory(jakarta.el.ExpressionFactory expressionFactory) {
+    public ExpressionFactory wrapExpressionFactory(ExpressionFactory expressionFactory) {
         return expressionLanguage().wrap(expressionFactory);
     }
 
@@ -958,70 +994,70 @@ public final class CdiBeanContainer implements BeanManager, io.micronaut.cdi.Mic
     }
 
     @Override
-    public <T> jakarta.enterprise.inject.spi.AnnotatedType<T> createAnnotatedType(Class<T> type) {
+    public <T> AnnotatedType<T> createAnnotatedType(Class<T> type) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <T> jakarta.enterprise.inject.spi.InjectionTargetFactory<T> getInjectionTargetFactory(
-        jakarta.enterprise.inject.spi.AnnotatedType<T> annotatedType) {
+    public <T> InjectionTargetFactory<T> getInjectionTargetFactory(
+        AnnotatedType<T> annotatedType) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <X> jakarta.enterprise.inject.spi.ProducerFactory<X> getProducerFactory(
-        jakarta.enterprise.inject.spi.AnnotatedField<? super X> field, Bean<X> declaringBean) {
+    public <X> ProducerFactory<X> getProducerFactory(
+        AnnotatedField<? super X> field, Bean<X> declaringBean) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <X> jakarta.enterprise.inject.spi.ProducerFactory<X> getProducerFactory(
-        jakarta.enterprise.inject.spi.AnnotatedMethod<? super X> method, Bean<X> declaringBean) {
+    public <X> ProducerFactory<X> getProducerFactory(
+        AnnotatedMethod<? super X> method, Bean<X> declaringBean) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <T> jakarta.enterprise.inject.spi.BeanAttributes<T> createBeanAttributes(
-        jakarta.enterprise.inject.spi.AnnotatedType<T> type) {
+    public <T> BeanAttributes<T> createBeanAttributes(
+        AnnotatedType<T> type) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public jakarta.enterprise.inject.spi.BeanAttributes<?> createBeanAttributes(
-        jakarta.enterprise.inject.spi.AnnotatedMember<?> type) {
+    public BeanAttributes<?> createBeanAttributes(
+        AnnotatedMember<?> type) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <T> Bean<T> createBean(jakarta.enterprise.inject.spi.BeanAttributes<T> attributes, Class<T> beanClass,
-                                  jakarta.enterprise.inject.spi.InjectionTargetFactory<T> factory) {
+    public <T> Bean<T> createBean(BeanAttributes<T> attributes, Class<T> beanClass,
+                                  InjectionTargetFactory<T> factory) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <T, X> Bean<T> createBean(jakarta.enterprise.inject.spi.BeanAttributes<T> attributes,
+    public <T, X> Bean<T> createBean(BeanAttributes<T> attributes,
                                      Class<X> beanClass,
-                                     jakarta.enterprise.inject.spi.ProducerFactory<X> producerFactory) {
+                                     ProducerFactory<X> producerFactory) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public InjectionPoint createInjectionPoint(jakarta.enterprise.inject.spi.AnnotatedField<?> field) {
+    public InjectionPoint createInjectionPoint(AnnotatedField<?> field) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public InjectionPoint createInjectionPoint(jakarta.enterprise.inject.spi.AnnotatedParameter<?> parameter) {
+    public InjectionPoint createInjectionPoint(AnnotatedParameter<?> parameter) {
         throw belongsToFull("Building a bean out of an annotated type");
     }
 
     @Override
-    public <T extends jakarta.enterprise.inject.spi.Extension> T getExtension(Class<T> extensionClass) {
+    public <T extends Extension> T getExtension(Class<T> extensionClass) {
         throw belongsToFull("A portable extension");
     }
 
     @Override
-    public <T> jakarta.enterprise.inject.spi.InterceptionFactory<T> createInterceptionFactory(
+    public <T> InterceptionFactory<T> createInterceptionFactory(
         CreationalContext<T> ctx, Class<T> clazz) {
         throw belongsToFull("An interception factory");
     }

@@ -15,19 +15,29 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiName;
+import io.micronaut.cdi.internal.metadata.MicronautQualifiers;
 import io.micronaut.cdi.spi.CdiReflection;
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.AnnotationValueProvider;
 import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.context.BeforeDestroyed;
+import jakarta.enterprise.context.Destroyed;
+import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.literal.NamedLiteral;
 import jakarta.inject.Named;
+import jakarta.inject.Qualifier;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +45,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -256,13 +267,13 @@ public final class CdiQualifier {
      * @return The instance, or {@code null} where the annotation class is not on the classpath
      * @throws UnsupportedOperationException Where an instance has to be made and the reflection module is absent
      */
-    public @Nullable Annotation instance(io.micronaut.context.BeanContext beanContext) {
+    public @Nullable Annotation instance(BeanContext beanContext) {
         Annotation resolved = instance;
         if (resolved != null) {
             return resolved;
         }
         if (isNamed()) {
-            resolved = jakarta.enterprise.inject.literal.NamedLiteral.of(written.stringValue().orElse(""));
+            resolved = NamedLiteral.of(written.stringValue().orElse(""));
         } else {
             AnnotationMetadata metadata = source == null ? AnnotationMetadata.EMPTY_METADATA : source;
             Class<? extends Annotation> type = metadata.getAnnotationType(name()).orElse(null);
@@ -286,7 +297,7 @@ public final class CdiQualifier {
      * @param qualifiers  The qualifiers
      * @return The instances
      */
-    public static Set<Annotation> instances(io.micronaut.context.BeanContext beanContext,
+    public static Set<Annotation> instances(BeanContext beanContext,
                                             Collection<CdiQualifier> qualifiers) {
         Set<Annotation> instances = new LinkedHashSet<>();
         for (CdiQualifier qualifier : qualifiers) {
@@ -443,20 +454,20 @@ public final class CdiQualifier {
                 null, annotation);
         }
         // the qualifiers the container itself fires its lifecycle events with, read through their own interface
-        if (annotation instanceof jakarta.enterprise.context.Initialized initialized) {
-            return scoped(jakarta.enterprise.context.Initialized.class, initialized.value(), annotation);
+        if (annotation instanceof Initialized initialized) {
+            return scoped(Initialized.class, initialized.value(), annotation);
         }
-        if (annotation instanceof jakarta.enterprise.context.BeforeDestroyed beforeDestroyed) {
-            return scoped(jakarta.enterprise.context.BeforeDestroyed.class, beforeDestroyed.value(), annotation);
+        if (annotation instanceof BeforeDestroyed beforeDestroyed) {
+            return scoped(BeforeDestroyed.class, beforeDestroyed.value(), annotation);
         }
-        if (annotation instanceof jakarta.enterprise.context.Destroyed destroyed) {
-            return scoped(jakarta.enterprise.context.Destroyed.class, destroyed.value(), annotation);
+        if (annotation instanceof Destroyed destroyed) {
+            return scoped(Destroyed.class, destroyed.value(), annotation);
         }
         String name = annotation.annotationType().getName();
         if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, annotation);
         }
-        if (annotation instanceof io.micronaut.core.annotation.AnnotationValueProvider<?> provider) {
+        if (annotation instanceof AnnotationValueProvider<?> provider) {
             return of(withNonbinding(provider.annotationValue(), types.nonbindingOf(name)), null, annotation, types);
         }
         CdiReflection reflection = CdiReflection.require(types.beanContext(),
@@ -563,7 +574,7 @@ public final class CdiQualifier {
      */
     public static List<CdiQualifier> declared(AnnotationMetadata metadata) {
         List<CdiQualifier> qualifiers = new ArrayList<>(2);
-        if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiAny.class)) {
+        if (metadata.hasAnnotation(CdiAny.class)) {
             // Any was written here; it is carried as the marker so that Micronaut does not narrow by it
             qualifiers.add(ANY);
         }
@@ -573,7 +584,7 @@ public final class CdiQualifier {
                 continue;
             }
             String name = annotation.getAnnotationName();
-            if (io.micronaut.cdi.internal.metadata.MicronautQualifiers.isMicronautOwn(name)) {
+            if (MicronautQualifiers.isMicronautOwn(name)) {
                 continue;
             }
             if (NAMED_NAME.equals(name) && metadata.hasAnnotation(CdiName.class)) {
@@ -608,7 +619,7 @@ public final class CdiQualifier {
         }
         return CdiReflection.require(types.beanContext(),
             "Whether " + type.getName() + ", an annotation the application was not "
-            + "compiled with as a qualifier, is one").isAnnotated(type, jakarta.inject.Qualifier.class);
+            + "compiled with as a qualifier, is one").isAnnotated(type, Qualifier.class);
     }
 
     /**
@@ -671,7 +682,7 @@ public final class CdiQualifier {
         }
         return CdiReflection.require(types.beanContext(),
             "Whether the qualifier " + name + ", which the application was not compiled "
-            + "with, may be given twice").isAnnotated(supplied.annotationType(), java.lang.annotation.Repeatable.class);
+            + "with, may be given twice").isAnnotated(supplied.annotationType(), Repeatable.class);
     }
 
     /**
@@ -759,8 +770,8 @@ public final class CdiQualifier {
     private record KnownType(Class<? extends Annotation> type) implements AnnotationMetadata {
 
         @Override
-        public java.util.Optional<Class<? extends Annotation>> getAnnotationType(String name) {
-            return type.getName().equals(name) ? java.util.Optional.of(type) : java.util.Optional.empty();
+        public Optional<Class<? extends Annotation>> getAnnotationType(String name) {
+            return type.getName().equals(name) ? Optional.of(type) : Optional.empty();
         }
     }
 }

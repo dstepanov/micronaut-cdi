@@ -18,6 +18,7 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
@@ -103,7 +104,7 @@ final class CdiMatching<T> implements Qualifier<T> {
         // resolution customizer), and the other way around it would not
         // a raw lookup has every bean that exposes the class among its candidates, a producer of a List for a
         // Collection included
-        return (Argument<T>) Argument.of(io.micronaut.core.reflect.ReflectionUtils.getPrimitiveType(raw));
+        return (Argument<T>) Argument.of(ReflectionUtils.getPrimitiveType(raw));
     }
 
     /**

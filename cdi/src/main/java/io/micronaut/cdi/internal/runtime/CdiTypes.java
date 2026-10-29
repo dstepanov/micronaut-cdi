@@ -23,13 +23,17 @@ import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.WildcardArgument;
 
 import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The types of the specification as the container holds them: each an {@link Argument}, which carries the type
@@ -108,8 +112,8 @@ public final class CdiTypes {
      * @param parameterTypes The {@link #erasedName erased names} of its parameter types
      * @return The method, or {@code null} where the definition has no executable method of the signature
      */
-    static io.micronaut.inject.@Nullable ExecutableMethod<?, ?> executableMethodOf(
-        io.micronaut.inject.BeanDefinition<?> definition, String name, String[] parameterTypes) {
+    static @Nullable ExecutableMethod<?, ?> executableMethodOf(
+        BeanDefinition<?> definition, String name, String[] parameterTypes) {
         return definition.findPossibleMethods(name)
             .filter(method -> hasParameterTypes(method.getArgumentTypes(), parameterTypes))
             .findFirst()
@@ -246,13 +250,13 @@ public final class CdiTypes {
         Argument<?>[] erased = new Argument<?>[arguments.length];
         boolean changed = false;
         for (int i = 0; i < arguments.length; i++) {
-            erased[i] = argumentWithErasedBounds(arguments[i], new java.util.HashSet<>());
+            erased[i] = argumentWithErasedBounds(arguments[i], new HashSet<>());
             changed |= erased[i] != arguments[i];
         }
         return changed ? type.withTypeParameters(erased) : type;
     }
 
-    private static Argument<?> argumentWithErasedBounds(Argument<?> argument, java.util.Set<String> variables) {
+    private static Argument<?> argumentWithErasedBounds(Argument<?> argument, Set<String> variables) {
         if (argument instanceof WildcardArgument<?> wildcard) {
             Argument<?>[] uppers = boundsErased(wildcard.getUpperBounds(), variables);
             Argument<?>[] lowers = boundsErased(wildcard.getLowerBounds(), variables);
@@ -286,7 +290,7 @@ public final class CdiTypes {
         return argument.withTypeParameters(erased);
     }
 
-    private static Argument<?>[] boundsErased(List<Argument<?>> bounds, java.util.Set<String> variables) {
+    private static Argument<?>[] boundsErased(List<Argument<?>> bounds, Set<String> variables) {
         Argument<?>[] erased = new Argument<?>[bounds.size()];
         for (int i = 0; i < erased.length; i++) {
             Argument<?> bound = bounds.get(i);

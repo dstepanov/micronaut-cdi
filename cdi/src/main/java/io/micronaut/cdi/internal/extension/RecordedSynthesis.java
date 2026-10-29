@@ -27,6 +27,7 @@ import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.runtime.OwnedDependents;
 import io.micronaut.cdi.internal.runtime.RecordedInvoker;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanDependencyResolver;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.RuntimeBeanDefinition;
@@ -48,6 +49,8 @@ import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -83,8 +86,8 @@ public final class RecordedSynthesis {
         this.beanContext = beanContext;
     }
 
-    private java.util.Collection<BeanDefinition<Object>> recorded(Class<? extends java.lang.annotation.Annotation> record) {
-        return beanContext.getBeanDefinitions(io.micronaut.inject.qualifiers.Qualifiers.byStereotype(record));
+    private Collection<BeanDefinition<Object>> recorded(Class<? extends Annotation> record) {
+        return beanContext.getBeanDefinitions(Qualifiers.byStereotype(record));
     }
 
     @PostConstruct
@@ -112,7 +115,7 @@ public final class RecordedSynthesis {
         if (beans.isEmpty() && observers.isEmpty()) {
             return;
         }
-        List<RecordedInvoker> invokers = new java.util.ArrayList<>();
+        List<RecordedInvoker> invokers = new ArrayList<>();
         for (Map.Entry<String, BeanDefinition<?>> bean : beans.entrySet()) {
             AnnotationValue<CdiSyntheticBean> record =
                 bean.getValue().getAnnotationMetadata().getAnnotation(CdiSyntheticBean.class);
@@ -232,7 +235,7 @@ public final class RecordedSynthesis {
      * track the dependents of looked up.
      */
     private OwnedDependents dependentsOf(RuntimeBeanDefinition.LookupContext lookupContext) {
-        io.micronaut.context.BeanDependencyResolver resolver;
+        BeanDependencyResolver resolver;
         try {
             resolver = lookupContext.getDependencies();
         } catch (UnsupportedOperationException e) {

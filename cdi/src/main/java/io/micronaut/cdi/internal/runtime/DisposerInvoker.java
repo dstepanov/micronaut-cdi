@@ -15,13 +15,16 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
+import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import org.jspecify.annotations.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
@@ -30,6 +33,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.inject.Singleton;
 
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Invokes the disposer method of a produced bean as the bean is destroyed.
@@ -54,8 +58,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
      * makes is disposed of by the same method.
      */
-    private final java.util.concurrent.ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
-        new java.util.concurrent.ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
+        new ConcurrentHashMap<>();
     private volatile @Nullable CdiBeanContainer container;
 
     public DisposerInvoker(BeanContext beanContext) {
@@ -114,7 +118,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         BeanDefinition<?> declaring = CdiResolution.declaringBeanOf(
             beanContext.getBeanDefinitions(declaringType.get()), declaringType.get().getName());
         if (declaring == null) {
-            throw new io.micronaut.context.exceptions.NoSuchBeanException(declaringType.get());
+            throw new NoSuchBeanException(declaringType.get());
         }
         ExecutableMethod<?, ?> method = findMethod(declaring, methodName, disposer.stringValues("parameterTypes"))
             .orElseThrow(() -> new IllegalStateException("The " + (staticMethod ? "static " : "")
@@ -145,7 +149,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
         }
         Object host = resolveDefinition(disposer.declaring(), dependencies);
-        if (host instanceof io.micronaut.aop.InterceptedProxy<?> proxy && !disposer.publicMethod()) {
+        if (host instanceof InterceptedProxy<?> proxy && !disposer.publicMethod()) {
             // A non-public disposer is invoked on the contextual target; public methods retain interception.
             host = proxy.interceptedTarget();
         }
@@ -203,7 +207,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             if (argument.isNullable()) {
                 return null;
             }
-            throw new jakarta.enterprise.inject.UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
+            throw new UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
         }
         Argument<Object> askedAs = CdiInstance.askedAs(beanContext, (Argument<Object>) argument, definition);
         // a dependent producer may satisfy it with null, which the disposal destroys as it does any other dependent

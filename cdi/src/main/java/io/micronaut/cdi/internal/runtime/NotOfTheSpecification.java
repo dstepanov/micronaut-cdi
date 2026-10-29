@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -65,7 +66,7 @@ final class NotOfTheSpecification<T> implements Qualifier<T> {
     @Override
     public <B extends BeanType<T>> Stream<B> reduce(Class<T> beanType, Stream<B> candidates) {
         return candidates.filter(candidate -> !candidate.getAnnotationMetadata()
-            .hasStereotype(io.micronaut.cdi.internal.metadata.CdiScope.class));
+            .hasStereotype(CdiScope.class));
     }
 
     @Override

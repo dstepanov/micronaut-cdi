@@ -16,12 +16,14 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.spi.CdiReflection;
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationBuilder;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 /**
  * The places an annotation instance crosses the boundary between the specification's interfaces, which speak
@@ -56,14 +58,14 @@ public final class CdiAnnotations {
      * @throws UnsupportedOperationException Where the type has no builder and the reflection module is not on the
      *                                       classpath
      */
-    public static <A extends Annotation> A annotationOf(io.micronaut.context.BeanContext beanContext, Class<A> type,
+    public static <A extends Annotation> A annotationOf(BeanContext beanContext, Class<A> type,
                                                        @Nullable AnnotationValue<?> value) {
         AnnotationBuilder<A> builder = AnnotationBuilder.find(type).orElse(null);
         if (builder != null) {
-            return value == null ? builder.build(java.util.Map.of()) : builder.build(value);
+            return value == null ? builder.build(Map.of()) : builder.build(value);
         }
         String what = "An instance of the annotation " + type.getName();
-        return io.micronaut.cdi.spi.CdiReflection.require(beanContext, what)
+        return CdiReflection.require(beanContext, what)
             .annotation(type, value);
     }
 

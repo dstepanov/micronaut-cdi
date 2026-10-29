@@ -15,13 +15,20 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
+import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.core.type.TypeHierarchy;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -57,7 +64,7 @@ public final class RecordedTypeIndex {
      * specification, and what the processor recorded does not change. A compiled definition is equal to another
      * of its class and a runtime one only to itself, which is what tells the beans apart.
      */
-    private final Map<io.micronaut.inject.BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
+    private final Map<BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
 
     public RecordedTypeIndex(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -69,7 +76,7 @@ public final class RecordedTypeIndex {
      * @param definition The definition
      * @return The bean types
      */
-    List<Argument<?>> beanTypesOf(io.micronaut.inject.BeanDefinition<?> definition) {
+    List<Argument<?>> beanTypesOf(BeanDefinition<?> definition) {
         List<Argument<?>> known = beanTypes.get(definition);
         if (known != null) {
             return known;
@@ -85,8 +92,8 @@ public final class RecordedTypeIndex {
      * @param definition The definition
      * @return The class
      */
-    static Class<?> beanClassOf(io.micronaut.inject.BeanDefinition<?> definition) {
-        return definition instanceof io.micronaut.inject.ProxyBeanDefinition<?> proxy
+    static Class<?> beanClassOf(BeanDefinition<?> definition) {
+        return definition instanceof ProxyBeanDefinition<?> proxy
             ? proxy.getTargetType() : definition.getBeanType();
     }
 
@@ -106,8 +113,8 @@ public final class RecordedTypeIndex {
      *
      * @return The module, or {@code null} where it is not on the classpath
      */
-    io.micronaut.cdi.spi.@Nullable CdiReflection reflection() {
-        return beanContext.findBean(io.micronaut.cdi.spi.CdiReflection.class).orElse(null);
+    @Nullable CdiReflection reflection() {
+        return beanContext.findBean(CdiReflection.class).orElse(null);
     }
 
     /**
@@ -163,14 +170,14 @@ public final class RecordedTypeIndex {
      * enumerates for the class.
      */
     private @Nullable Entry recordedOf(Class<?> type) {
-        for (io.micronaut.inject.BeanDefinition<?> definition
+        for (BeanDefinition<?> definition
             : beanContext.getBeanDefinitions(Argument.of(type))) {
-            io.micronaut.core.annotation.AnnotationMetadata metadata = definition.getAnnotationMetadata();
-            if (metadata.hasAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)) {
+            AnnotationMetadata metadata = definition.getAnnotationMetadata();
+            if (metadata.hasAnnotation(CdiProducer.class)) {
                 continue;
             }
             List<AnnotationValue<Annotation>> closure = metadata
-                .findAnnotation(io.micronaut.cdi.internal.metadata.CdiBeanTypes.class)
+                .findAnnotation(CdiBeanTypes.class)
                 .map(types -> types.getAnnotations("value")).orElse(List.of());
             if (closure.isEmpty()) {
                 continue;
@@ -181,7 +188,7 @@ public final class RecordedTypeIndex {
                 continue;
             }
             List<String> variables = new ArrayList<>();
-            for (AnnotationValue<Annotation> argument : own.getAnnotations(io.micronaut.cdi.internal.metadata.CdiRecordedType.ARGUMENTS)) {
+            for (AnnotationValue<Annotation> argument : own.getAnnotations(CdiRecordedType.ARGUMENTS)) {
                 if ("VARIABLE".equals(argument.stringValue("kind").orElse(null))) {
                     variables.add(argument.stringValue("name").orElse("T"));
                 }

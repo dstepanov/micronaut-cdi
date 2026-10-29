@@ -19,16 +19,21 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.BeanDependencyResolver;
 import io.micronaut.context.BeanRegistration;
+import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * The dependent instances one owner creates - a lookup, a creational context, one notification of an observer -
@@ -133,11 +138,11 @@ public final class OwnedDependents implements AutoCloseable {
      * @param <T>        The bean type
      * @return The registration
      */
-    public <T> BeanRegistration<T> registrationAt(io.micronaut.context.BeanResolutionContext.@Nullable Segment<?, ?> injectedAt,
-                                                  jakarta.enterprise.inject.spi.InjectionPoint selected,
+    public <T> BeanRegistration<T> registrationAt(BeanResolutionContext.@Nullable Segment<?, ?> injectedAt,
+                                                  InjectionPoint selected,
                                                   BeanDefinition<? extends T> definition, Argument<T> type) {
         if (!CdiResolution.isDependent(definition)
-            || definition instanceof io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition<?>) {
+            || definition instanceof AbstractInjectionPointBeanDefinition<?>) {
             return registration(definition, type);
         }
         LookupSegment<?, T> segment = injectedAt != null
@@ -182,7 +187,7 @@ public final class OwnedDependents implements AutoCloseable {
      * @param <R>             What the action returns
      * @return What the action returned
      */
-    public <R> R within(RuntimeBeanDefinition.LookupContext creationContext, java.util.function.Supplier<R> action) {
+    public <R> R within(RuntimeBeanDefinition.LookupContext creationContext, Supplier<R> action) {
         creation = creationContext;
         try {
             return action.get();
@@ -394,7 +399,7 @@ public final class OwnedDependents implements AutoCloseable {
      * by Micronaut before the shutdown completes.</p>
      */
     private <T> BeanRegistration<T> resolve(
-        java.util.function.Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {
+        Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {
         BeanDependencyResolver owner = owner();
         try {
             return lookup.apply(owner);

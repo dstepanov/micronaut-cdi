@@ -17,6 +17,8 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.context.ApplicationContextConfigurer;
+import io.micronaut.context.BeanContextConfiguration;
+import io.micronaut.context.BeanResolutionCustomizer;
 import io.micronaut.core.annotation.Internal;
 
 /**
@@ -30,10 +32,10 @@ public final class CdiContextConfigurer implements ApplicationContextConfigurer 
 
     @Override
     public void configure(ApplicationContextBuilder builder) {
-        io.micronaut.context.BeanResolutionCustomizer installed =
-            builder instanceof io.micronaut.context.BeanContextConfiguration configuration
+        BeanResolutionCustomizer installed =
+            builder instanceof BeanContextConfiguration configuration
                 ? configuration.beanResolutionCustomizer()
-                : io.micronaut.context.BeanResolutionCustomizer.DEFAULT;
+                : BeanResolutionCustomizer.DEFAULT;
         if (installed instanceof CdiResolutionCustomizer) {
             return;
         }

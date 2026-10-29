@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -98,7 +99,7 @@ public final class CdiQualifiers {
      * @param annotationMetadata The metadata of the element
      * @return The qualifiers
      */
-    public static Set<Annotation> declared(io.micronaut.context.BeanContext beanContext,
+    public static Set<Annotation> declared(BeanContext beanContext,
                                            AnnotationMetadata annotationMetadata) {
         return CdiQualifier.instances(beanContext, CdiQualifier.declared(annotationMetadata));
     }

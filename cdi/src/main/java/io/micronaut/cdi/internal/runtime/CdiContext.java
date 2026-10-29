@@ -17,6 +17,8 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.context.ApplicationScope;
 import io.micronaut.cdi.internal.context.RequestScope;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.BeanCreationContext;
@@ -34,6 +36,7 @@ import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -61,12 +64,12 @@ public final class CdiContext implements AlterableContext {
     private final Class<? extends Annotation> scope;
     private final BooleanSupplier active;
     private final @Nullable AbstractConcurrentCustomScope<?> holder;
-    private final io.micronaut.context.@Nullable BeanContext singletons;
+    private final @Nullable BeanContext singletons;
 
     private CdiContext(Class<? extends Annotation> scope,
                        BooleanSupplier active,
                        @Nullable AbstractConcurrentCustomScope<?> holder,
-                       io.micronaut.context.@Nullable BeanContext singletons) {
+                       @Nullable BeanContext singletons) {
         this.scope = scope;
         this.active = active;
         this.holder = holder;
@@ -115,7 +118,7 @@ public final class CdiContext implements AlterableContext {
      * @return The context
      */
     public static CdiContext ofSingleton(Class<? extends Annotation> scope,
-                                         io.micronaut.context.BeanContext beanContext) {
+                                         BeanContext beanContext) {
         return new CdiContext(scope, () -> true, null, beanContext);
     }
 
@@ -208,11 +211,11 @@ public final class CdiContext implements AlterableContext {
     private <T> @Nullable T heldInstanceOf(CdiBean<T> bean) {
         if (holder != null) {
             return holder.findBeanRegistration(bean.definition())
-                .map(io.micronaut.context.BeanRegistration::bean)
+                .map(BeanRegistration::bean)
                 .orElse(null);
         }
         if (singletons != null) {
-            for (io.micronaut.context.BeanRegistration<?> registration
+            for (BeanRegistration<?> registration
                 : singletons.getActiveBeanRegistrations(bean.definition().getBeanType())) {
                 if (bean.equals(new CdiBean<>(singletons, registration.getBeanDefinition()))) {
                     return (T) registration.bean();
@@ -267,8 +270,8 @@ public final class CdiContext implements AlterableContext {
      * anew. A singleton that was never created has nothing to destroy.
      */
     private void destroySingleton(CdiBean<?> bean) {
-        io.micronaut.context.BeanContext beanContext = java.util.Objects.requireNonNull(singletons);
-        for (io.micronaut.context.BeanRegistration<?> registration
+        BeanContext beanContext = Objects.requireNonNull(singletons);
+        for (BeanRegistration<?> registration
             : beanContext.getActiveBeanRegistrations(bean.definition().getBeanType())) {
             if (bean.equals(new CdiBean<>(beanContext, registration.getBeanDefinition()))) {
                 beanContext.destroyBean(registration);

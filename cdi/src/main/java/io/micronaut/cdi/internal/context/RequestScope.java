@@ -16,19 +16,31 @@
 package io.micronaut.cdi.internal.context;
 
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
+import io.micronaut.cdi.internal.runtime.ObserverRegistry;
+import io.micronaut.context.BeanContext;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.propagation.PropagatedContext;
 import io.micronaut.core.propagation.PropagatedContextElement;
+import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanIdentifier;
+import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.ContextNotActiveException;
+import jakarta.enterprise.context.Destroyed;
+import jakarta.enterprise.context.Initialized;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -59,13 +71,13 @@ import java.util.function.Supplier;
 @Internal
 public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequestScope> {
 
-    private final io.micronaut.context.BeanContext beanContext;
+    private final BeanContext beanContext;
 
     /**
      * Every request this scope has begun and not yet ended, wherever its thread went: what shutdown destroys,
      * so that a request suspended or left active on another thread still has its beans' destruction run.
      */
-    private final java.util.Set<Instances> live = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Set<Instances> live = ConcurrentHashMap.newKeySet();
 
     /**
      * Whether a request of the propagated context is a live one of this scope. A request of another container -
@@ -74,10 +86,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * while it was under way - the context of a task handed to an executor, say - and is not a request to put new
      * beans into.
      */
-    private final java.util.function.Predicate<Instances> liveRequestOfThisScope =
+    private final Predicate<Instances> liveRequestOfThisScope =
         instances -> instances.owner() == this && !instances.ended().get();
 
-    public RequestScope(io.micronaut.context.BeanContext beanContext) {
+    public RequestScope(BeanContext beanContext) {
         // each bean is created under a lock of its own, so that a creation may wait for another thread creating
         // another bean of the scope
         super(CdiRequestScope.class, true);
@@ -128,25 +140,25 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * or was destroyed: the qualifier carries the moment, and the payload in SE is a plain object, there being
      * no request object to hand over.
      */
-    private void requestContextEvent(java.lang.annotation.Annotation moment) {
-        beanContext.findBean(io.micronaut.cdi.internal.runtime.ObserverRegistry.class).ifPresent(observers ->
-            observers.notifyObservers(new Object(), io.micronaut.core.type.Argument.OBJECT_ARGUMENT,
-                java.util.Set.of(moment), false));
+    private void requestContextEvent(Annotation moment) {
+        beanContext.findBean(ObserverRegistry.class).ifPresent(observers ->
+            observers.notifyObservers(new Object(), Argument.OBJECT_ARGUMENT,
+                Set.of(moment), false));
     }
 
     private void initializedEvent() {
-        requestContextEvent(jakarta.enterprise.context.Initialized.Literal.of(
-            jakarta.enterprise.context.RequestScoped.class));
+        requestContextEvent(Initialized.Literal.of(
+            RequestScoped.class));
     }
 
     private void beforeDestroyedEvent() {
-        requestContextEvent(jakarta.enterprise.context.BeforeDestroyed.Literal.of(
-            jakarta.enterprise.context.RequestScoped.class));
+        requestContextEvent(BeforeDestroyed.Literal.of(
+            RequestScoped.class));
     }
 
     private void destroyedEvent() {
-        requestContextEvent(jakarta.enterprise.context.Destroyed.Literal.of(
-            jakarta.enterprise.context.RequestScoped.class));
+        requestContextEvent(Destroyed.Literal.of(
+            RequestScoped.class));
     }
 
     @Override
@@ -394,14 +406,14 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         // of its propagated context, which would otherwise keep them in scope past the container. An activation that
         // has ended already is in scope only because a context captured while it was under way was propagated again,
         // by a scope this one did not open and does not close: the unwinding stops there
-        java.util.List<PropagatedContextElement> elements = PropagatedContext.getOrEmpty().getAllElements();
+        List<PropagatedContextElement> elements = PropagatedContext.getOrEmpty().getAllElements();
         while (!elements.isEmpty() && elements.getLast() instanceof Activation activation
             && activation.instances().owner() == this && activation.isOfTheCallingThread() && activation.end()) {
             elements = PropagatedContext.getOrEmpty().getAllElements();
         }
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
         // are the container's to destroy as it goes down
-        for (Instances instances : java.util.List.copyOf(live)) {
+        for (Instances instances : List.copyOf(live)) {
             // each as the request it is: whichever thread it was left on, its beans reach one another as they go
             PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroy(instances));
         }
@@ -461,7 +473,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     private Instances newInstances() {
         Instances instances = new Instances(this, new RequestBeans(),
-            new java.util.concurrent.atomic.AtomicBoolean());
+            new AtomicBoolean());
         live.add(instances);
         return instances;
     }
@@ -520,7 +532,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param ended Whether the request has ended, its beans destroyed
      */
     private record Instances(RequestScope owner, Map<BeanIdentifier, CreatedBean<?>> beans,
-                             java.util.concurrent.atomic.AtomicBoolean ended)
+                             AtomicBoolean ended)
         implements PropagatedContextElement {
 
         // one request is one object: the generated equality would compare the bean maps, making every

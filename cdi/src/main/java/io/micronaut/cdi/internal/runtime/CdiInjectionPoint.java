@@ -15,21 +15,36 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.MicronautInjectionPoint;
 import io.micronaut.cdi.internal.metadata.CdiInjectedMethod;
+import io.micronaut.cdi.internal.metadata.CdiTransient;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.ArgumentInjectionPoint;
+import io.micronaut.inject.CallableInjectionPoint;
+import io.micronaut.inject.ConstructorInjectionPoint;
+import io.micronaut.inject.FieldInjectionPoint;
+import io.micronaut.inject.MethodInjectionPoint;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -46,22 +61,22 @@ import java.util.Set;
  * @since 1.0
  */
 @Internal
-public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInjectionPoint {
+public final class CdiInjectionPoint implements MicronautInjectionPoint {
 
     // the container the point belongs to, which reads its member and makes its qualifiers annotation instances
     private final BeanContext beanContext;
     private final @Nullable Bean<?> bean;
     private final Argument<?> argument;
     private final @Nullable InjectionSite site;
-    private final java.util.List<CdiQualifier> selectedQualifiers;
+    private final List<CdiQualifier> selectedQualifiers;
 
     CdiInjectionPoint(BeanContext beanContext, @Nullable Bean<?> bean, Argument<?> argument,
                       @Nullable InjectionSite site) {
-        this(beanContext, bean, argument, site, java.util.List.of());
+        this(beanContext, bean, argument, site, List.of());
     }
 
     private CdiInjectionPoint(BeanContext beanContext, @Nullable Bean<?> bean, Argument<?> argument,
-                              @Nullable InjectionSite site, java.util.List<CdiQualifier> selectedQualifiers) {
+                              @Nullable InjectionSite site, List<CdiQualifier> selectedQualifiers) {
         this.beanContext = beanContext;
         this.selectedQualifiers = selectedQualifiers;
         this.bean = bean;
@@ -110,11 +125,11 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
      * @param argument       The injected parameter
      * @return The site
      */
-    static InjectionSite methodSite(Class<?> declaringClass, io.micronaut.inject.MethodInjectionPoint<?, ?> method,
+    static InjectionSite methodSite(Class<?> declaringClass, MethodInjectionPoint<?, ?> method,
                                     Argument<?> argument) {
         InjectionSite compiled = parameterSite(declaringClass, method.getName(), method.getArguments(), argument,
             false);
-        io.micronaut.core.annotation.AnnotationValue<CdiInjectedMethod> declared = method.getAnnotationMetadata()
+        AnnotationValue<CdiInjectedMethod> declared = method.getAnnotationMetadata()
             .getAnnotation(CdiInjectedMethod.class);
         if (declared == null) {
             return compiled;
@@ -139,18 +154,18 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
         Set<Annotation> declared = CdiQualifiers.declared(beanContext, argument.getAnnotationMetadata());
         if (!selectedQualifiers.isEmpty()) {
             // an Instance narrowed with select has the qualifiers it was selected with as well (section 5.6.1)
-            Set<Annotation> all = new java.util.LinkedHashSet<>(declared);
+            Set<Annotation> all = new LinkedHashSet<>(declared);
             all.addAll(CdiQualifier.instances(beanContext, selectedQualifiers));
-            return java.util.Collections.unmodifiableSet(all);
+            return Collections.unmodifiableSet(all);
         }
         return declared.isEmpty()
-            ? Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE)
+            ? Set.of(Default.Literal.INSTANCE)
             : declared;
     }
 
     @Override
-    public java.util.List<io.micronaut.core.annotation.AnnotationValue<?>> getQualifierValues() {
-        java.util.List<io.micronaut.core.annotation.AnnotationValue<?>> all = new java.util.ArrayList<>();
+    public List<AnnotationValue<?>> getQualifierValues() {
+        List<AnnotationValue<?>> all = new ArrayList<>();
         for (CdiQualifier declared : CdiQualifier.declared(argument.getAnnotationMetadata())) {
             all.add(reported(declared.written()));
         }
@@ -160,18 +175,18 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
         if (all.isEmpty()) {
             all.add(CdiQualifier.DEFAULT.written());
         }
-        return java.util.Collections.unmodifiableList(all);
+        return Collections.unmodifiableList(all);
     }
 
     /**
      * A qualifier as a program is told it: its members, without the ones Micronaut's metadata keeps for itself -
      * the {@code $nonBinding} list the container compares by among them - which are no member of the annotation.
      */
-    private static io.micronaut.core.annotation.AnnotationValue<?> reported(
-        io.micronaut.core.annotation.AnnotationValue<?> written) {
-        java.util.Map<CharSequence, Object> members = new java.util.LinkedHashMap<>();
+    private static AnnotationValue<?> reported(
+        AnnotationValue<?> written) {
+        Map<CharSequence, Object> members = new LinkedHashMap<>();
         boolean internal = false;
-        for (java.util.Map.Entry<CharSequence, Object> member : written.getValues().entrySet()) {
+        for (Map.Entry<CharSequence, Object> member : written.getValues().entrySet()) {
             if (member.getKey().toString().startsWith("$")) {
                 internal = true;
             } else {
@@ -181,7 +196,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
         if (!internal) {
             return written;
         }
-        return new io.micronaut.core.annotation.AnnotationValue<>(written.getAnnotationName(), members,
+        return new AnnotationValue<>(written.getAnnotationName(), members,
             written.getDefaultValues(), written.getRetentionPolicy(), written.getStereotypes());
     }
 
@@ -208,7 +223,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
      * @param qualifiers The qualifiers the lookup was selected with
      * @return The injection point, typed as selected
      */
-    CdiInjectionPoint viewedAs(Argument<?> selected, java.util.List<CdiQualifier> qualifiers) {
+    CdiInjectionPoint viewedAs(Argument<?> selected, List<CdiQualifier> qualifiers) {
         Argument<?> viewed = Argument.of(selected.getType(), argument.getAnnotationMetadata(),
             selected.getTypeParameters());
         // the member is still the one that was written, whatever the lookup was selected as
@@ -224,8 +239,8 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
      * @param segment   The segment
      * @return The injection point
      */
-    static jakarta.enterprise.inject.spi.InjectionPoint of(CdiBeanContainer container,
-                                                           io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
+    static InjectionPoint of(CdiBeanContainer container,
+                             BeanResolutionContext.Segment<?, ?> segment) {
         if (segment instanceof LookupSegment<?, ?> lookup) {
             return lookup.selected();
         }
@@ -242,22 +257,22 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
      * @return The injection point
      */
     public static CdiInjectionPoint of(BeanContext beanContext, Bean<?> bean,
-                                       io.micronaut.context.BeanResolutionContext.Segment<?, ?> segment) {
+                                       BeanResolutionContext.Segment<?, ?> segment) {
         Class<?> declaring = bean.getBeanClass();
         Argument<?> argument = segment.getArgument();
         InjectionSite site;
-        if (segment instanceof io.micronaut.inject.FieldInjectionPoint<?, ?> field) {
+        if (segment instanceof FieldInjectionPoint<?, ?> field) {
             site = InjectionSite.ofField(declaring, field.getName());
-        } else if (segment instanceof io.micronaut.inject.ArgumentInjectionPoint<?, ?> parameter
-            && parameter.getOuterInjectionPoint() instanceof io.micronaut.inject.CallableInjectionPoint<?> outer) {
+        } else if (segment instanceof ArgumentInjectionPoint<?, ?> parameter
+            && parameter.getOuterInjectionPoint() instanceof CallableInjectionPoint<?> outer) {
             // the factory method of a produced bean is the constructor of that bean to Micronaut, and a method
             // all the same, whose name is the member's
-            String member = outer instanceof io.micronaut.inject.MethodInjectionPoint<?, ?> method
+            String member = outer instanceof MethodInjectionPoint<?, ?> method
                 ? method.getName() : InjectionSite.CONSTRUCTOR;
-            site = outer instanceof io.micronaut.inject.MethodInjectionPoint<?, ?> method
+            site = outer instanceof MethodInjectionPoint<?, ?> method
                 ? methodSite(declaring, method, argument)
                 : parameterSite(declaring, member, outer.getArguments(), argument,
-                    outer instanceof io.micronaut.inject.ConstructorInjectionPoint<?>
+                    outer instanceof ConstructorInjectionPoint<?>
                         && CdiResolution.isProxyDefinition(segment.getDeclaringType()));
         } else {
             site = InjectionSite.ofParameter(declaring, segment.getName(), List.of(), -1);
@@ -284,7 +299,7 @@ public final class CdiInjectionPoint implements io.micronaut.cdi.MicronautInject
     public boolean isTransient() {
         // only a field can be transient, and the processor recorded whether one is
         return site != null && site.field()
-            && argument.getAnnotationMetadata().hasAnnotation(io.micronaut.cdi.internal.metadata.CdiTransient.class);
+            && argument.getAnnotationMetadata().hasAnnotation(CdiTransient.class);
     }
 
     @Override

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.context.BeanContext;
@@ -23,16 +24,25 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import io.micronaut.scheduling.TaskExecutors;
+import jakarta.enterprise.inject.spi.EventMetadata;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * The observer methods of every bean in the container, and the resolution of the ones an event notifies.
@@ -65,8 +75,8 @@ public final class ObserverRegistry {
      * The observers each kind of event resolved to, emptied whenever an observer is added. An application fires
      * events of a bounded number of types, and past the bound the rest are resolved as they are fired.
      */
-    private volatile Map<Resolution, List<ObserverMethod<?>>> resolved = new java.util.concurrent.ConcurrentHashMap<>();
-    private volatile java.util.concurrent.@Nullable Executor asyncExecutor;
+    private volatile Map<Resolution, List<ObserverMethod<?>>> resolved = new ConcurrentHashMap<>();
+    private volatile @Nullable Executor asyncExecutor;
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -95,13 +105,13 @@ public final class ObserverRegistry {
      *
      * @return The executor
      */
-    java.util.concurrent.Executor asyncExecutor() {
-        java.util.concurrent.Executor found = asyncExecutor;
+    Executor asyncExecutor() {
+        Executor found = asyncExecutor;
         if (found == null) {
-            found = beanContext.findBean(java.util.concurrent.ExecutorService.class,
-                    io.micronaut.inject.qualifiers.Qualifiers.byName(io.micronaut.scheduling.TaskExecutors.BLOCKING))
-                .<java.util.concurrent.Executor>map(executor -> executor)
-                .orElseGet(java.util.concurrent.ForkJoinPool::commonPool);
+            found = beanContext.findBean(ExecutorService.class,
+                    Qualifiers.byName(TaskExecutors.BLOCKING))
+                .<Executor>map(executor -> executor)
+                .orElseGet(ForkJoinPool::commonPool);
             asyncExecutor = found;
         }
         return found;
@@ -149,7 +159,7 @@ public final class ObserverRegistry {
         // one a program implemented itself says what it observes through the specification's interface alone
         synthetic.add(observer instanceof CdiNotifiable ? observer : new ForeignObserverMethod<>(observer, types()));
         observers = null;
-        resolved = new java.util.concurrent.ConcurrentHashMap<>();
+        resolved = new ConcurrentHashMap<>();
     }
 
     private List<ObserverMethod<?>> find() {
@@ -159,7 +169,7 @@ public final class ObserverRegistry {
         // lookup drops a replaced bean before it narrows by the marker: a replacement that observes nothing still
         // takes the observers of the bean it replaced with it
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT,
-            io.micronaut.inject.qualifiers.Qualifiers.byStereotype(CdiObserving.class))) {
+            Qualifiers.byStereotype(CdiObserving.class))) {
             for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
                 AnnotationValue<CdiObserver> observer = method.getAnnotation(CdiObserver.class);
                 if (observer != null) {
@@ -182,7 +192,7 @@ public final class ObserverRegistry {
      *                        the other way do not see
      * @return The observer methods, in the order they are notified
      */
-    public List<ObserverMethod<?>> resolve(Argument<?> eventType, java.util.Collection<CdiQualifier> eventQualifiers,
+    public List<ObserverMethod<?>> resolve(Argument<?> eventType, Collection<CdiQualifier> eventQualifiers,
                                            boolean async) {
         return resolve(eventType, null, eventQualifiers, async);
     }
@@ -199,7 +209,7 @@ public final class ObserverRegistry {
      * @return The observer methods, in the order they are notified
      */
     public List<ObserverMethod<?>> resolve(Argument<?> eventType, @Nullable Argument<?> above,
-                                           java.util.Collection<CdiQualifier> eventQualifiers, boolean async) {
+                                           Collection<CdiQualifier> eventQualifiers, boolean async) {
         List<ObserverMethod<?>> all = observers();
         Resolution key = new Resolution(eventType, above, List.copyOf(eventQualifiers), async);
         Map<Resolution, List<ObserverMethod<?>>> cache = resolved;
@@ -266,7 +276,7 @@ public final class ObserverRegistry {
                                 Argument<?> eventType,
                                 List<CdiQualifier> eventQualifiers,
                                 boolean async,
-                                jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
+                                @Nullable
                                     InjectionPoint firedFrom) {
         notifyObservers(event, eventType, null, eventQualifiers, async, firedFrom);
     }
@@ -288,9 +298,9 @@ public final class ObserverRegistry {
                                 @Nullable Argument<?> above,
                                 List<CdiQualifier> eventQualifiers,
                                 boolean async,
-                                jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable
+                                @Nullable
                                     InjectionPoint firedFrom) {
-        jakarta.enterprise.inject.spi.EventMetadata metadata =
+        EventMetadata metadata =
             new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         for (ObserverMethod<?> observer : resolve(eventType, above, eventQualifiers, async)) {
             ((CdiNotifiable) observer).notifyWith(event, metadata);
@@ -309,14 +319,14 @@ public final class ObserverRegistry {
      * @return What the observers threw, in notification order
      */
     @SuppressWarnings("unchecked")
-    public java.util.List<Throwable> notifyObserversCollecting(
+    public List<Throwable> notifyObserversCollecting(
         Object event, Argument<?> eventType, @Nullable Argument<?> above, List<CdiQualifier> eventQualifiers,
-        jakarta.enterprise.inject.spi.@org.jspecify.annotations.Nullable InjectionPoint firedFrom) {
-        jakarta.enterprise.inject.spi.EventMetadata metadata =
+        @Nullable InjectionPoint firedFrom) {
+        EventMetadata metadata =
             new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
-        java.util.List<Throwable> thrown = new java.util.ArrayList<>(0);
-        io.micronaut.cdi.internal.context.RequestScope requestScope =
-            beanContext.findBean(io.micronaut.cdi.internal.context.RequestScope.class).orElse(null);
+        List<Throwable> thrown = new ArrayList<>(0);
+        RequestScope requestScope =
+            beanContext.findBean(RequestScope.class).orElse(null);
         for (ObserverMethod<?> observer : resolve(eventType, above, eventQualifiers, true)) {
             try {
                 if (requestScope == null) {

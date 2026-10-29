@@ -27,6 +27,7 @@ import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.provider.AbstractInjectionPointBeanDefinition;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -93,7 +94,7 @@ public abstract class CdiInjectionPointFactory<B> extends AbstractInjectionPoint
      * @param raw The raw required type
      * @return Whether it is a type of the bean
      */
-    final boolean isBeanType(java.lang.reflect.Type raw) {
+    final boolean isBeanType(Type raw) {
         return raw.equals(getBeanType()) || getExposedTypes().contains(raw);
     }
 

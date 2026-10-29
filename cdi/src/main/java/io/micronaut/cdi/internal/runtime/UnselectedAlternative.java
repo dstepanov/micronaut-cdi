@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiSelectableAlternative;
+import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.condition.Condition;
 import io.micronaut.context.condition.ConditionContext;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -88,7 +89,7 @@ public final class UnselectedAlternative implements Condition {
     }
 
     private static Set<String> selected(ConditionContext<?> context, String property) {
-        if (!(context.getBeanContext() instanceof io.micronaut.context.ApplicationContext application)) {
+        if (!(context.getBeanContext() instanceof ApplicationContext application)) {
             return Set.of();
         }
         String names = application.getProperty(property, String.class).orElse("");

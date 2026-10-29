@@ -26,6 +26,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public final class SpecificationTypes {
      * @return The arguments
      */
     public static List<Argument<?>> argumentsOf(Iterable<? extends Type> types) {
-        List<Argument<?>> arguments = new java.util.ArrayList<>();
+        List<Argument<?>> arguments = new ArrayList<>();
         for (Type type : types) {
             arguments.add(argumentOf(type));
         }
