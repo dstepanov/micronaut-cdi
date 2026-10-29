@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * The compiler options that name the build compatible extensions of a compilation: an extension the service
@@ -62,9 +63,18 @@ class ExtensionOptionsTest {
         assertEquals(List.of("Registered ran"), ranWith(null, null));
     }
 
+    @Test
+    void theOptionsOfAFailedCompilationAreNotTheNextOnes() {
+        assertThrows(RuntimeException.class, () -> ranWith(Failing.class.getName(), "true"),
+            "the extension reports an error, which fails the compilation");
+        assertEquals(List.of("Registered ran"), ranWith(null, null));
+    }
+
     /**
      * Compiles the subject with the given options and returns what the discovery phases of the extensions that
-     * ran reported, in the order they reported it.
+     * ran reported, sorted. Nothing is cleaned up between compilations: Micronaut's processor copies the
+     * micronaut.* options into the system properties as it initializes and restores them as it finishes, which is
+     * what keeps one compilation's options from being the next one's.
      */
     private static List<String> ranWith(String extensions, String only) {
         try (JavaParser parser = new JavaParser() {
@@ -90,12 +100,6 @@ class ExtensionOptionsTest {
             }
             ran.sort(null);
             return ran;
-        } finally {
-            // Micronaut's processor copies every micronaut.* option into the system properties as it initializes
-            // and reads them back as a compilation's options: cleared, so that one compilation's options are not
-            // the next one's
-            System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION);
-            System.clearProperty(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION);
         }
     }
 
@@ -106,6 +110,16 @@ class ExtensionOptionsTest {
         @Discovery
         public void discover(Messages messages) {
             messages.info("Named ran");
+        }
+    }
+
+    /**
+     * An extension the options name, registered as no service, that fails the compilation.
+     */
+    public static final class Failing implements BuildCompatibleExtension {
+        @Discovery
+        public void discover(Messages messages) {
+            messages.error("Failing failed");
         }
     }
 
