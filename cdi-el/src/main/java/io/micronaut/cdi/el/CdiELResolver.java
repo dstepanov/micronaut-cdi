@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.el;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
@@ -89,7 +90,7 @@ public final class CdiELResolver extends ELResolver {
      * is a class of the container's own making with no introspection of its own.
      */
     private static Object unproxied(Object reference) {
-        if (reference instanceof io.micronaut.aop.InterceptedProxy<?> proxy) {
+        if (reference instanceof InterceptedProxy<?> proxy) {
             Object target = proxy.interceptedTarget();
             return target == null ? reference : target;
         }
