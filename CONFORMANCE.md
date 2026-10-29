@@ -41,7 +41,7 @@ visible in a test report as what passes.
 | 2.2 | The bean types of a bean, including a produced array, interface and primitive, and narrowing with `@Typed` | `CdiBean` |
 | 2.2 | A primitive and the class that boxes it as one bean type | `CdiTypes`, `CdiInstance`, `CdiBeanContainer` |
 | 3.5 | A managed bean has a constructor taking no parameters or one annotated `@Inject` | `BeanDiscoveryVisitor` |
-| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiMatching`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembers`, `CompiledAnnotationTypes` |
+| 5.2 | Typesafe resolution of an injection point, an `Instance` and the bean manager through one selection of candidates, by every qualifier named, with `@Nonbinding` members left out of the comparison, on the values each qualifier was compiled with and the qualifiers the container records of each bean | `CdiBeanContainer`, `CdiBeanQualifier`, `CdiBeanInjectionProvider`, `ContainerInjectionVisitor`, `CdiQualifier`, `NonbindingMembers`, `CompiledAnnotationTypes` |
 | 5.6.1, 9 | `Instance` and `Event` selected by `AnnotationValue` and `Argument`, and `Instance` and `BeanContainer.getBeans` narrowed by a Micronaut `Qualifier`, beside the specification's selections | `MicronautInstance`, `MicronautEvent`, `MicronautBeanContainer` |
 | 12.3 | The `@Enhancement` phase of a build compatible extension, and the language model it reads | `BuildCompatibleExtensionVisitor`, `io.micronaut.cdi.processor.extension` |
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
@@ -176,7 +176,7 @@ compiles, and is not added at run time. A qualifier the program
 composes as an `AnnotationValue` lists nothing, and one read from an annotation instance lists what its type
 marks, so a member is left out of a comparison when either side lists it. An injection point, a programmatic lookup
 and the bean manager select their beans by these and nothing else: the container hands Micronaut a qualifier of its
-own, `CdiMatching`, which compares them (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
+own, `CdiBeanQualifier`, which compares them (`CdiBeanContainer.beansOf`). Micronaut's own qualifier for an
 annotation instance or value (`Qualifiers.byAnnotation(Annotation)`, `byAnnotation(AnnotationMetadata,
 AnnotationValue)`) no longer falls back to the name of the bean class since Micronaut Core 5.3, but it compares by
 the qualifiers a bean was compiled with alone, while the qualifiers of a bean of the
@@ -339,7 +339,7 @@ The candidates are Micronaut's: the container asks the bean context for the defi
 required type (`BeanContext.getBeanDefinitions(Argument, Qualifier)`), so what Micronaut leaves out of every lookup
 is left out here too - what is disabled, what an environment narrowed away, the target a proxy stands in front of,
 and a bean another one replaces with Micronaut's `Replaces`, which Micronaut drops before any qualifier sees the
-candidates. The qualifier handed over with the class, `CdiMatching`, keeps the beans one of whose recorded bean
+candidates. The qualifier handed over with the class, `CdiBeanQualifier`, keeps the beans one of whose recorded bean
 types matches the full required type by the rules of section 2.4.2.1 - a type Micronaut only indexes a definition
 under is none of them - and that have every required qualifier, a qualifier a portable extension added among the
 ones a bean has; it leaves out an interceptor, an abstract class and the components an extension had the container
@@ -831,7 +831,7 @@ own rather than the first one alone.
   qualifiers its metadata records, while the qualifiers of a bean of the specification are also the ones a portable
   extension added as the container started, and `@Default` where it declares none. An injection point of a bean
   of the specification, a lookup and the bean manager here select their beans by the container's own record of
-  each bean's qualifiers through a Micronaut `Qualifier` of the container's own (`CdiMatching`), handed to
+  each bean's qualifiers through a Micronaut `Qualifier` of the container's own (`CdiBeanQualifier`), handed to
   `BeanContext.getBeanDefinitions(Argument, Qualifier)` with the raw class of the required type.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a

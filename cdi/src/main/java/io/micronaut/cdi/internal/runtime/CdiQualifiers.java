@@ -34,7 +34,7 @@ import java.util.Set;
  *
  * <p>A lookup of the container does not resolve by the Micronaut qualifier made here, which describes the bean the way
  * Micronaut keys a registration: the container asks the bean context for the candidates with a qualifier of its own,
- * {@link CdiMatching}, which compares the qualifiers of each bean by the rules of the specification
+ * {@link CdiBeanQualifier}, which compares the qualifiers of each bean by the rules of the specification
  * ({@link CdiBeanContainer#beansOf}).</p>
  *
  * @author Denis Stepanov

@@ -57,13 +57,13 @@ import java.util.stream.Stream;
  * @since 1.0
  */
 @Internal
-final class CdiMatching<T> implements Qualifier<T> {
+final class CdiBeanQualifier<T> implements Qualifier<T> {
 
     private final CdiBeanContainer container;
     private final Argument<?> required;
     private final List<CdiQualifier> qualifiers;
 
-    private CdiMatching(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
+    private CdiBeanQualifier(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
         this.container = container;
         this.required = required;
         this.qualifiers = List.copyOf(qualifiers);
@@ -78,8 +78,8 @@ final class CdiMatching<T> implements Qualifier<T> {
      * @param <T>        The bean type
      * @return The qualifier
      */
-    static <T> CdiMatching<T> of(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
-        return new CdiMatching<>(container, required, qualifiers);
+    static <T> CdiBeanQualifier<T> of(CdiBeanContainer container, Argument<?> required, List<CdiQualifier> qualifiers) {
+        return new CdiBeanQualifier<>(container, required, qualifiers);
     }
 
     /**
@@ -210,7 +210,7 @@ final class CdiMatching<T> implements Qualifier<T> {
      */
     @Override
     public boolean contains(Qualifier<T> qualifier) {
-        if (!(qualifier instanceof CdiMatching<T> other) || !required.equalsStructure(other.required)) {
+        if (!(qualifier instanceof CdiBeanQualifier<T> other) || !required.equalsStructure(other.required)) {
             return false;
         }
         for (CdiQualifier one : other.qualifiers) {
@@ -226,7 +226,7 @@ final class CdiMatching<T> implements Qualifier<T> {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof CdiMatching<?> other) || container != other.container
+        if (!(o instanceof CdiBeanQualifier<?> other) || container != other.container
             || qualifiers.size() != other.qualifiers.size() || !required.equalsStructure(other.required)) {
             return false;
         }

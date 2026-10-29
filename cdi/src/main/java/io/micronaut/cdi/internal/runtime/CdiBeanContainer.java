@@ -268,7 +268,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         // composed with the program's qualifier, which the bean context hands every eligible definition at once and
         // the type that was asked for, as Micronaut's own lookups hand it: a qualifier may choose among the
         // candidates - the closest type arguments - rather than test each on its own
-        CdiMatching<Object> matching = matching(beanType, List.of(CdiQualifier.ANY));
+        CdiBeanQualifier<Object> matching = matching(beanType, List.of(CdiQualifier.ANY));
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(),
             Qualifiers.byQualifiers(matching,
@@ -328,7 +328,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Selection select(Argument<?> point) {
-        CdiMatching<Object> matching;
+        CdiBeanQualifier<Object> matching;
         try {
             matching = matching(point, CdiQualifier.declared(point.getAnnotationMetadata()));
         } catch (IllegalArgumentException e) {
@@ -342,7 +342,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         boolean specification = false;
         boolean micronaut = false;
         for (BeanDefinition<?> definition : ofClass) {
-            if (!CdiMatching.isInjectable(definition) || !hasTypeOfClass(definition, raw)) {
+            if (!CdiBeanQualifier.isInjectable(definition) || !hasTypeOfClass(definition, raw)) {
                 // an interceptor is a bean of the specification of its class, though never one a point is
                 // injected with, and a definition the context only indexes under the class is no bean of it:
                 // neither says anything of which rules the point is resolved by
@@ -409,7 +409,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     @SuppressWarnings({"unchecked", "rawtypes"})
     <T> Collection<BeanDefinition<T>> definitionsOf(Argument<T> type, List<CdiQualifier> required,
                                                     io.micronaut.context.@Nullable Qualifier<?> narrowedBy) {
-        CdiMatching<T> matching = matching(type, required);
+        CdiBeanQualifier<T> matching = matching(type, required);
         // the program's qualifier is handed every eligible definition at once, as Micronaut's own lookups hand it
         io.micronaut.context.Qualifier<T> qualifier = narrowedBy == null ? matching
             : Qualifiers.byQualifiers(matching,
@@ -422,7 +422,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * say: the one candidate selection of the container, which an injection point, an {@code Instance}, the bean
      * manager and the validation of the deployment all make. The bean context enumerates the candidates of the
      * class of the type, as it does for every lookup - less what is disabled, the targets of proxies, and a bean
-     * another one replaces with Micronaut's {@code Replaces} - and the {@link CdiMatching qualifier of the
+     * another one replaces with Micronaut's {@code Replaces} - and the {@link CdiBeanQualifier qualifier of the
      * specification} keeps the ones it admits: one of whose recorded bean types matches the type - a type
      * Micronaut only indexes the definition under is none of them - and that has the qualifiers, with what a
      * portable extension added. An interceptor, which is never injected, is left out.
@@ -433,7 +433,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * @throws IllegalArgumentException For a type with a type variable among its arguments
      */
     Set<Bean<?>> beansOf(Argument<?> beanType, List<CdiQualifier> required) {
-        CdiMatching<Object> matching = matching(beanType, required);
+        CdiBeanQualifier<Object> matching = matching(beanType, required);
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(), matching)) {
             beans.add(canonicalBean(definition));
@@ -441,9 +441,9 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         return beans;
     }
 
-    private <T> CdiMatching<T> matching(Argument<?> beanType, List<CdiQualifier> required) {
+    private <T> CdiBeanQualifier<T> matching(Argument<?> beanType, List<CdiQualifier> required) {
         CdiAssignability.requireNoTypeVariable(beanType);
-        return CdiMatching.of(this, beanType, required);
+        return CdiBeanQualifier.of(this, beanType, required);
     }
 
     private static Set<Bean<?>> ofTheSpecification(Set<Bean<?>> beans) {
@@ -570,14 +570,14 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * The beans of the deployment: every bean the bean context enumerates - everything that was compiled, minus
      * what is disabled, minus what an environment narrowed away, and minus the ones another one replaces with
      * Micronaut's {@code Replaces}, which are no beans of it, not of their name and not with dependencies to
-     * validate - that is a {@linkplain CdiMatching#isBean bean of the container}.
+     * validate - that is a {@linkplain CdiBeanQualifier#isBean bean of the container}.
      *
      * @return The beans
      */
     List<CdiBean<?>> beans() {
         List<CdiBean<?>> beans = new ArrayList<>();
         for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
-            if (CdiMatching.isBean(definition)) {
+            if (CdiBeanQualifier.isBean(definition)) {
                 beans.add(canonicalBean(definition));
             }
         }
@@ -591,7 +591,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         // unnamed bean, and reads the name Micronaut materialized rather than one a stereotype gave (CdiName)
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
-            if (name.equals(CdiBean.nameOf(definition)) && CdiMatching.isBean(definition)) {
+            if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {
                 beans.add(canonicalBean(definition));
             }
         }
