@@ -48,6 +48,9 @@ import java.util.Set;
  */
 final class CdiContexts {
 
+    /**
+     * The scopes the specification declares, which are what they are whatever a build recorded.
+     */
     private static final Set<String> NORMAL_SCOPES = Set.of(
         "jakarta.enterprise.context.ApplicationScoped", "jakarta.enterprise.context.RequestScoped",
         "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");

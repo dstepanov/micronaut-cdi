@@ -106,9 +106,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
 
     /**
-     * The annotations the specification declares, which are what they are whatever a build recorded.
-     */
-    /**
      * The number of injection points what they resolve to is kept for.
      */
     private static final int MAX_SELECTIONS = 16_384;
