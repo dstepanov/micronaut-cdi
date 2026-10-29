@@ -24,6 +24,7 @@ import jakarta.enterprise.inject.spi.AnnotatedType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -83,12 +84,12 @@ final class ReflectiveAnnotatedType<X> implements AnnotatedType<X> {
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return new LinkedHashSet<>(java.util.List.of(type.getAnnotationsByType(annotationType)));
+        return new LinkedHashSet<>(List.of(type.getAnnotationsByType(annotationType)));
     }
 
     @Override
     public Set<Annotation> getAnnotations() {
-        return new LinkedHashSet<>(java.util.List.of(type.getAnnotations()));
+        return new LinkedHashSet<>(List.of(type.getAnnotations()));
     }
 
     @Override

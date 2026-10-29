@@ -20,6 +20,7 @@ import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.GenericTypeUtils;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.type.Argument;
 import io.micronaut.reflection.ReflectionArguments;
@@ -30,14 +31,26 @@ import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -74,12 +87,12 @@ public final class ReflectiveCdi implements CdiReflection {
     }
 
     @Override
-    public java.util.List<Type> typeClosureOf(Type type, boolean arrayStops) {
+    public List<Type> typeClosureOf(Type type, boolean arrayStops) {
         return closureOf(type, arrayStops);
     }
 
-    private static java.util.List<Type> closureOf(Type type, boolean arrayStops) {
-        java.util.List<Type> closure = new java.util.ArrayList<>();
+    private static List<Type> closureOf(Type type, boolean arrayStops) {
+        List<Type> closure = new ArrayList<>();
         Class<?> raw = CdiTypes.rawClassOf(type);
         if (raw == null || raw == Object.class) {
             // a type variable or a wildcard names no type of its own
@@ -94,7 +107,7 @@ public final class ReflectiveCdi implements CdiReflection {
         // array, the arrays of the supertypes of its component, the arrays of fewer dimensions it is an array of,
         // and what every array implements. The container hands over the types it rendered itself, whose variables
         // carry their bounds but no annotated bounds, which Micronaut reads the variable through
-        java.util.List<Argument<?>> supertypes = ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type));
+        List<Argument<?>> supertypes = ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type));
         for (Argument<?> supertype : supertypes.subList(1, supertypes.size())) {
             if (supertype.getType() != Object.class) {
                 closure.add(ReflectionArguments.toExactType(supertype));
@@ -119,7 +132,7 @@ public final class ReflectiveCdi implements CdiReflection {
     @Override
     public Type declaredTypeOf(Class<?> type) {
         TypeVariable<?>[] variables = type.getTypeParameters();
-        return variables.length == 0 ? type : io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(type, variables);
+        return variables.length == 0 ? type : GenericTypeUtils.parameterizedType(type, variables);
     }
 
     @Override
@@ -131,7 +144,7 @@ public final class ReflectiveCdi implements CdiReflection {
         // the variables the class declares are resolved against the type the event was fired as: the class's
         // own view of that type is unified with it. The variables are told apart by their names, which are the
         // class's own: the closure renders a variable of its own rather than the one the class declares
-        Map<String, Type> resolution = new java.util.HashMap<>();
+        Map<String, Type> resolution = new HashMap<>();
         Class<?> declaredRaw = CdiTypes.rawClassOf(declaredType);
         if (declaredType instanceof ParameterizedType declaredParameterized && declaredRaw != null) {
             for (Type supertype : typeClosureOf(declaredTypeOf(runtimeClass), false)) {
@@ -148,7 +161,7 @@ public final class ReflectiveCdi implements CdiReflection {
         Type[] arguments = new Type[variables.length];
         for (int i = 0; i < variables.length; i++) {
             Type resolved = resolution.get(variables[i].getName());
-            if (resolved instanceof java.lang.reflect.WildcardType wildcard) {
+            if (resolved instanceof WildcardType wildcard) {
                 Type[] uppers = wildcard.getUpperBounds();
                 resolved = uppers.length > 0 ? uppers[0] : Object.class;
             }
@@ -159,7 +172,7 @@ public final class ReflectiveCdi implements CdiReflection {
             }
             arguments[i] = resolved;
         }
-        return io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(runtimeClass, arguments);
+        return GenericTypeUtils.parameterizedType(runtimeClass, arguments);
     }
 
     private static void unify(Type own, Type declared, Map<String, Type> resolution) {
@@ -167,9 +180,9 @@ public final class ReflectiveCdi implements CdiReflection {
             resolution.put(variable.getName(), declared);
             return;
         }
-        if (own instanceof java.lang.reflect.GenericArrayType ownArray) {
+        if (own instanceof GenericArrayType ownArray) {
             // an array of a variable, or of a type that uses one, T[] or List<T>[], is unified through its component
-            if (declared instanceof java.lang.reflect.GenericArrayType declaredArray) {
+            if (declared instanceof GenericArrayType declaredArray) {
                 unify(ownArray.getGenericComponentType(), declaredArray.getGenericComponentType(), resolution);
             } else if (declared instanceof Class<?> declaredClass && declaredClass.isArray()) {
                 unify(ownArray.getGenericComponentType(), declaredClass.getComponentType(), resolution);
@@ -195,8 +208,8 @@ public final class ReflectiveCdi implements CdiReflection {
 
     @Override
     public boolean isRetainedAtRuntime(Class<? extends Annotation> annotationType) {
-        java.lang.annotation.Retention retention = annotationType.getAnnotation(java.lang.annotation.Retention.class);
-        return retention != null && retention.value() == java.lang.annotation.RetentionPolicy.RUNTIME;
+        Retention retention = annotationType.getAnnotation(Retention.class);
+        return retention != null && retention.value() == RetentionPolicy.RUNTIME;
     }
 
     @Override
@@ -215,7 +228,7 @@ public final class ReflectiveCdi implements CdiReflection {
             // the parameter types it declares
             Class<?>[] declared = declaredTypesOf(site);
             if (declared != null) {
-                java.lang.reflect.Method exact = ReflectionUtils.findMethod(site.declaringClass(), site.memberName(),
+                Method exact = ReflectionUtils.findMethod(site.declaringClass(), site.memberName(),
                     declared).orElse(null);
                 if (exact != null) {
                     return exact;
@@ -227,9 +240,9 @@ public final class ReflectiveCdi implements CdiReflection {
         // Foo extends Bar<String>, which the erased Object[] the method declares is assignable from. Micronaut finds
         // the declaration the compiled types resolve to, through the superclasses and the interfaces; where another
         // declaration fits them as well, nothing tells which of them was injected, and none is answered
-        java.lang.reflect.Method found = ReflectionExecutables.findMethod(site.declaringClass(), site.memberName(),
+        Method found = ReflectionExecutables.findMethod(site.declaringClass(), site.memberName(),
             parameterTypes).orElse(null);
-        if (found == null || java.util.Arrays.equals(found.getParameterTypes(), parameterTypes)) {
+        if (found == null || Arrays.equals(found.getParameterTypes(), parameterTypes)) {
             // a declaration of the compiled types themselves is the one: no other of its name declares them
             return found;
         }
@@ -270,26 +283,26 @@ public final class ReflectiveCdi implements CdiReflection {
      * Whether the method is the only declaration of its name in the class and above it that the compiled types
      * fit: a method it overrides is the same declaration, any other is another.
      */
-    private static boolean isTheOnlyFit(Class<?> type, java.lang.reflect.Method found, Class<?>[] compiledTypes) {
-        java.util.Set<java.util.List<Class<?>>> fitting = new java.util.HashSet<>();
-        java.util.Deque<Class<?>> classes = new java.util.ArrayDeque<>();
-        java.util.Set<Class<?>> seen = new java.util.HashSet<>();
+    private static boolean isTheOnlyFit(Class<?> type, Method found, Class<?>[] compiledTypes) {
+        Set<List<Class<?>>> fitting = new HashSet<>();
+        Deque<Class<?>> classes = new ArrayDeque<>();
+        Set<Class<?>> seen = new HashSet<>();
         classes.add(type);
         while (!classes.isEmpty()) {
             Class<?> current = classes.poll();
             if (!seen.add(current)) {
                 continue;
             }
-            for (java.lang.reflect.Method candidate : current.getDeclaredMethods()) {
+            for (Method candidate : current.getDeclaredMethods()) {
                 if (!candidate.isSynthetic() && candidate.getName().equals(found.getName())
                     && fits(candidate.getParameterTypes(), compiledTypes)) {
-                    fitting.add(java.util.List.of(candidate.getParameterTypes()));
+                    fitting.add(List.of(candidate.getParameterTypes()));
                 }
             }
             if (current.getSuperclass() != null) {
                 classes.add(current.getSuperclass());
             }
-            classes.addAll(java.util.List.of(current.getInterfaces()));
+            classes.addAll(List.of(current.getInterfaces()));
         }
         return fitting.size() == 1;
     }

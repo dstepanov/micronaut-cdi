@@ -48,6 +48,7 @@ import jakarta.enterprise.inject.spi.configurator.BeanConfigurator;
 import jakarta.enterprise.inject.spi.configurator.ObserverMethodConfigurator;
 import jakarta.enterprise.invoke.Invoker;
 import jakarta.enterprise.invoke.InvokerBuilder;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -323,10 +324,10 @@ final class PortableEvents {
     static final class BeanAttributesEvent<T> extends PortableEvent implements ProcessBeanAttributes<T> {
 
         private final Bean<T> bean;
-        private final @org.jspecify.annotations.Nullable Annotated annotated;
+        private final @Nullable Annotated annotated;
         private final List<Throwable> problems;
 
-        BeanAttributesEvent(Bean<T> bean, @org.jspecify.annotations.Nullable Annotated annotated,
+        BeanAttributesEvent(Bean<T> bean, @Nullable Annotated annotated,
                             List<Throwable> problems) {
             super("ProcessBeanAttributes");
             this.bean = bean;
@@ -386,10 +387,10 @@ final class PortableEvents {
     static class BeanEvent<X> extends PortableEvent implements ProcessBean<X> {
 
         private final Bean<X> bean;
-        private final @org.jspecify.annotations.Nullable Annotated annotated;
+        private final @Nullable Annotated annotated;
         private final List<Throwable> problems;
 
-        BeanEvent(String name, Bean<X> bean, @org.jspecify.annotations.Nullable Annotated annotated,
+        BeanEvent(String name, Bean<X> bean, @Nullable Annotated annotated,
                   List<Throwable> problems) {
             super(name);
             this.bean = bean;
