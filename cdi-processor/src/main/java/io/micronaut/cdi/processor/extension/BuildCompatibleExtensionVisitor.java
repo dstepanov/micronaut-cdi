@@ -437,7 +437,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // binding registered by an extension has to be one by then. What it marked on the members of an
         // annotation interface is read from there by Micronaut as it reads each occurrence
         for (String describedClass : started.describedClassNames()) {
-            context.getClassElement(describedClass).ifPresent(this::applyWhatWasDiscovered);
+            context.getClassElement(describedClass).ifPresent(this::applyDiscovery);
         }
     }
 
@@ -450,7 +450,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         started.visited(element);
-        applyWhatWasDiscovered(element);
+        applyDiscovery(element);
         enhance(element, context);
     }
 
@@ -587,7 +587,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             if (element == null || element.isAbstract() || element.isInterface() || hasDefinition(element, context)) {
                 continue;
             }
-            applyWhatWasDiscovered(element);
+            applyDiscovery(element);
             enhance(element, context);
             // what each class of the compilation is put through as it is visited: its scope, its injection points
             // marked for the container, its bean types, its producers and observers, its default qualifier
@@ -964,7 +964,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * interceptor binding or a stereotype, and the scope that makes it a bean where it was added to the
      * scanned classes.
      */
-    private void applyWhatWasDiscovered(ClassElement element) {
+    private void applyDiscovery(ClassElement element) {
         if (discovered().isEmpty()) {
             return;
         }
