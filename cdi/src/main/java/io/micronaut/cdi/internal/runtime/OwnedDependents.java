@@ -60,6 +60,12 @@ public final class OwnedDependents implements AutoCloseable {
     private final @Nullable BeanDependencyResolver resolver;
     private @Nullable BeanDependencyGroup group;
     /**
+     * Whether the owner has destroyed what it held ({@link #close}): a group opened after that is closed by the
+     * container as it stops, and is the late one until the owner closes it after all.
+     */
+    private boolean closed;
+    private boolean lateGroup;
+    /**
      * What was created without Micronaut owning it, destroyed here. What was created through the resolver or the
      * group is Micronaut's, which finds it again from the instance it holds
      * ({@link BeanDependencyResolver#findRegistration}).
@@ -315,11 +321,19 @@ public final class OwnedDependents implements AutoCloseable {
     public void close() {
         BeanDependencyGroup closing;
         List<CreatedBean<?>> releasing;
+        boolean closingLate;
         synchronized (this) {
             closing = group;
+            closingLate = lateGroup;
             group = null;
+            lateGroup = false;
+            closed = true;
             releasing = List.copyOf(held);
             held.clear();
+        }
+        if (closing != null && closingLate) {
+            // closed by its owner after all: the container need not close it as it stops
+            beanContext.findBean(CdiBeanContainer.class).ifPresent(container -> container.forgetAtShutdown(closing));
         }
         Throwable failure = null;
         // in the reverse of the order they were created in, as Micronaut destroys the dependents of a bean: one
@@ -379,11 +393,24 @@ public final class OwnedDependents implements AutoCloseable {
         return resolver != null ? resolver : ownGroup();
     }
 
-    private synchronized BeanDependencyGroup ownGroup() {
-        BeanDependencyGroup own = group;
-        if (own == null) {
+    private BeanDependencyGroup ownGroup() {
+        BeanDependencyGroup own;
+        boolean late;
+        synchronized (this) {
+            own = group;
+            if (own != null) {
+                return own;
+            }
             own = beanContext.createDependencyGroup();
             group = own;
+            lateGroup = closed;
+            late = closed;
+        }
+        if (late) {
+            // opened after the owner destroyed what it held - a lookup that escaped its owner - which nothing else
+            // closes: the container closes it as it stops
+            BeanDependencyGroup opened = own;
+            beanContext.findBean(CdiBeanContainer.class).ifPresent(container -> container.closeAtShutdown(opened));
         }
         return own;
     }
@@ -399,10 +426,10 @@ public final class OwnedDependents implements AutoCloseable {
      * thread, and makes this case unnecessary once it is the Core built on). The group is closed with what the owner
      * holds as the bean's destruction completes; one opened while the context stops is destroyed by Micronaut
      * before the shutdown completes. The other is made through a reference that escaped the bean after it was
-     * destroyed: the owner has closed what it held by then, and the group opened for it has no automatic cleanup -
-     * what it creates is not destroyed with the bean, nor as the context stops ({@code OwnerlessLookupTest}) - though
-     * {@code Instance.destroy} of an instance, or closing the lookup itself, still destroys what it holds. Removing
-     * the retry would make both fail, so it stays.</p>
+     * destroyed: the owner has closed what it held by then, so the group opened for it is handed to the container, which
+     * closes it as it stops ({@link CdiBeanContainer#closeAtShutdown}, {@code OwnerlessLookupTest}): what it creates
+     * lives until then rather than until the bean was destroyed, unless {@code Instance.destroy} or closing the lookup
+     * destroys it first. Removing the retry would make both fail, so it stays.</p>
      */
     private <T> BeanRegistration<T> resolve(
         Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {

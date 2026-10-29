@@ -684,6 +684,11 @@ and work they wait for on an executor - and destroys what they create before it 
 5.3, #13849; `ShutdownDependenciesTest`). Micronaut still resolves for a bean being destroyed on behalf of its own
 destruction callbacks on the destroying thread alone, so a lookup injected into the bean that its `@PreDestroy` uses
 from another thread creates through a dependency group of the lookup's own instead (`ShutdownLookupOffThreadTest`).
+A lookup that escaped the bean it was injected into and is used after that bean was destroyed creates the same way,
+through a group of its own; with no owner left to close it, the container closes that group as it stops
+(`CdiBeanContainer.closeAtShutdown`, `OwnerlessLookupTest`). Such an instance therefore lives until the container
+stops, not until the bean it escaped was destroyed, unless the program destroys it with `Instance.destroy` or closes
+the lookup.
 
 ### Known limitations a review has named
 

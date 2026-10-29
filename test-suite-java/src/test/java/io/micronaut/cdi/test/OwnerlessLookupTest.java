@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * after the bean was destroyed, by a reference that escaped it, and used from another thread by the bean's
  * {@code @PreDestroy} while it is destroyed and the container keeps running. In both the lookup creates the instance
  * through a dependency group of its own. The group opened by the {@code @PreDestroy} is closed as the bean's
- * destruction completes; the one opened after the bean was destroyed is closed by nothing, and what it created is
- * not destroyed even as the container stops.
+ * destruction completes; the one opened after the bean was destroyed has no owner left to close it, and the container
+ * closes it as it stops, destroying what it created then.
  */
 class OwnerlessLookupTest {
 
@@ -89,7 +89,7 @@ class OwnerlessLookupTest {
     }
 
     @Test
-    void aLookupThatEscapedItsDestroyedOwnerStillCreatesWhatNothingDestroys() {
+    void aLookupThatEscapedItsDestroyedOwnerCreatesWhatTheContainerDestroysAsItStops() {
         SEEN.clear();
         try (ApplicationContext context = ApplicationContext.run()) {
             armed = true;
@@ -108,8 +108,10 @@ class OwnerlessLookupTest {
         } finally {
             armed = false;
         }
-        // the escaped helper is not destroyed: its group was opened after the owner had closed its dependents
-        assertEquals(List.of("helped owned", "helper destroyed owned", "helped escaped", "stopping"), SEEN);
+        // the escaped helper lives until the container stops: its group was opened after the owner had closed its
+        // dependents
+        assertEquals(List.of("helped owned", "helper destroyed owned", "helped escaped", "stopping",
+            "helper destroyed escaped"), SEEN);
     }
 
     @Test

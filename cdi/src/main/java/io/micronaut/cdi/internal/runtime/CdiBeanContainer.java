@@ -27,6 +27,7 @@ import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -71,12 +72,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * The container itself, as a program reaches it: the object of section 2.9.1, through which a bean can be looked
@@ -133,6 +136,12 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * The contexts of the scopes: the views of the built-in ones and the ones extensions registered.
      */
     private final CdiContexts contexts;
+    /**
+     * The dependency groups lookups opened after their owner had already destroyed what it held - a lookup that
+     * escaped the bean it was injected into, used after that bean was destroyed - which no owner closes: closed as
+     * the container stops, the latest first, so that what they created is destroyed then (see Conformance).
+     */
+    private final Deque<BeanDependencyGroup> lateGroups = new ConcurrentLinkedDeque<>();
 
     @Inject
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
@@ -148,7 +157,44 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
 
     @PreDestroy
     void stopped() {
+        Throwable failure = null;
+        for (BeanDependencyGroup group = lateGroups.pollLast(); group != null; group = lateGroups.pollLast()) {
+            try {
+                group.close();
+            } catch (RuntimeException | Error e) {
+                if (failure == null) {
+                    failure = e;
+                } else {
+                    failure.addSuppressed(e);
+                }
+            }
+        }
         CdiRunning.stopped(this);
+        if (failure instanceof Error error) {
+            throw error;
+        }
+        if (failure != null) {
+            throw (RuntimeException) failure;
+        }
+    }
+
+    /**
+     * Closes, as the container stops, a group a lookup opened after its owner had destroyed what it held, which no
+     * owner closes.
+     *
+     * @param group The group
+     */
+    void closeAtShutdown(BeanDependencyGroup group) {
+        lateGroups.add(group);
+    }
+
+    /**
+     * Forgets a group {@link #closeAtShutdown} was handed that its owner closed after all.
+     *
+     * @param group The group
+     */
+    void forgetAtShutdown(BeanDependencyGroup group) {
+        lateGroups.remove(group);
     }
 
     @Override
