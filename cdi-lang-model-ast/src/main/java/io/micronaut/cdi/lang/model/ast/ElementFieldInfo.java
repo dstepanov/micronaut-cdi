@@ -45,15 +45,6 @@ public final class ElementFieldInfo extends ElementDeclarationInfo implements Fi
         this.declaringClass = declaringClass;
     }
 
-    /**
-     * The Micronaut field this describes.
-     *
-     * @return The field element
-     */
-    public FieldElement fieldElement() {
-        return element;
-    }
-
     @Override
     public String name() {
         return element.getName();
