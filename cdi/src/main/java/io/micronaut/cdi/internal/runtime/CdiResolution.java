@@ -29,6 +29,7 @@ import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.AdvisedBeanType;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
@@ -42,7 +43,6 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -224,7 +224,7 @@ public final class CdiResolution {
         if (!kept.isEmpty()) {
             return kept.size() == candidates.size() ? candidates : kept;
         }
-        Map<BeanDefinition<?>, T> byDefinition = new LinkedHashMap<>();
+        Map<BeanDefinition<?>, T> byDefinition = CollectionUtils.newLinkedHashMap(candidates.size());
         for (T candidate : candidates) {
             byDefinition.putIfAbsent(Objects.requireNonNull(definitionOf.apply(candidate)), candidate);
         }

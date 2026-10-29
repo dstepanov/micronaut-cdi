@@ -27,6 +27,7 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.core.type.TypeHierarchy;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.inject.Singleton;
@@ -34,7 +35,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -293,7 +293,7 @@ public final class RecordedTypeIndex {
         }
 
         private Map<String, Argument<?>> argumentsOf(Argument<?> type) {
-            Map<String, Argument<?>> arguments = new HashMap<>();
+            Map<String, Argument<?>> arguments = CollectionUtils.newHashMap(variables.size());
             if (CdiTypes.isParameterized(type)) {
                 Argument<?>[] actual = type.getTypeParameters();
                 for (int i = 0; i < actual.length && i < variables.size(); i++) {

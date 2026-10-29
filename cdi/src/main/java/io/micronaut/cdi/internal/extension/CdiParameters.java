@@ -22,6 +22,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;
+import io.micronaut.core.util.CollectionUtils;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import org.jspecify.annotations.Nullable;
 
@@ -29,7 +30,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,13 +64,13 @@ public final class CdiParameters implements Parameters {
     CdiParameters(BeanContext beanContext,
                   List<AnnotationValue<CdiSyntheticParameter>> recorded) {
         this.beanContext = beanContext;
-        Map<String, AnnotationValue<CdiSyntheticParameter>> byName = new LinkedHashMap<>();
+        Map<String, AnnotationValue<CdiSyntheticParameter>> byName = CollectionUtils.newLinkedHashMap(recorded.size());
         for (AnnotationValue<CdiSyntheticParameter> parameter : recorded) {
             // a key recorded twice is the last value recorded for it
             byName.put(parameter.stringValue("name").orElseThrow(), parameter);
         }
         this.parameters = Collections.unmodifiableMap(byName);
-        Map<String, RecordedInvoker[]> read = new LinkedHashMap<>();
+        Map<String, RecordedInvoker[]> read = CollectionUtils.newLinkedHashMap(byName.size());
         for (Map.Entry<String, AnnotationValue<CdiSyntheticParameter>> parameter : byName.entrySet()) {
             if ("INVOKER".equals(parameter.getValue().stringValue("kind").orElse(null))) {
                 read.put(parameter.getKey(), readInvokers(beanContext, parameter.getValue()));
