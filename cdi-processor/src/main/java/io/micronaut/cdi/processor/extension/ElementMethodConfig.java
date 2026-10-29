@@ -18,6 +18,7 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
 import jakarta.enterprise.inject.build.compatible.spi.ParameterConfig;
@@ -58,7 +59,7 @@ public final class ElementMethodConfig extends ElementDeclarationConfig<MethodCo
     @Override
     public List<ParameterConfig> parameters() {
         List<ParameterConfig> parameters = new ArrayList<>();
-        for (io.micronaut.inject.ast.ParameterElement parameter : element.getParameters()) {
+        for (ParameterElement parameter : element.getParameters()) {
             parameters.add(new ElementParameterConfig(parameter, info, context()));
         }
         return parameters;

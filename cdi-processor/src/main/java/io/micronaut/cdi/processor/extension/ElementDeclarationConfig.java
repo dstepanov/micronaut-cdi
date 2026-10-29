@@ -25,6 +25,8 @@ import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 
 import java.lang.annotation.Annotation;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -121,8 +123,8 @@ public abstract class ElementDeclarationConfig<C extends DeclarationConfig> impl
      * Every annotation declared right here: some elements — a parameter, say — carry theirs in the declared
      * metadata rather than answering {@code getDeclaredAnnotationNames}.
      */
-    private java.util.Set<String> declaredAnnotationNames() {
-        java.util.Set<String> names = new java.util.LinkedHashSet<>(element.getDeclaredAnnotationNames());
+    private Set<String> declaredAnnotationNames() {
+        Set<String> names = new LinkedHashSet<>(element.getDeclaredAnnotationNames());
         names.addAll(element.getAnnotationMetadata().getDeclaredMetadata().getAnnotationNames());
         return names;
     }

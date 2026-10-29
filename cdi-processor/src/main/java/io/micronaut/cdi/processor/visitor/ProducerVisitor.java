@@ -38,10 +38,17 @@ import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.WildcardElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,9 +97,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     );
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
+    public TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -147,7 +154,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
 
-        java.util.Set<MethodElement> matchedDisposers = new java.util.HashSet<>();
+        Set<MethodElement> matchedDisposers = new HashSet<>();
         for (MemberElement producer : producers) {
             if (interceptorClass) {
                 // section 3.3.2/3.4.2: an interceptor declares no producers
@@ -178,13 +185,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             // the dependent pseudo-scope. The scope is written onto the producer rather than left to default to
             // it, because the annotation metadata of a producer carries what its class declares as well: without
             // one of its own the produced bean would be resolved in the scope of the class that produces it
-            io.micronaut.core.annotation.AnnotationValue<CdiScope> declaredScope =
+            AnnotationValue<CdiScope> declaredScope =
                 CdiScopeVisitor.scopeRecordOf(producer, context);
             if (!declaresAScope(producer) && declaredScope == null) {
                 producer.annotate(Prototype.class);
                 // written on the member so that it shadows the scope of the class that declares the producer,
                 // which the produced bean's metadata carries as well
-                producer.annotate(io.micronaut.cdi.internal.metadata.CdiScope.class,
+                producer.annotate(CdiScope.class,
                     builder -> builder.value(Cdi.DEPENDENT));
             } else if (!producer.hasDeclaredAnnotation(CdiScope.class)) {
                 // the scope came through a stereotype the producer declares: written onto the member itself so
@@ -198,7 +205,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             }
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
             // injected — the definition says so, so that resolution hands the null on instead of failing
-            producer.annotate(io.micronaut.core.annotation.AnnotationUtil.NULLABLE);
+            producer.annotate(AnnotationUtil.NULLABLE);
             allowReflectionIfNeeded(producer);
             MethodElement disposer = findDisposer(producer, disposers, context);
             if (disposer != null) {
@@ -286,7 +293,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
     private static boolean containsWildcard(ClassElement type) {
         for (ClassElement argument : type.getTypeArguments().values()) {
-            if (argument instanceof io.micronaut.inject.ast.WildcardElement) {
+            if (argument instanceof WildcardElement) {
                 return true;
             }
             if (!argument.isGenericPlaceholder() && !argument.isRawType() && containsWildcard(argument)) {
@@ -446,14 +453,14 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      * producer wrote.
      */
     private static boolean typeArgumentsCompatible(ClassElement produced, ClassElement disposed) {
-        java.util.Collection<ClassElement> producedArguments = produced.getTypeArguments().values();
-        java.util.Collection<ClassElement> disposedArguments = disposed.getTypeArguments().values();
+        Collection<ClassElement> producedArguments = produced.getTypeArguments().values();
+        Collection<ClassElement> disposedArguments = disposed.getTypeArguments().values();
         if (producedArguments.isEmpty() || disposedArguments.isEmpty()
             || producedArguments.size() != disposedArguments.size()) {
             return true;
         }
-        java.util.Iterator<ClassElement> producedEach = producedArguments.iterator();
-        java.util.Iterator<ClassElement> disposedEach = disposedArguments.iterator();
+        Iterator<ClassElement> producedEach = producedArguments.iterator();
+        Iterator<ClassElement> disposedEach = disposedArguments.iterator();
         while (producedEach.hasNext()) {
             ClassElement producedArgument = producedEach.next();
             ClassElement disposedArgument = disposedEach.next();
@@ -528,9 +535,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             if (annotation != null) {
                 // a member that takes no part in resolution binds a disposer no more than it does a bean, and the
                 // list of them is not a member of the annotation
-                java.util.List<String> nonbinding =
-                    java.util.Arrays.asList(annotation.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE));
-                Map<CharSequence, Object> binding = new TreeMap<>(java.util.Comparator.comparing(CharSequence::toString));
+                List<String> nonbinding =
+                    Arrays.asList(annotation.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE));
+                Map<CharSequence, Object> binding = new TreeMap<>(Comparator.comparing(CharSequence::toString));
                 annotation.getValues().forEach((member, value) -> {
                     String memberName = member.toString();
                     if (!memberName.startsWith("$") && !nonbinding.contains(memberName)) {

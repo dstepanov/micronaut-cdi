@@ -18,8 +18,10 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.visitor.ObserverVisitor;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -32,9 +34,11 @@ import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.ParameterInfo;
 import jakarta.enterprise.lang.model.types.Type;
+import jakarta.inject.Qualifier;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An observer method as the registration phase of section 2.10.3 describes it, read straight off the compiled
@@ -78,17 +82,17 @@ final class ElementObserverInfo implements ObserverInfo {
      */
     ClassElement observedType() {
         ClassElement type = observed.getGenericType();
-        java.util.Map<String, ClassElement> inherited = declaringClass.getAllTypeArguments()
-            .getOrDefault(method.getDeclaringType().getName(), java.util.Map.of());
+        Map<String, ClassElement> inherited = declaringClass.getAllTypeArguments()
+            .getOrDefault(method.getDeclaringType().getName(), Map.of());
         if (inherited.isEmpty()) {
             return type;
         }
-        if (type instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder && !type.isArray()) {
+        if (type instanceof GenericPlaceholderElement placeholder && !type.isArray()) {
             ClassElement bound = inherited.get(placeholder.getVariableName());
             return bound != null ? bound : type;
         }
         ClassElement resolved = type.foldBoundGenericTypes(argument ->
-            argument instanceof io.micronaut.inject.ast.GenericPlaceholderElement placeholder && !argument.isArray()
+            argument instanceof GenericPlaceholderElement placeholder && !argument.isArray()
                 ? inherited.getOrDefault(placeholder.getVariableName(), argument) : argument);
         return resolved != null ? resolved : type;
     }
@@ -105,7 +109,7 @@ final class ElementObserverInfo implements ObserverInfo {
             .filter(parameter -> parameter.name().equals(observed.getName()))
             .findFirst()
             .map(parameter -> parameter.annotations(annotation ->
-                annotation.declaration().hasAnnotation(jakarta.inject.Qualifier.class)))
+                annotation.declaration().hasAnnotation(Qualifier.class)))
             .orElse(List.of());
     }
 
@@ -140,7 +144,7 @@ final class ElementObserverInfo implements ObserverInfo {
     @Override
     public int priority() {
         // read as the observer is compiled, so that what is reported is the priority it is notified in
-        return io.micronaut.cdi.processor.visitor.ObserverVisitor.priorityOf(observed, method);
+        return ObserverVisitor.priorityOf(observed, method);
     }
 
     @Override

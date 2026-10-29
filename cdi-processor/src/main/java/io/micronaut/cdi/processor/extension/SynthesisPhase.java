@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
@@ -100,7 +101,7 @@ final class SynthesisPhase {
             }
 
             private <T> SyntheticObserverBuilder<T> observer(
-                Type eventType, AnnotationValue<io.micronaut.cdi.internal.metadata.CdiRecordedType> recorded) {
+                Type eventType, AnnotationValue<CdiRecordedType> recorded) {
                 RecordingObserverBuilder<T> builder = new RecordingObserverBuilder<>(context,
                     nextId(extensionName), eventType, recorded,
                     // the class an observer is declared by is the extension's, unless the extension names one

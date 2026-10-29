@@ -17,13 +17,19 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
+import io.micronaut.cdi.internal.metadata.CdiScope;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
+import io.micronaut.inject.ast.GenericPlaceholderElement;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.WildcardElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -51,9 +57,9 @@ import java.util.List;
 public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
+    public TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -76,7 +82,7 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
             && !TypeHierarchyRecords.record(element, element, context)) {
             record(element, element);
         }
-        for (io.micronaut.inject.ast.MemberElement producer : SpecificationBeans.producersOf(element)) {
+        for (MemberElement producer : SpecificationBeans.producersOf(element)) {
             ClassElement produced = producer instanceof MethodElement method ? method.getGenericReturnType()
                 : producer instanceof FieldElement field ? field.getGenericType() : null;
             if (produced != null && !answeredWithoutRecord(produced)
@@ -92,8 +98,8 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
      */
     private static boolean answeredWithoutRecord(ClassElement produced) {
         return produced.isArray() || produced.isPrimitive()
-            || produced instanceof io.micronaut.inject.ast.GenericPlaceholderElement
-            || produced instanceof io.micronaut.inject.ast.WildcardElement
+            || produced instanceof GenericPlaceholderElement
+            || produced instanceof WildcardElement
             || "java.lang.Object".equals(produced.getName());
     }
 
@@ -103,8 +109,8 @@ public final class BeanTypesVisitor implements TypeElementVisitor<Object, Object
      * type hierarchy visitor records what of it is needed ({@link TypeHierarchyVisitor}).
      */
     private static boolean isBeanClass(ClassElement element) {
-        return element.hasStereotype(io.micronaut.cdi.internal.metadata.CdiScope.class)
-            || element.hasStereotype(io.micronaut.core.annotation.AnnotationUtil.SCOPE)
+        return element.hasStereotype(CdiScope.class)
+            || element.hasStereotype(AnnotationUtil.SCOPE)
             || element.hasStereotype("io.micronaut.context.annotation.Bean")
             || element.hasStereotype("io.micronaut.context.annotation.Context")
             || SpecificationBeans.isBean(element);

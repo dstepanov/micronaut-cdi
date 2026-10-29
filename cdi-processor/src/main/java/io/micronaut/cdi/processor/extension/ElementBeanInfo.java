@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
@@ -23,6 +24,9 @@ import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.visitor.BeanTypesVisitor;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -42,9 +46,15 @@ import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.Set;
 
 /**
  * One bean, described to an extension while the class that declares it is compiled.
@@ -68,9 +78,9 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * bean of its own accord, and the markers {@code Any} and {@code Default} are read into, which are reported
      * as themselves.
      */
-    private static final java.util.Set<String> NOT_QUALIFIERS_OF_THE_BEAN = Cdi.withMicronautQualifiers(
+    private static final Set<String> NOT_QUALIFIERS_OF_THE_BEAN = Cdi.withMicronautQualifiers(
         Cdi.ANY,
-        io.micronaut.cdi.internal.metadata.CdiAny.class.getName()
+        CdiAny.class.getName()
     );
 
     final ClassElement declaringClass;
@@ -114,7 +124,7 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * What the bean was declared with: the annotations of the class, or of the producer alone. The metadata of a
      * method carries its class's as well, and the class's scope, name or {@code Typed} are not the producer's.
      */
-    private io.micronaut.core.annotation.AnnotationMetadata declared() {
+    private AnnotationMetadata declared() {
         if (producer instanceof MethodElement method) {
             return method.getMethodAnnotationMetadata();
         }
@@ -150,12 +160,12 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      */
     @Override
     public Collection<Type> types() {
-        java.util.Set<Type> closure = new java.util.LinkedHashSet<>();
+        Set<Type> closure = new LinkedHashSet<>();
         // the closure the container records, the supertypes of a raw type raw
-        for (ClassElement type : io.micronaut.cdi.processor.visitor.BeanTypesVisitor.closureOf(beanType())) {
+        for (ClassElement type : BeanTypesVisitor.closureOf(beanType())) {
             closure.add(ElementTypes.of(type, context));
         }
-        java.util.Set<String> narrowed = new java.util.HashSet<>(java.util.Arrays.asList(
+        Set<String> narrowed = new HashSet<>(Arrays.asList(
             declared().stringValues("jakarta.enterprise.inject.Typed")));
         boolean typed = declared().hasAnnotation("jakarta.enterprise.inject.Typed");
         List<Type> types = new ArrayList<>();
@@ -212,17 +222,17 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
     public Collection<AnnotationInfo> qualifiers() {
         List<AnnotationInfo> qualifiers = new ArrayList<>();
         qualifiers.add(new ElementAnnotationInfo(
-            io.micronaut.core.annotation.AnnotationValue.builder(Cdi.ANY).build(), context));
-        io.micronaut.core.annotation.AnnotationMetadata metadata = producer == null
+            AnnotationValue.builder(Cdi.ANY).build(), context));
+        AnnotationMetadata metadata = producer == null
             ? declaringClass.getAnnotationMetadata() : producer.getAnnotationMetadata().getDeclaredMetadata();
         for (String name : metadata.getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
             if (NOT_QUALIFIERS_OF_THE_BEAN.contains(name)
                 || ("jakarta.inject.Named".equals(name) && metadata.hasAnnotation(CdiName.class))) {
                 continue;
             }
-            List<io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation>> occurrences =
+            List<AnnotationValue<Annotation>> occurrences =
                 metadata.getAnnotationValuesByName(name);
-            for (io.micronaut.core.annotation.AnnotationValue<?> annotation : occurrences) {
+            for (AnnotationValue<?> annotation : occurrences) {
                 qualifiers.add(new ElementAnnotationInfo(annotation, context));
             }
         }
@@ -284,7 +294,7 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      */
     @Override
     public @Nullable Integer priority() {
-        java.util.OptionalInt declared = declared().intValue(Cdi.PRIORITY, "value");
+        OptionalInt declared = declared().intValue(Cdi.PRIORITY, "value");
         if (declared.isEmpty() && producer != null) {
             declared = declaringClass.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
         }

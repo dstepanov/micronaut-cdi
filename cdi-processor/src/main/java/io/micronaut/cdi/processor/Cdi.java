@@ -15,7 +15,15 @@
  */
 package io.micronaut.cdi.processor;
 
+import io.micronaut.cdi.internal.metadata.MicronautQualifiers;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.OptionalInt;
+import java.util.Set;
 
 /**
  * The names of the annotations of the Jakarta Contexts and Dependency Injection specification.
@@ -169,9 +177,9 @@ public final class Cdi {
      * @param metadata The annotation metadata
      * @return The priority, or {@code null} where none was written
      */
-    public static java.lang.@org.jspecify.annotations.Nullable Integer priorityOf(
-        io.micronaut.core.annotation.AnnotationMetadata metadata) {
-        java.util.OptionalInt declared = metadata.intValue(PRIORITY, "value");
+    public static @Nullable Integer priorityOf(
+        AnnotationMetadata metadata) {
+        OptionalInt declared = metadata.intValue(PRIORITY, "value");
         return declared.isPresent() ? declared.getAsInt() : null;
     }
 
@@ -182,9 +190,9 @@ public final class Cdi {
      * @param names The names
      * @return The names, with Micronaut's own
      */
-    public static java.util.Set<String> withMicronautQualifiers(String... names) {
-        java.util.Set<String> all = new java.util.HashSet<>(java.util.Arrays.asList(names));
-        all.addAll(io.micronaut.cdi.internal.metadata.MicronautQualifiers.NAMES);
-        return java.util.Set.copyOf(all);
+    public static Set<String> withMicronautQualifiers(String... names) {
+        Set<String> all = new HashSet<>(Arrays.asList(names));
+        all.addAll(MicronautQualifiers.NAMES);
+        return Set.copyOf(all);
     }
 }

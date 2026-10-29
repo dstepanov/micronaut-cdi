@@ -15,15 +15,24 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
+import io.micronaut.cdi.internal.metadata.CdiInjectedMethod;
+import io.micronaut.cdi.internal.metadata.CdiTransient;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.context.BeanRegistration;
+import io.micronaut.context.annotation.Parameter;
+import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.ResolveWith;
+import io.micronaut.context.annotation.Value;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.ElementModifier;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.PropertyElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.inject.utils.BeanInjectionUtils;
@@ -84,9 +93,9 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
     );
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
+    public TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -112,11 +121,11 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
             .forEach(field -> mark(field, field.getGenericType()));
         bean.getEnclosedElements(ElementQuery.ALL_FIELDS).stream()
             .filter(field -> isInjected(field)
-                && field.getModifiers().contains(io.micronaut.inject.ast.ElementModifier.TRANSIENT))
+                && field.getModifiers().contains(ElementModifier.TRANSIENT))
             // InjectionPoint.isTransient() answers from the record rather than from the field itself; the record is
             // the same whatever class inherits the field, so it is written of an inherited one as well
-            .forEach(field -> field.annotate(io.micronaut.cdi.internal.metadata.CdiTransient.class));
-        for (io.micronaut.inject.ast.PropertyElement property : bean.getSyntheticBeanProperties()) {
+            .forEach(field -> field.annotate(CdiTransient.class));
+        for (PropertyElement property : bean.getSyntheticBeanProperties()) {
             // a property a compiler describes as one - a Kotlin property under KSP - is injected through its setter,
             // with the metadata of the property; one whose setter alone is annotated, @set:Inject, as well
             MethodElement setter = property.getWriteMethod().orElse(null);
@@ -153,7 +162,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
         for (int i = 0; i < parameters.length; i++) {
             types[i] = RecordedTypeValues.erasedName(parameters[i].getType());
         }
-        method.annotate(io.micronaut.cdi.internal.metadata.CdiInjectedMethod.class, builder -> builder
+        method.annotate(CdiInjectedMethod.class, builder -> builder
             .member("declaringType", new AnnotationClassValue<>(method.getDeclaringType().getName()))
             .member("parameterTypes", types));
     }
@@ -195,14 +204,14 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
      * point metadata - whose beans are built-in ones that read the point they are injected into.
      */
     private static boolean isResolvedByMicronaut(Element element, ClassElement type) {
-        if (element.hasStereotype(io.micronaut.context.annotation.Value.class)
-            || element.hasStereotype(io.micronaut.context.annotation.Property.class)
-            || element.hasStereotype(io.micronaut.context.annotation.Parameter.class)) {
+        if (element.hasStereotype(Value.class)
+            || element.hasStereotype(Property.class)
+            || element.hasStereotype(Parameter.class)) {
             return true;
         }
         ClassElement resolved = type.isArray() ? type.fromArray() : type;
-        if (resolved.isAssignable(io.micronaut.context.BeanRegistration.class)
-            || type.getFirstTypeArgument().map(argument -> argument.isAssignable(io.micronaut.context.BeanRegistration.class))
+        if (resolved.isAssignable(BeanRegistration.class)
+            || type.getFirstTypeArgument().map(argument -> argument.isAssignable(BeanRegistration.class))
                 .orElse(false)) {
             return true;
         }

@@ -17,16 +17,26 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.WildcardElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * The definition errors of section 2.5 that live on an injection point, detected as the class compiles: a
@@ -53,9 +63,9 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
     private static final String INJECTION_POINT = "jakarta.enterprise.inject.spi.InjectionPoint";
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
+    public TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -193,7 +203,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
 
     private void checkParameter(ParameterElement parameter, MethodElement method, boolean normalScoped,
                                 boolean disposer, boolean observer, boolean genericClass,
-                                ClassElement declaring, @org.jspecify.annotations.Nullable String allowedMetadataType,
+                                ClassElement declaring, @Nullable String allowedMetadataType,
                                 VisitorContext context) {
         String named = null;
         if (parameter.hasDeclaredAnnotation(AnnotationUtil.NAMED)) {
@@ -211,9 +221,9 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             declaring, allowedMetadataType, context);
     }
 
-    private void checkType(ClassElement type, io.micronaut.inject.ast.Element at, boolean normalScoped,
+    private void checkType(ClassElement type, Element at, boolean normalScoped,
                            boolean disposer, boolean observer, boolean genericClass,
-                           ClassElement declaring, @org.jspecify.annotations.Nullable String allowedMetadataType,
+                           ClassElement declaring, @Nullable String allowedMetadataType,
                            VisitorContext context) {
         if (type.isGenericPlaceholder() && !genericClass) {
             context.fail("An injection point whose declared type is a type variable is a definition error "
@@ -250,9 +260,9 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * {@code Bean} reach only an interceptor, and the intercepted one says nothing more than {@code Bean<?>}.
      * {@code Decorator} and the decorated {@code Bean} reach only a decorator, which no class is here.
      */
-    private void checkMetadataInjection(ClassElement type, io.micronaut.inject.ast.Element at,
+    private void checkMetadataInjection(ClassElement type, Element at,
                                         ClassElement declaring,
-                                        @org.jspecify.annotations.Nullable String allowedMetadataType,
+                                        @Nullable String allowedMetadataType,
                                         VisitorContext context) {
         String name = type.getName();
         boolean interceptorClass = declaring.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
@@ -262,7 +272,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 context.fail("Decorator metadata reaches only a decorator (section 9.4)", at);
             }
         } else if ("jakarta.enterprise.inject.spi.Bean".equals(name)) {
-            java.util.Collection<ClassElement> arguments = type.getTypeArguments().values();
+            Collection<ClassElement> arguments = type.getTypeArguments().values();
             ClassElement argument = arguments.isEmpty() ? null : arguments.iterator().next();
             if (at.hasDeclaredAnnotation("jakarta.enterprise.inject.Decorated")) {
                 if (!decoratorClass) {
@@ -282,7 +292,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 return;
             }
             if (type.isRawType() || argument == null || argument.isGenericPlaceholder()
-                || argument instanceof io.micronaut.inject.ast.WildcardElement) {
+                || argument instanceof WildcardElement) {
                 return;
             }
             if (!argument.getName().equals(declaring.getName())
@@ -291,26 +301,26 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     + "> is not the metadata of " + declaring.getSimpleName() + " (section 9.4)", at);
             }
         } else if ("jakarta.enterprise.inject.spi.Interceptor".equals(name)) {
-            java.util.Collection<ClassElement> arguments = type.getTypeArguments().values();
+            Collection<ClassElement> arguments = type.getTypeArguments().values();
             ClassElement argument = arguments.isEmpty() ? null : arguments.iterator().next();
             if (!interceptorClass) {
                 context.fail("Interceptor metadata reaches only an interceptor (section 9.4)", at);
             } else if (argument != null && !argument.isGenericPlaceholder()
-                && !(argument instanceof io.micronaut.inject.ast.WildcardElement)
+                && !(argument instanceof WildcardElement)
                 && !argument.getName().equals(declaring.getName())) {
                 context.fail("An interceptor may only be told about itself (section 9.4)", at);
             }
         }
     }
 
-    private static boolean isUnboundedWildcard(@org.jspecify.annotations.Nullable ClassElement argument) {
-        if (!(argument instanceof io.micronaut.inject.ast.WildcardElement wildcard)) {
+    private static boolean isUnboundedWildcard(@Nullable ClassElement argument) {
+        if (!(argument instanceof WildcardElement wildcard)) {
             return false;
         }
         if (!wildcard.getLowerBounds().isEmpty()) {
             return false;
         }
-        java.util.List<? extends ClassElement> uppers = wildcard.getUpperBounds();
+        List<? extends ClassElement> uppers = wildcard.getUpperBounds();
         return uppers.isEmpty() || uppers.size() == 1 && "java.lang.Object".equals(uppers.get(0).getName());
     }
 
@@ -353,15 +363,15 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * Whether the member is inherited from a generic class, whose variables the bean resolves: a point of such a
      * variable is of the type the bean gives it.
      */
-    private static boolean resolvedByTheBean(io.micronaut.inject.ast.MemberElement member, ClassElement element) {
+    private static boolean resolvedByTheBean(MemberElement member, ClassElement element) {
         return !isDeclaredBy(member, element) && !member.getDeclaringType().getDeclaredGenericPlaceholders().isEmpty();
     }
 
-    private static boolean isDeclaredBy(io.micronaut.inject.ast.MemberElement member, ClassElement element) {
+    private static boolean isDeclaredBy(MemberElement member, ClassElement element) {
         return member.getDeclaringType().getName().equals(element.getName());
     }
 
-    private static boolean isInjected(io.micronaut.inject.ast.Element element) {
+    private static boolean isInjected(Element element) {
         return SpecificationBeans.isInjected(element);
     }
 
@@ -381,13 +391,13 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         // read from what the member itself declares: the annotation metadata of a member carries what its class
         // declares as well, and the class's scope is the one this must not be answered with. A scope written on
         // the member wins over one a stereotype carries (section 2.7.2), and that is resolved as a class's is
-        io.micronaut.core.annotation.AnnotationMetadata declared = producer.getAnnotationMetadata().getDeclaredMetadata();
-        io.micronaut.core.annotation.AnnotationValue<CdiScope> written = declared.hasAnnotation(CdiScope.class)
+        AnnotationMetadata declared = producer.getAnnotationMetadata().getDeclaredMetadata();
+        AnnotationValue<CdiScope> written = declared.hasAnnotation(CdiScope.class)
             ? declared.getAnnotation(CdiScope.class) : null;
         if (written != null) {
             return written.booleanValue("normal").orElse(false);
         }
-        io.micronaut.core.annotation.AnnotationValue<CdiScope> resolved =
+        AnnotationValue<CdiScope> resolved =
             CdiScopeVisitor.scopeRecordOf(producer, context);
         return resolved != null && resolved.booleanValue("normal").orElse(false);
     }

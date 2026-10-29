@@ -18,6 +18,8 @@ package io.micronaut.cdi.processor.extension;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
+import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -133,8 +135,8 @@ final class SyntheticRecords {
      * @return The record
      */
     static AnnotationValue<CdiRecordedType> typeOf(Type type) {
-        return io.micronaut.cdi.processor.visitor.RecordedTypeValues.of(
-            io.micronaut.cdi.lang.model.ast.ElementTypes.elementOf(type));
+        return RecordedTypeValues.of(
+            ElementTypes.elementOf(type));
     }
 
     private static AnnotationValueBuilder<CdiSyntheticParameter> parameter(String key, String kind, boolean array) {

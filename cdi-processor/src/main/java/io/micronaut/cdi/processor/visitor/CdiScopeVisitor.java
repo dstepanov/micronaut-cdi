@@ -21,17 +21,24 @@ import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.context.annotation.Prototype;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.MemberElement;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Decides which scope a class is in, the way section 2.3.1 says it is decided, and records it.
@@ -56,9 +63,9 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     private static final String PSEUDO_SCOPE = "jakarta.inject.Scope";
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
+    public TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -79,8 +86,8 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         readClass(element, context);
-        for (io.micronaut.inject.ast.MemberElement member : element.getEnclosedElements(
-            io.micronaut.inject.ast.ElementQuery.of(io.micronaut.inject.ast.MemberElement.class).onlyDeclared())) {
+        for (MemberElement member : element.getEnclosedElements(
+            ElementQuery.of(MemberElement.class).onlyDeclared())) {
             if (SpecificationBeans.isProducer(member)
                 && !checkScopesOf(member, "The producer " + element.getName() + "#" + member.getName(),
                     context)) {
@@ -109,7 +116,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * @param context The visitor context
      * @return Whether it is well formed
      */
-    static boolean checkScopesOf(io.micronaut.inject.ast.Element element, String described,
+    static boolean checkScopesOf(Element element, String described,
                                  VisitorContext context) {
         List<String> declared = new ArrayList<>();
         for (String name : element.getDeclaredAnnotationNames()) {
@@ -187,8 +194,8 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         if (stereotypes.isEmpty()) {
             return true;
         }
-        java.util.Set<String> scopes = new java.util.LinkedHashSet<>();
-        java.util.Set<Integer> priorities = new java.util.LinkedHashSet<>();
+        Set<String> scopes = new LinkedHashSet<>();
+        Set<Integer> priorities = new LinkedHashSet<>();
         for (String stereotype : stereotypes) {
             ClassElement declaration = context.getClassElement(stereotype).orElse(null);
             if (declaration == null) {
@@ -200,7 +207,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                 }
             }
             declaration.getAnnotationMetadata()
-                .intValue(Cdi.PRIORITY, io.micronaut.core.annotation.AnnotationMetadata.VALUE_MEMBER)
+                .intValue(Cdi.PRIORITY, AnnotationMetadata.VALUE_MEMBER)
                 .ifPresent(priorities::add);
             // a value written on the stereotype is a definition error wherever it is used, the stereotype
             // perhaps compiled elsewhere
@@ -268,7 +275,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         // a scope other than the specification's own is resolved here only where it is a scope of the kind the
         // specification declares, and whether it is normal is what its declaration says
         boolean normal = isNormal(resolved, context);
-        for (io.micronaut.core.annotation.AnnotationValue<?> annotation
+        for (AnnotationValue<?> annotation
             : CdiScopes.annotationsOf(resolved, normal)) {
             element.annotate(annotation);
         }
@@ -311,7 +318,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * @param context The visitor context
      * @return The record, or {@code null} where the producer declares no scope
      */
-    public static io.micronaut.core.annotation.@Nullable AnnotationValue<CdiScope> scopeRecordOf(Element member,
+    public static @Nullable AnnotationValue<CdiScope> scopeRecordOf(Element member,
                                                                                                VisitorContext context) {
         DeclaredScope declared = scopeDeclaredOn(member, context);
         String scope = declared != null ? declared.scope() : pseudoScopeDeclaredOn(member, context);
@@ -340,7 +347,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      */
     private static @Nullable String pseudoScopeDeclaredOn(Element element, VisitorContext context) {
         for (String candidate : element.getAnnotationMetadata().getAnnotationNamesByStereotype(PSEUDO_SCOPE)) {
-            String scope = resolveToPseudoScope(candidate, context, new java.util.HashSet<>());
+            String scope = resolveToPseudoScope(candidate, context, new HashSet<>());
             if (scope != null && !Cdi.DEPENDENT.equals(scope)
                 && declaredContributorOf(element, candidate, context) != null) {
                 return scope;
@@ -354,7 +361,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * Micronaut's own scopes, which the mappers add, are none of the application's.
      */
     private static @Nullable String resolveToPseudoScope(String candidate, VisitorContext context,
-                                                         java.util.Set<String> seen) {
+                                                         Set<String> seen) {
         if ("jakarta.inject.Singleton".equals(candidate) || Cdi.DEPENDENT.equals(candidate)) {
             return candidate;
         }

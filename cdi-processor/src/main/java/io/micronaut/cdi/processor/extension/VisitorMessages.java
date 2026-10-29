@@ -23,6 +23,7 @@ import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.lang.model.AnnotationTarget;
+import org.jspecify.annotations.Nullable;
 
 /**
  * What an extension has to say, said through the compiler.
@@ -135,7 +136,7 @@ public final class VisitorMessages implements Messages {
     /**
      * The declaration a message is about, where it is one this module handed the extension.
      */
-    private static @org.jspecify.annotations.Nullable Element elementOf(AnnotationTarget relatedTo) {
+    private static @Nullable Element elementOf(AnnotationTarget relatedTo) {
         return relatedTo instanceof ElementDeclarationInfo declaration ? declaration.element() : null;
     }
 }

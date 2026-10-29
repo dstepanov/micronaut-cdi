@@ -19,19 +19,50 @@ import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
+import io.micronaut.cdi.internal.metadata.CdiScannedClasses;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
+import io.micronaut.cdi.processor.visitor.BeanDiscoveryVisitor;
+import io.micronaut.cdi.processor.visitor.BeanNameVisitor;
+import io.micronaut.cdi.processor.visitor.BeanTypesVisitor;
+import io.micronaut.cdi.processor.visitor.CdiScopeVisitor;
+import io.micronaut.cdi.processor.visitor.ContainerInjectionVisitor;
+import io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor;
+import io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor;
+import io.micronaut.cdi.processor.visitor.ObserverVisitor;
+import io.micronaut.cdi.processor.visitor.ProducerVisitor;
+import io.micronaut.cdi.processor.visitor.ProxyabilityVisitor;
+import io.micronaut.cdi.processor.visitor.SpecificationBeans;
+import io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor;
+import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.order.OrderUtil;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ConstructorElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.FieldElement;
+import io.micronaut.inject.ast.MemberElement;
+import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
+import io.micronaut.inject.visitor.TypeElementQuery;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import io.micronaut.inject.writer.GeneratedFile;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
+import jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
+import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
+import jakarta.enterprise.inject.build.compatible.spi.InvokerFactory;
+import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.inject.build.compatible.spi.Discovery;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
@@ -42,15 +73,27 @@ import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
+import jakarta.enterprise.inject.spi.DefinitionException;
+import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.declarations.FieldInfo;
+import jakarta.enterprise.lang.model.declarations.MethodInfo;
+import jakarta.interceptor.Interceptor;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 /**
  * Runs the enhancement phase of the build compatible extensions of section 2.10, while the classes they enhance
@@ -107,7 +150,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * one class to the next, made as the compilation starts the visitor and read as its rounds finish. A visitor a
      * compiler constructs and never starts has none.
      */
-    private @org.jspecify.annotations.Nullable DiscoveredClasses discovered;
+    private @Nullable DiscoveredClasses discovered;
     /**
      * Which of the phases that wait for the whole deployment have run, which run once: the scanned classes have
      * been seen to - imported, under javac, or registered - and the synthesis and validation phases have run.
@@ -116,8 +159,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private boolean synthesized;
 
     @Override
-    public java.util.Set<String> getSupportedOptions() {
-        return java.util.Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION);
+    public Set<String> getSupportedOptions() {
+        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION);
     }
 
     /**
@@ -158,7 +201,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 }
             }
         }
-        discoveries.sort(java.util.Comparator.comparingInt(ExtensionMethod::priority));
+        discoveries.sort(Comparator.comparingInt(ExtensionMethod::priority));
         List<ExtensionMethod> enhancements = new ArrayList<>();
         List<ExtensionMethod> registrations = new ArrayList<>();
         for (BuildCompatibleExtension extension : extensions) {
@@ -185,10 +228,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 }
             }
         }
-        enhancements.sort(java.util.Comparator.comparingInt(ExtensionMethod::priority));
-        registrations.sort(java.util.Comparator.comparingInt(ExtensionMethod::priority));
-        synthesizers.sort(java.util.Comparator.comparingInt(ExtensionMethod::priority));
-        validators.sort(java.util.Comparator.comparingInt(ExtensionMethod::priority));
+        enhancements.sort(Comparator.comparingInt(ExtensionMethod::priority));
+        registrations.sort(Comparator.comparingInt(ExtensionMethod::priority));
+        synthesizers.sort(Comparator.comparingInt(ExtensionMethod::priority));
+        validators.sort(Comparator.comparingInt(ExtensionMethod::priority));
         for (ExtensionMethod enhancement : enhancements) {
             enhancers.add(new Enhancer(enhancement.extension(), enhancement.method(),
                 enhancement.method().getAnnotation(Enhancement.class)));
@@ -242,16 +285,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         for (Class<?> parameterType : method.getParameterTypes()) {
             if (parameterType.equals(ClassConfig.class) || parameterType.equals(MethodConfig.class)
                 || parameterType.equals(FieldConfig.class)
-                || parameterType.equals(jakarta.enterprise.lang.model.declarations.ClassInfo.class)
-                || parameterType.equals(jakarta.enterprise.lang.model.declarations.MethodInfo.class)
-                || parameterType.equals(jakarta.enterprise.lang.model.declarations.FieldInfo.class)) {
+                || parameterType.equals(ClassInfo.class)
+                || parameterType.equals(MethodInfo.class)
+                || parameterType.equals(FieldInfo.class)) {
                 queried++;
             } else if (!Phase.ENHANCEMENT.hands(parameterType)) {
                 throw Phase.ENHANCEMENT.unsupported(method, parameterType);
             }
         }
         if (queried != 1) {
-            throw new jakarta.enterprise.inject.spi.DefinitionException("The @Enhancement method " + method
+            throw new DefinitionException("The @Enhancement method " + method
                 + " must declare exactly one parameter naming what it enhances (section 2.10.2)");
         }
     }
@@ -259,22 +302,22 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private static void validateRegistration(Method method) {
         int queried = 0;
         for (Class<?> parameterType : method.getParameterTypes()) {
-            if (parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.BeanInfo.class)
-                || parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo.class)
-                || parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo.class)) {
+            if (parameterType.equals(BeanInfo.class)
+                || parameterType.equals(InterceptorInfo.class)
+                || parameterType.equals(ObserverInfo.class)) {
                 queried++;
             } else if (!Phase.REGISTRATION.hands(parameterType)) {
                 throw Phase.REGISTRATION.unsupported(method, parameterType);
             }
         }
         if (queried != 1) {
-            throw new jakarta.enterprise.inject.spi.DefinitionException("The @Registration method " + method
+            throw new DefinitionException("The @Registration method " + method
                 + " must declare exactly one parameter naming what it is told about (section 2.10.3)");
         }
     }
 
     private static void validateHanded(Phase phase, Method method,
-                                       @org.jspecify.annotations.Nullable Class<?> subject) {
+                                       @Nullable Class<?> subject) {
         for (Class<?> parameterType : method.getParameterTypes()) {
             if (!parameterType.equals(subject) && !phase.hands(parameterType)) {
                 throw phase.unsupported(method, parameterType);
@@ -306,9 +349,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     @Override
-    public io.micronaut.inject.visitor.TypeElementQuery query() {
+    public TypeElementQuery query() {
         // only the class is visited: what it declares is read from it, and core need not walk its members
-        return io.micronaut.inject.visitor.TypeElementQuery.onlyClass();
+        return TypeElementQuery.onlyClass();
     }
 
     @Override
@@ -335,8 +378,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * The classes of the compilation this visitor has visited, which what it registers and generates is written
      * from.
      */
-    io.micronaut.inject.ast.Element[] contributors() {
-        return discovered().contributors().toArray(new io.micronaut.inject.ast.Element[0]);
+    Element[] contributors() {
+        return discovered().contributors().toArray(new Element[0]);
     }
 
     /**
@@ -362,8 +405,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * soon as any file is deleted, with nothing left to regenerate it, while one that names them is generated
      * again, the other classes it names processed again with it, whenever one of them changes or goes.</p>
      */
-    static java.util.Optional<io.micronaut.inject.writer.GeneratedFile> generatedSource(
-        VisitorContext context, String packageName, String className, io.micronaut.inject.ast.Element[] origins) {
+    static Optional<GeneratedFile> generatedSource(
+        VisitorContext context, String packageName, String className, Element[] origins) {
         if (context.getLanguage() == VisitorContext.Language.KOTLIN) {
             return context.visitGeneratedSourceFile(packageName, className, origins);
         }
@@ -376,7 +419,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // specification's resolver is the static entry point of its build time API, which an extension calls with
         // nothing to hand it; it is set here, as the compilation starts, rather than left to the service loader,
         // which looks through the loader of the API and does not always see the service entry of this module
-        jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver.setBuildServices(
+        BuildServicesResolver.setBuildServices(
             new ElementBuildServices(context));
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts. The discovery phase runs once, as it is first started
@@ -498,19 +541,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         String className = SCANNED_CLASSES + suffix(context);
         StringBuilder source = new StringBuilder("package " + GENERATED + ";\n\n");
-        if (context.getClassElement(io.micronaut.cdi.internal.metadata.CdiScannedClasses.class.getName()).isPresent()) {
+        if (context.getClassElement(CdiScannedClasses.class.getName()).isPresent()) {
             // the record of what was scanned, for whoever reads the compiled classes: the import itself says
             // nothing once compiled
             List<String> names = new ArrayList<>();
             for (String scanned : discovered().scannedClasses()) {
                 names.add('"' + scanned + '"');
             }
-            source.append("@" + io.micronaut.cdi.internal.metadata.CdiScannedClasses.class.getName()
+            source.append("@" + CdiScannedClasses.class.getName()
                 + "({" + String.join(", ", names) + "})\n");
         }
         source.append("@io.micronaut.context.annotation.ClassImport(classes = {" + String.join(", ", literals) + "})\n")
             .append("final class " + className + " {\n}\n");
-        java.util.Optional<io.micronaut.inject.writer.GeneratedFile> file =
+        Optional<GeneratedFile> file =
             generatedSource(context, GENERATED, className, contributors());
         if (file.isEmpty()) {
             context.fail("The import of the scanned classes could not be written: the compilation accepts no "
@@ -549,25 +592,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             enhance(element, context);
             // what each class of the compilation is put through as it is visited: its scope, its injection points
             // marked for the container, its bean types, its producers and observers, its default qualifier
-            for (io.micronaut.inject.visitor.TypeElementVisitor<?, ?> visitor : classVisitors()) {
-                if (!(visitor instanceof io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor)) {
+            for (TypeElementVisitor<?, ?> visitor : classVisitors()) {
+                if (!(visitor instanceof InjectionPointRulesVisitor)) {
                     // the rules a class is held to as it compiles are its own compilation's to judge; and a compiler
                     // that reads a class of a library from its bytes reads less of it than of a source
                     visitor.visitClass(element, context);
                 }
             }
             register(element, messages, context);
-            java.util.Map<String, io.micronaut.inject.ast.MemberElement> producers = new java.util.HashMap<>();
-            for (io.micronaut.inject.ast.MemberElement producer
-                : io.micronaut.cdi.processor.visitor.SpecificationBeans.producersOf(element)) {
+            Map<String, MemberElement> producers = new HashMap<>();
+            for (MemberElement producer
+                : SpecificationBeans.producersOf(element)) {
                 producers.put(producerKey(producer), producer);
             }
             context.registerBean(element, contributors()).inject()
                 .produceBeans(ElementQuery.ALL_METHODS.onlyDeclared()
-                    .annotated(metadata -> metadata.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.PRODUCES)),
+                    .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
                     produced -> describedAsVisited(produced, producers))
                 .produceBeans(ElementQuery.ALL_FIELDS.onlyDeclared()
-                    .annotated(metadata -> metadata.hasDeclaredAnnotation(io.micronaut.cdi.processor.Cdi.PRODUCES)),
+                    .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
                     produced -> describedAsVisited(produced, producers));
         }
     }
@@ -576,28 +619,28 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * Gives the bean a producer of a scanned class of a library produces what the visitors recorded of the producer:
      * the builder reads the member anew, without what they wrote on it.
      */
-    private static void describedAsVisited(io.micronaut.inject.ast.beans.BeanElementBuilder produced,
-                                           java.util.Map<String, io.micronaut.inject.ast.MemberElement> producers) {
-        if (!(produced.getProducingElement() instanceof io.micronaut.inject.ast.MemberElement member)) {
+    private static void describedAsVisited(BeanElementBuilder produced,
+                                           Map<String, MemberElement> producers) {
+        if (!(produced.getProducingElement() instanceof MemberElement member)) {
             return;
         }
-        io.micronaut.inject.ast.MemberElement visited = producers.get(producerKey(member));
+        MemberElement visited = producers.get(producerKey(member));
         if (visited == null) {
             return;
         }
-        io.micronaut.core.annotation.AnnotationMetadata recorded = visited.getAnnotationMetadata().getDeclaredMetadata();
+        AnnotationMetadata recorded = visited.getAnnotationMetadata().getDeclaredMetadata();
         for (String name : recorded.getAnnotationNames()) {
-            io.micronaut.core.annotation.AnnotationValue<java.lang.annotation.Annotation> value = recorded.getAnnotation(name);
+            AnnotationValue<Annotation> value = recorded.getAnnotation(name);
             if (value != null && !produced.hasDeclaredAnnotation(name)) {
                 produced.annotate(value);
             }
         }
     }
 
-    private static String producerKey(io.micronaut.inject.ast.MemberElement member) {
-        if (member instanceof io.micronaut.inject.ast.MethodElement method) {
+    private static String producerKey(MemberElement member) {
+        if (member instanceof MethodElement method) {
             StringBuilder key = new StringBuilder(method.getName()).append('(');
-            for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
+            for (ParameterElement parameter : method.getParameters()) {
                 key.append(parameter.getType().getName()).append(',');
             }
             return key.append(')').toString();
@@ -608,20 +651,20 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     /**
      * The visitors of this module that read one class at a time, in the order Micronaut runs them in.
      */
-    private static List<io.micronaut.inject.visitor.TypeElementVisitor<?, ?>> classVisitors() {
-        List<io.micronaut.inject.visitor.TypeElementVisitor<?, ?>> visitors = new ArrayList<>(List.of(
-            new io.micronaut.cdi.processor.visitor.CdiScopeVisitor(),
-            new io.micronaut.cdi.processor.visitor.ContainerInjectionVisitor(),
-            new io.micronaut.cdi.processor.visitor.BeanNameVisitor(),
-            new io.micronaut.cdi.processor.visitor.BeanDiscoveryVisitor(),
-            new io.micronaut.cdi.processor.visitor.ProducerVisitor(),
-            new io.micronaut.cdi.processor.visitor.ObserverVisitor(),
-            new io.micronaut.cdi.processor.visitor.DefaultQualifierVisitor(),
-            new io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor(),
-            new io.micronaut.cdi.processor.visitor.ProxyabilityVisitor(),
-            new io.micronaut.cdi.processor.visitor.BeanTypesVisitor(),
-            new io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor()));
-        io.micronaut.core.order.OrderUtil.reverseSort(visitors);
+    private static List<TypeElementVisitor<?, ?>> classVisitors() {
+        List<TypeElementVisitor<?, ?>> visitors = new ArrayList<>(List.of(
+            new CdiScopeVisitor(),
+            new ContainerInjectionVisitor(),
+            new BeanNameVisitor(),
+            new BeanDiscoveryVisitor(),
+            new ProducerVisitor(),
+            new ObserverVisitor(),
+            new DefaultQualifierVisitor(),
+            new InjectionPointRulesVisitor(),
+            new ProxyabilityVisitor(),
+            new BeanTypesVisitor(),
+            new TypeHierarchyVisitor()));
+        OrderUtil.reverseSort(visitors);
         return visitors;
     }
 
@@ -647,7 +690,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                     registerComponent(context, new SynthesisPhase.Component(
                         SyntheticRecords.classElement(context, contextClass, "context"),
                         AnnotationValue.builder(CdiRegisteredContext.class)
-                            .member("scope", new io.micronaut.core.annotation.AnnotationClassValue<>(scopeName))
+                            .member("scope", new AnnotationClassValue<>(scopeName))
                             .member("normal", discovered().isNormalContext(scopeName))
                             .build()));
                 } catch (IllegalArgumentException e) {
@@ -847,7 +890,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + " could not be invoked: " + e, null);
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause() == null ? e : e.getCause();
-            if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException) {
+            if (cause instanceof DefinitionException) {
                 context.fail("The " + phase + " method " + method + " failed: " + cause, null);
             } else {
                 context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the " + phase + " method " + method
@@ -869,18 +912,18 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
         if (registrars.isEmpty() || element.isAbstract() || element.isInterface()
-            || io.micronaut.cdi.processor.visitor.SpecificationBeans.isVetoed(element)) {
+            || SpecificationBeans.isVetoed(element)) {
             return;
         }
         if (!discovered().registering(element.getName())) {
             return;
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
-        if (io.micronaut.cdi.processor.visitor.SpecificationBeans.isClassBean(element)) {
+        if (SpecificationBeans.isClassBean(element)) {
             beans.add(ElementBeanInfo.of(element, null, context));
         }
-        for (io.micronaut.inject.ast.MemberElement producer
-            : io.micronaut.cdi.processor.visitor.SpecificationBeans.producersOf(element)) {
+        for (MemberElement producer
+            : SpecificationBeans.producersOf(element)) {
             beans.add(ElementBeanInfo.of(element, producer, context));
         }
         for (ElementBeanInfo bean : beans) {
@@ -893,11 +936,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // section 2.10.3 also tells the phase about the observers: a registration method asking for an
         // ObserverInfo is invoked once for each observer whose observed event type matches. An observer method
         // is inherited, so the bean of this class observes with the ones its superclasses declare as well
-        for (io.micronaut.inject.ast.MethodElement method
+        for (MethodElement method
             : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
-            io.micronaut.inject.ast.ParameterElement observed = null;
+            ParameterElement observed = null;
             boolean async = false;
-            for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
+            for (ParameterElement parameter : method.getParameters()) {
                 if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.Observes")) {
                     observed = parameter;
                 } else if (parameter.hasDeclaredAnnotation("jakarta.enterprise.event.ObservesAsync")) {
@@ -932,15 +975,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             // added to the scanned classes during discovery: a bean as though it declared the dependent scope,
             // recorded as one so that it is a bean of the specification - described to the registration phase and
             // validated as any. Written only where nothing gives the class a scope: a stereotype's must win
-            for (AnnotationValue<?> annotation : io.micronaut.cdi.processor.CdiScopes.annotationsOf(
-                io.micronaut.cdi.processor.Cdi.DEPENDENT, false)) {
+            for (AnnotationValue<?> annotation : CdiScopes.annotationsOf(
+                Cdi.DEPENDENT, false)) {
                 element.annotate(annotation);
             }
         }
         for (AnnotationValue<?> annotation : discovered().annotationsFor(element.getName())) {
             element.annotate(annotation);
         }
-        java.util.Map<String, List<AnnotationValue<?>>> members =
+        Map<String, List<AnnotationValue<?>>> members =
             discovered().memberAnnotationsFor(element.getName());
         if (!members.isEmpty()) {
             // the members of an annotation interface, as Micronaut answers them under every compiler: a member
@@ -987,7 +1030,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         private boolean asksForBeans(boolean orInterceptors) {
             for (Class<?> parameterType : method.getParameterTypes()) {
                 if (parameterType.equals(BeanInfo.class) || (orInterceptors && parameterType.equals(
-                    jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo.class))) {
+                    InterceptorInfo.class))) {
                     return true;
                 }
             }
@@ -996,7 +1039,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
         private boolean asksForObservers() {
             for (Class<?> parameterType : method.getParameterTypes()) {
-                if (parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo.class)) {
+                if (parameterType.equals(ObserverInfo.class)) {
                     return true;
                 }
             }
@@ -1019,12 +1062,12 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return asksForObservers() && matches(observer.observedType());
         }
 
-        private void describeObserver(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo observer,
+        private void describeObserver(ObserverInfo observer,
                                       Messages messages, VisitorContext context) {
             Class<?>[] parameterTypes = method.getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
-                if (parameterTypes[i].equals(jakarta.enterprise.inject.build.compatible.spi.ObserverInfo.class)) {
+                if (parameterTypes[i].equals(ObserverInfo.class)) {
                     arguments[i] = observer;
                 } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
                     arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context);
@@ -1051,8 +1094,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             for (int i = 0; i < parameterTypes.length; i++) {
                 if (parameterTypes[i].equals(BeanInfo.class)
                     || (parameterTypes[i].equals(
-                        jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo.class)
-                        && bean instanceof jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo)) {
+                        InterceptorInfo.class)
+                        && bean instanceof InterceptorInfo)) {
                     arguments[i] = bean;
                 } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
                     arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context);
@@ -1078,10 +1121,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
          * stops the deployment is the exception the specification names rather than a compile diagnostic.
          */
         private static void rethrowDeploymentProblem(Throwable cause) {
-            if (cause instanceof jakarta.enterprise.inject.spi.DeploymentException deployment) {
+            if (cause instanceof DeploymentException deployment) {
                 throw deployment;
             }
-            if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException definition) {
+            if (cause instanceof DefinitionException definition) {
                 throw definition;
             }
         }
@@ -1134,19 +1177,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                     || carriedAsMetaAnnotation(element.getAnnotationMetadata(), annotation)) {
                 return true;
             }
-            for (io.micronaut.inject.ast.MethodElement method
+            for (MethodElement method
                 : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
                 if (memberCarries(method, annotation, any)) {
                     return true;
                 }
             }
-            for (io.micronaut.inject.ast.ConstructorElement constructor
+            for (ConstructorElement constructor
                 : element.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {
                 if (memberCarries(constructor, annotation, any)) {
                     return true;
                 }
             }
-            for (io.micronaut.inject.ast.FieldElement field
+            for (FieldElement field
                 : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
                 if (any
                     ? !field.getDeclaredAnnotationNames().isEmpty()
@@ -1158,7 +1201,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return false;
         }
 
-        private static boolean memberCarries(io.micronaut.inject.ast.MethodElement method, String annotation,
+        private static boolean memberCarries(MethodElement method, String annotation,
                                              boolean any) {
             if (any
                 ? !method.getDeclaredAnnotationNames().isEmpty()
@@ -1166,7 +1209,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                     || carriedAsMetaAnnotation(method.getAnnotationMetadata(), annotation)) {
                 return true;
             }
-            for (io.micronaut.inject.ast.ParameterElement parameter : method.getParameters()) {
+            for (ParameterElement parameter : method.getParameters()) {
                 if (any
                     ? !parameter.getDeclaredAnnotationNames().isEmpty()
                     : parameter.hasDeclaredAnnotation(annotation)
@@ -1181,11 +1224,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
          * Whether an annotation the element declares is itself annotated with the one asked for, which the
          * specification counts as the annotation being used.
          */
-        private static boolean carriedAsMetaAnnotation(io.micronaut.core.annotation.AnnotationMetadata metadata,
+        private static boolean carriedAsMetaAnnotation(AnnotationMetadata metadata,
                                                        String annotation) {
             // what carries the asked-for annotation as a meta-annotation: the query answers the annotations
             // that lead to it, and any of them being declared here is what counts
-            java.util.List<String> carriers = metadata.getAnnotationNamesByStereotype(annotation);
+            List<String> carriers = metadata.getAnnotationNamesByStereotype(annotation);
             return metadata.getDeclaredAnnotationNames().stream().anyMatch(carriers::contains);
         }
 
@@ -1196,10 +1239,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             // taking a configuration of the class once for the class
             List<Object[]> invocations = new ArrayList<>();
             if (takes(parameterTypes, MethodConfig.class)
-                || takes(parameterTypes, jakarta.enterprise.lang.model.declarations.MethodInfo.class)) {
+                || takes(parameterTypes, MethodInfo.class)) {
                 classConfig.methods().forEach(m -> invocations.add(arguments(parameterTypes, m, messages, context)));
             } else if (takes(parameterTypes, FieldConfig.class)
-                || takes(parameterTypes, jakarta.enterprise.lang.model.declarations.FieldInfo.class)) {
+                || takes(parameterTypes, FieldInfo.class)) {
                 classConfig.fields().forEach(f -> invocations.add(arguments(parameterTypes, f, messages, context)));
             } else {
                 invocations.add(arguments(parameterTypes, classConfig, messages, context));
@@ -1245,15 +1288,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
          * declaration the configuration is of.
          */
         private static Object readOnlyOrConfig(Class<?> parameterType, Object config) {
-            if (parameterType.equals(jakarta.enterprise.lang.model.declarations.MethodInfo.class)
+            if (parameterType.equals(MethodInfo.class)
                 && config instanceof MethodConfig methodConfig) {
                 return methodConfig.info();
             }
-            if (parameterType.equals(jakarta.enterprise.lang.model.declarations.FieldInfo.class)
+            if (parameterType.equals(FieldInfo.class)
                 && config instanceof FieldConfig fieldConfig) {
                 return fieldConfig.info();
             }
-            if (parameterType.equals(jakarta.enterprise.lang.model.declarations.ClassInfo.class)
+            if (parameterType.equals(ClassInfo.class)
                 && config instanceof ClassConfig cc) {
                 return cc.info();
             }
@@ -1268,14 +1311,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private enum Phase {
         DISCOVERY("@Discovery", "2.10.1", Messages.class),
         ENHANCEMENT("@Enhancement", "2.10.2", Messages.class,
-            jakarta.enterprise.inject.build.compatible.spi.Types.class),
+            Types.class),
         REGISTRATION("@Registration", "2.10.3", Messages.class,
-            jakarta.enterprise.inject.build.compatible.spi.Types.class,
-            jakarta.enterprise.inject.build.compatible.spi.InvokerFactory.class),
+            Types.class,
+            InvokerFactory.class),
         SYNTHESIS("@Synthesis", "2.10.4", Messages.class,
-            jakarta.enterprise.inject.build.compatible.spi.Types.class),
+            Types.class),
         VALIDATION("@Validation", "2.10.5", Messages.class,
-            jakarta.enterprise.inject.build.compatible.spi.Types.class);
+            Types.class);
 
         private final String annotation;
         private final String section;
@@ -1298,15 +1341,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
          * What a parameter of a type the phase hands is given.
          */
         Object argument(Class<?> parameterType, Messages messages,
-                        @org.jspecify.annotations.Nullable VisitorContext context) {
+                        @Nullable VisitorContext context) {
             if (parameterType.equals(Messages.class)) {
                 return messages;
             }
             if (context != null && hands(parameterType)) {
-                if (parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.Types.class)) {
+                if (parameterType.equals(Types.class)) {
                     return new VisitorTypes(context);
                 }
-                if (parameterType.equals(jakarta.enterprise.inject.build.compatible.spi.InvokerFactory.class)) {
+                if (parameterType.equals(InvokerFactory.class)) {
                     return new ElementInvokerFactory();
                 }
             }
@@ -1314,8 +1357,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + parameterType.getName());
         }
 
-        jakarta.enterprise.inject.spi.DefinitionException unsupported(Method method, Class<?> parameterType) {
-            return new jakarta.enterprise.inject.spi.DefinitionException("The " + annotation + " method " + method
+        DefinitionException unsupported(Method method, Class<?> parameterType) {
+            return new DefinitionException("The " + annotation + " method " + method
                 + " declares a parameter of type " + parameterType.getName()
                 + ", which the phase does not hand to one (section " + section + ")");
         }
@@ -1330,10 +1373,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     private record ExtensionMethod(BuildCompatibleExtension extension, Method method) {
 
         private int priority() {
-            jakarta.annotation.Priority priority = method.getAnnotation(jakarta.annotation.Priority.class);
+            Priority priority = method.getAnnotation(Priority.class);
             // the default of section 2.10: halfway through the application range
             return priority != null ? priority.value()
-                : jakarta.interceptor.Interceptor.Priority.APPLICATION + 500;
+                : Interceptor.Priority.APPLICATION + 500;
         }
     }
 }
