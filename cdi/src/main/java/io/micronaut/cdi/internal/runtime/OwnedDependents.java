@@ -390,7 +390,8 @@ public final class OwnedDependents implements AutoCloseable {
 
     /**
      * Resolves through the owner, or through a group of the owner's own where the resolver of the bean it belongs to
-     * refuses: Micronaut refuses with an {@code IllegalStateException} once the bean's destruction has begun.
+     * refuses: once the bean's destruction has begun, Micronaut refuses with an {@code IllegalStateException} any
+     * resolution outside the window it leaves its destruction callbacks.
      *
      * <p>Two kinds of lookup reach the group. One is made by the bean's {@code @PreDestroy} from another thread,
      * the context stopping or not: the Micronaut Core this builds on resolves for a bean being destroyed on behalf of
@@ -398,9 +399,10 @@ public final class OwnedDependents implements AutoCloseable {
      * thread, and makes this case unnecessary once it is the Core built on). The group is closed with what the owner
      * holds as the bean's destruction completes; one opened while the context stops is destroyed by Micronaut
      * before the shutdown completes. The other is made through a reference that escaped the bean after it was
-     * destroyed: the owner has closed what it held by then, so nothing closes the group opened for it, and what it
-     * creates is not destroyed even as the context stops ({@code OwnerlessLookupTest}). Removing the retry would
-     * make both fail, so it stays.</p>
+     * destroyed: the owner has closed what it held by then, and the group opened for it has no automatic cleanup -
+     * what it creates is not destroyed with the bean, nor as the context stops ({@code OwnerlessLookupTest}) - though
+     * {@code Instance.destroy} of an instance, or closing the lookup itself, still destroys what it holds. Removing
+     * the retry would make both fail, so it stays.</p>
      */
     private <T> BeanRegistration<T> resolve(
         Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {
