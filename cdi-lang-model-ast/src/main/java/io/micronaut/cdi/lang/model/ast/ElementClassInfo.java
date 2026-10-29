@@ -20,6 +20,9 @@ import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.EnumElement;
+import io.micronaut.inject.ast.FieldElement;
+import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.PropertyElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -31,6 +34,7 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -130,7 +134,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      * what its superclass repeated, so the two are never mixed.
      */
     @Override
-    public <T extends java.lang.annotation.Annotation> Collection<AnnotationInfo> repeatableAnnotation(
+    public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(
         Class<T> annotationType) {
         ClassElement type = element;
         while (type != null) {
@@ -256,14 +260,14 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public Collection<MethodInfo> methods() {
         List<MethodInfo> methods = new ArrayList<>();
-        for (io.micronaut.inject.ast.MethodElement method : ElementMembers.methodsOf(element)) {
+        for (MethodElement method : ElementMembers.methodsOf(element)) {
             // the class the method was declared by, which an inherited method's is not this one
             methods.add(new ElementMethodInfo(method, declarationOf(method.getDeclaringType(), context()), context()));
         }
         if (methods.isEmpty() && isAnnotation()) {
             // KSP answers the members of an annotation interface as its properties, and no methods
             // with the accessor of each, which is the method the language model reports
-            for (io.micronaut.inject.ast.PropertyElement property : element.getBeanProperties()) {
+            for (PropertyElement property : element.getBeanProperties()) {
                 property.getReadMethod()
                     .ifPresent(read -> methods.add(new ElementMethodInfo(read, this, context())));
             }
@@ -274,7 +278,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public Collection<FieldInfo> fields() {
         List<FieldInfo> fields = new ArrayList<>();
-        for (io.micronaut.inject.ast.FieldElement field : ElementMembers.fieldsOf(element)) {
+        for (FieldElement field : ElementMembers.fieldsOf(element)) {
             fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType(), context()), context()));
         }
         return fields;

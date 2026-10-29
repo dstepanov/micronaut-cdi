@@ -16,7 +16,9 @@
 package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
@@ -71,7 +73,7 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     @Override
     public List<ParameterInfo> parameters() {
         List<ParameterInfo> parameters = new ArrayList<>();
-        for (io.micronaut.inject.ast.ParameterElement parameter : element.getParameters()) {
+        for (ParameterElement parameter : element.getParameters()) {
             parameters.add(new ElementParameterInfo(parameter, this, context()));
         }
         return parameters;
@@ -102,7 +104,7 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
 
     @Override
     public boolean isConstructor() {
-        return element instanceof io.micronaut.inject.ast.ConstructorElement;
+        return element instanceof ConstructorElement;
     }
 
     @Override

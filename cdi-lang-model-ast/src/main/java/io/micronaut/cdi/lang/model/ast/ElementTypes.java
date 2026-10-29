@@ -18,6 +18,7 @@ package io.micronaut.cdi.lang.model.ast;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.PrimitiveElement;
@@ -230,7 +231,7 @@ public final class ElementTypes {
         if ("void".equals(name)) {
             return new Void(context);
         }
-        if (io.micronaut.core.reflect.ClassUtils.getPrimitiveType(name).isPresent()) {
+        if (ClassUtils.getPrimitiveType(name).isPresent()) {
             return new Primitive(name, List.of(), context);
         }
         ClassElement element = ExtensionAnnotationTypes.declarationOf(name, context);
