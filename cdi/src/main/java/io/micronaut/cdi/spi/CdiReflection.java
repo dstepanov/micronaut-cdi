@@ -41,9 +41,10 @@ import java.util.Set;
  * something that would read as there being nothing to report.</p>
  *
  * <p>The implementation reads annotations with Micronaut's {@code io.micronaut.reflection.ReflectionAnnotations}
- * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The three questions about generic types -
- * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked through this interface so
- * that reading a class's generic signatures stays in the optional module: the type closure is Micronaut's
+ * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The two questions about generic types -
+ * {@link #typeClosureOf} and {@link #declaredTypeOf} - are asked through this interface so that reading a class's
+ * generic signatures stays in the optional module, and the type of an event is inferred from their answers as it is
+ * from a recorded hierarchy: the type closure is Micronaut's
  * {@code ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type))}, which keeps a wildcard a wildcard
  * and a variable a variable.</p>
  *
@@ -104,18 +105,6 @@ public interface CdiReflection {
      * @return The type
      */
     Type declaredTypeOf(Class<?> type);
-
-    /**
-     * The type of an event of the given runtime class that was fired as the given type (section 2.8.1): the
-     * class with its type variables resolved from the type it was fired as.
-     *
-     * @param runtimeClass The class of the event object
-     * @param declaredType The type the event was fired as
-     * @return The event type
-     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
-     *                                  unresolved
-     */
-    Type eventTypeOf(Class<?> runtimeClass, Type declaredType);
 
     /**
      * The member an injection point injects into.

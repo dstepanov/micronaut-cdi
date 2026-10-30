@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * The types of the specification as the container holds them: each an {@link Argument}, which carries the type
@@ -542,23 +543,36 @@ public final class CdiTypes {
 
     private static Argument<?> resolvedEventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass,
                                                    Argument<?> declaredType) {
+        // the class over its own variables, and its closure: what the record of the class says of it, or what the
+        // module that reads classes reads of it where nothing was recorded. The variables are resolved from either the
+        // same way
         RecordedTypeIndex.Entry recorded = recordOf(index, runtimeClass);
-        if (recorded == null) {
+        List<String> variables;
+        Supplier<@Nullable List<Argument<?>>> closureOfTheClass;
+        if (recorded != null) {
+            variables = recorded.variables();
+            closureOfTheClass = () -> recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
+        } else {
             CdiReflection reflection = reflection(index);
-            if (reflection != null) {
-                return SpecificationTypes.argumentOf(
-                    reflection.eventTypeOf(runtimeClass, declaredType.asType()));
+            if (reflection == null) {
+                return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
             }
-            return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
+            Type declaration = reflection.declaredTypeOf(runtimeClass);
+            variables = new ArrayList<>();
+            if (isParameterized(SpecificationTypes.argumentOf(declaration))) {
+                for (Argument<?> variable : SpecificationTypes.argumentOf(declaration).getTypeParameters()) {
+                    variables.add(((GenericPlaceholder<?>) variable).getVariableName());
+                }
+            }
+            closureOfTheClass = () -> SpecificationTypes.argumentsOf(reflection.typeClosureOf(declaration, false));
         }
-        List<String> variables = recorded.variables();
         if (variables.isEmpty()) {
             return Argument.of(runtimeClass);
         }
         Map<String, Argument<?>> resolution = new HashMap<>();
         Class<?> declaredRaw = rawClassOf(declaredType);
         if (isParameterized(declaredType) && declaredRaw != null) {
-            List<Argument<?>> closure = recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
+            List<Argument<?>> closure = closureOfTheClass.get();
             if (closure != null) {
                 for (Argument<?> supertype : closure) {
                     if (rawClassOf(supertype) == declaredRaw && isParameterized(supertype)) {

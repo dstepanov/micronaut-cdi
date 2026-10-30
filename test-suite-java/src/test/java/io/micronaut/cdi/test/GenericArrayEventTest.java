@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.test;
 
-import io.micronaut.cdi.reflection.ReflectiveCdi;
+import io.micronaut.cdi.internal.runtime.CdiTypes;
+import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -81,13 +83,18 @@ class GenericArrayEventTest {
     }
 
     @Test
-    void theReflectionModuleResolvesAVariableThroughAnArray() {
-        ReflectiveCdi reflection = new ReflectiveCdi();
-        ParameterizedType strings = assertInstanceOf(ParameterizedType.class, reflection.eventTypeOf(
-            ArrayPayload.class, new TypeLiteral<Payload<String[]>>() { }.getType()));
-        assertEquals(String.class, strings.getActualTypeArguments()[0]);
-        ParameterizedType lists = assertInstanceOf(ParameterizedType.class, reflection.eventTypeOf(
-            ListArrayPayload.class, new TypeLiteral<Payload<List<String>[]>>() { }.getType()));
-        assertEquals(String.class, lists.getActualTypeArguments()[0]);
+    void theContainerResolvesAVariableThroughAnArray() {
+        // one inference for a class the application was compiled with and one the reflection module reads
+        try (ApplicationContext context = ApplicationContext.run()) {
+            RecordedTypeIndex index = RecordedTypeIndex.of(context);
+            ParameterizedType strings = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(index,
+                ArrayPayload.class, SpecificationTypes.argumentOf(new TypeLiteral<Payload<String[]>>() { }.getType()))
+                .asType());
+            assertEquals(String.class, strings.getActualTypeArguments()[0]);
+            ParameterizedType lists = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(index,
+                ListArrayPayload.class,
+                SpecificationTypes.argumentOf(new TypeLiteral<Payload<List<String>[]>>() { }.getType())).asType());
+            assertEquals(String.class, lists.getActualTypeArguments()[0]);
+        }
     }
 }
