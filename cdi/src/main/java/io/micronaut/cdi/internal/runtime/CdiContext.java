@@ -144,9 +144,11 @@ public final class CdiContext implements AlterableContext {
             T instance = ((CdiBean<T>) contextual).scopedInstance();
             Store store = store(true);
             if (store != null) {
-                Held<T> release = new Held<>(contextual, instance, creationalContext, false);
-                if (store.publish(release) != release) {
-                    // one is kept already, or the context ended: this one has nothing to wait for
+                Held<T> release = new Held<>(contextual, null, creationalContext, false);
+                if (store.publish(release) == null) {
+                    // the context ended: nothing will release this one later. Where one is kept already, the
+                    // instance is the one it was kept for, and the creational context kept with it is released
+                    // as the context ends, not now, while the instance is in use
                     release.destroy();
                 }
             }
@@ -338,19 +340,20 @@ public final class CdiContext implements AlterableContext {
      * was asked for with, which is released as the context ends.
      *
      * @param contextual        The contextual that created it
-     * @param instance          The instance
+     * @param instance          The instance, which is not kept for a bean of the container: Micronaut's scope holds
+     *                          that one
      * @param creationalContext The creational context it was created in
      * @param owned             Whether the instance is this context's to hand out and destroy: it is for what a
      *                          program's contextual created, and is not for the instance of a bean of the container,
      *                          which the scope Micronaut holds it in answers and destroys
      * @param <T>               The type of the instance
      */
-    private record Held<T>(Contextual<T> contextual, T instance, CreationalContext<T> creationalContext,
+    private record Held<T>(Contextual<T> contextual, @Nullable T instance, CreationalContext<T> creationalContext,
                            boolean owned) {
 
         void destroy() {
             if (owned) {
-                contextual.destroy(instance, creationalContext);
+                contextual.destroy(Objects.requireNonNull(instance), creationalContext);
             } else {
                 creationalContext.release();
             }
