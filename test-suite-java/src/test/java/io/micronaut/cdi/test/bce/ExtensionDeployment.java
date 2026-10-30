@@ -50,7 +50,7 @@ final class ExtensionDeployment {
             classes = CompiledClasses.of(parser.generate(className, source));
         }
         ClassLoader loader = classes.loader(ExtensionDeployment.class.getClassLoader());
-        return ApplicationContext.builder()
+        ApplicationContext context = ApplicationContext.builder()
             .classLoader(loader)
             .beanDefinitionsProvider(classLoader -> {
                 List<BeanDefinitionReference<?>> references =
@@ -67,7 +67,17 @@ final class ExtensionDeployment {
                 }
                 return references;
             })
-            .build()
-            .start();
+            .build();
+        try {
+            return context.start();
+        } catch (RuntimeException | Error e) {
+            // the caller is handed no context to close when the start fails
+            try {
+                context.close();
+            } catch (RuntimeException | Error closing) {
+                e.addSuppressed(closing);
+            }
+            throw e;
+        }
     }
 }
