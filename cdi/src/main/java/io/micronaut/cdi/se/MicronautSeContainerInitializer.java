@@ -380,15 +380,23 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     }
 
     /**
-     * Whether a bean is infrastructure every container has rather than a bean of an archive: a built-in bean of the
-     * container, or one that is no bean of the specification - Micronaut's own beans and the container's, none of
-     * which this processor compiled as one - whatever package it is in. A bean of the application is one of the
-     * archive it was selected into, and is in no other, even in a package under {@code io.micronaut}.
+     * Whether a bean is infrastructure every container has rather than a bean of an archive. A built-in bean of the
+     * container is. A bean of the specification - one the processor recorded a scope or a producer of - is not: it
+     * is a bean of the archive it was selected into whatever its package, even under {@code io.micronaut}. A bean
+     * with nothing of the specification recorded - a plain {@code jakarta.inject} singleton of the application as
+     * much as one of Micronaut's own - is infrastructure only where its class is the framework's, under
+     * {@code io.micronaut} or {@code jakarta}: missing metadata alone does not make a bean the framework's.
      */
     private static boolean isInfrastructure(BeanType<?> bean) {
         AnnotationMetadata metadata = bean.getAnnotationMetadata();
-        return metadata.hasAnnotation(CdiBuiltIn.class)
-            || !metadata.hasAnnotation(CdiScope.class) && producerOf(bean) == null;
+        if (metadata.hasAnnotation(CdiBuiltIn.class)) {
+            return true;
+        }
+        if (metadata.hasAnnotation(CdiScope.class) || producerOf(bean) != null) {
+            return false;
+        }
+        String name = classOf(bean).getName();
+        return name.startsWith("io.micronaut.") || name.startsWith("jakarta.");
     }
 
     private boolean isSelected(String className) {
