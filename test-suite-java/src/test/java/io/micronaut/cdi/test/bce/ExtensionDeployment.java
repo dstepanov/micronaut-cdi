@@ -16,6 +16,7 @@
 package io.micronaut.cdi.test.bce;
 
 import io.micronaut.annotation.processing.test.JavaParser;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.test.CompiledClasses;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.DefaultBeanDefinitionsProvider;
@@ -71,11 +72,14 @@ final class ExtensionDeployment {
         try {
             return context.start();
         } catch (RuntimeException | Error e) {
-            // the caller is handed no context to close when the start fails
+            // the caller is handed no context to close when the start fails, and its container would otherwise
+            // stay what CDI.current() resolves to for the tests after it
             try {
                 context.close();
             } catch (RuntimeException | Error closing) {
                 e.addSuppressed(closing);
+            } finally {
+                CdiBeanContainer.failedToStart(context);
             }
             throw e;
         }
