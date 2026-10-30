@@ -413,9 +413,25 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         }
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
         // are the container's to destroy as it goes down
+        Throwable failure = null;
         for (Instances instances : List.copyOf(live)) {
-            // each as the request it is: whichever thread it was left on, its beans reach one another as they go
-            PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroy(instances));
+            // each as the request it is: whichever thread it was left on, its beans reach one another as they go.
+            // One request failing to be destroyed leaves the others to be destroyed all the same
+            try {
+                PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroy(instances));
+            } catch (RuntimeException | Error e) {
+                if (failure == null) {
+                    failure = e;
+                } else if (failure != e) {
+                    failure.addSuppressed(e);
+                }
+            }
+        }
+        if (failure instanceof Error error) {
+            throw error;
+        }
+        if (failure != null) {
+            throw (RuntimeException) failure;
         }
     }
 

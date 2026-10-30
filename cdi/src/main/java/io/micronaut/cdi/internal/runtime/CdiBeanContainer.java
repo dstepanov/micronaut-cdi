@@ -164,11 +164,12 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             } catch (RuntimeException | Error e) {
                 if (failure == null) {
                     failure = e;
-                } else {
+                } else if (failure != e) {
                     failure.addSuppressed(e);
                 }
             }
         }
+        // no longer what CDI.current() resolves to, whatever a group threw as it closed
         CdiRunning.stopped(this);
         if (failure instanceof Error error) {
             throw error;

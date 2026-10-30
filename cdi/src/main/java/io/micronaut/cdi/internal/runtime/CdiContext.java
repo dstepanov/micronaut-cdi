@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.RuntimeBeanDefinition;
+import io.micronaut.context.exceptions.BeanDestructionException;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
@@ -380,7 +381,9 @@ public final class CdiContext implements AlterableContext {
                 ended = true;
                 drained = List.copyOf(held.values());
             }
-            RuntimeException failure = null;
+            // every instance is destroyed whatever another's destruction threw - an Error among it, or the very
+            // exception another threw - and the first failure is reported once they all are
+            Throwable failure = null;
             for (Held<?> each : drained) {
                 // one a destruction callback destroyed meanwhile is gone already
                 if (!remove(each)) {
@@ -388,16 +391,19 @@ public final class CdiContext implements AlterableContext {
                 }
                 try {
                     each.destroy();
-                } catch (RuntimeException e) {
+                } catch (RuntimeException | Error e) {
                     if (failure == null) {
                         failure = e;
-                    } else {
+                    } else if (failure != e) {
                         failure.addSuppressed(e);
                     }
                 }
             }
+            if (failure instanceof Error error) {
+                throw error;
+            }
             if (failure != null) {
-                throw failure;
+                throw (RuntimeException) failure;
             }
         }
     }
@@ -450,7 +456,13 @@ public final class CdiContext implements AlterableContext {
 
                 @Override
                 public void close() {
-                    store.end();
+                    try {
+                        store.end();
+                    } catch (RuntimeException | Error e) {
+                        // reported the way the scope expects a bean's destruction to fail, so that the scope goes on
+                        // destroying its other beans rather than stopping at the store
+                        throw new BeanDestructionException(DEFINITION, e);
+                    }
                 }
             };
         }

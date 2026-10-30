@@ -145,7 +145,8 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private static void during(String what, Runnable step) {
         try {
             step.run();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | Error e) {
+            // an Error too: Micronaut destroys the singletons only once this listener returns
             LOG.error("The container failed during {} as it stopped", what, e);
         }
     }
