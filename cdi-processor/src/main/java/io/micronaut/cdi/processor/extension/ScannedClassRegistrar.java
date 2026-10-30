@@ -178,6 +178,9 @@ final class ScannedClassRegistrar {
                     visitor.visitClass(element, context);
                 }
             }
+            // a qualified field without Inject is still no injection point: the rules are not checked, but the
+            // qualifiers Micronaut would inject such a field by are taken off it as for a class of the compilation
+            InjectionPointRulesVisitor.leaveUninjected(element);
             visitor.register(element, messages, context);
             Map<String, MemberElement> producers = new HashMap<>();
             for (MemberElement producer

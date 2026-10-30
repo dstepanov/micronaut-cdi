@@ -327,8 +327,13 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * written there, or one an extension added - qualifies nothing. Micronaut injects a field that declares a
      * qualifier, so one left in place would make the field an injection point. A producer field keeps its
      * qualifiers, which are those of the bean it produces.
+     *
+     * <p>A scanned class of a library, which is not held to the rules this visitor checks, has its fields left so
+     * as well (see the registration of scanned classes).</p>
+     *
+     * @param element The bean class
      */
-    private static void leaveUninjected(ClassElement element) {
+    public static void leaveUninjected(ClassElement element) {
         if (!element.hasAnnotation(CdiScope.class)) {
             return;
         }
