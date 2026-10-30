@@ -286,8 +286,18 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public Collection<RecordComponentInfo> recordComponents() {
-        // a record component is described by the field and the accessor it stands for, both of which are
-        // reported already; it is not described again here
-        return List.of();
+        if (!element.isRecord()) {
+            return List.of();
+        }
+        // Micronaut describes each component of a record as a property, with the field and the accessor of it
+        List<RecordComponentInfo> components = new ArrayList<>();
+        for (PropertyElement property : element.getBeanProperties()) {
+            FieldElement field = property.getField().orElse(null);
+            MethodElement accessor = property.getReadMethod().orElse(null);
+            if (field != null && accessor != null) {
+                components.add(new ElementRecordComponentInfo(property, field, accessor, this, context()));
+            }
+        }
+        return List.copyOf(components);
     }
 }
