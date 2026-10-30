@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.RuntimeBeanDefinition;
+import io.micronaut.context.exceptions.BeanDestructionException;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
@@ -135,48 +136,51 @@ public final class CdiContext implements AlterableContext {
             // the contract of a null creational context is a plain lookup: what the context holds, or nothing
             return get(contextual);
         }
-        Map<Contextual<?>, Held<?>> store = store(true);
-        if (store == null) {
-            // the dependent pseudo-scope holds nothing: what is created belongs to whoever asked. A singleton
-            // is held by Micronaut
-            return instanceOf(contextual, creationalContext);
-        }
-        synchronized (store) {
-            Held<T> held = existing(store, contextual);
-            if (held != null) {
-                return held.instance();
+        if (isHeldByMicronaut(contextual)) {
+            // a bean of the container is held by the scope Micronaut keeps the instances of its beans in, which is
+            // this context: the instance is the one that scope holds, asked of it every time. Only the creational
+            // context handed in is kept here, to be released as the context ends (section 6.2): the instance is
+            // never answered from here, which would go on handing it out after Micronaut destroyed it
+            T instance = ((CdiBean<T>) contextual).scopedInstance();
+            Store store = store(true);
+            if (store != null) {
+                Held<T> release = new Held<>(contextual, null, creationalContext, false);
+                if (store.publish(release) == null) {
+                    // the context ended: nothing will release this one later. Where one is kept already, the
+                    // instance is the one it was kept for, and the creational context kept with it is released
+                    // as the context ends, not now, while the instance is in use
+                    release.destroy();
+                }
             }
+            return instance;
+        }
+        Store store = store(true);
+        if (store == null) {
+            // the dependent pseudo-scope holds nothing: what is created belongs to whoever asked
+            return contextual.create(creationalContext);
+        }
+        Held<T> held = store.find(contextual);
+        if (held != null && held.owned()) {
+            return held.instance();
         }
         // created outside the lock — creation may be arbitrarily slow, or reach back into this context
-        T instance = instanceOf(contextual, creationalContext);
+        T instance = contextual.create(creationalContext);
         if (instance == null) {
             return null;
         }
-        Held<T> created = new Held<>(contextual, instance, creationalContext, !isHeldByMicronaut(contextual));
-        Held<T> raced;
-        synchronized (store) {
-            raced = existing(store, contextual);
-            if (raced == null) {
-                store.put(contextual, created);
-                return instance;
-            }
+        Held<T> created = new Held<>(contextual, instance, creationalContext, true);
+        Held<T> kept = store.publish(created);
+        if (kept == created) {
+            return instance;
         }
-        // another thread stored first: one instance per contextual per context, so ours is let go
+        // another thread stored first - one instance per contextual per context - or the context ended while the
+        // instance was created, and a context that has ended keeps nothing: ours is let go either way
         created.destroy();
-        return raced.instance();
-    }
-
-    /**
-     * The instance this context holds of a contextual it holds none of yet. A contextual a program handed in is
-     * asked to create it. A bean of the container is held by the scope Micronaut keeps its instances in, which
-     * is this context: the instance is the one that scope creates, once, since creating one through the bean
-     * would be a second instance of the scope.
-     */
-    private <T> T instanceOf(Contextual<T> contextual, CreationalContext<T> creationalContext) {
-        if (isHeldByMicronaut(contextual)) {
-            return ((CdiBean<T>) contextual).scopedInstance();
+        if (kept == null) {
+            throw new ContextNotActiveException("The " + scope.getName() + " context ended while an instance of "
+                + contextual + " was created for it");
         }
-        return contextual.create(creationalContext);
+        return kept.instance();
     }
 
     /**
@@ -191,13 +195,11 @@ public final class CdiContext implements AlterableContext {
     @Override
     public <T> @Nullable T get(Contextual<T> contextual) {
         requireActive();
-        Map<Contextual<?>, Held<?>> store = store(false);
+        Store store = store(false);
         if (store != null) {
-            synchronized (store) {
-                Held<T> held = existing(store, contextual);
-                if (held != null) {
-                    return held.instance();
-                }
+            Held<T> held = store.find(contextual);
+            if (held != null && held.owned()) {
+                return held.instance();
             }
         }
         // not something a program handed in, so it may be a bean of the container: the instance the scope
@@ -224,11 +226,6 @@ public final class CdiContext implements AlterableContext {
             }
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> @Nullable Held<T> existing(Map<Contextual<?>, Held<?>> store, Contextual<T> contextual) {
-        return (Held<T>) store.get(contextual);
     }
 
     /**
@@ -262,19 +259,44 @@ public final class CdiContext implements AlterableContext {
     @Override
     public void destroy(Contextual<?> contextual) {
         requireActive();
-        Map<Contextual<?>, Held<?>> store = store(false);
+        Store store = store(false);
         if (store != null) {
-            Held<?> held;
-            synchronized (store) {
-                held = store.remove(contextual);
+            Held<?> held = store.remove(contextual);
+            if (held != null && held.owned()) {
+                held.destroy();
+                return;
             }
             if (held != null) {
-                held.destroy();
-                if (held.owned()) {
-                    return;
+                // the instance Micronaut holds is destroyed whatever releasing the creational context threw, and
+                // the first failure is the one reported
+                Throwable failure = null;
+                try {
+                    held.destroy();
+                } catch (RuntimeException | Error e) {
+                    failure = e;
                 }
+                try {
+                    destroyHeldByMicronaut(contextual);
+                } catch (RuntimeException | Error e) {
+                    if (failure == null) {
+                        failure = e;
+                    } else if (failure != e) {
+                        failure.addSuppressed(e);
+                    }
+                }
+                if (failure instanceof Error error) {
+                    throw error;
+                }
+                if (failure != null) {
+                    throw (RuntimeException) failure;
+                }
+                return;
             }
         }
+        destroyHeldByMicronaut(contextual);
+    }
+
+    private void destroyHeldByMicronaut(Contextual<?> contextual) {
         // not something a program handed in, so it is a bean of the container: the instance Micronaut holds in
         // the scope is destroyed and forgotten, and the next reference through the proxy is a fresh one
         if (contextual instanceof CdiBean<?> bean) {
@@ -309,18 +331,18 @@ public final class CdiContext implements AlterableContext {
      * destroyed — and every creational context in it released — exactly when the scope is.
      */
     @SuppressWarnings("unchecked")
-    private @Nullable Map<Contextual<?>, Held<?>> store(boolean forCreation) {
+    private @Nullable Store store(boolean forCreation) {
         if (holder == null) {
             return null;
         }
-        try {
-            return ((AbstractConcurrentCustomScope<Annotation>) holder).getOrCreate(new StoreCreation());
-        } catch (ContextNotActiveException e) {
-            if (forCreation) {
-                throw e;
-            }
-            return null;
+        if (!forCreation) {
+            // asking what the context holds, or destroying what it may hold, puts nothing into it: the store is the
+            // one the scope holds already, if any
+            return holder.findBeanRegistration(StoreCreation.DEFINITION)
+                .map(BeanRegistration::bean)
+                .orElse(null);
         }
+        return ((AbstractConcurrentCustomScope<Annotation>) holder).getOrCreate(new StoreCreation());
     }
 
     private void requireActive() {
@@ -331,25 +353,109 @@ public final class CdiContext implements AlterableContext {
 
     /**
      * One instance a program's contextual created, with the creational context it was created in, so that
-     * destroying it hands both back the way section 2.5.1 says.
+     * destroying it hands both back the way section 2.5.1 says; or the creational context a bean of the container
+     * was asked for with, which is released as the context ends.
      *
      * @param contextual        The contextual that created it
-     * @param instance          The instance
+     * @param instance          The instance, which is not kept for a bean of the container: Micronaut's scope holds
+     *                          that one
      * @param creationalContext The creational context it was created in
-     * @param owned             Whether this context is what destroys the instance: it is for an instance a
-     *                          program's contextual created, and is not for the instance of a bean of the
-     *                          container, which the scope Micronaut holds it in destroys. Only the creational
-     *                          context of such an instance is this context's to release
+     * @param owned             Whether the instance is this context's to hand out and destroy: it is for what a
+     *                          program's contextual created, and is not for the instance of a bean of the container,
+     *                          which the scope Micronaut holds it in answers and destroys
      * @param <T>               The type of the instance
      */
-    private record Held<T>(Contextual<T> contextual, T instance, CreationalContext<T> creationalContext,
+    private record Held<T>(Contextual<T> contextual, @Nullable T instance, CreationalContext<T> creationalContext,
                            boolean owned) {
 
         void destroy() {
             if (owned) {
-                contextual.destroy(instance, creationalContext);
+                contextual.destroy(Objects.requireNonNull(instance), creationalContext);
             } else {
                 creationalContext.release();
+            }
+        }
+    }
+
+    /**
+     * The instances of the contextuals a program handed one context, from the first creation in the context until
+     * the context ends. Ending it is final: an instance created for the context as it ends is not kept, since
+     * nothing would destroy it again, and while the instances are destroyed the ones not yet destroyed are still
+     * found, so that a destruction callback asking the context for a peer finds the peer rather than creating
+     * another into a context on its way out.
+     */
+    private static final class Store {
+
+        private final Map<Contextual<?>, Held<?>> held = new LinkedHashMap<>();
+        private boolean ended;
+
+        @SuppressWarnings("unchecked")
+        synchronized <T> @Nullable Held<T> find(Contextual<T> contextual) {
+            return (Held<T>) held.get(contextual);
+        }
+
+        /**
+         * Keeps what was created, unless another instance of its contextual is kept already or the context ended.
+         *
+         * @return What is kept: the given instance, the one kept before it, or {@code null} once the context ended
+         */
+        @SuppressWarnings("unchecked")
+        synchronized <T> @Nullable Held<T> publish(Held<T> created) {
+            if (ended) {
+                return null;
+            }
+            Held<T> raced = (Held<T>) held.get(created.contextual());
+            if (raced != null) {
+                return raced;
+            }
+            held.put(created.contextual(), created);
+            return created;
+        }
+
+        synchronized @Nullable Held<?> remove(Contextual<?> contextual) {
+            return held.remove(contextual);
+        }
+
+        private synchronized boolean remove(Held<?> each) {
+            return held.remove(each.contextual(), each);
+        }
+
+        /**
+         * Ends the context: what it holds is destroyed, each instance taken out as it is destroyed, and nothing is
+         * kept afterwards.
+         */
+        void end() {
+            List<Held<?>> drained;
+            synchronized (this) {
+                if (ended) {
+                    return;
+                }
+                ended = true;
+                drained = List.copyOf(held.values());
+            }
+            // every instance is destroyed whatever another's destruction threw - an Error among it, or the very
+            // exception another threw - and the first failure is reported once they all are
+            Throwable failure = null;
+            for (Held<?> each : drained) {
+                // one a destruction callback destroyed meanwhile is gone already
+                if (!remove(each)) {
+                    continue;
+                }
+                try {
+                    each.destroy();
+                } catch (RuntimeException | Error e) {
+                    if (failure == null) {
+                        failure = e;
+                    } else if (failure != e) {
+                        failure.addSuppressed(e);
+                    }
+                }
+            }
+            if (failure instanceof Error error) {
+                throw error;
+            }
+            if (failure != null) {
+                throw (RuntimeException) failure;
             }
         }
     }
@@ -363,16 +469,16 @@ public final class CdiContext implements AlterableContext {
      * does so for every entry whenever it looks a bean up by its definition. It answers with a definition of its
      * own, which no bean of the container equals, and which is never used to create anything.</p>
      */
-    private static final class StoreCreation implements BeanCreationContext<Map<Contextual<?>, Held<?>>> {
+    private static final class StoreCreation implements BeanCreationContext<Store> {
 
         private static final BeanIdentifier ID = CONTEXTUAL_STORE_ID;
 
         @SuppressWarnings({"unchecked", "rawtypes"})
-        private static final BeanDefinition<Map<Contextual<?>, Held<?>>> DEFINITION = (BeanDefinition)
+        private static final BeanDefinition<Store> DEFINITION = (BeanDefinition)
             RuntimeBeanDefinition.of(StoreCreation.class, StoreCreation::new);
 
         @Override
-        public BeanDefinition<Map<Contextual<?>, Held<?>>> definition() {
+        public BeanDefinition<Store> definition() {
             return DEFINITION;
         }
 
@@ -382,16 +488,16 @@ public final class CdiContext implements AlterableContext {
         }
 
         @Override
-        public CreatedBean<Map<Contextual<?>, Held<?>>> create() {
-            Map<Contextual<?>, Held<?>> store = new LinkedHashMap<>();
+        public CreatedBean<Store> create() {
+            Store store = new Store();
             return new CreatedBean<>() {
                 @Override
-                public BeanDefinition<Map<Contextual<?>, Held<?>>> definition() {
+                public BeanDefinition<Store> definition() {
                     return DEFINITION;
                 }
 
                 @Override
-                public Map<Contextual<?>, Held<?>> bean() {
+                public Store bean() {
                     return store;
                 }
 
@@ -402,25 +508,12 @@ public final class CdiContext implements AlterableContext {
 
                 @Override
                 public void close() {
-                    List<Held<?>> drained;
-                    synchronized (store) {
-                        drained = List.copyOf(store.values());
-                        store.clear();
-                    }
-                    RuntimeException failure = null;
-                    for (Held<?> held : drained) {
-                        try {
-                            held.destroy();
-                        } catch (RuntimeException e) {
-                            if (failure == null) {
-                                failure = e;
-                            } else {
-                                failure.addSuppressed(e);
-                            }
-                        }
-                    }
-                    if (failure != null) {
-                        throw failure;
+                    try {
+                        store.end();
+                    } catch (RuntimeException | Error e) {
+                        // reported the way the scope expects a bean's destruction to fail, so that the scope goes on
+                        // destroying its other beans rather than stopping at the store
+                        throw new BeanDestructionException(DEFINITION, e);
                     }
                 }
             };

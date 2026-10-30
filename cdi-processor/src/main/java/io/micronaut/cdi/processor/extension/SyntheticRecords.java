@@ -21,6 +21,7 @@ import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -137,6 +138,23 @@ final class SyntheticRecords {
     static AnnotationValue<CdiRecordedType> typeOf(Type type) {
         return RecordedTypeValues.of(
             ElementTypes.elementOf(type));
+    }
+
+    /**
+     * A bean type an extension declared as the record the container reads it back from: a class by itself is
+     * recorded as the class, whatever type parameters it declares, and a parameterized type with its arguments.
+     *
+     * @param type The type
+     * @return The record
+     */
+    static AnnotationValue<CdiRecordedType> beanTypeOf(Type type) {
+        if (type.isClass()) {
+            return AnnotationValue.builder(CdiRecordedType.class)
+                .member(AnnotationMetadata.VALUE_MEMBER,
+                    new AnnotationClassValue<>(ElementTypes.elementOf(type).getName()))
+                .build();
+        }
+        return RecordedTypeValues.ofBeanType(ElementTypes.elementOf(type));
     }
 
     private static AnnotationValueBuilder<CdiSyntheticParameter> parameter(String key, String kind, boolean array) {

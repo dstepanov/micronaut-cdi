@@ -56,6 +56,7 @@ import jakarta.enterprise.inject.spi.ProcessBean;
 import jakarta.enterprise.inject.spi.ProcessBeanAttributes;
 import jakarta.enterprise.inject.spi.ProcessInjectionTarget;
 import jakarta.enterprise.inject.spi.ProcessManagedBean;
+import jakarta.enterprise.inject.spi.WithAnnotations;
 import jakarta.inject.Singleton;
 import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
@@ -63,7 +64,9 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -319,9 +322,17 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
 
         static List<Observer> of(Extension extension, CdiBeanContainer container) {
             List<Observer> found = new ArrayList<>();
+            // the methods of the classes below the one being read, which override what it declares
+            List<Method> below = new ArrayList<>();
             for (Class<?> type = extension.getClass(); type != null && type != Object.class;
                  type = type.getSuperclass()) {
-                for (Method method : type.getDeclaredMethods()) {
+                Method[] methods = type.getDeclaredMethods();
+                for (Method method : methods) {
+                    if (method.isBridge() || method.isSynthetic() || isOverridden(method, below)) {
+                        // an observer method is inherited only where it is not overridden (section 10.4): an
+                        // override is the observer, or no observer at all where it does not observe
+                        continue;
+                    }
                     Annotation[][] annotations = method.getParameterAnnotations();
                     for (int i = 0; i < annotations.length; i++) {
                         if (!has(annotations[i], Observes.class)) {
@@ -335,6 +346,20 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                                 + "extension observes " + raw.getName() + ", which is not one of the container "
                                 + "lifecycle events a compile-time container fires to a portable extension");
                         }
+                        if (has(annotations[i], WithAnnotations.class)) {
+                            if (raw != ProcessAnnotatedType.class) {
+                                throw new DefinitionException("The observer method " + method + " of the extension "
+                                    + "declares @WithAnnotations on a parameter that is no ProcessAnnotatedType "
+                                    + "(section 11.5.6)");
+                            }
+                            // the classes an observer restricted by annotations is notified of are the ones that,
+                            // or a member or parameter of which, carry one of them; notifying it of every class
+                            // instead would apply what it does to classes it never meant
+                            throw new UnsupportedOperationException("The observer method " + method + " of the "
+                                + "extension restricts the classes it observes with @WithAnnotations, which a "
+                                + "compile-time container does not support: a build compatible extension's "
+                                + "@Enhancement(withAnnotations = ...) does the same while the classes compile");
+                        }
                         requireNothingButTheContainer(method, i);
                         method.setAccessible(true);
                         int priority = DEFAULT_PRIORITY;
@@ -347,8 +372,35 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                             SpecificationTypes.argumentOf(method.getGenericParameterTypes()[i]), priority, container));
                     }
                 }
+                below.addAll(Arrays.asList(methods));
             }
             return found;
+        }
+
+        /**
+         * Whether a method a class declares is overridden by one a subclass declares, by the rules of the Java
+         * language: an instance method neither private nor static, overridden by an instance method of the same
+         * name and parameter types, and from another package only where it is public or protected.
+         */
+        private static boolean isOverridden(Method method, List<Method> below) {
+            int modifiers = method.getModifiers();
+            if (Modifier.isPrivate(modifiers) || Modifier.isStatic(modifiers)) {
+                return false;
+            }
+            boolean inherited = Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers);
+            for (Method candidate : below) {
+                int candidateModifiers = candidate.getModifiers();
+                if (Modifier.isPrivate(candidateModifiers) || Modifier.isStatic(candidateModifiers)
+                    || !candidate.getName().equals(method.getName())
+                    || !Arrays.equals(candidate.getParameterTypes(), method.getParameterTypes())) {
+                    continue;
+                }
+                if (inherited || candidate.getDeclaringClass().getPackageName()
+                    .equals(method.getDeclaringClass().getPackageName())) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static boolean has(Annotation[] annotations, Class<? extends Annotation> type) {

@@ -25,7 +25,14 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
+import jakarta.enterprise.inject.build.compatible.spi.Types;
+import jakarta.enterprise.inject.spi.EventContext;
+import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.util.Nonbinding;
+
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * The synthetic beans the review scenarios read back: a request scoped one, a selected and an unselected
@@ -60,6 +67,10 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
             .scope(RequestScoped.class)
             .createWith(TicketCounterCreator.class)
             .disposeWith(TicketCounterDisposer.class);
+        components.addBean(Shift.class)
+            .type(Shift.class)
+            .scope(RequestScoped.class)
+            .createWith(ShiftCreator.class);
         components.addBean(Signal.class)
             .type(Signal.class)
             .alternative(true)
@@ -87,6 +98,40 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
     }
 
     /**
+     * Describes the synthetic beans whose bean types are read back exactly as they were declared: a generic
+     * implementation exposed as a parameterization of an interface it implements, and an implementation exposed
+     * as its own class alone.
+     *
+     * @param components What the extension adds to the container
+     * @param types      What composes the parameterized type
+     */
+    @Synthesis
+    public void exactlyTypedBeans(SyntheticComponents components, Types types) {
+        components.addBean(Box.class)
+            .type(types.parameterized(Supplier.class, String.class))
+            .withParam("content", "boxed")
+            .createWith(BoxCreator.class);
+        components.addBean(Crate.class)
+            .type(Crate.class)
+            .createWith(CrateCreator.class);
+    }
+
+    /**
+     * Describes two synthetic observers of a dispatch: one declared by the class the extension names, the other by
+     * the extension, which names none.
+     *
+     * @param components What the extension adds to the container
+     */
+    @Synthesis
+    public void dispatchObservers(SyntheticComponents components) {
+        components.addObserver(Dispatch.class)
+            .declaringClass(DispatchDesk.class)
+            .observeWith(DispatchObserver.class);
+        components.addObserver(Dispatch.class)
+            .observeWith(DispatchObserver.class);
+    }
+
+    /**
      * Creates a ticket counter.
      */
     public static final class TicketCounterCreator implements SyntheticBeanCreator<TicketCounter> {
@@ -103,6 +148,16 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
         @Override
         public void dispose(TicketCounter instance, Instance<Object> lookup, Parameters params) {
             TicketCounter.DISPOSED.incrementAndGet();
+        }
+    }
+
+    /**
+     * Creates a shift.
+     */
+    public static final class ShiftCreator implements SyntheticBeanCreator<Shift> {
+        @Override
+        public Shift create(Instance<Object> lookup, Parameters params) {
+            return new Shift();
         }
     }
 
@@ -134,6 +189,43 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
         @Override
         public Zest create(Instance<Object> lookup, Parameters params) {
             return new Zest(params.get("flavour", String.class));
+        }
+    }
+
+    /**
+     * Creates a box of the content the description named.
+     */
+    @SuppressWarnings("rawtypes")
+    public static final class BoxCreator implements SyntheticBeanCreator<Box> {
+        @Override
+        public Box create(Instance<Object> lookup, Parameters params) {
+            return new Box<>(params.get("content", String.class));
+        }
+    }
+
+    /**
+     * Creates a crate.
+     */
+    public static final class CrateCreator implements SyntheticBeanCreator<Crate> {
+        @Override
+        public Crate create(Instance<Object> lookup, Parameters params) {
+            return new Crate();
+        }
+    }
+
+    /**
+     * Observes a dispatch, keeping the metadata of the last notification.
+     */
+    public static final class DispatchObserver implements SyntheticObserver<Dispatch> {
+
+        /**
+         * The metadata the last notification of either observer of a dispatch carried.
+         */
+        public static final AtomicReference<EventMetadata> LAST_METADATA = new AtomicReference<>();
+
+        @Override
+        public void observe(EventContext<Dispatch> event, Parameters params) {
+            LAST_METADATA.set(event.getMetadata());
         }
     }
 }

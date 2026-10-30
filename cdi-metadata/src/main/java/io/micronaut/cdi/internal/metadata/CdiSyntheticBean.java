@@ -58,11 +58,21 @@ public @interface CdiSyntheticBean {
     Class<?> implementation();
 
     /**
-     * The bean types the extension declared.
+     * The classes of the bean types the extension declared, which is all a processor before
+     * {@link #declaredTypes()} recorded of them: the container reads the bean types from these where a record has no
+     * declared types.
+     *
+     * @return The classes
+     */
+    Class<?>[] types() default {};
+
+    /**
+     * The bean types the extension declared, each as it declared it: a class by itself, or a parameterized type
+     * with its arguments.
      *
      * @return The types
      */
-    Class<?>[] types() default {};
+    CdiRecordedType[] declaredTypes() default {};
 
     /**
      * The annotation types of the qualifiers, in the order of the qualifiers.

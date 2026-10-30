@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
 import org.jspecify.annotations.Nullable;
 
@@ -52,6 +53,10 @@ final class CdiRunning {
 
     static void stopped(CdiBeanContainer container) {
         RUNNING.remove(container);
+    }
+
+    static void stoppedFor(BeanContext beanContext) {
+        RUNNING.removeIf(container -> container.beanContext() == beanContext);
     }
 
     /**

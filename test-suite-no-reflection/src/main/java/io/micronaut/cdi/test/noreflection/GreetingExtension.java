@@ -54,6 +54,9 @@ public final class GreetingExtension implements BuildCompatibleExtension {
         components.addObserver(Ping.class)
             .withParam("listener", "the synthetic observer")
             .observeWith(PingObserver.class);
+        components.addObserver(Whisper.class)
+            .qualifier(Loud.class)
+            .observeWith(WhisperObserver.class);
     }
 
     /**

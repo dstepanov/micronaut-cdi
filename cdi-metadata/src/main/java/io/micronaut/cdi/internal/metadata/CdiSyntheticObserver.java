@@ -65,6 +65,14 @@ public @interface CdiSyntheticObserver {
     Class<?>[] qualifierTypes() default {};
 
     /**
+     * The class the observer is declared by: the one the extension named, or the extension itself. {@code void}
+     * stands for none the compilation could see.
+     *
+     * @return The declaring class
+     */
+    Class<?> declaringClass() default void.class;
+
+    /**
      * The order of the observer among the observers of an event: the priority the extension gave it, which a
      * synthetic observer has no annotation to carry it on, and which is no bean order Micronaut's {@code Order}
      * could stand for.

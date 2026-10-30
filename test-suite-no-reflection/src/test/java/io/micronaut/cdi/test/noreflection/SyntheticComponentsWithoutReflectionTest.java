@@ -1,11 +1,13 @@
 package io.micronaut.cdi.test.noreflection;
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,5 +110,20 @@ class SyntheticComponentsWithoutReflectionTest {
         context.getBean(CdiBeanContainer.class).getEvent().select(Ping.class).fire(new Ping("ping"));
         assertEquals(before + 1, PingObserver.OBSERVED.size());
         assertEquals("ping heard by the synthetic observer", PingObserver.OBSERVED.get(before));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aQualifiedSyntheticObserverIsNotifiedDirectlyWithoutAnInstanceOfItsQualifier() {
+        // the qualifier has no generated builder, and there is no reflection module to make an instance of it: the
+        // metadata of a direct notification makes one only if the observer asks for it
+        ObserverMethod<Whisper> observer = (ObserverMethod<Whisper>) context.getBean(ObserverRegistry.class)
+            .observers().stream()
+            .filter(candidate -> candidate.getObservedType() == Whisper.class)
+            .findFirst().orElseThrow();
+        int before = WhisperObserver.OBSERVED.size();
+        observer.notify(new Whisper("psst"));
+        assertEquals(before + 1, WhisperObserver.OBSERVED.size());
+        assertEquals("psst", WhisperObserver.OBSERVED.get(before));
     }
 }

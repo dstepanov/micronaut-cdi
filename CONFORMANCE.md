@@ -143,13 +143,18 @@ Under KSP the exception is a Kotlin property that declares a qualifier and no `I
 reads the qualifier of a property as `Inject` on the property and its setter, so the processor cannot tell it from
 one written with `Inject`, and the property is injected.
 
-### A private producer or observer is read reflectively
+### A private member is read reflectively
 
-*Sections 3.2, 3.3 and 9.4.* The specification allows a producer method, a producer field and an observer
-method to be private, and a private member cannot be read from the bean definition Micronaut generates beside it.
-Such a member is annotated `@ReflectiveAccess`, which is Micronaut's way of saying that it is read reflectively,
-and only that member is: everything else about the bean goes on being resolved the way it was compiled. What the
-author wrote therefore decides where reflection is used, rather than the module deciding it for them.
+*Sections 3.2, 3.3, 3.4, 3.7, 3.8 and 9.4.* The specification allows a producer method, a producer field, a
+disposer method and an observer method to be private, and a private member cannot be read from the bean definition
+Micronaut generates beside it. Such a member is annotated `@ReflectiveAccess`, which is Micronaut's way of saying
+that it is read reflectively, and only that member is: everything else about the bean goes on being resolved the
+way it was compiled. What the author wrote therefore decides where reflection is used, rather than the module
+deciding it for them. A private injected field, initializer method, lifecycle callback or constructor is the same
+case, written by Micronaut Core's own definition writer as it writes one for any Micronaut bean: it is reached with
+a reflective lookup and `setAccessible`. The `NoReflection` check of the build reads the sources of this module, not
+the generated definitions nor Micronaut Core; README, "Reflection", lists the reflection that remains with
+`micronaut-cdi` alone.
 
 ### A qualifier is compared as the values it was compiled with
 
@@ -433,7 +438,10 @@ bean for each synthetic bean, and obtains a creator, a disposer, an observer or 
 it loads no extension, invokes nothing reflectively and instantiates no class by name. The parameters an
 extension attaches with `withParam` are the types the specification allows, all of which an annotation value
 holds. The classes the extension names have to be on the classpath the application is compiled against, and
-each needs a constructor without parameters the generated definition can call.
+each needs a constructor without parameters the generated definition can call. A synthetic observer reports as
+its bean class the class the extension named with `declaringClass`, or the extension itself; where that class is
+not on the classpath of the running application - an extension on the processor path alone - there is no class to
+report, and `ObserverMethod.getBeanClass()` returns the observer class instead.
 
 The language model an extension reads, and the annotations and types it composes with `AnnotationBuilder` and
 `Types`, have one implementation, built on the compiler's view of the classes. A synthetic bean, a synthetic
@@ -552,7 +560,10 @@ What an extension can do:
 - `AfterTypeDiscovery.getAlternatives()` lists the classes of the selected alternatives, and cannot change them;
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
   place of the container's own; `addObserverMethod(ObserverMethod)` adds an observer method; and
-  `getAnnotatedType`/`getAnnotatedTypes` describe a class;
+  `getAnnotatedType`/`getAnnotatedTypes` describe a class. A context added for a normal scope the application
+  declares with `@NormalScope` is registered, but does not serve the beans of that scope: they were compiled into
+  the application scope, which holds them (`PortableCustomNormalScopeTest`, disabled; "Known limitations a review
+  has named");
 - `addDefinitionError` on any event that has it, and an exception an observer throws, fail the bootstrap with a
   `DefinitionException`; `AfterDeploymentValidation.addDeploymentProblem` fails it with a `DeploymentException`.
 
@@ -564,7 +575,11 @@ a qualifier, `remove`, `methods`, `fields` and `constructors`; `AfterTypeDiscove
 `getDecorators` and `addAnnotatedType`; `ProcessInjectionTarget.getInjectionTarget` and `setInjectionTarget`;
 `ProcessBeanAttributes.veto`, `setBeanAttributes`, `configureBeanAttributes` and `ignoreFinalMethods`;
 `ProcessManagedBean.createInvoker`; `AfterBeanDiscovery.addBean` and the configurator form of
-`addObserverMethod`. A build compatible extension does each of those while the application compiles.
+`addObserverMethod`; and an observer of `ProcessAnnotatedType` restricted with `@WithAnnotations`, which would
+otherwise be notified of every class (`@WithAnnotations` on any other event parameter is a definition error, as
+section 11.5.6 says). A build compatible extension does each of those while the application compiles - the
+restriction by annotations with `@Enhancement(withAnnotations = ...)`. A configurator an event handed out is only
+to be used while the event is notified, and is refused afterwards like the event itself.
 
 Not fired: `ProcessInjectionPoint`, `ProcessProducer`, `ProcessObserverMethod`, `ProcessProducerMethod`,
 `ProcessProducerField`, `ProcessSyntheticBean`, `ProcessSyntheticAnnotatedType` and `BeforeShutdown`; a produced
@@ -692,6 +707,17 @@ the lookup.
 
 ### Known limitations a review has named
 
+A custom normal scope an application declares with `@NormalScope`, whose context a portable extension adds with
+`AfterBeanDiscovery.addContext` in an SE container, is not served by that context. The processor reads such a scope,
+which no compile-time context serves, into the application scope (`NormalScopeAnnotationMapper`), so a bean of it is
+held in the application scope's map; the context added at runtime registers a Micronaut custom scope for the scope's
+own annotation, which no bean's Micronaut scope names. A context a build compatible extension registers with
+`MetaAnnotations.addContext` is known while the beans compile and does serve them. Closing it needs the scope's own
+annotation among the scopes Micronaut tries for the bean ahead of the application scope - so that
+`CustomScopeRegistry.findDeclaredScope` finds the extension's scope where one is registered and falls back to the
+application scope where none is - which changes how every such bean is compiled and is left for a change of its own
+(`PortableCustomNormalScopeTest`, disabled).
+
 Three findings of an internal review are documented rather than coded around. A dependent bean reached from an
 EL expression through the bare resolver of `getELResolver` is created but not destroyed when the evaluation
 completes — the EL contract offers the resolver no end-of-evaluation moment to hook; EL is provided beyond
@@ -706,6 +732,19 @@ forms are safe across threads. And a creation that waits for another thread can,
 when that thread needs to create the same bean — a bean is created under a lock of its own, one for every context
 of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
+
+A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
+`RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
+the context's instance and the context destroys it; but Micronaut generates a scoped proxy only for a definition
+it compiled, and nothing is generated for a synthetic bean beyond the definitions of the classes its extension
+named. A reference to it injected into a bean of a wider scope is therefore the instance the scope's context held at
+injection, which a later request still sees, rather than a proxy that follows the active context
+(`NormalScopedSyntheticBeanTest`, disabled). Injecting a normal scoped synthetic bean into a bean of a wider scope
+is unsupported; look the bean up through `Instance` where it is used instead.
+Closing this needs a proxy class per normal scoped synthetic bean - Micronaut's compiled scoped proxy of the
+implementation class, written by the processor beside the creator's definition - which the rule that the
+processor generates no class beyond Micronaut's own definitions currently rules out; see "Open points in
+Micronaut Core".
 
 ## The technology compatibility kit
 
@@ -809,6 +848,33 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **Enum constants and typed arrays are not compiled into the metadata.** The metadata writer records an enum
+  constant by its name (`AnnotationMetadataGenUtils`), so a synthetic component's enum parameter is turned back into
+  its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.
+  Emitting the constant and the array in the generated metadata would leave `Parameters` nothing to look up.
+- **A failed start is not rolled back.** `DefaultBeanContext.start()` rethrows a startup failure without destroying
+  what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
+  on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
+  the singletons and scoped beans created before the failure are not destroyed and are left to the garbage
+  collector. A full rollback belongs in Core.
+- **A runtime definition's generic metadata is incomplete.** `RuntimeBeanDefinition.Builder.typeArguments` answers
+  `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
+  query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the
+  arguments of every declared type, and complete recorded metadata would leave nothing to read.
+- **A scope has no terminal state.** `AbstractConcurrentCustomScope` lets a creation that found a scope map before
+  its destruction announce itself after the destruction pass, and publish into the map. The request scope fences
+  its map as a request ends, and the context store of `CdiContext` has an end of its own; a terminal close on the
+  scope (creations refused and closed once the scope ended) would hold both.
+- **A bean type does not say where it originates.** The SE bootstrap reconstructs the class a bean belongs to - the
+  producer's class, a proxy's target, the outer class of a generated name - to select it into an archive;
+  `BeanType.getOriginatingTypeName()`, written by `BeanDefinitionWriter`, would answer it before a definition is
+  loaded.
+- **A definition registered at runtime has no scoped proxy.** `RuntimeBeanDefinition.Builder.scope` routes a bean
+  to a custom scope, but the client proxy of a normal scope (`ScopedProxy`) is generated AOP machinery that only a
+  compiled definition gets, and `RuntimeProxyCreator` is internal. A normal scoped synthetic bean is therefore
+  injected without a proxy (see "Known limitations a review has named"). Either the processor writes the
+  implementation's compiled scoped proxy - one generated class per such bean, needing the user's decision on the
+  no-new-classes rule - or core accepts a proxy definition for a runtime definition.
 - **Annotations as the source wrote them are derived, not recorded.** A repeatable annotation is folded into its
   container, and what Micronaut's mappers add is not told apart from what the source wrote. The language model
   unfolds a container of one repetition and filters Micronaut's own annotations

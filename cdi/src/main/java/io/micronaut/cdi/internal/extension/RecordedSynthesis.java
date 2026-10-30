@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.internal.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
@@ -24,6 +26,7 @@ import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifiers;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
+import io.micronaut.cdi.internal.runtime.RecordedTypes;
 import io.micronaut.cdi.internal.runtime.OwnedDependents;
 import io.micronaut.cdi.internal.runtime.RecordedInvoker;
 import io.micronaut.context.BeanContext;
@@ -45,6 +48,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -55,6 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -102,15 +107,15 @@ public final class RecordedSynthesis {
         // definition of the application
         for (BeanDefinition<?> definition : recorded(CdiSyntheticBean.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticBean.class).ifPresent(record ->
-                beans.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
+                putOnce(beans, record.stringValue("id").orElseThrow(), definition, CdiSyntheticBean.class));
         }
         for (BeanDefinition<?> definition : recorded(CdiSyntheticDisposer.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticDisposer.class).ifPresent(record ->
-                disposers.putIfAbsent(record.stringValue().orElseThrow(), definition));
+                putOnce(disposers, record.stringValue().orElseThrow(), definition, CdiSyntheticDisposer.class));
         }
         for (BeanDefinition<?> definition : recorded(CdiSyntheticObserver.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticObserver.class).ifPresent(record ->
-                observers.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
+                putOnce(observers, record.stringValue("id").orElseThrow(), definition, CdiSyntheticObserver.class));
         }
         if (beans.isEmpty() && observers.isEmpty()) {
             return;
@@ -138,19 +143,96 @@ public final class RecordedSynthesis {
             AnnotationValue<CdiSyntheticObserver> record =
                 observer.getAnnotationMetadata().getAnnotation(CdiSyntheticObserver.class);
             if (record != null) {
-                observerRegistry.registerSynthetic(new SyntheticObserverMethod<>(beanContext, observer, record));
+                // read once, and handed to the observer: the invokers it hands out are the ones validated below
+                CdiParameters parameters = new CdiParameters(beanContext,
+                    record.getAnnotations("params", CdiSyntheticParameter.class));
+                invokers.addAll(parameters.invokers());
+                observerRegistry.registerSynthetic(
+                    new SyntheticObserverMethod<>(beanContext, observer, record, parameters));
             }
         }
         if (!beans.isEmpty()) {
             // the container may have read its beans already: what was just registered has to be seen
             beanContext.findBean(CdiBeanContainer.class).ifPresent(CdiBeanContainer::refreshCandidates);
         }
-        // an invoker an extension built and handed to a synthetic component names lookups; whether they
-        // resolve is a property of the deployment, and is checked as it comes up rather than at the first
-        // invocation (CDI 4.1, chapter 7)
+        // an invoker an extension built and handed to a synthetic bean or observer names lookups; whether they
+        // resolve is a property of the deployment, and is checked as it comes up, once every synthetic bean is
+        // registered, rather than at the first invocation (CDI 4.1, chapter 7)
         for (RecordedInvoker invoker : invokers) {
             invoker.validateLookups();
         }
+    }
+
+    /**
+     * Keeps the first record of a component, and makes sure any other of the same identity records the same
+     * component: two compilations that each ran the extension recorded it twice, and it is one component; two
+     * records of one identity that differ are two compilations whose extension described different components,
+     * of which keeping either would silently lose the other.
+     */
+    private static void putOnce(Map<String, BeanDefinition<?>> records, String id, BeanDefinition<?> definition,
+                                Class<? extends Annotation> recordType) {
+        BeanDefinition<?> known = records.putIfAbsent(id, definition);
+        if (known == null || known == definition) {
+            return;
+        }
+        if (known.getBeanType() != definition.getBeanType() || !sameRecord(
+            known.getAnnotationMetadata().getAnnotation(recordType),
+            definition.getAnnotationMetadata().getAnnotation(recordType))) {
+            throw new DeploymentException("The synthetic component " + id + " was recorded differently by two "
+                + "compilations, by " + known.getName() + " and by " + definition.getName() + ": a build compatible "
+                + "extension that describes different components in different compilations of one application "
+                + "describes them under the same identity, and the container cannot tell which is meant");
+        }
+    }
+
+    /**
+     * Whether two records are the same record: the same members, each with the same value, nested records and
+     * arrays compared the same way. Annotation equality is not enough: it compares the members one of them has
+     * with the other's, and two records each with a member the other lacks can compare equal.
+     */
+    private static boolean sameRecord(@Nullable AnnotationValue<?> one, @Nullable AnnotationValue<?> other) {
+        if (one == null || other == null) {
+            return one == other;
+        }
+        if (!one.getAnnotationName().equals(other.getAnnotationName())) {
+            return false;
+        }
+        Map<String, Object> values = valuesOf(one);
+        Map<String, Object> otherValues = valuesOf(other);
+        if (!values.keySet().equals(otherValues.keySet())) {
+            return false;
+        }
+        for (Map.Entry<String, Object> member : values.entrySet()) {
+            if (!sameValue(member.getValue(), otherValues.get(member.getKey()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Map<String, Object> valuesOf(AnnotationValue<?> record) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        record.getValues().forEach((name, value) -> values.put(name.toString(), value));
+        return values;
+    }
+
+    private static boolean sameValue(@Nullable Object one, @Nullable Object other) {
+        if (one instanceof AnnotationValue<?> record) {
+            return other instanceof AnnotationValue<?> otherRecord && sameRecord(record, otherRecord);
+        }
+        if (one instanceof Object[] values) {
+            if (!(other instanceof Object[] otherValues) || values.length != otherValues.length) {
+                return false;
+            }
+            for (int i = 0; i < values.length; i++) {
+                if (!sameValue(values[i], otherValues[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // a primitive array element by element, anything else by its own equality
+        return Objects.deepEquals(one, other);
     }
 
     @SuppressWarnings("unchecked")
@@ -162,8 +244,9 @@ public final class RecordedSynthesis {
             new IllegalStateException("The implementation class " + record.stringValue("implementation").orElse("")
                 + " of a synthetic bean is not on the classpath"));
         Class<? extends Annotation> scope = scopeOf(record);
+        List<Argument<?>> types = typesOf(record);
         RuntimeBeanDefinition.Builder<T> builder = RuntimeBeanDefinition
-            .builder(Argument.of(implementation), creationContext ->
+            .builder(beanTypeOf(implementation, types), creationContext ->
                 create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
                     creationContext));
         List<AnnotationValue<Annotation>> qualifiers = record.getAnnotations(CdiSyntheticBean.QUALIFIERS);
@@ -191,8 +274,18 @@ public final class RecordedSynthesis {
             builder.singleton(false);
         }
         // the bean types are exactly what was declared (or the API's {Object} default) — the implementation
-        // class is not among them unless the extension said so
-        builder.exposedTypes(record.classValues("types"));
+        // class is not among them unless the extension said so — each with the type arguments it was declared
+        // with, so that the definition answers what it implements a type as from what was recorded rather than
+        // from the generic signature of the implementation class
+        Class<?>[] exposed = new Class<?>[types.size()];
+        for (int i = 0; i < exposed.length; i++) {
+            Argument<?> type = types.get(i);
+            exposed[i] = type.getType();
+            if (type.getType() != implementation) {
+                builder.typeArguments(type.getType(), type.getTypeParameters());
+            }
+        }
+        builder.exposedTypes(exposed);
         if (disposer != null) {
             // the definition disposes of each instance it created as the instance is destroyed, which is the
             // moment the extension meant (section 2.10.5)
@@ -200,6 +293,42 @@ public final class RecordedSynthesis {
                 dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, parameters, instance, disposalContext));
         }
         beanContext.registerBeanDefinition(builder.build());
+    }
+
+    /**
+     * The bean types the extension declared, as it declared them.
+     */
+    private static List<Argument<?>> typesOf(AnnotationValue<CdiSyntheticBean> record) {
+        List<AnnotationValue<CdiRecordedType>> recorded =
+            record.getAnnotations("declaredTypes", CdiRecordedType.class);
+        if (recorded.isEmpty()) {
+            // recorded by a processor before the declared types were: the classes of the types are what it wrote
+            Class<?>[] classes = record.classValues("types");
+            List<Argument<?>> types = new ArrayList<>(classes.length);
+            for (Class<?> type : classes) {
+                types.add(Argument.of(type));
+            }
+            return types;
+        }
+        List<Argument<?>> types = new ArrayList<>(recorded.size());
+        for (AnnotationValue<CdiRecordedType> type : recorded) {
+            types.add(RecordedTypes.typeOf(type));
+        }
+        return types;
+    }
+
+    /**
+     * The type the definition is of: the implementation class, with the arguments the extension declared it with
+     * where it declared the implementation class itself a parameterized bean type.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> Argument<T> beanTypeOf(Class<T> implementation, List<Argument<?>> types) {
+        for (Argument<?> type : types) {
+            if (type.getType() == implementation) {
+                return (Argument<T>) type;
+            }
+        }
+        return Argument.of(implementation);
     }
 
     /**
@@ -287,6 +416,8 @@ public final class RecordedSynthesis {
         if (record.booleanValue("alternative").orElse(false)) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }
+        // the bean types are the ones the definition is registered with, which are exactly the declared ones
+        metadata.addDeclaredAnnotation(CdiDeclaredTypes.class.getName(), Map.of());
         return metadata;
     }
 

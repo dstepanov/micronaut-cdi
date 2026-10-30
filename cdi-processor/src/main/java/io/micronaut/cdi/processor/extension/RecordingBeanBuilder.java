@@ -55,7 +55,7 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
     private final VisitorContext context;
     private final String id;
     private final ClassElement implementation;
-    private final List<ClassElement> types = new ArrayList<>();
+    private final List<Type> types = new ArrayList<>();
     private final List<AnnotationValue<?>> qualifiers = new ArrayList<>();
     private final Map<String, AnnotationValue<CdiSyntheticParameter>> parameters = new LinkedHashMap<>();
     private final List<ClassElement> stereotypes = new ArrayList<>();
@@ -82,12 +82,13 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
     }
 
     /**
-     * The bean types the extension declared, or the {@code Object} alone that the API defaults to: the
-     * implementation class is not among them unless the extension said so.
+     * The bean types the extension declared, each as it declared it - a class by itself, or a parameterized type
+     * with its arguments - or the {@code Object} alone that the API defaults to: the implementation class is not
+     * among them unless the extension said so.
      */
-    List<ClassElement> types() {
+    List<Type> types() {
         if (types.isEmpty()) {
-            return List.of(SyntheticRecords.classElement(context, Object.class, "bean type"));
+            return List.of(ElementTypes.objectType(context));
         }
         return types;
     }
@@ -134,21 +135,21 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> type(Class<?> type) {
-        types.add(SyntheticRecords.classElement(context, type, "bean type"));
+        // a class named by itself is the class type, whatever type parameters it declares
+        types.add(new VisitorTypes(context).of(type));
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> type(ClassInfo type) {
-        types.add(SyntheticRecords.classElement(context, type.name(), "bean type"));
+        types.add(new VisitorTypes(context).ofClass(type));
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> type(Type type) {
-        // a bean type is resolved by its class here, which is what the definition registered for the bean
-        // exposes; the arguments of a parameterized type are not part of what it is resolved by
-        types.add(ElementTypes.elementOf(type));
+        // recorded as it was given: a parameterized type is a bean type with its arguments (section 2.2.1)
+        types.add(type);
         return this;
     }
 

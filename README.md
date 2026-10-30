@@ -14,10 +14,12 @@ producer produces and of a class an event can be of is Micronaut's type hierarch
 generated class named `$<Class>$TypeHierarchy` beside it - a class of the JDK or of a library a compilation needs
 one of gets it in a sub-package of the class needing it, as `com.example.$$java.util.$List$TypeHierarchy` - found
 through the `META-INF/micronaut` service entries and loaded when its class is first asked about; a bean whose
-closure such a record cannot say in full carries it on its definition. The one member the container invokes reflectively
-is a private producer or observer, which the specification allows and Micronaut marks `@ReflectiveAccess`. The
-parts of the specification's API that hand out reflection objects are an optional module, described under
-[Reflection](#reflection).
+closure such a record cannot say in full carries it on its definition. A member the generated definitions reach
+reflectively is one the specification allows to be private, which no generated class may access: a private
+producer, disposer or observer method, which the processor marks `@ReflectiveAccess`, and a private injected field,
+initializer method, lifecycle callback or constructor, which Micronaut Core's definition writer reaches reflectively
+for any Micronaut bean. The parts of the specification's API that hand out reflection objects are an optional
+module; what reflection remains with `micronaut-cdi` alone is listed under [Reflection](#reflection).
 
 The interception of a bean is deferred to
 [Micronaut Jakarta Interceptors](https://github.com/dstepanov/micronaut-jakarta-interceptors), which implements
@@ -100,7 +102,7 @@ keeps at run time is listed under [Conformance](CONFORMANCE.md#container-injecti
 | `test-suite-kotlin` | A Kotlin class compiled through KSP, read by a build compatible extension through the same language model |
 | `test-suite-groovy` | The same, for a Groovy class compiled by the Groovy compiler |
 | `test-suite-no-reflection` | What works with `micronaut-cdi` alone, and what names the module to add when it does not |
-| `test-suite-graalvm` | The matching of types by the processor's records inside a GraalVM native image, with `micronaut-cdi` alone; its `nativeTest` is run on its own |
+| `test-suite-graalvm` | The matching of types by the processor's records inside a GraalVM native image, with `micronaut-cdi` alone; its `nativeTest` is run on its own, nightly in CI |
 | `micronaut-cdi-reflection` | Optional. Answers the parts of the specification's API that hand out reflection objects, which is the one thing here that reads a class back |
 
 ## Build compatible extensions
@@ -242,10 +244,12 @@ its class and the type it was fired as is only notified where the module is ther
 event is fired through `select(Argument)`.
 
 That module also brings `io.micronaut:micronaut-reflection`, which answers the accessors of an interceptor's
-`InvocationContext` that return an object of the Java reflection API: `getMethod()`, `getConstructor()`,
+`InvocationContext` that return an object of the Java reflection API: `getMethod()`,
 `getInterceptorBindings()`, `getInterceptorBinding(Class)` and `getInterceptorBindings(Class)`. Without it each of
 them throws an `UnsupportedOperationException` that names the dependency to add, and everything else of an
-interception works as before.
+interception works as before. `getConstructor()` of a constructor interception is the exception: Jakarta
+Interceptors answers it through Micronaut Core's `BeanConstructor.getTargetConstructor()`, which looks the
+constructor up reflectively whether or not the module is there.
 
 The boundary is checked while the modules compile, by the `NoReflection` check of
 [errorprone-no-reflection](https://github.com/micronaut-projects/errorprone-no-reflection), alongside NullAway. The
@@ -260,6 +264,34 @@ container's own implementations of those interfaces. Inside the container a type
 `Type` is read into one where a program hands it in and made from one where the specification reports it, both
 in the package `io.micronaut.cdi.internal.type`. The list is in [cdi/build.gradle](cdi/build.gradle).
 Reflection anywhere else fails the build.
+
+The check reads the sources written here, not what is generated, nor what Micronaut Core does when it is called,
+so `micronaut-cdi` alone is not free of reflection at runtime. What remains, and why:
+
+- **Private members.** A private producer, disposer or observer method is marked `@ReflectiveAccess` by the
+  processor and dispatched reflectively by the generated definition. A private injected field, initializer method
+  or `@PostConstruct`/`@PreDestroy` callback is written by Micronaut Core's `BeanDefinitionWriter` as a reflective
+  call, which `AbstractInitializableBeanDefinition` makes with a method or field lookup and `setAccessible`, and a
+  private constructor goes through `InstantiationUtils`; an inaccessible inherited member does the same. Compile-time
+  metadata cannot grant a generated class access to a private member: these stay reflective unless the member is
+  made accessible.
+- **Enum and typed array parameters of a synthetic component.** Micronaut records an enum constant by its name, and
+  `Parameters.get` turns the name into the constant through Core's `ConversionService`, which calls `Enum.valueOf`
+  (and `getEnumConstants()`); an enum array or an array of a particular annotation type is made with
+  `java.lang.reflect.Array.newInstance`. Closing it needs compiled enum constants and typed arrays in Core's
+  generated metadata (see CONFORMANCE, "Open points in Micronaut Core").
+- **The records the container reads.** The type hierarchy records and the bean definitions are found through
+  Core's `SoftServiceLoader`, which loads each generated class by name and constructs it, reflectively where a
+  method handle is not to be had. It inspects no class of the application: it loads what the compiler generated.
+- **`TypeLiteral`.** `TypeLiteral.getType()` of the specification's API reads the generic superclass of the
+  anonymous subclass a program wrote; `select(Argument, ...)` of `MicronautInstance` and `MicronautEvent` names the
+  type without it.
+
+The type arguments of a synthetic bean's declared types are recorded with it and handed to its definition, so a
+lookup by one of those types (`getTypeArguments(Class)`) is answered from the record. The rest of a runtime
+definition's generic metadata is still worked out from the implementation class: `getTypeArguments(String)` walks
+its hierarchy, `getTypeArgumentKeys()` reads `Class.getTypeParameters()`, and a query for a supertype that was not
+declared reaches `GenericTypeUtils`. Complete type metadata on `RuntimeBeanDefinition` is a Micronaut Core follow-up.
 
 Nullness is checked the same way, by [NullAway](https://github.com/uber/NullAway) as an ErrorProne check that
 fails the compilation of the main sources of `micronaut-cdi`, `micronaut-cdi-processor`, `micronaut-cdi-lang-model-ast`,
@@ -314,7 +346,8 @@ whose tests run on the JVM with every `check` and in an image with
 JAVA_HOME=/path/to/graalvm ./gradlew :test-suite-graalvm:nativeTest
 ```
 
-which is not part of `check`: the image takes some four minutes to build. No reachability metadata is declared
+which is not part of `check`: the image takes some four minutes to build. The CI workflow runs it in a job of its
+own, nightly and on demand. No reachability metadata is declared
 here for it. Micronaut's type hierarchy records and the bean definitions are `META-INF/micronaut` services, which
 Core's own build-time feature registers in the image, and the `@ReflectiveAccess` the processors declare is turned
 into metadata by `micronaut-graal`, which the suite has on its annotation processor path.

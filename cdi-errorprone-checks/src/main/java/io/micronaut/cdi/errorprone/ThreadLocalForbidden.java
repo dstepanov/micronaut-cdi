@@ -21,17 +21,23 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 
 import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
 
 /**
  * Forbids {@link ThreadLocal} in Micronaut CDI: a field, a local variable or a parameter of the type or of a subtype
- * such as {@link InheritableThreadLocal}, an instance created of either, and {@link ThreadLocal#withInitial}.
+ * such as {@link InheritableThreadLocal}, an instance created of either, {@link ThreadLocal#withInitial}, a call of
+ * a method of a thread local however it was obtained - one a dependency hands over included - and a method or
+ * constructor reference to one.
  *
  * <p>State that belongs to a thread does not reach the thread work is carried to, survives the container that
  * kept it, and is invisible to whoever reads the code that resolves a bean. What a request, a resolution or a
@@ -49,7 +55,7 @@ import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
 )
 public final class ThreadLocalForbidden extends BugChecker
     implements BugChecker.VariableTreeMatcher, BugChecker.NewClassTreeMatcher,
-    BugChecker.MethodInvocationTreeMatcher {
+    BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
     private static final String THREAD_LOCAL = "java.lang.ThreadLocal";
 
@@ -57,6 +63,9 @@ public final class ThreadLocalForbidden extends BugChecker
 
     private static final Matcher<ExpressionTree> WITH_INITIAL =
         Matchers.staticMethod().onClass(THREAD_LOCAL).named("withInitial");
+
+    private static final Matcher<ExpressionTree> OF_A_THREAD_LOCAL =
+        Matchers.instanceMethod().onDescendantOf(THREAD_LOCAL);
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
@@ -70,6 +79,18 @@ public final class ThreadLocalForbidden extends BugChecker
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        return WITH_INITIAL.matches(tree, state) ? describeMatch(tree) : Description.NO_MATCH;
+        return WITH_INITIAL.matches(tree, state) || OF_A_THREAD_LOCAL.matches(tree, state)
+            ? describeMatch(tree) : Description.NO_MATCH;
+    }
+
+    @Override
+    public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
+        Symbol symbol = ASTHelpers.getSymbol(tree);
+        Type threadLocal = state.getTypeFromString(THREAD_LOCAL);
+        if (symbol == null || threadLocal == null) {
+            return Description.NO_MATCH;
+        }
+        return ASTHelpers.isSubtype(symbol.owner.type, threadLocal, state)
+            ? describeMatch(tree) : Description.NO_MATCH;
     }
 }

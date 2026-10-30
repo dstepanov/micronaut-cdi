@@ -1,7 +1,6 @@
 package io.micronaut.cdi.test.customscope;
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
-import io.micronaut.cdi.test.extension.mapscope.MapContext;
 import io.micronaut.cdi.test.extension.mapscope.MapScoped;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.Dependent;
@@ -38,12 +37,11 @@ class ProducerCustomScopeTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void theProducedBeanIsInTheScopeItsProducerDeclares() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            MapContext.STORE.clear();
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
             Bean<?> bean = container.resolve((Set) container.getBeans(Gauge.class));
             assertEquals(MapScoped.class, bean.getScope());
             assertEquals("gauge", context.getBean(Gauge.class).read());
-            assertEquals(1, MapContext.STORE.size(), "created in the extension's context");
+            assertEquals(1, MapContexts.of(context).size(), "created in the extension's context");
         }
     }
 }

@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationClassValue;
@@ -230,7 +231,8 @@ final class SynthesisPhase {
         AnnotationValueBuilder<CdiSyntheticBean> record = AnnotationValue.builder(CdiSyntheticBean.class)
             .member("id", bean.id())
             .member("implementation", new AnnotationClassValue<>(bean.implementation().getName()))
-            .member("types", classValues(bean.types()))
+            .member("types", rawTypesOf(bean))
+            .member("declaredTypes", beanTypesOf(bean))
             .member(CdiSyntheticBean.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]))
             .member("qualifierTypes", typesOf(qualifiers));
         Scope scope = scopeOf(bean);
@@ -266,6 +268,12 @@ final class SynthesisPhase {
             .member("id", observer.id())
             .member(CdiSyntheticObserver.EVENT_TYPE, observer.recordedEventType())
             .member("priority", observer.priority());
+        ClassElement declaringClass = observer.declaringClassIfKnown();
+        if (declaringClass != null) {
+            // the class the registration phase reported the observer with, which the running container reports
+            // too where the class is on its classpath
+            record.member("declaringClass", new AnnotationClassValue<>(declaringClass.getName()));
+        }
         if (!observer.qualifiers().isEmpty()) {
             List<AnnotationValue<?>> qualifiers = completed(observer.qualifiers());
             record.member(CdiSyntheticObserver.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]));
@@ -300,6 +308,23 @@ final class SynthesisPhase {
             types[i] = new AnnotationClassValue<>(annotations.get(i).getAnnotationName());
         }
         return types;
+    }
+
+    private static AnnotationClassValue<?>[] rawTypesOf(RecordingBeanBuilder<?> bean) {
+        List<ClassElement> classes = new ArrayList<>();
+        for (Type type : bean.types()) {
+            classes.add(ElementTypes.elementOf(type));
+        }
+        return classValues(classes);
+    }
+
+    private static AnnotationValue<?>[] beanTypesOf(RecordingBeanBuilder<?> bean) {
+        List<Type> types = bean.types();
+        AnnotationValue<?>[] records = new AnnotationValue<?>[types.size()];
+        for (int i = 0; i < records.length; i++) {
+            records[i] = SyntheticRecords.beanTypeOf(types.get(i));
+        }
+        return records;
     }
 
     private static AnnotationClassValue<?>[] classValues(List<ClassElement> classes) {

@@ -47,3 +47,34 @@ jobs:
           name: test-reports-java-${{ matrix.java }}
           path: '**/build/reports/tests/'
           retention-days: 7
+
+  # the suite's tests inside a GraalVM native image: what the JVM build cannot show - that the generated records,
+  # annotation builders and definitions are reachable in an image - in a few minutes of image building, so nightly
+  # and on demand rather than for every change
+  native:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: graalvm
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Native tests
+        run: ./gradlew :test-suite-graalvm:nativeTest
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-native
+          path: 'test-suite-graalvm/build/reports/tests/'
+          retention-days: 7

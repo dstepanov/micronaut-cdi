@@ -38,7 +38,7 @@ import java.util.Set;
  * @since 1.0
  */
 @Internal
-final class CdiEventMetadata implements EventMetadata {
+public final class CdiEventMetadata implements EventMetadata {
 
     // the container the event was fired in, which makes the qualifiers it was fired with annotation instances
     private final BeanContext beanContext;
@@ -48,8 +48,16 @@ final class CdiEventMetadata implements EventMetadata {
     private volatile @Nullable Type type;
     private volatile @Nullable Set<Annotation> qualifiers;
 
-    CdiEventMetadata(BeanContext beanContext, List<CdiQualifier> firedWith,
-                     @Nullable InjectionPoint injectionPoint, Argument<?> eventType) {
+    /**
+     * The metadata of a firing.
+     *
+     * @param beanContext    The context of the container the event was fired in
+     * @param firedWith      The qualifiers the event was fired with, made annotation instances only if asked for
+     * @param injectionPoint The injection point of the {@code Event} it was fired through, if any
+     * @param eventType      The type the event was fired as
+     */
+    public CdiEventMetadata(BeanContext beanContext, List<CdiQualifier> firedWith,
+                            @Nullable InjectionPoint injectionPoint, Argument<?> eventType) {
         this.beanContext = beanContext;
         this.firedWith = firedWith;
         this.injectionPoint = injectionPoint;

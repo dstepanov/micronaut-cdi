@@ -22,6 +22,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.convert.ConversionService;
+import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.CollectionUtils;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import org.jspecify.annotations.Nullable;
@@ -103,16 +104,36 @@ public final class CdiParameters implements Parameters {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> @Nullable T get(String key, Class<T> type) {
         AnnotationValue<CdiSyntheticParameter> parameter = parameters.get(key);
         if (parameter == null) {
             return null;
         }
         Object value = valueOf(parameter, type);
-        if (type.isInstance(value)) {
-            return type.cast(value);
+        // a value is handed back as it was given (the Parameters contract): a primitive may be asked for by its
+        // wrapper, and any other type than the value's is a ClassCastException rather than a conversion
+        Class<?> requested = Argument.of(type).getWrapperType();
+        if (requested.isInstance(value)) {
+            return (T) value;
         }
-        return ConversionService.SHARED.convertRequired(value, type);
+        if (value instanceof Annotation[] annotations && requested.isArray()
+            && requested.getComponentType().isAnnotation()
+            && allInstances(annotations, requested.getComponentType())) {
+            // the annotations of an array asked for as an array of their own type, which only a typed array holds
+            return ConversionService.SHARED.convertRequired(value, type);
+        }
+        throw new ClassCastException("The parameter " + key + " is a " + value.getClass().getTypeName()
+            + ", which cannot be looked up as a " + type.getTypeName());
+    }
+
+    private static boolean allInstances(Object[] values, Class<?> type) {
+        for (Object value : values) {
+            if (!type.isInstance(value)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -126,29 +147,30 @@ public final class CdiParameters implements Parameters {
         String kind = parameter.stringValue("kind").orElseThrow();
         return switch (kind) {
             case "BOOLEAN" -> {
+                // an array handed out is the caller's to change, never the one the metadata holds
                 boolean[] values = parameter.booleanValues("booleans");
-                yield array ? values : (Object) (values.length > 0 && values[0]);
+                yield array ? values.clone() : (Object) (values.length > 0 && values[0]);
             }
             case "INT" -> {
                 int[] values = parameter.intValues("ints");
-                yield array ? values : (Object) (values.length > 0 ? values[0] : 0);
+                yield array ? values.clone() : (Object) (values.length > 0 ? values[0] : 0);
             }
             case "LONG" -> {
                 long[] values = parameter.longValues("longs");
-                yield array ? values : (Object) (values.length > 0 ? values[0] : 0L);
+                yield array ? values.clone() : (Object) (values.length > 0 ? values[0] : 0L);
             }
             case "DOUBLE" -> {
                 double[] values = parameter.doubleValues("doubles");
-                yield array ? values : (Object) (values.length > 0 ? values[0] : 0d);
+                yield array ? values.clone() : (Object) (values.length > 0 ? values[0] : 0d);
             }
             case "STRING" -> {
                 String[] values = parameter.stringValues("strings");
-                yield array ? values : values.length > 0 ? values[0] : "";
+                yield array ? values.clone() : values.length > 0 ? values[0] : "";
             }
             case "ENUM" -> enumsOf(parameter, array, type);
             case "CLASS" -> {
                 Class<?>[] values = parameter.classValues("classes");
-                yield array ? values : values[0];
+                yield array ? values.clone() : values[0];
             }
             case "ANNOTATION" -> annotationsOf(parameter, array, type);
             case "INVOKER" -> {
@@ -163,26 +185,21 @@ public final class CdiParameters implements Parameters {
     }
 
     /**
-     * An enum constant is recorded by its name. It is converted to the enum it is asked for as, or to the enum
-     * it was recorded with where it is asked for as anything wider.
+     * An enum constant is recorded by its name and its enum, and is a constant of that enum whatever it is asked for
+     * as: one asked for as another enum is not converted to it. Micronaut records an enum constant by name, and the
+     * constant of that name is found through the enum (see CONFORMANCE, the optional reflection module).
      */
     private static Object enumsOf(AnnotationValue<CdiSyntheticParameter> parameter, boolean array, Class<?> type) {
         String[] names = parameter.stringValues("strings");
         Class<?> recorded = parameter.classValue("type").orElse(null);
         if (!array) {
-            Class<?> enumType = type.isEnum() || recorded == null ? type : recorded;
+            Class<?> enumType = recorded != null ? recorded : type;
             return ConversionService.SHARED.convertRequired(names[0], enumType);
         }
-        Class<?> component = type.isArray() ? type.getComponentType() : null;
-        if (component != null && component.isEnum()) {
-            return ConversionService.SHARED.convertRequired(names, type);
+        if (recorded != null) {
+            return ConversionService.SHARED.convertRequired(names, recorded.arrayType());
         }
-        Enum<?>[] constants = new Enum<?>[names.length];
-        for (int i = 0; i < names.length; i++) {
-            Class<?> enumType = recorded == null ? Enum.class : recorded;
-            constants[i] = (Enum<?>) ConversionService.SHARED.convertRequired(names[i], enumType);
-        }
-        return constants;
+        return ConversionService.SHARED.convertRequired(names, type);
     }
 
     /**

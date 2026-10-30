@@ -15,12 +15,16 @@
  */
 package io.micronaut.cdi.se;
 
+import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
@@ -34,6 +38,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -233,14 +239,21 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         ApplicationContext context = builder.build();
         try {
             return new MicronautSeContainer(context.start());
-        } catch (RuntimeException e) {
-            RuntimeException said = whatAnExtensionSaid(e);
-            if (said != null) {
-                try {
-                    context.close();
-                } catch (RuntimeException closing) {
-                    said.addSuppressed(closing);
+        } catch (RuntimeException | Error e) {
+            // whatever the start failed with, the context is closed and its container is not left as the one
+            // CDI.current() resolves to; what an extension said is reported as it said it
+            RuntimeException said = e instanceof RuntimeException runtime ? whatAnExtensionSaid(runtime) : null;
+            Throwable reported = said != null ? said : e;
+            try {
+                context.close();
+            } catch (RuntimeException | Error closing) {
+                if (closing != reported) {
+                    reported.addSuppressed(closing);
                 }
+            } finally {
+                CdiBeanContainer.failedToStart(context);
+            }
+            if (said != null) {
                 throw said;
             }
             throw e;
@@ -252,14 +265,13 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * wraps as the failure to create the bean that ran the extensions.
      */
     private static @Nullable RuntimeException whatAnExtensionSaid(Throwable failure) {
-        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+        // each cause once: two exceptions may name each other as their cause
+        Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Throwable cause = failure; cause != null && seen.add(cause); cause = cause.getCause()) {
             if (cause instanceof DefinitionException
                 || cause instanceof DeploymentException
                 || cause instanceof UnsupportedOperationException) {
                 return (RuntimeException) cause;
-            }
-            if (cause.getCause() == cause) {
-                break;
             }
         }
         return null;
@@ -277,12 +289,15 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * container has.
      */
     private boolean belongsToSyntheticArchive(BeanType<?> bean) {
+        if (isInfrastructure(bean)) {
+            return true;
+        }
         String producer = producerOf(bean);
         if (producer != null) {
             // a bean produced by a member of a class belongs to the archive its producer is in, whatever type it
             // produces - and so does the client proxy of one in a normal scope, which declares itself and is of
-            // the produced type. What the container's own classes produce is in every archive, as they are
-            return isSelected(producer) || isInfrastructure(producer);
+            // the produced type
+            return isSelected(producer);
         }
         if (bean instanceof BeanDefinition<?> definition) {
             // a bean produced by a member of an application class belongs to the archive its producer is in,
@@ -295,16 +310,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                     // the producer's class is in the archive, and so is what it produces: a String, say
                     return true;
                 }
-                if (!selected && !isInfrastructure(declaring.getName())) {
+                if (!selected) {
                     return false;
                 }
             }
         }
-        String name = classOf(bean).getName();
-        return isInfrastructure(name) || isSelected(name);
+        return isSelected(classOf(bean).getName());
     }
 
     private static boolean onClasspath(BeanType<?> bean, Set<String> classpath) {
+        if (isInfrastructure(bean)) {
+            return true;
+        }
         String producer = producerOf(bean);
         if (producer != null && classpath.contains(outerClassOf(producer))) {
             // what a producer produces, its client proxy included, is where the producer is
@@ -318,13 +335,12 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 if (listed && isProduced(definition, declaring)) {
                     return true;
                 }
-                if (!listed && !isInfrastructure(declaring.getName())) {
+                if (!listed) {
                     return false;
                 }
             }
         }
-        String name = classOf(bean).getName();
-        return isInfrastructure(name) || classpath.contains(outerClassOf(name));
+        return classpath.contains(outerClassOf(classOf(bean).getName()));
     }
 
     /**
@@ -363,8 +379,24 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         return !(definition instanceof ProxyBeanDefinition<?>) && declaring != definition.getBeanType();
     }
 
-    private static boolean isInfrastructure(String className) {
-        return className.startsWith("io.micronaut.") || className.startsWith("jakarta.");
+    /**
+     * Whether a bean is infrastructure every container has rather than a bean of an archive. A built-in bean of the
+     * container is. A bean of the specification - one the processor recorded a scope or a producer of - is not: it
+     * is a bean of the archive it was selected into whatever its package, even under {@code io.micronaut}. A bean
+     * with nothing of the specification recorded - a plain {@code jakarta.inject} singleton of the application as
+     * much as one of Micronaut's own - is infrastructure only where its class is the framework's, under
+     * {@code io.micronaut} or {@code jakarta}: missing metadata alone does not make a bean the framework's.
+     */
+    private static boolean isInfrastructure(BeanType<?> bean) {
+        AnnotationMetadata metadata = bean.getAnnotationMetadata();
+        if (metadata.hasAnnotation(CdiBuiltIn.class)) {
+            return true;
+        }
+        if (metadata.hasAnnotation(CdiScope.class) || producerOf(bean) != null) {
+            return false;
+        }
+        String name = classOf(bean).getName();
+        return name.startsWith("io.micronaut.") || name.startsWith("jakarta.");
     }
 
     private boolean isSelected(String className) {

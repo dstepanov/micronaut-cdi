@@ -77,6 +77,7 @@ class ThreadLocalForbiddenTest {
                 "  static void clear(ThreadLocal<?> state) {",
                 "    // BUG: Diagnostic contains: ThreadLocalForbidden",
                 "    ThreadLocal<?> same = state;",
+                "    // BUG: Diagnostic contains: ThreadLocalForbidden",
                 "    same.remove();",
                 "  }",
                 "}")
@@ -94,6 +95,37 @@ class ThreadLocalForbiddenTest {
                 "  final Depth depth =",
                 "      // BUG: Diagnostic contains: ThreadLocalForbidden",
                 "      new Depth();",
+                "}")
+            .doTest();
+    }
+
+    @Test
+    void aThreadLocalADependencySuppliesIsReportedWhereItIsUsed() {
+        helper.addSourceLines("Dependency.java",
+                "class Dependency {",
+                "  static ThreadLocal<String> current() {",
+                "    return null;",
+                "  }",
+                "}")
+            .addSourceLines("Holder.java",
+                "class Holder {",
+                "  static String exchange() {",
+                "    // BUG: Diagnostic contains: ThreadLocalForbidden",
+                "    Dependency.current().set(\"held\");",
+                "    // BUG: Diagnostic contains: ThreadLocalForbidden",
+                "    return Dependency.current().get();",
+                "  }",
+                "}")
+            .doTest();
+    }
+
+    @Test
+    void aMethodReferenceToAThreadLocalIsReported() {
+        helper.addSourceLines("Holder.java",
+                "import java.util.function.Supplier;",
+                "class Holder {",
+                "  // BUG: Diagnostic contains: ThreadLocalForbidden",
+                "  static final Supplier<ThreadLocal<String>> MAKE = ThreadLocal::new;",
                 "}")
             .doTest();
     }

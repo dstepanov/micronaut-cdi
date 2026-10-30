@@ -155,6 +155,17 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         CdiRunning.started(this);
     }
 
+    /**
+     * Takes the container of a context that failed to start off what {@code CDI.current()} resolves to: Micronaut
+     * destroys the beans of a context that is running alone, so the container of one whose start failed is not
+     * destroyed, and would otherwise stay the current one.
+     *
+     * @param beanContext The context that failed to start
+     */
+    public static void failedToStart(BeanContext beanContext) {
+        CdiRunning.stoppedFor(beanContext);
+    }
+
     @PreDestroy
     void stopped() {
         Throwable failure = null;
@@ -164,11 +175,12 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             } catch (RuntimeException | Error e) {
                 if (failure == null) {
                     failure = e;
-                } else {
+                } else if (failure != e) {
                     failure.addSuppressed(e);
                 }
             }
         }
+        // no longer what CDI.current() resolves to, whatever a group threw as it closed
         CdiRunning.stopped(this);
         if (failure instanceof Error error) {
             throw error;
