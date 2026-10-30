@@ -206,8 +206,8 @@ final class SourceModel {
     }
 
     /**
-     * The receiver of a method: the declaring type for an instance method and for the constructor of an inner
-     * class, carrying whatever was written on a receiver parameter; nothing for a static method or the
+     * The receiver of a method: the declaring type for an instance method and the enclosing type for the
+     * constructor of an inner class, carrying whatever was written on a receiver parameter; nothing for a static method or the
      * constructor of a class that is not inner.
      *
      * @param method The method
@@ -222,8 +222,12 @@ final class SourceModel {
         if (method instanceof ConstructorElement && !(declaring.isInner() && !declaring.isStatic())) {
             return null;
         }
+        // the receiver of an instance method is an instance of its class, and the receiver of the constructor of an
+        // inner class the enclosing instance (JLS 8.4.1), where nothing is written of it
+        ClassElement receiver = method instanceof ConstructorElement
+            ? declaring.getEnclosingType().orElse(declaring) : declaring;
         return method.getReceiverType().map(type -> ElementTypes.of(type, context))
-            .orElseGet(() -> ElementTypes.of(declaring, context));
+            .orElseGet(() -> ElementTypes.of(receiver, context));
     }
 
     /**

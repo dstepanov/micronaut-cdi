@@ -185,4 +185,53 @@ class LanguageModelReviewTest {
             }
         }
     }
+
+    @Test
+    void theReceiverOfAnInnerClassConstructorIsTheEnclosingClass() {
+        Receivers.read.clear();
+        try (JavaParser parser = ExtensionCompilation.of(Receivers.class)) {
+            parser.generate("receivers.Outer", """
+                package receivers;
+
+                @jakarta.enterprise.context.Dependent
+                public class Outer {
+
+                    public Inner make() {
+                        return new Inner();
+                    }
+
+                    public class Inner {
+                        public Inner() {
+                        }
+
+                        public void method() {
+                        }
+                    }
+                }
+                """);
+        }
+        assertEquals(List.of("constructor receivers.Outer", "method receivers.Outer$Inner"), Receivers.read);
+    }
+
+    public static class Receivers implements BuildCompatibleExtension {
+        static final List<String> read = new ArrayList<>();
+
+        @Enhancement(types = Object.class, withSubtypes = true)
+        public void check(ClassConfig config) {
+            if (!config.info().name().equals("receivers.Outer")) {
+                return;
+            }
+            // the inner class, as the method that makes one names it
+            ClassInfo info = config.info().methods().stream().filter(m -> m.name().equals("make")).findFirst()
+                .orElseThrow().returnType().asClass().declaration();
+            for (MethodInfo constructor : info.constructors()) {
+                read.add("constructor " + constructor.receiverType().asClass().declaration().name());
+            }
+            for (MethodInfo method : info.methods()) {
+                if (method.name().equals("method")) {
+                    read.add("method " + method.receiverType().asClass().declaration().name());
+                }
+            }
+        }
+    }
 }
