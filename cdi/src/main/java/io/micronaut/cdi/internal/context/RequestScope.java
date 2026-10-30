@@ -515,7 +515,15 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         try {
             destroyScope(instances.beans());
         } finally {
-            ended(instances);
+            try {
+                // a creation that found the request before it ended, and announced itself only after the beans were
+                // destroyed, would otherwise put its bean where nothing destroys it again: from here on the request
+                // refuses it, and what slipped in before is destroyed now
+                instances.beans().end();
+                destroyScope(instances.beans());
+            } finally {
+                ended(instances);
+            }
         }
     }
 
@@ -532,9 +540,33 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     @SuppressWarnings("serial")
     private static final class RequestBeans extends ConcurrentHashMap<BeanIdentifier, CreatedBean<?>> {
         private final transient ConcurrentHashMap<BeanIdentifier, Object> creationLocks = new ConcurrentHashMap<>(8);
+        private final transient Object endLock = new Object();
+        private boolean ended;
 
         RequestBeans() {
             super(8);
+        }
+
+        /**
+         * Refuses every bean put from now on: the request has ended.
+         */
+        void end() {
+            synchronized (endLock) {
+                ended = true;
+            }
+        }
+
+        @Override
+        public @Nullable CreatedBean<?> put(BeanIdentifier key, CreatedBean<?> value) {
+            synchronized (endLock) {
+                if (!ended) {
+                    return super.put(key, value);
+                }
+            }
+            // created for a request that ended meanwhile: destroyed rather than kept where nothing destroys it
+            value.close();
+            throw new ContextNotActiveException("The request ended while " + value.definition().getBeanType().getName()
+                + " was created for it");
         }
     }
 
@@ -547,7 +579,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param beans The beans of the request
      * @param ended Whether the request has ended, its beans destroyed
      */
-    private record Instances(RequestScope owner, Map<BeanIdentifier, CreatedBean<?>> beans,
+    private record Instances(RequestScope owner, RequestBeans beans,
                              AtomicBoolean ended)
         implements PropagatedContextElement {
 
