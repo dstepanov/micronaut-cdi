@@ -125,7 +125,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
             }
             superClass = superClass.getSuperType().orElse(null);
         }
-        return found;
+        return List.copyOf(found);
     }
 
     /**

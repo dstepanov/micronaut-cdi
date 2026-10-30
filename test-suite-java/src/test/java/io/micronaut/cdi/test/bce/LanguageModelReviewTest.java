@@ -150,8 +150,21 @@ class LanguageModelReviewTest {
                 package collections;
 
                 @Subject.Tags({"a", "b"})
+                @Subject.Mark("x")
+                @Subject.Mark("y")
                 @jakarta.enterprise.context.Dependent
-                public class Subject {
+                public class Subject<T> implements java.io.Serializable {
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    @java.lang.annotation.Repeatable(Marks.class)
+                    public @interface Mark {
+                        String value();
+                    }
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    public @interface Marks {
+                        Mark[] value();
+                    }
 
                     @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
                     @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE_USE)
@@ -165,7 +178,7 @@ class LanguageModelReviewTest {
 
                     @Used String field;
 
-                    void method(String parameter) {
+                    <M> void method(String parameter) throws java.io.IOException {
                     }
                 }
                 """);
@@ -195,6 +208,13 @@ class LanguageModelReviewTest {
             tryClear("members", tags.members().values());
             tryClear("asArray", tags.value().asArray());
             tryClear("type annotations", fieldType.annotations());
+            tryClear("class annotations", info.annotations());
+            tryClear("repeatable annotation", info.repeatableAnnotation(jakarta.enterprise.context.Dependent.class));
+            tryClear("super interfaces", info.superInterfaces());
+            tryClear("class type parameters", info.typeParameters());
+            tryClear("method type parameters", method.typeParameters());
+            tryClear("thrown types", method.throwsTypes());
+            tryClear("type repeatable annotation", fieldType.repeatableAnnotation(jakarta.enterprise.context.Dependent.class));
             checked = true;
         }
 

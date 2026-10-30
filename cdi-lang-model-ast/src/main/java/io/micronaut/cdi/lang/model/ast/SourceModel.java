@@ -154,7 +154,7 @@ final class SourceModel {
         for (AnnotationValue<Annotation> value : element.getDeclaredAnnotationValuesByName(annotation)) {
             found.add(new ElementAnnotationInfo(value, context));
         }
-        return found;
+        return List.copyOf(found);
     }
 
     /**
@@ -242,7 +242,7 @@ final class SourceModel {
         for (ClassElement type : thrown) {
             types.add(ElementTypes.of(type, context));
         }
-        return types;
+        return List.copyOf(types);
     }
 
     /**
@@ -270,7 +270,7 @@ final class SourceModel {
         for (GenericPlaceholderElement placeholder : placeholders) {
             variables.add(ElementTypes.variableOf(placeholder, context));
         }
-        return variables;
+        return List.copyOf(variables);
     }
 
     /**
@@ -300,7 +300,7 @@ final class SourceModel {
         for (ClassElement type : clazz.getInterfaces()) {
             types.add(ElementTypes.of(type, context));
         }
-        return types;
+        return List.copyOf(types);
     }
 
     /**
