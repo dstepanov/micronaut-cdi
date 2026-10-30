@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * What a class selected into the synthetic archive of an SE bootstrap declares is in the archive with it: the
  * beans its producers produce, whatever their types, its disposers and its observers.
  *
- * <p>The classes are outside {@code io.micronaut}, as an application's are: what is under it is the container's
- * own and is in every archive.</p>
+ * <p>What is no bean of the specification - Micronaut's own beans and the container's - is in every archive; a bean
+ * of the application is in the archive it was selected into, whatever its package ({@code SeArchiveNamespaceTest}).</p>
  */
 class SeSelectedClassMembersTest {
 

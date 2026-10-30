@@ -15,12 +15,15 @@
  */
 package io.micronaut.cdi.se;
 
+import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
@@ -277,12 +280,15 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * container has.
      */
     private boolean belongsToSyntheticArchive(BeanType<?> bean) {
+        if (isInfrastructure(bean)) {
+            return true;
+        }
         String producer = producerOf(bean);
         if (producer != null) {
             // a bean produced by a member of a class belongs to the archive its producer is in, whatever type it
             // produces - and so does the client proxy of one in a normal scope, which declares itself and is of
-            // the produced type. What the container's own classes produce is in every archive, as they are
-            return isSelected(producer) || isInfrastructure(producer);
+            // the produced type
+            return isSelected(producer);
         }
         if (bean instanceof BeanDefinition<?> definition) {
             // a bean produced by a member of an application class belongs to the archive its producer is in,
@@ -295,16 +301,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                     // the producer's class is in the archive, and so is what it produces: a String, say
                     return true;
                 }
-                if (!selected && !isInfrastructure(declaring.getName())) {
+                if (!selected) {
                     return false;
                 }
             }
         }
-        String name = classOf(bean).getName();
-        return isInfrastructure(name) || isSelected(name);
+        return isSelected(classOf(bean).getName());
     }
 
     private static boolean onClasspath(BeanType<?> bean, Set<String> classpath) {
+        if (isInfrastructure(bean)) {
+            return true;
+        }
         String producer = producerOf(bean);
         if (producer != null && classpath.contains(outerClassOf(producer))) {
             // what a producer produces, its client proxy included, is where the producer is
@@ -318,13 +326,12 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 if (listed && isProduced(definition, declaring)) {
                     return true;
                 }
-                if (!listed && !isInfrastructure(declaring.getName())) {
+                if (!listed) {
                     return false;
                 }
             }
         }
-        String name = classOf(bean).getName();
-        return isInfrastructure(name) || classpath.contains(outerClassOf(name));
+        return classpath.contains(outerClassOf(classOf(bean).getName()));
     }
 
     /**
@@ -363,8 +370,16 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         return !(definition instanceof ProxyBeanDefinition<?>) && declaring != definition.getBeanType();
     }
 
-    private static boolean isInfrastructure(String className) {
-        return className.startsWith("io.micronaut.") || className.startsWith("jakarta.");
+    /**
+     * Whether a bean is infrastructure every container has rather than a bean of an archive: a built-in bean of the
+     * container, or one that is no bean of the specification - Micronaut's own beans and the container's, none of
+     * which this processor compiled as one - whatever package it is in. A bean of the application is one of the
+     * archive it was selected into, and is in no other, even in a package under {@code io.micronaut}.
+     */
+    private static boolean isInfrastructure(BeanType<?> bean) {
+        AnnotationMetadata metadata = bean.getAnnotationMetadata();
+        return metadata.hasAnnotation(CdiBuiltIn.class)
+            || !metadata.hasAnnotation(CdiScope.class) && producerOf(bean) == null;
     }
 
     private boolean isSelected(String className) {
