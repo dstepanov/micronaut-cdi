@@ -66,13 +66,34 @@ class RecordedSynthesisConflictTest {
         }
     }
 
+    @Test
+    void twoRecordsOfOneIdentityThatDifferInWhichMembersTheyHaveFailTheStart() {
+        // as many members each, one named and the other an alternative: no member compares unequal by value
+        try (ApplicationContext context = ApplicationContext.builder().build()) {
+            context.registerBeanDefinition(recordOf("conflict.Extension#2", Alpha.class, Map.of("name", "named")));
+            context.registerBeanDefinition(recordOf("conflict.Extension#2", Alpha.class, Map.of("alternative", true)));
+            RuntimeException failure = assertThrows(RuntimeException.class, context::start);
+            StringBuilder messages = new StringBuilder();
+            for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+                messages.append(cause.getMessage()).append('\n');
+            }
+            assertTrue(messages.toString().contains("conflict.Extension#2"), messages.toString());
+        }
+    }
+
     private static RuntimeBeanDefinition<Creator> recordOf(String id, Class<?> implementation) {
+        return recordOf(id, implementation, Map.of());
+    }
+
+    private static RuntimeBeanDefinition<Creator> recordOf(String id, Class<?> implementation,
+                                                           Map<String, Object> more) {
         MutableAnnotationMetadata metadata = new MutableAnnotationMetadata();
-        metadata.addDeclaredAnnotation(CdiSyntheticBean.class.getName(), Map.of(
-            "id", id,
-            "implementation", new AnnotationClassValue<>(implementation),
-            "types", new AnnotationValue<?>[] {AnnotationValue.builder(CdiRecordedType.class)
-                .member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(implementation)).build()}));
+        Map<CharSequence, Object> values = new java.util.LinkedHashMap<>(more);
+        values.put("id", id);
+        values.put("implementation", new AnnotationClassValue<>(implementation));
+        values.put("declaredTypes", new AnnotationValue<?>[] {AnnotationValue.builder(CdiRecordedType.class)
+            .member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(implementation)).build()});
+        metadata.addDeclaredAnnotation(CdiSyntheticBean.class.getName(), values);
         return RuntimeBeanDefinition.builder(Creator.class, Creator::new)
             .annotationMetadata(metadata)
             .build();

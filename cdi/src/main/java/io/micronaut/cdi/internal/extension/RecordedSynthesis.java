@@ -175,7 +175,7 @@ public final class RecordedSynthesis {
         if (known == null || known == definition) {
             return;
         }
-        if (known.getBeanType() != definition.getBeanType() || !Objects.equals(
+        if (known.getBeanType() != definition.getBeanType() || !sameRecord(
             known.getAnnotationMetadata().getAnnotation(recordType),
             definition.getAnnotationMetadata().getAnnotation(recordType))) {
             throw new DeploymentException("The synthetic component " + id + " was recorded differently by two "
@@ -183,6 +183,56 @@ public final class RecordedSynthesis {
                 + "extension that describes different components in different compilations of one application "
                 + "describes them under the same identity, and the container cannot tell which is meant");
         }
+    }
+
+    /**
+     * Whether two records are the same record: the same members, each with the same value, nested records and
+     * arrays compared the same way. Annotation equality is not enough: it compares the members one of them has
+     * with the other's, and two records each with a member the other lacks can compare equal.
+     */
+    private static boolean sameRecord(@Nullable AnnotationValue<?> one, @Nullable AnnotationValue<?> other) {
+        if (one == null || other == null) {
+            return one == other;
+        }
+        if (!one.getAnnotationName().equals(other.getAnnotationName())) {
+            return false;
+        }
+        Map<String, Object> values = valuesOf(one);
+        Map<String, Object> otherValues = valuesOf(other);
+        if (!values.keySet().equals(otherValues.keySet())) {
+            return false;
+        }
+        for (Map.Entry<String, Object> member : values.entrySet()) {
+            if (!sameValue(member.getValue(), otherValues.get(member.getKey()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Map<String, Object> valuesOf(AnnotationValue<?> record) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        record.getValues().forEach((name, value) -> values.put(name.toString(), value));
+        return values;
+    }
+
+    private static boolean sameValue(@Nullable Object one, @Nullable Object other) {
+        if (one instanceof AnnotationValue<?> record) {
+            return other instanceof AnnotationValue<?> otherRecord && sameRecord(record, otherRecord);
+        }
+        if (one instanceof Object[] values) {
+            if (!(other instanceof Object[] otherValues) || values.length != otherValues.length) {
+                return false;
+            }
+            for (int i = 0; i < values.length; i++) {
+                if (!sameValue(values[i], otherValues[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // a primitive array element by element, anything else by its own equality
+        return Objects.deepEquals(one, other);
     }
 
     @SuppressWarnings("unchecked")
