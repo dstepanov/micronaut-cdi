@@ -16,7 +16,6 @@
 package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
-import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.cdi.internal.runtime.CdiNotifiable;
 import io.micronaut.cdi.internal.runtime.CdiQualifier;
 import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
@@ -65,14 +64,13 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     private volatile @Nullable List<CdiQualifier> qualifiers;
 
     SyntheticObserverMethod(BeanContext beanContext, BeanDefinition<?> definition,
-                            AnnotationValue<CdiSyntheticObserver> record) {
+                            AnnotationValue<CdiSyntheticObserver> record, CdiParameters parameters) {
         this.beanContext = beanContext;
         this.definition = definition;
         this.record = record;
         this.eventArgument = RecordedTypes.typeOf(record.getAnnotation(CdiSyntheticObserver.EVENT_TYPE).orElseThrow());
         this.eventType = eventArgument.asType();
-        this.parameters = new CdiParameters(beanContext,
-            record.getAnnotations("params", CdiSyntheticParameter.class));
+        this.parameters = parameters;
         // the class the extension named, or the extension itself (section 2.10.5). An extension runs while the
         // application compiles, and is often on the processor path alone: where the class is not on the classpath
         // of the running application there is no class to report, and the observer class stands in for it

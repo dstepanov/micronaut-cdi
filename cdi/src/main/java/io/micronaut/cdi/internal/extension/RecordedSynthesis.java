@@ -141,16 +141,21 @@ public final class RecordedSynthesis {
             AnnotationValue<CdiSyntheticObserver> record =
                 observer.getAnnotationMetadata().getAnnotation(CdiSyntheticObserver.class);
             if (record != null) {
-                observerRegistry.registerSynthetic(new SyntheticObserverMethod<>(beanContext, observer, record));
+                // read once, and handed to the observer: the invokers it hands out are the ones validated below
+                CdiParameters parameters = new CdiParameters(beanContext,
+                    record.getAnnotations("params", CdiSyntheticParameter.class));
+                invokers.addAll(parameters.invokers());
+                observerRegistry.registerSynthetic(
+                    new SyntheticObserverMethod<>(beanContext, observer, record, parameters));
             }
         }
         if (!beans.isEmpty()) {
             // the container may have read its beans already: what was just registered has to be seen
             beanContext.findBean(CdiBeanContainer.class).ifPresent(CdiBeanContainer::refreshCandidates);
         }
-        // an invoker an extension built and handed to a synthetic component names lookups; whether they
-        // resolve is a property of the deployment, and is checked as it comes up rather than at the first
-        // invocation (CDI 4.1, chapter 7)
+        // an invoker an extension built and handed to a synthetic bean or observer names lookups; whether they
+        // resolve is a property of the deployment, and is checked as it comes up, once every synthetic bean is
+        // registered, rather than at the first invocation (CDI 4.1, chapter 7)
         for (RecordedInvoker invoker : invokers) {
             invoker.validateLookups();
         }
