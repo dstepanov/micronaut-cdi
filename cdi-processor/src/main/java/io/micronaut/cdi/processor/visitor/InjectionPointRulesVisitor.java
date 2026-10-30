@@ -146,12 +146,12 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             boolean producer = declared && SpecificationBeans.isProducer(method);
             boolean disposer = false;
             boolean observer = false;
-            if (declared) {
-                for (ParameterElement parameter : method.getParameters()) {
-                    disposer |= parameter.hasDeclaredAnnotation(Cdi.DISPOSES);
-                    observer |= parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
-                        || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC);
-                }
+            for (ParameterElement parameter : method.getParameters()) {
+                // a producer and a disposer are the declaring bean's own, where an observer a bean inherits is
+                // observed for the bean, and its injection points are the bean's
+                disposer |= declared && parameter.hasDeclaredAnnotation(Cdi.DISPOSES);
+                observer |= parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
+                    || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC);
             }
             if (!injected && !producer && !disposer && !observer) {
                 continue;
