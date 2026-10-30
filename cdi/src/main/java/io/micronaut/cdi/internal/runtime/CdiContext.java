@@ -313,14 +313,14 @@ public final class CdiContext implements AlterableContext {
         if (holder == null) {
             return null;
         }
-        try {
-            return ((AbstractConcurrentCustomScope<Annotation>) holder).getOrCreate(new StoreCreation());
-        } catch (ContextNotActiveException e) {
-            if (forCreation) {
-                throw e;
-            }
-            return null;
+        if (!forCreation) {
+            // asking what the context holds, or destroying what it may hold, puts nothing into it: the store is the
+            // one the scope holds already, if any
+            return holder.findBeanRegistration(StoreCreation.DEFINITION)
+                .map(BeanRegistration::bean)
+                .orElse(null);
         }
+        return ((AbstractConcurrentCustomScope<Annotation>) holder).getOrCreate(new StoreCreation());
     }
 
     private void requireActive() {
