@@ -20,6 +20,7 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -105,9 +105,7 @@ final class DisposerMatcher {
             // section 3.3.7 matches the disposed parameter by the rules of typesafe resolution: a disposer of
             // the supertype disposes of what a producer of the subtype produces — and the type arguments take
             // part, which Micronaut's erased assignability alone would miss
-            if (!dimensionsFit(produced, candidate.disposedType())
-                || !produced.isAssignable(candidate.disposedType())
-                || !typeArgumentsCompatible(produced, candidate.disposedType())) {
+            if (!isAssignableToDisposed(produced, candidate.disposedType())) {
                 continue;
             }
             if (producerQualifiers == null) {
@@ -123,20 +121,6 @@ final class DisposerMatcher {
             found = candidate;
         }
         return found;
-    }
-
-    /**
-     * Whether an array is disposed of as an array of as many dimensions, or as what every array is (an
-     * {@code Object}, a {@code Cloneable}, a {@code Serializable}), and a type that is no array as no array: Groovy
-     * reads an array of a library class as assignable to its component.
-     */
-    private static boolean dimensionsFit(ClassElement produced, ClassElement disposed) {
-        int producedDimensions = produced.getArrayDimensions();
-        int disposedDimensions = disposed.getArrayDimensions();
-        if (producedDimensions == disposedDimensions) {
-            return true;
-        }
-        return disposedDimensions < producedDimensions && EVERY_ARRAY.contains(disposed.getName().replace("[]", ""));
     }
 
     /**
@@ -195,61 +179,204 @@ final class DisposerMatcher {
     }
 
     /**
-     * Whether the produced type's arguments fit the disposed parameter's: a disposer of {@code List<String>}
-     * does not dispose of what a producer of {@code List<Integer>} produces, though the two erase alike. The
-     * produced type is first read as the disposed parameter's class - a class that swaps the two arguments of the
-     * map it extends, produced as {@code Flipped<String, Integer>}, is a {@code Map<Integer, String>}, and a class
-     * with no arguments of its own is the parameterization of the supertype it extends. A raw side fits any parameterization, a
-     * variable on either side admits what the other wrote, and a wildcard on the disposer's side admits what is
-     * within its bounds.
+     * Whether a bean type of what the producer produces is assignable to the disposed parameter's type by the rules
+     * of typesafe resolution (section 2.4.2), the produced type first read as the disposed parameter's class: a class
+     * that swaps the two arguments of the map it extends, produced as {@code Flipped<String, Integer>}, is a
+     * {@code Map<Integer, String>}, and a class with no arguments of its own is the parameterization of the supertype it
+     * extends. An array producer has its own array type and {@code Object} as its bean types (section 3.3.2), and an
+     * array matches only an array of identical element type.
      */
-    private static boolean typeArgumentsCompatible(ClassElement produced, ClassElement disposed) {
-        Collection<ClassElement> disposedArguments = disposed.getTypeArguments().values();
-        if (disposedArguments.isEmpty()) {
+    static boolean isAssignableToDisposed(ClassElement produced, ClassElement disposed) {
+        if (isObject(disposed)) {
             return true;
         }
-        Map<String, ClassElement> projected = produced.getName().equals(disposed.getName())
-            ? produced.getTypeArguments() : produced.getTypeArguments(disposed.getName());
-        Collection<ClassElement> producedArguments = projected.values();
-        if (producedArguments.isEmpty() || producedArguments.size() != disposedArguments.size()) {
-            return true;
+        if (produced.isArray() || disposed.isArray()) {
+            return produced.isArray() && disposed.isArray() && isIdentical(produced, disposed);
         }
-        Iterator<ClassElement> producedEach = producedArguments.iterator();
-        Iterator<ClassElement> disposedEach = disposedArguments.iterator();
-        while (producedEach.hasNext()) {
-            ClassElement producedArgument = producedEach.next();
-            ClassElement disposedArgument = disposedEach.next();
-            if (producedArgument.isGenericPlaceholder() || producedArgument.isWildcard()
-                || disposedArgument.isGenericPlaceholder()) {
-                continue;
-            }
-            if (disposedArgument instanceof WildcardElement wildcard) {
-                if (!withinBounds(producedArgument, wildcard)) {
-                    return false;
-                }
-                continue;
-            }
-            if (!producedArgument.getName().equals(disposedArgument.getName())
-                || producedArgument.getArrayDimensions() != disposedArgument.getArrayDimensions()
-                || !typeArgumentsCompatible(producedArgument, disposedArgument)) {
+        if (!produced.isAssignable(disposed.getName())) {
+            return false;
+        }
+        Collection<ClassElement> required = argumentsOf(disposed);
+        Collection<ClassElement> bean = produced.getName().equals(disposed.getName())
+            ? argumentsOf(produced) : produced.getTypeArguments(disposed.getName()).values();
+        if (produced.isRawType() && produced.getName().equals(disposed.getName())) {
+            bean = List.of();
+        }
+        if (required.isEmpty()) {
+            // a parameterized bean type is a raw required type where its arguments ask nothing
+            return bean.stream().allMatch(DisposerMatcher::asksNothing);
+        }
+        if (bean.isEmpty()) {
+            // a raw bean type is a parameterized required type where the required arguments ask nothing
+            return required.stream().allMatch(DisposerMatcher::asksNothing);
+        }
+        if (bean.size() != required.size()) {
+            return false;
+        }
+        Iterator<ClassElement> beanEach = bean.iterator();
+        for (ClassElement requiredArgument : required) {
+            if (!isArgumentAssignable(beanEach.next(), requiredArgument)) {
                 return false;
             }
         }
         return true;
     }
 
-    private static boolean withinBounds(ClassElement argument, WildcardElement wildcard) {
-        for (ClassElement upper : wildcard.getUpperBounds()) {
-            if (!upper.getName().equals(Object.class.getName()) && !argument.isAssignable(upper)) {
+    /**
+     * Whether a type argument of the bean type is assignable to one of the required type (section 2.4.2.1).
+     */
+    private static boolean isArgumentAssignable(ClassElement bean, ClassElement required) {
+        if (required instanceof WildcardElement wildcard) {
+            return withinBounds(bean, wildcard.getUpperBounds(), wildcard.getLowerBounds());
+        }
+        if (required instanceof GenericPlaceholderElement variable) {
+            return withinBounds(bean, variable.getBounds(), List.of());
+        }
+        if (bean instanceof GenericPlaceholderElement variable) {
+            // an actual required type is assignable to a variable of the bean type within the bounds of the variable
+            for (ClassElement bound : variable.getBounds()) {
+                if (!isJavaAssignable(required, bound)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return isIdentical(bean, required);
+    }
+
+    /**
+     * Whether a type argument of the bean type is within the given bounds: an actual type assignable to every upper
+     * bound and with every lower bound assignable to it, a variable by its upper bounds.
+     */
+    private static boolean withinBounds(ClassElement argument, List<? extends ClassElement> upper,
+                                        List<? extends ClassElement> lower) {
+        List<? extends ClassElement> own = argument instanceof GenericPlaceholderElement variable
+            ? variable.getBounds() : List.of(argument);
+        for (ClassElement bound : upper) {
+            if (isObject(bound)) {
+                continue;
+            }
+            boolean any = false;
+            for (ClassElement type : own) {
+                any |= isJavaAssignable(type, bound);
+            }
+            if (!any) {
                 return false;
             }
         }
-        for (ClassElement lower : wildcard.getLowerBounds()) {
-            if (!lower.isAssignable(argument)) {
+        for (ClassElement bound : lower) {
+            if (argument instanceof GenericPlaceholderElement || !isJavaAssignable(bound, argument)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Whether one type is assignable to another as Java has it, with type arguments compared: what a bound asks of
+     * a type.
+     */
+    private static boolean isJavaAssignable(ClassElement from, ClassElement to) {
+        if (isObject(to)) {
+            return true;
+        }
+        if (from instanceof GenericPlaceholderElement variable) {
+            for (ClassElement bound : variable.getBounds()) {
+                if (isJavaAssignable(bound, to)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (to instanceof GenericPlaceholderElement || to.isWildcard()) {
+            return true;
+        }
+        if (from.isArray() || to.isArray()) {
+            if (from.isArray() && to.isArray() && from.getArrayDimensions() == to.getArrayDimensions()) {
+                return from.isPrimitive() || to.isPrimitive() ? isIdentical(from, to)
+                    : isJavaAssignable(from.fromArray(), to.fromArray());
+            }
+            return from.isArray() && !to.isArray() && EVERY_ARRAY.contains(to.getName());
+        }
+        if (!from.isAssignable(to.getName())) {
+            return false;
+        }
+        Collection<ClassElement> required = argumentsOf(to);
+        if (required.isEmpty()) {
+            return true;
+        }
+        Collection<ClassElement> projected = from.getName().equals(to.getName())
+            ? argumentsOf(from) : from.getTypeArguments(to.getName()).values();
+        if (projected.isEmpty() || projected.size() != required.size()) {
+            // a raw type is assignable to any parameterization of itself, unchecked
+            return true;
+        }
+        Iterator<ClassElement> projectedEach = projected.iterator();
+        for (ClassElement requiredArgument : required) {
+            ClassElement argument = projectedEach.next();
+            boolean fits = requiredArgument instanceof WildcardElement wildcard
+                ? withinBounds(argument, wildcard.getUpperBounds(), wildcard.getLowerBounds())
+                : requiredArgument instanceof GenericPlaceholderElement || isIdentical(argument, requiredArgument);
+            if (!fits) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Whether two types are the same type: the same class, as many dimensions, and identical arguments.
+     */
+    private static boolean isIdentical(ClassElement one, ClassElement other) {
+        if (one instanceof GenericPlaceholderElement a && other instanceof GenericPlaceholderElement b) {
+            return a.getVariableName().equals(b.getVariableName());
+        }
+        if (one instanceof WildcardElement a && other instanceof WildcardElement b) {
+            return areIdentical(a.getUpperBounds(), b.getUpperBounds())
+                && areIdentical(a.getLowerBounds(), b.getLowerBounds());
+        }
+        if (!one.getName().equals(other.getName()) || one.getArrayDimensions() != other.getArrayDimensions()) {
+            return false;
+        }
+        List<ClassElement> oneArguments = List.copyOf(argumentsOf(one));
+        List<ClassElement> otherArguments = List.copyOf(argumentsOf(other));
+        if (oneArguments.isEmpty() || otherArguments.isEmpty()) {
+            return oneArguments.isEmpty() && otherArguments.isEmpty();
+        }
+        return areIdentical(oneArguments, otherArguments);
+    }
+
+    private static boolean areIdentical(List<? extends ClassElement> one, List<? extends ClassElement> other) {
+        if (one.size() != other.size()) {
+            return false;
+        }
+        for (int i = 0; i < one.size(); i++) {
+            if (!isIdentical(one.get(i), other.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The type arguments of a type as written, none for a raw use or a type that takes none.
+     */
+    private static Collection<ClassElement> argumentsOf(ClassElement type) {
+        return type.isRawType() ? List.of() : type.getTypeArguments().values();
+    }
+
+    /**
+     * Whether a type argument asks nothing: {@code Object}, or an unbounded variable.
+     */
+    private static boolean asksNothing(ClassElement argument) {
+        if (argument instanceof GenericPlaceholderElement variable) {
+            return variable.getBounds().stream().allMatch(DisposerMatcher::isObject);
+        }
+        return isObject(argument);
+    }
+
+    private static boolean isObject(ClassElement type) {
+        return !type.isArray() && Object.class.getName().equals(type.getName());
     }
 
     /**
