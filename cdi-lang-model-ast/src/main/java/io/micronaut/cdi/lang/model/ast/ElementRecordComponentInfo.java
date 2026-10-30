@@ -15,21 +15,36 @@
  */
 package io.micronaut.cdi.lang.model.ast;
 
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.annotation.AnnotationMetadataHierarchy;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.PropertyElement;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.RecordComponentInfo;
 import jakarta.enterprise.lang.model.types.Type;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * A component of a record, read from the property Micronaut describes the component as: its field and its accessor
- * are the ones the property names, and its annotations are what the property carries, which are the component's
- * together with those of its field and its accessor (Micronaut merges the three).
+ * are the ones the property names, and its annotations are the ones the record header writes on the component.
+ *
+ * <p>Micronaut merges the metadata of the component with that of its field and its accessor into the metadata of
+ * the property, the component's at the root of it ({@code PropertyElementAnnotationMetadata}); the annotations are
+ * read from that root alone, so that one written on an explicit accessor, or one that applies to the field and not
+ * to the component, is not reported for the component. A Micronaut view of the component itself would make this
+ * independent of how the property metadata is composed; where the root is not the component's - a property that
+ * merges nothing - no annotation is reported rather than another declaration's.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -41,6 +56,7 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
     private final FieldElement field;
     private final MethodElement accessor;
     private final ClassInfo declaringRecord;
+    private final AnnotationMetadata declared;
 
     /**
      * @param element         The property the component is described as
@@ -56,6 +72,37 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
         this.field = field;
         this.accessor = accessor;
         this.declaringRecord = declaringRecord;
+        AnnotationMetadata read = element.getReadTypeAnnotationMetadata().orElse(null);
+        this.declared = read instanceof AnnotationMetadataHierarchy hierarchy
+            ? hierarchy.getRootMetadata() : AnnotationMetadata.EMPTY_METADATA;
+    }
+
+    @Override
+    public Collection<AnnotationInfo> annotations() {
+        List<AnnotationInfo> found = new ArrayList<>();
+        for (String name : declared.getDeclaredAnnotationNames()) {
+            if (!ExtensionAnnotations.isReported(element, name, context())) {
+                continue;
+            }
+            AnnotationValue<Annotation> annotation = declared.getDeclaredAnnotation(name);
+            if (annotation != null) {
+                found.add(new ElementAnnotationInfo(annotation, context()));
+            }
+        }
+        return List.copyOf(ExtensionAnnotations.unfoldSingleRepetitions(found, declared));
+    }
+
+    @Override
+    public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
+        String name = annotationType.getName();
+        if (!ExtensionAnnotations.isReported(element, name, context())) {
+            return List.of();
+        }
+        List<AnnotationInfo> found = new ArrayList<>();
+        for (AnnotationValue<Annotation> value : declared.getDeclaredAnnotationValuesByName(name)) {
+            found.add(new ElementAnnotationInfo(value, context()));
+        }
+        return List.copyOf(found);
     }
 
     @Override

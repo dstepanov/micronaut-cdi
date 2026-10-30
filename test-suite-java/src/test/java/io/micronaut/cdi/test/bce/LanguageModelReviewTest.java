@@ -47,7 +47,23 @@ class LanguageModelReviewTest {
                 package records;
 
                 @jakarta.enterprise.context.Dependent
-                public record Person(@Person.ComponentOnly String name, int age) {
+                public record Person(@Person.ComponentOnly @Person.FieldOnly String name, int age) {
+
+                    @Person.AccessorOnly
+                    public String name() {
+                        return name;
+                    }
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    @java.lang.annotation.Target(java.lang.annotation.ElementType.FIELD)
+                    public @interface FieldOnly {
+                    }
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    @java.lang.annotation.Target({java.lang.annotation.ElementType.METHOD,
+                        java.lang.annotation.ElementType.RECORD_COMPONENT})
+                    public @interface AccessorOnly {
+                    }
 
                     @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
                     @java.lang.annotation.Target(java.lang.annotation.ElementType.RECORD_COMPONENT)
@@ -56,11 +72,16 @@ class LanguageModelReviewTest {
                 }
                 """);
         }
-        assertEquals(List.of("name String field name accessor name annotated true",
-            "age int field age accessor age annotated false"), Components.read);
+        assertEquals(List.of("name String field name accessor name annotated [ComponentOnly]"
+                + " field annotated [FieldOnly] accessor annotated [AccessorOnly]",
+            "age int field age accessor age annotated [] field annotated [] accessor annotated []"), Components.read);
     }
 
     public static class Components implements BuildCompatibleExtension {
+        private static List<String> simpleNames(java.util.Collection<jakarta.enterprise.lang.model.AnnotationInfo> annotations) {
+            return annotations.stream().map(a -> a.name().substring(a.name().lastIndexOf('$') + 1)).sorted().toList();
+        }
+
         static final List<String> read = new ArrayList<>();
 
         @Enhancement(types = Object.class, withSubtypes = true)
@@ -74,8 +95,9 @@ class LanguageModelReviewTest {
                 String type = component.type().isClass()
                     ? component.type().asClass().declaration().simpleName() : component.type().toString();
                 read.add(component.name() + " " + type + " field " + component.field().name() + " accessor "
-                    + component.accessor().name() + " annotated "
-                    + component.hasAnnotation(a -> a.name().equals("records.Person$ComponentOnly")));
+                    + component.accessor().name() + " annotated " + simpleNames(component.annotations())
+                    + " field annotated " + simpleNames(component.field().annotations())
+                    + " accessor annotated " + simpleNames(component.accessor().annotations()));
             }
         }
     }
