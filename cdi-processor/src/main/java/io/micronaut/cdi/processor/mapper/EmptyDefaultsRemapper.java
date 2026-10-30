@@ -69,7 +69,7 @@ public final class EmptyDefaultsRemapper implements AnnotationRemapper {
         Map<CharSequence, Object> missing = null;
         for (AnnotationMemberElement member : NonbindingMembers.memberElementsOf(declaration).values()) {
             String name = member.getName();
-            if (recorded != null && recorded.containsKey(name) || annotation.contains(name)) {
+            if ((recorded != null && recorded.containsKey(name)) || annotation.contains(name)) {
                 continue;
             }
             Optional<Object> declared = member.getDefaultValue();
