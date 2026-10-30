@@ -276,6 +276,17 @@ class AssignabilityRulesTest {
             "Foo<Number> does not observe Foo<Integer>: an argument is invariant");
     }
 
+    @Test
+    void anArrayIsWithinTheBoundsOfTheInterfacesEveryArrayImplements() {
+        // an array type is a java.io.Serializable and a Cloneable as well as an Object (JLS 4.10.3)
+        assertTrue(bean(literal(new TypeLiteral<Box<? extends java.io.Serializable>>() { }),
+            literal(new TypeLiteral<Box<String[]>>() { })), "String[] is Serializable");
+        assertTrue(bean(literal(new TypeLiteral<Box<? extends Cloneable>>() { }),
+            literal(new TypeLiteral<Box<int[]>>() { })), "int[] is Cloneable");
+        assertFalse(bean(literal(new TypeLiteral<Box<? extends Runnable>>() { }),
+            literal(new TypeLiteral<Box<String[]>>() { })), "String[] is no Runnable");
+    }
+
     private static Type literal(TypeLiteral<?> literal) {
         return literal.getType();
     }

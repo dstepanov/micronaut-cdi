@@ -22,6 +22,7 @@ import io.micronaut.core.type.GenericPlaceholder;
 import io.micronaut.core.type.WildcardArgument;
 import org.jspecify.annotations.Nullable;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -646,8 +647,14 @@ public final class CdiAssignability {
         if (CdiTypes.isArray(to) || CdiTypes.isArray(from)) {
             Argument<?> toComponent = to.componentType();
             Argument<?> fromComponent = from.componentType();
+            if (toComponent == null && fromComponent != null) {
+                // an array is an Object, a Serializable and a Cloneable (JLS 4.10.3), and nothing else that is
+                // not an array
+                return CdiTypes.isObject(to) || !CdiTypes.isParameterized(to)
+                    && (to.getType() == Serializable.class || to.getType() == Cloneable.class);
+            }
             if (toComponent == null || fromComponent == null) {
-                return CdiTypes.isObject(to);
+                return false;
             }
             if (CdiTypes.isClass(toComponent) && CdiTypes.isClass(fromComponent)) {
                 return toComponent.getType().isAssignableFrom(fromComponent.getType());
