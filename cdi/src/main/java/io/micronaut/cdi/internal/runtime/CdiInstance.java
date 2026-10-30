@@ -420,9 +420,9 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
      */
     static <T> void destroyResolved(BeanContext beanContext, BeanDefinition<T> definition, T instance) {
         if (CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
-            CdiBean<T> bean = new CdiBean<>(beanContext, definition);
-            Context context = beanContext
-                .getBean(CdiBeanContainer.class).getContext(bean.getScope());
+            CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
+            CdiBean<?> bean = container.canonicalBean(definition);
+            Context context = container.getContext(bean.getScope());
             if (context instanceof AlterableContext alterable) {
                 alterable.destroy(bean);
                 return;
@@ -548,8 +548,10 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Bean<T> getBean() {
-            return new CdiBean<>(beanContext, definition);
+            // the container's own bean of the definition, the one it answers with
+            return (Bean<T>) beanContext.getBean(CdiBeanContainer.class).canonicalBean(definition);
         }
 
         @Override
