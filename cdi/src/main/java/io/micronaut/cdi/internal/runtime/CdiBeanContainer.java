@@ -28,6 +28,7 @@ import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.WatchableBeanContext;
+import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -867,8 +868,13 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             && ctx instanceof CdiCreationalContext<?> creation) {
             Argument<?> type = injectionPoint instanceof CdiInjectionPoint own
                 ? own.argument() : SpecificationTypes.argumentOf(injectionPoint.getType());
-            return creation.created().registrationAt(null, injectionPoint, (BeanDefinition) cdiBean.definition(),
-                (Argument) type).bean();
+            try {
+                return creation.created().registrationAt(null, injectionPoint, (BeanDefinition) cdiBean.definition(),
+                    (Argument) type).bean();
+            } catch (BeanCreationException e) {
+                // what the bean threw comes out as Contextual.create has it come out (section 6.1.1)
+                throw CdiBean.translated(e);
+            }
         }
         return getReference(bean, injectionPoint.getType(), ctx);
     }

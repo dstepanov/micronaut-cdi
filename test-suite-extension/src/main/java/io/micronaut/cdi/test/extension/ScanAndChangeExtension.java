@@ -19,6 +19,7 @@ public class ScanAndChangeExtension implements BuildCompatibleExtension {
         scan.add("io.micronaut.cdi.test.PlainScannedBean$Nested");
         // a class of a library, which no compilation of the application compiles
         scan.add(ScannedLibraryBean.class.getName());
+        scan.add(ScannedLibraryProbe.class.getName());
     }
 
     @Enhancement(types = Object.class, withSubtypes = true, withAnnotations = RemovableQualifier.class)

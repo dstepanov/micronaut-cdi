@@ -18,7 +18,11 @@ package io.micronaut.cdi.test;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.cdi.reflection.ReflectiveCdi;
+import io.micronaut.cdi.test.extension.UnrecordedArrayPayload;
+import io.micronaut.cdi.test.extension.UnrecordedPayload;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.core.type.TypeHierarchies;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.Observes;
@@ -34,6 +38,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A type variable of the class of an event that its supertype uses as the component of an array is resolved from
@@ -84,7 +89,7 @@ class GenericArrayEventTest {
 
     @Test
     void theContainerResolvesAVariableThroughAnArray() {
-        // one inference for a class the application was compiled with and one the reflection module reads
+        // classes the application was compiled with, whose hierarchies are recorded
         try (ApplicationContext context = ApplicationContext.run()) {
             RecordedTypeIndex index = RecordedTypeIndex.of(context);
             ParameterizedType strings = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(index,
@@ -96,5 +101,22 @@ class GenericArrayEventTest {
                 SpecificationTypes.argumentOf(new TypeLiteral<Payload<List<String>[]>>() { }.getType())).asType());
             assertEquals(String.class, lists.getActualTypeArguments()[0]);
         }
+    }
+
+    @Test
+    void theReflectionModuleResolvesAVariableThroughAnArrayOfAClassNothingRecorded() {
+        // a class of a library compiled without the processor: only the reflection module reads its hierarchy
+        assertTrue(TypeHierarchies.find(UnrecordedArrayPayload.class).isEmpty(), "the library class is recorded");
+        Type fired = new TypeLiteral<UnrecordedPayload<String[]>>() { }.getType();
+        try (ApplicationContext context = ApplicationContext.run()) {
+            ParameterizedType strings = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(
+                RecordedTypeIndex.of(context), UnrecordedArrayPayload.class, SpecificationTypes.argumentOf(fired))
+                .asType());
+            assertEquals(String.class, strings.getActualTypeArguments()[0]);
+        }
+        // the deprecated entry of the module answers the same inference
+        ParameterizedType bridged = assertInstanceOf(ParameterizedType.class,
+            new ReflectiveCdi().eventTypeOf(UnrecordedArrayPayload.class, fired));
+        assertEquals(String.class, bridged.getActualTypeArguments()[0]);
     }
 }

@@ -38,10 +38,10 @@ public class ScannedLibraryBean {
     }
 
     /**
-     * What the bean observed and disposed of, for the tests to read.
+     * What the bean observed and disposed of, for the tests to read, held by the container.
      */
-    public static final java.util.List<String> SEEN =
-        java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+    @jakarta.inject.Inject
+    public ScannedLibraryProbe probe;
 
     /**
      * A qualified field that is no injection point: it keeps its value.
@@ -53,14 +53,14 @@ public class ScannedLibraryBean {
      * @param signal The signal observed
      */
     public void observe(@jakarta.enterprise.event.Observes ScannedLibrarySignal signal) {
-        SEEN.add("observed " + signal.name());
+        probe.saw("observed " + signal.name());
     }
 
     /**
      * @param product What the producer produced
      */
     public void dispose(@jakarta.enterprise.inject.Disposes ScannedLibraryProduct product) {
-        SEEN.add("disposed " + product.name());
+        probe.saw("disposed " + product.name());
     }
 
     /**
@@ -96,7 +96,7 @@ public class ScannedLibraryBean {
      */
     public void disposeSeveral(@jakarta.enterprise.inject.Disposes @jakarta.inject.Named("several")
                                ScannedLibraryNote note) {
-        SEEN.add("disposed note " + note.name());
+        probe.saw("disposed note " + note.name());
     }
 
     /**

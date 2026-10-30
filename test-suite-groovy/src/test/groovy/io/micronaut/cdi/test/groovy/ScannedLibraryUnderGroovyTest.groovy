@@ -3,6 +3,7 @@ package io.micronaut.cdi.test.groovy
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer
 import io.micronaut.cdi.test.extension.ScannedLibraryBean
 import io.micronaut.cdi.test.extension.ScannedLibraryNote
+import io.micronaut.cdi.test.extension.ScannedLibraryProbe
 import io.micronaut.cdi.test.extension.ScannedLibraryProduct
 import io.micronaut.cdi.test.extension.ScannedLibrarySignal
 import io.micronaut.context.ApplicationContext
@@ -30,13 +31,12 @@ class ScannedLibraryUnderGroovyTest {
 
     @Test
     void theObserverAndTheDisposerOfTheLibraryClassAreInvoked() {
-        ScannedLibraryBean.SEEN.clear()
         ApplicationContext context = ApplicationContext.run()
         try {
             CdiBeanContainer container = context.getBean(CdiBeanContainer)
             container.getEvent().select(ScannedLibrarySignal).fire(new ScannedLibrarySignal("groovy"))
             createAndDestroy(container.createInstance().select(ScannedLibraryProduct))
-            assertEquals(["observed groovy", "disposed produced by the library"], ScannedLibraryBean.SEEN)
+            assertEquals(["observed groovy", "disposed produced by the library"], context.getBean(ScannedLibraryProbe).seen())
         } finally {
             context.close()
         }
@@ -44,14 +44,13 @@ class ScannedLibraryUnderGroovyTest {
 
     @Test
     void overloadsToldApartByTheDimensionsOfAParameterKeepTheirOwnDisposers() {
-        ScannedLibraryBean.SEEN.clear()
         ApplicationContext context = ApplicationContext.run()
         try {
             Instance<ScannedLibraryNote> notes = context.getBean(CdiBeanContainer).createInstance()
                 .select(ScannedLibraryNote)
             createAndDestroy(notes.select(NamedLiteral.of("single")))
             createAndDestroy(notes.select(NamedLiteral.of("several")))
-            assertEquals(["disposed note several"], ScannedLibraryBean.SEEN.findAll { it.startsWith("disposed note") })
+            assertEquals(["disposed note several"], context.getBean(ScannedLibraryProbe).seen().findAll { it.startsWith("disposed note") })
         } finally {
             context.close()
         }

@@ -185,26 +185,6 @@ public final class CompiledAnnotationTypes {
     }
 
     /**
-     * Whether every member of the annotation type of the given name that takes part in resolution has a default,
-     * so that an instance of it may be written with none of them.
-     *
-     * @param name The annotation type name
-     * @return Whether every binding member has a default, or {@code null} where nothing was compiled of the type
-     */
-    public @Nullable Boolean isDefaultedEverywhere(String name) {
-        Recorded recorded = recorded(name);
-        if (recorded == null) {
-            return null;
-        }
-        for (String member : recorded.members) {
-            if (!recorded.nonbinding.contains(member) && !recorded.defaults.containsKey(member)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * The members of the annotation type of the given name that take no part in resolution, as the qualifiers
      * and bindings the application was compiled with list them under {@code $nonBinding}.
      *

@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.spi;
 
+import io.micronaut.cdi.internal.runtime.CdiTypes;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import jakarta.enterprise.inject.spi.Annotated;
@@ -105,6 +107,23 @@ public interface CdiReflection {
      * @return The type
      */
     Type declaredTypeOf(Class<?> type);
+
+    /**
+     * The type of an event of the given runtime class that was fired as the given type (section 2.8.1): the
+     * class with its type variables resolved from the type it was fired as.
+     *
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
+     * @return The event type
+     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
+     *                                  unresolved
+     * @deprecated The container infers the type of an event itself, from {@link #declaredTypeOf} and
+     * {@link #typeClosureOf}; this answers the same inference, for a caller compiled against it
+     */
+    @Deprecated(since = "1.0")
+    default Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
+        return CdiTypes.eventTypeReadBy(this, runtimeClass, SpecificationTypes.argumentOf(declaredType)).asType();
+    }
 
     /**
      * The member an injection point injects into.
