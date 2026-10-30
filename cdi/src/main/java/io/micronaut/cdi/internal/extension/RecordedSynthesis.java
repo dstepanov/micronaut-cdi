@@ -249,7 +249,17 @@ public final class RecordedSynthesis {
      * The bean types the extension declared, as it declared them.
      */
     private static List<Argument<?>> typesOf(AnnotationValue<CdiSyntheticBean> record) {
-        List<AnnotationValue<CdiRecordedType>> recorded = record.getAnnotations("types", CdiRecordedType.class);
+        List<AnnotationValue<CdiRecordedType>> recorded =
+            record.getAnnotations("declaredTypes", CdiRecordedType.class);
+        if (recorded.isEmpty()) {
+            // recorded by a processor before the declared types were: the classes of the types are what it wrote
+            Class<?>[] classes = record.classValues("types");
+            List<Argument<?>> types = new ArrayList<>(classes.length);
+            for (Class<?> type : classes) {
+                types.add(Argument.of(type));
+            }
+            return types;
+        }
         List<Argument<?>> types = new ArrayList<>(recorded.size());
         for (AnnotationValue<CdiRecordedType> type : recorded) {
             types.add(RecordedTypes.typeOf(type));

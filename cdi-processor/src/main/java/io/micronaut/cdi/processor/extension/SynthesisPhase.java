@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
 import io.micronaut.core.annotation.AnnotationClassValue;
@@ -230,7 +231,8 @@ final class SynthesisPhase {
         AnnotationValueBuilder<CdiSyntheticBean> record = AnnotationValue.builder(CdiSyntheticBean.class)
             .member("id", bean.id())
             .member("implementation", new AnnotationClassValue<>(bean.implementation().getName()))
-            .member("types", beanTypesOf(bean))
+            .member("types", rawTypesOf(bean))
+            .member("declaredTypes", beanTypesOf(bean))
             .member(CdiSyntheticBean.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]))
             .member("qualifierTypes", typesOf(qualifiers));
         Scope scope = scopeOf(bean);
@@ -306,6 +308,14 @@ final class SynthesisPhase {
             types[i] = new AnnotationClassValue<>(annotations.get(i).getAnnotationName());
         }
         return types;
+    }
+
+    private static AnnotationClassValue<?>[] rawTypesOf(RecordingBeanBuilder<?> bean) {
+        List<ClassElement> classes = new ArrayList<>();
+        for (Type type : bean.types()) {
+            classes.add(ElementTypes.elementOf(type));
+        }
+        return classValues(classes);
     }
 
     private static AnnotationValue<?>[] beanTypesOf(RecordingBeanBuilder<?> bean) {
