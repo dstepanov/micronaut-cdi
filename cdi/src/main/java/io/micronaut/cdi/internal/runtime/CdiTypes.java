@@ -547,25 +547,45 @@ public final class CdiTypes {
         // module that reads classes reads of it where nothing was recorded. The variables are resolved from either the
         // same way
         RecordedTypeIndex.Entry recorded = recordOf(index, runtimeClass);
-        List<String> variables;
-        Supplier<@Nullable List<Argument<?>>> closureOfTheClass;
-        if (recorded != null) {
-            variables = recorded.variables();
-            closureOfTheClass = () -> recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
-        } else {
+        if (recorded == null) {
             CdiReflection reflection = reflection(index);
             if (reflection == null) {
                 return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
             }
-            Type declaration = reflection.declaredTypeOf(runtimeClass);
-            variables = new ArrayList<>();
-            if (isParameterized(SpecificationTypes.argumentOf(declaration))) {
-                for (Argument<?> variable : SpecificationTypes.argumentOf(declaration).getTypeParameters()) {
-                    variables.add(((GenericPlaceholder<?>) variable).getVariableName());
-                }
-            }
-            closureOfTheClass = () -> SpecificationTypes.argumentsOf(reflection.typeClosureOf(declaration, false));
+            return eventTypeReadBy(reflection, runtimeClass, declaredType);
         }
+        return inferredEventType(runtimeClass, recorded.variables(),
+            () -> recorded.closureOf(recorded.declaredTypeOf(runtimeClass)), declaredType);
+    }
+
+    /**
+     * The type of an event of the given runtime class that was fired as the given type, from what the module that
+     * reads classes reads of the class: the inference made of a recorded hierarchy, made of its answers.
+     *
+     * @param reflection   The module that reads classes
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
+     * @return The event type
+     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
+     *                                  unresolved
+     */
+    public static Argument<?> eventTypeReadBy(CdiReflection reflection, Class<?> runtimeClass,
+                                              Argument<?> declaredType) {
+        Type declaration = reflection.declaredTypeOf(runtimeClass);
+        Argument<?> declared = SpecificationTypes.argumentOf(declaration);
+        List<String> variables = new ArrayList<>();
+        if (isParameterized(declared)) {
+            for (Argument<?> variable : declared.getTypeParameters()) {
+                variables.add(((GenericPlaceholder<?>) variable).getVariableName());
+            }
+        }
+        return inferredEventType(runtimeClass, variables,
+            () -> SpecificationTypes.argumentsOf(reflection.typeClosureOf(declaration, false)), declaredType);
+    }
+
+    private static Argument<?> inferredEventType(Class<?> runtimeClass, List<String> variables,
+                                                 Supplier<@Nullable List<Argument<?>>> closureOfTheClass,
+                                                 Argument<?> declaredType) {
         if (variables.isEmpty()) {
             return Argument.of(runtimeClass);
         }
