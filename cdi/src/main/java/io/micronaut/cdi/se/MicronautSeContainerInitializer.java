@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
@@ -37,6 +38,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -236,14 +239,21 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         ApplicationContext context = builder.build();
         try {
             return new MicronautSeContainer(context.start());
-        } catch (RuntimeException e) {
-            RuntimeException said = whatAnExtensionSaid(e);
-            if (said != null) {
-                try {
-                    context.close();
-                } catch (RuntimeException closing) {
-                    said.addSuppressed(closing);
+        } catch (RuntimeException | Error e) {
+            // whatever the start failed with, the context is closed and its container is not left as the one
+            // CDI.current() resolves to; what an extension said is reported as it said it
+            RuntimeException said = e instanceof RuntimeException runtime ? whatAnExtensionSaid(runtime) : null;
+            Throwable reported = said != null ? said : e;
+            try {
+                context.close();
+            } catch (RuntimeException | Error closing) {
+                if (closing != reported) {
+                    reported.addSuppressed(closing);
                 }
+            } finally {
+                CdiBeanContainer.failedToStart(context);
+            }
+            if (said != null) {
                 throw said;
             }
             throw e;
@@ -255,14 +265,13 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      * wraps as the failure to create the bean that ran the extensions.
      */
     private static @Nullable RuntimeException whatAnExtensionSaid(Throwable failure) {
-        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+        // each cause once: two exceptions may name each other as their cause
+        Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Throwable cause = failure; cause != null && seen.add(cause); cause = cause.getCause()) {
             if (cause instanceof DefinitionException
                 || cause instanceof DeploymentException
                 || cause instanceof UnsupportedOperationException) {
                 return (RuntimeException) cause;
-            }
-            if (cause.getCause() == cause) {
-                break;
             }
         }
         return null;
