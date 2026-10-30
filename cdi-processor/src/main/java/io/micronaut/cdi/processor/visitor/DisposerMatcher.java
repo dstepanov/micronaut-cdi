@@ -17,45 +17,47 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.processor.Cdi;
-import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.WildcardElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Matches the producers of one class to the disposer methods it declares (section 3.3.7), each disposer described
  * once for the class visit rather than once per producer it is compared with.
  *
- * <p>A disposer disposes of a producer when the type of its disposed parameter is the type the producer produces
- * and their qualifiers are the same, which is the resolution rule of the specification narrowed to the one class
- * the two are declared on. It holds nothing beyond the visit of the class it was made for.</p>
+ * <p>A disposer disposes of a producer by the rules of typesafe resolution (section 3.4.3) narrowed to the one class
+ * the two are declared on: the type of its disposed parameter is a bean type of the producer, and the producer has
+ * every qualifier the parameter requires. It holds nothing beyond the visit of the class it was made for.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 final class DisposerMatcher {
 
+    private static final String NAMED = "jakarta.inject.Named";
+
     /**
-     * The qualifiers that take no part in matching a disposer to its producer.
+     * The qualifiers that are not compared as values: {@code Default} and {@code Any}, which are given rather than
+     * compared, and Micronaut's own.
      */
     private static final Set<String> NOT_COMPARED = Cdi.withMicronautQualifiers(
         Cdi.DEFAULT,
-        Cdi.ANY
+        Cdi.ANY,
+        CdiAny.class.getName()
     );
 
     private final List<DisposerCandidate> candidates;
@@ -75,11 +77,13 @@ final class DisposerMatcher {
         for (MethodElement disposer : disposers) {
             int index = disposedParameter(disposer);
             ParameterElement disposed = disposer.getParameters()[index];
-            // a disposed parameter qualified Any disposes of what every producer of the type produced, however
-            // those producers are qualified; anything else has to be qualified the same way the producer is
-            boolean any = disposed.hasDeclaredAnnotation(Cdi.ANY) || disposed.hasDeclaredAnnotation(CdiAny.class);
-            candidates.add(new DisposerCandidate(disposer, index, disposed.getGenericType(),
-                any ? Map.of() : qualifiers(disposed), any));
+            List<AnnotationValue<?>> required = qualifiers(disposed);
+            // a parameter that declares no qualifier requires the default one (section 2.3.4); one qualified Any
+            // requires nothing of a producer beyond the other qualifiers it declares
+            boolean any = isAny(disposed);
+            boolean requiresDefault = disposed.hasDeclaredAnnotation(Cdi.DEFAULT) || (required.isEmpty() && !any);
+            candidates.add(new DisposerCandidate(disposer, index, disposed.getGenericType(), required,
+                requiresDefault));
         }
         return new DisposerMatcher(List.copyOf(candidates));
     }
@@ -93,7 +97,7 @@ final class DisposerMatcher {
      */
     @Nullable DisposerCandidate find(MemberElement producer, VisitorContext context) {
         ClassElement produced = ProducerVisitor.producedType(producer);
-        Map<String, Map<CharSequence, Object>> producerQualifiers = null;
+        List<AnnotationValue<?>> producerQualifiers = null;
         DisposerCandidate found = null;
         for (DisposerCandidate candidate : candidates) {
             // section 3.3.7 matches the disposed parameter by the rules of typesafe resolution: a disposer of
@@ -103,13 +107,11 @@ final class DisposerMatcher {
                 || !typeArgumentsCompatible(produced, candidate.disposedType())) {
                 continue;
             }
-            if (!candidate.any()) {
-                if (producerQualifiers == null) {
-                    producerQualifiers = qualifiers(producer);
-                }
-                if (!candidate.qualifiers().equals(producerQualifiers)) {
-                    continue;
-                }
+            if (producerQualifiers == null) {
+                producerQualifiers = qualifiers(producer);
+            }
+            if (!hasRequiredQualifiers(candidate, producer, producerQualifiers)) {
+                continue;
             }
             if (found != null) {
                 context.fail("More than one disposer method disposes of what this producer produces", producer);
@@ -118,6 +120,48 @@ final class DisposerMatcher {
             found = candidate;
         }
         return found;
+    }
+
+    /**
+     * Whether the producer has every qualifier the disposed parameter requires: the default one where the parameter
+     * requires it - a producer has it where it declares it, or declares no qualifier but {@code Named} and
+     * {@code Any} - and each other one, compared by its binding members as Micronaut compares two occurrences
+     * ({@link AnnotationValue#matches}), defaults filled in and arrays compared by their elements.
+     */
+    private static boolean hasRequiredQualifiers(DisposerCandidate candidate, MemberElement producer,
+                                                 List<AnnotationValue<?>> producerQualifiers) {
+        if (candidate.requiresDefault() && !hasDefault(producer, producerQualifiers)) {
+            return false;
+        }
+        for (AnnotationValue<?> required : candidate.qualifiers()) {
+            boolean present = false;
+            for (AnnotationValue<?> qualifier : producerQualifiers) {
+                if (qualifier.getAnnotationName().equals(required.getAnnotationName()) && qualifier.matches(required)) {
+                    present = true;
+                    break;
+                }
+            }
+            if (!present) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean hasDefault(Element producer, List<AnnotationValue<?>> qualifiers) {
+        if (producer.hasDeclaredAnnotation(Cdi.DEFAULT)) {
+            return true;
+        }
+        for (AnnotationValue<?> qualifier : qualifiers) {
+            if (!NAMED.equals(qualifier.getAnnotationName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAny(Element element) {
+        return element.hasDeclaredAnnotation(Cdi.ANY) || element.hasDeclaredAnnotation(CdiAny.class);
     }
 
     /**
@@ -135,15 +179,22 @@ final class DisposerMatcher {
 
     /**
      * Whether the produced type's arguments fit the disposed parameter's: a disposer of {@code List<String>}
-     * does not dispose of what a producer of {@code List<Integer>} produces, though the two erase alike. A
-     * raw side fits any parameterization, and a variable or wildcard on the disposer's side admits what the
-     * producer wrote.
+     * does not dispose of what a producer of {@code List<Integer>} produces, though the two erase alike. The
+     * produced type is first read as the disposed parameter's class - a class that swaps the two arguments of the
+     * map it extends, produced as {@code Flipped<String, Integer>}, is a {@code Map<Integer, String>}, and a class
+     * with no arguments of its own is the parameterization of the supertype it extends. A raw side fits any parameterization, a
+     * variable on either side admits what the other wrote, and a wildcard on the disposer's side admits what is
+     * within its bounds.
      */
     private static boolean typeArgumentsCompatible(ClassElement produced, ClassElement disposed) {
-        Collection<ClassElement> producedArguments = produced.getTypeArguments().values();
         Collection<ClassElement> disposedArguments = disposed.getTypeArguments().values();
-        if (producedArguments.isEmpty() || disposedArguments.isEmpty()
-            || producedArguments.size() != disposedArguments.size()) {
+        if (disposedArguments.isEmpty()) {
+            return true;
+        }
+        Map<String, ClassElement> projected = produced.getName().equals(disposed.getName())
+            ? produced.getTypeArguments() : produced.getTypeArguments(disposed.getName());
+        Collection<ClassElement> producedArguments = projected.values();
+        if (producedArguments.isEmpty() || producedArguments.size() != disposedArguments.size()) {
             return true;
         }
         Iterator<ClassElement> producedEach = producedArguments.iterator();
@@ -151,11 +202,18 @@ final class DisposerMatcher {
         while (producedEach.hasNext()) {
             ClassElement producedArgument = producedEach.next();
             ClassElement disposedArgument = disposedEach.next();
-            if (disposedArgument.isGenericPlaceholder() || disposedArgument.isWildcard()
-                || producedArgument.isGenericPlaceholder() || producedArgument.isWildcard()) {
+            if (producedArgument.isGenericPlaceholder() || producedArgument.isWildcard()
+                || disposedArgument.isGenericPlaceholder()) {
+                continue;
+            }
+            if (disposedArgument instanceof WildcardElement wildcard) {
+                if (!withinBounds(producedArgument, wildcard)) {
+                    return false;
+                }
                 continue;
             }
             if (!producedArgument.getName().equals(disposedArgument.getName())
+                || producedArgument.getArrayDimensions() != disposedArgument.getArrayDimensions()
                 || !typeArgumentsCompatible(producedArgument, disposedArgument)) {
                 return false;
             }
@@ -163,38 +221,41 @@ final class DisposerMatcher {
         return true;
     }
 
+    private static boolean withinBounds(ClassElement argument, WildcardElement wildcard) {
+        for (ClassElement upper : wildcard.getUpperBounds()) {
+            if (!upper.getName().equals(Object.class.getName()) && !argument.isAssignable(upper)) {
+                return false;
+            }
+        }
+        for (ClassElement lower : wildcard.getLowerBounds()) {
+            if (!lower.isAssignable(argument)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
-     * The qualifiers an element declares, as the names of the qualifier annotations mapped to their members.
-     *
-     * <p>They are read into a sorted map so that two elements qualified the same way compare equal whichever
-     * order the qualifiers were written in. Only the qualifiers the element declares itself are read: the
-     * annotation metadata of a member carries what its class declares as well, and a disposer parameter is
-     * compared against a producer of another class as often as not.</p>
-     *
-     * <p>The default qualifier is left out of the comparison, along with the Micronaut annotation that goes with
-     * it. It is given to a bean rather than written on one, and a disposer parameter is not a bean, so counting
-     * it would have every disposer fail to match the producer it was written for.</p>
+     * The qualifiers an element declares itself, every occurrence of a repeatable one among them, but for
+     * {@code Default}, {@code Any} and Micronaut's own (see {@link #NOT_COMPARED}): the annotation metadata of a
+     * member carries what its class declares as well, and a disposer parameter is compared against a producer of
+     * another class as often as not.
      */
-    private static Map<String, Map<CharSequence, Object>> qualifiers(Element element) {
-        Map<String, Map<CharSequence, Object>> qualifiers = new TreeMap<>();
+    private static List<AnnotationValue<?>> qualifiers(Element element) {
+        List<AnnotationValue<?>> qualifiers = new ArrayList<>();
         for (String name : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
             if (NOT_COMPARED.contains(name) || !element.hasDeclaredAnnotation(name)) {
                 continue;
             }
-            AnnotationValue<?> annotation = element.getAnnotation(name);
-            if (annotation != null) {
-                // a member that takes no part in resolution binds a disposer no more than it does a bean, and the
-                // list of them is not a member of the annotation
-                List<String> nonbinding =
-                    Arrays.asList(annotation.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE));
-                Map<CharSequence, Object> binding = new TreeMap<>(Comparator.comparing(CharSequence::toString));
-                annotation.getValues().forEach((member, value) -> {
-                    String memberName = member.toString();
-                    if (!memberName.startsWith("$") && !nonbinding.contains(memberName)) {
-                        binding.put(memberName, value);
-                    }
-                });
-                qualifiers.put(name, binding);
+            List<AnnotationValue<Annotation>> occurrences =
+                element.getAnnotationMetadata().getDeclaredAnnotationValuesByName(name);
+            if (occurrences.isEmpty()) {
+                AnnotationValue<Annotation> single = element.getAnnotation(name);
+                if (single != null) {
+                    qualifiers.add(single);
+                }
+            } else {
+                qualifiers.addAll(occurrences);
             }
         }
         return qualifiers;
@@ -206,10 +267,10 @@ final class DisposerMatcher {
      * @param method            The disposer method
      * @param disposedParameter The index of its disposed parameter
      * @param disposedType      The type of its disposed parameter
-     * @param qualifiers        The qualifiers of its disposed parameter, none where it is qualified {@code Any}
-     * @param any               Whether its disposed parameter is qualified {@code Any}
+     * @param qualifiers        The qualifiers its disposed parameter requires of a producer beside the default one
+     * @param requiresDefault   Whether its disposed parameter requires the default qualifier
      */
     record DisposerCandidate(MethodElement method, int disposedParameter, ClassElement disposedType,
-                             Map<String, Map<CharSequence, Object>> qualifiers, boolean any) {
+                             List<AnnotationValue<?>> qualifiers, boolean requiresDefault) {
     }
 }
