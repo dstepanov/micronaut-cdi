@@ -466,8 +466,11 @@ public final class CdiQualifier {
         if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, annotation);
         }
+        // named by its type alone: formatting an annotation literal reads every member of it reflectively
         AnnotationValue<?> values = CdiAnnotations.valuesOf(types.beanContext(), annotation,
-            "Reading the members of the annotation instance " + annotation + " (" + SELECT_BY_VALUE + ")");
+            "Reading the binding members of a literal of the qualifier " + name + ", which neither carries its values"
+                + " nor has a builder generated for its type (register the type with @RegisterAnnotations, or select"
+                + " by an AnnotationValue: " + SELECT_BY_VALUE + ")");
         return of(withNonbinding(values, types.nonbindingOf(name)), null, annotation, types);
     }
 

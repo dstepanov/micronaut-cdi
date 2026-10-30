@@ -39,7 +39,7 @@ public class RegisteredQualifiersWithoutReflectionTest {
         /**
          * A literal a program writes, which neither carries its values nor is made by the builder.
          */
-        final class Literal extends AnnotationLiteral<Topping> implements Topping {
+        class Literal extends AnnotationLiteral<Topping> implements Topping {
 
             private final String value;
             private final String note;
@@ -76,6 +76,20 @@ public class RegisteredQualifiersWithoutReflectionTest {
                 CDI.current().select(Dessert.class, new Topping.Literal("cream", "cold")).get().getClass());
             assertTrue(CDI.current().select(Dessert.class, new Topping.Literal("custard", "warm")).isUnsatisfied(),
                 "@Topping(\"custard\") is not the @Topping(\"cream\") of the bean");
+        }
+    }
+
+    @Test
+    void aLiteralReadByItsBuilderIsNeverFormatted() {
+        // AnnotationLiteral.toString reads every member reflectively: a literal the builder reads is not formatted
+        Topping unformattable = new Topping.Literal("cream", "cold") {
+            @Override
+            public String toString() {
+                throw new IllegalStateException("the literal was formatted");
+            }
+        };
+        try (ApplicationContext ignored = ApplicationContext.run()) {
+            assertEquals(Pie.class, CDI.current().select(Dessert.class, unformattable).get().getClass());
         }
     }
 
