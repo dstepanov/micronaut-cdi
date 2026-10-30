@@ -141,16 +141,14 @@ public final class CdiContext implements AlterableContext {
             // here, which would go on handing the instance out after Micronaut destroyed it
             return ((CdiBean<T>) contextual).scopedInstance();
         }
-        Map<Contextual<?>, Held<?>> store = store(true);
+        Store store = store(true);
         if (store == null) {
             // the dependent pseudo-scope holds nothing: what is created belongs to whoever asked
             return contextual.create(creationalContext);
         }
-        synchronized (store) {
-            Held<T> held = existing(store, contextual);
-            if (held != null) {
-                return held.instance();
-            }
+        Held<T> held = store.find(contextual);
+        if (held != null) {
+            return held.instance();
         }
         // created outside the lock — creation may be arbitrarily slow, or reach back into this context
         T instance = contextual.create(creationalContext);
@@ -158,17 +156,18 @@ public final class CdiContext implements AlterableContext {
             return null;
         }
         Held<T> created = new Held<>(contextual, instance, creationalContext);
-        Held<T> raced;
-        synchronized (store) {
-            raced = existing(store, contextual);
-            if (raced == null) {
-                store.put(contextual, created);
-                return instance;
-            }
+        Held<T> kept = store.publish(created);
+        if (kept == created) {
+            return instance;
         }
-        // another thread stored first: one instance per contextual per context, so ours is let go
+        // another thread stored first - one instance per contextual per context - or the context ended while the
+        // instance was created, and a context that has ended keeps nothing: ours is let go either way
         created.destroy();
-        return raced.instance();
+        if (kept == null) {
+            throw new ContextNotActiveException("The " + scope.getName() + " context ended while an instance of "
+                + contextual + " was created for it");
+        }
+        return kept.instance();
     }
 
     /**
@@ -183,13 +182,11 @@ public final class CdiContext implements AlterableContext {
     @Override
     public <T> @Nullable T get(Contextual<T> contextual) {
         requireActive();
-        Map<Contextual<?>, Held<?>> store = store(false);
+        Store store = store(false);
         if (store != null) {
-            synchronized (store) {
-                Held<T> held = existing(store, contextual);
-                if (held != null) {
-                    return held.instance();
-                }
+            Held<T> held = store.find(contextual);
+            if (held != null) {
+                return held.instance();
             }
         }
         // not something a program handed in, so it may be a bean of the container: the instance the scope
@@ -216,11 +213,6 @@ public final class CdiContext implements AlterableContext {
             }
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> @Nullable Held<T> existing(Map<Contextual<?>, Held<?>> store, Contextual<T> contextual) {
-        return (Held<T>) store.get(contextual);
     }
 
     /**
@@ -254,12 +246,9 @@ public final class CdiContext implements AlterableContext {
     @Override
     public void destroy(Contextual<?> contextual) {
         requireActive();
-        Map<Contextual<?>, Held<?>> store = store(false);
+        Store store = store(false);
         if (store != null) {
-            Held<?> held;
-            synchronized (store) {
-                held = store.remove(contextual);
-            }
+            Held<?> held = store.remove(contextual);
             if (held != null) {
                 held.destroy();
                 return;
@@ -299,7 +288,7 @@ public final class CdiContext implements AlterableContext {
      * destroyed — and every creational context in it released — exactly when the scope is.
      */
     @SuppressWarnings("unchecked")
-    private @Nullable Map<Contextual<?>, Held<?>> store(boolean forCreation) {
+    private @Nullable Store store(boolean forCreation) {
         if (holder == null) {
             return null;
         }
@@ -336,6 +325,84 @@ public final class CdiContext implements AlterableContext {
     }
 
     /**
+     * The instances of the contextuals a program handed one context, from the first creation in the context until
+     * the context ends. Ending it is final: an instance created for the context as it ends is not kept, since
+     * nothing would destroy it again, and while the instances are destroyed the ones not yet destroyed are still
+     * found, so that a destruction callback asking the context for a peer finds the peer rather than creating
+     * another into a context on its way out.
+     */
+    private static final class Store {
+
+        private final Map<Contextual<?>, Held<?>> held = new LinkedHashMap<>();
+        private boolean ended;
+
+        @SuppressWarnings("unchecked")
+        synchronized <T> @Nullable Held<T> find(Contextual<T> contextual) {
+            return (Held<T>) held.get(contextual);
+        }
+
+        /**
+         * Keeps what was created, unless another instance of its contextual is kept already or the context ended.
+         *
+         * @return What is kept: the given instance, the one kept before it, or {@code null} once the context ended
+         */
+        @SuppressWarnings("unchecked")
+        synchronized <T> @Nullable Held<T> publish(Held<T> created) {
+            if (ended) {
+                return null;
+            }
+            Held<T> raced = (Held<T>) held.get(created.contextual());
+            if (raced != null) {
+                return raced;
+            }
+            held.put(created.contextual(), created);
+            return created;
+        }
+
+        synchronized @Nullable Held<?> remove(Contextual<?> contextual) {
+            return held.remove(contextual);
+        }
+
+        private synchronized boolean remove(Held<?> each) {
+            return held.remove(each.contextual(), each);
+        }
+
+        /**
+         * Ends the context: what it holds is destroyed, each instance taken out as it is destroyed, and nothing is
+         * kept afterwards.
+         */
+        void end() {
+            List<Held<?>> drained;
+            synchronized (this) {
+                if (ended) {
+                    return;
+                }
+                ended = true;
+                drained = List.copyOf(held.values());
+            }
+            RuntimeException failure = null;
+            for (Held<?> each : drained) {
+                // one a destruction callback destroyed meanwhile is gone already
+                if (!remove(each)) {
+                    continue;
+                }
+                try {
+                    each.destroy();
+                } catch (RuntimeException e) {
+                    if (failure == null) {
+                        failure = e;
+                    } else {
+                        failure.addSuppressed(e);
+                    }
+                }
+            }
+            if (failure != null) {
+                throw failure;
+            }
+        }
+    }
+
+    /**
      * Creates the store inside the scope, as the one bean of the scope this module itself holds there: the
      * scope destroys every bean it holds when it ends, and destroying the store is what releases everything a
      * program handed in.
@@ -344,16 +411,16 @@ public final class CdiContext implements AlterableContext {
      * does so for every entry whenever it looks a bean up by its definition. It answers with a definition of its
      * own, which no bean of the container equals, and which is never used to create anything.</p>
      */
-    private static final class StoreCreation implements BeanCreationContext<Map<Contextual<?>, Held<?>>> {
+    private static final class StoreCreation implements BeanCreationContext<Store> {
 
         private static final BeanIdentifier ID = CONTEXTUAL_STORE_ID;
 
         @SuppressWarnings({"unchecked", "rawtypes"})
-        private static final BeanDefinition<Map<Contextual<?>, Held<?>>> DEFINITION = (BeanDefinition)
+        private static final BeanDefinition<Store> DEFINITION = (BeanDefinition)
             RuntimeBeanDefinition.of(StoreCreation.class, StoreCreation::new);
 
         @Override
-        public BeanDefinition<Map<Contextual<?>, Held<?>>> definition() {
+        public BeanDefinition<Store> definition() {
             return DEFINITION;
         }
 
@@ -363,16 +430,16 @@ public final class CdiContext implements AlterableContext {
         }
 
         @Override
-        public CreatedBean<Map<Contextual<?>, Held<?>>> create() {
-            Map<Contextual<?>, Held<?>> store = new LinkedHashMap<>();
+        public CreatedBean<Store> create() {
+            Store store = new Store();
             return new CreatedBean<>() {
                 @Override
-                public BeanDefinition<Map<Contextual<?>, Held<?>>> definition() {
+                public BeanDefinition<Store> definition() {
                     return DEFINITION;
                 }
 
                 @Override
-                public Map<Contextual<?>, Held<?>> bean() {
+                public Store bean() {
                     return store;
                 }
 
@@ -383,26 +450,7 @@ public final class CdiContext implements AlterableContext {
 
                 @Override
                 public void close() {
-                    List<Held<?>> drained;
-                    synchronized (store) {
-                        drained = List.copyOf(store.values());
-                        store.clear();
-                    }
-                    RuntimeException failure = null;
-                    for (Held<?> held : drained) {
-                        try {
-                            held.destroy();
-                        } catch (RuntimeException e) {
-                            if (failure == null) {
-                                failure = e;
-                            } else {
-                                failure.addSuppressed(e);
-                            }
-                        }
-                    }
-                    if (failure != null) {
-                        throw failure;
-                    }
+                    store.end();
                 }
             };
         }
