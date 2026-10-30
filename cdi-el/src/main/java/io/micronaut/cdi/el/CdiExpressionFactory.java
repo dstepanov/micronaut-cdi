@@ -114,11 +114,25 @@ final class CdiExpressionFactory extends ExpressionFactory {
             return call.apply(context);
         }
         CdiEvaluation evaluation = new CdiEvaluation();
+        R result;
         try {
-            return call.apply(new BeanReachingContext(context, beans, beanContext, evaluation));
-        } finally {
-            evaluation.complete();
+            result = call.apply(new BeanReachingContext(context, beans, beanContext, evaluation));
+        } catch (RuntimeException | Error e) {
+            // the failure of the evaluation is what is reported; what destroying its beans threw goes with it
+            Throwable cleanup = evaluation.complete();
+            if (cleanup != null) {
+                CdiEvaluation.suppressing(e, cleanup);
+            }
+            throw e;
         }
+        Throwable cleanup = evaluation.complete();
+        if (cleanup instanceof RuntimeException runtime) {
+            throw runtime;
+        }
+        if (cleanup instanceof Error error) {
+            throw error;
+        }
+        return result;
     }
 
     /**
