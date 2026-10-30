@@ -383,7 +383,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     void register(ClassElement element, Messages messages, VisitorContext context) {
         if (!extensions.registers() || element.isAbstract() || element.isInterface()
-            || SpecificationBeans.isVetoed(element)) {
+            || SpecificationBeans.isVetoed(element) || !SpecificationBeans.hasABeanConstructor(element)) {
             return;
         }
         if (!discovered().registering(element.getName())) {

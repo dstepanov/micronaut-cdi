@@ -84,6 +84,12 @@ class RegistrationDescriptionTest {
                     public static class Unbuildable {
                         public Unbuildable(String argument) {
                         }
+
+                        // a class that cannot be a bean declares no producer either (section 3.1.1)
+                        @jakarta.enterprise.inject.Produces
+                        StringBuffer unbuilt() {
+                            return new StringBuffer();
+                        }
                     }
 
                     @jakarta.enterprise.inject.Stereotype
