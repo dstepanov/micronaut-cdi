@@ -18,6 +18,7 @@ package io.micronaut.cdi.test.context;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.propagation.PropagatedContext;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.RequestContextController;
 import jakarta.enterprise.context.spi.Context;
@@ -33,7 +34,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -77,11 +80,10 @@ class ContextStoreClosingTest {
                     requests.deactivate();
                 }
                 release.countDown();
-                try {
-                    late.get(10, TimeUnit.SECONDS);
-                } catch (ExecutionException e) {
-                    // refused, as the context it was created for has ended
-                }
+                // refused, as the context it was created for has ended
+                ExecutionException refused = assertThrows(ExecutionException.class,
+                    () -> late.get(10, TimeUnit.SECONDS));
+                assertInstanceOf(ContextNotActiveException.class, refused.getCause());
                 assertEquals(1, slow.created.get());
                 assertEquals(1, slow.destroyed.size(), "what was created for the ended request is destroyed");
             } finally {
