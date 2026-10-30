@@ -27,6 +27,8 @@ import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.WatchableBeanContext;
+import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -122,7 +124,8 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     /**
      * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
      * compiled definition are constants, and two points of one type and name may declare different qualifiers.
-     * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}).
+     * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}),
+     * and as the definitions of the context change once it runs (a watch of the context).
      * Micronaut keeps the candidates of a type, a destroyed dependent's included, but matching them by the rules of
      * the specification and narrowing them is this container's work, which a dependent bean created over and over
      * would do again for each of its points (see Conformance).
@@ -149,6 +152,17 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         this.beanContext = beanContext;
         this.observers = observers;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope);
+        if (beanContext instanceof WatchableBeanContext watchable) {
+            // a definition registered with the context once it runs, or one a development reload retires or adds,
+            // changes what a point resolves to: the next resolution is made again. The watch belongs to this bean,
+            // and is closed as it is destroyed
+            watchable.definitions().watch(change -> {
+                if (!change.initial()) {
+                    change.removed().forEach(canonical::remove);
+                    refreshCandidates();
+                }
+            });
+        }
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
@@ -635,7 +649,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         // alternatives outrank everything else, and among them the one of the highest priority wins. Anything short
         // of a single winner is the ambiguity of section 2.4.2
         List<Bean<? extends X>> narrowed = CdiResolution.narrow(
-            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, beanContext),
+            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, null, beanContext),
             Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);
@@ -852,13 +866,27 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         return beanContext;
     }
 
+    /**
+     * The reference for an injection point, which is the one injected there: the point of a bean of the
+     * specification is resolved by the qualifiers it was compiled with, which needs no annotation instance, and
+     * a foreign one by the instances it hands over. A dependent bean is created for the point, on behalf of the
+     * creational context, so that the bean's own {@link InjectionPoint} is the point it was asked for.
+     */
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Object getInjectableReference(InjectionPoint injectionPoint, CreationalContext<?> ctx) {
-        Set<Bean<?>> beans = getBeans(injectionPoint.getType(),
-            injectionPoint.getQualifiers().toArray(new Annotation[0]));
-        Bean<?> bean = resolve(beans);
-        if (bean == null) {
-            throw new UnsatisfiedResolutionException("No bean qualifies for " + injectionPoint);
+        Bean<?> bean = resolvedFor(injectionPoint);
+        if (bean instanceof CdiBean<?> cdiBean && cdiBean.isDependent()
+            && ctx instanceof CdiCreationalContext<?> creation) {
+            Argument<?> type = injectionPoint instanceof CdiInjectionPoint own
+                ? own.argument() : SpecificationTypes.argumentOf(injectionPoint.getType());
+            try {
+                return creation.created().registrationAt(null, injectionPoint, (BeanDefinition) cdiBean.definition(),
+                    (Argument) type).bean();
+            } catch (BeanCreationException e) {
+                // what the bean threw comes out as Contextual.create has it come out (section 6.1.1)
+                throw CdiBean.translated(e);
+            }
         }
         return getReference(bean, injectionPoint.getType(), ctx);
     }
@@ -918,10 +946,31 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         return CdiAnnotations.bindingHashCode(types(), interceptorBinding);
     }
 
+    /**
+     * The bean an injection point resolves to.
+     *
+     * @throws UnsatisfiedResolutionException Where no bean qualifies
+     * @throws AmbiguousResolutionException   Where more than one does and nothing chooses among them
+     */
+    private Bean<?> resolvedFor(InjectionPoint injectionPoint) {
+        Set<Bean<?>> beans = injectionPoint instanceof CdiInjectionPoint own
+            ? beansOf(own.argument(), own.requiredQualifiers())
+            : getBeans(injectionPoint.getType(), injectionPoint.getQualifiers().toArray(new Annotation[0]));
+        Bean<?> bean = resolve(beans);
+        if (bean == null) {
+            throw new UnsatisfiedResolutionException("No bean qualifies for " + injectionPoint);
+        }
+        return bean;
+    }
+
+    /**
+     * Validates an injection point a program hands over as the container validates the points of its beans as it
+     * starts, by resolving it (section 5.2.2): one no bean satisfies, or more than one does, is reported as the
+     * {@code InjectionException} of that resolution. No bean is created.
+     */
     @Override
     public void validate(InjectionPoint injectionPoint) {
-        // an injection point is resolved as the bean that declares it is compiled, and one that could not be
-        // resolved has already been reported by then
+        resolvedFor(injectionPoint);
     }
 
     @Override

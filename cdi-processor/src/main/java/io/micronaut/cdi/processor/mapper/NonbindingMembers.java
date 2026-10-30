@@ -62,7 +62,7 @@ public final class NonbindingMembers {
     /**
      * The annotation interface of the given name as the compilation holds it.
      */
-    private static @Nullable ClassElement declarationOf(String name, VisitorContext context) {
+    static @Nullable ClassElement declarationOf(String name, VisitorContext context) {
         // a nested annotation is recorded by its binary name, and asked of the compiler by its canonical one
         Optional<ClassElement> found = context.getClassElement(name);
         if (found.isEmpty() && name.indexOf('$') >= 0) {
@@ -121,7 +121,7 @@ public final class NonbindingMembers {
      * The annotations of the language, of Micronaut and of this module, which are never a qualifier with a
      * member an application marks: passed over without reading anything.
      */
-    private static boolean isNeverABindingType(String name) {
+    static boolean isNeverABindingType(String name) {
         return name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("kotlin.")
             || name.startsWith("groovy.") || name.startsWith("jakarta.inject.") || name.startsWith("jakarta.annotation.")
             || name.startsWith("io.micronaut.context.annotation.") || name.startsWith("io.micronaut.core.annotation.")

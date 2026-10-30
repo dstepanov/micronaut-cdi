@@ -218,9 +218,12 @@ public final class CdiContext implements AlterableContext {
                 .orElse(null);
         }
         if (singletons != null) {
+            // the singletons Micronaut holds of the class, told apart by the container's own bean of each definition
+            // rather than a wrapper made for each: Micronaut keeps them by definition, but answers that by class
+            CdiBeanContainer container = singletons.getBean(CdiBeanContainer.class);
             for (BeanRegistration<?> registration
                 : singletons.getActiveBeanRegistrations(bean.definition().getBeanType())) {
-                if (bean.equals(new CdiBean<>(singletons, registration.getBeanDefinition()))) {
+                if (bean.equals(container.canonicalBean(registration.getBeanDefinition()))) {
                     return (T) registration.bean();
                 }
             }
@@ -317,9 +320,10 @@ public final class CdiContext implements AlterableContext {
      */
     private void destroySingleton(CdiBean<?> bean) {
         BeanContext beanContext = Objects.requireNonNull(singletons);
+        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
         for (BeanRegistration<?> registration
             : beanContext.getActiveBeanRegistrations(bean.definition().getBeanType())) {
-            if (bean.equals(new CdiBean<>(beanContext, registration.getBeanDefinition()))) {
+            if (bean.equals(container.canonicalBean(registration.getBeanDefinition()))) {
                 beanContext.destroyBean(registration);
                 return;
             }

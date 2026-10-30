@@ -40,37 +40,32 @@ import java.util.Set;
 @Internal
 public final class NonbindingAnnotationCustomizer implements ReflectionAnnotationCustomizer {
 
-    /**
-     * The members each annotation type marks, read once per type.
-     */
-    private static final ClassValue<String[]> MARKED = new ClassValue<>() {
-        @Override
-        protected String[] computeValue(Class<?> type) {
-            List<String> marked = new ArrayList<>(1);
-            for (Method member : type.getDeclaredMethods()) {
-                if (member.isAnnotationPresent(Nonbinding.class)) {
-                    marked.add(member.getName());
-                }
-            }
-            return marked.toArray(new String[0]);
-        }
-    };
-
-    @Override
-    public boolean supports(Class<? extends Annotation> annotationType) {
-        return MARKED.get(annotationType).length > 0;
-    }
-
     @Override
     public void customize(Annotation annotation, Map<CharSequence, Object> values) {
+        // read off the members as each annotation is read, which is once per instance read reflectively: no
+        // record of them is kept beside the one the JVM keeps of the members of a class
+        List<String> marked = markedOf(annotation.annotationType());
+        if (marked.isEmpty()) {
+            return;
+        }
         Set<String> listed = new LinkedHashSet<>();
         Object micronauts = values.get(AnnotationUtil.NON_BINDING_ATTRIBUTE);
         if (micronauts instanceof String[] names) {
             listed.addAll(List.of(names));
         }
-        listed.addAll(List.of(MARKED.get(annotation.annotationType())));
+        listed.addAll(marked);
         // the attribute lists itself, as the processor records it
         listed.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
         values.put(AnnotationUtil.NON_BINDING_ATTRIBUTE, listed.toArray(String[]::new));
+    }
+
+    private static List<String> markedOf(Class<? extends Annotation> type) {
+        List<String> marked = new ArrayList<>(1);
+        for (Method member : type.getDeclaredMethods()) {
+            if (member.isAnnotationPresent(Nonbinding.class)) {
+                marked.add(member.getName());
+            }
+        }
+        return marked;
     }
 }

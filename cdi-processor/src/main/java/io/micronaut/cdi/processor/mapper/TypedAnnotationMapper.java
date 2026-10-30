@@ -55,7 +55,7 @@ public final class TypedAnnotationMapper implements NamedAnnotationMapper {
             // empty typed member reads to Micronaut as no restriction at all, so Object is named outright
             types = new AnnotationClassValue<?>[] {new AnnotationClassValue<>(Object.class)};
         }
-        return List.of(annotation, AnnotationValue.builder(Bean.class)
+        return List.of(AnnotationValue.builder(Bean.class)
             .member("typed", types)
             .build());
     }

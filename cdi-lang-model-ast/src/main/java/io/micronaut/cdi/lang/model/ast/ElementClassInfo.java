@@ -125,7 +125,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
             }
             superClass = superClass.getSuperType().orElse(null);
         }
-        return found;
+        return List.copyOf(found);
     }
 
     /**
@@ -254,7 +254,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         List<MethodInfo> constructors = new ArrayList<>();
         element.getEnclosedElements(ElementQuery.CONSTRUCTORS)
             .forEach(constructor -> constructors.add(new ElementMethodInfo(constructor, this, context())));
-        return constructors;
+        return List.copyOf(constructors);
     }
 
     @Override
@@ -272,7 +272,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
                     .ifPresent(read -> methods.add(new ElementMethodInfo(read, this, context())));
             }
         }
-        return methods;
+        return List.copyOf(methods);
     }
 
     @Override
@@ -281,13 +281,23 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         for (FieldElement field : ElementMembers.fieldsOf(element)) {
             fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType(), context()), context()));
         }
-        return fields;
+        return List.copyOf(fields);
     }
 
     @Override
     public Collection<RecordComponentInfo> recordComponents() {
-        // a record component is described by the field and the accessor it stands for, both of which are
-        // reported already; it is not described again here
-        return List.of();
+        if (!element.isRecord()) {
+            return List.of();
+        }
+        // Micronaut describes each component of a record as a property, with the field and the accessor of it
+        List<RecordComponentInfo> components = new ArrayList<>();
+        for (PropertyElement property : element.getBeanProperties()) {
+            FieldElement field = property.getField().orElse(null);
+            MethodElement accessor = property.getReadMethod().orElse(null);
+            if (field != null && accessor != null) {
+                components.add(new ElementRecordComponentInfo(property, field, accessor, this, context()));
+            }
+        }
+        return List.copyOf(components);
     }
 }

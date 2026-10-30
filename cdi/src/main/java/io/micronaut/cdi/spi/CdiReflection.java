@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.spi;
 
+import io.micronaut.cdi.internal.runtime.CdiTypes;
+import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import jakarta.enterprise.inject.spi.Annotated;
@@ -41,9 +43,10 @@ import java.util.Set;
  * something that would read as there being nothing to report.</p>
  *
  * <p>The implementation reads annotations with Micronaut's {@code io.micronaut.reflection.ReflectionAnnotations}
- * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The three questions about generic types -
- * {@link #typeClosureOf}, {@link #declaredTypeOf} and {@link #eventTypeOf} - are asked through this interface so
- * that reading a class's generic signatures stays in the optional module: the type closure is Micronaut's
+ * and members with {@code io.micronaut.core.reflect.ReflectionUtils}. The two questions about generic types -
+ * {@link #typeClosureOf} and {@link #declaredTypeOf} - are asked through this interface so that reading a class's
+ * generic signatures stays in the optional module, and the type of an event is inferred from their answers as it is
+ * from a recorded hierarchy: the type closure is Micronaut's
  * {@code ReflectionArguments.typeClosureOf(ReflectionArguments.ofExact(type))}, which keeps a wildcard a wildcard
  * and a variable a variable.</p>
  *
@@ -114,8 +117,13 @@ public interface CdiReflection {
      * @return The event type
      * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
      *                                  unresolved
+     * @deprecated The container infers the type of an event itself, from {@link #declaredTypeOf} and
+     * {@link #typeClosureOf}; this answers the same inference, for a caller compiled against it
      */
-    Type eventTypeOf(Class<?> runtimeClass, Type declaredType);
+    @Deprecated(since = "1.0")
+    default Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
+        return CdiTypes.eventTypeReadBy(this, runtimeClass, SpecificationTypes.argumentOf(declaredType)).asType();
+    }
 
     /**
      * The member an injection point injects into.

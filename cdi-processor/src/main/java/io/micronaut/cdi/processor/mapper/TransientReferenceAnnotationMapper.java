@@ -46,6 +46,6 @@ public final class TransientReferenceAnnotationMapper implements NamedAnnotation
 
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
-        return List.of(annotation, AnnotationValue.builder(InjectScope.class).build());
+        return List.of(AnnotationValue.builder(InjectScope.class).build());
     }
 }

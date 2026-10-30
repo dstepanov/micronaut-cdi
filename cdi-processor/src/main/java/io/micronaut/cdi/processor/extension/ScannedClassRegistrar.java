@@ -27,8 +27,10 @@ import io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor;
 import io.micronaut.cdi.processor.visitor.ObserverVisitor;
 import io.micronaut.cdi.processor.visitor.ProducerVisitor;
 import io.micronaut.cdi.processor.visitor.ProxyabilityVisitor;
+import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
 import io.micronaut.cdi.processor.visitor.SpecificationBeans;
 import io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.order.OrderUtil;
@@ -38,6 +40,7 @@ import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
+import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.inject.writer.GeneratedFile;
@@ -175,13 +178,22 @@ final class ScannedClassRegistrar {
                     visitor.visitClass(element, context);
                 }
             }
+            // a qualified field without Inject is still no injection point: the rules are not checked, but the
+            // qualifiers Micronaut would inject such a field by are taken off it as for a class of the compilation
+            InjectionPointRulesVisitor.leaveUninjected(element);
             visitor.register(element, messages, context);
             Map<String, MemberElement> producers = new HashMap<>();
             for (MemberElement producer
                 : SpecificationBeans.producersOf(element)) {
                 producers.put(producerKey(producer), producer);
             }
+            ElementQuery<MethodElement> executable = ElementQuery.ALL_METHODS
+                .annotated(metadata -> metadata.hasStereotype(Executable.class));
             context.registerBean(element, visitor.contributors()).inject()
+                // the observers, disposers and invoked methods the visitors marked executable: the builder writes the
+                // executable methods it is handed, an instance or a static one, and finds none of its own
+                .withMethods(executable, BeanMethodElement::executable)
+                .withMethods(executable.onlyStatic(), BeanMethodElement::executable)
                 .produceBeans(ElementQuery.ALL_METHODS.onlyDeclared()
                     .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
                     produced -> describedAsVisited(produced, producers))
@@ -217,7 +229,8 @@ final class ScannedClassRegistrar {
         if (member instanceof MethodElement method) {
             StringBuilder key = new StringBuilder(method.getName()).append('(');
             for (ParameterElement parameter : method.getParameters()) {
-                key.append(parameter.getType().getName()).append(',');
+                // with its dimensions, so that produce(Foo) and produce(Foo[]) are two producers
+                key.append(RecordedTypeValues.erasedName(parameter.getType())).append(',');
             }
             return key.append(')').toString();
         }

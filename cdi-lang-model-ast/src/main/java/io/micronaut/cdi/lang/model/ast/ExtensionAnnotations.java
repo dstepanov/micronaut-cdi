@@ -91,7 +91,7 @@ final class ExtensionAnnotations {
                 }
             }
         }
-        return found;
+        return List.copyOf(found);
     }
 
     /**
@@ -185,7 +185,7 @@ final class ExtensionAnnotations {
             AnnotationInfo single = singleRepetitionIn(annotation, metadata);
             reported.add(single != null ? single : annotation);
         }
-        return reported;
+        return List.copyOf(reported);
     }
 
     private static @Nullable AnnotationInfo singleRepetitionIn(AnnotationInfo candidate, AnnotationMetadata metadata) {

@@ -62,25 +62,42 @@ final class CdiEvaluation {
     }
 
     /**
-     * Destroys what the evaluation created, every instance even when the destruction of one fails.
+     * Destroys what the evaluation created, every instance even when the destruction of one fails, and answers
+     * what the first destruction that failed threw, the later ones suppressed by it.
+     *
+     * @return What destroying threw, or {@code null}
      */
-    void complete() {
-        RuntimeException failure = null;
-        for (CreationalContext<?> creationalContext : created) {
-            try {
-                creationalContext.release();
-            } catch (RuntimeException e) {
-                if (failure == null) {
-                    failure = e;
-                } else {
-                    failure.addSuppressed(e);
+    @Nullable Throwable complete() {
+        Throwable failure = null;
+        try {
+            for (CreationalContext<?> creationalContext : created) {
+                try {
+                    creationalContext.release();
+                } catch (RuntimeException | Error e) {
+                    failure = suppressing(failure, e);
                 }
             }
+        } finally {
+            created.clear();
+            instances.clear();
         }
-        created.clear();
-        instances.clear();
-        if (failure != null) {
-            throw failure;
+        return failure;
+    }
+
+    /**
+     * The first of two failures with the second suppressed by it, where they are not one and the same.
+     *
+     * @param first  The first failure, or {@code null}
+     * @param second The second failure
+     * @return The failure to report
+     */
+    static Throwable suppressing(@Nullable Throwable first, Throwable second) {
+        if (first == null) {
+            return second;
         }
+        if (first != second) {
+            first.addSuppressed(second);
+        }
+        return first;
     }
 }

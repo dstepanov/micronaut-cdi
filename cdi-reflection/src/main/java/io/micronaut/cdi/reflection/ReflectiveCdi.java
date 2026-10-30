@@ -36,18 +36,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -133,70 +129,6 @@ public final class ReflectiveCdi implements CdiReflection {
     public Type declaredTypeOf(Class<?> type) {
         TypeVariable<?>[] variables = type.getTypeParameters();
         return variables.length == 0 ? type : GenericTypeUtils.parameterizedType(type, variables);
-    }
-
-    @Override
-    public Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
-        TypeVariable<?>[] variables = runtimeClass.getTypeParameters();
-        if (variables.length == 0) {
-            return runtimeClass;
-        }
-        // the variables the class declares are resolved against the type the event was fired as: the class's
-        // own view of that type is unified with it. The variables are told apart by their names, which are the
-        // class's own: the closure renders a variable of its own rather than the one the class declares
-        Map<String, Type> resolution = new HashMap<>();
-        Class<?> declaredRaw = CdiTypes.rawClassOf(declaredType);
-        if (declaredType instanceof ParameterizedType declaredParameterized && declaredRaw != null) {
-            for (Type supertype : typeClosureOf(declaredTypeOf(runtimeClass), false)) {
-                if (CdiTypes.rawClassOf(supertype) == declaredRaw && supertype instanceof ParameterizedType own) {
-                    Type[] ownArguments = own.getActualTypeArguments();
-                    Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
-                    for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
-                        unify(ownArguments[i], declaredArguments[i], resolution);
-                    }
-                    break;
-                }
-            }
-        }
-        Type[] arguments = new Type[variables.length];
-        for (int i = 0; i < variables.length; i++) {
-            Type resolved = resolution.get(variables[i].getName());
-            if (resolved instanceof WildcardType wildcard) {
-                Type[] uppers = wildcard.getUpperBounds();
-                resolved = uppers.length > 0 ? uppers[0] : Object.class;
-            }
-            if (resolved == null || resolved instanceof TypeVariable<?>) {
-                throw new IllegalArgumentException("The type variable " + variables[i].getName() + " of "
-                    + runtimeClass.getName() + " is not resolved by the type the event was fired as: "
-                    + declaredType.getTypeName());
-            }
-            arguments[i] = resolved;
-        }
-        return GenericTypeUtils.parameterizedType(runtimeClass, arguments);
-    }
-
-    private static void unify(Type own, Type declared, Map<String, Type> resolution) {
-        if (own instanceof TypeVariable<?> variable) {
-            resolution.put(variable.getName(), declared);
-            return;
-        }
-        if (own instanceof GenericArrayType ownArray) {
-            // an array of a variable, or of a type that uses one, T[] or List<T>[], is unified through its component
-            if (declared instanceof GenericArrayType declaredArray) {
-                unify(ownArray.getGenericComponentType(), declaredArray.getGenericComponentType(), resolution);
-            } else if (declared instanceof Class<?> declaredClass && declaredClass.isArray()) {
-                unify(ownArray.getGenericComponentType(), declaredClass.getComponentType(), resolution);
-            }
-            return;
-        }
-        if (own instanceof ParameterizedType ownParameterized
-            && declared instanceof ParameterizedType declaredParameterized) {
-            Type[] ownArguments = ownParameterized.getActualTypeArguments();
-            Type[] declaredArguments = declaredParameterized.getActualTypeArguments();
-            for (int i = 0; i < ownArguments.length && i < declaredArguments.length; i++) {
-                unify(ownArguments[i], declaredArguments[i], resolution);
-            }
-        }
     }
 
     @Override

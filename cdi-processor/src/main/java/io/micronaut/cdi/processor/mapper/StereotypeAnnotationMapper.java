@@ -48,7 +48,6 @@ public final class StereotypeAnnotationMapper implements NamedAnnotationMapper {
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         return List.of(
-            annotation,
             AnnotationValue.builder(Bean.class).build(),
             AnnotationValue.builder(DefaultScope.class).value(Prototype.class).build()
         );

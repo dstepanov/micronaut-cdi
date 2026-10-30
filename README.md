@@ -145,9 +145,10 @@ reads classes back if it asks to:
   type in Micronaut's `@RegisterAnnotations`, which has a builder generated that makes the instance without
   reflection;
 - an annotation literal with binding members handed to `select(...)`, `getBeans(...)`, `resolveObserverMethods(...)`
-  or `resolveInterceptors(...)`, unless it carries its values - an instance the builder Micronaut generates for a type
-  listed in `@RegisterAnnotations` made, or one Micronaut synthesised: the members of any other can only be read
-  reflectively;
+  or `resolveInterceptors(...)`, unless it carries its values (an instance Micronaut synthesised or a generated
+  builder made) or its type is listed in `@RegisterAnnotations`, whose generated builder reads any literal of it
+  through its accessors. The members of any other literal can only be read reflectively: without the module the
+  lookup fails, and is never made as though the literal were written at its defaults;
 - `BeanContainer.isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and `isInterceptorBinding` for an
   annotation the build recorded nothing of;
 - `BeanManager.getStereotypeDefinition` and `getInterceptorBindingDefinition`;

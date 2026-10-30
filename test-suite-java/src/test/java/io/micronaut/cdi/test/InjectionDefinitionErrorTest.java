@@ -56,6 +56,28 @@ class InjectionDefinitionErrorTest {
     }
 
     @Test
+    void anInjectionPointOfAnObserverABeanInheritsIsHeldToTheRules() {
+        // an observer a bean inherits is observed for the bean, and the other parameters of it are its injection points
+        assertRefused("""
+            package broken;
+
+            import jakarta.enterprise.context.Dependent;
+            import jakarta.enterprise.event.Observes;
+            import jakarta.enterprise.inject.spi.BeanManager;
+            import jakarta.inject.Named;
+
+            @Dependent
+            public class Subject extends Base {
+            }
+
+            abstract class Base {
+                void receive(@Observes String event, @Named BeanManager manager) {
+                }
+            }
+            """, "must name the bean it asks for");
+    }
+
+    @Test
     void aBeanDeclaringAScopeOfTheSpecificationAndOneOfItsOwnIsRefused() {
         // section 2.3.2: a bean declares at most one scope, whichever declares them
         assertRefused("""

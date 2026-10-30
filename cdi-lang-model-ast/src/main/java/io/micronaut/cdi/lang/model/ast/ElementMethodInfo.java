@@ -76,7 +76,7 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
         for (ParameterElement parameter : element.getParameters()) {
             parameters.add(new ElementParameterInfo(parameter, this, context()));
         }
-        return parameters;
+        return List.copyOf(parameters);
     }
 
     @Override

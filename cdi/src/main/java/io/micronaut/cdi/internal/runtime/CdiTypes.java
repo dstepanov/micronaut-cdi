@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * The types of the specification as the container holds them: each an {@link Argument}, which carries the type
@@ -542,23 +543,56 @@ public final class CdiTypes {
 
     private static Argument<?> resolvedEventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass,
                                                    Argument<?> declaredType) {
+        // the class over its own variables, and its closure: what the record of the class says of it, or what the
+        // module that reads classes reads of it where nothing was recorded. The variables are resolved from either the
+        // same way
         RecordedTypeIndex.Entry recorded = recordOf(index, runtimeClass);
         if (recorded == null) {
             CdiReflection reflection = reflection(index);
-            if (reflection != null) {
-                return SpecificationTypes.argumentOf(
-                    reflection.eventTypeOf(runtimeClass, declaredType.asType()));
+            if (reflection == null) {
+                return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
             }
-            return rawClassOf(declaredType) == runtimeClass ? declaredType : Argument.of(runtimeClass);
+            return eventTypeReadBy(reflection, runtimeClass, declaredType);
         }
-        List<String> variables = recorded.variables();
+        return inferredEventType(runtimeClass, recorded.variables(),
+            () -> recorded.closureOf(recorded.declaredTypeOf(runtimeClass)), declaredType);
+    }
+
+    /**
+     * The type of an event of the given runtime class that was fired as the given type, from what the module that
+     * reads classes reads of the class: the inference made of a recorded hierarchy, made of its answers.
+     *
+     * @param reflection   The module that reads classes
+     * @param runtimeClass The class of the event object
+     * @param declaredType The type the event was fired as
+     * @return The event type
+     * @throws IllegalArgumentException Where the type the event was fired as leaves a variable of the class
+     *                                  unresolved
+     */
+    public static Argument<?> eventTypeReadBy(CdiReflection reflection, Class<?> runtimeClass,
+                                              Argument<?> declaredType) {
+        Type declaration = reflection.declaredTypeOf(runtimeClass);
+        Argument<?> declared = SpecificationTypes.argumentOf(declaration);
+        List<String> variables = new ArrayList<>();
+        if (isParameterized(declared)) {
+            for (Argument<?> variable : declared.getTypeParameters()) {
+                variables.add(((GenericPlaceholder<?>) variable).getVariableName());
+            }
+        }
+        return inferredEventType(runtimeClass, variables,
+            () -> SpecificationTypes.argumentsOf(reflection.typeClosureOf(declaration, false)), declaredType);
+    }
+
+    private static Argument<?> inferredEventType(Class<?> runtimeClass, List<String> variables,
+                                                 Supplier<@Nullable List<Argument<?>>> closureOfTheClass,
+                                                 Argument<?> declaredType) {
         if (variables.isEmpty()) {
             return Argument.of(runtimeClass);
         }
         Map<String, Argument<?>> resolution = new HashMap<>();
         Class<?> declaredRaw = rawClassOf(declaredType);
         if (isParameterized(declaredType) && declaredRaw != null) {
-            List<Argument<?>> closure = recorded.closureOf(recorded.declaredTypeOf(runtimeClass));
+            List<Argument<?>> closure = closureOfTheClass.get();
             if (closure != null) {
                 for (Argument<?> supertype : closure) {
                     if (rawClassOf(supertype) == declaredRaw && isParameterized(supertype)) {

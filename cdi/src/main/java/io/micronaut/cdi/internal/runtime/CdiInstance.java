@@ -353,7 +353,7 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
      * The one definition the lookup resolves to, narrowed the way section 2.4.2 narrows several candidates.
      */
     private BeanDefinition<T> one() {
-        List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions(), type, beanContext);
+        List<BeanDefinition<T>> candidates = CdiResolution.narrowToOne(definitions(), type, narrowedBy, beanContext);
         if (candidates.isEmpty()) {
             throw new UnsatisfiedResolutionException("No bean of type " + type.getTypeName() + " qualifies");
         }
@@ -382,7 +382,7 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
 
     @Override
     public boolean isAmbiguous() {
-        return CdiResolution.narrowToOne(definitions(), type, beanContext).size() > 1;
+        return CdiResolution.narrowToOne(definitions(), type, narrowedBy, beanContext).size() > 1;
     }
 
     @Override
@@ -420,9 +420,9 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
      */
     static <T> void destroyResolved(BeanContext beanContext, BeanDefinition<T> definition, T instance) {
         if (CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
-            CdiBean<T> bean = new CdiBean<>(beanContext, definition);
-            Context context = beanContext
-                .getBean(CdiBeanContainer.class).getContext(bean.getScope());
+            CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
+            CdiBean<?> bean = container.canonicalBean(definition);
+            Context context = container.getContext(bean.getScope());
             if (context instanceof AlterableContext alterable) {
                 alterable.destroy(bean);
                 return;
@@ -548,8 +548,10 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Bean<T> getBean() {
-            return new CdiBean<>(beanContext, definition);
+            // the container's own bean of the definition, the one it answers with
+            return (Bean<T>) beanContext.getBean(CdiBeanContainer.class).canonicalBean(definition);
         }
 
         @Override
