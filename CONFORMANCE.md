@@ -707,6 +707,18 @@ when that thread needs to create the same bean — a bean is created under a loc
 of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
 
+A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
+`RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
+the context's instance and the context destroys it; but Micronaut generates a scoped proxy only for a definition
+it compiled, and nothing is generated for a synthetic bean beyond the definitions of the classes its extension
+named. A reference to it injected into a bean of a wider scope is therefore what the scope's context held at
+injection - or nothing, outside an active context - rather than a proxy that follows the active context
+(`NormalScopedSyntheticBeanTest`, disabled). Look the bean up through `Instance` where it is used instead.
+Closing this needs a proxy class per normal scoped synthetic bean - Micronaut's compiled scoped proxy of the
+implementation class, written by the processor beside the creator's definition - which the rule that the
+processor generates no class beyond Micronaut's own definitions currently rules out; see "Open points in
+Micronaut Core".
+
 ## The technology compatibility kit
 
 The `micronaut-cdi-tck` module resolves `jakarta.enterprise:cdi-tck-core-impl` from Maven Central at build time,
@@ -809,6 +821,12 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A definition registered at runtime has no scoped proxy.** `RuntimeBeanDefinition.Builder.scope` routes a bean
+  to a custom scope, but the client proxy of a normal scope (`ScopedProxy`) is generated AOP machinery that only a
+  compiled definition gets, and `RuntimeProxyCreator` is internal. A normal scoped synthetic bean is therefore
+  injected without a proxy (see "Known limitations a review has named"). Either the processor writes the
+  implementation's compiled scoped proxy - one generated class per such bean, needing the user's decision on the
+  no-new-classes rule - or core accepts a proxy definition for a runtime definition.
 - **Annotations as the source wrote them are derived, not recorded.** A repeatable annotation is folded into its
   container, and what Micronaut's mappers add is not told apart from what the source wrote. The language model
   unfolds a container of one repetition and filters Micronaut's own annotations

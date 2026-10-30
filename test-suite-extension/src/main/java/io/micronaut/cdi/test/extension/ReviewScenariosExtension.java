@@ -65,6 +65,10 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
             .scope(RequestScoped.class)
             .createWith(TicketCounterCreator.class)
             .disposeWith(TicketCounterDisposer.class);
+        components.addBean(Shift.class)
+            .type(Shift.class)
+            .scope(RequestScoped.class)
+            .createWith(ShiftCreator.class);
         components.addBean(Signal.class)
             .type(Signal.class)
             .alternative(true)
@@ -142,6 +146,16 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
         @Override
         public void dispose(TicketCounter instance, Instance<Object> lookup, Parameters params) {
             TicketCounter.DISPOSED.incrementAndGet();
+        }
+    }
+
+    /**
+     * Creates a shift.
+     */
+    public static final class ShiftCreator implements SyntheticBeanCreator<Shift> {
+        @Override
+        public Shift create(Instance<Object> lookup, Parameters params) {
+            return new Shift();
         }
     }
 
