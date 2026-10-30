@@ -230,7 +230,7 @@ final class SynthesisPhase {
         AnnotationValueBuilder<CdiSyntheticBean> record = AnnotationValue.builder(CdiSyntheticBean.class)
             .member("id", bean.id())
             .member("implementation", new AnnotationClassValue<>(bean.implementation().getName()))
-            .member("types", classValues(bean.types()))
+            .member("types", beanTypesOf(bean))
             .member(CdiSyntheticBean.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]))
             .member("qualifierTypes", typesOf(qualifiers));
         Scope scope = scopeOf(bean);
@@ -300,6 +300,15 @@ final class SynthesisPhase {
             types[i] = new AnnotationClassValue<>(annotations.get(i).getAnnotationName());
         }
         return types;
+    }
+
+    private static AnnotationValue<?>[] beanTypesOf(RecordingBeanBuilder<?> bean) {
+        List<Type> types = bean.types();
+        AnnotationValue<?>[] records = new AnnotationValue<?>[types.size()];
+        for (int i = 0; i < records.length; i++) {
+            records[i] = SyntheticRecords.beanTypeOf(types.get(i));
+        }
+        return records;
     }
 
     private static AnnotationClassValue<?>[] classValues(List<ClassElement> classes) {

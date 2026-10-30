@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.internal.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
+import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
@@ -24,6 +26,7 @@ import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifiers;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
+import io.micronaut.cdi.internal.runtime.RecordedTypes;
 import io.micronaut.cdi.internal.runtime.OwnedDependents;
 import io.micronaut.cdi.internal.runtime.RecordedInvoker;
 import io.micronaut.context.BeanContext;
@@ -162,8 +165,9 @@ public final class RecordedSynthesis {
             new IllegalStateException("The implementation class " + record.stringValue("implementation").orElse("")
                 + " of a synthetic bean is not on the classpath"));
         Class<? extends Annotation> scope = scopeOf(record);
+        List<Argument<?>> types = typesOf(record);
         RuntimeBeanDefinition.Builder<T> builder = RuntimeBeanDefinition
-            .builder(Argument.of(implementation), creationContext ->
+            .builder(beanTypeOf(implementation, types), creationContext ->
                 create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
                     creationContext));
         List<AnnotationValue<Annotation>> qualifiers = record.getAnnotations(CdiSyntheticBean.QUALIFIERS);
@@ -191,8 +195,18 @@ public final class RecordedSynthesis {
             builder.singleton(false);
         }
         // the bean types are exactly what was declared (or the API's {Object} default) — the implementation
-        // class is not among them unless the extension said so
-        builder.exposedTypes(record.classValues("types"));
+        // class is not among them unless the extension said so — each with the type arguments it was declared
+        // with, so that the definition answers what it implements a type as from what was recorded rather than
+        // from the generic signature of the implementation class
+        Class<?>[] exposed = new Class<?>[types.size()];
+        for (int i = 0; i < exposed.length; i++) {
+            Argument<?> type = types.get(i);
+            exposed[i] = type.getType();
+            if (type.getType() != implementation) {
+                builder.typeArguments(type.getType(), type.getTypeParameters());
+            }
+        }
+        builder.exposedTypes(exposed);
         if (disposer != null) {
             // the definition disposes of each instance it created as the instance is destroyed, which is the
             // moment the extension meant (section 2.10.5)
@@ -200,6 +214,32 @@ public final class RecordedSynthesis {
                 dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, parameters, instance, disposalContext));
         }
         beanContext.registerBeanDefinition(builder.build());
+    }
+
+    /**
+     * The bean types the extension declared, as it declared them.
+     */
+    private static List<Argument<?>> typesOf(AnnotationValue<CdiSyntheticBean> record) {
+        List<AnnotationValue<CdiRecordedType>> recorded = record.getAnnotations("types", CdiRecordedType.class);
+        List<Argument<?>> types = new ArrayList<>(recorded.size());
+        for (AnnotationValue<CdiRecordedType> type : recorded) {
+            types.add(RecordedTypes.typeOf(type));
+        }
+        return types;
+    }
+
+    /**
+     * The type the definition is of: the implementation class, with the arguments the extension declared it with
+     * where it declared the implementation class itself a parameterized bean type.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> Argument<T> beanTypeOf(Class<T> implementation, List<Argument<?>> types) {
+        for (Argument<?> type : types) {
+            if (type.getType() == implementation) {
+                return (Argument<T>) type;
+            }
+        }
+        return Argument.of(implementation);
     }
 
     /**
@@ -287,6 +327,8 @@ public final class RecordedSynthesis {
         if (record.booleanValue("alternative").orElse(false)) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }
+        // the bean types are the ones the definition is registered with, which are exactly the declared ones
+        metadata.addDeclaredAnnotation(CdiDeclaredTypes.class.getName(), Map.of());
         return metadata;
     }
 

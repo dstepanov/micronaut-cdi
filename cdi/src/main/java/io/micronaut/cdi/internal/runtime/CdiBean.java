@@ -18,6 +18,7 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
+import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
 import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.context.BeanRegistration;
@@ -220,6 +221,19 @@ public class CdiBean<T> implements Bean<T> {
             return List.of(definition.asArgument(), Argument.OBJECT_ARGUMENT);
         }
         List<Argument<?>> types = new ArrayList<>();
+        if (definition.getAnnotationMetadata().hasDeclaredAnnotation(CdiDeclaredTypes.class)) {
+            // a synthetic bean (section 2.10.5) is a bean of exactly the types its extension declared, each with
+            // the arguments it was declared with, which its definition was registered with: nothing is worked out
+            // from the implementation class, whose own supertypes are not bean types unless they were declared
+            for (Class<?> exposed : definition.getExposedTypes()) {
+                List<Argument<?>> arguments = definition.getTypeArguments(exposed);
+                CdiTypes.addDistinct(types, arguments.isEmpty() ? Argument.of(exposed)
+                    : Argument.of(exposed, (String) null, arguments.toArray(Argument.ZERO_ARGUMENTS)));
+            }
+            types.removeIf(type -> !CdiAssignability.isLegalBeanType(type));
+            CdiTypes.addDistinct(types, Argument.OBJECT_ARGUMENT);
+            return types;
+        }
         // the types a bean narrowed itself to are the ones it named with Typed, which is asked for rather than
         // Micronaut's own set of exposed types: those are what Micronaut resolves the bean by, and it exposes an
         // array by its component type as well, which is not a bean type of the array

@@ -79,9 +79,9 @@ final class SyntheticBeanInfo implements BeanInfo {
     public Collection<Type> types() {
         List<Type> types = new ArrayList<>();
         boolean object = false;
-        for (ClassElement type : bean.types()) {
-            object = object || "java.lang.Object".equals(type.getName());
-            types.add(ElementTypes.of(type, context));
+        for (Type type : bean.types()) {
+            object = object || type.isClass() && "java.lang.Object".equals(type.asClass().declaration().name());
+            types.add(type);
         }
         if (!object) {
             // every bean has Object among its types (section 2.2)
