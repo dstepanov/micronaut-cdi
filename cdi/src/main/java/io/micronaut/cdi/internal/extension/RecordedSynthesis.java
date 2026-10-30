@@ -48,6 +48,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -58,6 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -105,15 +107,15 @@ public final class RecordedSynthesis {
         // definition of the application
         for (BeanDefinition<?> definition : recorded(CdiSyntheticBean.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticBean.class).ifPresent(record ->
-                beans.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
+                putOnce(beans, record.stringValue("id").orElseThrow(), definition, CdiSyntheticBean.class));
         }
         for (BeanDefinition<?> definition : recorded(CdiSyntheticDisposer.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticDisposer.class).ifPresent(record ->
-                disposers.putIfAbsent(record.stringValue().orElseThrow(), definition));
+                putOnce(disposers, record.stringValue().orElseThrow(), definition, CdiSyntheticDisposer.class));
         }
         for (BeanDefinition<?> definition : recorded(CdiSyntheticObserver.class)) {
             definition.getAnnotationMetadata().findAnnotation(CdiSyntheticObserver.class).ifPresent(record ->
-                observers.putIfAbsent(record.stringValue("id").orElseThrow(), definition));
+                putOnce(observers, record.stringValue("id").orElseThrow(), definition, CdiSyntheticObserver.class));
         }
         if (beans.isEmpty() && observers.isEmpty()) {
             return;
@@ -158,6 +160,28 @@ public final class RecordedSynthesis {
         // registered, rather than at the first invocation (CDI 4.1, chapter 7)
         for (RecordedInvoker invoker : invokers) {
             invoker.validateLookups();
+        }
+    }
+
+    /**
+     * Keeps the first record of a component, and makes sure any other of the same identity records the same
+     * component: two compilations that each ran the extension recorded it twice, and it is one component; two
+     * records of one identity that differ are two compilations whose extension described different components,
+     * of which keeping either would silently lose the other.
+     */
+    private static void putOnce(Map<String, BeanDefinition<?>> records, String id, BeanDefinition<?> definition,
+                                Class<? extends Annotation> recordType) {
+        BeanDefinition<?> known = records.putIfAbsent(id, definition);
+        if (known == null || known == definition) {
+            return;
+        }
+        if (known.getBeanType() != definition.getBeanType() || !Objects.equals(
+            known.getAnnotationMetadata().getAnnotation(recordType),
+            definition.getAnnotationMetadata().getAnnotation(recordType))) {
+            throw new DeploymentException("The synthetic component " + id + " was recorded differently by two "
+                + "compilations, by " + known.getName() + " and by " + definition.getName() + ": a build compatible "
+                + "extension that describes different components in different compilations of one application "
+                + "describes them under the same identity, and the container cannot tell which is meant");
         }
     }
 
