@@ -171,7 +171,7 @@ final class PortableEvents {
         @Override
         public AnnotatedTypeConfigurator<X> configureAnnotatedType() {
             whileNotifying();
-            return new TypeConfigurator<>(type, added, types);
+            return new TypeConfigurator<>(this, type, added, types);
         }
 
         @Override
@@ -189,11 +189,15 @@ final class PortableEvents {
 
         private static final String NAME = "AnnotatedTypeConfigurator";
 
+        // the event that handed the configurator out, which it is only to be used while that event is notified
+        private final PortableEvent event;
         private final AnnotatedType<T> type;
         private final List<Annotation> added;
         private final CompiledAnnotationTypes types;
 
-        TypeConfigurator(AnnotatedType<T> type, List<Annotation> added, CompiledAnnotationTypes types) {
+        TypeConfigurator(PortableEvent event, AnnotatedType<T> type, List<Annotation> added,
+                         CompiledAnnotationTypes types) {
+            this.event = event;
             this.type = type;
             this.added = added;
             this.types = types;
@@ -201,11 +205,14 @@ final class PortableEvents {
 
         @Override
         public AnnotatedType<T> getAnnotated() {
+            event.whileNotifying();
             return type;
         }
 
         @Override
         public AnnotatedTypeConfigurator<T> add(Annotation annotation) {
+            // kept and used during a later event, what it added would be accepted and never applied
+            event.whileNotifying();
             if (!CdiQualifier.isQualifierType(types, annotation.annotationType())) {
                 throw new UnsupportedOperationException("AnnotatedTypeConfigurator.add(@"
                     + annotation.annotationType().getName() + ") is not supported by a compile-time container: "
