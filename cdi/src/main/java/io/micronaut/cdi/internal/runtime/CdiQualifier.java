@@ -24,7 +24,6 @@ import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.annotation.AnnotationValueProvider;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.Destroyed;
@@ -465,13 +464,6 @@ public final class CdiQualifier {
         }
         String name = annotation.annotationType().getName();
         if (Boolean.TRUE.equals(types.isMarker(name))) {
-            return new CdiQualifier(new AnnotationValue<>(name), null, annotation);
-        }
-        if (!(annotation instanceof AnnotationValueProvider<?>) && Boolean.TRUE.equals(types.isDefaultedEverywhere(name))
-            && types.beanContext().findBean(CdiReflection.class).isEmpty()
-            && CdiAnnotations.builderOf(types.beanContext(), annotation.annotationType()) == null) {
-            // an instance nothing can read without reflection, of a type whose every binding member has a default:
-            // read as written at its defaults, which is what it was read as before the members were recorded
             return new CdiQualifier(new AnnotationValue<>(name), null, annotation);
         }
         AnnotationValue<?> values = CdiAnnotations.valuesOf(types.beanContext(), annotation,
