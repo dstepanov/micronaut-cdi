@@ -42,13 +42,13 @@ class NormalScopedSyntheticBeanTest {
             int first;
             requests.activate();
             try {
-                first = desk.shift.number();
+                first = desk.shiftNumber();
             } finally {
                 requests.deactivate();
             }
             requests.activate();
             try {
-                assertNotEquals(first, desk.shift.number());
+                assertNotEquals(first, desk.shiftNumber());
             } finally {
                 requests.deactivate();
             }
@@ -63,5 +63,15 @@ class NormalScopedSyntheticBeanTest {
 
         @Inject
         Shift shift;
+
+        /**
+         * The number of the shift, read through the reference the desk was injected with: called on the desk's
+         * client proxy, it reaches the desk itself, where a field read on the proxy would not.
+         *
+         * @return The number
+         */
+        public int shiftNumber() {
+            return shift.number();
+        }
     }
 }

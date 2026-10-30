@@ -711,9 +711,10 @@ A synthetic bean in a normal scope has no client proxy. It is registered as the 
 `RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
 the context's instance and the context destroys it; but Micronaut generates a scoped proxy only for a definition
 it compiled, and nothing is generated for a synthetic bean beyond the definitions of the classes its extension
-named. A reference to it injected into a bean of a wider scope is therefore what the scope's context held at
-injection - or nothing, outside an active context - rather than a proxy that follows the active context
-(`NormalScopedSyntheticBeanTest`, disabled). Look the bean up through `Instance` where it is used instead.
+named. A reference to it injected into a bean of a wider scope is therefore the instance the scope's context held at
+injection, which a later request still sees, rather than a proxy that follows the active context
+(`NormalScopedSyntheticBeanTest`, disabled). Injecting a normal scoped synthetic bean into a bean of a wider scope
+is unsupported; look the bean up through `Instance` where it is used instead.
 Closing this needs a proxy class per normal scoped synthetic bean - Micronaut's compiled scoped proxy of the
 implementation class, written by the processor beside the creator's definition - which the rule that the
 processor generates no class beyond Micronaut's own definitions currently rules out; see "Open points in
