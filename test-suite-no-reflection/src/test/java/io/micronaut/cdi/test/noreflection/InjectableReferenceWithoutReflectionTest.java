@@ -70,6 +70,36 @@ class InjectableReferenceWithoutReflectionTest {
         Book book;
     }
 
+    interface Fragile {
+    }
+
+    @Dependent
+    static class Shattering implements Fragile {
+        Shattering() {
+            throw new IllegalStateException("shattered");
+        }
+    }
+
+    @Dependent
+    static class Handler {
+        @Inject
+        Fragile fragile;
+    }
+
+    @Test
+    void whatTheCreatedBeanThrowsIsThrownAsItWas() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = (BeanManager) context.getBean(MicronautBeanContainer.class);
+            Bean<?> handler = manager.getBeans(Handler.class).iterator().next();
+            InjectionPoint point = handler.getInjectionPoints().iterator().next();
+            CreationalContext<?> creation = manager.createCreationalContext(null);
+            IllegalStateException thrown = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> manager.getInjectableReference(point, creation));
+            assertEquals("shattered", thrown.getMessage());
+            creation.release();
+        }
+    }
+
     @Test
     void theReferenceIsResolvedByTheCompiledQualifiersAndCreatedForThePoint() {
         try (ApplicationContext context = ApplicationContext.run()) {
