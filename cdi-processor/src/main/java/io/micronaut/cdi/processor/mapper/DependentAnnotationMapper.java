@@ -45,9 +45,9 @@ public final class DependentAnnotationMapper implements NamedAnnotationMapper {
 
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
-        // the annotation of the specification is not kept beside the Micronaut one it was read as: it is
-        // annotated jakarta.inject.Scope itself, so keeping it would leave the bean declaring a second scope that
-        // has no context to be resolved in. What it was written with is recorded instead
+        // Micronaut keeps the annotation of the specification beside what it is read as; being annotated
+        // jakarta.inject.Scope itself it would leave the bean declaring a second scope that has no context to be
+        // resolved in, so the scope visitor removes it (CdiScopeVisitor). What it was written with is recorded here
         return CdiScopes.annotationsOf(Cdi.DEPENDENT, false);
     }
 }

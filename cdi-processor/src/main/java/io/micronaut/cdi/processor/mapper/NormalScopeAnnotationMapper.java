@@ -55,7 +55,6 @@ public final class NormalScopeAnnotationMapper implements NamedAnnotationMapper 
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         return List.of(
-            annotation,
             AnnotationValue.builder(Bean.class).build(),
             AnnotationValue.builder(CdiApplicationScope.class).build()
         );
