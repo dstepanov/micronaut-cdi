@@ -849,13 +849,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object getInjectableReference(InjectionPoint injectionPoint, CreationalContext<?> ctx) {
-        Set<Bean<?>> beans = injectionPoint instanceof CdiInjectionPoint own
-            ? beansOf(own.argument(), own.requiredQualifiers())
-            : getBeans(injectionPoint.getType(), injectionPoint.getQualifiers().toArray(new Annotation[0]));
-        Bean<?> bean = resolve(beans);
-        if (bean == null) {
-            throw new UnsatisfiedResolutionException("No bean qualifies for " + injectionPoint);
-        }
+        Bean<?> bean = resolvedFor(injectionPoint);
         if (bean instanceof CdiBean<?> cdiBean && cdiBean.isDependent()
             && ctx instanceof CdiCreationalContext<?> creation) {
             Argument<?> type = injectionPoint instanceof CdiInjectionPoint own
@@ -921,10 +915,31 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         return CdiAnnotations.bindingHashCode(types(), interceptorBinding);
     }
 
+    /**
+     * The bean an injection point resolves to.
+     *
+     * @throws UnsatisfiedResolutionException Where no bean qualifies
+     * @throws AmbiguousResolutionException   Where more than one does and nothing chooses among them
+     */
+    private Bean<?> resolvedFor(InjectionPoint injectionPoint) {
+        Set<Bean<?>> beans = injectionPoint instanceof CdiInjectionPoint own
+            ? beansOf(own.argument(), own.requiredQualifiers())
+            : getBeans(injectionPoint.getType(), injectionPoint.getQualifiers().toArray(new Annotation[0]));
+        Bean<?> bean = resolve(beans);
+        if (bean == null) {
+            throw new UnsatisfiedResolutionException("No bean qualifies for " + injectionPoint);
+        }
+        return bean;
+    }
+
+    /**
+     * Validates an injection point a program hands over as the container validates the points of its beans as it
+     * starts, by resolving it (section 5.2.2): one no bean satisfies, or more than one does, is reported as the
+     * {@code InjectionException} of that resolution. No bean is created.
+     */
     @Override
     public void validate(InjectionPoint injectionPoint) {
-        // an injection point is resolved as the bean that declares it is compiled, and one that could not be
-        // resolved has already been reported by then
+        resolvedFor(injectionPoint);
     }
 
     @Override

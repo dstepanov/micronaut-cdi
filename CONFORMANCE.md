@@ -576,7 +576,9 @@ container bring of their own, which are the ones under `io.micronaut` and `jakar
 ### The bean manager answers what CDI Lite can
 
 *Section 11.1.* The programmatic access CDI Lite describes is the `BeanContainer`. The `BeanManager` of CDI Full
-extends it, and is implemented here as far as Lite reaches: looking a bean up, resolving an injectable reference,
+extends it, and is implemented here as far as Lite reaches: looking a bean up, resolving an injectable reference
+(a dependent bean is created for the point it is asked for), validating an injection point a program hands over
+(it is resolved, and an unsatisfied or ambiguous one is reported; nothing is created),
 comparing two qualifiers or two interceptor bindings by the members that bind, and reading the definition of a
 stereotype or an interceptor binding, which is answered by `micronaut-cdi-reflection`. It is a bean, so a program
 can inject it.
