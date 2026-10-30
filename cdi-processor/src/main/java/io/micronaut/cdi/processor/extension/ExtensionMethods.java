@@ -54,6 +54,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -136,7 +137,7 @@ final class ExtensionMethods {
         // as those classes come past. Within each phase the methods run by their priority, lowest first
         // (section 2.10)
         for (BuildCompatibleExtension extension : extensions) {
-            for (Method method : extension.getClass().getDeclaredMethods()) {
+            for (Method method : declaredMethodsOf(extension.getClass())) {
                 if (method.isAnnotationPresent(Discovery.class)) {
                     validateDiscovery(method);
                     method.setAccessible(true);
@@ -148,7 +149,7 @@ final class ExtensionMethods {
         List<ExtensionMethod> enhancements = new ArrayList<>();
         List<ExtensionMethod> registrations = new ArrayList<>();
         for (BuildCompatibleExtension extension : extensions) {
-            for (Method method : extension.getClass().getDeclaredMethods()) {
+            for (Method method : declaredMethodsOf(extension.getClass())) {
                 if (method.isAnnotationPresent(Enhancement.class)) {
                     validateEnhancement(method);
                     method.setAccessible(true);
@@ -848,6 +849,20 @@ final class ExtensionMethods {
      * @param extension The extension
      * @param method    The method
      */
+    /**
+     * The methods a class declares, in an order every compilation sees alike: by name, then by parameter types. The
+     * order reflection hands them out in is unspecified, and the synthetic components of an extension are
+     * identified by the order its synthesis methods described them in, so two compilations of one application
+     * running the methods in different orders would record one component under two identities, and two components
+     * under one.
+     */
+    private static List<Method> declaredMethodsOf(Class<?> type) {
+        List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
+        methods.sort(Comparator.comparing(Method::getName)
+            .thenComparing(method -> Arrays.toString(method.getParameterTypes())));
+        return methods;
+    }
+
     private record ExtensionMethod(BuildCompatibleExtension extension, Method method) {
 
         private int priority() {
