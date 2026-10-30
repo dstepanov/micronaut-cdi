@@ -94,6 +94,21 @@ public class RegisteredQualifiersWithoutReflectionTest {
     }
 
     @Test
+    void anAccessorThatFailsFailsTheReadOfTheLiteral() {
+        Topping failing = new Topping.Literal("cream", "cold") {
+            @Override
+            public String value() {
+                throw new UnsupportedOperationException("the accessor failed");
+            }
+        };
+        try (ApplicationContext ignored = ApplicationContext.run()) {
+            UnsupportedOperationException thrown = org.junit.jupiter.api.Assertions.assertThrows(
+                UnsupportedOperationException.class, () -> CDI.current().select(Dessert.class, failing).get());
+            assertEquals("the accessor failed", thrown.getMessage());
+        }
+    }
+
+    @Test
     void theQualifiersOfABeanAreInstancesOfARegisteredAnnotationType() {
         try (ApplicationContext ignored = ApplicationContext.run()) {
             MicronautBeanContainer container = (MicronautBeanContainer) CDI.current().getBeanContainer();
