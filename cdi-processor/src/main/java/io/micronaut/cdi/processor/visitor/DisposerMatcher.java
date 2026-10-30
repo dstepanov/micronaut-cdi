@@ -388,12 +388,14 @@ final class DisposerMatcher {
     private static List<AnnotationValue<?>> qualifiers(Element element) {
         List<AnnotationValue<?>> qualifiers = new ArrayList<>();
         for (String name : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
-            if (NOT_COMPARED.contains(name) || !element.hasDeclaredAnnotation(name)) {
+            if (NOT_COMPARED.contains(name)) {
                 continue;
             }
+            // the occurrences the element declares, a repeated qualifier's read out of the container Micronaut keeps
+            // them in: their presence is what says the element declares the qualifier
             List<AnnotationValue<Annotation>> occurrences =
                 element.getAnnotationMetadata().getDeclaredAnnotationValuesByName(name);
-            if (occurrences.isEmpty()) {
+            if (occurrences.isEmpty() && element.hasDeclaredAnnotation(name)) {
                 AnnotationValue<Annotation> single = element.getAnnotation(name);
                 if (single != null) {
                     qualifiers.add(single);
