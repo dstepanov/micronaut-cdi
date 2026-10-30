@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.internal.runtime.CdiEventMetadata;
 import io.micronaut.cdi.internal.runtime.CdiNotifiable;
 import io.micronaut.cdi.internal.runtime.CdiQualifier;
 import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
@@ -31,7 +32,6 @@ import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
-import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 
 import java.lang.annotation.Annotation;
@@ -151,7 +151,8 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public void notify(T event) {
-        notify(event, new Metadata(getObservedQualifiers(), eventType));
+        // the qualifiers are made annotation instances only if the observer asks for them, as for any observer
+        notify(event, new CdiEventMetadata(beanContext, observedQualifiers(), null, eventArgument));
     }
 
     @SuppressWarnings("unchecked")
@@ -183,24 +184,6 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     @SuppressWarnings("unchecked")
     private SyntheticObserver<T> instantiate() {
         return (SyntheticObserver<T>) beanContext.getBean(definition);
-    }
-
-    private record Metadata(Set<Annotation> qualifiers, Type type) implements EventMetadata {
-
-        @Override
-        public Set<Annotation> getQualifiers() {
-            return qualifiers;
-        }
-
-        @Override
-        public @Nullable InjectionPoint getInjectionPoint() {
-            return null;
-        }
-
-        @Override
-        public Type getType() {
-            return type;
-        }
     }
 
     private record Context<T>(T event, EventMetadata metadata) implements EventContext<T> {
