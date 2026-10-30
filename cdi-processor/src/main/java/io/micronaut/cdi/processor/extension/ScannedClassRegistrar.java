@@ -29,6 +29,7 @@ import io.micronaut.cdi.processor.visitor.ProducerVisitor;
 import io.micronaut.cdi.processor.visitor.ProxyabilityVisitor;
 import io.micronaut.cdi.processor.visitor.SpecificationBeans;
 import io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.order.OrderUtil;
@@ -38,6 +39,7 @@ import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
+import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.inject.writer.GeneratedFile;
@@ -181,7 +183,13 @@ final class ScannedClassRegistrar {
                 : SpecificationBeans.producersOf(element)) {
                 producers.put(producerKey(producer), producer);
             }
+            ElementQuery<MethodElement> executable = ElementQuery.ALL_METHODS
+                .annotated(metadata -> metadata.hasStereotype(Executable.class));
             context.registerBean(element, visitor.contributors()).inject()
+                // the observers, disposers and invoked methods the visitors marked executable: the builder writes the
+                // executable methods it is handed, an instance or a static one, and finds none of its own
+                .withMethods(executable, BeanMethodElement::executable)
+                .withMethods(executable.onlyStatic(), BeanMethodElement::executable)
                 .produceBeans(ElementQuery.ALL_METHODS.onlyDeclared()
                     .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
                     produced -> describedAsVisited(produced, producers))
