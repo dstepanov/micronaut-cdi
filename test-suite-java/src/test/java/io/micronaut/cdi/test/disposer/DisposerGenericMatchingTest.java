@@ -25,7 +25,6 @@ import jakarta.enterprise.util.TypeLiteral;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class DisposerGenericMatchingTest {
 
-    static final List<String> DISPOSED = Collections.synchronizedList(new ArrayList<>());
+    /**
+     * What was disposed of, held by the container.
+     */
+    @jakarta.inject.Singleton
+    public static class Disposals {
+        private final List<String> disposed = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        void add(String what) {
+            disposed.add(what);
+        }
+
+        List<String> disposed() {
+            return List.copyOf(disposed);
+        }
+    }
 
     static class Flipped<A, B> extends HashMap<B, A> {
         final String name;
@@ -55,18 +68,24 @@ class DisposerGenericMatchingTest {
 
     @Dependent
     public static class FlippedMaker {
+        @jakarta.inject.Inject
+        Disposals disposals;
+
         @Produces
         Flipped<String, Integer> flipped() {
             return new Flipped<>("flipped");
         }
 
         void dispose(@Disposes Map<Integer, String> map) {
-            DISPOSED.add(map instanceof Flipped<?, ?> flipped ? flipped.name : "map");
+            disposals.add(map instanceof Flipped<?, ?> flipped ? flipped.name : "map");
         }
     }
 
     @Dependent
     public static class StringsMaker {
+        @jakarta.inject.Inject
+        Disposals disposals;
+
         @Produces
         Strings strings() {
             return new Strings();
@@ -78,7 +97,7 @@ class DisposerGenericMatchingTest {
         }
 
         void dispose(@Disposes List<Integer> numbers) {
-            DISPOSED.add(((Object) numbers) instanceof Strings ? "strings" : "numbers");
+            disposals.add(((Object) numbers) instanceof Strings ? "strings" : "numbers");
         }
     }
 
@@ -90,12 +109,13 @@ class DisposerGenericMatchingTest {
 
     @Test
     void theProducedTypeIsProjectedOntoTheDisposedClassBeforeItsArgumentsAreCompared() {
-        DISPOSED.clear();
-        try (ApplicationContext ignored = ApplicationContext.run()) {
+        List<String> disposed;
+        try (ApplicationContext context = ApplicationContext.run()) {
             createAndDestroy(new TypeLiteral<Flipped<String, Integer>>() { });
             createAndDestroy(new TypeLiteral<Strings>() { });
             createAndDestroy(new TypeLiteral<List<Integer>>() { });
+            disposed = context.getBean(Disposals.class).disposed();
         }
-        assertEquals(List.of("flipped", "numbers"), DISPOSED);
+        assertEquals(List.of("flipped", "numbers"), disposed);
     }
 }

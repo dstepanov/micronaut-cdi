@@ -29,8 +29,6 @@ import org.junit.jupiter.api.Test;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +41,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class DisposerQualifierMatchingTest {
 
-    static final List<String> DISPOSED = Collections.synchronizedList(new ArrayList<>());
+    /**
+     * What was disposed of, held by the container.
+     */
+    @jakarta.inject.Singleton
+    public static class Disposals {
+        private final List<String> disposed = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        void add(String what) {
+            disposed.add(what);
+        }
+
+        List<String> disposed() {
+            return List.copyOf(disposed);
+        }
+    }
 
     @Qualifier
     @Retention(RetentionPolicy.RUNTIME)
@@ -90,6 +102,9 @@ class DisposerQualifierMatchingTest {
 
     @Dependent
     public static class ShapeMaker {
+        @jakarta.inject.Inject
+        Disposals disposals;
+
         @Produces
         @Red
         @Big
@@ -98,12 +113,15 @@ class DisposerQualifierMatchingTest {
         }
 
         void dispose(@Disposes @Red Shape shape) {
-            DISPOSED.add(shape.name());
+            disposals.add(shape.name());
         }
     }
 
     @Dependent
     public static class PaintMaker {
+        @jakarta.inject.Inject
+        Disposals disposals;
+
         @Produces
         @Red
         Paint red() {
@@ -117,12 +135,15 @@ class DisposerQualifierMatchingTest {
         }
 
         void dispose(@Disposes @Any @Red Paint paint) {
-            DISPOSED.add(paint.name());
+            disposals.add(paint.name());
         }
     }
 
     @Dependent
     public static class LabelMaker {
+        @jakarta.inject.Inject
+        Disposals disposals;
+
         @Produces
         @Tags({"x", "y"})
         Label label() {
@@ -130,12 +151,15 @@ class DisposerQualifierMatchingTest {
         }
 
         void dispose(@Disposes @Tags({"x", "y"}) Label label) {
-            DISPOSED.add(label.name());
+            disposals.add(label.name());
         }
     }
 
     @Dependent
     public static class CrateMaker {
+        @jakarta.inject.Inject
+        Disposals disposals;
+
         @Produces
         @Size
         Crate crate() {
@@ -143,7 +167,7 @@ class DisposerQualifierMatchingTest {
         }
 
         void dispose(@Disposes @Size(1) Crate crate) {
-            DISPOSED.add(crate.name());
+            disposals.add(crate.name());
         }
     }
 
@@ -155,14 +179,15 @@ class DisposerQualifierMatchingTest {
 
     @Test
     void theDisposedParameterRequiresItsQualifiersOfTheProducer() {
-        DISPOSED.clear();
-        try (ApplicationContext ignored = ApplicationContext.run()) {
+        List<String> disposed;
+        try (ApplicationContext context = ApplicationContext.run()) {
             createAndDestroy(Shape.class, new Red.Literal());
             createAndDestroy(Paint.class, new Red.Literal());
             createAndDestroy(Paint.class, new Blue.Literal());
             createAndDestroy(Label.class, Any.Literal.INSTANCE);
             createAndDestroy(Crate.class, Any.Literal.INSTANCE);
+            disposed = context.getBean(Disposals.class).disposed();
         }
-        assertEquals(List.of("big red shape", "red paint", "tagged label", "sized crate"), DISPOSED);
+        assertEquals(List.of("big red shape", "red paint", "tagged label", "sized crate"), disposed);
     }
 }
