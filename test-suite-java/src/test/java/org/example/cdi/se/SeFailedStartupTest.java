@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
- * An SE bootstrap that fails as the container starts leaves nothing of the failed container behind: it is not the
+ * An SE bootstrap that fails as the container starts does not leave the failed container current: it is not the
  * container {@code CDI.current()} resolves to, and a failure whose causes refer to each other is still reported.
  */
 class SeFailedStartupTest {

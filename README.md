@@ -287,8 +287,11 @@ so `micronaut-cdi` alone is not free of reflection at runtime. What remains, and
   anonymous subclass a program wrote; `select(Argument, ...)` of `MicronautInstance` and `MicronautEvent` names the
   type without it.
 
-The type arguments of a synthetic bean are recorded with it and handed to its definition, so Micronaut does not
-work them out reflectively from the implementation class's generic signature.
+The type arguments of a synthetic bean's declared types are recorded with it and handed to its definition, so a
+lookup by one of those types (`getTypeArguments(Class)`) is answered from the record. The rest of a runtime
+definition's generic metadata is still worked out from the implementation class: `getTypeArguments(String)` walks
+its hierarchy, `getTypeArgumentKeys()` reads `Class.getTypeParameters()`, and a query for a supertype that was not
+declared reaches `GenericTypeUtils`. Complete type metadata on `RuntimeBeanDefinition` is a Micronaut Core follow-up.
 
 Nullness is checked the same way, by [NullAway](https://github.com/uber/NullAway) as an ErrorProne check that
 fails the compilation of the main sources of `micronaut-cdi`, `micronaut-cdi-processor`, `micronaut-cdi-lang-model-ast`,

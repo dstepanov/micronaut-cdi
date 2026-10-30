@@ -438,7 +438,10 @@ bean for each synthetic bean, and obtains a creator, a disposer, an observer or 
 it loads no extension, invokes nothing reflectively and instantiates no class by name. The parameters an
 extension attaches with `withParam` are the types the specification allows, all of which an annotation value
 holds. The classes the extension names have to be on the classpath the application is compiled against, and
-each needs a constructor without parameters the generated definition can call.
+each needs a constructor without parameters the generated definition can call. A synthetic observer reports as
+its bean class the class the extension named with `declaringClass`, or the extension itself; where that class is
+not on the classpath of the running application - an extension on the processor path alone - there is no class to
+report, and `ObserverMethod.getBeanClass()` returns the observer class instead.
 
 The language model an extension reads, and the annotations and types it composes with `AnnotationBuilder` and
 `Types`, have one implementation, built on the compiler's view of the classes. A synthetic bean, a synthetic
@@ -850,9 +853,14 @@ own rather than the first one alone.
   its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.
   Emitting the constant and the array in the generated metadata would leave `Parameters` nothing to look up.
 - **A failed start is not rolled back.** `DefaultBeanContext.start()` rethrows a startup failure without destroying
-  what was created, and `stop()` destroys only a running context. The SE bootstrap closes the context and takes its
-  container off `CDI.current()` on any failure, but the singletons and scoped beans created before the failure are
-  left to the garbage collector.
+  what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
+  on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
+  the singletons and scoped beans created before the failure are not destroyed and are left to the garbage
+  collector. A full rollback belongs in Core.
+- **A runtime definition's generic metadata is incomplete.** `RuntimeBeanDefinition.Builder.typeArguments` answers
+  `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
+  query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the
+  arguments of every declared type, and complete recorded metadata would leave nothing to read.
 - **A scope has no terminal state.** `AbstractConcurrentCustomScope` lets a creation that found a scope map before
   its destruction announce itself after the destruction pass, and publish into the map. The request scope fences
   its map as a request ends, and the context store of `CdiContext` has an end of its own; a terminal close on the
