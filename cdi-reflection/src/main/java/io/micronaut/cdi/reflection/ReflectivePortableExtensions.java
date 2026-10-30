@@ -56,6 +56,7 @@ import jakarta.enterprise.inject.spi.ProcessBean;
 import jakarta.enterprise.inject.spi.ProcessBeanAttributes;
 import jakarta.enterprise.inject.spi.ProcessInjectionTarget;
 import jakarta.enterprise.inject.spi.ProcessManagedBean;
+import jakarta.enterprise.inject.spi.WithAnnotations;
 import jakarta.inject.Singleton;
 import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
@@ -344,6 +345,20 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                             throw new UnsupportedOperationException("The observer method " + method + " of the "
                                 + "extension observes " + raw.getName() + ", which is not one of the container "
                                 + "lifecycle events a compile-time container fires to a portable extension");
+                        }
+                        if (has(annotations[i], WithAnnotations.class)) {
+                            if (raw != ProcessAnnotatedType.class) {
+                                throw new DefinitionException("The observer method " + method + " of the extension "
+                                    + "declares @WithAnnotations on a parameter that is no ProcessAnnotatedType "
+                                    + "(section 11.5.6)");
+                            }
+                            // the classes an observer restricted by annotations is notified of are the ones that,
+                            // or a member or parameter of which, carry one of them; notifying it of every class
+                            // instead would apply what it does to classes it never meant
+                            throw new UnsupportedOperationException("The observer method " + method + " of the "
+                                + "extension restricts the classes it observes with @WithAnnotations, which a "
+                                + "compile-time container does not support: a build compatible extension's "
+                                + "@Enhancement(withAnnotations = ...) does the same while the classes compile");
                         }
                         requireNothingButTheContainer(method, i);
                         method.setAccessible(true);
