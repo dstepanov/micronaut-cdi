@@ -840,13 +840,28 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         return beanContext;
     }
 
+    /**
+     * The reference for an injection point, which is the one injected there: the point of a bean of the
+     * specification is resolved by the qualifiers it was compiled with, which needs no annotation instance, and
+     * a foreign one by the instances it hands over. A dependent bean is created for the point, on behalf of the
+     * creational context, so that the bean's own {@link InjectionPoint} is the point it was asked for.
+     */
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Object getInjectableReference(InjectionPoint injectionPoint, CreationalContext<?> ctx) {
-        Set<Bean<?>> beans = getBeans(injectionPoint.getType(),
-            injectionPoint.getQualifiers().toArray(new Annotation[0]));
+        Set<Bean<?>> beans = injectionPoint instanceof CdiInjectionPoint own
+            ? beansOf(own.argument(), own.requiredQualifiers())
+            : getBeans(injectionPoint.getType(), injectionPoint.getQualifiers().toArray(new Annotation[0]));
         Bean<?> bean = resolve(beans);
         if (bean == null) {
             throw new UnsatisfiedResolutionException("No bean qualifies for " + injectionPoint);
+        }
+        if (bean instanceof CdiBean<?> cdiBean && cdiBean.isDependent()
+            && ctx instanceof CdiCreationalContext<?> creation) {
+            Argument<?> type = injectionPoint instanceof CdiInjectionPoint own
+                ? own.argument() : SpecificationTypes.argumentOf(injectionPoint.getType());
+            return creation.created().registrationAt(null, injectionPoint, (BeanDefinition) cdiBean.definition(),
+                (Argument) type).bean();
         }
         return getReference(bean, injectionPoint.getType(), ctx);
     }

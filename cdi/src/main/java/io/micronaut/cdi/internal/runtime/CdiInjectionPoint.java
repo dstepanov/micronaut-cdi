@@ -163,6 +163,29 @@ public final class CdiInjectionPoint implements MicronautInjectionPoint {
             : declared;
     }
 
+    /**
+     * The qualifiers the point requires, as compiled and selected: what it is resolved by, with no annotation
+     * instance made of any of them.
+     *
+     * @return The qualifiers, the default one where the point declares none
+     */
+    List<CdiQualifier> requiredQualifiers() {
+        List<CdiQualifier> declared = CdiQualifier.declared(argument.getAnnotationMetadata());
+        if (!selectedQualifiers.isEmpty()) {
+            List<CdiQualifier> all = new ArrayList<>(declared);
+            all.addAll(selectedQualifiers);
+            return all;
+        }
+        return declared.isEmpty() ? List.of(CdiQualifier.DEFAULT) : declared;
+    }
+
+    /**
+     * @return The type the point asks for, as Micronaut holds it
+     */
+    Argument<?> argument() {
+        return argument;
+    }
+
     @Override
     public List<AnnotationValue<?>> getQualifierValues() {
         List<AnnotationValue<?>> all = new ArrayList<>();
