@@ -209,13 +209,13 @@ public final class ElementAnnotationMember implements AnnotationMember {
         if (value instanceof Iterable<?> values) {
             values.forEach(element ->
                 members.add(new ElementAnnotationMember(element, annotation, member, context)));
-            return members;
+            return List.copyOf(members);
         }
         int length = Array.getLength(value);
         for (int i = 0; i < length; i++) {
             members.add(new ElementAnnotationMember(Array.get(value, i), annotation, member, context));
         }
-        return members;
+        return List.copyOf(members);
     }
 
     /**

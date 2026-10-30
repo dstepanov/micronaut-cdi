@@ -254,7 +254,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         List<MethodInfo> constructors = new ArrayList<>();
         element.getEnclosedElements(ElementQuery.CONSTRUCTORS)
             .forEach(constructor -> constructors.add(new ElementMethodInfo(constructor, this, context())));
-        return constructors;
+        return List.copyOf(constructors);
     }
 
     @Override
@@ -272,7 +272,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
                     .ifPresent(read -> methods.add(new ElementMethodInfo(read, this, context())));
             }
         }
-        return methods;
+        return List.copyOf(methods);
     }
 
     @Override
@@ -281,7 +281,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         for (FieldElement field : ElementMembers.fieldsOf(element)) {
             fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType(), context()), context()));
         }
-        return fields;
+        return List.copyOf(fields);
     }
 
     @Override

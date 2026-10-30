@@ -365,7 +365,8 @@ public final class ElementTypes {
         private final List<AnnotationInfo> annotations;
 
         Annotated(List<AnnotationInfo> annotations, VisitorContext context) {
-            this.annotations = annotations;
+            // the model is immutable, whatever list the annotations were collected into
+            this.annotations = List.copyOf(annotations);
             this.context = context;
         }
 

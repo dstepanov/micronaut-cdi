@@ -22,6 +22,7 @@ import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.RecordComponentInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import org.junit.jupiter.api.Test;
@@ -114,6 +115,73 @@ class LanguageModelReviewTest {
                 Type type = member.asType();
                 Type named = type.isArray() ? type.asArray().componentType() : type;
                 read.add(type.kind() + " " + named.asClass().declaration().name());
+            }
+        }
+    }
+
+    @Test
+    void theCollectionsOfTheModelAreImmutable() {
+        Collections.mutable.clear();
+        Collections.checked = false;
+        try (JavaParser parser = ExtensionCompilation.of(Collections.class)) {
+            parser.generate("collections.Subject", """
+                package collections;
+
+                @Subject.Tags({"a", "b"})
+                @jakarta.enterprise.context.Dependent
+                public class Subject {
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE_USE)
+                    public @interface Used {
+                    }
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    public @interface Tags {
+                        String[] value();
+                    }
+
+                    @Used String field;
+
+                    void method(String parameter) {
+                    }
+                }
+                """);
+        }
+        assertTrue(Collections.checked, "the extension ran");
+        assertEquals(List.of(), Collections.mutable);
+    }
+
+    public static class Collections implements BuildCompatibleExtension {
+        static final List<String> mutable = new ArrayList<>();
+        static volatile boolean checked;
+
+        @Enhancement(types = Object.class, withSubtypes = true)
+        public void check(ClassConfig config) {
+            ClassInfo info = config.info();
+            if (!info.name().equals("collections.Subject")) {
+                return;
+            }
+            AnnotationInfo tags = info.annotations(a -> a.name().equals("collections.Subject$Tags")).iterator().next();
+            MethodInfo method = info.methods().stream().filter(m -> m.name().equals("method")).findFirst().orElseThrow();
+            Type fieldType = info.fields().stream().filter(f -> f.name().equals("field")).findFirst().orElseThrow()
+                .type();
+            tryClear("constructors", info.constructors());
+            tryClear("methods", info.methods());
+            tryClear("fields", info.fields());
+            tryClear("parameters", method.parameters());
+            tryClear("members", tags.members().values());
+            tryClear("asArray", tags.value().asArray());
+            tryClear("type annotations", fieldType.annotations());
+            checked = true;
+        }
+
+        private static void tryClear(String what, java.util.Collection<?> collection) {
+            try {
+                collection.clear();
+                mutable.add(what);
+            } catch (UnsupportedOperationException e) {
+                // immutable, as the model is
             }
         }
     }

@@ -24,6 +24,7 @@ import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -118,7 +119,7 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
         Map<String, AnnotationMember> members = new LinkedHashMap<>();
         values().forEach((name, value) ->
             members.put(name.toString(), new ElementAnnotationMember(value, name(), name.toString(), context)));
-        return members;
+        return Collections.unmodifiableMap(members);
     }
 
     private Map<CharSequence, Object> values() {
