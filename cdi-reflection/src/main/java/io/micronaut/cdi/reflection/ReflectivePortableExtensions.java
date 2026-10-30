@@ -63,7 +63,9 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -319,9 +321,17 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
 
         static List<Observer> of(Extension extension, CdiBeanContainer container) {
             List<Observer> found = new ArrayList<>();
+            // the methods of the classes below the one being read, which override what it declares
+            List<Method> below = new ArrayList<>();
             for (Class<?> type = extension.getClass(); type != null && type != Object.class;
                  type = type.getSuperclass()) {
-                for (Method method : type.getDeclaredMethods()) {
+                Method[] methods = type.getDeclaredMethods();
+                for (Method method : methods) {
+                    if (method.isBridge() || method.isSynthetic() || isOverridden(method, below)) {
+                        // an observer method is inherited only where it is not overridden (section 10.4): an
+                        // override is the observer, or no observer at all where it does not observe
+                        continue;
+                    }
                     Annotation[][] annotations = method.getParameterAnnotations();
                     for (int i = 0; i < annotations.length; i++) {
                         if (!has(annotations[i], Observes.class)) {
@@ -347,8 +357,35 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                             SpecificationTypes.argumentOf(method.getGenericParameterTypes()[i]), priority, container));
                     }
                 }
+                below.addAll(Arrays.asList(methods));
             }
             return found;
+        }
+
+        /**
+         * Whether a method a class declares is overridden by one a subclass declares, by the rules of the Java
+         * language: an instance method neither private nor static, overridden by an instance method of the same
+         * name and parameter types, and from another package only where it is public or protected.
+         */
+        private static boolean isOverridden(Method method, List<Method> below) {
+            int modifiers = method.getModifiers();
+            if (Modifier.isPrivate(modifiers) || Modifier.isStatic(modifiers)) {
+                return false;
+            }
+            boolean inherited = Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers);
+            for (Method candidate : below) {
+                int candidateModifiers = candidate.getModifiers();
+                if (Modifier.isPrivate(candidateModifiers) || Modifier.isStatic(candidateModifiers)
+                    || !candidate.getName().equals(method.getName())
+                    || !Arrays.equals(candidate.getParameterTypes(), method.getParameterTypes())) {
+                    continue;
+                }
+                if (inherited || candidate.getDeclaringClass().getPackageName()
+                    .equals(method.getDeclaringClass().getPackageName())) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static boolean has(Annotation[] annotations, Class<? extends Annotation> type) {
