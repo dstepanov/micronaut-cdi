@@ -118,6 +118,7 @@ public final class CdiParameters implements Parameters {
             return (T) value;
         }
         if (value instanceof Annotation[] annotations && requested.isArray()
+            && requested.getComponentType().isAnnotation()
             && allInstances(annotations, requested.getComponentType())) {
             // the annotations of an array asked for as an array of their own type, which only a typed array holds
             return ConversionService.SHARED.convertRequired(value, type);

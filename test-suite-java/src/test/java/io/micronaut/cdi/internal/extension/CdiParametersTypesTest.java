@@ -79,6 +79,18 @@ class CdiParametersTypesTest {
     }
 
     @Test
+    void anEmptyAnnotationArrayIsNotAnArrayOfAnotherType() {
+        try (ApplicationContext context = ApplicationContext.builder().build()) {
+            CdiParameters parameters = new CdiParameters(context, List.of(
+                parameter("marks", "ANNOTATION").member("array", true)
+                    .member(CdiSyntheticParameter.ANNOTATIONS, new AnnotationValue<?>[0])
+                    .member("classes", new AnnotationClassValue<?>[0]).build()));
+            assertEquals(0, parameters.get("marks", Deprecated[].class).length);
+            assertThrows(ClassCastException.class, () -> parameters.get("marks", String[].class));
+        }
+    }
+
+    @Test
     void anArrayHandedOutIsTheCallersToChange() {
         try (ApplicationContext context = ApplicationContext.builder().build()) {
             CdiParameters parameters = new CdiParameters(context, List.of(
