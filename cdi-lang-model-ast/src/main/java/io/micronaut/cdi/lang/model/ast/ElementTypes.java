@@ -231,6 +231,13 @@ public final class ElementTypes {
         if ("void".equals(name)) {
             return new Void(context);
         }
+        // an array class is named as the class file names it, [Ljava.util.Map; or [I, or as the source does
+        if (name.startsWith("[")) {
+            return new Array(ofName(componentOf(name.substring(1)), context), List.of(), context);
+        }
+        if (name.endsWith("[]")) {
+            return new Array(ofName(name.substring(0, name.length() - 2), context), List.of(), context);
+        }
         if (ClassUtils.getPrimitiveType(name).isPresent()) {
             return new Primitive(name, List.of(), context);
         }
@@ -238,7 +245,45 @@ public final class ElementTypes {
         if (element == null) {
             throw new IllegalStateException("The type " + name + " is not on the compilation's classpath");
         }
-        return of(element, context);
+        return classLiteralOf(element, context);
+    }
+
+    /**
+     * The name of the component an array class name without its first bracket names, in the form {@link #ofName}
+     * reads.
+     */
+    private static String componentOf(String descriptor) {
+        if (descriptor.startsWith("[")) {
+            return descriptor;
+        }
+        if (descriptor.startsWith("L") && descriptor.endsWith(";")) {
+            return descriptor.substring(1, descriptor.length() - 1);
+        }
+        return switch (descriptor) {
+            case "Z" -> "boolean";
+            case "B" -> "byte";
+            case "C" -> "char";
+            case "S" -> "short";
+            case "I" -> "int";
+            case "J" -> "long";
+            case "F" -> "float";
+            case "D" -> "double";
+            default -> descriptor;
+        };
+    }
+
+    /**
+     * A class literal: the class without its type arguments, a generic class named as it is written in
+     * {@code List.class}, and an array of one element by element, never a parameterized type.
+     */
+    private static Type classLiteralOf(ClassElement element, VisitorContext context) {
+        if (element.isArray()) {
+            return new Array(classLiteralOf(element.fromArray(), context), List.of(), context);
+        }
+        if (element.isPrimitive()) {
+            return new Primitive(element.getName(), List.of(), context);
+        }
+        return rawClassOf(element, List.of(), context);
     }
 
     /**

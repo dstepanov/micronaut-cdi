@@ -19,8 +19,11 @@ import io.micronaut.annotation.processing.test.JavaParser;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
+import jakarta.enterprise.lang.model.AnnotationInfo;
+import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.RecordComponentInfo;
+import jakarta.enterprise.lang.model.types.Type;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -72,6 +75,45 @@ class LanguageModelReviewTest {
                 read.add(component.name() + " " + type + " field " + component.field().name() + " accessor "
                     + component.accessor().name() + " annotated "
                     + component.hasAnnotation(a -> a.name().equals("records.Person$ComponentOnly")));
+            }
+        }
+    }
+
+    @Test
+    void aClassLiteralOfAGenericClassIsAClassType() {
+        Literals.read.clear();
+        try (JavaParser parser = ExtensionCompilation.of(Literals.class)) {
+            parser.generate("literals.Holder", """
+                package literals;
+
+                @Holder.Names({java.util.List.class, java.util.Map[].class})
+                @jakarta.enterprise.context.Dependent
+                public class Holder {
+
+                    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                    public @interface Names {
+                        Class<?>[] value();
+                    }
+                }
+                """);
+        }
+        assertEquals(List.of("CLASS java.util.List", "ARRAY java.util.Map"), Literals.read);
+    }
+
+    public static class Literals implements BuildCompatibleExtension {
+        static final List<String> read = new ArrayList<>();
+
+        @Enhancement(types = Object.class, withSubtypes = true)
+        public void check(ClassConfig config) {
+            ClassInfo info = config.info();
+            if (!info.name().equals("literals.Holder")) {
+                return;
+            }
+            AnnotationInfo names = info.annotations(a -> a.name().equals("literals.Holder$Names")).iterator().next();
+            for (AnnotationMember member : names.value().asArray()) {
+                Type type = member.asType();
+                Type named = type.isArray() ? type.asArray().componentType() : type;
+                read.add(type.kind() + " " + named.asClass().declaration().name());
             }
         }
     }
