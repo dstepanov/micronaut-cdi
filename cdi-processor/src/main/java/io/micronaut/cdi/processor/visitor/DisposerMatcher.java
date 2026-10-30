@@ -49,6 +49,8 @@ import java.util.Set;
 final class DisposerMatcher {
 
     private static final String NAMED = "jakarta.inject.Named";
+    private static final Set<String> EVERY_ARRAY = Set.of(Object.class.getName(), Cloneable.class.getName(),
+        java.io.Serializable.class.getName());
 
     /**
      * The qualifiers that are not compared as values: {@code Default} and {@code Any}, which are given rather than
@@ -103,7 +105,8 @@ final class DisposerMatcher {
             // section 3.3.7 matches the disposed parameter by the rules of typesafe resolution: a disposer of
             // the supertype disposes of what a producer of the subtype produces — and the type arguments take
             // part, which Micronaut's erased assignability alone would miss
-            if (!produced.isAssignable(candidate.disposedType())
+            if (!dimensionsFit(produced, candidate.disposedType())
+                || !produced.isAssignable(candidate.disposedType())
                 || !typeArgumentsCompatible(produced, candidate.disposedType())) {
                 continue;
             }
@@ -120,6 +123,20 @@ final class DisposerMatcher {
             found = candidate;
         }
         return found;
+    }
+
+    /**
+     * Whether an array is disposed of as an array of as many dimensions, or as what every array is (an
+     * {@code Object}, a {@code Cloneable}, a {@code Serializable}), and a type that is no array as no array: Groovy
+     * reads an array of a library class as assignable to its component.
+     */
+    private static boolean dimensionsFit(ClassElement produced, ClassElement disposed) {
+        int producedDimensions = produced.getArrayDimensions();
+        int disposedDimensions = disposed.getArrayDimensions();
+        if (producedDimensions == disposedDimensions) {
+            return true;
+        }
+        return disposedDimensions < producedDimensions && EVERY_ARRAY.contains(disposed.getName().replace("[]", ""));
     }
 
     /**
