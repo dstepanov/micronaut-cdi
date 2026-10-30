@@ -28,8 +28,10 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.inject.spi.EventContext;
+import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.util.Nonbinding;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -212,12 +214,18 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
     }
 
     /**
-     * Observes a dispatch, which only the class the observer is reported as declared by is read for.
+     * Observes a dispatch, keeping the metadata of the last notification.
      */
     public static final class DispatchObserver implements SyntheticObserver<Dispatch> {
+
+        /**
+         * The metadata the last notification of either observer of a dispatch carried.
+         */
+        public static final AtomicReference<EventMetadata> LAST_METADATA = new AtomicReference<>();
+
         @Override
         public void observe(EventContext<Dispatch> event, Parameters params) {
-            // nothing to do: only the metadata of the observer is read
+            LAST_METADATA.set(event.getMetadata());
         }
     }
 }

@@ -155,6 +155,12 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         notify(event, new CdiEventMetadata(beanContext, observedQualifiers(), null, eventArgument));
     }
 
+    @Override
+    public void notify(EventContext<T> eventContext) {
+        // the metadata of the context the caller hands over, not metadata made up of the observer itself
+        notify(eventContext.getEvent(), eventContext.getMetadata());
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void notifyWith(Object event, EventMetadata metadata) {

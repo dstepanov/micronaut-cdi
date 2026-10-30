@@ -33,6 +33,7 @@ import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import org.jspecify.annotations.Nullable;
@@ -205,6 +206,12 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     @Override
     public void notify(T event) {
         notify(event, new CdiEventMetadata(beanContext, observedQualifiers(), null, observedArgument()));
+    }
+
+    @Override
+    public void notify(EventContext<T> eventContext) {
+        // the metadata of the context the caller hands over, not metadata made up of the observer itself
+        notify(eventContext.getEvent(), eventContext.getMetadata());
     }
 
     /**
