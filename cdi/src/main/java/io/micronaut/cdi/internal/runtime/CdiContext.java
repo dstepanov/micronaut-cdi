@@ -267,11 +267,28 @@ public final class CdiContext implements AlterableContext {
                 return;
             }
             if (held != null) {
-                // the instance Micronaut holds is destroyed below whatever releasing the creational context threw
+                // the instance Micronaut holds is destroyed whatever releasing the creational context threw, and
+                // the first failure is the one reported
+                Throwable failure = null;
                 try {
                     held.destroy();
-                } finally {
+                } catch (RuntimeException | Error e) {
+                    failure = e;
+                }
+                try {
                     destroyHeldByMicronaut(contextual);
+                } catch (RuntimeException | Error e) {
+                    if (failure == null) {
+                        failure = e;
+                    } else if (failure != e) {
+                        failure.addSuppressed(e);
+                    }
+                }
+                if (failure instanceof Error error) {
+                    throw error;
+                }
+                if (failure != null) {
+                    throw (RuntimeException) failure;
                 }
                 return;
             }
