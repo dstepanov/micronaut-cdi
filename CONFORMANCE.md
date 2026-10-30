@@ -362,7 +362,10 @@ resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut keeps t
 Micronaut Core 5.3 (#14063) keeps them when a dependent bean is destroyed, but matching them by the rules of the
 specification and narrowing them is the container's own work, which a dependent bean created over and over would
 do again for each of its points (without it, creating a dependent bean with eight injected dependencies takes 28%
-longer and allocates 87% more). Core's active resolution
+longer and allocates 87% more). The selections and the container's beans follow the definitions of the context: a
+watch of the context (`WatchableBeanContext.definitions()`) forgets them as a definition is registered once the
+context runs, or retired or added by a development reload. The bean types of a definition and the disposers
+resolved for a producer are not yet forgotten so. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 

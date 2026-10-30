@@ -27,6 +27,7 @@ import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.WatchableBeanContext;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -122,7 +123,8 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     /**
      * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
      * compiled definition are constants, and two points of one type and name may declare different qualifiers.
-     * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}).
+     * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}),
+     * and as the definitions of the context change once it runs (a watch of the context).
      * Micronaut keeps the candidates of a type, a destroyed dependent's included, but matching them by the rules of
      * the specification and narrowing them is this container's work, which a dependent bean created over and over
      * would do again for each of its points (see Conformance).
@@ -149,6 +151,17 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         this.beanContext = beanContext;
         this.observers = observers;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope);
+        if (beanContext instanceof WatchableBeanContext watchable) {
+            // a definition registered with the context once it runs, or one a development reload retires or adds,
+            // changes what a point resolves to: the next resolution is made again. The watch belongs to this bean,
+            // and is closed as it is destroyed
+            watchable.definitions().watch(change -> {
+                if (!change.initial()) {
+                    change.removed().forEach(canonical::remove);
+                    refreshCandidates();
+                }
+            });
+        }
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
