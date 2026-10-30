@@ -24,7 +24,6 @@ import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.annotation.AnnotationValueProvider;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.Destroyed;
@@ -433,8 +432,8 @@ public final class CdiQualifier {
      * compiled with that has no binding member is told from another of its type by nothing: neither is read. An
      * instance that carries its values - one the builder generated for a registered annotation type made, or one
      * Micronaut synthesised - hands them over, the members the application was compiled with as non-binding
-     * listed beside them. Anything else is read member by member, which is reflection, and is asked of the module
-     * that does it.</p>
+     * listed beside them. Any other instance of a registered annotation type is read by the builder generated for
+     * it, through its accessors; anything else is read by the module that does reflection.</p>
      *
      * @param types      What the application was compiled with
      * @param annotation The annotation
@@ -467,13 +466,9 @@ public final class CdiQualifier {
         if (Boolean.TRUE.equals(types.isMarker(name))) {
             return new CdiQualifier(new AnnotationValue<>(name), null, annotation);
         }
-        if (annotation instanceof AnnotationValueProvider<?> provider) {
-            return of(withNonbinding(provider.annotationValue(), types.nonbindingOf(name)), null, annotation, types);
-        }
-        CdiReflection reflection = CdiReflection.require(types.beanContext(),
-            "Reading the members of the annotation instance "
-            + annotation + " (" + SELECT_BY_VALUE + ")");
-        return of(reflection.valuesOf(annotation), null, annotation, types);
+        AnnotationValue<?> values = CdiAnnotations.valuesOf(types.beanContext(), annotation,
+            "Reading the members of the annotation instance " + annotation + " (" + SELECT_BY_VALUE + ")");
+        return of(withNonbinding(values, types.nonbindingOf(name)), null, annotation, types);
     }
 
     /**
