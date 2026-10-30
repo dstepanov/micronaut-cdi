@@ -138,9 +138,19 @@ public final class CdiContext implements AlterableContext {
         }
         if (isHeldByMicronaut(contextual)) {
             // a bean of the container is held by the scope Micronaut keeps the instances of its beans in, which is
-            // this context: the instance is the one that scope holds, asked of it every time. Nothing of it is kept
-            // here, which would go on handing the instance out after Micronaut destroyed it
-            return ((CdiBean<T>) contextual).scopedInstance();
+            // this context: the instance is the one that scope holds, asked of it every time. Only the creational
+            // context handed in is kept here, to be released as the context ends (section 6.2): the instance is
+            // never answered from here, which would go on handing it out after Micronaut destroyed it
+            T instance = ((CdiBean<T>) contextual).scopedInstance();
+            Store store = store(true);
+            if (store != null) {
+                Held<T> release = new Held<>(contextual, instance, creationalContext, false);
+                if (store.publish(release) != release) {
+                    // one is kept already, or the context ended: this one has nothing to wait for
+                    release.destroy();
+                }
+            }
+            return instance;
         }
         Store store = store(true);
         if (store == null) {
@@ -148,7 +158,7 @@ public final class CdiContext implements AlterableContext {
             return contextual.create(creationalContext);
         }
         Held<T> held = store.find(contextual);
-        if (held != null) {
+        if (held != null && held.owned()) {
             return held.instance();
         }
         // created outside the lock — creation may be arbitrarily slow, or reach back into this context
@@ -156,7 +166,7 @@ public final class CdiContext implements AlterableContext {
         if (instance == null) {
             return null;
         }
-        Held<T> created = new Held<>(contextual, instance, creationalContext);
+        Held<T> created = new Held<>(contextual, instance, creationalContext, true);
         Held<T> kept = store.publish(created);
         if (kept == created) {
             return instance;
@@ -186,7 +196,7 @@ public final class CdiContext implements AlterableContext {
         Store store = store(false);
         if (store != null) {
             Held<T> held = store.find(contextual);
-            if (held != null) {
+            if (held != null && held.owned()) {
                 return held.instance();
             }
         }
@@ -250,11 +260,24 @@ public final class CdiContext implements AlterableContext {
         Store store = store(false);
         if (store != null) {
             Held<?> held = store.remove(contextual);
-            if (held != null) {
+            if (held != null && held.owned()) {
                 held.destroy();
                 return;
             }
+            if (held != null) {
+                // the instance Micronaut holds is destroyed below whatever releasing the creational context threw
+                try {
+                    held.destroy();
+                } finally {
+                    destroyHeldByMicronaut(contextual);
+                }
+                return;
+            }
         }
+        destroyHeldByMicronaut(contextual);
+    }
+
+    private void destroyHeldByMicronaut(Contextual<?> contextual) {
         // not something a program handed in, so it is a bean of the container: the instance Micronaut holds in
         // the scope is destroyed and forgotten, and the next reference through the proxy is a fresh one
         if (contextual instanceof CdiBean<?> bean) {
@@ -311,17 +334,26 @@ public final class CdiContext implements AlterableContext {
 
     /**
      * One instance a program's contextual created, with the creational context it was created in, so that
-     * destroying it hands both back the way section 2.5.1 says.
+     * destroying it hands both back the way section 2.5.1 says; or the creational context a bean of the container
+     * was asked for with, which is released as the context ends.
      *
      * @param contextual        The contextual that created it
      * @param instance          The instance
      * @param creationalContext The creational context it was created in
+     * @param owned             Whether the instance is this context's to hand out and destroy: it is for what a
+     *                          program's contextual created, and is not for the instance of a bean of the container,
+     *                          which the scope Micronaut holds it in answers and destroys
      * @param <T>               The type of the instance
      */
-    private record Held<T>(Contextual<T> contextual, T instance, CreationalContext<T> creationalContext) {
+    private record Held<T>(Contextual<T> contextual, T instance, CreationalContext<T> creationalContext,
+                           boolean owned) {
 
         void destroy() {
-            contextual.destroy(instance, creationalContext);
+            if (owned) {
+                contextual.destroy(instance, creationalContext);
+            } else {
+                creationalContext.release();
+            }
         }
     }
 
