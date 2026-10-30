@@ -27,6 +27,7 @@ import io.micronaut.cdi.processor.visitor.InjectionPointRulesVisitor;
 import io.micronaut.cdi.processor.visitor.ObserverVisitor;
 import io.micronaut.cdi.processor.visitor.ProducerVisitor;
 import io.micronaut.cdi.processor.visitor.ProxyabilityVisitor;
+import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
 import io.micronaut.cdi.processor.visitor.SpecificationBeans;
 import io.micronaut.cdi.processor.visitor.TypeHierarchyVisitor;
 import io.micronaut.context.annotation.Executable;
@@ -225,7 +226,8 @@ final class ScannedClassRegistrar {
         if (member instanceof MethodElement method) {
             StringBuilder key = new StringBuilder(method.getName()).append('(');
             for (ParameterElement parameter : method.getParameters()) {
-                key.append(parameter.getType().getName()).append(',');
+                // with its dimensions, so that produce(Foo) and produce(Foo[]) are two producers
+                key.append(RecordedTypeValues.erasedName(parameter.getType())).append(',');
             }
             return key.append(')').toString();
         }
