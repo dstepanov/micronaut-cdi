@@ -101,6 +101,13 @@ final class RecordingObserverBuilder<T> implements SyntheticObserverBuilder<T> {
         return declaringClass;
     }
 
+    /**
+     * The class the observer is reported as declared by, where the compilation can see it.
+     */
+    @Nullable ClassElement declaringClassIfKnown() {
+        return declaringClass;
+    }
+
     int priority() {
         return priority;
     }

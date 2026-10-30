@@ -61,6 +61,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     private final Argument<?> eventArgument;
     private final Type eventType;
     private final CdiParameters parameters;
+    private final Class<?> beanClass;
     private volatile @Nullable List<CdiQualifier> qualifiers;
 
     SyntheticObserverMethod(BeanContext beanContext, BeanDefinition<?> definition,
@@ -72,6 +73,12 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         this.eventType = eventArgument.asType();
         this.parameters = new CdiParameters(beanContext,
             record.getAnnotations("params", CdiSyntheticParameter.class));
+        // the class the extension named, or the extension itself (section 2.10.5). An extension runs while the
+        // application compiles, and is often on the processor path alone: where the class is not on the classpath
+        // of the running application there is no class to report, and the observer class stands in for it
+        this.beanClass = record.classValue("declaringClass")
+            .filter(declaring -> declaring != void.class)
+            .orElse(definition.getBeanType());
     }
 
     @Override
@@ -81,7 +88,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public Class<?> getBeanClass() {
-        return definition.getBeanType();
+        return beanClass;
     }
 
     @Override

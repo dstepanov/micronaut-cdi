@@ -25,7 +25,9 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
+import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.util.Nonbinding;
 
 import java.util.function.Supplier;
@@ -109,6 +111,21 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
     }
 
     /**
+     * Describes two synthetic observers of a dispatch: one declared by the class the extension names, the other by
+     * the extension, which names none.
+     *
+     * @param components What the extension adds to the container
+     */
+    @Synthesis
+    public void dispatchObservers(SyntheticComponents components) {
+        components.addObserver(Dispatch.class)
+            .declaringClass(DispatchDesk.class)
+            .observeWith(DispatchObserver.class);
+        components.addObserver(Dispatch.class)
+            .observeWith(DispatchObserver.class);
+    }
+
+    /**
      * Creates a ticket counter.
      */
     public static final class TicketCounterCreator implements SyntheticBeanCreator<TicketCounter> {
@@ -177,6 +194,16 @@ public final class ReviewScenariosExtension implements BuildCompatibleExtension 
         @Override
         public Crate create(Instance<Object> lookup, Parameters params) {
             return new Crate();
+        }
+    }
+
+    /**
+     * Observes a dispatch, which only the class the observer is reported as declared by is read for.
+     */
+    public static final class DispatchObserver implements SyntheticObserver<Dispatch> {
+        @Override
+        public void observe(EventContext<Dispatch> event, Parameters params) {
+            // nothing to do: only the metadata of the observer is read
         }
     }
 }

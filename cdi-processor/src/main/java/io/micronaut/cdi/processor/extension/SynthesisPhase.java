@@ -266,6 +266,12 @@ final class SynthesisPhase {
             .member("id", observer.id())
             .member(CdiSyntheticObserver.EVENT_TYPE, observer.recordedEventType())
             .member("priority", observer.priority());
+        ClassElement declaringClass = observer.declaringClassIfKnown();
+        if (declaringClass != null) {
+            // the class the registration phase reported the observer with, which the running container reports
+            // too where the class is on its classpath
+            record.member("declaringClass", new AnnotationClassValue<>(declaringClass.getName()));
+        }
         if (!observer.qualifiers().isEmpty()) {
             List<AnnotationValue<?>> qualifiers = completed(observer.qualifiers());
             record.member(CdiSyntheticObserver.QUALIFIERS, qualifiers.toArray(new AnnotationValue<?>[0]));
