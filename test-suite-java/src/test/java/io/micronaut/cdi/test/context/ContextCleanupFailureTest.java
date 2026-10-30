@@ -28,8 +28,12 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -74,6 +78,70 @@ class ContextCleanupFailureTest {
             assertTrue(RequestTracked.DESTROYED.getAndSet(false),
                 "a bean of the request is destroyed whatever a contextual of the request threw");
         }
+    }
+
+    @Test
+    void oneExceptionThrownByTheFirstTwoDestructionsLeavesTheRestDestroyed() {
+        // the very same exception twice in a row: suppressing it onto itself is not permitted, and must not stop
+        // the destructions after it
+        List<String> log = new CopyOnWriteArrayList<>();
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            RequestContextController requests = context.getBean(RequestContextController.class);
+            RuntimeException shared = new IllegalStateException("thrown twice");
+            requests.activate();
+            try {
+                Context requestContext = container.getContext(RequestScoped.class);
+                for (Probe probe : List.of(
+                    Probe.destroyedWith("shared-1", log, () -> {
+                        throw shared;
+                    }),
+                    Probe.destroyedWith("shared-2", log, () -> {
+                        throw shared;
+                    }),
+                    Probe.of("survivor", log))) {
+                    requestContext.get(probe, container.createCreationalContext(probe));
+                }
+            } finally {
+                try {
+                    requests.deactivate();
+                } catch (RuntimeException | Error ignored) {
+                    // what the destruction threw may be reported; what matters is what was destroyed
+                }
+            }
+            assertEquals(List.of("shared-1", "shared-2", "survivor"), log);
+        }
+    }
+
+    @Test
+    void everyRequestLeftOpenIsDestroyedAsTheContainerStopsWhateverOneThrows() throws Exception {
+        List<String> log = new CopyOnWriteArrayList<>();
+        ApplicationContext context = ApplicationContext.run();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            RequestContextController requests = context.getBean(RequestContextController.class);
+            List<Probe> probes = List.of(
+                Probe.destroyedWith("first", log, () -> {
+                    throw new AssertionError("a failed destruction");
+                }),
+                Probe.of("second", log));
+            for (Probe probe : probes) {
+                // a request begun on a thread of its own and never ended
+                executor.submit(() -> {
+                    requests.activate();
+                    container.getContext(RequestScoped.class).get(probe, container.createCreationalContext(probe));
+                }).get(10, TimeUnit.SECONDS);
+            }
+        } finally {
+            try {
+                context.close();
+            } catch (RuntimeException | Error ignored) {
+                // what the shutdown threw may be reported; what matters is what was destroyed
+            }
+            executor.shutdownNow();
+        }
+        assertTrue(log.containsAll(List.of("first", "second")), log.toString());
     }
 
     @Test
