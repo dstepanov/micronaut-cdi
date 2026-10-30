@@ -1,7 +1,7 @@
 package io.micronaut.cdi.test.context;
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
-import io.micronaut.cdi.test.extension.mapscope.MapContext;
+import io.micronaut.cdi.test.customscope.MapContexts;
 import io.micronaut.cdi.test.extension.mapscope.MapScoped;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -116,7 +116,6 @@ class ContextualInstanceLookupTest {
     void aCustomScopedBeanThatWasNeverCreatedDoesNotExist() {
         try (ApplicationContext context = ApplicationContext.run()) {
             NOTIFIED.clear();
-            MapContext.STORE.clear();
             NeverCreatedScoped.INSTANCES.set(0);
 
             context.getBean(CdiBeanContainer.class).getEvent().select(Pang.class).fire(new Pang());
@@ -134,14 +133,13 @@ class ContextualInstanceLookupTest {
     void aConditionalObserverOfAnInactiveCustomContextIsNotNotified() {
         try (ApplicationContext context = ApplicationContext.run()) {
             NOTIFIED.clear();
-            MapContext.STORE.clear();
-            MapContext.active = false;
+            MapContexts.of(context).setActive(false);
             try {
                 assertDoesNotThrow(() ->
                     context.getBean(CdiBeanContainer.class).getEvent().select(Pang.class).fire(new Pang()));
                 assertEquals(List.of(), NOTIFIED);
             } finally {
-                MapContext.active = true;
+                MapContexts.of(context).setActive(true);
             }
         }
     }
