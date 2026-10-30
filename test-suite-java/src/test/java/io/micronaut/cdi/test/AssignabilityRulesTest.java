@@ -271,6 +271,12 @@ class AssignabilityRulesTest {
         assertThrows(IllegalArgumentException.class,
             () -> event(Foo.class, literal(new TypeLiteral<Foo<F>>() { })),
             "an event whose type contains a type variable has no type to be observed as (section 2.8.1)");
+        assertThrows(IllegalArgumentException.class,
+            () -> event(Object.class, literal(new TypeLiteral<Foo<List<F>>>() { })),
+            "a type variable nested in an argument leaves the event without a type to be observed as too");
+        assertThrows(IllegalArgumentException.class,
+            () -> event(Object.class, literal(new TypeLiteral<Foo<F>[]>() { })),
+            "so does one in the component of an array");
         assertTrue(event(literal(new TypeLiteral<Foo<Number>>() { }), literal(new TypeLiteral<Foo<Number>>() { })));
         assertFalse(event(literal(new TypeLiteral<Foo<Number>>() { }), literal(new TypeLiteral<Foo<Integer>>() { })),
             "Foo<Number> does not observe Foo<Integer>: an argument is invariant");

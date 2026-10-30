@@ -184,17 +184,7 @@ public final class CdiAssignability {
         requireQualifiers(types, observedEventQualifiers);
         RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
         Argument<?> specified = SpecificationTypes.argumentOf(specifiedType);
-        requireNoTypeVariable(specified);
-        if (CdiTypes.isParameterized(specified)) {
-            // an event type is stricter than a required bean type: a type variable anywhere in it leaves the
-            // event without a type to be observed as
-            for (Argument<?> argument : specified.getTypeParameters()) {
-                if (argument.isUnresolvedTypeVariable()) {
-                    throw new IllegalArgumentException(
-                        "A type variable does not describe an event: " + specifiedType);
-                }
-            }
-        }
+        requireEventType(specified, "A type variable does not describe an event: " + specifiedType);
         if (!isEventTypeMatching(index, SpecificationTypes.argumentOf(observedEventType), specified)) {
             return false;
         }
@@ -748,6 +738,38 @@ public final class CdiAssignability {
      */
     private static @Nullable Class<?> rawTypeOf(Argument<?> type) {
         return CdiTypes.classOf(type);
+    }
+
+    /**
+     * Requires a type to be one an event can be fired as, which is stricter than a required bean type: a type
+     * variable anywhere in it - an argument, an argument of an argument, the component of an array, a bound of a
+     * wildcard - leaves the event without a type to be observed as (section 2.8.1). What selects an event and what
+     * matches one ask the same of it.
+     *
+     * @param type    The event type
+     * @param message What an exception says where it is not one
+     * @throws IllegalArgumentException Where a type variable is in it
+     */
+    static void requireEventType(Argument<?> type, String message) {
+        if (type.isUnresolvedTypeVariable()) {
+            throw new IllegalArgumentException(message);
+        }
+        Argument<?> component = type.componentType();
+        if (component != null) {
+            requireEventType(component, message);
+        }
+        if (type instanceof WildcardArgument<?> wildcard) {
+            for (Argument<?> bound : wildcard.getUpperBounds()) {
+                requireEventType(bound, message);
+            }
+            for (Argument<?> bound : wildcard.getLowerBounds()) {
+                requireEventType(bound, message);
+            }
+        } else if (CdiTypes.isParameterized(type)) {
+            for (Argument<?> argument : type.getTypeParameters()) {
+                requireEventType(argument, message);
+            }
+        }
     }
 
     static void requireNoTypeVariable(Argument<?> type) {
