@@ -23,6 +23,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanInjectionProvider;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.DefaultBeanResolutionContext;
+import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.context.annotation.ResolveWith;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
@@ -198,14 +199,17 @@ public final class CdiResolution {
      *
      * @param candidates  The candidate definitions
      * @param type        The type looked up, or {@code null} where it is not known
+     * @param qualifier   The Micronaut qualifier the lookup was narrowed by, which the resolution customizer is told
+     *                    of, or {@code null}
      * @param beanContext The context, whose resolution customizer has a say among beans of Micronaut's own
      * @param <T>         The bean type
      * @return The narrowed candidates
      */
     public static <T extends BeanDefinition<?>> List<T> narrowToOne(Collection<T> candidates,
                                                                     @Nullable Argument<?> type,
+                                                                    @Nullable Qualifier<?> qualifier,
                                                                     BeanContext beanContext) {
-        return narrow(resolvedAmong(candidates, definition -> definition, type, beanContext));
+        return narrow(resolvedAmong(candidates, definition -> definition, type, qualifier, beanContext));
     }
 
     /**
@@ -218,6 +222,7 @@ public final class CdiResolution {
      * @param definitionOf The definition of a candidate, or {@code null} for one that is not a bean the container
      *                     described, which is taken for a bean of the specification
      * @param type         The type looked up, or {@code null} where it is not known
+     * @param qualifier    The Micronaut qualifier the lookup was narrowed by, or {@code null}
      * @param beanContext  The context, whose resolution customizer has a say among beans of Micronaut's own
      * @param <T>          The candidate type
      * @return The candidates, the given collection itself where it has nothing to drop
@@ -225,6 +230,7 @@ public final class CdiResolution {
     public static <T> Collection<T> resolvedAmong(Collection<T> candidates,
                                                    Function<? super T, @Nullable BeanDefinition<?>> definitionOf,
                                                    @Nullable Argument<?> type,
+                                                   @Nullable Qualifier<?> qualifier,
                                                    BeanContext beanContext) {
         if (candidates.size() < 2) {
             return candidates;
@@ -243,7 +249,8 @@ public final class CdiResolution {
         for (T candidate : candidates) {
             byDefinition.putIfAbsent(Objects.requireNonNull(definitionOf.apply(candidate)), candidate);
         }
-        List<BeanDefinition<?>> chosen = amongMicronautsOwn(new ArrayList<>(byDefinition.keySet()), type, beanContext);
+        List<BeanDefinition<?>> chosen = amongMicronautsOwn(new ArrayList<>(byDefinition.keySet()), type, qualifier,
+            beanContext);
         if (chosen.size() == byDefinition.size()) {
             return candidates;
         }
@@ -260,17 +267,35 @@ public final class CdiResolution {
      * the choice of the resolution customizer of the context, the ones that are not secondary, the one of the lowest
      * order, the default implementation, and the one of exactly the type looked up.
      *
+     * <p>{@code selectAmong} tells the customizer of no qualifier. A lookup narrowed by a Micronaut qualifier is
+     * resolved as {@code BeanContext.getBean} resolves it, which tells the customizer that qualifier, where that
+     * picks one of the candidates; the candidates of such a lookup are the beans of the type the qualifier keeps.
+     * A {@code selectAmong} that takes the qualifier would let this go.</p>
+     *
      * @param candidates  The definitions, more than one
      * @param type        The type looked up, or {@code null} where it is not known
+     * @param qualifier   The Micronaut qualifier the lookup was narrowed by, or {@code null}
      * @param beanContext The context, whose resolution customizer has a say
      * @return The one definition chosen, or the candidates nothing chose among
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     static List<BeanDefinition<?>> amongMicronautsOwn(List<BeanDefinition<?>> candidates,
                                                        @Nullable Argument<?> type,
+                                                       @Nullable Qualifier<?> qualifier,
                                                        BeanContext beanContext) {
         if (candidates.size() < 2) {
             return candidates;
+        }
+        if (qualifier != null && type != null) {
+            try {
+                BeanDefinition<?> chosen = (BeanDefinition<?>) beanContext
+                    .findBeanDefinition((Argument) type, (Qualifier) qualifier).orElse(null);
+                if (chosen != null && candidates.contains(chosen)) {
+                    return List.of(chosen);
+                }
+            } catch (NonUniqueBeanException e) {
+                // nothing chose among them with the qualifier either: the rules without it decide
+            }
         }
         return (List) beanContext.selectAmong((Argument) type, (Collection) candidates);
     }

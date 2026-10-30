@@ -623,7 +623,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         // alternatives outrank everything else, and among them the one of the highest priority wins. Anything short
         // of a single winner is the ambiguity of section 2.4.2
         List<Bean<? extends X>> narrowed = CdiResolution.narrow(
-            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, beanContext),
+            CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, null, beanContext),
             Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);
