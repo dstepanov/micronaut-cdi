@@ -28,7 +28,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -578,12 +577,40 @@ public final class CdiAssignability {
      */
     private static List<Argument<?>> boundsAgainst(Argument<?> variable, Argument<?> type) {
         List<Argument<?>> bounds = uppermostBoundsOf(variable);
-        Map<String, Argument<?>> itself = Map.of(((GenericPlaceholder<?>) variable).getVariableName(), type);
+        String name = ((GenericPlaceholder<?>) variable).getVariableName();
         List<Argument<?>> substituted = new ArrayList<>(bounds.size());
         for (Argument<?> bound : bounds) {
-            substituted.add(CdiTypes.substitute(bound, itself, false));
+            substituted.add(itselfIn(bound, name, type));
         }
         return substituted;
+    }
+
+    /**
+     * The bound with the variable it bounds replaced by the type checked, in its type arguments and in the component
+     * of an array, and not in the bounds of a wildcard: unlike {@code Argument.substituteTypeVariables}, which
+     * substitutes into a wildcard as well, so that {@code ? super T} is checked against the variable it names.
+     */
+    private static Argument<?> itselfIn(Argument<?> bound, String variable, Argument<?> type) {
+        Argument<?> component = bound.componentType();
+        if (component != null) {
+            Argument<?> substituted = itselfIn(component, variable, type);
+            return substituted == component ? bound : substituted.arrayType();
+        }
+        if (bound.isUnresolvedTypeVariable()) {
+            return variable.equals(((GenericPlaceholder<?>) bound).getVariableName()) ? type : bound;
+        }
+        if (!CdiTypes.isParameterized(bound)) {
+            return bound;
+        }
+        Argument<?>[] arguments = bound.getTypeParameters();
+        Argument<?>[] substituted = new Argument<?>[arguments.length];
+        boolean changed = false;
+        for (int i = 0; i < arguments.length; i++) {
+            substituted[i] = itselfIn(arguments[i], variable, type);
+            changed |= substituted[i] != arguments[i];
+        }
+        // written the way the bound was: the annotations of the use are kept
+        return changed ? bound.withTypeParameters(substituted) : bound;
     }
 
     /**

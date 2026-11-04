@@ -417,19 +417,17 @@ public final class OwnedDependents implements AutoCloseable {
 
     /**
      * Resolves through the owner, or through a group of the owner's own where the resolver of the bean it belongs to
-     * refuses: once the bean's destruction has begun, Micronaut refuses with an {@code IllegalStateException} any
-     * resolution outside the window it leaves its destruction callbacks.
+     * refuses because the owner was destroyed: once the bean's destruction has begun, Micronaut refuses with an
+     * {@code IllegalStateException} any resolution outside the window it leaves its destruction callbacks.
      *
-     * <p>Two kinds of lookup reach the group. One is made by the bean's {@code @PreDestroy} from another thread,
-     * the context stopping or not: the Micronaut Core this builds on resolves for a bean being destroyed on behalf of
-     * its destruction callbacks on the thread destroying it alone (Core #14194 accepts work they hand to another
-     * thread, and makes this case unnecessary once it is the Core built on). The group is closed with what the owner
-     * holds as the bean's destruction completes; one opened while the context stops is destroyed by Micronaut
-     * before the shutdown completes. The other is made through a reference that escaped the bean after it was
-     * destroyed: the owner has closed what it held by then, so the group opened for it is handed to the container, which
-     * closes it as it stops ({@link CdiBeanContainer#closeAtShutdown}, {@code OwnerlessLookupTest}): what it creates
-     * lives until then rather than until the bean was destroyed, unless {@code Instance.destroy} or closing the lookup
-     * destroys it first. Removing the retry would make both fail, so it stays.</p>
+     * <p>A lookup the bean's {@code @PreDestroy} makes, on its thread or on one it hands work to and waits for, is
+     * within that window: Micronaut resolves it through the bean's resolver and destroys what it creates with the bean
+     * (since Micronaut Core 5.3, #14194; {@code ShutdownLookupOffThreadTest}, {@code OwnerlessLookupTest}). What
+     * reaches the group is a lookup made through a reference that escaped the bean after it was destroyed: the owner
+     * has closed what it held by then, so the group opened for it is handed to the container, which closes it as it
+     * stops ({@link CdiBeanContainer#closeAtShutdown}, {@code OwnerlessLookupTest}): what it creates lives until then
+     * rather than until the bean was destroyed, unless {@code Instance.destroy} or closing the lookup destroys it
+     * first. A refusal while the owner is still open is Micronaut's to report.</p>
      */
     private <T> BeanRegistration<T> resolve(
         Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {
@@ -437,10 +435,14 @@ public final class OwnedDependents implements AutoCloseable {
         try {
             return lookup.apply(owner);
         } catch (IllegalStateException e) {
-            if (owner != resolver) {
+            if (owner != resolver || !isClosed()) {
                 throw e;
             }
             return lookup.apply(ownGroup());
         }
+    }
+
+    private synchronized boolean isClosed() {
+        return closed;
     }
 }

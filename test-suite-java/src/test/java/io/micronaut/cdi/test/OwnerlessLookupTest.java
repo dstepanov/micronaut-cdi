@@ -20,12 +20,13 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * What a lookup injected into a bean does once Micronaut no longer resolves through that bean's own resolver: used
- * after the bean was destroyed, by a reference that escaped it, and used from another thread by the bean's
- * {@code @PreDestroy} while it is destroyed and the container keeps running. In both the lookup creates the instance
- * through a dependency group of its own. The group opened by the {@code @PreDestroy} is closed as the bean's
- * destruction completes; the one opened after the bean was destroyed has no owner left to close it, and the container
- * closes it as it stops, destroying what it created then.
+ * What a lookup injected into a bean does around that bean's destruction: used after the bean was destroyed, by a
+ * reference that escaped it, and used from another thread by the bean's {@code @PreDestroy} while it is destroyed and
+ * the container keeps running. The {@code @PreDestroy} resolves through the bean's own resolver, which Micronaut
+ * accepts for work the destruction callbacks hand to another thread (since Micronaut Core 5.3, #14194), and what it
+ * creates is destroyed with the bean. The escaped lookup, which Micronaut no longer resolves for through the bean,
+ * creates through a dependency group of its own, which has no owner left to close it: the container closes it as it
+ * stops, destroying what it created then.
  */
 class OwnerlessLookupTest {
 
