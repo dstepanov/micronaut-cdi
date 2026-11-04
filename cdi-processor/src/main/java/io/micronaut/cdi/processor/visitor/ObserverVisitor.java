@@ -76,6 +76,10 @@ public final class ObserverVisitor implements TypeElementVisitor<Object, Object>
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
+        if (SpecificationBeans.declaresNoManagedBean(element)) {
+            // no managed bean, so its observer methods are none
+            return;
+        }
         boolean interceptorClass = element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");
         boolean observing = false;
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {

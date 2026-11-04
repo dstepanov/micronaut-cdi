@@ -17,6 +17,7 @@ package io.micronaut.cdi.processor.visitor;
 
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
@@ -78,6 +79,9 @@ public final class SpecificationBeans {
         if (!producersOf(element).isEmpty()) {
             return true;
         }
+        if (declaresNoManagedBean(element)) {
+            return false;
+        }
         // an observer method is inherited, where a producer and a disposer are not (section 4.2)
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
             if (Arrays.stream(method.getParameters()).anyMatch(
@@ -89,6 +93,24 @@ public final class SpecificationBeans {
             }
         }
         return false;
+    }
+
+    /**
+     * Whether nothing but the observer and disposer methods it declares would make a bean of the class - no scope, of
+     * the specification or of Micronaut's, and not Micronaut's {@code Bean} - and it declares no bean constructor, so
+     * that it is no managed bean (section 3.1.1) and its observer methods are none (section 10.4). Since Micronaut Core
+     * 5.3 javac hands the visitors a class whose only annotations are on parameters, as KSP and Groovy hand them every
+     * class; marking its methods executable would have Micronaut write a definition of a class it cannot create.
+     *
+     * @param element The class
+     * @return Whether it is no managed bean
+     */
+    static boolean declaresNoManagedBean(ClassElement element) {
+        return !element.isAbstract()
+            && !element.hasStereotype(CdiScope.class)
+            && !element.hasStereotype(AnnotationUtil.SCOPE)
+            && !element.hasStereotype(Bean.class)
+            && !hasABeanConstructor(element);
     }
 
     /**
