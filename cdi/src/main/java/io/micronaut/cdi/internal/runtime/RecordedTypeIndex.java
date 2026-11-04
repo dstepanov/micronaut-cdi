@@ -275,7 +275,7 @@ public final class RecordedTypeIndex {
                 if (resolved == null) {
                     return null;
                 }
-                closure.add(CdiTypes.substitute(resolved, arguments, true));
+                closure.add(resolved.substituteTypeVariables(arguments));
             }
             return closure;
         }

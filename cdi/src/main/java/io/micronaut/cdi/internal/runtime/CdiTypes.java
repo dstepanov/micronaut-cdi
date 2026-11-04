@@ -306,63 +306,6 @@ public final class CdiTypes {
     }
 
     /**
-     * The type with each type variable named among the given arguments replaced by the argument, so that what
-     * a subtype says about its parameters carries into the supertypes it collects.
-     *
-     * @param type          The type
-     * @param arguments     The variable assignments, by the name of the variable
-     * @param intoWildcards Whether the bounds of a wildcard are substituted as well
-     * @return The substituted type
-     */
-    public static Argument<?> substitute(Argument<?> type, Map<String, Argument<?>> arguments,
-                                         boolean intoWildcards) {
-        if (arguments.isEmpty()) {
-            return type;
-        }
-        Argument<?> component = type.componentType();
-        if (component != null) {
-            // an array of a variable, or of a type that uses one, is the array of the substituted component
-            Argument<?> substituted = substitute(component, arguments, intoWildcards);
-            return substituted == component ? type : substituted.arrayType();
-        }
-        if (type.isUnresolvedTypeVariable()) {
-            Argument<?> argument = arguments.get(((GenericPlaceholder<?>) type).getVariableName());
-            return argument != null ? argument : type;
-        }
-        if (isParameterized(type)) {
-            Argument<?>[] substituted = substitute(List.of(type.getTypeParameters()), arguments, intoWildcards);
-            // written the way the type was: a variable resolved to a parameterized type stays a resolved
-            // variable, and the annotations of the use are kept
-            return substituted == null ? type : type.withTypeParameters(substituted);
-        }
-        if (intoWildcards && type instanceof WildcardArgument<?> wildcard) {
-            Argument<?>[] upper = substitute(wildcard.getUpperBounds(), arguments, true);
-            Argument<?>[] lower = substitute(wildcard.getLowerBounds(), arguments, true);
-            if (upper == null && lower == null) {
-                return type;
-            }
-            Argument<?>[] uppers = upper != null ? upper : wildcard.getUpperBounds().toArray(Argument.ZERO_ARGUMENTS);
-            Argument<?>[] lowers = lower != null ? lower : wildcard.getLowerBounds().toArray(Argument.ZERO_ARGUMENTS);
-            return Argument.ofWildcard(uppers[0].getType(), null, null, uppers[0].getTypeParameters(), uppers, lowers);
-        }
-        return type;
-    }
-
-    /**
-     * The given types substituted, or {@code null} where the substitution changes none of them.
-     */
-    private static Argument<?> @Nullable [] substitute(List<Argument<?>> types, Map<String, Argument<?>> arguments,
-                                                       boolean intoWildcards) {
-        Argument<?>[] substituted = new Argument<?>[types.size()];
-        boolean changed = false;
-        for (int i = 0; i < substituted.length; i++) {
-            substituted[i] = substitute(types.get(i), arguments, intoWildcards);
-            changed |= substituted[i] != types.get(i);
-        }
-        return changed ? substituted : null;
-    }
-
-    /**
      * The type closure of a type: the type, and every class and interface above it with the type arguments the
      * hierarchy gives each, {@code Object} left out.
      *
