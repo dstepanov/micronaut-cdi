@@ -17,8 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * A lookup injected into a bean may be used from that bean's {@code @PreDestroy} on another thread as the context
- * stops, where Micronaut refuses the bean's own resolver: what it creates is held by the lookup instead, and
- * destroyed with it.
+ * stops: Micronaut resolves through the bean's own resolver for work its destruction callbacks hand to another thread
+ * (since Micronaut Core 5.3, #14194), and destroys what it creates with the bean.
  */
 class ShutdownLookupOffThreadTest {
 
