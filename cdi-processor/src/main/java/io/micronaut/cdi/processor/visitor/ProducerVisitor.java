@@ -182,7 +182,8 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // as the scope of a class is: what the mappers add for a normal scope - the application scope
                 // Micronaut holds one of the application's own in - is not what was written, and a pseudo-scope of
                 // the application's own is one no mapper reads
-                if (declaredScope != null) {
+                if (declaredScope != null && !CdiScopeVisitor.writeScopeServedByItsOwnContext(producer,
+                    declaredScope.stringValue().orElse(""), declaredScope.booleanValue("normal").orElse(false))) {
                     producer.annotate(declaredScope);
                 }
             }

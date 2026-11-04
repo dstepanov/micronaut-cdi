@@ -51,6 +51,7 @@ visible in a test report as what passes.
 | 12 | `AnnotationBuilder` and `Types`, composing annotation values and types of the one language model | `ElementAnnotationBuilder`, `ElementBuildServices`, `VisitorTypes` |
 | 12.5 | Synthetic beans and synthetic observers at runtime, registered from what was recorded, with the creation and disposal functions, the parameters and the lookup they are handed | `RecordedSynthesis`, `CdiParameters`, `SyntheticObserverMethod` |
 | 12.1 | `ScannedClasses.add` and `MetaAnnotations.addContext`, applied while the classes are compiled | `DiscoveredClasses`, `ExtensionContexts` |
+| 2.4, 6.2 | A normal scope the application declares with `@NormalScope`, served by the context an extension registers for it, and held in the application scope where none is registered | `CdiScopes`, `CdiScopeVisitor`, `ProducerVisitor`, `ExtensionContexts`, `ExtensionCustomScope` |
 | 25 (SE) | The SE bootstrap: `SeContainerInitializer` through the service loader, `SeContainer` over a Micronaut context, discovery turned off as a narrowed one | `MicronautSeContainerInitializer`, `MicronautSeContainer` |
 | 25.1 | An alternative no priority selected, enabled by `selectAlternatives`/`selectAlternativeStereotypes` as the container is built | `CdiSelectableAlternative`, `UnselectedAlternative` |
 | 6.5.2 | `@ActivateRequestContext` as the built-in Jakarta interceptor at `PLATFORM_BEFORE + 100`, so the application's interceptors stand on either side of it | `ActivateRequestContextJakartaInterceptor` |
@@ -568,9 +569,11 @@ What an extension can do:
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
   place of the container's own; `addObserverMethod(ObserverMethod)` adds an observer method; and
   `getAnnotatedType`/`getAnnotatedTypes` describe a class. A context added for a normal scope the application
-  declares with `@NormalScope` is registered, but does not serve the beans of that scope: they were compiled into
-  the application scope, which holds them (`PortableCustomNormalScopeTest`, disabled; "Known limitations a review
-  has named");
+  declares with `@NormalScope` serves the beans of that scope - a class declaring it, inheriting it or carrying it
+  with a stereotype, and a producer declaring it: an instance is created into the context and found in it again,
+  an inactive one throws `ContextNotActiveException` rather than being stepped around, and what it destroys is
+  destroyed with its dependents (`PortableCustomNormalScopeTest`; the order of the scopes is described under
+  "A normal scope of the application's own");
 - `addDefinitionError` on any event that has it, and an exception an observer throws, fail the bootstrap with a
   `DefinitionException`; `AfterDeploymentValidation.addDeploymentProblem` fails it with a `DeploymentException`.
 
@@ -594,6 +597,28 @@ bean is described by `ProcessBeanAttributes` and a plain `ProcessBean`, and `get
 method is not described. An extension with an observer of any other event - an event of the application among
 them - is refused as the bootstrap starts, rather than left waiting for it. The beans Micronaut and this
 container bring of their own, which are the ones under `io.micronaut` and `jakarta`, are not described.
+
+### A normal scope of the application's own
+
+A normal scope an application declares with `@NormalScope` has no context the container provides, and the context
+that serves it is registered by an extension: by a build compatible one with `MetaAnnotations.addContext` while the
+beans compile, or by a portable one with `AfterBeanDiscovery.addContext` only as an SE container starts. A bean of
+such a scope - a class declaring it, inheriting it or carrying it with a stereotype, and a producer declaring it - is
+therefore compiled with two Micronaut scopes, in this order: the scope's own annotation first, proxied, and the
+application scope (`CdiApplicationScope`) behind it (`CdiScopes`, `CdiScopeVisitor`, `ProducerVisitor`). The scope's
+own annotation is what Micronaut reports as the scope of the definition (`getScopeName()`), and what it tries first.
+
+Micronaut resolves an instance of the bean through the scope a custom scope is registered for, trying them in the
+order the metadata names them and remembering a scope it found none for until a custom scope is registered at
+runtime. Where a context of the scope is registered, whether by a build compatible or a portable extension, its
+custom scope (`ExtensionCustomScope`) holds the bean, and a context that is registered but inactive throws
+`ContextNotActiveException` - it is never stepped around to the application scope. Where no context of the scope is
+registered at all, the application scope holds the bean, one instance for as long as the container runs, which is
+the widest reading of a scope nothing else manages. The container reports the scope the author wrote, recorded as
+`CdiScope` (`PortableCustomNormalScopeTest`, `CustomNormalScopeUnderGroovyTest`, `CustomNormalScopeUnderKspTest`).
+
+The two built-in normal scopes are not read this way: `@ApplicationScoped` and `@RequestScoped` are held by this
+module's own scopes, which name no other behind them.
 
 ### The bean manager answers what CDI Lite can
 
@@ -717,17 +742,6 @@ stops, not until the bean it escaped was destroyed, unless the program destroys 
 the lookup.
 
 ### Known limitations a review has named
-
-A custom normal scope an application declares with `@NormalScope`, whose context a portable extension adds with
-`AfterBeanDiscovery.addContext` in an SE container, is not served by that context. The processor reads such a scope,
-which no compile-time context serves, into the application scope (`NormalScopeAnnotationMapper`), so a bean of it is
-held in the application scope's map; the context added at runtime registers a Micronaut custom scope for the scope's
-own annotation, which no bean's Micronaut scope names. A context a build compatible extension registers with
-`MetaAnnotations.addContext` is known while the beans compile and does serve them. Closing it needs the scope's own
-annotation among the scopes Micronaut tries for the bean ahead of the application scope - so that
-`CustomScopeRegistry.findDeclaredScope` finds the extension's scope where one is registered and falls back to the
-application scope where none is - which changes how every such bean is compiled and is left for a change of its own
-(`PortableCustomNormalScopeTest`, disabled).
 
 Three findings of an internal review are documented rather than coded around. A dependent bean reached from an
 EL expression through the bare resolver of `getELResolver` is created but not destroyed when the evaluation

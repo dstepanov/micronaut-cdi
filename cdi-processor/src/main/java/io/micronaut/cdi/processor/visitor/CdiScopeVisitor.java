@@ -61,6 +61,7 @@ import java.util.Set;
 public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object> {
 
     private static final String PSEUDO_SCOPE = "jakarta.inject.Scope";
+    private static final String SCOPED_PROXY = "io.micronaut.runtime.context.scope.ScopedProxy";
 
     @Override
     public TypeElementQuery query() {
@@ -100,7 +101,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
                 member.removeAnnotation(CdiScope.class);
                 member.removeAnnotation(CdiApplicationScope.class);
                 member.removeAnnotation(CdiRequestScope.class);
-                member.removeAnnotation("io.micronaut.runtime.context.scope.ScopedProxy");
+                member.removeAnnotation(SCOPED_PROXY);
             }
         }
         element.getEnclosedElements(ElementQuery.ALL_METHODS).forEach(CdiScopeVisitor::readMember);
@@ -274,10 +275,41 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         // a scope other than the specification's own is resolved here only where it is a scope of the kind the
         // specification declares, and whether it is normal is what its declaration says
         boolean normal = isNormal(resolved, context);
+        if (writeScopeServedByItsOwnContext(element, resolved, normal)) {
+            return;
+        }
         for (AnnotationValue<?> annotation
             : CdiScopes.annotationsOf(resolved, normal)) {
             element.annotate(annotation);
         }
+    }
+
+    /**
+     * Writes a normal scope other than the specification's own onto a class or a producer that declares or
+     * inherits it, directly or through a stereotype: the scope's own annotation as the first Micronaut scope of
+     * the bean, and the application scope the mappers read it into behind it.
+     *
+     * <p>What the mappers wrote is taken off first, wherever it came from - written on the element, or carried
+     * by an annotation it declares or inherits - so that the scope's own annotation leads the scopes Micronaut
+     * tries, and the proxying is written again with it.</p>
+     *
+     * @param element The class or the producer
+     * @param scope   The name of the scope annotation
+     * @param normal  Whether it is a normal scope
+     * @return Whether the scope is one of that kind, and was written
+     */
+    static boolean writeScopeServedByItsOwnContext(Element element, String scope, boolean normal) {
+        if (!CdiScopes.isServedByItsOwnContext(scope, normal)) {
+            return false;
+        }
+        // the proxying first: what the application scope carries is listed under it, and goes with it
+        element.removeStereotype(SCOPED_PROXY);
+        element.removeAnnotation(CdiApplicationScope.class);
+        element.removeStereotype(CdiApplicationScope.class);
+        for (AnnotationValue<?> annotation : CdiScopes.annotationsOf(scope, true)) {
+            element.annotate(annotation);
+        }
+        return true;
     }
 
     /**

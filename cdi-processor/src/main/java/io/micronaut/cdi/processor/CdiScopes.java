@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.annotation.Prototype;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 
@@ -38,6 +39,8 @@ import java.util.List;
  */
 @Internal
 public final class CdiScopes {
+
+    private static final String SCOPED_PROXY = "io.micronaut.runtime.context.scope.ScopedProxy";
 
     private CdiScopes() {
     }
@@ -71,7 +74,43 @@ public final class CdiScopes {
             case Cdi.REQUEST_SCOPED -> List.of(AnnotationValue.builder(CdiRequestScope.class).build(),
                 recordOf(scope, true));
             case Cdi.DEPENDENT -> List.of(AnnotationValue.builder(Prototype.class).build(), recordOf(scope, false));
-            default -> List.of(recordOf(scope, normal));
+            default -> normal ? servedByItsOwnContext(scope) : List.of(recordOf(scope, false));
         };
+    }
+
+    /**
+     * Whether a scope is a normal one other than the specification's own, which the context registered for it
+     * serves.
+     *
+     * @param scope  The name of the scope annotation
+     * @param normal Whether it is a normal scope
+     * @return Whether the context registered for it serves it
+     */
+    public static boolean isServedByItsOwnContext(String scope, boolean normal) {
+        return normal && !Cdi.APPLICATION_SCOPED.equals(scope) && !Cdi.REQUEST_SCOPED.equals(scope);
+    }
+
+    /**
+     * What a bean of a normal scope other than the specification's own is annotated with: the scope's own
+     * annotation as the first Micronaut scope of the bean, proxied, and the application scope behind it.
+     *
+     * <p>Such a scope is served by the context registered for it, which a build compatible extension registers as
+     * the application compiles and a portable extension only as the container starts. Micronaut tries the scopes of
+     * a bean in the order its metadata names them, so the context registered for the scope's own annotation serves
+     * the bean wherever there is one, active or not, and the application scope holds it in a container that
+     * registered none.</p>
+     *
+     * @param scope The name of the scope annotation
+     * @return The annotations
+     */
+    private static List<AnnotationValue<?>> servedByItsOwnContext(String scope) {
+        return List.of(
+            AnnotationValue.builder(scope)
+                .stereotype(AnnotationValue.builder(AnnotationUtil.SCOPE).build())
+                .stereotype(AnnotationValue.builder(SCOPED_PROXY).build())
+                .build(),
+            AnnotationValue.builder(CdiApplicationScope.class).build(),
+            recordOf(scope, true)
+        );
     }
 }

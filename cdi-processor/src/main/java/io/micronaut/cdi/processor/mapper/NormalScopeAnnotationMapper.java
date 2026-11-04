@@ -35,11 +35,12 @@ import java.util.List;
  * meta-annotation appears, so the declared annotation becomes a bean-defining one, and a bean carrying it is
  * proxied and held the way a normal scoped bean is.</p>
  *
- * <p>The instances of such a scope are held for as long as the container runs, which is the widest reading of a
- * scope nothing else manages: the specification leaves the lifecycle of a custom scope to whoever registered its
- * context, and CDI Lite registers none. Which annotation the bean was written with is recorded separately, by
- * {@link io.micronaut.cdi.processor.visitor.CdiScopeVisitor}, so the container still reports the scope the
- * author named.</p>
+ * <p>The application scope is what holds the instances of such a scope where no context of it is registered, for
+ * as long as the container runs, which is the widest reading of a scope nothing else manages: the specification
+ * leaves the lifecycle of a custom scope to whoever registered its context. Where an extension registers one, it is
+ * the scope's own annotation that serves the bean: {@link io.micronaut.cdi.processor.visitor.CdiScopeVisitor} and
+ * {@link io.micronaut.cdi.processor.visitor.ProducerVisitor} write it ahead of the application scope, and record
+ * which annotation the bean was written with, so the container reports the scope the author named.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
