@@ -20,7 +20,6 @@ import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.internal.metadata.MicronautQualifiers;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
-import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -38,9 +37,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -168,79 +165,17 @@ public final class CdiQualifier {
      * A hash code that two qualifiers which {@link #matches(CdiQualifier) match} share, over the members that
      * bind: what the container answers when asked for the hash code of a qualifier or an interceptor binding.
      *
-     * <p>Micronaut has no hash code for {@link AnnotationValue#matches(AnnotationValue)}. The container hashes an
-     * annotation instance, whose non-binding members are the ones the application was compiled with for its type
-     * whichever instance it is, and the specification asks two qualifiers that differ by a binding member to hash
-     * differently. So the members that bind are hashed, the ones the value leaves out at the defaults it carries;
-     * an annotation held by a member is hashed by its name alone, since it may itself list non-binding members, and
-     * a member that is an empty string not at all, which only lets more qualifiers share a hash code.</p>
+     * <p>It is Micronaut's hash code for {@link AnnotationValue#matches(AnnotationValue)},
+     * {@link AnnotationValue#bindingHashCode()} (since Micronaut Core 5.3, #14194): the binding members at the
+     * defaults the value carries, the ones it lists under {@code $nonBinding} left out, an annotation a member holds
+     * hashed by its name and an empty string not at all. It agrees with the comparison where each side carries the
+     * defaults of its annotation and lists its non-binding members, which a qualifier here does: the container
+     * completes one that lacks them with what the application was compiled with as it reads it.</p>
      *
      * @return The hash code
      */
     public int bindingHashCode() {
-        AnnotationValue<?> value = written();
-        Set<String> nonBinding = Set.of(value.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE));
-        Map<CharSequence, Object> members = new LinkedHashMap<>();
-        Map<CharSequence, Object> defaults = value.getDefaultValues();
-        if (defaults != null) {
-            defaults.forEach((member, memberValue) -> members.put(member.toString(), memberValue));
-        }
-        value.getValues().forEach((member, memberValue) -> members.put(member.toString(), memberValue));
-        int hash = name().hashCode();
-        for (Map.Entry<CharSequence, Object> member : members.entrySet()) {
-            Object memberValue = member.getValue();
-            String memberName = member.getKey().toString();
-            if (memberValue == null || isMicronautMember(memberName) || nonBinding.contains(memberName)
-                || memberValue instanceof String text && text.isEmpty()) {
-                continue;
-            }
-            hash += memberName.hashCode() ^ hashOf(memberValue);
-        }
-        return hash;
-    }
-
-    /**
-     * Whether the member is one Micronaut keeps beside the annotation's own: the list of the non-binding members,
-     * or the stereotypes.
-     */
-    private static boolean isMicronautMember(String member) {
-        return AnnotationUtil.NON_BINDING_ATTRIBUTE.equals(member) || AnnotationUtil.STEREOTYPES_MEMBER.equals(member);
-    }
-
-    /**
-     * The hash code of a member value: an array or a collection by its elements, which Micronaut compares an
-     * annotation held in either by, a class by its name and a nested annotation by its name. The array types are
-     * listed out rather than read through {@code java.lang.reflect.Array}, which keeps it free of reflection.
-     */
-    private static int hashOf(@Nullable Object value) {
-        return switch (value) {
-            case null -> 0;
-            case AnnotationValue<?> nested -> nested.getAnnotationName().hashCode();
-            case AnnotationClassValue<?> type -> type.getName().hashCode();
-            case Object[] array -> {
-                int hash = 1;
-                for (Object element : array) {
-                    hash = 31 * hash + hashOf(element);
-                }
-                yield hash;
-            }
-            case Collection<?> collection -> {
-                int hash = 1;
-                for (Object element : collection) {
-                    hash = 31 * hash + hashOf(element);
-                }
-                yield hash;
-            }
-            case int[] array -> Arrays.hashCode(array);
-            case long[] array -> Arrays.hashCode(array);
-            case double[] array -> Arrays.hashCode(array);
-            case boolean[] array -> Arrays.hashCode(array);
-            case byte[] array -> Arrays.hashCode(array);
-            case short[] array -> Arrays.hashCode(array);
-            case char[] array -> Arrays.hashCode(array);
-            case float[] array -> Arrays.hashCode(array);
-            default -> value.hashCode();
-        };
+        return written().bindingHashCode();
     }
 
     /**
@@ -372,57 +307,7 @@ public final class CdiQualifier {
         if (ANY_NAME.equals(name)) {
             return ANY;
         }
-        return of(recorded(value), null, null, types);
-    }
-
-    /**
-     * The value with its members spelt as Micronaut records them: an enum constant as its name, a class as an
-     * {@link AnnotationClassValue}, an annotation it holds spelt so as well.
-     *
-     * <p>{@code AnnotationValueBuilder.member(String, Enum)} keeps the constant, where compiled metadata holds its
-     * name, and {@link AnnotationValue#matches(AnnotationValue)} compares the two as different values, so a value a
-     * program built of a qualifier with an enum member would select nothing. The value is left as it is where it
-     * holds nothing to respell.</p>
-     */
-    private static AnnotationValue<?> recorded(AnnotationValue<?> value) {
-        Map<CharSequence, Object> values = value.getValues();
-        Map<CharSequence, Object> respelt = null;
-        for (Map.Entry<CharSequence, Object> member : values.entrySet()) {
-            Object given = member.getValue();
-            Object spelt = recorded(given);
-            if (spelt != given) {
-                if (respelt == null) {
-                    respelt = new LinkedHashMap<>(values);
-                }
-                respelt.put(member.getKey(), spelt);
-            }
-        }
-        return respelt == null ? value : new AnnotationValue<>(value.getAnnotationName(), respelt,
-            value.getDefaultValues());
-    }
-
-    private static @Nullable Object recorded(@Nullable Object value) {
-        return switch (value) {
-            case Enum<?> constant -> constant.name();
-            case Class<?> type -> new AnnotationClassValue<>(type.getName());
-            case AnnotationValue<?> nested -> recorded(nested);
-            case Object[] array -> {
-                Object[] spelt = null;
-                for (int i = 0; i < array.length; i++) {
-                    Object element = recorded(array[i]);
-                    if (element != array[i]) {
-                        if (spelt == null) {
-                            // of the elements' new type: an Enum[] does not hold a name, nor a Class[] an
-                            // AnnotationClassValue
-                            spelt = Arrays.copyOf(array, array.length, Object[].class);
-                        }
-                        spelt[i] = element;
-                    }
-                }
-                yield spelt == null ? array : spelt;
-            }
-            case null, default -> value;
-        };
+        return of(value, null, null, types);
     }
 
     /**
@@ -714,34 +599,7 @@ public final class CdiQualifier {
      */
     private static CdiQualifier of(AnnotationValue<?> given, @Nullable AnnotationMetadata source,
                                    @Nullable Annotation instance, @Nullable CompiledAnnotationTypes types) {
-        return new CdiQualifier(withoutUndefaultedEmptyStrings(withDefaults(given, source, types)), source, instance);
-    }
-
-    /**
-     * The value without the members bound to the empty string that it has no default for.
-     *
-     * <p>Micronaut records no default of the empty string for an annotation compiled from Java, so the qualifier
-     * {@code @Zone} compiled onto a bean, whose member defaults to {@code ""}, carries neither the member nor its
-     * default, and {@link AnnotationValue#matches(AnnotationValue)} compares {@code @Zone("")} - a literal, or a value
-     * a program built - as a member the bean lacks. The two are the same annotation instance, so a member bound to
-     * the empty string with no default to say otherwise is the member left out. Where a default is known, the empty
-     * string is compared with it as Micronaut compares it: {@code @Level("")} is not {@code @Level} when the member
-     * defaults to {@code "INFO"}.</p>
-     */
-    private static AnnotationValue<?> withoutUndefaultedEmptyStrings(AnnotationValue<?> value) {
-        Map<CharSequence, Object> values = value.getValues();
-        Map<CharSequence, Object> defaults = value.getDefaultValues();
-        Map<CharSequence, Object> kept = null;
-        for (Map.Entry<CharSequence, Object> member : values.entrySet()) {
-            if (member.getValue() instanceof String text && text.isEmpty()
-                && (defaults == null || !defaults.containsKey(member.getKey()))) {
-                if (kept == null) {
-                    kept = new LinkedHashMap<>(values);
-                }
-                kept.remove(member.getKey());
-            }
-        }
-        return kept == null ? value : new AnnotationValue<>(value.getAnnotationName(), kept, defaults);
+        return new CdiQualifier(withDefaults(given, source, types), source, instance);
     }
 
     @Override
