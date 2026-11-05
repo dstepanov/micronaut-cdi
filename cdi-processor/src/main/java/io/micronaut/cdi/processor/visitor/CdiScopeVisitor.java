@@ -598,7 +598,7 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     private static void readMember(Element element) {
         if (!element.hasAnnotation(CdiScope.class) && element.hasAnnotation(Cdi.DEPENDENT)) {
             element.annotate(Prototype.class);
-            element.annotate(CdiScope.class, builder -> builder.value(Cdi.DEPENDENT));
+            element.annotate(CdiScopes.recordOf(Cdi.DEPENDENT, false));
         }
         takeOffTheDependentPseudoScope(element);
     }
