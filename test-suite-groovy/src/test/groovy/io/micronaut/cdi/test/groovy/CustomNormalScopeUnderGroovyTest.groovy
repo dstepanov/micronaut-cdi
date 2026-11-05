@@ -5,6 +5,8 @@ import io.micronaut.context.ApplicationContext
 import jakarta.enterprise.context.Dependent
 import jakarta.enterprise.context.NormalScope
 import jakarta.enterprise.inject.Produces
+import jakarta.enterprise.inject.Stereotype
+import jakarta.inject.Singleton
 import org.junit.jupiter.api.Test
 
 import java.lang.annotation.ElementType
@@ -14,6 +16,7 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertSame
 
 /**
  * A bean of a normal scope of the application's own compiled by the Groovy compiler is held first by the scope's own
@@ -58,6 +61,45 @@ class CustomNormalScopeUnderGroovyTest {
         }
     }
 
+    @Foggy
+    static class Cloud {
+    }
+
+    /**
+     * Declares the dependent pseudo-scope over the normal scope it would inherit, and keeps state of its own.
+     */
+    @Dependent
+    static class Drizzle extends Cloud {
+        private int calls
+
+        int count() {
+            ++calls
+        }
+    }
+
+    /**
+     * A stereotype carrying the normal scope.
+     */
+    @Stereotype
+    @Foggy
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target([ElementType.TYPE, ElementType.METHOD])
+    static @interface Hazy {
+    }
+
+    static class Ice {
+    }
+
+    @Dependent
+    static class IceProducer {
+        @Produces
+        @Singleton
+        @Hazy
+        Ice ice() {
+            new Ice()
+        }
+    }
+
     @Test
     void theScopesOwnAnnotationLeadsTheApplicationScope() {
         try (ApplicationContext context = ApplicationContext.run()) {
@@ -70,6 +112,19 @@ class CustomNormalScopeUnderGroovyTest {
             }
             assertEquals(context.getBean(Mist).id(), context.getBean(Mist).id())
             assertEquals(context.getBean(Steam).id(), context.getBean(Steam).id())
+        }
+    }
+
+    @Test
+    void aPseudoScopeWinsOverTheNormalScopeAndIsNotProxiedForIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Drizzle drizzle = context.getBean(Drizzle)
+            assertEquals(Drizzle, drizzle.getClass())
+            assertEquals(1, drizzle.count())
+            assertEquals(2, drizzle.count())
+            Ice ice = context.getBean(Ice)
+            assertEquals(Ice, ice.getClass())
+            assertSame(ice, context.getBean(Ice))
         }
     }
 }

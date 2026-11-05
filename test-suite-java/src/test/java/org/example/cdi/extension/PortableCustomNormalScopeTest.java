@@ -16,6 +16,7 @@ import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Annotation;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -135,6 +137,84 @@ class PortableCustomNormalScopeTest {
 
         public int count() {
             return CREATED.get();
+        }
+    }
+
+    /**
+     * A bean of the scope whose producer field is set as the bean is created, which only the contextual instance
+     * has: the client proxy is never initialized.
+     */
+    @Cloudy
+    public static class Weather {
+        @Produces
+        Vapor rain;
+
+        @jakarta.annotation.PostConstruct
+        void created() {
+            rain = new Vapor("rain");
+        }
+    }
+
+    /**
+     * A bean that declares the dependent pseudo-scope over the scope it would inherit, and keeps state of its own.
+     */
+    @Dependent
+    public static class Fog extends Mist {
+        private int calls;
+
+        @Override
+        public String name() {
+            return "fog";
+        }
+
+        public int call() {
+            return ++calls;
+        }
+    }
+
+    /**
+     * A producer method that declares the singleton pseudo-scope over the scope its stereotype carries.
+     */
+    @Dependent
+    public static class SolidVaporProducer {
+        @Produces
+        @jakarta.inject.Singleton
+        @Overcast
+        Vapor vapor() {
+            return new Vapor("solid");
+        }
+    }
+
+    /**
+     * A producer field that declares the singleton pseudo-scope over the scope its stereotype carries.
+     */
+    @Dependent
+    public static class SolidVaporFieldProducer {
+        @Produces
+        @jakarta.inject.Singleton
+        @Overcast
+        Vapor vapor = new Vapor("solid field");
+    }
+
+    /**
+     * A bean of the scope that says when it is destroyed.
+     */
+    @Cloudy
+    public static class Settled {
+        static final AtomicInteger CREATED = new AtomicInteger();
+
+        @jakarta.annotation.PostConstruct
+        void created() {
+            CREATED.incrementAndGet();
+        }
+
+        public int count() {
+            return CREATED.get();
+        }
+
+        @PreDestroy
+        void destroyed() {
+            DESTROYED.add("settled");
         }
     }
 
@@ -293,6 +373,84 @@ class PortableCustomNormalScopeTest {
             // the reference outlives the instance: the next call creates one again in the context
             assertEquals("mist", mist.name());
             assertEquals(1, adding.context.held.size());
+        }
+    }
+
+    @Test
+    @Disabled("Micronaut reads a producer field off the factory it looked up, which for a bean in a normal scope "
+        + "is the client proxy (MicronautCoreIssuesTest#aBeanFieldOfAFactoryInAProxiedScopeIsReadFromItsTarget)")
+    void aProducerFieldOfABeanOfTheScopeIsReadFromTheContextualInstance() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, Weather.class)) {
+            Vapor rain = container.select(Vapor.class).get();
+            assertNotNull(rain, "the field is read from the instance the context holds, not from the client proxy");
+            assertEquals("rain", rain.name());
+            assertEquals(1, adding.context.held.size(), "the producing instance is held by the context");
+        }
+    }
+
+    @Test
+    @Disabled("Micronaut reads a producer field off the factory it looked up, which for a bean in a normal scope "
+        + "is the client proxy (MicronautCoreIssuesTest#aBeanFieldOfAFactoryInAProxiedScopeIsReadFromItsTarget)")
+    void aProducerFieldOfABeanOfAnInactiveScopeIsNotReadPastTheContext() {
+        AddingCloudy adding = new AddingCloudy();
+        adding.context.active = false;
+        try (SeContainer container = start(adding, Weather.class)) {
+            assertThrows(ContextNotActiveException.class, () -> container.select(Vapor.class).get());
+        }
+    }
+
+    @Test
+    void aDependentSubclassOfABeanOfTheScopeIsNotProxiedForIt() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, Fog.class)) {
+            Fog fog = container.select(Fog.class).get();
+            assertEquals("fog", fog.name());
+            assertEquals(1, fog.call());
+            assertEquals(2, fog.call(), "the reference is the instance, which keeps its state between calls");
+            assertTrue(adding.context.held.isEmpty(), "nothing is held by the context of the scope it overrides");
+            assertEquals(Dependent.class, container.getBeanManager().resolve(
+                container.getBeanManager().getBeans(Fog.class)).getScope());
+        }
+    }
+
+    @Test
+    void aProducerMethodsOwnScopeWinsOverTheOneItsStereotypeCarries() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, SolidVaporProducer.class)) {
+            assertProducedInTheSingletonScope(container, adding, "solid");
+        }
+    }
+
+    @Test
+    void aProducerFieldsOwnScopeWinsOverTheOneItsStereotypeCarries() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, SolidVaporFieldProducer.class)) {
+            assertProducedInTheSingletonScope(container, adding, "solid field");
+        }
+    }
+
+    private static void assertProducedInTheSingletonScope(SeContainer container, AddingCloudy adding, String name) {
+        Vapor vapor = container.select(Vapor.class).get();
+        assertEquals(name, vapor.name());
+        assertSame(Vapor.class, vapor.getClass(), "a bean of a pseudo-scope is not proxied");
+        assertSame(vapor, container.select(Vapor.class).get());
+        assertTrue(adding.context.held.isEmpty(), "nothing is held by the context of the stereotype's scope");
+        assertEquals(jakarta.inject.Singleton.class, container.getBeanManager().resolve(
+            container.getBeanManager().getBeans(Vapor.class)).getScope());
+    }
+
+    @Test
+    void withNoContextOfTheScopeAnInstanceIsDestroyedWhereTheApplicationScopeHoldsIt() {
+        DESTROYED.clear();
+        Settled.CREATED.set(0);
+        try (SeContainer container = start(null, Settled.class)) {
+            jakarta.enterprise.inject.Instance<Settled> lookup = container.select(Settled.class);
+            Settled settled = lookup.get();
+            assertEquals(1, settled.count());
+            lookup.destroy(settled);
+            assertEquals(List.of("settled"), DESTROYED);
+            assertEquals(2, lookup.get().count(), "the next call creates the instance again");
         }
     }
 

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
@@ -413,6 +414,16 @@ public final class RecordedSynthesis {
         metadata.addDeclaredAnnotation(CdiScope.class.getName(), Map.of(
             AnnotationMetadata.VALUE_MEMBER, scope != null ? scope.getName() : "jakarta.enterprise.context.Dependent",
             "normal", record.booleanValue("normal").orElse(false)));
+        if (scope != null && record.booleanValue("normal").orElse(false) && ExtensionContexts.servedBy(scope) == scope) {
+            // a normal scope of the application's own, held the way the compiler has a class bean of it held: the
+            // scope's own annotation first, served by the context an extension registers for it, and the
+            // application scope behind it, which Micronaut tries next and which holds the instance where no
+            // context of the scope is registered. There is no client proxy in front of it (CONFORMANCE, EXT-2)
+            for (String served : List.of(scope.getName(), CdiApplicationScope.class.getName())) {
+                metadata.addDeclaredAnnotation(served, Map.of());
+                metadata.addDeclaredStereotype(List.of(served), AnnotationUtil.SCOPE, Map.of());
+            }
+        }
         if (record.booleanValue("alternative").orElse(false)) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }

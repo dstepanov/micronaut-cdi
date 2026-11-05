@@ -617,6 +617,26 @@ registered at all, the application scope holds the bean, one instance for as lon
 the widest reading of a scope nothing else manages. The container reports the scope the author wrote, recorded as
 `CdiScope` (`PortableCustomNormalScopeTest`, `CustomNormalScopeUnderGroovyTest`, `CustomNormalScopeUnderKspTest`).
 
+A class or a producer in a pseudo-scope is not proxied for a normal scope it does not have: a class that declares
+`@Dependent` or `@Singleton` and inherits a normal scope from a superclass, and a class or a producer that declares
+one beside a stereotype carrying a normal scope, are written with neither the scopes that normal scope was read into
+nor the client proxy and the advice they carry, and the rules of a normal scope - no public field, a proxyable class
+- are not theirs. A scope written on a producer wins over one a stereotype it declares carries, whichever of the two
+is normal. Interceptor advice of another origin is kept (`PortableCustomNormalScopeTest`,
+`DependentSubclassOfNormalScopeTest`).
+
+An instance the application scope holds in place of the context of the scope is destroyed there:
+`Instance.destroy` of a bean of the scope destroys the instance where nothing is registered for the scope, and the
+next call through the client proxy creates one again (`PortableCustomNormalScopeTest`).
+
+A synthetic bean a build compatible extension adds in such a scope is registered with the same two scopes in the
+same order - the scope's own annotation, and the application scope behind it - so that it is held by the context
+of the scope where one is registered and by the application scope where none is, one instance for every lookup
+(`SyntheticCustomNormalScopeTest`). It has no client proxy (see "Known limitations a review has named").
+
+A producer field of a bean of the scope is read off the client proxy rather than off the instance the scope holds,
+as for any normal scope (see "Open points in Micronaut Core").
+
 The two built-in normal scopes are not read this way: `@ApplicationScoped` and `@RequestScoped` are held by this
 module's own scopes, which name no other behind them.
 
@@ -886,6 +906,15 @@ own rather than the first one alone.
   `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
   query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the
   arguments of every declared type, and complete recorded metadata would leave nothing to read.
+- **A bean field of a factory is read off the factory's scoped proxy.** The definition Micronaut writes for a bean
+  field looks its factory up and reads the field off what it found (`BeanDefinitionWriter.getBeanFromFactoryField`),
+  which for a factory in a scope reached through a client proxy is the proxy rather than the instance the scope
+  holds. A producer field of a bean in a normal scope - the application and the request scope as much as one of the
+  application's own - therefore reads the field of a proxy that was never initialized, so a field set as the bean
+  is created reads `null`, and an inactive context is not asked. A producer method is invoked through the proxy,
+  which hands the call on to the instance, and is not affected; nor is a static producer field. Closing it needs
+  the definition to read the field off the target of a scoped proxy (`MicronautCoreIssuesTest`, disabled;
+  `PortableCustomNormalScopeTest`, disabled).
 - **A scope has no terminal state.** `AbstractConcurrentCustomScope` lets a creation that found a scope map before
   its destruction announce itself after the destruction pass, and publish into the map. The request scope fences
   its map as a request ends, and the context store of `CdiContext` has an end of its own; a terminal close on the

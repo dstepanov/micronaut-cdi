@@ -244,10 +244,17 @@ public final class SpecificationBeans {
     /**
      * Whether the class is in a normal scope, which is what makes it reached through a client proxy.
      *
+     * <p>The scope recorded on the class, where one is, decides: a class that declares a pseudo-scope is not in the
+     * normal scope it would inherit from a superclass, or that a stereotype it declares carries, although the
+     * annotation of that scope is still among its stereotypes.</p>
+     *
      * @param element The class
      * @return Whether its scope is normal
      */
     static boolean isNormalScoped(ClassElement element) {
+        if (element.hasDeclaredAnnotation(CdiScope.class)) {
+            return element.booleanValue(CdiScope.class, "normal").orElse(false);
+        }
         return element.hasStereotype(Cdi.NORMAL_SCOPE)
             || element.getAnnotationMetadata().booleanValue(CdiScope.class, "normal").orElse(false);
     }

@@ -187,6 +187,12 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     producer.annotate(declaredScope);
                 }
             }
+            if (declaredScope != null && !declaredScope.booleanValue("normal").orElse(false)) {
+                // a pseudo-scope written on the producer wins over a normal scope a stereotype it declares carries
+                // (section 2.7.2), and what the mappers read that one into - the scope it is held in, the client
+                // proxy - goes with it
+                CdiScopeVisitor.takeOffTheNormalScopeItOverrides(producer);
+            }
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
             // injected — the definition says so, so that resolution hands the null on instead of failing
             producer.annotate(AnnotationUtil.NULLABLE);
