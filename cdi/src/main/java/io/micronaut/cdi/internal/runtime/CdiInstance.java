@@ -28,7 +28,6 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
@@ -423,13 +422,9 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         if (CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
             CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
             CdiBean<?> bean = container.canonicalBean(definition);
-            Class<? extends Annotation> scope = bean.getScope();
-            if (container.getContexts(scope).isEmpty()) {
-                // a normal scope of the application's own that no extension registered a context for: the
-                // application scope holds its instances in its place, and is what destroys one
-                scope = ApplicationScoped.class;
-            }
-            Context context = container.getContext(scope);
+            // the context that holds the instance: for a normal scope of the application's own that no extension
+            // registered a context for, the application scope's, which is what destroys one
+            Context context = container.getContext(container.scopeHolding(bean));
             if (context instanceof AlterableContext alterable) {
                 alterable.destroy(bean);
                 return;

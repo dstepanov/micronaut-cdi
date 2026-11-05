@@ -21,6 +21,7 @@ import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.processor.Cdi;
+import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
@@ -174,8 +175,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 producer.annotate(Prototype.class);
                 // written on the member so that it shadows the scope of the class that declares the producer,
                 // which the produced bean's metadata carries as well
-                producer.annotate(CdiScope.class,
-                    builder -> builder.value(Cdi.DEPENDENT));
+                producer.annotate(CdiScopes.recordOf(Cdi.DEPENDENT, false));
             } else if (!producer.hasDeclaredAnnotation(CdiScope.class)) {
                 // the scope came through a stereotype the producer declares: written onto the member itself so
                 // that it shadows the scope of the class that declares the producer (section 2.6.1). It is resolved

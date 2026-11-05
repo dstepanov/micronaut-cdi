@@ -39,6 +39,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
@@ -828,6 +829,23 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     @Override
     public Collection<Context> getContexts(Class<? extends Annotation> scopeType) {
         return contexts.of(scopeType);
+    }
+
+    /**
+     * The scope whose context holds the instances of a bean: the bean's own, except for a normal scope of the
+     * application's own that no context is registered for, whose instances the application scope holds in its
+     * place - the compiler has such a bean held by the scope's own annotation first and the application scope
+     * behind it. What finds, or destroys, the instance a bean has asks the context of this scope.
+     *
+     * @param bean The bean
+     * @return The scope whose context holds its instances
+     */
+    Class<? extends Annotation> scopeHolding(CdiBean<?> bean) {
+        Class<? extends Annotation> scope = bean.getScope();
+        if (bean.isNormalScoped() && contexts.of(scope).isEmpty()) {
+            return ApplicationScoped.class;
+        }
+        return scope;
     }
 
     @Override

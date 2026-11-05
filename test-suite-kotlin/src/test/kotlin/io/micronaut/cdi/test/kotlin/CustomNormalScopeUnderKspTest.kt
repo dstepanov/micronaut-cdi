@@ -1,7 +1,10 @@
 package io.micronaut.cdi.test.kotlin
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope
+import io.micronaut.cdi.internal.metadata.CdiProducer
+import io.micronaut.cdi.internal.metadata.CdiScope
 import io.micronaut.context.ApplicationContext
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.context.Dependent
 import jakarta.enterprise.context.NormalScope
 import jakarta.enterprise.inject.Produces
@@ -71,6 +74,17 @@ open class IceProducer {
     open fun ice(): Ice = Ice()
 }
 
+open class Puddle
+
+/**
+ * Declares a producer with no scope of its own in a normal scoped class.
+ */
+@ApplicationScoped
+open class PuddleProducer {
+    @Produces
+    open fun puddle(): Puddle? = null
+}
+
 /**
  * A bean of a normal scope of the application's own compiled through KSP is held first by the scope's own
  * annotation - declared, inherited or declared by a producer - and by the application scope behind it, which holds
@@ -92,6 +106,17 @@ class CustomNormalScopeUnderKspTest {
             }
             assertEquals(context.getBean(Mist::class.java).id(), context.getBean(Mist::class.java).id())
             assertEquals(context.getBean(Steam::class.java).id(), context.getBean(Steam::class.java).id())
+        }
+    }
+
+    @Test
+    fun aProducerWithNoScopeOfItsOwnIsDependentInANormalScopedClass() {
+        ApplicationContext.run().use { context ->
+            val definition = context.getBeanDefinitions(Puddle::class.java)
+                .first { it.hasAnnotation(CdiProducer::class.java) }
+            val metadata = definition.annotationMetadata
+            assertEquals("jakarta.enterprise.context.Dependent", metadata.stringValue(CdiScope::class.java).orElse(null))
+            assertEquals(false, metadata.booleanValue(CdiScope::class.java, "normal").orElse(true))
         }
     }
 

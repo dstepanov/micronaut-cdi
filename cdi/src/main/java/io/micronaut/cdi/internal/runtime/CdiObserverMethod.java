@@ -315,16 +315,22 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             return true;
         }
         try {
-            return container().activeContext(bean.getScope()) != null;
+            CdiBeanContainer found = container();
+            return found.activeContext(found.scopeHolding(bean)) != null;
         } catch (IllegalArgumentException e) {
             // a scope no context is registered for: resolving the bean reports that, not this check
             return true;
         }
     }
 
+    /**
+     * The active context that holds the instances of the bean: for a normal scope of the application's own that no
+     * context is registered for, the application scope's, which holds them in its place.
+     */
     private @Nullable Context activeContextOf(CdiBean<?> bean) {
         try {
-            return container().activeContext(bean.getScope());
+            CdiBeanContainer found = container();
+            return found.activeContext(found.scopeHolding(bean));
         } catch (IllegalArgumentException e) {
             return null;
         }

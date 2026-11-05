@@ -1,7 +1,10 @@
 package io.micronaut.cdi.test.groovy
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope
+import io.micronaut.cdi.internal.metadata.CdiProducer
+import io.micronaut.cdi.internal.metadata.CdiScope
 import io.micronaut.context.ApplicationContext
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.context.Dependent
 import jakarta.enterprise.context.NormalScope
 import jakarta.enterprise.inject.Produces
@@ -97,6 +100,39 @@ class CustomNormalScopeUnderGroovyTest {
         @Hazy
         Ice ice() {
             new Ice()
+        }
+    }
+
+    static class Puddle {
+    }
+
+    static class Pool {
+    }
+
+    /**
+     * Declares a producer method and a producer field with no scope of their own in a normal scoped class.
+     */
+    @ApplicationScoped
+    static class PuddleProducer {
+        @Produces
+        public static Pool pool
+
+        @Produces
+        Puddle puddle() {
+            null
+        }
+    }
+
+    @Test
+    void aProducerWithNoScopeOfItsOwnIsDependentInANormalScopedClass() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            for (Class<?> type : [Puddle, Pool]) {
+                def definition = context.getBeanDefinitions(type).find { it.hasAnnotation(CdiProducer) }
+                assertEquals("jakarta.enterprise.context.Dependent",
+                    definition.annotationMetadata.stringValue(CdiScope).orElse(null), type.name)
+                assertEquals(false, definition.annotationMetadata.booleanValue(CdiScope, "normal").orElse(true),
+                    type.name)
+            }
         }
     }
 

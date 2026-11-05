@@ -48,15 +48,16 @@ public final class CdiScopes {
     /**
      * The record of the scope a bean was written with.
      *
+     * <p>Whether the scope is normal is written whichever it is. The metadata of a producer carries what the class
+     * that declares it carries behind its own, and a member the producer's record left out is read from the class's:
+     * a dependent producer of a normal scoped class would be taken for a normal scoped one.</p>
+     *
      * @param scope  The name of the scope annotation
      * @param normal Whether it is a normal scope
      * @return The record
      */
     public static AnnotationValue<CdiScope> recordOf(String scope, boolean normal) {
-        if (normal) {
-            return AnnotationValue.builder(CdiScope.class).value(scope).member("normal", true).build();
-        }
-        return AnnotationValue.builder(CdiScope.class).value(scope).build();
+        return AnnotationValue.builder(CdiScope.class).value(scope).member("normal", normal).build();
     }
 
     /**
