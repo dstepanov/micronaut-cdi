@@ -196,6 +196,28 @@ class PortableCustomNormalScopeTest {
         Vapor vapor = new Vapor("solid field");
     }
 
+    /**
+     * A bean of the scope that says when it is destroyed.
+     */
+    @Cloudy
+    public static class Settled {
+        static final AtomicInteger CREATED = new AtomicInteger();
+
+        @jakarta.annotation.PostConstruct
+        void created() {
+            CREATED.incrementAndGet();
+        }
+
+        public int count() {
+            return CREATED.get();
+        }
+
+        @PreDestroy
+        void destroyed() {
+            DESTROYED.add("settled");
+        }
+    }
+
     @Dependent
     public static class VaporProducer {
         @Produces
@@ -416,6 +438,20 @@ class PortableCustomNormalScopeTest {
         assertTrue(adding.context.held.isEmpty(), "nothing is held by the context of the stereotype's scope");
         assertEquals(jakarta.inject.Singleton.class, container.getBeanManager().resolve(
             container.getBeanManager().getBeans(Vapor.class)).getScope());
+    }
+
+    @Test
+    void withNoContextOfTheScopeAnInstanceIsDestroyedWhereTheApplicationScopeHoldsIt() {
+        DESTROYED.clear();
+        Settled.CREATED.set(0);
+        try (SeContainer container = start(null, Settled.class)) {
+            jakarta.enterprise.inject.Instance<Settled> lookup = container.select(Settled.class);
+            Settled settled = lookup.get();
+            assertEquals(1, settled.count());
+            lookup.destroy(settled);
+            assertEquals(List.of("settled"), DESTROYED);
+            assertEquals(2, lookup.get().count(), "the next call creates the instance again");
+        }
     }
 
     @Test

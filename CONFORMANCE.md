@@ -625,6 +625,10 @@ nor the client proxy and the advice they carry, and the rules of a normal scope 
 is normal. Interceptor advice of another origin is kept (`PortableCustomNormalScopeTest`,
 `DependentSubclassOfNormalScopeTest`).
 
+An instance the application scope holds in place of the context of the scope is destroyed there:
+`Instance.destroy` of a bean of the scope destroys the instance where nothing is registered for the scope, and the
+next call through the client proxy creates one again (`PortableCustomNormalScopeTest`).
+
 A producer field of a bean of the scope is read off the client proxy rather than off the instance the scope holds,
 as for any normal scope (see "Open points in Micronaut Core").
 
