@@ -629,6 +629,11 @@ An instance the application scope holds in place of the context of the scope is 
 `Instance.destroy` of a bean of the scope destroys the instance where nothing is registered for the scope, and the
 next call through the client proxy creates one again (`PortableCustomNormalScopeTest`).
 
+A synthetic bean a build compatible extension adds in such a scope is registered with the same two scopes in the
+same order - the scope's own annotation, and the application scope behind it - so that it is held by the context
+of the scope where one is registered and by the application scope where none is, one instance for every lookup
+(`SyntheticCustomNormalScopeTest`). It has no client proxy (see "Known limitations a review has named").
+
 A producer field of a bean of the scope is read off the client proxy rather than off the instance the scope holds,
 as for any normal scope (see "Open points in Micronaut Core").
 
