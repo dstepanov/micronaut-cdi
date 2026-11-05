@@ -58,6 +58,22 @@ class CustomNormalScopeUnderGroovyTest {
         }
     }
 
+    @Foggy
+    static class Cloud {
+    }
+
+    /**
+     * Declares the dependent pseudo-scope over the normal scope it would inherit, and keeps state of its own.
+     */
+    @Dependent
+    static class Drizzle extends Cloud {
+        private int calls
+
+        int count() {
+            ++calls
+        }
+    }
+
     @Test
     void theScopesOwnAnnotationLeadsTheApplicationScope() {
         try (ApplicationContext context = ApplicationContext.run()) {
@@ -70,6 +86,16 @@ class CustomNormalScopeUnderGroovyTest {
             }
             assertEquals(context.getBean(Mist).id(), context.getBean(Mist).id())
             assertEquals(context.getBean(Steam).id(), context.getBean(Steam).id())
+        }
+    }
+
+    @Test
+    void aPseudoScopeWinsOverTheNormalScopeAndIsNotProxiedForIt() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Drizzle drizzle = context.getBean(Drizzle)
+            assertEquals(Drizzle, drizzle.getClass())
+            assertEquals(1, drizzle.count())
+            assertEquals(2, drizzle.count())
         }
     }
 }

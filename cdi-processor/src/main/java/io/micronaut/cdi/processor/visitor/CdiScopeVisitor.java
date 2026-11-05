@@ -22,6 +22,7 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.CdiScopes;
 import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
@@ -34,6 +35,7 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -260,6 +262,11 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         if (element.hasDeclaredAnnotation(CdiScope.class)) {
             // a mapper has already read what the class declares
             takeOffTheDependentPseudoScope(element);
+            if (!element.booleanValue(CdiScope.class, "normal").orElse(false)) {
+                // a pseudo-scope the class declares wins over a normal scope it would inherit or a stereotype it
+                // declares carries, and what the mappers read that one into goes with it
+                takeOffTheNormalScopeItOverrides(element);
+            }
             return;
         }
         String resolved = resolveScope(element, context);
@@ -310,6 +317,65 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             element.annotate(annotation);
         }
         return true;
+    }
+
+    /**
+     * Takes off what the mappers read a normal scope into, where the class or the producer is in a pseudo-scope
+     * that wins over it: a normal scope the class inherits from a superclass when it declares the dependent or the
+     * singleton pseudo-scope itself (section 2.3.1), or one a stereotype carries when the class or the producer
+     * declares a pseudo-scope beside it (section 2.7.2).
+     *
+     * <p>What goes is the application and the request scope this module serves normal scopes with, and the
+     * client proxy they carry: the {@code ScopedProxy} stereotype, and the lazy {@code Around} advice with a
+     * separate target it brings. A lazy proxy that keeps no target would hand each call to a new dependent
+     * instance. Advice of another origin - an interceptor binding - is kept.</p>
+     *
+     * <p>A class is read with what it inherits, which is where such a scope comes from; a producer with only what
+     * it declares itself, since the metadata of a member carries what the class declaring it declares as well,
+     * and the scope of that class is not the produced bean's.</p>
+     *
+     * @param element The class or the producer
+     */
+    static void takeOffTheNormalScopeItOverrides(Element element) {
+        AnnotationMetadata read = element instanceof ClassElement
+            ? element.getAnnotationMetadata() : element.getAnnotationMetadata().getDeclaredMetadata();
+        if (!read.hasStereotype(SCOPED_PROXY)) {
+            return;
+        }
+        // the advice the proxying alone brings goes with it; an Around written on the element itself or carried
+        // by anything else is advice of its own
+        boolean proxyingAdviceOnly = !read.hasDeclaredAnnotation(AnnotationUtil.ANN_AROUND)
+            && read.getAnnotationNamesByStereotype(AnnotationUtil.ANN_AROUND).stream().allMatch(SCOPED_PROXY::equals);
+        // Micronaut proxies an element for an interceptor binding of the around kind as well, and the proxying
+        // brings one of its own
+        List<AnnotationValue<Annotation>> bindings =
+            read.getAnnotationValuesByName(AnnotationUtil.ANN_INTERCEPTOR_BINDING);
+        element.removeAnnotation(CdiApplicationScope.class);
+        element.removeStereotype(CdiApplicationScope.class);
+        element.removeAnnotation(CdiRequestScope.class);
+        element.removeStereotype(CdiRequestScope.class);
+        element.removeStereotype(SCOPED_PROXY);
+        if (proxyingAdviceOnly) {
+            element.removeAnnotation(AnnotationUtil.ANN_AROUND);
+            element.removeStereotype(AnnotationUtil.ANN_AROUND);
+        }
+        if (bindings.stream().anyMatch(CdiScopeVisitor::isTheProxying)) {
+            // the bindings are held together, so all go and those of another origin are written back
+            element.removeAnnotation(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
+            element.removeStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
+            for (AnnotationValue<Annotation> binding : bindings) {
+                if (!isTheProxying(binding)) {
+                    element.annotate(binding);
+                }
+            }
+        }
+    }
+
+    /**
+     * Whether the interceptor binding is the one the {@code ScopedProxy} stereotype brings.
+     */
+    private static boolean isTheProxying(AnnotationValue<Annotation> binding) {
+        return List.of(binding.stringValues()).contains(SCOPED_PROXY);
     }
 
     /**

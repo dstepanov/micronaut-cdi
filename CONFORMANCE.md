@@ -617,6 +617,13 @@ registered at all, the application scope holds the bean, one instance for as lon
 the widest reading of a scope nothing else manages. The container reports the scope the author wrote, recorded as
 `CdiScope` (`PortableCustomNormalScopeTest`, `CustomNormalScopeUnderGroovyTest`, `CustomNormalScopeUnderKspTest`).
 
+A class in a pseudo-scope is not proxied for a normal scope it does not have: a class that declares `@Dependent`
+or `@Singleton` and inherits a normal scope from a superclass, or declares one beside a stereotype carrying a
+normal scope, is written with neither the scopes that normal scope was read into nor the client proxy and the
+advice they carry, and the rules of a normal scope - no public field, a proxyable class - are not its.
+Interceptor advice of another origin is kept (`PortableCustomNormalScopeTest`,
+`DependentSubclassOfNormalScopeTest`).
+
 A producer field of a bean of the scope is read off the client proxy rather than off the instance the scope holds,
 as for any normal scope (see "Open points in Micronaut Core").
 

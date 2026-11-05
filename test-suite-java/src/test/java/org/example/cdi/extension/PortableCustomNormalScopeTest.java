@@ -155,6 +155,23 @@ class PortableCustomNormalScopeTest {
         }
     }
 
+    /**
+     * A bean that declares the dependent pseudo-scope over the scope it would inherit, and keeps state of its own.
+     */
+    @Dependent
+    public static class Fog extends Mist {
+        private int calls;
+
+        @Override
+        public String name() {
+            return "fog";
+        }
+
+        public int call() {
+            return ++calls;
+        }
+    }
+
     @Dependent
     public static class VaporProducer {
         @Produces
@@ -334,6 +351,20 @@ class PortableCustomNormalScopeTest {
         adding.context.active = false;
         try (SeContainer container = start(adding, Weather.class)) {
             assertThrows(ContextNotActiveException.class, () -> container.select(Vapor.class).get());
+        }
+    }
+
+    @Test
+    void aDependentSubclassOfABeanOfTheScopeIsNotProxiedForIt() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, Fog.class)) {
+            Fog fog = container.select(Fog.class).get();
+            assertEquals("fog", fog.name());
+            assertEquals(1, fog.call());
+            assertEquals(2, fog.call(), "the reference is the instance, which keeps its state between calls");
+            assertTrue(adding.context.held.isEmpty(), "nothing is held by the context of the scope it overrides");
+            assertEquals(Dependent.class, container.getBeanManager().resolve(
+                container.getBeanManager().getBeans(Fog.class)).getScope());
         }
     }
 
