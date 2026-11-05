@@ -408,8 +408,9 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
     /**
      * The record of the scope a producer method or field declares, directly or through a stereotype it declares,
      * resolved as the scope of a class is: a normal scope - one of the specification's own, or one the application
-     * or an extension declared - the dependent pseudo-scope, or another pseudo-scope. What the class that declares
-     * the producer declares is not the producer's.
+     * or an extension declared - the dependent pseudo-scope, or another pseudo-scope. A scope written on the producer
+     * itself wins over one a stereotype it declares carries (section 2.7.2). What the class that declares the
+     * producer declares is not the producer's.
      *
      * @param member  The producer
      * @param context The visitor context
@@ -417,6 +418,13 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      */
     public static @Nullable AnnotationValue<CdiScope> scopeRecordOf(Element member,
                                                                                                VisitorContext context) {
+        for (String name : member.getDeclaredAnnotationNames()) {
+            // the session and the conversation scope belong to CDI Full, and are not read as scopes here
+            if (isWrittenScope(name, context) && !Cdi.SESSION_SCOPED.equals(name)
+                && !Cdi.CONVERSATION_SCOPED.equals(name)) {
+                return CdiScopes.recordOf(name, isNormal(name, context));
+            }
+        }
         DeclaredScope declared = scopeDeclaredOn(member, context);
         String scope = declared != null ? declared.scope() : pseudoScopeDeclaredOn(member, context);
         return scope == null ? null : CdiScopes.recordOf(scope, isNormal(scope, context));

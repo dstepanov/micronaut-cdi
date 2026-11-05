@@ -172,6 +172,30 @@ class PortableCustomNormalScopeTest {
         }
     }
 
+    /**
+     * A producer method that declares the singleton pseudo-scope over the scope its stereotype carries.
+     */
+    @Dependent
+    public static class SolidVaporProducer {
+        @Produces
+        @jakarta.inject.Singleton
+        @Overcast
+        Vapor vapor() {
+            return new Vapor("solid");
+        }
+    }
+
+    /**
+     * A producer field that declares the singleton pseudo-scope over the scope its stereotype carries.
+     */
+    @Dependent
+    public static class SolidVaporFieldProducer {
+        @Produces
+        @jakarta.inject.Singleton
+        @Overcast
+        Vapor vapor = new Vapor("solid field");
+    }
+
     @Dependent
     public static class VaporProducer {
         @Produces
@@ -366,6 +390,32 @@ class PortableCustomNormalScopeTest {
             assertEquals(Dependent.class, container.getBeanManager().resolve(
                 container.getBeanManager().getBeans(Fog.class)).getScope());
         }
+    }
+
+    @Test
+    void aProducerMethodsOwnScopeWinsOverTheOneItsStereotypeCarries() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, SolidVaporProducer.class)) {
+            assertProducedInTheSingletonScope(container, adding, "solid");
+        }
+    }
+
+    @Test
+    void aProducerFieldsOwnScopeWinsOverTheOneItsStereotypeCarries() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, SolidVaporFieldProducer.class)) {
+            assertProducedInTheSingletonScope(container, adding, "solid field");
+        }
+    }
+
+    private static void assertProducedInTheSingletonScope(SeContainer container, AddingCloudy adding, String name) {
+        Vapor vapor = container.select(Vapor.class).get();
+        assertEquals(name, vapor.name());
+        assertSame(Vapor.class, vapor.getClass(), "a bean of a pseudo-scope is not proxied");
+        assertSame(vapor, container.select(Vapor.class).get());
+        assertTrue(adding.context.held.isEmpty(), "nothing is held by the context of the stereotype's scope");
+        assertEquals(jakarta.inject.Singleton.class, container.getBeanManager().resolve(
+            container.getBeanManager().getBeans(Vapor.class)).getScope());
     }
 
     @Test

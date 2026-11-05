@@ -5,7 +5,10 @@ import io.micronaut.context.ApplicationContext
 import jakarta.enterprise.context.Dependent
 import jakarta.enterprise.context.NormalScope
 import jakarta.enterprise.inject.Produces
+import jakarta.enterprise.inject.Stereotype
+import jakarta.inject.Singleton
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 import java.lang.annotation.Inherited
 
@@ -50,6 +53,25 @@ open class Drizzle : Cloud() {
 }
 
 /**
+ * A stereotype carrying the normal scope.
+ */
+@Stereotype
+@Foggy
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+annotation class Hazy
+
+open class Ice
+
+@Dependent
+open class IceProducer {
+    @Produces
+    @Singleton
+    @Hazy
+    open fun ice(): Ice = Ice()
+}
+
+/**
  * A bean of a normal scope of the application's own compiled through KSP is held first by the scope's own
  * annotation - declared, inherited or declared by a producer - and by the application scope behind it, which holds
  * it where no context of the scope is registered.
@@ -80,6 +102,9 @@ class CustomNormalScopeUnderKspTest {
             assertEquals(Drizzle::class.java, drizzle.javaClass)
             assertEquals(1, drizzle.count())
             assertEquals(2, drizzle.count())
+            val ice = context.getBean(Ice::class.java)
+            assertEquals(Ice::class.java, ice.javaClass)
+            assertSame(ice, context.getBean(Ice::class.java))
         }
     }
 }
