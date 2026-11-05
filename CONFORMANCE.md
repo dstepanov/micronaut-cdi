@@ -231,7 +231,9 @@ What the container has to know of a qualifier or interceptor binding type - whet
 which of them bind, whether it is repeatable, its retention - is read from the compiled metadata of the beans
 (`CompiledAnnotationTypes`): the class level metadata of every definition, the records of the synthetic components
 and of the qualifiers an extension registered, and, for a type no bean class carries, the injection points and
-executable methods of the definitions. An annotation `BeforeBeanDiscovery.addQualifier` makes a qualifier is one
+executable methods of the definitions. The record of a qualifier a build compatible extension registered carries the
+members the compilation saw its interface declare and the ones that do not bind, so that one no bean class carries
+is not taken for a marker by its name alone. An annotation `BeforeBeanDiscovery.addQualifier` makes a qualifier is one
 for that container. A type the application was not compiled with has no record, and is asked of its class by the
 reflection module.
 
