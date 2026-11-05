@@ -715,10 +715,12 @@ final class ExtensionMethods {
             ElementClassConfig classConfig = new ElementClassConfig(element, context);
             Class<?>[] parameterTypes = method.getParameterTypes();
             // a method taking a configuration of a member is invoked once for each of those members, and one
-            // taking a configuration of the class once for the class
+            // taking a configuration of the class once for the class. A method configuration is one of a
+            // constructor as much as of a method: @Enhancement hands it each constructor and each method declared
             List<Object[]> invocations = new ArrayList<>();
             if (takes(parameterTypes, MethodConfig.class)
                 || takes(parameterTypes, MethodInfo.class)) {
+                classConfig.constructors().forEach(c -> invocations.add(arguments(parameterTypes, c, messages, context)));
                 classConfig.methods().forEach(m -> invocations.add(arguments(parameterTypes, m, messages, context)));
             } else if (takes(parameterTypes, FieldConfig.class)
                 || takes(parameterTypes, FieldInfo.class)) {
