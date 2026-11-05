@@ -203,14 +203,15 @@ public final class CdiInjectionPoint implements MicronautInjectionPoint {
 
     /**
      * A qualifier as a program is told it: its members, without the ones Micronaut's metadata keeps for itself -
-     * the {@code $nonBinding} list the container compares by among them - which are no member of the annotation.
+     * the {@code $nonBinding} list the container compares by among them - which are no member of the annotation. A
+     * member the annotation interface names with a leading dollar sign is one of its members, and is reported.
      */
     private static AnnotationValue<?> reported(
         AnnotationValue<?> written) {
         Map<CharSequence, Object> members = new LinkedHashMap<>();
         boolean internal = false;
         for (Map.Entry<CharSequence, Object> member : written.getValues().entrySet()) {
-            if (member.getKey().toString().startsWith("$")) {
+            if (CdiAnnotations.isReservedMember(member.getKey())) {
                 internal = true;
             } else {
                 members.put(member.getKey(), member.getValue());

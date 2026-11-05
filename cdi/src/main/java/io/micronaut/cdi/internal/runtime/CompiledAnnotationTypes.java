@@ -389,14 +389,15 @@ public final class CompiledAnnotationTypes {
 
         void read(AnnotationValue<?> occurrence, AnnotationMetadata metadata) {
             membersKnown = true;
+            // only the names Micronaut keeps for itself among the values are no members: Java lets a member be
+            // named with a leading dollar sign
             for (CharSequence member : occurrence.getValues().keySet()) {
-                String memberName = member.toString();
-                if (!memberName.startsWith("$")) {
-                    members.add(memberName);
+                if (!CdiAnnotations.isReservedMember(member)) {
+                    members.add(member.toString());
                 }
             }
             for (String member : occurrence.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
-                if (!member.startsWith("$")) {
+                if (!CdiAnnotations.isReservedMember(member)) {
                     nonbinding.add(member);
                 }
             }

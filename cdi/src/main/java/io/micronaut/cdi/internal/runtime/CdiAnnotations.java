@@ -19,6 +19,7 @@ import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationBuilder;
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueProvider;
 import io.micronaut.core.annotation.Internal;
@@ -43,6 +44,20 @@ import java.util.Map;
 public final class CdiAnnotations {
 
     private CdiAnnotations() {
+    }
+
+    /**
+     * Whether a name among the values of an annotation is one Micronaut keeps for itself there - the members that
+     * take no part in resolution ({@link AnnotationUtil#NON_BINDING_ATTRIBUTE}), the stereotypes of the occurrence
+     * ({@link AnnotationUtil#STEREOTYPES_MEMBER}) - rather than a member of the annotation. A member Java lets an
+     * annotation interface name with a leading dollar sign, {@code String $level()}, is a member like any other.
+     *
+     * @param name The name
+     * @return Whether it is Micronaut's own
+     */
+    public static boolean isReservedMember(CharSequence name) {
+        return AnnotationUtil.NON_BINDING_ATTRIBUTE.contentEquals(name)
+            || AnnotationUtil.STEREOTYPES_MEMBER.contentEquals(name);
     }
 
     /**

@@ -233,7 +233,9 @@ which of them bind, whether it is repeatable, its retention - is read from the c
 and of the qualifiers an extension registered, and, for a type no bean class carries, the injection points and
 executable methods of the definitions. The record of a qualifier a build compatible extension registered carries the
 members the compilation saw its interface declare and the ones that do not bind, so that one no bean class carries
-is not taken for a marker by its name alone. An annotation `BeforeBeanDiscovery.addQualifier` makes a qualifier is one
+is not taken for a marker by its name alone. A member is whatever the interface declares, a name with a leading
+dollar sign included; only the names Micronaut keeps among the values of an annotation (`$nonBinding`,
+`$stereotypes`) are not members. An annotation `BeforeBeanDiscovery.addQualifier` makes a qualifier is one
 for that container. A type the application was not compiled with has no record, and is asked of its class by the
 reflection module.
 
