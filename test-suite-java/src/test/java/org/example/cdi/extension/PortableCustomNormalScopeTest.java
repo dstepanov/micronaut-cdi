@@ -218,6 +218,28 @@ class PortableCustomNormalScopeTest {
         }
     }
 
+    /**
+     * A bean of the scope with a conditional observer, notified only where an instance of it exists.
+     */
+    @Cloudy
+    public static class Watcher {
+        static final List<String> SEEN = Collections.synchronizedList(new ArrayList<>());
+
+        public String name() {
+            return "watcher";
+        }
+
+        void seen(@Observes(notifyObserver = jakarta.enterprise.event.Reception.IF_EXISTS) Sighting sighting) {
+            SEEN.add(sighting.what());
+        }
+    }
+
+    /**
+     * The event the conditional observer observes.
+     */
+    public record Sighting(String what) {
+    }
+
     @Dependent
     public static class VaporProducer {
         @Produces
@@ -464,6 +486,18 @@ class PortableCustomNormalScopeTest {
             assertEquals(1, container.select(Counted.class).get().count(), "one instance for every reference");
             assertEquals(Cloudy.class, container.getBeanManager().resolve(
                 container.getBeanManager().getBeans(Counted.class)).getScope());
+        }
+    }
+
+    @Test
+    void withNoContextOfTheScopeAConditionalObserverIsNotifiedWhereTheApplicationScopeHoldsAnInstance() {
+        Watcher.SEEN.clear();
+        try (SeContainer container = start(null, Watcher.class)) {
+            container.getBeanManager().getEvent().select(Sighting.class).fire(new Sighting("before"));
+            assertTrue(Watcher.SEEN.isEmpty(), "no instance exists yet");
+            assertEquals("watcher", container.select(Watcher.class).get().name());
+            container.getBeanManager().getEvent().select(Sighting.class).fire(new Sighting("after"));
+            assertEquals(List.of("after"), Watcher.SEEN, "the instance the application scope holds is notified");
         }
     }
 }

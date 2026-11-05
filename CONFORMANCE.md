@@ -627,7 +627,8 @@ is normal. Interceptor advice of another origin is kept (`PortableCustomNormalSc
 
 An instance the application scope holds in place of the context of the scope is destroyed there:
 `Instance.destroy` of a bean of the scope destroys the instance where nothing is registered for the scope, and the
-next call through the client proxy creates one again (`PortableCustomNormalScopeTest`).
+next call through the client proxy creates one again, and a conditional observer (`Reception.IF_EXISTS`) of a bean of
+the scope is notified where the application scope holds an instance of it (`PortableCustomNormalScopeTest`).
 
 A synthetic bean a build compatible extension adds in such a scope is registered with the same two scopes in the
 same order - the scope's own annotation, and the application scope behind it - so that it is held by the context
