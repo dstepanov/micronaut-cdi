@@ -7,6 +7,7 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Prototype;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Singleton;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Retention;
@@ -157,5 +158,40 @@ class MicronautCoreIssuesTest {
         Class<?> type = Class.forName("io.micronaut.cdi.test.index.BeanTypeRecordTest$Shelf");
         assertSame(io.micronaut.core.type.TypeHierarchies.find(type).orElseThrow(),
             io.micronaut.core.type.TypeHierarchies.find(type).orElseThrow());
+    }
+
+    record Reading(String source) {
+    }
+
+    /**
+     * A factory in a scope reached through a client proxy, whose bean field is set as the instance is created.
+     */
+    @Factory
+    @io.micronaut.runtime.context.scope.Refreshable
+    static class RefreshedFactory {
+        @Bean
+        @Prototype
+        Reading reading;
+
+        @jakarta.annotation.PostConstruct
+        void created() {
+            reading = new Reading("the instance");
+        }
+    }
+
+    /**
+     * A bean field of a factory in a scope reached through a client proxy is read from the instance the scope holds.
+     * Micronaut looks the factory up and reads the field off what it found, which is the proxy: a lazy proxy is never
+     * initialized, so the field reads as it was before the instance was created, and the scope - inactive, or holding
+     * an instance of its own - is never asked (BeanDefinitionWriter#getBeanFromFactoryField). A method of the factory
+     * is invoked through the proxy, which hands it on to the instance, and is not affected.
+     */
+    @Test
+    @Disabled("Micronaut reads a bean field of a factory off its scoped proxy rather than off the proxy's target")
+    void aBeanFieldOfAFactoryInAProxiedScopeIsReadFromItsTarget() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Reading reading = context.getBean(Reading.class);
+            assertEquals("the instance", reading.source());
+        }
     }
 }

@@ -16,6 +16,7 @@ import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Annotation;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -135,6 +137,21 @@ class PortableCustomNormalScopeTest {
 
         public int count() {
             return CREATED.get();
+        }
+    }
+
+    /**
+     * A bean of the scope whose producer field is set as the bean is created, which only the contextual instance
+     * has: the client proxy is never initialized.
+     */
+    @Cloudy
+    public static class Weather {
+        @Produces
+        Vapor rain;
+
+        @jakarta.annotation.PostConstruct
+        void created() {
+            rain = new Vapor("rain");
         }
     }
 
@@ -293,6 +310,30 @@ class PortableCustomNormalScopeTest {
             // the reference outlives the instance: the next call creates one again in the context
             assertEquals("mist", mist.name());
             assertEquals(1, adding.context.held.size());
+        }
+    }
+
+    @Test
+    @Disabled("Micronaut reads a producer field off the factory it looked up, which for a bean in a normal scope "
+        + "is the client proxy (MicronautCoreIssuesTest#aBeanFieldOfAFactoryInAProxiedScopeIsReadFromItsTarget)")
+    void aProducerFieldOfABeanOfTheScopeIsReadFromTheContextualInstance() {
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = start(adding, Weather.class)) {
+            Vapor rain = container.select(Vapor.class).get();
+            assertNotNull(rain, "the field is read from the instance the context holds, not from the client proxy");
+            assertEquals("rain", rain.name());
+            assertEquals(1, adding.context.held.size(), "the producing instance is held by the context");
+        }
+    }
+
+    @Test
+    @Disabled("Micronaut reads a producer field off the factory it looked up, which for a bean in a normal scope "
+        + "is the client proxy (MicronautCoreIssuesTest#aBeanFieldOfAFactoryInAProxiedScopeIsReadFromItsTarget)")
+    void aProducerFieldOfABeanOfAnInactiveScopeIsNotReadPastTheContext() {
+        AddingCloudy adding = new AddingCloudy();
+        adding.context.active = false;
+        try (SeContainer container = start(adding, Weather.class)) {
+            assertThrows(ContextNotActiveException.class, () -> container.select(Vapor.class).get());
         }
     }
 
