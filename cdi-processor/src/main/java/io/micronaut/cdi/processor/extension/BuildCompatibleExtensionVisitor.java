@@ -46,6 +46,7 @@ import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -287,10 +288,28 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + "compilation", discovered().contributors().get(0));
             return;
         }
+        // the members of each, as the compilation sees its interface: an annotation no bean uses, one only an
+        // injection point or an observer of a library carries, has no other record of them, and a name alone would
+        // read as an annotation without a member that binds
+        List<AnnotationValue<CdiExtensionQualifiers.Members>> members = new ArrayList<>();
+        for (String qualifier : discovered().registeredQualifiers()) {
+            ClassElement declaration = NonbindingMembers.declarationOf(qualifier, context);
+            if (declaration != null) {
+                Set<String> nonbinding = new LinkedHashSet<>(NonbindingMembers.nonbindingMembersOf(declaration));
+                nonbinding.addAll(discovered().nonbindingMembersMarked(qualifier));
+                members.add(AnnotationValue.builder(CdiExtensionQualifiers.Members.class)
+                    .member(CdiExtensionQualifiers.Members.NAME, qualifier)
+                    .member(CdiExtensionQualifiers.MEMBERS,
+                        NonbindingMembers.memberElementsOf(declaration).keySet().toArray(new String[0]))
+                    .member(CdiExtensionQualifiers.Members.NONBINDING, nonbinding.toArray(new String[0]))
+                    .build());
+            }
+        }
         context.registerBean(record, contributors())
             .annotate(AnnotationValue.builder(CdiExtensionComponents.class).build())
             .annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
                 .values(discovered().registeredQualifiers().toArray(new String[0]))
+                .member(CdiExtensionQualifiers.MEMBERS, members.toArray(new AnnotationValue[0]))
                 .build());
     }
 

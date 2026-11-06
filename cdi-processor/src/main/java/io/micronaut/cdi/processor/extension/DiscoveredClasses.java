@@ -103,6 +103,24 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
+     * The members of an annotation the discovery phase marked {@code Nonbinding}.
+     *
+     * @param annotation The name of the annotation
+     * @return The member names
+     */
+    public Set<String> nonbindingMembersMarked(String annotation) {
+        Set<String> marked = new LinkedHashSet<>();
+        memberAnnotationsFor(annotation).forEach((member, added) -> {
+            for (AnnotationValue<?> value : added) {
+                if (Cdi.NONBINDING.equals(value.getAnnotationName())) {
+                    marked.add(member);
+                }
+            }
+        });
+        return marked;
+    }
+
+    /**
      * Whether the discovery phase added the class to the scanned ones, making it a bean even though nothing on
      * it says so.
      *

@@ -61,8 +61,12 @@ public final class NonbindingMembers {
 
     /**
      * The annotation interface of the given name as the compilation holds it.
+     *
+     * @param name    The binary name of the annotation
+     * @param context The compilation
+     * @return The interface, or {@code null} where the compilation does not see it
      */
-    static @Nullable ClassElement declarationOf(String name, VisitorContext context) {
+    public static @Nullable ClassElement declarationOf(String name, VisitorContext context) {
         // a nested annotation is recorded by its binary name, and asked of the compiler by its canonical one
         Optional<ClassElement> found = context.getClassElement(name);
         if (found.isEmpty() && name.indexOf('$') >= 0) {
@@ -139,6 +143,17 @@ public final class NonbindingMembers {
         if (declaration == null) {
             return Set.of();
         }
+        return nonbindingMembersOf(declaration);
+    }
+
+    /**
+     * Every member the given annotation interface marks as taking no part in resolution, as the compilation holds
+     * it: the ones its source marks {@code Nonbinding} or {@code NonBinding}.
+     *
+     * @param declaration The annotation interface
+     * @return The members, in the order they are declared
+     */
+    public static Set<String> nonbindingMembersOf(ClassElement declaration) {
         Set<String> members = new LinkedHashSet<>();
         membersOf(declaration).forEach((member, metadata) -> {
             if (metadata.hasAnnotation(Cdi.NONBINDING) || metadata.hasAnnotation(MICRONAUT_NONBINDING)) {

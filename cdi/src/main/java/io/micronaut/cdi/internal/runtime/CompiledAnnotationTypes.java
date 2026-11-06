@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
+import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.Members;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.context.BeanContext;
@@ -71,6 +72,7 @@ public final class CompiledAnnotationTypes {
     private static final String QUALIFIER = AnnotationUtil.QUALIFIER;
     private static final String BINDING = "jakarta.interceptor.InterceptorBinding";
     private static final String STEREOTYPE = "jakarta.enterprise.inject.Stereotype";
+    private static final String MEMBERS = CdiExtensionQualifiers.MEMBERS;
 
     private final BeanContext beanContext;
     /**
@@ -181,7 +183,8 @@ public final class CompiledAnnotationTypes {
      */
     public @Nullable Boolean isMarker(String name) {
         Recorded recorded = recorded(name);
-        return recorded == null ? null : recorded.nonbinding.containsAll(recorded.members);
+        // a name with nothing read of its members is no evidence of an annotation without any
+        return recorded == null || !recorded.membersKnown ? null : recorded.nonbinding.containsAll(recorded.members);
     }
 
     /**
@@ -210,11 +213,13 @@ public final class CompiledAnnotationTypes {
 
     private @Nullable Recorded recorded(String name) {
         Recorded recorded = fromClasses().get(name);
-        if (recorded != null) {
+        if (recorded != null && recorded.membersKnown) {
             return recorded;
         }
-        // a type the classes do not carry may be one an injection point or an observer is qualified by
-        return fromMembers().get(name);
+        // a type the classes do not carry, or name alone - as a registration compiled without the members of the
+        // annotation does - may be one an injection point or an observer is qualified by
+        Recorded occurring = fromMembers().get(name);
+        return occurring != null ? occurring : recorded;
     }
 
     private Map<String, Recorded> fromClasses() {
@@ -256,9 +261,16 @@ public final class CompiledAnnotationTypes {
                 metadata.getAnnotation(CdiExtensionQualifiers.class);
             if (registered != null) {
                 // an annotation an extension made a qualifier of, which no bean may use: its registration is
-                // the one witness of it
+                // the one witness of it, with the members the compilation saw its interface declare
                 for (String qualifier : registered.stringValues()) {
-                    types.computeIfAbsent(qualifier, Recorded::new).qualifier = true;
+                    types.computeIfAbsent(qualifier, Recorded::named).qualifier = true;
+                }
+                for (AnnotationValue<Annotation> members : registered.getAnnotations(MEMBERS)) {
+                    String qualifier = members.stringValue(Members.NAME).orElse(null);
+                    if (qualifier != null) {
+                        types.computeIfAbsent(qualifier, Recorded::new)
+                            .declared(members.stringValues(MEMBERS), members.stringValues(Members.NONBINDING));
+                    }
                 }
             }
             // the qualifiers of a synthetic component are recorded as values nested in its record
@@ -342,6 +354,12 @@ public final class CompiledAnnotationTypes {
         private final Set<String> nonbinding = new LinkedHashSet<>();
         private boolean qualifier;
         private boolean binding;
+        /**
+         * Whether the members are known: false only for an annotation an extension's registration names and
+         * nothing else was read of - no occurrence, nor the interface as the compilation saw it - since the name
+         * alone says nothing of them.
+         */
+        private boolean membersKnown = true;
         private boolean repeatable;
         private @Nullable RetentionPolicy retention;
         private boolean defaultsRead;
@@ -351,15 +369,35 @@ public final class CompiledAnnotationTypes {
             this.name = name;
         }
 
+        /**
+         * The record of an annotation known by its name alone, so far.
+         */
+        static Recorded named(String name) {
+            Recorded recorded = new Recorded(name);
+            recorded.membersKnown = false;
+            return recorded;
+        }
+
+        /**
+         * The members the compilation saw the interface declare, and the ones that take no part in resolution.
+         */
+        void declared(String[] declared, String[] declaredNonbinding) {
+            membersKnown = true;
+            members.addAll(List.of(declared));
+            nonbinding.addAll(List.of(declaredNonbinding));
+        }
+
         void read(AnnotationValue<?> occurrence, AnnotationMetadata metadata) {
+            membersKnown = true;
+            // only the names Micronaut keeps for itself among the values are no members: Java lets a member be
+            // named with a leading dollar sign
             for (CharSequence member : occurrence.getValues().keySet()) {
-                String memberName = member.toString();
-                if (!memberName.startsWith("$")) {
-                    members.add(memberName);
+                if (!CdiAnnotations.isReservedMember(member)) {
+                    members.add(member.toString());
                 }
             }
             for (String member : occurrence.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
-                if (!member.startsWith("$")) {
+                if (!CdiAnnotations.isReservedMember(member)) {
                     nonbinding.add(member);
                 }
             }

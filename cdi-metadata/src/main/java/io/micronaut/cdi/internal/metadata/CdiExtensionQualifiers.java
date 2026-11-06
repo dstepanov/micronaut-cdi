@@ -39,9 +39,64 @@ import java.lang.annotation.Target;
 public @interface CdiExtensionQualifiers {
 
     /**
+     * The name of the member that holds the members of each annotation, and of the member of each record that holds
+     * every member of its annotation.
+     */
+    String MEMBERS = "members";
+
+    /**
      * The annotation names.
      *
      * @return The names
      */
     String[] value();
+
+    /**
+     * What the compilation saw of the interface of each annotation named, where it saw it: its members, and the ones
+     * that take no part in resolution, as its source and the extensions marked them. A name alone says nothing of
+     * the members, so an annotation with no record here is not taken for one without any.
+     *
+     * @return The members of each annotation
+     */
+    Members[] members() default {};
+
+    /**
+     * The members of one annotation an extension made a qualifier of, as the compilation saw its interface.
+     */
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({})
+    @interface Members {
+
+        /**
+         * The name of the member that holds the annotation name.
+         */
+        String NAME = "name";
+
+        /**
+         * The name of the member that holds the members that take no part in resolution.
+         */
+        String NONBINDING = "nonbinding";
+
+        /**
+         * The annotation name.
+         *
+         * @return The name
+         */
+        String name();
+
+        /**
+         * Every member the interface declares.
+         *
+         * @return The member names
+         */
+        String[] members() default {};
+
+        /**
+         * The members that take no part in resolution.
+         *
+         * @return The member names
+         */
+        String[] nonbinding() default {};
+    }
 }
