@@ -35,6 +35,7 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.order.OrderUtil;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -53,12 +54,12 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Sees to the classes the discovery phase added to the scanned ones (section 2.10.1), once the first round of a
- * compilation that visited any class is finished: under javac they are imported, so that javac makes beans of them
- * in the next round, and under KSP and Groovy a bean is registered for each class of a library that has no
- * definition, put through what a class of the compilation is put through as it is visited.
+ * Sees to the classes the discovery phase added to the scanned ones (section 2.10.1): under javac they are imported
+ * as the first round of a compilation that visited any class is finished, so that javac makes beans of them in the
+ * next round, and under KSP and Groovy a bean is registered for each class of a library that has no definition once
+ * the compilation is finished, put through what a class of the compilation is put through as it is visited.
  *
- * <p>It is made for one round's finish, from what {@link BuildCompatibleExtensionVisitor} discovered, and keeps
+ * <p>It is made for one of those moments, from what {@link BuildCompatibleExtensionVisitor} discovered, and keeps
  * nothing beyond it.</p>
  *
  * @author Denis Stepanov
@@ -150,14 +151,18 @@ final class ScannedClassRegistrar {
 
     /**
      * Under KSP and Groovy, registers a bean of each class the discovery phase added to the scanned ones that the
-     * compilation does not compile and that has no definition of its own.
+     * compilation does not compile and that has no definition of its own, once every round is over.
      *
      * <p>A class the compilation compiles is handed to the bean machinery as every class is, and is a bean with
      * the scope it was given as it was visited. A class of a library is not, and is put through what a class of
      * the compilation is put through here: what the discovery phase said of it, the enhancement and the
      * registration phases, and then a bean registered for it, with its injection points.</p>
      */
-    void registerScannedClasses(VisitorContext context) {
+    void registerScannedClasses(Element[] contributors, VisitorContext context) {
+        if (context.getLanguage() == VisitorContext.Language.JAVA) {
+            // imported instead, as the first round finished
+            return;
+        }
         Messages messages = new VisitorMessages(context);
         for (String scanned : discovered.scannedClasses()) {
             int nested = scanned.indexOf('$');
@@ -189,7 +194,7 @@ final class ScannedClassRegistrar {
             }
             ElementQuery<MethodElement> executable = ElementQuery.ALL_METHODS
                 .annotated(metadata -> metadata.hasStereotype(Executable.class));
-            context.registerBean(element, visitor.contributors()).inject()
+            context.registerBean(element, contributors).inject()
                 // the observers, disposers and invoked methods the visitors marked executable: the builder writes the
                 // executable methods it is handed, an instance or a static one, and finds none of its own
                 .withMethods(executable, BeanMethodElement::executable)
@@ -273,7 +278,7 @@ final class ScannedClassRegistrar {
      * once.
      */
     private String suffix(VisitorContext context) {
-        return suffixOf(discovered.contributors().get(0).getName(), context);
+        return suffixOf(discovered.contributors().get(0), context);
     }
 
     /**

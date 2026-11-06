@@ -67,7 +67,8 @@ import java.util.function.Predicate;
  * about as their round finishes, and the ones of the compilation what is written for the deployment as a whole is
  * written from. With the synthesis of section 2.10.5 ({@link SynthesisPhase}) this is all the processor keeps from
  * one class to the next; it is made as the compilation starts the extension visitor and is read as its rounds
- * finish, and no other visitor reads it.</p>
+ * and the compilation finish, and no other visitor reads it. The classes are kept by name: KSP invalidates the
+ * elements of a round as the round ends.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -87,7 +88,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      * registration phase has not been told about yet; and those it has.
      */
     private final Set<String> visited = new HashSet<>();
-    private final List<ClassElement> contributors = new ArrayList<>();
+    private final List<String> contributors = new ArrayList<>();
     private final List<ClassElement> unregistered = new ArrayList<>();
     private final Set<String> registered = new HashSet<>();
     private boolean roundFinished;
@@ -160,17 +161,21 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     void visited(ClassElement element) {
         if (visited.add(element.getName())) {
             if (!(roundFinished && scanned.contains(element.getName()))) {
-                contributors.add(element);
+                contributors.add(element.getName());
             }
             unregistered.add(element);
         }
     }
 
     /**
-     * Notes that a round of the compilation finished.
+     * Notes that a round of the compilation that visited a class of it finished.
+     *
+     * @return Whether it is the first such round
      */
-    void roundFinished() {
+    boolean firstRoundFinished() {
+        boolean first = !roundFinished;
         roundFinished = true;
+        return first;
     }
 
     /**
@@ -184,12 +189,12 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
-     * The classes of the compilation the compiler visited, in the order it visited them: what is registered and
-     * generated for the deployment as a whole is written from them, and the first names it.
+     * The names of the classes of the compilation the compiler visited, in the order it visited them: what is
+     * registered and generated for the deployment as a whole is written from them, and the first names it.
      *
-     * @return The classes
+     * @return The class names
      */
-    List<ClassElement> contributors() {
+    List<String> contributors() {
         return contributors;
     }
 
