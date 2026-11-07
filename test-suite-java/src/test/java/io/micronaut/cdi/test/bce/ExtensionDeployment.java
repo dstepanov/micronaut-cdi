@@ -46,8 +46,20 @@ final class ExtensionDeployment {
      */
     static ApplicationContext start(Class<? extends BuildCompatibleExtension> extension, String className,
                                     String source) {
+        return start(ExtensionCompilation.of(extension), className, source);
+    }
+
+    /**
+     * Compiles the source with the given compilation, which it closes, and starts a container with what it compiled.
+     *
+     * @param compilation The compilation
+     * @param className   The name of the class the source declares
+     * @param source      The source
+     * @return The started context
+     */
+    static ApplicationContext start(JavaParser compilation, String className, String source) {
         CompiledClasses classes;
-        try (JavaParser parser = ExtensionCompilation.of(extension)) {
+        try (JavaParser parser = compilation) {
             classes = CompiledClasses.of(parser.generate(className, source));
         }
         ClassLoader loader = classes.loader(ExtensionDeployment.class.getClassLoader());

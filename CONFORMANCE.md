@@ -419,7 +419,7 @@ listeners, and what its producer was injected with is released with it.
 
 *Section 12.* Discovery runs as the compilation starts. Enhancement runs as each class is compiled, and
 registration as the round that compiled it finishes. Synthesis, the registration of what it described, and
-validation run once every class of the compilation has been registered. An extension therefore goes on the annotation processor path of the project it
+validation run once every class of the compilation has been registered, after its last round. An extension therefore goes on the annotation processor path of the project it
 is written for rather than on its classpath, and is still found through the service loader as the specification
 says. The running application does not load it, and an extension that is only on the runtime classpath does
 nothing.
@@ -471,15 +471,30 @@ compilation is where the application is put together.
 The phases run the same way whichever language the application is compiled in - by javac, by the Groovy
 compiler, or by KSP - with no source generated for them. Micronaut calls `TypeElementVisitor.finishRound` once
 every visitor has visited every class of a round, and before the beans of the round are written, in all three: the
-registration phase is told about each class the round visited then, and the first round that visits a class of the
-compilation is the moment every class has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
-javac, where the scanned classes are imported, they wait for the next round, which visits the imported classes.
+registration phase is told about each class the round visited then, while what it does to a bean - an invoker it
+asks for, for one - can still be written with the bean. It calls `TypeElementVisitor.finishCompilation` once, after
+the last round, when every class of the compilation has been registered - a class another annotation processor
+generated in a later round included, and under javac the scanned classes the import brought in - and synthesis,
+the registration of what it described, and validation run then (`LaterRoundBeanTest`). The classes of the
+compilation are kept by name and looked up again there, since KSP invalidates the elements of a round as the round
+ends; one that can no longer be found fails the compilation, naming it. For the same reason a bean or an observer
+the registration phase described in a round, which an extension may keep and read in synthesis or validation, looks
+its class and member up again by name and signature under KSP once its round is over, and so does everything of the
+language model an extension may keep - a class, a method, a field, a parameter, a record component, a class type -
+with the generic arguments of a type kept and equality and hash codes that do not change with the round
+(`CurrentElement`, `HandedOut`; `KeptDescriptionsTest`, `KeptDescriptionsUnderKspTest`,
+`KeptDescriptionsUnderGroovyTest`). Under javac, the import
+of the scanned classes is written as the first round that visits a class of the compilation finishes, so that a
+later round visits them; a scanned class another processor generates rounds later is imported all the same, since
+javac reads the import in the round that has the class, and one never found fails the compilation as the import
+names it. Under KSP and Groovy a scanned class that is neither compiled nor on the class path fails the compilation,
+naming it.
 Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
 `VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
 the record of the component is put on the definition as annotation values. The definition is named after the
-first class of the compilation and has every class of it as an origin: under javac, Gradle then recompiles the
-whole source set when one changes, and under KSP the definitions are written again with any of them. A Groovy or
-Kotlin compilation that finished no round fails rather than leaving the phases out.
+first class of the compilation and has every class of it as an origin. What `finishCompilation` writes disables
+incremental annotation processing under Gradle: the subsequent compilations a change affects compile all the sources
+of the source set. Under KSP the definitions are aggregating outputs, written again whenever a source changes.
 
 Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
@@ -500,7 +515,7 @@ container's, read as it starts from the metadata the classes were compiled with.
 
 What still aggregates is the build compatible extensions, whose phases the specification defines over the whole
 deployment, and it is confined to the one visitor that runs them (`BuildCompatibleExtensionVisitor`), made as the
-compilation starts it, read as its rounds finish, and read by no other visitor:
+compilation starts it, read as its rounds and the compilation finish, and read by no other visitor:
 
 - `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
   `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
@@ -508,10 +523,14 @@ compilation starts it, read as its rounds finish, and read by no other visitor:
   as each named class comes past; and the classes the compiler visited, by name, which the registration phase of
   section 2.10.3 is told about as their round finishes, and of which the ones of the compilation are the origins
   of what is written for the deployment as a whole (the import of the scanned classes, the record of the registered
-  qualifiers, the definitions of the contexts and of the synthetic components). Two flags say whether the scanned
-  classes were seen to and whether synthesis ran, which happen once.
+  qualifiers, the definitions of the contexts and of the synthetic components). A flag says whether
+  a round that visited a class of the compilation finished, after which the import of the scanned classes is
+  written under javac, once.
+- `CurrentElement`'s count of the rounds of the compilation that finished, which the visitor keeps up as each round
+  and the compilation finish and the language model reads to tell an element handed out in an earlier round: kept
+  with the compilation, on the attributes of its `VisitorContext`, and read by nothing else.
 - `SynthesisPhase`: the synthetic beans and observers the synthesis phase of section 2.10.5 described, made and
-  consumed as the round finishes, after every bean is known, followed by the registration of what it described and
+  consumed as the compilation finishes, after every bean is registered, followed by the registration of what it described and
   the validation of section 2.10.6, which are told about the deployment as a whole.
 - The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
   saw for a later one, as the specification allows and the kit's extensions do.
@@ -947,6 +966,15 @@ own rather than the first one alone.
 - **A field's annotation metadata does not include its declaring class's, a method's does.** The priority that
   selects an alternative producer field is therefore read from the declaring class explicitly
   (`ProducerVisitor.selectIfAlternative`).
+- **Under KSP, what a visitor annotated lasts one round.** Micronaut keeps the annotations a visitor added to an
+  element (`AbstractAnnotationMetadataBuilder`) by the element's native symbol, and KSP makes new symbols for every
+  round, so a class looked up again once the compilation is finished no longer carries what an enhancement added to
+  it. The language model and the descriptions of the registration phase look their elements up again once their
+  round is over (`CurrentElement`), so what an extension kept stays valid; but a bean description it kept and reads
+  in synthesis or validation answers under KSP without the qualifiers, scope and other annotations an enhancement
+  added (`KeptDescriptionsUnderKspTest.whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished`, disabled). Both
+  are needed: the elements looked up again, which this module does, and what a visitor annotated kept by the class's
+  name and the member's signature rather than by the round's symbols, which is Micronaut Core's.
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an

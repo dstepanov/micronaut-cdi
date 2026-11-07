@@ -54,14 +54,17 @@ import java.util.Set;
 @Internal
 public final class ElementClassInfo extends ElementDeclarationInfo implements ClassInfo {
 
-    private final ClassElement element;
-    private @Nullable ClassElement declaration;
+    private final CurrentElement<ClassElement> element;
 
     /**
      * @param element The class
      * @param context The compilation the class is read in
      */
     public ElementClassInfo(ClassElement element, VisitorContext context) {
+        this(CurrentElement.ofClass(element, context), context);
+    }
+
+    private ElementClassInfo(CurrentElement<ClassElement> element, VisitorContext context) {
         super(element, context);
         this.element = element;
     }
@@ -86,6 +89,15 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      * @return The class element
      */
     public ClassElement classElement() {
+        return element.get();
+    }
+
+    /**
+     * The class, as the compilation has it whenever it is read: what a member of it is looked up again among.
+     *
+     * @return The class
+     */
+    CurrentElement<ClassElement> currentElement() {
         return element;
     }
 
@@ -95,15 +107,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      * a plain class element.
      */
     private ClassElement declaration() {
-        if (declaration == null) {
-            if (element instanceof AnnotationElement || element instanceof EnumElement) {
-                declaration = element;
-            } else {
-                ClassElement resolved = ExtensionAnnotationTypes.declarationOf(element.getName(), context());
-                declaration = resolved != null ? resolved : element;
-            }
+        ClassElement current = element.get();
+        if (current instanceof AnnotationElement || current instanceof EnumElement) {
+            return current;
         }
-        return declaration;
+        ClassElement resolved = ExtensionAnnotationTypes.declarationOf(current.getName(), context());
+        return resolved != null ? resolved : current;
     }
 
     /**
@@ -116,7 +125,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         List<AnnotationInfo> found = new ArrayList<>(super.annotations());
         Set<String> present = new HashSet<>();
         found.forEach(annotation -> present.add(annotation.name()));
-        ClassElement superClass = element.getSuperType().orElse(null);
+        ClassElement superClass = element.get().getSuperType().orElse(null);
         while (superClass != null) {
             for (AnnotationInfo annotation : ExtensionAnnotations.declaredOn(superClass, context())) {
                 if (ExtensionAnnotations.isInherited(annotation.name(), context()) && present.add(annotation.name())) {
@@ -136,7 +145,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(
         Class<T> annotationType) {
-        ClassElement type = element;
+        ClassElement type = element.get();
         while (type != null) {
             List<AnnotationInfo> found = ExtensionAnnotations.repeatableOn(type, annotationType.getName(), context());
             if (!found.isEmpty()) {
@@ -152,38 +161,38 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public String name() {
-        return element.getName();
+        return element.get().getName();
     }
 
     @Override
     public String simpleName() {
         // the simple name of a nested class is its own, not outer-dollar-inner, which is how the language
         // model of the specification reads (and how java.lang.Class#getSimpleName answers)
-        String simple = element.getSimpleName();
+        String simple = element.get().getSimpleName();
         int nested = simple.lastIndexOf('$');
         return nested < 0 ? simple : simple.substring(nested + 1);
     }
 
     @Override
     public PackageInfo packageInfo() {
-        return new ElementPackageInfo(element.getPackage(), context());
+        return new ElementPackageInfo(element.get().getPackage(), context());
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
-        return SourceModel.of(context()).typeParametersOf(element);
+        return SourceModel.of(context()).typeParametersOf(element.get());
     }
 
     @Override
     public @Nullable Type superClass() {
-        return SourceModel.of(context()).superClassOf(element);
+        return SourceModel.of(context()).superClassOf(element.get());
     }
 
     @Override
     public @Nullable ClassInfo superClassDeclaration() {
-        return element.getSuperType().map(type -> declarationOf(type, context())).orElseGet(() -> {
+        return element.get().getSuperType().map(type -> declarationOf(type, context())).orElseGet(() -> {
             // a class whose superclass is Object still has one, though Micronaut's model leaves it implicit
-            if (element.isInterface() || "java.lang.Object".equals(element.getName())) {
+            if (element.get().isInterface() || "java.lang.Object".equals(element.get().getName())) {
                 return null;
             }
             ClassElement object = ExtensionAnnotationTypes.declarationOf("java.lang.Object", context());
@@ -193,12 +202,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public List<Type> superInterfaces() {
-        return SourceModel.of(context()).superInterfacesOf(element);
+        return SourceModel.of(context()).superInterfacesOf(element.get());
     }
 
     @Override
     public List<ClassInfo> superInterfacesDeclarations() {
-        return element.getInterfaces().stream().map(i -> (ClassInfo) declarationOf(i, context())).toList();
+        return element.get().getInterfaces().stream().map(i -> (ClassInfo) declarationOf(i, context())).toList();
     }
 
     @Override
@@ -209,12 +218,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public boolean isInterface() {
         // Groovy describes an annotation interface as an interface too
-        return element.isInterface() && !isAnnotation();
+        return element.get().isInterface() && !isAnnotation();
     }
 
     @Override
     public boolean isEnum() {
-        return element.isEnum() || declaration() instanceof EnumElement;
+        return element.get().isEnum() || declaration() instanceof EnumElement;
     }
 
     @Override
@@ -224,35 +233,35 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public boolean isRecord() {
-        return element.isRecord();
+        return element.get().isRecord();
     }
 
     @Override
     public boolean isAbstract() {
-        if (element.isAbstract()) {
+        if (element.get().isAbstract()) {
             return true;
         }
         // an enum that declares an abstract method, for its constants to implement, is abstract in its class
         // file, which is what the model describes; no compiler says so of the enum itself, since the source may
         // not write the modifier on an enum
-        return isEnum() && !element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().onlyAbstract())
+        return isEnum() && !element.get().getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().onlyAbstract())
             .isEmpty();
     }
 
     @Override
     public boolean isFinal() {
-        return element.isFinal();
+        return element.get().isFinal();
     }
 
     @Override
     public int modifiers() {
-        return modifiersOf(element.getModifiers());
+        return modifiersOf(element.get().getModifiers());
     }
 
     @Override
     public Collection<MethodInfo> constructors() {
         List<MethodInfo> constructors = new ArrayList<>();
-        element.getEnclosedElements(ElementQuery.CONSTRUCTORS)
+        element.get().getEnclosedElements(ElementQuery.CONSTRUCTORS)
             .forEach(constructor -> constructors.add(new ElementMethodInfo(constructor, this, context())));
         return List.copyOf(constructors);
     }
@@ -260,14 +269,14 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public Collection<MethodInfo> methods() {
         List<MethodInfo> methods = new ArrayList<>();
-        for (MethodElement method : ElementMembers.methodsOf(element)) {
+        for (MethodElement method : ElementMembers.methodsOf(element.get())) {
             // the class the method was declared by, which an inherited method's is not this one
             methods.add(new ElementMethodInfo(method, declarationOf(method.getDeclaringType(), context()), context()));
         }
         if (methods.isEmpty() && isAnnotation()) {
             // KSP answers the members of an annotation interface as its properties, and no methods
             // with the accessor of each, which is the method the language model reports
-            for (PropertyElement property : element.getBeanProperties()) {
+            for (PropertyElement property : element.get().getBeanProperties()) {
                 property.getReadMethod()
                     .ifPresent(read -> methods.add(new ElementMethodInfo(read, this, context())));
             }
@@ -278,7 +287,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     @Override
     public Collection<FieldInfo> fields() {
         List<FieldInfo> fields = new ArrayList<>();
-        for (FieldElement field : ElementMembers.fieldsOf(element)) {
+        for (FieldElement field : ElementMembers.fieldsOf(element.get())) {
             fields.add(new ElementFieldInfo(field, declarationOf(field.getDeclaringType(), context()), context()));
         }
         return List.copyOf(fields);
@@ -286,12 +295,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public Collection<RecordComponentInfo> recordComponents() {
-        if (!element.isRecord()) {
+        if (!element.get().isRecord()) {
             return List.of();
         }
         // Micronaut describes each component of a record as a property, with the field and the accessor of it
         List<RecordComponentInfo> components = new ArrayList<>();
-        for (PropertyElement property : element.getBeanProperties()) {
+        for (PropertyElement property : element.get().getBeanProperties()) {
             FieldElement field = property.getField().orElse(null);
             MethodElement accessor = property.getReadMethod().orElse(null);
             if (field != null && accessor != null) {
