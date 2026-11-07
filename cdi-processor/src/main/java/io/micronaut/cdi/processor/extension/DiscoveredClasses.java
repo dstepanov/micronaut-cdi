@@ -88,10 +88,15 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
      * registration phase has not been told about yet; and those it has.
      */
     private final Set<String> visited = new HashSet<>();
-    private final List<String> contributors = new ArrayList<>();
+    private final Map<String, String> contributors = new LinkedHashMap<>();
     private final List<ClassElement> unregistered = new ArrayList<>();
     private final Set<String> registered = new HashSet<>();
     private boolean roundFinished;
+    /**
+     * How many rounds have finished, the compilation itself counting as the last: what tells an element handed out
+     * in an earlier round, which KSP invalidates as its round ends.
+     */
+    private int finishedRounds;
     private @Nullable VisitorContext context;
 
     /**
@@ -161,7 +166,7 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     void visited(ClassElement element) {
         if (visited.add(element.getName())) {
             if (!(roundFinished && scanned.contains(element.getName()))) {
-                contributors.add(element.getName());
+                contributors.put(element.getName(), element.getCanonicalName());
             }
             unregistered.add(element);
         }
@@ -179,6 +184,22 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
+     * Notes that a round finished, or that the compilation did.
+     */
+    void finished() {
+        finishedRounds++;
+    }
+
+    /**
+     * The round the compilation is in, counted by the rounds finished before it.
+     *
+     * @return The round
+     */
+    int round() {
+        return finishedRounds;
+    }
+
+    /**
      * Whether the compiler visited the class of the given name.
      *
      * @param className The name of the class
@@ -189,12 +210,14 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     }
 
     /**
-     * The names of the classes of the compilation the compiler visited, in the order it visited them: what is
-     * registered and generated for the deployment as a whole is written from them, and the first names it.
+     * The classes of the compilation the compiler visited, the canonical name of each by its name, in the order it
+     * visited them: what is registered and generated for the deployment as a whole is written from them, and the
+     * first names it. A class is looked up by its canonical name where its name is not enough: one whose own name
+     * holds a dollar sign, as a generated one's does.
      *
-     * @return The class names
+     * @return The canonical names by the names
      */
-    List<String> contributors() {
+    Map<String, String> contributors() {
         return contributors;
     }
 

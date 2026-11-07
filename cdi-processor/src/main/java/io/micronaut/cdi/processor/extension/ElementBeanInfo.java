@@ -83,13 +83,11 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
         CdiAny.class.getName()
     );
 
-    final ClassElement declaringClass;
     final VisitorContext context;
-    private final @Nullable MemberElement producer;
+    private final HandedOut handedOut;
 
-    ElementBeanInfo(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
-        this.declaringClass = declaringClass;
-        this.producer = producer;
+    ElementBeanInfo(HandedOut handedOut, VisitorContext context) {
+        this.handedOut = handedOut;
         this.context = context;
     }
 
@@ -99,13 +97,44 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      *
      * @param declaringClass The class
      * @param producer       The producer, or {@code null} for the class itself
+     * @param rounds         What counts the rounds of the compilation, which an extension may read the description
+     *                       in a later one of
      * @param context        The visitor context
      * @return The description
      */
-    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
-        return producer == null && declaringClass.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
-            ? new ElementInterceptorInfo(declaringClass, context)
-            : new ElementBeanInfo(declaringClass, producer, context);
+    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, DiscoveredClasses rounds,
+                              VisitorContext context) {
+        return of(new HandedOut(declaringClass, producer, rounds, context), context);
+    }
+
+    /**
+     * The description of the bean the class or the member of it handed out is.
+     *
+     * @param handedOut The class, and the producer of it or none
+     * @param context   The visitor context
+     * @return The description
+     */
+    static ElementBeanInfo of(HandedOut handedOut, VisitorContext context) {
+        return handedOut.member() == null
+            && handedOut.declaringClass().hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
+            ? new ElementInterceptorInfo(handedOut, context)
+            : new ElementBeanInfo(handedOut, context);
+    }
+
+    /**
+     * The class that declares the bean, as the compilation has it now.
+     *
+     * @return The class
+     */
+    ClassElement declaringElement() {
+        return handedOut.declaringClass();
+    }
+
+    /**
+     * The producer of the bean, as the compilation has it now.
+     */
+    private @Nullable MemberElement producer() {
+        return handedOut.member();
     }
 
     @Override
@@ -117,7 +146,8 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * The element the bean was declared by: the class itself, or the producer that produces it.
      */
     private Element declaration() {
-        return producer == null ? declaringClass : producer;
+        MemberElement producer = producer();
+        return producer == null ? declaringElement() : producer;
     }
 
     /**
@@ -125,7 +155,7 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * method carries its class's as well, and the class's scope, name or {@code Typed} are not the producer's.
      */
     private AnnotationMetadata declared() {
-        if (producer instanceof MethodElement method) {
+        if (producer() instanceof MethodElement method) {
             return method.getMethodAnnotationMetadata();
         }
         return declaration().getAnnotationMetadata();
@@ -137,13 +167,13 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * @return The type
      */
     ClassElement beanType() {
-        if (producer instanceof MethodElement method) {
+        if (producer() instanceof MethodElement method) {
             return method.getGenericReturnType();
         }
-        if (producer instanceof FieldElement field) {
+        if (producer() instanceof FieldElement field) {
             return field.getGenericType();
         }
-        return declaringClass;
+        return declaringElement();
     }
 
     @Override
@@ -223,8 +253,9 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
         List<AnnotationInfo> qualifiers = new ArrayList<>();
         qualifiers.add(new ElementAnnotationInfo(
             AnnotationValue.builder(Cdi.ANY).build(), context));
+        MemberElement producer = producer();
         AnnotationMetadata metadata = producer == null
-            ? declaringClass.getAnnotationMetadata() : producer.getAnnotationMetadata().getDeclaredMetadata();
+            ? declaringElement().getAnnotationMetadata() : producer.getAnnotationMetadata().getDeclaredMetadata();
         for (String name : metadata.getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
             if (NOT_QUALIFIERS_OF_THE_BEAN.contains(name)
                 || ("jakarta.inject.Named".equals(name) && metadata.hasAnnotation(CdiName.class))) {
@@ -241,22 +272,22 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
 
     @Override
     public ClassInfo declaringClass() {
-        return new ElementClassInfo(declaringClass, context);
+        return new ElementClassInfo(declaringElement(), context);
     }
 
     @Override
     public boolean isClassBean() {
-        return producer == null;
+        return !handedOut.isMember();
     }
 
     @Override
     public boolean isProducerMethod() {
-        return producer instanceof MethodElement;
+        return producer() instanceof MethodElement;
     }
 
     @Override
     public boolean isProducerField() {
-        return producer instanceof FieldElement;
+        return producer() instanceof FieldElement;
     }
 
     @Override
@@ -267,13 +298,13 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
 
     @Override
     public @Nullable MethodInfo producerMethod() {
-        return producer instanceof MethodElement method
+        return producer() instanceof MethodElement method
             ? new ElementMethodInfo(method, declaringClass(), context) : null;
     }
 
     @Override
     public @Nullable FieldInfo producerField() {
-        return producer instanceof FieldElement field
+        return producer() instanceof FieldElement field
             ? new ElementFieldInfo(field, declaringClass(), context) : null;
     }
 
@@ -284,8 +315,8 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
     @Override
     public boolean isAlternative() {
         boolean declaredOne = declared().hasAnnotation(Cdi.ALTERNATIVE) || declared().hasStereotype(Cdi.ALTERNATIVE);
-        return producer == null ? declaredOne
-            : declaredOne || declaringClass.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE);
+        return isClassBean() ? declaredOne
+            : declaredOne || declaringElement().getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE);
     }
 
     /**
@@ -295,8 +326,8 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
     @Override
     public @Nullable Integer priority() {
         OptionalInt declared = declared().intValue(Cdi.PRIORITY, "value");
-        if (declared.isEmpty() && producer != null) {
-            declared = declaringClass.getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
+        if (declared.isEmpty() && !isClassBean()) {
+            declared = declaringElement().getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
         }
         return declared.isPresent() ? declared.getAsInt() : null;
     }

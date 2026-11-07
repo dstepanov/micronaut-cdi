@@ -19,7 +19,6 @@ import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
@@ -41,8 +40,8 @@ import java.util.List;
 @Internal
 final class ElementInterceptorInfo extends ElementBeanInfo implements InterceptorInfo {
 
-    ElementInterceptorInfo(ClassElement declaringClass, VisitorContext context) {
-        super(declaringClass, null, context);
+    ElementInterceptorInfo(HandedOut handedOut, VisitorContext context) {
+        super(handedOut, context);
     }
 
     @Override
@@ -53,7 +52,7 @@ final class ElementInterceptorInfo extends ElementBeanInfo implements Intercepto
     @Override
     public Collection<AnnotationInfo> interceptorBindings() {
         List<AnnotationInfo> bindings = new ArrayList<>();
-        AnnotationMetadata metadata = declaringClass.getAnnotationMetadata();
+        AnnotationMetadata metadata = declaringElement().getAnnotationMetadata();
         for (String name : metadata.getAnnotationNamesByStereotype("jakarta.interceptor.InterceptorBinding")) {
             // every occurrence of a repeatable binding, as the container reports them
             List<AnnotationValue<Annotation>> occurrences =
@@ -85,7 +84,7 @@ final class ElementInterceptorInfo extends ElementBeanInfo implements Intercepto
         if (marker == null) {
             return false;
         }
-        return declaringClass.getEnclosedElements(
+        return declaringElement().getEnclosedElements(
                 ElementQuery.ALL_METHODS).stream()
             .anyMatch(method -> method.hasDeclaredAnnotation(marker));
     }

@@ -57,7 +57,9 @@ import java.util.Optional;
  * Sees to the classes the discovery phase added to the scanned ones (section 2.10.1): under javac they are imported
  * as the first round of a compilation that visited any class is finished, so that javac makes beans of them in the
  * next round, and under KSP and Groovy a bean is registered for each class of a library that has no definition once
- * the compilation is finished, put through what a class of the compilation is put through as it is visited.
+ * the compilation is finished, put through what a class of the compilation is put through as it is visited. A
+ * scanned class another processor generates in a later round is imported all the same: javac waits for the round that
+ * has it before it reads the import.
  *
  * <p>It is made for one of those moments, from what {@link BuildCompatibleExtensionVisitor} discovered, and keeps
  * nothing beyond it.</p>
@@ -104,13 +106,12 @@ final class ScannedClassRegistrar {
      * of on their own is decided after the visitors have run, so a bean registered for each here would stand
      * beside the definition javac writes for some: the import names them all, and javac makes each a bean once,
      * the whole bean machinery processing it, with the scope it was given as it was visited. KSP and Groovy hand
-     * the bean machinery every class they compile, and read no import (see {@link #registerScannedClasses}).</p>
-     *
-     * @return Whether the import was written, and the classes it names are visited in the next round
+     * the bean machinery every class they compile, and read no import (see {@link #registerScannedClasses}). A
+     * scanned class javac never finds fails the compilation as the import names it.</p>
      */
-    boolean importScannedClasses(VisitorContext context) {
+    void importScannedClasses(VisitorContext context) {
         if (context.getLanguage() != VisitorContext.Language.JAVA || discovered.scannedClasses().isEmpty()) {
-            return false;
+            return;
         }
         List<String> literals = new ArrayList<>();
         for (String scanned : discovered.scannedClasses()) {
@@ -139,14 +140,13 @@ final class ScannedClassRegistrar {
         if (file.isEmpty()) {
             context.fail("The import of the scanned classes could not be written: the compilation accepts no "
                 + "generated source", null);
-            return false;
+            return;
         }
         try {
             file.get().write(writer -> writer.write(source.toString()));
         } catch (Exception e) {
             throw new IllegalStateException("The import of the scanned classes could not be written", e);
         }
-        return true;
     }
 
     /**
@@ -156,7 +156,8 @@ final class ScannedClassRegistrar {
      * <p>A class the compilation compiles is handed to the bean machinery as every class is, and is a bean with
      * the scope it was given as it was visited. A class of a library is not, and is put through what a class of
      * the compilation is put through here: what the discovery phase said of it, the enhancement and the
-     * registration phases, and then a bean registered for it, with its injection points.</p>
+     * registration phases, and then a bean registered for it, with its injection points. A scanned class that is
+     * neither compiled nor on the class path fails the compilation.</p>
      */
     void registerScannedClasses(Element[] contributors, VisitorContext context) {
         if (context.getLanguage() == VisitorContext.Language.JAVA) {
@@ -164,13 +165,18 @@ final class ScannedClassRegistrar {
             return;
         }
         Messages messages = new VisitorMessages(context);
+        List<String> missing = new ArrayList<>();
         for (String scanned : discovered.scannedClasses()) {
             int nested = scanned.indexOf('$');
             if (discovered.wasVisited(scanned) || (nested > 0 && discovered.wasVisited(scanned.substring(0, nested)))) {
                 continue;
             }
             ClassElement element = context.getClassElement(scanned).orElse(null);
-            if (element == null || element.isAbstract() || element.isInterface() || hasDefinition(element, context)) {
+            if (element == null) {
+                missing.add(scanned);
+                continue;
+            }
+            if (element.isAbstract() || element.isInterface() || hasDefinition(element, context)) {
                 continue;
             }
             visitor.prepareScanned(element, context);
@@ -205,6 +211,10 @@ final class ScannedClassRegistrar {
                 .produceBeans(ElementQuery.ALL_FIELDS.onlyDeclared()
                     .annotated(metadata -> metadata.hasDeclaredAnnotation(Cdi.PRODUCES)),
                     produced -> describedAsVisited(produced, producers));
+        }
+        if (!missing.isEmpty()) {
+            context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the classes " + missing + " the discovery phase added "
+                + "to the scanned classes are neither compiled nor on the class path of the compilation", null);
         }
     }
 
@@ -278,7 +288,7 @@ final class ScannedClassRegistrar {
      * once.
      */
     private String suffix(VisitorContext context) {
-        return suffixOf(discovered.contributors().get(0), context);
+        return suffixOf(discovered.contributors().keySet().iterator().next(), context);
     }
 
     /**

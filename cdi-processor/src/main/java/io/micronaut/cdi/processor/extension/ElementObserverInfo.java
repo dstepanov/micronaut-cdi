@@ -37,13 +37,16 @@ import jakarta.enterprise.lang.model.declarations.ParameterInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.inject.Qualifier;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * An observer method as the registration phase of section 2.10.3 describes it, read straight off the compiled
- * elements: the method, the parameter it observes, and the class that declares them.
+ * elements: the method, the parameter it observes, and the class that declares them, as the compilation has them
+ * when it is read ({@link HandedOut}).
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -51,19 +54,25 @@ import java.util.Map;
 @Internal
 final class ElementObserverInfo implements ObserverInfo {
 
-    private final ClassElement declaringClass;
-    private final MethodElement method;
-    private final ParameterElement observed;
+    private final HandedOut handedOut;
+    private final int observedIndex;
     private final boolean async;
     private final VisitorContext context;
 
     ElementObserverInfo(ClassElement declaringClass, MethodElement method, ParameterElement observed,
-                        boolean async, VisitorContext context) {
-        this.declaringClass = declaringClass;
-        this.method = method;
-        this.observed = observed;
+                        boolean async, DiscoveredClasses rounds, VisitorContext context) {
+        this.handedOut = new HandedOut(declaringClass, method, rounds, context);
+        this.observedIndex = Arrays.asList(method.getParameters()).indexOf(observed);
         this.async = async;
         this.context = context;
+    }
+
+    private ClassElement declaringElement() {
+        return handedOut.declaringClass();
+    }
+
+    private MethodElement method() {
+        return (MethodElement) Objects.requireNonNull(handedOut.member());
     }
 
     /**
@@ -72,7 +81,7 @@ final class ElementObserverInfo implements ObserverInfo {
      * @return The observed parameter
      */
     ParameterElement observedParameter() {
-        return observed;
+        return method().getParameters()[observedIndex];
     }
 
     /**
@@ -82,9 +91,9 @@ final class ElementObserverInfo implements ObserverInfo {
      * @return The observed type
      */
     ClassElement observedType() {
-        ClassElement type = observed.getGenericType();
-        Map<String, ClassElement> inherited = declaringClass.getAllTypeArguments()
-            .getOrDefault(method.getDeclaringType().getName(), Map.of());
+        ClassElement type = observedParameter().getGenericType();
+        Map<String, ClassElement> inherited = declaringElement().getAllTypeArguments()
+            .getOrDefault(method().getDeclaringType().getName(), Map.of());
         if (inherited.isEmpty()) {
             return type;
         }
@@ -105,9 +114,9 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public Collection<AnnotationInfo> qualifiers() {
-        ClassInfo declaring = new ElementClassInfo(declaringClass, context);
-        return new ElementMethodInfo(method, declaring, context).parameters().stream()
-            .filter(parameter -> parameter.name().equals(observed.getName()))
+        ClassInfo declaring = new ElementClassInfo(declaringElement(), context);
+        return new ElementMethodInfo(method(), declaring, context).parameters().stream()
+            .filter(parameter -> parameter.name().equals(observedParameter().getName()))
             .findFirst()
             .map(parameter -> parameter.annotations(annotation ->
                 annotation.declaration().hasAnnotation(Qualifier.class)))
@@ -116,25 +125,25 @@ final class ElementObserverInfo implements ObserverInfo {
 
     @Override
     public ClassInfo declaringClass() {
-        return new ElementClassInfo(declaringClass, context);
+        return new ElementClassInfo(declaringElement(), context);
     }
 
     @Override
     public MethodInfo observerMethod() {
-        return new ElementMethodInfo(method, new ElementClassInfo(declaringClass, context), context);
+        return new ElementMethodInfo(method(), new ElementClassInfo(declaringElement(), context), context);
     }
 
     @Override
     public ParameterInfo eventParameter() {
         return observerMethod().parameters().stream()
-            .filter(parameter -> parameter.name().equals(observed.getName()))
+            .filter(parameter -> parameter.name().equals(observedParameter().getName()))
             .findFirst()
             .orElseThrow();
     }
 
     @Override
     public BeanInfo bean() {
-        return ElementBeanInfo.of(declaringClass, null, context);
+        return ElementBeanInfo.of(handedOut.with(null), context);
     }
 
     @Override
@@ -145,7 +154,7 @@ final class ElementObserverInfo implements ObserverInfo {
     @Override
     public int priority() {
         // read as the observer is compiled, so that what is reported is the priority it is notified in
-        return ObserverVisitor.priorityOf(observed, method);
+        return ObserverVisitor.priorityOf(observedParameter(), method());
     }
 
     @Override
@@ -156,8 +165,8 @@ final class ElementObserverInfo implements ObserverInfo {
     @Override
     public Reception reception() {
         String value = async
-            ? observed.stringValue(Cdi.OBSERVES_ASYNC, "notifyObserver").orElse("ALWAYS")
-            : observed.stringValue(Cdi.OBSERVES, "notifyObserver").orElse("ALWAYS");
+            ? observedParameter().stringValue(Cdi.OBSERVES_ASYNC, "notifyObserver").orElse("ALWAYS")
+            : observedParameter().stringValue(Cdi.OBSERVES, "notifyObserver").orElse("ALWAYS");
         return Reception.valueOf(value);
     }
 
@@ -167,6 +176,6 @@ final class ElementObserverInfo implements ObserverInfo {
             return TransactionPhase.IN_PROGRESS;
         }
         return TransactionPhase.valueOf(
-            observed.stringValue(Cdi.OBSERVES, "during").orElse("IN_PROGRESS"));
+            observedParameter().stringValue(Cdi.OBSERVES, "during").orElse("IN_PROGRESS"));
     }
 }

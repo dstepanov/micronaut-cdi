@@ -138,22 +138,22 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     /**
      * The classes of the compilation this visitor has visited, which what it registers and generates is written
      * from, looked up by name in the compilation as it is now: KSP invalidates the elements of a round as the round
-     * ends.
+     * ends. The compilation fails, naming them, where some cannot be found.
+     *
+     * @return The classes, or {@code null} where some cannot be found
      */
-    private Element[] contributors(VisitorContext context) {
+    private Element @Nullable [] contributors(VisitorContext context) {
         List<Element> contributors = new ArrayList<>(discovered().contributors().size());
-        for (String name : discovered().contributors()) {
-            context.getClassElement(name).ifPresent(contributors::add);
+        List<String> missing = new ArrayList<>();
+        discovered().contributors().forEach((name, canonicalName) -> context.getClassElement(name)
+            .or(() -> context.getClassElement(canonicalName))
+            .ifPresentOrElse(contributors::add, () -> missing.add(name)));
+        if (!missing.isEmpty()) {
+            context.fail("The synthesis and validation phases of the build compatible extensions cannot run: the "
+                + "classes " + missing + " the compilation visited can no longer be found", null);
+            return null;
         }
         return contributors.toArray(new Element[0]);
-    }
-
-    /**
-     * The first class of the compilation this visitor visited, which a problem of the deployment as a whole is
-     * reported on.
-     */
-    private @Nullable Element firstContributor(VisitorContext context) {
-        return context.getClassElement(discovered().contributors().get(0)).orElse(null);
     }
 
     /**
@@ -231,6 +231,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (!started.contributors().isEmpty() && started.firstRoundFinished()) {
             new ScannedClassRegistrar(this, started).importScannedClasses(context);
         }
+        started.finished();
     }
 
     /**
@@ -239,15 +240,24 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * the compiler does not make beans of, of the context classes and of the registered qualifiers, and the
      * synthesis of section 2.10.5, the registration of what it described, and the validation of section 2.10.6.
      *
-     * <p>What is registered here is written by every compiler, and needs no source.</p>
+     * <p>What is registered here is written by every compiler, and needs no source. The beans and observers the
+     * registration phase described in the rounds look their elements up again from here on, as KSP has
+     * invalidated the ones of the rounds.</p>
      */
     @Override
     public void finishCompilation(VisitorContext context) {
         DiscoveredClasses started = discovered;
-        if (started == null || started.contributors().isEmpty()) {
+        if (started == null) {
+            return;
+        }
+        started.finished();
+        if (started.contributors().isEmpty()) {
             return;
         }
         Element[] contributors = contributors(context);
+        if (contributors == null) {
+            return;
+        }
         new ScannedClassRegistrar(this, started).registerScannedClasses(contributors, context);
         registerContexts(contributors, context);
         registerQualifiers(contributors, context);
@@ -269,7 +279,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                             .member("normal", discovered().isNormalContext(scopeName))
                             .build()));
                 } catch (IllegalArgumentException e) {
-                    context.fail(String.valueOf(e.getMessage()), firstContributor(context));
+                    context.fail(String.valueOf(e.getMessage()), contributors[0]);
                 }
             }
         });
@@ -287,7 +297,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (record == null) {
             context.fail("The qualifiers the build compatible extensions registered cannot be recorded: "
                 + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
-                + "compilation", firstContributor(context));
+                + "compilation", contributors[0]);
             return;
         }
         // the members of each, as the compilation sees its interface: an annotation no bean uses, one only an
@@ -368,7 +378,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // the built-in beans are beans of the application too (section 2.10.3): no class of the compilation
         // declares them, so the phase is told about them here
         context.getClassElement("io.micronaut.cdi.internal.runtime.CdiBeanContainer").ifPresent(container -> {
-            extensions.describeBean(ElementBeanInfo.of(container, null, context), messages, context);
+            extensions.describeBean(ElementBeanInfo.of(container, null, discovered(), context), messages, context);
         });
         // and the validation phase is the last word on it
         extensions.validate(messages, context);
@@ -394,11 +404,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
-            beans.add(ElementBeanInfo.of(element, null, context));
+            beans.add(ElementBeanInfo.of(element, null, discovered(), context));
         }
         for (MemberElement producer
             : SpecificationBeans.producersOf(element)) {
-            beans.add(ElementBeanInfo.of(element, producer, context));
+            beans.add(ElementBeanInfo.of(element, producer, discovered(), context));
         }
         for (ElementBeanInfo bean : beans) {
             extensions.describeBean(bean, messages, context);
@@ -421,8 +431,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             if (observed == null) {
                 continue;
             }
-            extensions.describeObserver(new ElementObserverInfo(element, method, observed, async, context), messages,
-                context);
+            extensions.describeObserver(
+                new ElementObserverInfo(element, method, observed, async, discovered(), context), messages, context);
         }
     }
 
