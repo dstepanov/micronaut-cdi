@@ -122,6 +122,17 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
+     * This visits every class, and in a Python compilation it would otherwise contribute a class twice, through its
+     * Java stub as well.
+     *
+     * @return {@code true}
+     */
+    @Override
+    public boolean skipClassesGeneratedForOtherLanguages() {
+        return true;
+    }
+
+    /**
      * An enhancement decides what a class says about itself, so it runs before everything else here.
      *
      * <p>Micronaut runs its visitors from the highest order down, so the one that runs first is the one that
