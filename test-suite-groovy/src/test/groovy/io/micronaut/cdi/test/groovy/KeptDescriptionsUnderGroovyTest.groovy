@@ -17,7 +17,12 @@ class KeptDescriptionsUnderGroovyTest {
     void theKeptDescriptionsReadInSynthesisAsTheyWereRegistered() {
         ApplicationContext context = ApplicationContext.run()
         try {
-            assertEquals('KeptProbe types=[KeptProbe, Object] qualifiers=[Any, KeptQualifier, Named] normalScope=false methods=[keptMethod, keptObserve]; enhanced KeptProbe methods=[keptMethod, keptObserve]; observer KeptProbe.keptObserve event=KeptEvent parameters=[event:KeptEvent]', context.getBean(KeptDescriptionReport).text())
+            assertEquals("KeptProbe types=[KeptProbe, Object] qualifiers=[Any, KeptQualifier, Named] normalScope=false " +
+                "methods=[keptMethod, keptObserve]; enhanced KeptProbe methods=[keptMethod, keptObserve]; " +
+                "method keptMethod():String of KeptProbe; parameter event:KeptEvent of keptObserve; " +
+                "field keptItems:List<String> of KeptProbe; type List<String>; the same class true; " +
+                "observer KeptProbe.keptObserve event=KeptEvent parameters=[event:KeptEvent]",
+                context.getBean(KeptDescriptionReport).text())
         } finally {
             context.close()
         }

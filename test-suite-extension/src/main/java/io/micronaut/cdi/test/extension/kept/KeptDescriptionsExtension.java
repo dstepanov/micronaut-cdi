@@ -11,20 +11,24 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.ParameterInfo;
 import jakarta.enterprise.lang.model.types.Type;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * Keeps the bean and the observer of a class marked {@link KeptDescription} from the registration phase, and reads
- * them in the synthesis and validation phases, which the specification has run once every bean is registered: in a
- * compilation of several rounds, after the round that described them. What synthesis read is the
+ * Keeps the class marked {@link KeptDescription} as it was enhanced - with a method, a parameter, a field and a type
+ * of it - and its bean and observer from the registration phase, and reads them in the synthesis and validation
+ * phases, which the specification has run once every bean is registered: in a compilation of several rounds, after
+ * the round that handed them out. What synthesis read is the
  * {@link KeptDescriptionReport}; validation fails the compilation unless it reads the same.
  */
 public final class KeptDescriptionsExtension implements BuildCompatibleExtension {
@@ -32,6 +36,11 @@ public final class KeptDescriptionsExtension implements BuildCompatibleExtension
     private final List<BeanInfo> beans = new ArrayList<>();
     private final List<ObserverInfo> observers = new ArrayList<>();
     private final List<ClassInfo> enhanced = new ArrayList<>();
+    private final Set<ClassInfo> enhancedSet = new HashSet<>();
+    private final List<MethodInfo> methods = new ArrayList<>();
+    private final List<ParameterInfo> parameters = new ArrayList<>();
+    private final List<FieldInfo> fields = new ArrayList<>();
+    private final List<Type> types = new ArrayList<>();
     private String synthesised = "";
 
     /**
@@ -42,7 +51,23 @@ public final class KeptDescriptionsExtension implements BuildCompatibleExtension
     @Enhancement(types = Object.class, withSubtypes = true, withAnnotations = KeptDescription.class)
     public void qualify(ClassConfig config) {
         config.addAnnotation(KeptQualifier.Literal.INSTANCE);
-        enhanced.add(config.info());
+        ClassInfo info = config.info();
+        enhanced.add(info);
+        enhancedSet.add(info);
+        for (MethodInfo method : info.methods()) {
+            if (method.name().equals("keptMethod")) {
+                methods.add(method);
+            }
+            if (method.name().equals("keptObserve")) {
+                parameters.addAll(method.parameters());
+            }
+        }
+        for (FieldInfo field : info.fields()) {
+            if (field.name().equals("keptItems")) {
+                fields.add(field);
+                types.add(field.type());
+            }
+        }
     }
 
     /**
@@ -109,6 +134,9 @@ public final class KeptDescriptionsExtension implements BuildCompatibleExtension
         for (ObserverInfo observer : observers) {
             messages.info("Kept an observer of " + observer.declaringClass().simpleName(), observer);
         }
+        for (MethodInfo method : methods) {
+            messages.info("Kept the method " + method.name(), method);
+        }
     }
 
     private String describe() {
@@ -128,6 +156,24 @@ public final class KeptDescriptionsExtension implements BuildCompatibleExtension
         for (ClassInfo info : enhanced) {
             described.add(attempt(() -> "enhanced " + info.simpleName() + " methods=" + sorted(info.methods().stream()
                 .map(MethodInfo::name).filter(name -> name.startsWith("kept")).toList())));
+        }
+        for (MethodInfo method : methods) {
+            described.add(attempt(() -> "method " + method.name() + "():" + describe(method.returnType())
+                + " of " + method.declaringClass().simpleName()));
+        }
+        for (ParameterInfo parameter : parameters) {
+            described.add(attempt(() -> "parameter " + parameter.name() + ":" + describe(parameter.type()) + " of "
+                + parameter.declaringMethod().name()));
+        }
+        for (FieldInfo field : fields) {
+            described.add(attempt(() -> "field " + field.name() + ":" + describe(field.type()) + " of "
+                + field.declaringClass().simpleName()));
+        }
+        for (Type type : types) {
+            described.add(attempt(() -> "type " + describe(type)));
+        }
+        for (BeanInfo bean : beans) {
+            described.add(attempt(() -> "the same class " + enhancedSet.contains(bean.declaringClass())));
         }
         for (ObserverInfo observer : observers) {
             described.add(attempt(() -> {
@@ -159,6 +205,15 @@ public final class KeptDescriptionsExtension implements BuildCompatibleExtension
         // a Groovy class is a GroovyObject as well, which nothing here is about
         return names.stream().filter(name -> !name.equals("GroovyObject"))
             .collect(Collectors.toCollection(TreeSet::new)).toString();
+    }
+
+    private static String describe(Type type) {
+        if (type.isParameterizedType()) {
+            return simple(type.asParameterizedType().declaration().name()) + "<" + type.asParameterizedType()
+                .typeArguments().stream().map(KeptDescriptionsExtension::describe).collect(Collectors.joining(","))
+                + ">";
+        }
+        return simple(type);
     }
 
     private static String simple(Type type) {

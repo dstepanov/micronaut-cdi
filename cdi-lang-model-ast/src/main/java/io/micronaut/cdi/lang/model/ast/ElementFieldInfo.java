@@ -31,7 +31,7 @@ import jakarta.enterprise.lang.model.types.Type;
 @Internal
 public final class ElementFieldInfo extends ElementDeclarationInfo implements FieldInfo {
 
-    private final FieldElement element;
+    private final CurrentElement<FieldElement> element;
     private final ClassInfo declaringClass;
 
     /**
@@ -40,6 +40,10 @@ public final class ElementFieldInfo extends ElementDeclarationInfo implements Fi
      * @param context        The compilation the field is read in
      */
     public ElementFieldInfo(FieldElement element, ClassInfo declaringClass, VisitorContext context) {
+        this(CurrentElement.ofMember(element, context), declaringClass, context);
+    }
+
+    private ElementFieldInfo(CurrentElement<FieldElement> element, ClassInfo declaringClass, VisitorContext context) {
         super(element, context);
         this.element = element;
         this.declaringClass = declaringClass;
@@ -47,27 +51,27 @@ public final class ElementFieldInfo extends ElementDeclarationInfo implements Fi
 
     @Override
     public String name() {
-        return element.getName();
+        return element.get().getName();
     }
 
     @Override
     public Type type() {
-        return SourceModel.of(context()).typeOf(element);
+        return SourceModel.of(context()).typeOf(element.get());
     }
 
     @Override
     public boolean isStatic() {
-        return element.isStatic();
+        return element.get().isStatic();
     }
 
     @Override
     public boolean isFinal() {
-        return element.isFinal();
+        return element.get().isFinal();
     }
 
     @Override
     public int modifiers() {
-        return modifiersOf(element.getModifiers());
+        return modifiersOf(element.get().getModifiers());
     }
 
     @Override

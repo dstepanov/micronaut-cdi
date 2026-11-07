@@ -479,8 +479,11 @@ the registration of what it described, and validation run then (`LaterRoundBeanT
 compilation are kept by name and looked up again there, since KSP invalidates the elements of a round as the round
 ends; one that can no longer be found fails the compilation, naming it. For the same reason a bean or an observer
 the registration phase described in a round, which an extension may keep and read in synthesis or validation, looks
-its class and member up again by name and signature under KSP once its round is over (`HandedOut`;
-`KeptDescriptionsTest`, `KeptDescriptionsUnderKspTest`, `KeptDescriptionsUnderGroovyTest`). Under javac, the import
+its class and member up again by name and signature under KSP once its round is over, and so does everything of the
+language model an extension may keep - a class, a method, a field, a parameter, a record component, a class type -
+with the generic arguments of a type kept and equality and hash codes that do not change with the round
+(`CurrentElement`, `HandedOut`; `KeptDescriptionsTest`, `KeptDescriptionsUnderKspTest`,
+`KeptDescriptionsUnderGroovyTest`). Under javac, the import
 of the scanned classes is written as the first round that visits a class of the compilation finishes, so that a
 later round visits them; a scanned class another processor generates rounds later is imported all the same, since
 javac reads the import in the round that has the class, and one never found fails the compilation as the import
@@ -489,11 +492,9 @@ naming it.
 Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
 `VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
 the record of the component is put on the definition as annotation values. The definition is named after the
-first class of the compilation and has every class of it as an origin. Gradle tracks what an isolating processor
-writes by the top-level types of its origins: where they are more than one, it recompiles the whole source set when
-one changes, and where there is exactly one - a compilation of a single top-level class - it tracks the definitions
-as that class's alone, so an incremental compilation that adds a second class compiles only the new one. Under KSP
-the definitions are aggregating outputs, written again whenever a source changes.
+first class of the compilation and has every class of it as an origin. What `finishCompilation` writes disables
+incremental annotation processing under Gradle: the subsequent compilations a change affects compile all the sources
+of the source set. Under KSP the definitions are aggregating outputs, written again whenever a source changes.
 
 Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
@@ -524,7 +525,10 @@ compilation starts it, read as its rounds and the compilation finish, and read b
   of what is written for the deployment as a whole (the import of the scanned classes, the record of the registered
   qualifiers, the definitions of the contexts and of the synthetic components). A flag says whether
   a round that visited a class of the compilation finished, after which the import of the scanned classes is
-  written under javac, once, and a count of the rounds finished tells a description handed out in an earlier one.
+  written under javac, once.
+- `CurrentElement`'s count of the rounds of the compilation that finished, which the visitor keeps up as each round
+  and the compilation finish and the language model reads to tell an element handed out in an earlier round: kept
+  with the compilation, on the attributes of its `VisitorContext`, and read by nothing else.
 - `SynthesisPhase`: the synthetic beans and observers the synthesis phase of section 2.10.5 described, made and
   consumed as the compilation finishes, after every bean is registered, followed by the registration of what it described and
   the validation of section 2.10.6, which are told about the deployment as a whole.
@@ -965,12 +969,12 @@ own rather than the first one alone.
 - **Under KSP, what a visitor annotated lasts one round.** Micronaut keeps the annotations a visitor added to an
   element (`AbstractAnnotationMetadataBuilder`) by the element's native symbol, and KSP makes new symbols for every
   round, so a class looked up again once the compilation is finished no longer carries what an enhancement added to
-  it. A bean description an extension kept from the registration phase and reads in synthesis or validation
-  therefore answers under KSP without the qualifiers, scope and other annotations an enhancement added, and a class
-  description it kept from its enhancement is invalid by then
-  (`KeptDescriptionsUnderKspTest.whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished`, disabled). Keying what
-  a visitor annotated by the class's name and the member's signature would close the first; the second would need
-  the language model to look its elements up again as well.
+  it. The language model and the descriptions of the registration phase look their elements up again once their
+  round is over (`CurrentElement`), so what an extension kept stays valid; but a bean description it kept and reads
+  in synthesis or validation answers under KSP without the qualifiers, scope and other annotations an enhancement
+  added (`KeptDescriptionsUnderKspTest.whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished`, disabled). Both
+  are needed: the elements looked up again, which this module does, and what a visitor annotated kept by the class's
+  name and the member's signature rather than by the round's symbols, which is Micronaut Core's.
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an

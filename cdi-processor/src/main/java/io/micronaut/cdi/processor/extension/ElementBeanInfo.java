@@ -97,14 +97,11 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      *
      * @param declaringClass The class
      * @param producer       The producer, or {@code null} for the class itself
-     * @param rounds         What counts the rounds of the compilation, which an extension may read the description
-     *                       in a later one of
      * @param context        The visitor context
      * @return The description
      */
-    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, DiscoveredClasses rounds,
-                              VisitorContext context) {
-        return of(new HandedOut(declaringClass, producer, rounds, context), context);
+    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
+        return of(new HandedOut(declaringClass, producer, context), context);
     }
 
     /**

@@ -14,6 +14,8 @@ import jakarta.inject.Named
 @Named("kept")
 class KeptProbe {
 
+    protected List<String> keptItems = []
+
     String keptMethod() {
         return "kept"
     }

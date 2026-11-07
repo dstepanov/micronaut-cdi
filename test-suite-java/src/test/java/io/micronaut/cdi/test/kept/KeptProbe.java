@@ -14,6 +14,8 @@ import jakarta.inject.Named;
 @Named("kept")
 public class KeptProbe {
 
+    java.util.List<String> keptItems = java.util.List.of();
+
     public String keptMethod() {
         return "kept";
     }

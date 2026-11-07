@@ -40,7 +40,7 @@ import java.util.List;
 @Internal
 public final class ElementMethodInfo extends ElementDeclarationInfo implements MethodInfo {
 
-    private final MethodElement element;
+    private final CurrentElement<MethodElement> element;
     private final ClassInfo declaringClass;
 
     /**
@@ -49,6 +49,11 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
      * @param context        The compilation the method is read in
      */
     public ElementMethodInfo(MethodElement element, ClassInfo declaringClass, VisitorContext context) {
+        this(CurrentElement.ofMember(element, context), declaringClass, context);
+    }
+
+    private ElementMethodInfo(CurrentElement<MethodElement> element, ClassInfo declaringClass,
+                              VisitorContext context) {
         super(element, context);
         this.element = element;
         this.declaringClass = declaringClass;
@@ -57,9 +62,18 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     /**
      * The Micronaut method this describes.
      *
-     * @return The method element
+     * @return The method element.get()
      */
     public MethodElement methodElement() {
+        return element.get();
+    }
+
+    /**
+     * The method, as the compilation has it whenever it is read: what a parameter of it is looked up again among.
+     *
+     * @return The method
+     */
+    CurrentElement<MethodElement> currentElement() {
         return element;
     }
 
@@ -67,14 +81,16 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     public String name() {
         // a constructor is named after the class it constructs, where Micronaut names it the way the class file
         // does
-        return isConstructor() ? declaringClass.name() : element.getName();
+        return isConstructor() ? declaringClass.name() : element.get().getName();
     }
 
     @Override
     public List<ParameterInfo> parameters() {
         List<ParameterInfo> parameters = new ArrayList<>();
-        for (ParameterElement parameter : element.getParameters()) {
-            parameters.add(new ElementParameterInfo(parameter, this, context()));
+        MethodElement method = element.get();
+        for (ParameterElement parameter : method.getParameters()) {
+            parameters.add(new ElementParameterInfo(CurrentElement.ofParameter(element, parameter, context()), this,
+                context()));
         }
         return List.copyOf(parameters);
     }
@@ -83,48 +99,48 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     public Type returnType() {
         // a constructor returns the class it constructs, where both Micronaut and the compiler report the void a
         // class file declares; the annotations of the use are the ones written on the constructor
-        return isConstructor() ? SourceModel.of(context()).constructorReturnTypeOf(element)
-            : SourceModel.of(context()).returnTypeOf(element);
+        return isConstructor() ? SourceModel.of(context()).constructorReturnTypeOf(element.get())
+            : SourceModel.of(context()).returnTypeOf(element.get());
     }
 
     @Override
     public @Nullable Type receiverType() {
-        return SourceModel.of(context()).receiverTypeOf(element);
+        return SourceModel.of(context()).receiverTypeOf(element.get());
     }
 
     @Override
     public List<Type> throwsTypes() {
-        return SourceModel.of(context()).throwsTypesOf(element);
+        return SourceModel.of(context()).throwsTypesOf(element.get());
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
-        return SourceModel.of(context()).typeParametersOf(element);
+        return SourceModel.of(context()).typeParametersOf(element.get());
     }
 
     @Override
     public boolean isConstructor() {
-        return element instanceof ConstructorElement;
+        return element.get() instanceof ConstructorElement;
     }
 
     @Override
     public boolean isStatic() {
-        return element.isStatic();
+        return element.get().isStatic();
     }
 
     @Override
     public boolean isAbstract() {
-        return element.isAbstract();
+        return element.get().isAbstract();
     }
 
     @Override
     public boolean isFinal() {
-        return element.isFinal();
+        return element.get().isFinal();
     }
 
     @Override
     public int modifiers() {
-        return modifiersOf(element.getModifiers());
+        return modifiersOf(element.get().getModifiers());
     }
 
     @Override

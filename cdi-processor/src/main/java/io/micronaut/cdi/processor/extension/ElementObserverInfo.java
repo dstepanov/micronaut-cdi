@@ -60,8 +60,8 @@ final class ElementObserverInfo implements ObserverInfo {
     private final VisitorContext context;
 
     ElementObserverInfo(ClassElement declaringClass, MethodElement method, ParameterElement observed,
-                        boolean async, DiscoveredClasses rounds, VisitorContext context) {
-        this.handedOut = new HandedOut(declaringClass, method, rounds, context);
+                        boolean async, VisitorContext context) {
+        this.handedOut = new HandedOut(declaringClass, method, context);
         this.observedIndex = Arrays.asList(method.getParameters()).indexOf(observed);
         this.async = async;
         this.context = context;

@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
+import io.micronaut.cdi.lang.model.ast.CurrentElement;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.CdiScopes;
@@ -231,7 +232,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (!started.contributors().isEmpty() && started.firstRoundFinished()) {
             new ScannedClassRegistrar(this, started).importScannedClasses(context);
         }
-        started.finished();
+        CurrentElement.roundFinished(context);
     }
 
     /**
@@ -250,7 +251,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (started == null) {
             return;
         }
-        started.finished();
+        CurrentElement.roundFinished(context);
         if (started.contributors().isEmpty()) {
             return;
         }
@@ -378,7 +379,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // the built-in beans are beans of the application too (section 2.10.3): no class of the compilation
         // declares them, so the phase is told about them here
         context.getClassElement("io.micronaut.cdi.internal.runtime.CdiBeanContainer").ifPresent(container -> {
-            extensions.describeBean(ElementBeanInfo.of(container, null, discovered(), context), messages, context);
+            extensions.describeBean(ElementBeanInfo.of(container, null, context), messages, context);
         });
         // and the validation phase is the last word on it
         extensions.validate(messages, context);
@@ -404,11 +405,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
-            beans.add(ElementBeanInfo.of(element, null, discovered(), context));
+            beans.add(ElementBeanInfo.of(element, null, context));
         }
         for (MemberElement producer
             : SpecificationBeans.producersOf(element)) {
-            beans.add(ElementBeanInfo.of(element, producer, discovered(), context));
+            beans.add(ElementBeanInfo.of(element, producer, context));
         }
         for (ElementBeanInfo bean : beans) {
             extensions.describeBean(bean, messages, context);
@@ -432,7 +433,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 continue;
             }
             extensions.describeObserver(
-                new ElementObserverInfo(element, method, observed, async, discovered(), context), messages, context);
+                new ElementObserverInfo(element, method, observed, async, context), messages, context);
         }
     }
 

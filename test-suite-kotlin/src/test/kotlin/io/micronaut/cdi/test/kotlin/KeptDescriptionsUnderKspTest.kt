@@ -8,7 +8,6 @@ import jakarta.enterprise.context.Dependent
 import jakarta.enterprise.event.Observes
 import jakarta.inject.Named
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -19,6 +18,9 @@ import org.junit.jupiter.api.Test
 @Dependent
 @Named("kept")
 open class KeptProbe {
+
+    @JvmField
+    var keptItems: java.util.List<String>? = null
 
     open fun keptMethod(): String = "kept"
 
@@ -35,28 +37,32 @@ open class KeptProbe {
 class KeptDescriptionsUnderKspTest {
 
     @Test
-    fun theKeptDescriptionsReadInSynthesisAsTheyWereRegistered() {
+    fun theKeptDescriptionsReadInSynthesisAsTheyWereHandedOut() {
         ApplicationContext.run().use { context ->
-            val read = context.getBean(KeptDescriptionReport::class.java).text.split("; ")
-            assertTrue(read[0].startsWith("KeptProbe types=[KeptProbe, Object] qualifiers=["), read[0])
-            assertTrue(read[0].endsWith("] normalScope=false methods=[keptMethod, keptObserve]"), read[0])
-            assertEquals("observer KeptProbe.keptObserve event=KeptEvent parameters=[event:KeptEvent]", read[2])
+            // the qualifiers an enhancement added are the part that needs Micronaut Core, below
+            val read = context.getBean(KeptDescriptionReport::class.java).text
+                .replace(Regex("qualifiers=\\[[^\\]]*\\] "), "")
+            assertEquals(EXPECTED.replace("qualifiers=[Any, KeptQualifier, Named] ", ""), read)
         }
     }
 
     /**
      * What an extension added to a class as it was enhanced is not seen on the class looked up again once its round
-     * is over, and a class description kept from the enhancement phase is invalid by then: Micronaut keeps what a
-     * visitor annotated by the round's own symbols under KSP.
+     * is over: Micronaut keeps what a visitor annotated by the round's own symbols under KSP.
      */
     @Test
     @Disabled("Micronaut Core keys what a visitor annotated by the symbols of the round under KSP")
     fun whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished() {
         ApplicationContext.run().use { context ->
-            assertEquals("KeptProbe types=[KeptProbe, Object] qualifiers=[Any, KeptQualifier, Named] normalScope=false "
-                + "methods=[keptMethod, keptObserve]; enhanced KeptProbe methods=[keptMethod, keptObserve]; "
-                + "observer KeptProbe.keptObserve event=KeptEvent parameters=[event:KeptEvent]",
-                context.getBean(KeptDescriptionReport::class.java).text)
+            assertEquals(EXPECTED, context.getBean(KeptDescriptionReport::class.java).text)
         }
+    }
+
+    private companion object {
+        const val EXPECTED = "KeptProbe types=[KeptProbe, Object] qualifiers=[Any, KeptQualifier, Named] normalScope=false " +
+            "methods=[keptMethod, keptObserve]; enhanced KeptProbe methods=[keptMethod, keptObserve]; " +
+            "method keptMethod():String of KeptProbe; parameter event:KeptEvent of keptObserve; " +
+            "field keptItems:List<String> of KeptProbe; type List<String>; the same class true; " +
+            "observer KeptProbe.keptObserve event=KeptEvent parameters=[event:KeptEvent]"
     }
 }

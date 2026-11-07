@@ -92,11 +92,6 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private final List<ClassElement> unregistered = new ArrayList<>();
     private final Set<String> registered = new HashSet<>();
     private boolean roundFinished;
-    /**
-     * How many rounds have finished, the compilation itself counting as the last: what tells an element handed out
-     * in an earlier round, which KSP invalidates as its round ends.
-     */
-    private int finishedRounds;
     private @Nullable VisitorContext context;
 
     /**
@@ -181,22 +176,6 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
         boolean first = !roundFinished;
         roundFinished = true;
         return first;
-    }
-
-    /**
-     * Notes that a round finished, or that the compilation did.
-     */
-    void finished() {
-        finishedRounds++;
-    }
-
-    /**
-     * The round the compilation is in, counted by the rounds finished before it.
-     *
-     * @return The round
-     */
-    int round() {
-        return finishedRounds;
     }
 
     /**
