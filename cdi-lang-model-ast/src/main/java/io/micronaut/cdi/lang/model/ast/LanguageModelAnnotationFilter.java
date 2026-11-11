@@ -19,6 +19,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -34,13 +35,19 @@ import java.util.List;
  * the specification's language model would report of the source; every registered filter must agree for an
  * annotation to be reported.</p>
  *
- * <p>The filters are loaded through Micronaut's service loader as they are asked for, and a filter decides from
- * its arguments alone: nothing of one is kept between calls, nor between compilations.</p>
+ * <p>The filters are loaded through Micronaut's service loader once per compilation, and kept on the compilation's
+ * {@code VisitorContext}: nothing of them outlives it, and a filter decides from its arguments alone.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 public interface LanguageModelAnnotationFilter {
+
+    /**
+     * The attribute of a compilation's context the filters are kept under.
+     */
+    @Internal
+    String REGISTERED = LanguageModelAnnotationFilter.class.getName() + ".registered";
 
     /**
      * Whether an annotation is reported.
@@ -52,14 +59,22 @@ public interface LanguageModelAnnotationFilter {
     boolean isReported(String annotationName, Place place);
 
     /**
-     * The registered filters, as the service loader of the class loader of this interface finds them.
+     * The registered filters of a compilation, as the service loader of the class loader of this interface finds
+     * them: loaded as the compilation first asks, and kept on its context.
      *
+     * @param context The compilation
      * @return The filters, possibly none
      */
     @Internal
-    static List<LanguageModelAnnotationFilter> registered() {
-        return SoftServiceLoader.load(LanguageModelAnnotationFilter.class,
-            LanguageModelAnnotationFilter.class.getClassLoader()).collectAll();
+    @SuppressWarnings("unchecked")
+    static List<LanguageModelAnnotationFilter> registered(VisitorContext context) {
+        List<LanguageModelAnnotationFilter> loaded = context.get(REGISTERED, List.class).orElse(null);
+        if (loaded == null) {
+            loaded = List.copyOf(SoftServiceLoader.load(LanguageModelAnnotationFilter.class,
+                LanguageModelAnnotationFilter.class.getClassLoader()).collectAll());
+            context.put(REGISTERED, loaded);
+        }
+        return loaded;
     }
 
     /**

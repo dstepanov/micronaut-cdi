@@ -151,7 +151,8 @@ final class ExtensionAnnotations {
      */
     static boolean isReported(Element element, String annotation, VisitorContext context) {
         return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context)
-            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false));
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false),
+                context);
     }
 
     /**
@@ -166,7 +167,7 @@ final class ExtensionAnnotations {
     static boolean isReportedOnType(String annotation, @Nullable ClassElement declaringType,
                                     VisitorContext context) {
         return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context)
-            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(null, declaringType, true));
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(null, declaringType, true), context);
     }
 
     /**
@@ -207,8 +208,9 @@ final class ExtensionAnnotations {
         return repetition;
     }
 
-    private static boolean isAllowed(String annotation, LanguageModelAnnotationFilter.Place place) {
-        for (LanguageModelAnnotationFilter filter : LanguageModelAnnotationFilter.registered()) {
+    private static boolean isAllowed(String annotation, LanguageModelAnnotationFilter.Place place,
+                                     VisitorContext context) {
+        for (LanguageModelAnnotationFilter filter : LanguageModelAnnotationFilter.registered(context)) {
             if (!filter.isReported(annotation, place)) {
                 return false;
             }

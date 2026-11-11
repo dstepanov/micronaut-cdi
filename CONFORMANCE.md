@@ -1101,8 +1101,9 @@ own rather than the first one alone.
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
   language model over the compiler's elements hold no static state that is not a constant: the registered
-  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` as they are asked for
-  (`LanguageModelAnnotationFilter.registered()`), and a provider is expected to decide from its arguments alone.
+  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` once per compilation and
+  kept on its `VisitorContext` (`LanguageModelAnnotationFilter.registered(VisitorContext)`), and a provider is
+  expected to decide from its arguments alone.
   Their reflection goes through Micronaut's helpers - `SoftServiceLoader`, `ClassUtils.forName`,
   `InstantiationUtils` - and the NoReflection check exempts only the classes that need it: the invocation of the
   extensions' phase methods (`ExtensionMethods`), an annotation member's array and enum values
