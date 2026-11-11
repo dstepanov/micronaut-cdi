@@ -45,8 +45,6 @@ public final class CdiEventMetadata implements EventMetadata {
     private final List<CdiQualifier> firedWith;
     private final @Nullable InjectionPoint injectionPoint;
     private final Argument<?> eventType;
-    private volatile @Nullable Type type;
-    private volatile @Nullable Set<Annotation> qualifiers;
 
     /**
      * The metadata of a firing.
@@ -67,15 +65,10 @@ public final class CdiEventMetadata implements EventMetadata {
     @Override
     public Set<Annotation> getQualifiers() {
         // annotation instances, which only an observer that asks for them needs
-        Set<Annotation> resolved = qualifiers;
-        if (resolved == null) {
-            Set<Annotation> all = new LinkedHashSet<>();
-            all.add(Any.Literal.INSTANCE);
-            all.addAll(CdiQualifier.instances(beanContext, firedWith));
-            resolved = Set.copyOf(all);
-            qualifiers = resolved;
-        }
-        return resolved;
+        Set<Annotation> all = new LinkedHashSet<>();
+        all.add(Any.Literal.INSTANCE);
+        all.addAll(CdiQualifier.instances(beanContext, firedWith));
+        return Set.copyOf(all);
     }
 
     @Override
@@ -85,12 +78,7 @@ public final class CdiEventMetadata implements EventMetadata {
 
     @Override
     public Type getType() {
-        Type resolved = type;
-        if (resolved == null) {
-            resolved = eventType.asType();
-            type = resolved;
-        }
-        return resolved;
+        return eventType.asType();
     }
 
     @Override

@@ -316,8 +316,7 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         if (CdiTypes.isArray(definition.asArgument())) {
             // A qualified Object lookup can select an array producer too. Resolve it by its recorded array
             // type rather than the erased array argument of the generated definition.
-            RecordedTypeIndex index = RecordedTypeIndex.of(beanContext);
-            for (Argument<?> type : CdiBean.typesOf(index, definition, definition.getBeanType())) {
+            for (Argument<?> type : RecordedTypeIndex.of(beanContext).beanTypesOf(definition)) {
                 if (CdiTypes.isArray(type)) {
                     @SuppressWarnings("unchecked") Argument<U> array = (Argument<U>) type;
                     return array;

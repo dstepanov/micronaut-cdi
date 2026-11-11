@@ -31,13 +31,12 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * What an observer observes does not change, so it is worked out once and shared by every resolution. Asking
- * twice answers the same thing, and the qualifiers handed out cannot be written to by whoever receives them.
+ * What an observer observes does not change: asking twice answers the same thing, and the qualifiers handed out
+ * cannot be written to by whoever receives them.
  */
 class ObserverMetadataIsStableTest {
 
@@ -82,19 +81,17 @@ class ObserverMetadataIsStableTest {
             Type first = observer.getObservedType();
             Type second = observer.getObservedType();
             assertEquals(first, second, "the observed type should not change between calls");
-            assertSame(first, second, "the observed type should be worked out once and kept");
             assertTrue(first.getTypeName().contains("Signal"),
                 "the observed type should be the event it observes, got " + first);
             assertTrue(first.getTypeName().contains("String"),
                 "the observed type should keep its type argument, got " + first);
 
             assertEquals(observer.getObservedQualifiers(), observer.getObservedQualifiers());
-            assertSame(observer.getObservedQualifiers(), observer.getObservedQualifiers());
             assertEquals(1, observer.getObservedQualifiers().size(),
                 "expected the one qualifier written on the parameter, got "
                     + observer.getObservedQualifiers());
 
-            // shared now, so nobody may write to it
+            // what the observer observes is not the receiver's to change
             assertThrows(UnsupportedOperationException.class,
                 () -> observer.getObservedQualifiers().clear());
         }

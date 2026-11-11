@@ -40,11 +40,7 @@ import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.provider.AbstractProviderDefinition;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.ConversationScoped;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.enterprise.context.SessionScoped;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.CreationException;
@@ -349,16 +345,8 @@ public class CdiBean<T> implements Bean<T> {
      * annotation the bean was compiled with, whose class the compiled metadata refers to.
      */
     private static @Nullable Class<? extends Annotation> annotationNamed(AnnotationMetadata metadata, String name) {
-        return switch (name) {
-            case "jakarta.enterprise.context.Dependent" -> Dependent.class;
-            case "jakarta.enterprise.context.ApplicationScoped" -> ApplicationScoped.class;
-            case "jakarta.enterprise.context.RequestScoped" -> RequestScoped.class;
-            case "jakarta.enterprise.context.SessionScoped" -> SessionScoped.class;
-            case "jakarta.enterprise.context.ConversationScoped" ->
-                ConversationScoped.class;
-            case "jakarta.inject.Singleton" -> Singleton.class;
-            default -> metadata.getAnnotationType(name).orElse(null);
-        };
+        Class<? extends Annotation> builtIn = CdiContexts.builtInScope(name);
+        return builtIn != null ? builtIn : metadata.getAnnotationType(name).orElse(null);
     }
 
     @Override

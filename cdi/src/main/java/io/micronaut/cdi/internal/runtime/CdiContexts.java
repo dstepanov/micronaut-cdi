@@ -21,9 +21,11 @@ import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ConversationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.SessionScoped;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.inject.Scope;
@@ -34,8 +36,8 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * The contexts of the container's scopes, which {@link CdiBeanContainer} answers for: the views of the built-in
@@ -49,13 +51,17 @@ import java.util.Set;
 final class CdiContexts {
 
     /**
-     * The scopes the specification declares, which are what they are whatever a build recorded.
+     * The scopes the specification declares, by name, which are what they are whatever a build recorded: the one
+     * place the container lists them.
      */
-    private static final Set<String> NORMAL_SCOPES = Set.of(
-        "jakarta.enterprise.context.ApplicationScoped", "jakarta.enterprise.context.RequestScoped",
-        "jakarta.enterprise.context.SessionScoped", "jakarta.enterprise.context.ConversationScoped");
-    private static final Set<String> PSEUDO_SCOPES = Set.of(
-        "jakarta.enterprise.context.Dependent", "jakarta.inject.Singleton");
+    private static final Map<String, Class<? extends Annotation>> NORMAL_SCOPES = Map.of(
+        ApplicationScoped.class.getName(), ApplicationScoped.class,
+        RequestScoped.class.getName(), RequestScoped.class,
+        SessionScoped.class.getName(), SessionScoped.class,
+        ConversationScoped.class.getName(), ConversationScoped.class);
+    private static final Map<String, Class<? extends Annotation>> PSEUDO_SCOPES = Map.of(
+        Dependent.class.getName(), Dependent.class,
+        Singleton.class.getName(), Singleton.class);
 
     private final BeanContext beanContext;
     /**
@@ -82,6 +88,17 @@ final class CdiContexts {
     }
 
     /**
+     * The annotation class of a scope the specification declares, by its name.
+     *
+     * @param name The name of the scope annotation
+     * @return The class, or {@code null} for a scope the specification does not declare
+     */
+    static @Nullable Class<? extends Annotation> builtInScope(String name) {
+        Class<? extends Annotation> normal = NORMAL_SCOPES.get(name);
+        return normal != null ? normal : PSEUDO_SCOPES.get(name);
+    }
+
+    /**
      * Whether the annotation type is a scope: one of the specification, one an extension registered a context
      * for, or one the annotation class says is.
      *
@@ -90,7 +107,7 @@ final class CdiContexts {
      */
     boolean isScope(Class<? extends Annotation> annotationType) {
         String name = annotationType.getName();
-        if (NORMAL_SCOPES.contains(name) || PSEUDO_SCOPES.contains(name) || isRegisteredScope(annotationType)) {
+        if (NORMAL_SCOPES.containsKey(name) || PSEUDO_SCOPES.containsKey(name) || isRegisteredScope(annotationType)) {
             return true;
         }
         CdiReflection reflection = reflection("BeanContainer.isScope", annotationType);
@@ -106,10 +123,10 @@ final class CdiContexts {
      */
     boolean isNormalScope(Class<? extends Annotation> annotationType) {
         String name = annotationType.getName();
-        if (NORMAL_SCOPES.contains(name)) {
+        if (NORMAL_SCOPES.containsKey(name)) {
             return true;
         }
-        if (PSEUDO_SCOPES.contains(name)) {
+        if (PSEUDO_SCOPES.containsKey(name)) {
             return false;
         }
         Optional<ExtensionContexts> extensions = beanContext.findBean(ExtensionContexts.class);

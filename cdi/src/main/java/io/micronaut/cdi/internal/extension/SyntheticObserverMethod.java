@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import jakarta.interceptor.Interceptor;
-import org.jspecify.annotations.Nullable;
 
 /**
  * An observer an extension synthesised (section 2.10.5): notified like any other, it creates an instance of the
@@ -61,7 +60,10 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
     private final Type eventType;
     private final CdiParameters parameters;
     private final Class<?> beanClass;
-    private volatile @Nullable List<CdiQualifier> qualifiers;
+    /**
+     * The qualifiers the observer observes, read from the record as the observer is registered.
+     */
+    private final List<CdiQualifier> qualifiers;
 
     SyntheticObserverMethod(BeanContext beanContext, BeanDefinition<?> definition,
                             AnnotationValue<CdiSyntheticObserver> record, CdiParameters parameters) {
@@ -77,6 +79,16 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
         this.beanClass = record.classValue("declaringClass")
             .filter(declaring -> declaring != void.class)
             .orElse(definition.getBeanType());
+        // a qualifier is recorded as the values it was written with, which is what resolution compares
+        List<AnnotationValue<Annotation>> recorded = record.getAnnotations(CdiSyntheticObserver.QUALIFIERS);
+        Class<?>[] types = record.classValues("qualifierTypes");
+        List<CdiQualifier> all = new ArrayList<>(recorded.size());
+        for (int i = 0; i < recorded.size(); i++) {
+            all.add(CdiQualifier.ofRecorded(CompiledAnnotationTypes.of(beanContext),
+                recorded.get(i),
+                i < types.length ? annotationType(types[i]) : null));
+        }
+        this.qualifiers = List.copyOf(all);
     }
 
     @Override
@@ -101,21 +113,7 @@ public final class SyntheticObserverMethod<T> implements ObserverMethod<T>,
 
     @Override
     public List<CdiQualifier> observedQualifiers() {
-        List<CdiQualifier> resolved = qualifiers;
-        if (resolved == null) {
-            // a qualifier is recorded as the values it was written with, which is what resolution compares
-            List<AnnotationValue<Annotation>> recorded = record.getAnnotations(CdiSyntheticObserver.QUALIFIERS);
-            Class<?>[] types = record.classValues("qualifierTypes");
-            List<CdiQualifier> all = new ArrayList<>(recorded.size());
-            for (int i = 0; i < recorded.size(); i++) {
-                all.add(CdiQualifier.ofRecorded(CompiledAnnotationTypes.of(beanContext),
-                    recorded.get(i),
-                    i < types.length ? annotationType(types[i]) : null));
-            }
-            resolved = List.copyOf(all);
-            qualifiers = resolved;
-        }
-        return resolved;
+        return qualifiers;
     }
 
     @SuppressWarnings("unchecked")
