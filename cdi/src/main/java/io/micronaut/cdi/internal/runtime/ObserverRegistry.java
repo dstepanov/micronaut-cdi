@@ -19,6 +19,8 @@ import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.WatchableBeanContext;
+import io.micronaut.context.watch.BeanDefinitionChange;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -37,9 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -49,8 +49,10 @@ import java.util.concurrent.ForkJoinPool;
  *
  * <p>Which methods those are was decided while they were compiled: the annotation processor marked each of them,
  * and Micronaut generated an executable method for it. All that is left is to find the marked ones, which is a
- * walk over the bean definitions rather than a scan of the classpath, and to keep them so the walk happens
- * once.</p>
+ * walk over the bean definitions rather than a scan of the classpath. The bean context hands them over as a
+ * watch of the definitions of the beans marked as observing: the ones there as the watch is registered, then again
+ * whenever a definition is registered once the context runs, or retired or added by a development reload, so the
+ * list follows the definitions rather than being kept from a first walk.</p>
  *
  * <p>Resolution is the rule of section 2.8.3: an observer is notified when the type it observes is one of the
  * event's types and the qualifiers it observes are among the ones the event was fired with. The ones that are
@@ -64,22 +66,34 @@ import java.util.concurrent.ForkJoinPool;
 @Internal
 public final class ObserverRegistry {
 
-    private static final int MAX_CACHED_RESOLUTIONS = 1024;
-
     private final BeanContext beanContext;
     private volatile @Nullable CompiledAnnotationTypes types;
     private volatile @Nullable RecordedTypeIndex typeIndex;
     private final List<ObserverMethod<?>> synthetic = new ArrayList<>();
-    private volatile @Nullable List<ObserverMethod<?>> observers;
     /**
-     * The observers each kind of event resolved to, emptied whenever an observer is added. An application fires
-     * events of a bounded number of types, and past the bound the rest are resolved as they are fired.
+     * The definitions of the beans with observers, as the watch of the context last handed them, or {@code null}
+     * where the context cannot be watched and they are read as they are asked for.
      */
-    private volatile Map<Resolution, List<ObserverMethod<?>>> resolved = new ConcurrentHashMap<>();
+    private volatile @Nullable Collection<BeanDefinition<Object>> observing;
+    /**
+     * The observer methods, sorted by priority: made again from the definitions of the watch and the synthetic
+     * observers whenever either changes.
+     */
+    private volatile @Nullable List<ObserverMethod<?>> observers;
     private volatile @Nullable Executor asyncExecutor;
 
     public ObserverRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
+        if (beanContext instanceof WatchableBeanContext watchable) {
+            // the beans with observers are marked as they compile: the marker is read from each bean's reference.
+            // The watch belongs to this bean, and is closed as it is destroyed
+            watchable.definitions().stereotype(CdiObserving.class).watch(this::observingChanged);
+        }
+    }
+
+    private synchronized void observingChanged(BeanDefinitionChange<Object> change) {
+        observing = change.current();
+        observers = null;
     }
 
     /**
@@ -159,17 +173,16 @@ public final class ObserverRegistry {
         // one a program implemented itself says what it observes through the specification's interface alone
         synthetic.add(observer instanceof CdiNotifiable ? observer : new ForeignObserverMethod<>(observer, types()));
         observers = null;
-        resolved = new ConcurrentHashMap<>();
     }
 
     private List<ObserverMethod<?>> find() {
         List<ObserverMethod<?>> found = new ArrayList<>(synthetic);
-        // the beans with observers are marked as they compile: the marker is read from each bean's reference, and
-        // only the definitions of those beans are loaded, rather than every definition of the application. The typed
-        // lookup drops a replaced bean before it narrows by the marker: a replacement that observes nothing still
-        // takes the observers of the bean it replaced with it
-        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT,
-            Qualifiers.byStereotype(CdiObserving.class))) {
+        Collection<BeanDefinition<Object>> watched = observing;
+        // the typed lookup drops a replaced bean before it narrows by the marker: a replacement that observes
+        // nothing still takes the observers of the bean it replaced with it
+        Collection<BeanDefinition<Object>> definitions = watched != null ? watched
+            : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT, Qualifiers.byStereotype(CdiObserving.class));
+        for (BeanDefinition<?> definition : definitions) {
             for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
                 AnnotationValue<CdiObserver> observer = method.getAnnotation(CdiObserver.class);
                 if (observer != null) {
@@ -211,12 +224,6 @@ public final class ObserverRegistry {
     public List<ObserverMethod<?>> resolve(Argument<?> eventType, @Nullable Argument<?> above,
                                            Collection<CdiQualifier> eventQualifiers, boolean async) {
         List<ObserverMethod<?>> all = observers();
-        Resolution key = new Resolution(eventType, above, List.copyOf(eventQualifiers), async);
-        Map<Resolution, List<ObserverMethod<?>>> cache = resolved;
-        List<ObserverMethod<?>> cached = cache.get(key);
-        if (cached != null) {
-            return cached;
-        }
         // the closure of the event's type is the same for every observer it is matched against
         List<Argument<?>> closure = CdiAssignability.eventTypeClosureOf(typeIndex(), eventType);
         if (above != null) {
@@ -237,12 +244,7 @@ public final class ObserverRegistry {
                 notified.add(observer);
             }
         }
-        List<ObserverMethod<?>> result = List.copyOf(notified);
-        if (observers == all && cache.size() < MAX_CACHED_RESOLUTIONS) {
-            // kept only while the observers it was resolved among are the current ones
-            cache.putIfAbsent(key, result);
-        }
-        return result;
+        return List.copyOf(notified);
     }
 
     /**
@@ -347,31 +349,5 @@ public final class ObserverRegistry {
             }
         }
         return thrown;
-    }
-
-    /**
-     * What an event's observers are resolved by: the type it was fired as, compared by its structure, the
-     * qualifiers it was fired with, and whether it was fired asynchronously.
-     *
-     * @param eventType  The type of the event
-     * @param above      The type its closure also holds, or {@code null}
-     * @param qualifiers The qualifiers of the event
-     * @param async      Whether it was fired asynchronously
-     */
-    private record Resolution(Argument<?> eventType, @Nullable Argument<?> above, List<CdiQualifier> qualifiers,
-                              boolean async) {
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof Resolution other && async == other.async
-                && eventType.equalsStructure(other.eventType) && qualifiers.equals(other.qualifiers)
-                && (above == null ? other.above == null : other.above != null && above.equalsStructure(other.above));
-        }
-
-        @Override
-        public int hashCode() {
-            return ((eventType.structureHashCode() * 31 + qualifiers.hashCode()) * 31 + Boolean.hashCode(async)) * 31
-                + (above == null ? 0 : above.structureHashCode());
-        }
     }
 }

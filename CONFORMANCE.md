@@ -381,7 +381,10 @@ a dependent bean with eight injected dependencies takes 28% longer and allocates
 definition are forgotten as the application's classes change (`WatchableBeanContext.classChanges()`), and what was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a bean of the specification is
 registered once the context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`
-narrowed to the beans of the specification). The disposers resolved for a producer are not yet forgotten so. Core's active resolution
+narrowed to the beans of the specification). The observer methods are the ones of the definitions a watch of the
+beans marked as observing hands over (`ObserverRegistry`, `WatchableBeanContext.definitions()` narrowed by
+`CdiObserving`), made again as the watch reports a change, and what an event resolves to is matched as it is fired
+rather than kept. The disposers resolved for a producer are not yet forgotten so. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
