@@ -50,10 +50,11 @@ import java.util.concurrent.ForkJoinPool;
  *
  * <p>Which methods those are was decided while they were compiled: the annotation processor marked each of them,
  * and Micronaut generated an executable method for it. All that is left is to find the marked ones, which is a
- * walk over the bean definitions rather than a scan of the classpath. The bean context hands them over as a
- * watch of the definitions of the beans marked as observing: the ones there as the watch is registered, then again
- * whenever a definition is registered once the context runs, or retired or added by a development reload, so the
- * list follows the definitions rather than being kept from a first walk.</p>
+ * walk over the definitions of the beans marked as observing rather than a scan of the classpath. The list is made
+ * again after any change of the definitions of the context - one registered once the context runs, or retired or
+ * added by a development reload - which a watch of every definition reports: a definition that replaces a bean
+ * with observers takes them with it whether or not it observes anything itself, so a watch narrowed to the
+ * observing beans would not hear of it.</p>
  *
  * <p>Resolution is the rule of section 2.8.3: an observer is notified when the type it observes is one of the
  * event's types and the qualifiers it observes are among the ones the event was fired with. The ones that are
@@ -76,13 +77,9 @@ public final class ObserverRegistry {
     private final BeanProvider<CdiBeanContainer> container;
     private final List<ObserverMethod<?>> synthetic = new ArrayList<>();
     /**
-     * The definitions of the beans with observers, as the watch of the context last handed them, or {@code null}
-     * where the context cannot be watched and they are read as they are asked for.
-     */
-    private volatile @Nullable Collection<BeanDefinition<Object>> observing;
-    /**
-     * The observer methods, sorted by priority: made again from the definitions of the watch and the synthetic
-     * observers whenever either changes.
+     * The observer methods, sorted by priority: made again from the observing definitions and the synthetic
+     * observers once either has changed. Made and forgotten under the lock of this registry, so that a list made
+     * from the definitions before a change is never kept after it.
      */
     private volatile @Nullable List<ObserverMethod<?>> observers;
 
@@ -93,15 +90,16 @@ public final class ObserverRegistry {
         this.typeIndex = typeIndex;
         this.container = container;
         if (beanContext instanceof WatchableBeanContext watchable) {
-            // the beans with observers are marked as they compile: the marker is read from each bean's reference.
+            // every change of the definitions: a replacement need not observe anything to take observers away.
             // The watch belongs to this bean, and is closed as it is destroyed
-            watchable.definitions().stereotype(CdiObserving.class).watch(this::observingChanged);
+            watchable.definitions().watch(this::definitionsChanged);
         }
     }
 
-    private synchronized void observingChanged(BeanDefinitionChange<Object> change) {
-        observing = change.current();
-        observers = null;
+    private synchronized void definitionsChanged(BeanDefinitionChange<Object> change) {
+        if (!change.initial()) {
+            observers = null;
+        }
     }
 
     /**
@@ -168,12 +166,11 @@ public final class ObserverRegistry {
 
     private List<ObserverMethod<?>> find() {
         List<ObserverMethod<?>> found = new ArrayList<>(synthetic);
-        Collection<BeanDefinition<Object>> watched = observing;
-        // the typed lookup drops a replaced bean before it narrows by the marker: a replacement that observes
-        // nothing still takes the observers of the bean it replaced with it
-        Collection<BeanDefinition<Object>> definitions = watched != null ? watched
-            : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT, Qualifiers.byStereotype(CdiObserving.class));
-        for (BeanDefinition<?> definition : definitions) {
+        // the beans with observers are marked as they compile. The typed lookup drops a replaced bean before it
+        // narrows by the marker: a replacement that observes nothing still takes the observers of the bean it
+        // replaced with it
+        for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT,
+            Qualifiers.byStereotype(CdiObserving.class))) {
             for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
                 AnnotationValue<CdiObserver> observer = method.getAnnotation(CdiObserver.class);
                 if (observer != null) {
