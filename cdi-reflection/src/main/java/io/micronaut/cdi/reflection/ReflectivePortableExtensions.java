@@ -357,7 +357,6 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                                 + "@Enhancement(withAnnotations = ...) does the same while the classes compile");
                         }
                         requireNothingButTheContainer(method, i);
-                        method.setAccessible(true);
                         int priority = DEFAULT_PRIORITY;
                         for (Annotation annotation : annotations[i]) {
                             if (annotation instanceof Priority declared) {
@@ -446,7 +445,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
             }
             try {
                 // the instance is ignored where the observer is static
-                ReflectionUtils.invokeMethod(extension, method, arguments);
+                ReflectionUtils.invokeInaccessibleMethod(extension, method, arguments);
             } catch (InvocationException e) {
                 // what the observer itself threw is what the bootstrap reports, a refusal of this container's
                 // among it; a failure to invoke it at all is a problem of the deployment
