@@ -8,7 +8,6 @@ import jakarta.enterprise.context.Dependent
 import jakarta.enterprise.event.Observes
 import jakarta.inject.Named
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 /**
@@ -39,7 +38,7 @@ class KeptDescriptionsUnderKspTest {
     @Test
     fun theKeptDescriptionsReadInSynthesisAsTheyWereHandedOut() {
         ApplicationContext.run().use { context ->
-            // the qualifiers an enhancement added are the part that needs Micronaut Core, below
+            // the qualifiers an enhancement added are checked on their own, below
             val read = context.getBean(KeptDescriptionReport::class.java).text
                 .replace(Regex("qualifiers=\\[[^\\]]*\\] "), "")
             assertEquals(EXPECTED.replace("qualifiers=[Any, KeptQualifier, Named] ", ""), read)
@@ -47,11 +46,11 @@ class KeptDescriptionsUnderKspTest {
     }
 
     /**
-     * What an extension added to a class as it was enhanced is not seen on the class looked up again once its round
-     * is over: Micronaut keeps what a visitor annotated by the round's own symbols under KSP.
+     * What an extension added to a class as it was enhanced is seen on the class looked up again once its round is
+     * over: Micronaut keeps what a visitor annotated by the class's name and the member's signature, not by the
+     * symbols of the round KSP made.
      */
     @Test
-    @Disabled("Micronaut Core keys what a visitor annotated by the symbols of the round under KSP")
     fun whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished() {
         ApplicationContext.run().use { context ->
             assertEquals(EXPECTED, context.getBean(KeptDescriptionReport::class.java).text)
