@@ -16,6 +16,10 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.io.service.SoftServiceLoader;
+import io.micronaut.core.reflect.ClassUtils;
+import io.micronaut.core.reflect.InstantiationUtils;
+import io.micronaut.core.reflect.exception.InstantiationException;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
@@ -58,7 +62,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 /**
  * The build compatible extensions of a compilation and the methods of their phases (section 2.10): found as the
@@ -124,8 +127,8 @@ final class ExtensionMethods {
             }
         }
         if (!Boolean.parseBoolean(options.get(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION))) {
-            for (BuildCompatibleExtension loaded : ServiceLoader.load(BuildCompatibleExtension.class,
-                BuildCompatibleExtensionVisitor.class.getClassLoader())) {
+            for (BuildCompatibleExtension loaded : SoftServiceLoader.load(BuildCompatibleExtension.class,
+                BuildCompatibleExtensionVisitor.class.getClassLoader()).collectAll()) {
                 // an extension both named and registered as a service runs once
                 if (extensions.stream().noneMatch(extension -> extension.getClass().equals(loaded.getClass()))) {
                     extensions.add(loaded);
@@ -361,24 +364,17 @@ final class ExtensionMethods {
      * what a compilation run inside a test sees its classes through.
      */
     private static BuildCompatibleExtension instantiate(String name) {
-        Class<?> type;
-        try {
-            type = Class.forName(name, true, BuildCompatibleExtensionVisitor.class.getClassLoader());
-        } catch (ClassNotFoundException e) {
-            try {
-                type = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
-            } catch (ClassNotFoundException | RuntimeException other) {
-                throw new IllegalStateException("The build compatible extension " + name + ", named by the option "
-                    + EXTENSIONS_OPTION + ", is not on the classpath of the compilation", e);
-            }
-        }
+        Class<?> type = ClassUtils.forName(name, BuildCompatibleExtensionVisitor.class.getClassLoader())
+            .or(() -> ClassUtils.forName(name, Thread.currentThread().getContextClassLoader()))
+            .orElseThrow(() -> new IllegalStateException("The build compatible extension " + name
+                + ", named by the option " + EXTENSIONS_OPTION + ", is not on the classpath of the compilation"));
         if (!BuildCompatibleExtension.class.isAssignableFrom(type)) {
             throw new IllegalStateException("The class " + name + ", named by the option " + EXTENSIONS_OPTION
                 + ", is not a " + BuildCompatibleExtension.class.getName());
         }
         try {
-            return (BuildCompatibleExtension) type.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
+            return (BuildCompatibleExtension) InstantiationUtils.instantiate(type);
+        } catch (InstantiationException e) {
             throw new IllegalStateException("The build compatible extension " + name + ", named by the option "
                 + EXTENSIONS_OPTION + ", could not be created through a constructor without parameters", e);
         }

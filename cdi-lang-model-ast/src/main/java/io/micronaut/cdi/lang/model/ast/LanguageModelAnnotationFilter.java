@@ -16,12 +16,12 @@
 package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.ServiceLoader;
 
 /**
  * Decides which of the annotations Micronaut recorded on a declaration or on a use of a type are reported to
@@ -34,8 +34,8 @@ import java.util.ServiceLoader;
  * the specification's language model would report of the source; every registered filter must agree for an
  * annotation to be reported.</p>
  *
- * <p>A filter is instantiated once per class loader and asked by every compilation that loader serves, so it
- * decides from its arguments alone and keeps no state between calls.</p>
+ * <p>The filters are loaded through Micronaut's service loader as they are asked for, and a filter decides from
+ * its arguments alone: nothing of one is kept between calls, nor between compilations.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -52,14 +52,14 @@ public interface LanguageModelAnnotationFilter {
     boolean isReported(String annotationName, Place place);
 
     /**
-     * The registered filters, loaded once per class loader of this interface and shared by every compilation it
-     * serves.
+     * The registered filters, as the service loader of the class loader of this interface finds them.
      *
      * @return The filters, possibly none
      */
     @Internal
     static List<LanguageModelAnnotationFilter> registered() {
-        return Registered.FILTERS;
+        return SoftServiceLoader.load(LanguageModelAnnotationFilter.class,
+            LanguageModelAnnotationFilter.class.getClassLoader()).collectAll();
     }
 
     /**
@@ -70,19 +70,5 @@ public interface LanguageModelAnnotationFilter {
      * @param onType        Whether the annotation is on a use of a type rather than on the declaration
      */
     record Place(@Nullable Element declaration, @Nullable ClassElement declaringType, boolean onType) {
-    }
-
-    /**
-     * Holds the loaded filters.
-     */
-    @Internal
-    final class Registered {
-
-        private static final List<LanguageModelAnnotationFilter> FILTERS = ServiceLoader
-            .load(LanguageModelAnnotationFilter.class, LanguageModelAnnotationFilter.class.getClassLoader())
-            .stream().map(ServiceLoader.Provider::get).toList();
-
-        private Registered() {
-        }
     }
 }

@@ -167,7 +167,7 @@ final class ElementObserverInfo implements ObserverInfo {
         String value = async
             ? observedParameter().stringValue(Cdi.OBSERVES_ASYNC, "notifyObserver").orElse("ALWAYS")
             : observedParameter().stringValue(Cdi.OBSERVES, "notifyObserver").orElse("ALWAYS");
-        return Reception.valueOf(value);
+        return constantNamed(Reception.values(), value);
     }
 
     @Override
@@ -175,7 +175,20 @@ final class ElementObserverInfo implements ObserverInfo {
         if (async) {
             return TransactionPhase.IN_PROGRESS;
         }
-        return TransactionPhase.valueOf(
+        return constantNamed(TransactionPhase.values(),
             observedParameter().stringValue(Cdi.OBSERVES, "during").orElse("IN_PROGRESS"));
+    }
+
+    /**
+     * The constant of the given name, found among the constants rather than with {@code valueOf}, which looks the
+     * constants up reflectively.
+     */
+    private static <E extends Enum<E>> E constantNamed(E[] constants, String name) {
+        for (E constant : constants) {
+            if (constant.name().equals(name)) {
+                return constant;
+            }
+        }
+        throw new IllegalArgumentException("No constant " + name + " among " + java.util.Arrays.toString(constants));
     }
 }

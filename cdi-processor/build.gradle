@@ -5,7 +5,7 @@ plugins {
 noReflection {
     // the processor and the build compatible extensions it runs execute inside javac while an application compiles,
     // and none of it reaches the runtime
-    allowIn 'io.micronaut.cdi.processor.*'
+    allowIn 'io.micronaut.cdi.processor.extension.ExtensionMethods'
 }
 
 dependencies {

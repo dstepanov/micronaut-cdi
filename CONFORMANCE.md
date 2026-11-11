@@ -1091,11 +1091,13 @@ own rather than the first one alone.
   injection point a dependent instance obtained through a lookup is given is a segment of its resolution path
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
-  language model over the compiler's elements hold no static state that is not a constant, beside the registered
-  `LanguageModelAnnotationFilter` services: those are loaded once per class loader of the language model and kept
-  as long as it is (`LanguageModelAnnotationFilter.registered()`), so one filter instance serves every compilation
-  that loader runs, and a provider is expected to decide from its arguments alone and keep no state between
-  calls. A harness that
+  language model over the compiler's elements hold no static state that is not a constant: the registered
+  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` as they are asked for
+  (`LanguageModelAnnotationFilter.registered()`), and a provider is expected to decide from its arguments alone.
+  Their reflection goes through Micronaut's helpers - `SoftServiceLoader`, `ClassUtils.forName`,
+  `InstantiationUtils` - and the NoReflection check exempts only the classes that need it: the invocation of the
+  extensions' phase methods (`ExtensionMethods`), an annotation member's array and enum values
+  (`ElementAnnotationMember`) and the loading of the filters. A harness that
   compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated
