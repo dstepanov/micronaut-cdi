@@ -20,6 +20,7 @@ import io.micronaut.cdi.MicronautEvent;
 import io.micronaut.cdi.MicronautInstance;
 import io.micronaut.cdi.internal.context.ApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.cdi.spi.CdiReflection;
@@ -30,6 +31,7 @@ import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -537,16 +539,19 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     }
 
     /**
-     * The beans of the deployment: every bean the bean context enumerates - everything that was compiled, minus
-     * what is disabled, minus what an environment narrowed away, and minus the ones another one replaces with
-     * Micronaut's {@code Replaces}, which are no beans of it, not of their name and not with dependencies to
-     * validate - that is a {@linkplain CdiBeanQualifier#isBean bean of the container}.
+     * The beans of the specification in the deployment: every bean the bean context enumerates - everything that
+     * was compiled, minus what is disabled, minus what an environment narrowed away, and minus the ones another one
+     * replaces with Micronaut's {@code Replaces}, which are no beans of it, not of their name and not with
+     * dependencies to validate - that was compiled with a scope of the specification ({@link CdiScope}) and is a
+     * {@linkplain CdiBeanQualifier#isBean bean of the container}. The scope is read from the reference of each
+     * definition, so the definitions of Micronaut's own beans are not loaded.
      *
      * @return The beans
      */
     List<CdiBean<?>> beans() {
         List<CdiBean<?>> beans = new ArrayList<>();
-        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(
+            Qualifiers.byStereotype(CdiScope.class))) {
             if (CdiBeanQualifier.isBean(definition)) {
                 beans.add(beanOf(definition));
             }
@@ -558,14 +563,20 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     public Set<Bean<?>> getBeans(String name) {
         // the definitions are read for the exact name the bean was recorded with, and only a bean of the name is
         // described. Micronaut's lookup by name is no narrower: it falls back to the simple name of the class of an
-        // unnamed bean, and reads the name Micronaut materialized rather than one a stereotype gave (CdiName)
+        // unnamed bean, and reads the name Micronaut materialized rather than one a stereotype gave (CdiName). Only
+        // the definitions whose references carry a name are loaded
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
+        named(name, Qualifiers.byStereotype(CdiName.class), beans);
+        named(name, Qualifiers.byStereotype(AnnotationUtil.NAMED), beans);
+        return beans;
+    }
+
+    private void named(String name, io.micronaut.context.Qualifier<Object> carrying, Set<Bean<?>> beans) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(carrying)) {
             if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {
                 beans.add(beanOf(definition));
             }
         }
-        return beans;
     }
 
     @Override
