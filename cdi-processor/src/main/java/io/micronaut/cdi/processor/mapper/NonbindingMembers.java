@@ -44,7 +44,8 @@ import java.util.Set;
  * the annotation interface, so a member a build compatible extension marked while the compilation was discovering its
  * classes (on the member, as the discovery phase is applied) is listed as one the source marks is
  * ({@code jakarta.enterprise.util.Nonbinding} being read as Micronaut's {@code NonBinding},
- * {@link NonbindingAnnotationMapper}). A qualifier an extension composes for a synthetic component is no occurrence
+ * by the mapper of Micronaut Jakarta Interceptors, a dependency of this module). A qualifier an extension composes
+ * for a synthetic component is no occurrence
  * Micronaut reads, and is given every member its interface marks here, read off the members
  * ({@link #complete(AnnotationValue, VisitorContext)}).</p>
  *
