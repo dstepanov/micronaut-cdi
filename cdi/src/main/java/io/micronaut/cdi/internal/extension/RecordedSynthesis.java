@@ -152,10 +152,6 @@ public final class RecordedSynthesis {
                     new SyntheticObserverMethod<>(beanContext, observer, record, parameters));
             }
         }
-        if (!beans.isEmpty()) {
-            // the container may have read its beans already: what was just registered has to be seen
-            beanContext.findBean(CdiBeanContainer.class).ifPresent(CdiBeanContainer::refreshCandidates);
-        }
         // an invoker an extension built and handed to a synthetic bean or observer names lookups; whether they
         // resolve is a property of the deployment, and is checked as it comes up, once every synthetic bean is
         // registered, rather than at the first invocation (CDI 4.1, chapter 7)

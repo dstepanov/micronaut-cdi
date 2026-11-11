@@ -369,17 +369,19 @@ Resolving one bean narrows the candidates as section 2.4.2 has it, separately fr
 specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank everything else
 (`CdiResolution.narrowToOne`); an alternative is not made Micronaut's primary bean, and nothing is chosen while
 the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
-measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), the
-container's bean of each definition, once (`CdiBeanContainer.canonicalBean`), and what each injection point
-resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type, and since
-Micronaut Core 5.3 (#14063) keeps them when a dependent bean is destroyed, but matching them by the rules of the
-specification and narrowing them is the container's own work, which a dependent bean created over and over would
-do again for each of its points (without it, creating a dependent bean with eight injected dependencies takes 28%
-longer and allocates 87% more). The selections and the container's beans follow the definitions of the context: a
-watch of the context (`WatchableBeanContext.definitions()`) forgets them as a definition is registered once the
-context runs, or retired or added by a development reload. The bean types of a definition, the disposers
-resolved for a producer and what was read of the qualifier and binding types (`CompiledAnnotationTypes`) are not
-yet forgotten so. Core's active resolution
+measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), and
+the container's bean of each definition, once (`CdiBeanContainer.canonicalBean`). What an injection point resolves
+to is not kept (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type - since Micronaut Core
+5.3 in a map bounded at 2048 types, kept when a dependent bean is destroyed (#14063), and invalidated by Micronaut
+itself as definitions are registered or reloaded - and the container matches them by the rules of the
+specification and narrows them as each point is resolved, so a synthetic bean, a qualifier a portable extension
+added and a definition registered once the context runs are seen by the next resolution without anything to
+forget. Matching again costs a dependent bean created over and over: measured against a cache per point, creating
+a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The container's beans follow
+the definitions of the context: a watch of the context (`WatchableBeanContext.definitions()`) forgets them as a
+definition is registered once the context runs, or retired or added by a development reload. The bean types of a
+definition, the disposers resolved for a producer and what was read of the qualifier and binding types
+(`CompiledAnnotationTypes`) are not yet forgotten so. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
@@ -1108,12 +1110,11 @@ own rather than the first one alone.
   Micronaut finds a record once per class loader and keeps it with the class of the record (since Micronaut Core
   5.3, #14064), so the container keeps none, and no record, nor the deployment loader it was found through, is kept
   with the shared class.
-- **The candidates of a type are kept for 30 types at most.** `DefaultBeanContext.beanCandidateCache` is a
-  least-recently-used cache of 30 lookup types, which a deployment of the specification exceeds; core #14063 left a
-  larger or configurable bound for a separate decision. The fixes of #14063 itself - a destroyed dependent no
-  longer purges the candidates of its types, a raw lookup of `Collection` finds a factory's `List`, and the untyped
-  `getBeanDefinitions(Qualifier)` drops a replaced bean before the qualifier - are pinned by
-  `MicronautCoreIssuesTest`.
+- **The fixes of core #14063** - a destroyed dependent no longer purges the candidates of its types, a raw lookup
+  of `Collection` finds a factory's `List`, and the untyped `getBeanDefinitions(Qualifier)` drops a replaced bean
+  before the qualifier - are pinned by `MicronautCoreIssuesTest`. The candidates of a type are kept in a map bounded
+  at 2048 types (`DefaultBeanContext.beanCandidateCache`), not the least-recently-used cache of 30 types of earlier
+  versions.
 - **The lookup argument of the resolution customizer widens one way.** Section 2.1.2 counts a primitive and its
   wrapper as one type; `resolveBeanLookupArgument` maps a lookup to one other argument, so a lookup of the primitive
   finds both and a lookup of the wrapper only the wrapper's beans. The container asks for a wrapper as the primitive.

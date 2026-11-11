@@ -27,7 +27,6 @@ import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.WatchableBeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -111,27 +110,12 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 @Internal
 public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
 
-    /**
-     * The number of injection points what they resolve to is kept for.
-     */
-    private static final int MAX_SELECTIONS = 16_384;
-
     private final BeanContext beanContext;
     /**
      * The container's own bean of each definition the bean context handed it, for everyone who describes the
      * same bean to hold the same object, which reads the bean types of its definition once.
      */
     private final Map<BeanDefinition<?>, CdiBean<?>> canonical = new ConcurrentHashMap<>();
-    /**
-     * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
-     * compiled definition are constants, and two points of one type and name may declare different qualifiers.
-     * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}),
-     * and as the definitions of the context change once it runs (a watch of the context).
-     * Micronaut keeps the candidates of a type, a destroyed dependent's included, but matching them by the rules of
-     * the specification and narrowing them is this container's work, which a dependent bean created over and over
-     * would do again for each of its points (see Conformance).
-     */
-    private volatile Map<PointKey, Selection> selections = new ConcurrentHashMap<>();
     private volatile @Nullable RecordedTypeIndex typeIndex;
     private volatile @Nullable CompiledAnnotationTypes types;
     private boolean validated;
@@ -153,17 +137,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         this.beanContext = beanContext;
         this.observers = observers;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope);
-        if (beanContext instanceof WatchableBeanContext watchable) {
-            // a definition registered with the context once it runs, or one a development reload retires or adds,
-            // changes what a point resolves to: the next resolution is made again. The watch belongs to this bean,
-            // and is closed as it is destroyed
-            watchable.definitions().watch(change -> {
-                if (!change.initial()) {
-                    change.removed().forEach(canonical::remove);
-                    refreshCandidates();
-                }
-            });
-        }
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
@@ -344,28 +317,17 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * specification the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its
      * name or by being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
      *
+     * <p>Nothing of it is kept: the candidates are the ones the bean context enumerates and keeps for the class,
+     * and invalidates itself as definitions are registered or a development reload changes them, so a bean
+     * registered while the container starts, a qualifier a portable extension added and a definition added once the
+     * context runs are all seen by the next resolution.</p>
+     *
      * @param point The injection point
      * @return What it resolves to
      * @throws AmbiguousResolutionException Where more than one bean remains
      */
-    Selection selectionFor(Argument<?> point) {
-        Map<PointKey, Selection> cache = selections;
-        PointKey key = new PointKey(point);
-        Selection known = cache.get(key);
-        if (known != null) {
-            return known;
-        }
-        Selection selection = select(point);
-        if (cache.size() < MAX_SELECTIONS) {
-            // a point made anew for each injection - one Micronaut wraps to evaluate an expression - is not kept
-            // beyond a bound
-            cache.putIfAbsent(key, selection);
-        }
-        return selection;
-    }
-
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private Selection select(Argument<?> point) {
+    Selection selectionFor(Argument<?> point) {
         CdiBeanQualifier<Object> matching;
         try {
             matching = matching(point, CdiQualifier.declared(point.getAnnotationMetadata()));
@@ -577,15 +539,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             }
         }
         return definition;
-    }
-
-    /**
-     * Forgets what the injection points were resolved to, so that beans registered while the container starts —
-     * the synthetic ones of section 2.10.5 — and qualifiers the portable extensions added are seen by the next
-     * resolution.
-     */
-    public void refreshCandidates() {
-        selections = new ConcurrentHashMap<>();
     }
 
     /**
@@ -1092,23 +1045,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     private static UnsupportedOperationException belongsToFull(String what) {
         return new UnsupportedOperationException(what + " belongs to CDI Full, which this module does not "
             + "implement. See Conformance");
-    }
-
-    /**
-     * An injection point as the key of what it resolves to: the point itself, compared by identity.
-     *
-     * @param point The injection point
-     */
-    private record PointKey(Argument<?> point) {
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof PointKey key && key.point == point;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(point);
-        }
     }
 
     /**
