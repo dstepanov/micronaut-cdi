@@ -265,15 +265,18 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
 
     /**
      * The definition of the bean the invoker names, found among the definitions of its class as the declaring bean
-     * of a disposer is found - or, for a record that carries the class by its name alone, among the beans of the
+     * of a disposer is found. A bean that narrowed its bean types with {@code Typed} is not a candidate of its own
+     * class, and a record may carry the class by its name alone: the bean is then found among the beans of the
      * specification, which the bean context narrows to on their references before it loads any.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private BeanDefinition<?> definitionOf(BeanContext beanContext) {
-        Collection<? extends BeanDefinition<?>> candidates = beanType != null
-            ? beanContext.getBeanDefinitions(beanType)
-            : (Collection) beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class));
-        BeanDefinition<?> found = CdiResolution.declaringBeanOf(candidates, beanClassName);
+        BeanDefinition<?> found = beanType == null ? null
+            : CdiResolution.declaringBeanOf(beanContext.getBeanDefinitions(beanType), beanClassName);
+        if (found == null) {
+            found = CdiResolution.declaringBeanOf(
+                (Collection) beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class)), beanClassName);
+        }
         if (found == null) {
             throw new IllegalStateException("No bean of " + beanClassName + " to invoke");
         }
