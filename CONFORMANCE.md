@@ -371,13 +371,20 @@ specification outranks a bean of Micronaut's own of the same type, and the alter
 the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
 measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`).
 The container's bean of a definition is made as it is asked for (`CdiBeanContainer.beanOf`), equal to every other
-of the same definition, and holds nothing of its own. What an injection point resolves to is not kept (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type - since Micronaut Core
-5.3 in a map bounded at 2048 types, kept when a dependent bean is destroyed (#14063), and invalidated by Micronaut
-itself as definitions are registered or reloaded - and the container matches them by the rules of the
-specification and narrows them as each point is resolved, so a synthetic bean, a qualifier a portable extension
-added and a definition registered once the context runs are seen by the next resolution without anything to
-forget. Matching again costs a dependent bean created over and over: measured against a cache per point, creating
-a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The bean types of a
+of the same definition, and holds nothing of its own. What an injection point resolves to is kept by
+Micronaut rather than by the container (`CdiBeanContainer.selectionFor`): the point is looked up with
+`BeanContext.findBeanDefinition` by a qualifier of its own (`SelectionQualifier`), which, handed the candidates of
+the class of the point, makes the container's selection - the rules of the specification, the narrowing of section
+2.4.2 and its ambiguity, the point left to Micronaut's rules among Micronaut's own beans - and admits one candidate
+or none, so Micronaut's own precedence among several never applies. Micronaut keeps the concrete candidate it found
+(a map bounded at 2048 lookups) and forgets it itself as definitions are registered or reloaded, so a synthetic bean
+and a definition registered once the context runs are seen by the next resolution; the qualifiers a portable
+extension added are part of the qualifier, so one added as the container starts selects again. The selection
+qualifier is never handed to the creation of the bean, which goes through the selected definition. A point no bean
+satisfies is selected again each time. Creating a dependent bean with eight injected dependencies (200,000
+creations and destructions, after as many to warm up) takes 4.9 us and allocates 10.1 KB per bean, against 9.9 us
+and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
+The bean types of a
 definition are kept for one generation of the definitions, a new one replacing it as the application's classes
 change (`WatchableBeanContext.classChanges()`) and once the definitions have changed, so that what is worked out
 from a retired definition while the change is made is never kept; and what was

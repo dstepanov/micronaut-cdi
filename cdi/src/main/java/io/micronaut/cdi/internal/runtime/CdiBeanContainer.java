@@ -81,6 +81,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -114,6 +115,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     private final BeanContext beanContext;
     private final RecordedTypeIndex typeIndex;
     private final CompiledAnnotationTypes types;
+    private final QualifierOverlay overlay;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -131,11 +133,12 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
                             ApplicationScope applicationScope, ObserverRegistry observers,
                             RecordedTypeIndex typeIndex, CompiledAnnotationTypes types,
-                            ExtensionContexts extensionContexts) {
+                            QualifierOverlay overlay, ExtensionContexts extensionContexts) {
         this.beanContext = beanContext;
         this.observers = observers;
         this.typeIndex = typeIndex;
         this.types = types;
+        this.overlay = overlay;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope, extensionContexts);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
@@ -317,16 +320,16 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * specification the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its
      * name or by being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
      *
-     * <p>Nothing of it is kept: the candidates are the ones the bean context enumerates and keeps for the class,
-     * and invalidates itself as definitions are registered or a development reload changes them, so a bean
-     * registered while the container starts, a qualifier a portable extension added and a definition added once the
-     * context runs are all seen by the next resolution.</p>
+     * <p>The container keeps nothing of it: the selection is made as the bean context looks up the concrete
+     * candidate of the class of the point by a {@link SelectionQualifier}, and the bean context keeps what it
+     * found and forgets it itself as definitions are registered or a development reload changes them. A qualifier
+     * a portable extension added makes the qualifier another one. A point no bean satisfies is selected again each
+     * time.</p>
      *
      * @param point The injection point
      * @return What it resolves to
      * @throws AmbiguousResolutionException Where more than one bean remains
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     Selection selectionFor(Argument<?> point) {
         CdiBeanQualifier<Object> matching;
         try {
@@ -335,6 +338,30 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             // a type with a variable the declaring class gives a value the definition does not carry
             return Selection.Unselected.MICRONAUT;
         }
+        Object added = overlay.state();
+        Optional<BeanDefinition<Object>> selected = beanContext.findBeanDefinition(matching.lookupType(),
+            new SelectionQualifier<>(this, matching, added, false));
+        if (selected.isPresent()) {
+            return new Selection.Selected(selected.get());
+        }
+        if (beanContext.findBeanDefinition(matching.lookupType(),
+            new SelectionQualifier<>(this, matching, added, true)).isPresent()) {
+            return Selection.Unselected.MICRONAUT;
+        }
+        // no bean satisfies the point, or there is no candidate of its class at all, which the bean context does
+        // not hand a qualifier
+        return select(matching);
+    }
+
+    /**
+     * The selection of {@link #selectionFor} itself, made over the candidates of the class of the point.
+     *
+     * @param matching The qualifier of the point
+     * @return What it resolves to
+     * @throws AmbiguousResolutionException Where more than one bean remains
+     */
+    Selection select(CdiBeanQualifier<Object> matching) {
+        Argument<?> point = matching.required();
         // the candidates of the class of the point as the bean context enumerates them, which the qualifier of
         // the specification is then applied to: the same as asking for the definitions with the qualifier
         Collection<BeanDefinition<Object>> ofClass = beanContext.getBeanDefinitions(matching.lookupType());
