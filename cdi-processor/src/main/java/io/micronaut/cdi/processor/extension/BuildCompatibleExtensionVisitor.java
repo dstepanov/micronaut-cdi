@@ -133,6 +133,23 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
+     * The synthesis and the validation run in {@link #finishCompilation(VisitorContext)} over the classes of the
+     * whole compilation, so this visitor has to see every class again whenever a class is changed, added or removed.
+     * An incremental compilation would otherwise give it the changed sources only, and a synthetic bean or a
+     * validation error that follows from an unchanged class would be lost.
+     *
+     * <p>Under javac this makes the annotation processor aggregating for the incremental compilation of Gradle: every
+     * class is processed again, without being compiled again, whenever a source changes. KSP cannot declare that
+     * before it runs; Groovy and Python have no incremental annotation processing.</p>
+     *
+     * @return {@code true}
+     */
+    @Override
+    public boolean aggregatesCompilation() {
+        return true;
+    }
+
+    /**
      * An enhancement decides what a class says about itself, so it runs before everything else here.
      *
      * <p>Micronaut runs its visitors from the highest order down, so the one that runs first is the one that
