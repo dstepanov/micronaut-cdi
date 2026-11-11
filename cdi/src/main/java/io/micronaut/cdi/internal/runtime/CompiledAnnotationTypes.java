@@ -29,6 +29,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.annotation.AnnotationMetadataSupport;
 import io.micronaut.inject.BeanDefinitionReference;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.FieldInjectionPoint;
@@ -171,14 +172,15 @@ public final class CompiledAnnotationTypes {
     }
 
     /**
-     * Whether the annotation type of the given name may be given more than once.
+     * Whether the annotation type of the given name may be given more than once: whether Micronaut registered a
+     * container for it, as the metadata of every bean that uses it registers as it loads.
      *
      * @param name The annotation type name
      * @return Whether it may, or {@code null} where nothing was compiled of the type
      */
     public @Nullable Boolean isRepeatable(String name) {
         Recorded recorded = recorded(name);
-        return recorded == null ? null : recorded.repeatable;
+        return recorded == null ? null : AnnotationMetadataSupport.getRepeatableAnnotation(name) != null;
     }
 
     /**
@@ -226,7 +228,7 @@ public final class CompiledAnnotationTypes {
      */
     public Map<CharSequence, Object> defaultsOf(String name) {
         Recorded recorded = recorded(name);
-        return recorded == null ? Map.of() : recorded.defaults;
+        return recorded == null ? Map.of() : AnnotationMetadataSupport.getDefaultValues(name);
     }
 
     private @Nullable Recorded recorded(String name) {
@@ -293,9 +295,9 @@ public final class CompiledAnnotationTypes {
             }
             // the qualifiers of a synthetic component are recorded as values nested in its record
             readNested(metadata.getAnnotation(CdiSyntheticBean.class),
-                CdiSyntheticBean.QUALIFIERS, metadata, types);
+                CdiSyntheticBean.QUALIFIERS, types);
             readNested(metadata.getAnnotation(CdiSyntheticObserver.class),
-                CdiSyntheticObserver.QUALIFIERS, metadata, types);
+                CdiSyntheticObserver.QUALIFIERS, types);
         }
         return types;
     }
@@ -324,7 +326,7 @@ public final class CompiledAnnotationTypes {
         return types;
     }
 
-    private static void readNested(@Nullable AnnotationValue<?> record, String member, AnnotationMetadata metadata,
+    private static void readNested(@Nullable AnnotationValue<?> record, String member,
                                    Map<String, Recorded> types) {
         if (record == null) {
             return;
@@ -332,7 +334,7 @@ public final class CompiledAnnotationTypes {
         for (AnnotationValue<Annotation> qualifier : record.getAnnotations(member)) {
             Recorded recorded = types.computeIfAbsent(qualifier.getAnnotationName(), Recorded::new);
             recorded.qualifier = true;
-            recorded.read(qualifier, metadata);
+            recorded.read(qualifier);
         }
     }
 
@@ -347,7 +349,7 @@ public final class CompiledAnnotationTypes {
             if (qualifier != null && !stereotypes.contains(qualifier.getAnnotationName())) {
                 Recorded recorded = types.computeIfAbsent(qualifier.getAnnotationName(), Recorded::new);
                 recorded.qualifier = true;
-                recorded.read(qualifier, metadata);
+                recorded.read(qualifier);
             }
         }
         for (String name : metadata.getAnnotationNamesByStereotype(BINDING)) {
@@ -357,7 +359,7 @@ public final class CompiledAnnotationTypes {
             Recorded recorded = types.computeIfAbsent(name, Recorded::new);
             recorded.binding = true;
             for (AnnotationValue<Annotation> binding : metadata.getAnnotationValuesByName(name)) {
-                recorded.read(binding, metadata);
+                recorded.read(binding);
             }
         }
     }
@@ -378,10 +380,7 @@ public final class CompiledAnnotationTypes {
          * alone says nothing of them.
          */
         private boolean membersKnown = true;
-        private boolean repeatable;
         private @Nullable RetentionPolicy retention;
-        private boolean defaultsRead;
-        private Map<CharSequence, Object> defaults = Map.of();
 
         Recorded(String name) {
             this.name = name;
@@ -405,7 +404,7 @@ public final class CompiledAnnotationTypes {
             nonbinding.addAll(List.of(declaredNonbinding));
         }
 
-        void read(AnnotationValue<?> occurrence, AnnotationMetadata metadata) {
+        void read(AnnotationValue<?> occurrence) {
             membersKnown = true;
             // only the names Micronaut keeps for itself among the values are no members: Java lets a member be
             // named with a leading dollar sign
@@ -419,15 +418,11 @@ public final class CompiledAnnotationTypes {
                     nonbinding.add(member);
                 }
             }
-            if (!defaultsRead) {
-                // a member left at its default is written nowhere, and is a member all the same
-                defaultsRead = true;
-                defaults = metadata.getDefaultValues(name);
-                for (CharSequence member : defaults.keySet()) {
-                    members.add(member.toString());
-                }
+            // a member left at its default is written nowhere, and is a member all the same: Micronaut registered
+            // the defaults of the type as the metadata that uses it loaded
+            for (CharSequence member : AnnotationMetadataSupport.getDefaultValues(name).keySet()) {
+                members.add(member.toString());
             }
-            repeatable |= metadata.findRepeatableAnnotation(name).isPresent();
             if (retention == null) {
                 retention = occurrence.getRetentionPolicy();
             }
