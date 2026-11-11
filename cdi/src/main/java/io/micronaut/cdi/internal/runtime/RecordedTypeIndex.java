@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.WatchableBeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -62,12 +63,19 @@ public final class RecordedTypeIndex {
      * The bean types of each definition, worked out once from what was recorded: the container compares them for
      * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
      * specification, and what the processor recorded does not change. A compiled definition is equal to another
-     * of its class and a runtime one only to itself, which is what tells the beans apart.
+     * of its class and a runtime one only to itself, which is what tells the beans apart. Emptied as the definitions
+     * of the context change once it runs - a definition registered, retired or added by a development reload - so
+     * that it holds no retired definition and no closure of a class that changed.
      */
     private final Map<BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
 
     public RecordedTypeIndex(BeanContext beanContext) {
         this.beanContext = beanContext;
+        if (beanContext instanceof WatchableBeanContext watchable) {
+            // the watch belongs to this bean, and is closed as it is destroyed. A class change comes before any
+            // bean of the retired generation is touched, and registers no first batch
+            watchable.classChanges().watch(change -> beanTypes.clear());
+        }
     }
 
     /**

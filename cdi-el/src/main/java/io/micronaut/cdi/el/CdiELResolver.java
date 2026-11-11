@@ -28,7 +28,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,8 +53,6 @@ import java.util.Set;
 public final class CdiELResolver extends ELResolver {
 
     private final BeanContainer beans;
-    @Nullable
-    private volatile Set<String> namespaces;
 
     /**
      * @param beans The container the names resolve in
@@ -179,29 +176,22 @@ public final class CdiELResolver extends ELResolver {
         if (!named.isEmpty()) {
             return beans.resolve(named);
         }
-        return namespaces().contains(name) ? new Namespace(name) : null;
+        return isNamespace(name) ? new Namespace(name) : null;
     }
 
     /**
-     * Every proper prefix of a bean name that ends where a period separates two identifiers. The beans of a
-     * container are settled once it has started, so the names are read once.
+     * Whether the name is a proper prefix of a bean name that ends where a period separates two identifiers. It is
+     * read from the beans as they are when asked, so a bean registered once the container runs is seen.
      */
-    private Set<String> namespaces() {
-        Set<String> known = namespaces;
-        if (known == null) {
-            known = new HashSet<>();
-            for (Bean<?> bean : beans.getBeans(Object.class, Any.Literal.INSTANCE)) {
-                String name = bean.getName();
-                if (name == null) {
-                    continue;
-                }
-                for (int dot = name.indexOf('.'); dot > 0; dot = name.indexOf('.', dot + 1)) {
-                    known.add(name.substring(0, dot));
-                }
+    private boolean isNamespace(String name) {
+        String prefix = name + '.';
+        for (Bean<?> bean : beans.getBeans(Object.class, Any.Literal.INSTANCE)) {
+            String beanName = bean.getName();
+            if (beanName != null && beanName.startsWith(prefix) && beanName.length() > prefix.length()) {
+                return true;
             }
-            namespaces = known;
         }
-        return known;
+        return false;
     }
 
     /**

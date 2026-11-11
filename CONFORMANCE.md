@@ -378,8 +378,10 @@ specification and narrows them as each point is resolved, so a synthetic bean, a
 added and a definition registered once the context runs are seen by the next resolution without anything to
 forget. Matching again costs a dependent bean created over and over: measured against a cache per point, creating
 a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The bean types of a
-definition, the disposers resolved for a producer and what was read of the qualifier and binding types
-(`CompiledAnnotationTypes`) are not yet forgotten so. Core's active resolution
+definition are forgotten as the application's classes change (`WatchableBeanContext.classChanges()`), and what was
+read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a bean of the specification is
+registered once the context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`
+narrowed to the beans of the specification). The disposers resolved for a producer are not yet forgotten so. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
