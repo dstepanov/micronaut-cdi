@@ -17,7 +17,6 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.Members;
-import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.context.BeanContext;
@@ -92,10 +91,11 @@ public final class CompiledAnnotationTypes {
     public CompiledAnnotationTypes(BeanContext beanContext) {
         this.beanContext = beanContext;
         if (beanContext instanceof WatchableBeanContext watchable) {
-            // a bean of the specification registered once the context runs, or retired or added by a development
-            // reload, may use a type nothing else was compiled with: what was read is read again on the next
-            // question. The watch belongs to this bean, and is closed as it is destroyed
-            watchable.definitions().stereotype(CdiScope.class).watch(change -> {
+            // a definition registered once the context runs, or retired or added by a development reload, may use
+            // a type nothing else was compiled with - one of Micronaut's own as well as one of the specification,
+            // since both are read: what was read is read again on the next question. The watch belongs to this
+            // bean, and is closed as it is destroyed
+            watchable.definitions().watch(change -> {
                 if (!change.initial()) {
                     forget();
                 }

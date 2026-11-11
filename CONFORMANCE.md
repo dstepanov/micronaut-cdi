@@ -379,12 +379,12 @@ added and a definition registered once the context runs are seen by the next res
 forget. Matching again costs a dependent bean created over and over: measured against a cache per point, creating
 a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The bean types of a
 definition are forgotten as the application's classes change (`WatchableBeanContext.classChanges()`), and what was
-read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a bean of the specification is
-registered once the context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`
-narrowed to the beans of the specification). The observer methods are the ones of the definitions a watch of the
-beans marked as observing hands over (`ObserverRegistry`, `WatchableBeanContext.definitions()` narrowed by
-`CdiObserving`), made again as the watch reports a change, and what an event resolves to is matched as it is fired
-rather than kept. The disposer of a producer and the bean and method an invoker names are found as they are
+read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
+context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`), since the
+definitions of Micronaut's own beans are read as well. The observer methods are read from the definitions of the beans marked as
+observing (`CdiObserving`) and made again after any change a watch of every definition reports (`ObserverRegistry`):
+a replacement that observes nothing takes the observers of the bean it replaces, and a watch narrowed to the
+observing beans does not hear of it. What an event resolves to is matched as it is fired rather than kept. The disposer of a producer and the bean and method an invoker names are found as they are
 needed, among the candidates the bean context keeps for the declaring class. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
