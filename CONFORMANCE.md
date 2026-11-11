@@ -378,7 +378,9 @@ specification and narrows them as each point is resolved, so a synthetic bean, a
 added and a definition registered once the context runs are seen by the next resolution without anything to
 forget. Matching again costs a dependent bean created over and over: measured against a cache per point, creating
 a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The bean types of a
-definition are forgotten as the application's classes change (`WatchableBeanContext.classChanges()`), and what was
+definition are kept for one generation of the definitions, a new one replacing it as the application's classes
+change (`WatchableBeanContext.classChanges()`) and once the definitions have changed, so that what is worked out
+from a retired definition while the change is made is never kept; and what was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
 context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`), since the
 definitions of Micronaut's own beans are read as well. The observer methods are read from the definitions of the beans marked as

@@ -63,19 +63,34 @@ public final class RecordedTypeIndex {
      * The bean types of each definition, worked out once from what was recorded: the container compares them for
      * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
      * specification, and what the processor recorded does not change. A compiled definition is equal to another
-     * of its class and a runtime one only to itself, which is what tells the beans apart. Emptied as the definitions
-     * of the context change once it runs - a definition registered, retired or added by a development reload - so
-     * that it holds no retired definition and no closure of a class that changed.
+     * of its class and a runtime one only to itself, which is what tells the beans apart.
+     *
+     * <p>The map is of one generation of the definitions: a new, empty one replaces it as the application's
+     * classes change and again once the definitions have changed - a definition registered, retired or added by a
+     * development reload - rather than the one map being emptied. Bean types worked out from a definition of the
+     * generation before, while the change was made, are put in the map of that generation, which nothing reads any
+     * more, so no retired definition, nor its class loader, is kept, and no closure of a class that changed is
+     * read.</p>
      */
-    private final Map<BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
+    private volatile Map<BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
 
     public RecordedTypeIndex(BeanContext beanContext) {
         this.beanContext = beanContext;
         if (beanContext instanceof WatchableBeanContext watchable) {
-            // the watch belongs to this bean, and is closed as it is destroyed. A class change comes before any
-            // bean of the retired generation is touched, and registers no first batch
-            watchable.classChanges().watch(change -> beanTypes.clear());
+            // the watches belong to this bean, and are closed as it is destroyed. A class change comes before any
+            // bean of the retired generation is touched, and registers no first batch; the change of the
+            // definitions comes once the new generation replaced the retired one, which closes the window between
+            watchable.classChanges().watch(change -> newGeneration());
+            watchable.definitions().watch(change -> {
+                if (!change.initial()) {
+                    newGeneration();
+                }
+            });
         }
+    }
+
+    private void newGeneration() {
+        beanTypes = new ConcurrentHashMap<>();
     }
 
     /**
@@ -85,12 +100,13 @@ public final class RecordedTypeIndex {
      * @return The bean types
      */
     List<Argument<?>> beanTypesOf(BeanDefinition<?> definition) {
-        List<Argument<?>> known = beanTypes.get(definition);
+        Map<BeanDefinition<?>, List<Argument<?>>> generation = beanTypes;
+        List<Argument<?>> known = generation.get(definition);
         if (known != null) {
             return known;
         }
         List<Argument<?>> types = List.copyOf(CdiBean.typesOf(this, definition, beanClassOf(definition)));
-        List<Argument<?>> raced = beanTypes.putIfAbsent(definition, types);
+        List<Argument<?>> raced = generation.putIfAbsent(definition, types);
         return raced != null ? raced : types;
     }
 
