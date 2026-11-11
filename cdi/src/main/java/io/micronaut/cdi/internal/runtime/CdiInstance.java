@@ -421,7 +421,7 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
     static <T> void destroyResolved(BeanContext beanContext, BeanDefinition<T> definition, T instance) {
         if (CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
             CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-            CdiBean<?> bean = container.canonicalBean(definition);
+            CdiBean<?> bean = container.beanOf(definition);
             // the context that holds the instance: for a normal scope of the application's own that no extension
             // registered a context for, the application scope's, which is what destroys one
             Context context = container.getContext(container.scopeHolding(bean));
@@ -553,7 +553,7 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         @SuppressWarnings("unchecked")
         public Bean<T> getBean() {
             // the container's own bean of the definition, the one it answers with
-            return (Bean<T>) beanContext.getBean(CdiBeanContainer.class).canonicalBean(definition);
+            return (Bean<T>) beanContext.getBean(CdiBeanContainer.class).beanOf(definition);
         }
 
         @Override

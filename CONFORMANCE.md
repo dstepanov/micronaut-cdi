@@ -369,17 +369,15 @@ Resolving one bean narrows the candidates as section 2.4.2 has it, separately fr
 specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank everything else
 (`CdiResolution.narrowToOne`); an alternative is not made Micronaut's primary bean, and nothing is chosen while
 the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
-measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), and
-the container's bean of each definition, once (`CdiBeanContainer.canonicalBean`). What an injection point resolves
-to is not kept (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type - since Micronaut Core
+measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`).
+The container's bean of a definition is made as it is asked for (`CdiBeanContainer.beanOf`), equal to every other
+of the same definition, and holds nothing of its own. What an injection point resolves to is not kept (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type - since Micronaut Core
 5.3 in a map bounded at 2048 types, kept when a dependent bean is destroyed (#14063), and invalidated by Micronaut
 itself as definitions are registered or reloaded - and the container matches them by the rules of the
 specification and narrows them as each point is resolved, so a synthetic bean, a qualifier a portable extension
 added and a definition registered once the context runs are seen by the next resolution without anything to
 forget. Matching again costs a dependent bean created over and over: measured against a cache per point, creating
-a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The container's beans follow
-the definitions of the context: a watch of the context (`WatchableBeanContext.definitions()`) forgets them as a
-definition is registered once the context runs, or retired or added by a development reload. The bean types of a
+a dependent bean with eight injected dependencies takes 28% longer and allocates 87% more. The bean types of a
 definition, the disposers resolved for a producer and what was read of the qualifier and binding types
 (`CompiledAnnotationTypes`) are not yet forgotten so. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point

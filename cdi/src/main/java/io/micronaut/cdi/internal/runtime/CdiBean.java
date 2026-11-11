@@ -88,9 +88,7 @@ public class CdiBean<T> implements Bean<T> {
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
-    private volatile @Nullable List<CdiQualifier> qualifiers;
     private volatile @Nullable Optional<QualifierOverlay> overlay;
-    private volatile @Nullable List<Argument<?>> types;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
@@ -152,12 +150,7 @@ public class CdiBean<T> implements Bean<T> {
      */
     public List<Argument<?>> types() {
         // worked out once for the context, which Micronaut's own lookups of the bean compare too
-        List<Argument<?>> resolved = types;
-        if (resolved == null) {
-            resolved = RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
-            types = resolved;
-        }
-        return resolved;
+        return RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
     }
 
     /**
@@ -326,17 +319,12 @@ public class CdiBean<T> implements Bean<T> {
      * @return The qualifiers
      */
     final List<CdiQualifier> qualifiers() {
-        List<CdiQualifier> compiled = qualifiers;
-        if (compiled == null) {
-            List<CdiQualifier> all = new ArrayList<>(3);
-            all.add(CdiQualifier.ANY);
-            for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
-                if (!declared.isAny()) {
-                    all.add(declared);
-                }
+        List<CdiQualifier> compiled = new ArrayList<>(3);
+        compiled.add(CdiQualifier.ANY);
+        for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
+            if (!declared.isAny()) {
+                compiled.add(declared);
             }
-            compiled = List.copyOf(all);
-            qualifiers = compiled;
         }
         Optional<QualifierOverlay> found = overlay;
         if (found == null) {

@@ -78,9 +78,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -111,11 +109,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
 
     private final BeanContext beanContext;
-    /**
-     * The container's own bean of each definition the bean context handed it, for everyone who describes the
-     * same bean to hold the same object, which reads the bean types of its definition once.
-     */
-    private final Map<BeanDefinition<?>, CdiBean<?>> canonical = new ConcurrentHashMap<>();
     private volatile @Nullable RecordedTypeIndex typeIndex;
     private volatile @Nullable CompiledAnnotationTypes types;
     private boolean validated;
@@ -284,7 +277,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(),
             Qualifiers.byQualifiers(matching,
                 (io.micronaut.context.Qualifier<Object>) qualifier))) {
-            beans.add(canonicalBean(definition));
+            beans.add(beanOf(definition));
         }
         return beans;
     }
@@ -362,7 +355,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         }
         Set<Bean<?>> eligible = new LinkedHashSet<>();
         for (BeanDefinition<Object> definition : matching.filterQualified(Object.class, ofClass)) {
-            eligible.add(canonicalBean(definition));
+            eligible.add(beanOf(definition));
         }
         if (micronaut && ofTheSpecification(eligible).isEmpty()) {
             // the beans of the specification of the class are not among the ones the qualifiers admit, and the
@@ -388,7 +381,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             return builtIn.isBeanType(raw);
         }
         Class<?> boxed = CdiTypes.boxedOf(raw);
-        for (Argument<?> type : canonicalBean(definition).types()) {
+        for (Argument<?> type : beanOf(definition).types()) {
             Class<?> own = CdiTypes.classOf(type);
             if (own != null && CdiTypes.boxedOf(own) == boxed) {
                 return true;
@@ -437,7 +430,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         CdiBeanQualifier<Object> matching = matching(beanType, required);
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(), matching)) {
-            beans.add(canonicalBean(definition));
+            beans.add(beanOf(definition));
         }
         return beans;
     }
@@ -502,25 +495,16 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     }
 
     /**
-     * The container's own bean for the given definition, so that everyone who describes the same bean holds
-     * the same object: the one {@code getBeans} answers with. The definition of the class of a bean in a normal
-     * scope - what its client proxy stands in front of, which a resolution creating the instance names - is the
-     * bean of the proxy.
+     * The container's bean for the given definition: the one {@code getBeans} answers with. The definition of the
+     * class of a bean in a normal scope - what its client proxy stands in front of, which a resolution creating the
+     * instance names - is the bean of the proxy. A bean is equal to every other one of the same definition, and
+     * holds nothing of its own: its types are the index's, so none is kept here.
      *
      * @param definition The definition
      * @return The bean
      */
-    public CdiBean<?> canonicalBean(BeanDefinition<?> definition) {
-        CdiBean<?> known = canonical.get(definition);
-        if (known != null) {
-            return known;
-        }
-        BeanDefinition<?> described = proxyOf(definition);
-        CdiBean<?> bean = canonical.computeIfAbsent(described, key -> new CdiBean<>(beanContext, key));
-        if (described != definition) {
-            canonical.putIfAbsent(definition, bean);
-        }
-        return bean;
+    public CdiBean<?> beanOf(BeanDefinition<?> definition) {
+        return new CdiBean<>(beanContext, proxyOf(definition));
     }
 
     /**
@@ -570,7 +554,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         List<CdiBean<?>> beans = new ArrayList<>();
         for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
             if (CdiBeanQualifier.isBean(definition)) {
-                beans.add(canonicalBean(definition));
+                beans.add(beanOf(definition));
             }
         }
         return beans;
@@ -584,7 +568,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
             if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {
-                beans.add(canonicalBean(definition));
+                beans.add(beanOf(definition));
             }
         }
         return beans;

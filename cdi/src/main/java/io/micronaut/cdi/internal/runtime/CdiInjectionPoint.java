@@ -268,7 +268,7 @@ public final class CdiInjectionPoint implements MicronautInjectionPoint {
         if (segment instanceof LookupSegment<?, ?> lookup) {
             return lookup.selected();
         }
-        return of(container.beanContext(), container.canonicalBean(segment.getDeclaringType()), segment);
+        return of(container.beanContext(), container.beanOf(segment.getDeclaringType()), segment);
     }
 
     /**

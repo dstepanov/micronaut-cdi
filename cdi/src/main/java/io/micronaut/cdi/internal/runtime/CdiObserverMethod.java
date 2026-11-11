@@ -190,7 +190,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Bean<?> getDeclaringBean() {
-        return beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
+        return beanContext.getBean(CdiBeanContainer.class).beanOf(declaring);
     }
 
     @Override
@@ -348,7 +348,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private CdiBean<?> declaringBean() {
         CdiBean<?> bean = declaringBean;
         if (bean == null) {
-            bean = beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
+            bean = beanContext.getBean(CdiBeanContainer.class).beanOf(declaring);
             declaringBean = bean;
         }
         return bean;
