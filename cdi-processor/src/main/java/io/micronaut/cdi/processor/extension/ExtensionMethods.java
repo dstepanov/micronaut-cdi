@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.io.service.ServiceDefinition;
 import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.core.reflect.InstantiationUtils;
@@ -62,6 +63,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceConfigurationError;
 
 /**
  * The build compatible extensions of a compilation and the methods of their phases (section 2.10): found as the
@@ -127,8 +129,7 @@ final class ExtensionMethods {
             }
         }
         if (!Boolean.parseBoolean(options.get(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION))) {
-            for (BuildCompatibleExtension loaded : SoftServiceLoader.load(BuildCompatibleExtension.class,
-                BuildCompatibleExtensionVisitor.class.getClassLoader()).collectAll()) {
+            for (BuildCompatibleExtension loaded : registered(BuildCompatibleExtensionVisitor.class.getClassLoader())) {
                 // an extension both named and registered as a service runs once
                 if (extensions.stream().noneMatch(extension -> extension.getClass().equals(loaded.getClass()))) {
                     extensions.add(loaded);
@@ -356,6 +357,35 @@ final class ExtensionMethods {
                 enhancer.enhance(element, messages, context);
             }
         }
+    }
+
+    /**
+     * The extensions registered as services through the given loader, each instantiated: an extension a service
+     * entry names that cannot be loaded or instantiated fails the compilation, as the specification's service
+     * loader would, rather than being left out - its phases would otherwise not run, without a word.
+     *
+     * @param loader The loader the service entries are read through
+     * @return The extensions
+     * @throws IllegalStateException Where a registered extension cannot be loaded or instantiated
+     */
+    static List<BuildCompatibleExtension> registered(ClassLoader loader) {
+        List<BuildCompatibleExtension> registered = new ArrayList<>();
+        for (ServiceDefinition<BuildCompatibleExtension> service
+            : SoftServiceLoader.load(BuildCompatibleExtension.class, loader)) {
+            if (!service.isPresent()) {
+                throw new IllegalStateException("The build compatible extension " + service.getName()
+                    + ", registered as a service, is not on the classpath of the compilation, or a class it needs "
+                    + "is not");
+            }
+            try {
+                registered.add(service.load());
+            } catch (RuntimeException | ServiceConfigurationError | LinkageError e) {
+                throw new IllegalStateException("The build compatible extension " + service.getName()
+                    + ", registered as a service, could not be created through a constructor without parameters",
+                    e);
+            }
+        }
+        return registered;
     }
 
     /**
