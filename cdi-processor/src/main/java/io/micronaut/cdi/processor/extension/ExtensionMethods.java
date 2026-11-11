@@ -20,6 +20,8 @@ import io.micronaut.core.io.service.ServiceDefinition;
 import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.core.reflect.InstantiationUtils;
+import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.reflect.exception.InstantiationException;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
@@ -144,7 +146,6 @@ final class ExtensionMethods {
             for (Method method : declaredMethodsOf(extension.getClass())) {
                 if (method.isAnnotationPresent(Discovery.class)) {
                     validateDiscovery(method);
-                    method.setAccessible(true);
                     discoveries.add(new ExtensionMethod(extension, method));
                 }
             }
@@ -156,22 +157,18 @@ final class ExtensionMethods {
             for (Method method : declaredMethodsOf(extension.getClass())) {
                 if (method.isAnnotationPresent(Enhancement.class)) {
                     validateEnhancement(method);
-                    method.setAccessible(true);
                     enhancements.add(new ExtensionMethod(extension, method));
                 }
                 if (method.isAnnotationPresent(Registration.class)) {
                     validateRegistration(method);
-                    method.setAccessible(true);
                     registrations.add(new ExtensionMethod(extension, method));
                 }
                 if (method.isAnnotationPresent(Synthesis.class)) {
                     validateHanded(Phase.SYNTHESIS, method, SyntheticComponents.class);
-                    method.setAccessible(true);
                     synthesizers.add(new ExtensionMethod(extension, method));
                 }
                 if (method.isAnnotationPresent(Validation.class)) {
                     validateHanded(Phase.VALIDATION, method, null);
-                    method.setAccessible(true);
                     validators.add(new ExtensionMethod(extension, method));
                 }
             }
@@ -360,6 +357,26 @@ final class ExtensionMethods {
     }
 
     /**
+     * Invokes a phase method of an extension, however accessible it is, through Micronaut's reflection helper,
+     * handing back what the invocation failed with as the exceptions of reflection, which each phase reports in
+     * its own way.
+     */
+    private static void invokePhaseMethod(Method method, Object extension, Object[] arguments)
+        throws IllegalAccessException, InvocationTargetException {
+        try {
+            ReflectionUtils.invokeInaccessibleMethod(extension, method, arguments);
+        } catch (InvocationException e) {
+            if (e.getCause() instanceof InvocationTargetException invoked) {
+                throw invoked;
+            }
+            if (e.getCause() instanceof IllegalAccessException inaccessible) {
+                throw inaccessible;
+            }
+            throw e;
+        }
+    }
+
+    /**
      * The extensions registered as services through the given loader, each instantiated: an extension a service
      * entry names that cannot be loaded or instantiated fails the compilation, as the specification's service
      * loader would, rather than being left out - its phases would otherwise not run, without a word.
@@ -482,7 +499,7 @@ final class ExtensionMethods {
             }
         }
         try {
-            method.invoke(extension, arguments);
+            invokePhaseMethod(method, extension, arguments);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("The discovery method " + method + " failed", e);
         }
@@ -496,7 +513,7 @@ final class ExtensionMethods {
                                            VisitorContext context) {
         Method method = extensionMethod.method();
         try {
-            method.invoke(extensionMethod.extension(), arguments);
+            invokePhaseMethod(method, extensionMethod.extension(), arguments);
             return true;
         } catch (IllegalAccessException e) {
             context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the " + phase + " method " + method
@@ -594,7 +611,7 @@ final class ExtensionMethods {
                 }
             }
             try {
-                method.invoke(extension, arguments);
+                invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
                 context.fail("The registration method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
@@ -622,7 +639,7 @@ final class ExtensionMethods {
                 }
             }
             try {
-                method.invoke(extension, arguments);
+                invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
                 context.fail("The registration method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
@@ -772,7 +789,7 @@ final class ExtensionMethods {
 
         private void invoke(Object[] arguments, VisitorContext context) {
             try {
-                method.invoke(extension, arguments);
+                invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
                 context.fail("The enhancement method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {

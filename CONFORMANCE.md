@@ -1104,10 +1104,14 @@ own rather than the first one alone.
   `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` once per compilation and
   kept on its `VisitorContext` (`LanguageModelAnnotationFilter.registered(VisitorContext)`), and a provider is
   expected to decide from its arguments alone.
-  Their reflection goes through Micronaut's helpers - `SoftServiceLoader`, `ClassUtils.forName`,
-  `InstantiationUtils` - and the NoReflection check exempts only the classes that need it: the invocation of the
-  extensions' phase methods (`ExtensionMethods`), an annotation member's array and enum values
-  (`ElementAnnotationMember`) and the loading of the filters. A harness that
+  What they reflect goes through Micronaut's helpers where one exists - `SoftServiceLoader` for the extensions and
+  the filters, `ClassUtils.forName` and `InstantiationUtils` for an extension a compiler option names,
+  `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts three
+  classes, for what has no helper or what the check counts even through one: `ExtensionMethods`, which finds an
+  extension's phase methods among its declared methods by their annotations and reads their parameter types, as
+  the specification defines an extension (and loads services); `ElementAnnotationMember`, which reads an annotation
+  member's array and enum values as the language model's API hands them out; and `LanguageModelAnnotationFilter`,
+  for the service loading of the filters. A harness that
   compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated

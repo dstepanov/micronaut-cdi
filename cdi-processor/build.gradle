@@ -4,7 +4,8 @@ plugins {
 
 noReflection {
     // the processor and the build compatible extensions it runs execute inside javac while an application compiles,
-    // and none of it reaches the runtime
+    // and none of it reaches the runtime. An extension's phase methods are found among its declared methods by their
+    // annotations, as the specification defines an extension; they are invoked through ReflectionUtils
     allowIn 'io.micronaut.cdi.processor.extension.ExtensionMethods'
 }
 
