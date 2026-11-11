@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.metadata.CdiObserving;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanProvider;
 import io.micronaut.context.WatchableBeanContext;
 import io.micronaut.context.watch.BeanDefinitionChange;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -67,8 +68,12 @@ import java.util.concurrent.ForkJoinPool;
 public final class ObserverRegistry {
 
     private final BeanContext beanContext;
-    private volatile @Nullable CompiledAnnotationTypes types;
-    private volatile @Nullable RecordedTypeIndex typeIndex;
+    private final CompiledAnnotationTypes types;
+    private final RecordedTypeIndex typeIndex;
+    /**
+     * The container, which the observers resolve their parameters through and which depends on this registry.
+     */
+    private final BeanProvider<CdiBeanContainer> container;
     private final List<ObserverMethod<?>> synthetic = new ArrayList<>();
     /**
      * The definitions of the beans with observers, as the watch of the context last handed them, or {@code null}
@@ -80,10 +85,13 @@ public final class ObserverRegistry {
      * observers whenever either changes.
      */
     private volatile @Nullable List<ObserverMethod<?>> observers;
-    private volatile @Nullable Executor asyncExecutor;
 
-    public ObserverRegistry(BeanContext beanContext) {
+    public ObserverRegistry(BeanContext beanContext, CompiledAnnotationTypes types, RecordedTypeIndex typeIndex,
+                            BeanProvider<CdiBeanContainer> container) {
         this.beanContext = beanContext;
+        this.types = types;
+        this.typeIndex = typeIndex;
+        this.container = container;
         if (beanContext instanceof WatchableBeanContext watchable) {
             // the beans with observers are marked as they compile: the marker is read from each bean's reference.
             // The watch belongs to this bean, and is closed as it is destroyed
@@ -103,32 +111,20 @@ public final class ObserverRegistry {
      * @return The record
      */
     CompiledAnnotationTypes types() {
-        CompiledAnnotationTypes compiled = types;
-        if (compiled == null) {
-            // a bean of the context, the same for as long as it runs: looked up once
-            compiled = CompiledAnnotationTypes.of(beanContext);
-            types = compiled;
-        }
-        return compiled;
+        return types;
     }
 
     /**
      * The executor an event fired asynchronously notifies its observers on where the firing names none: Micronaut's
-     * executor of blocking work, which an observer may well do, read as it is first needed. A context without one
-     * notifies them on the common pool.
+     * executor of blocking work, which an observer may well do, looked up as an event is fired. A context without
+     * one notifies them on the common pool.
      *
      * @return The executor
      */
     Executor asyncExecutor() {
-        Executor found = asyncExecutor;
-        if (found == null) {
-            found = beanContext.findBean(ExecutorService.class,
-                    Qualifiers.byName(TaskExecutors.BLOCKING))
-                .<Executor>map(executor -> executor)
-                .orElseGet(ForkJoinPool::commonPool);
-            asyncExecutor = found;
-        }
-        return found;
+        return beanContext.findBean(ExecutorService.class, Qualifiers.byName(TaskExecutors.BLOCKING))
+            .<Executor>map(executor -> executor)
+            .orElseGet(ForkJoinPool::commonPool);
     }
 
     /**
@@ -137,12 +133,7 @@ public final class ObserverRegistry {
      * @return The index of this container
      */
     RecordedTypeIndex typeIndex() {
-        RecordedTypeIndex index = typeIndex;
-        if (index == null) {
-            index = RecordedTypeIndex.of(beanContext);
-            typeIndex = index;
-        }
-        return index;
+        return typeIndex;
     }
 
     /**
@@ -188,7 +179,7 @@ public final class ObserverRegistry {
                 if (observer != null) {
                     // a static observer has an executable method of its own, which is invoked without an
                     // instance of the bean that declares it
-                    found.add(new CdiObserverMethod<>(beanContext, definition, method, observer));
+                    found.add(new CdiObserverMethod<>(beanContext, container, definition, method, observer));
                 }
             }
         }

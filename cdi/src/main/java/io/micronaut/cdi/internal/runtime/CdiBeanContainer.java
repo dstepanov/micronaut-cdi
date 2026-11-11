@@ -26,6 +26,7 @@ import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
+import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
@@ -109,8 +110,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
 
     private final BeanContext beanContext;
-    private volatile @Nullable RecordedTypeIndex typeIndex;
-    private volatile @Nullable CompiledAnnotationTypes types;
+    private final RecordedTypeIndex typeIndex;
+    private final CompiledAnnotationTypes types;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -126,10 +127,14 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
 
     @Inject
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
-                            ApplicationScope applicationScope, ObserverRegistry observers) {
+                            ApplicationScope applicationScope, ObserverRegistry observers,
+                            RecordedTypeIndex typeIndex, CompiledAnnotationTypes types,
+                            ExtensionContexts extensionContexts) {
         this.beanContext = beanContext;
         this.observers = observers;
-        this.contexts = new CdiContexts(beanContext, requestScope, applicationScope);
+        this.typeIndex = typeIndex;
+        this.types = types;
+        this.contexts = new CdiContexts(beanContext, requestScope, applicationScope, extensionContexts);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
@@ -473,25 +478,14 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * @return The index of this container
      */
     RecordedTypeIndex typeIndex() {
-        RecordedTypeIndex index = typeIndex;
-        if (index == null) {
-            // a bean of the context, the same for as long as it runs: looked up once rather than for each type compared
-            index = RecordedTypeIndex.of(beanContext);
-            typeIndex = index;
-        }
-        return index;
+        return typeIndex;
     }
 
     /**
      * What the application was compiled with of each qualifier and interceptor binding type.
      */
     private CompiledAnnotationTypes types() {
-        CompiledAnnotationTypes compiled = types;
-        if (compiled == null) {
-            compiled = CompiledAnnotationTypes.of(beanContext);
-            types = compiled;
-        }
-        return compiled;
+        return types;
     }
 
     /**

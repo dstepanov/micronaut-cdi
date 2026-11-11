@@ -19,6 +19,7 @@ import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanProvider;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
@@ -61,10 +62,15 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      */
     private final ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
         new ConcurrentHashMap<>();
-    private volatile @Nullable CdiBeanContainer container;
+    /**
+     * The container the parameters of a disposer are resolved through, which is a bean of the context like this
+     * listener: obtained as a disposer first needs it.
+     */
+    private final BeanProvider<CdiBeanContainer> container;
 
-    public DisposerInvoker(BeanContext beanContext) {
+    public DisposerInvoker(BeanContext beanContext, BeanProvider<CdiBeanContainer> container) {
         this.beanContext = beanContext;
+        this.container = container;
     }
 
     @Override
@@ -183,13 +189,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
         }
-        CdiBeanContainer container = this.container;
-        if (container == null) {
-            container = beanContext.getBean(CdiBeanContainer.class);
-            this.container = container;
-        }
         Argument<Object> point = (Argument<Object>) argument;
-        return switch (container.selectionFor(argument)) {
+        return switch (container.get().selectionFor(argument)) {
             case Selection.Selected selected -> {
                 BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
                 Argument<Object> askedAs = CdiInstance.askedAs(beanContext, point, definition);

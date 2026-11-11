@@ -67,12 +67,14 @@ final class CdiContexts {
     private final List<Context> singletonContexts;
     private final List<Context> dependentContexts;
     /**
-     * The contexts extensions registered, a bean of the context created as it starts: looked up once.
+     * The contexts extensions registered.
      */
-    private volatile @Nullable Optional<ExtensionContexts> extensionContexts;
+    private final ExtensionContexts extensionContexts;
 
-    CdiContexts(BeanContext beanContext, RequestScope requestScope, ApplicationScope applicationScope) {
+    CdiContexts(BeanContext beanContext, RequestScope requestScope, ApplicationScope applicationScope,
+                ExtensionContexts extensionContexts) {
         this.beanContext = beanContext;
+        this.extensionContexts = extensionContexts;
         this.requestContexts = List.of(CdiContext.ofRequest(RequestScoped.class, requestScope));
         this.applicationContexts = List.of(CdiContext.ofApplication(ApplicationScoped.class, applicationScope));
         this.singletonContexts = List.of(CdiContext.ofSingleton(Singleton.class, beanContext));
@@ -155,16 +157,9 @@ final class CdiContexts {
         if (scopeType == Dependent.class) {
             return dependentContexts;
         }
-        Optional<ExtensionContexts> extensions = extensionContexts;
-        if (extensions == null) {
-            extensions = beanContext.findBean(ExtensionContexts.class);
-            extensionContexts = extensions;
-        }
-        if (extensions.isPresent()) {
-            List<AlterableContext> registered = extensions.get().contextsFor(scopeType);
-            if (!registered.isEmpty()) {
-                return new ArrayList<>(registered);
-            }
+        List<AlterableContext> registered = extensionContexts.contextsFor(scopeType);
+        if (!registered.isEmpty()) {
+            return new ArrayList<>(registered);
         }
         if (scopeType == RequestScoped.class) {
             return requestContexts;

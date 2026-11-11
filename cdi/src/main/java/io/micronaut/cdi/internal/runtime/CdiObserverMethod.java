@@ -19,6 +19,7 @@ import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanProvider;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -69,11 +70,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private final boolean staticMethod;
     private final int priority;
     private final TransactionPhase during;
-    /**
-     * The bean declaring the method, read when a notification first needs it.
-     */
-    private volatile @Nullable CdiBean<?> declaringBean;
-    private volatile @Nullable CdiBeanContainer container;
+    private final BeanProvider<CdiBeanContainer> container;
     // what the observer observes never changes, and resolving it walks the declaring class's methods: every
     // event fired asks every observer, so the answer is worked out once and kept
     private volatile @Nullable Type observedType;
@@ -83,10 +80,12 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private volatile @Nullable Set<Annotation> observedQualifierInstances;
 
     CdiObserverMethod(BeanContext beanContext,
+                      BeanProvider<CdiBeanContainer> container,
                       BeanDefinition<?> declaring,
                       ExecutableMethod<?, ?> method,
                       AnnotationValue<CdiObserver> observer) {
         this.beanContext = beanContext;
+        this.container = container;
         this.declaring = declaring;
         this.method = method;
         this.observedParameter = observer.intValue(CdiObserver.OBSERVED_PARAMETER).orElse(0);
@@ -190,7 +189,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Bean<?> getDeclaringBean() {
-        return beanContext.getBean(CdiBeanContainer.class).beanOf(declaring);
+        return declaringBean();
     }
 
     @Override
@@ -337,21 +336,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     private CdiBeanContainer container() {
-        CdiBeanContainer found = container;
-        if (found == null) {
-            found = beanContext.getBean(CdiBeanContainer.class);
-            container = found;
-        }
-        return found;
+        return container.get();
     }
 
     private CdiBean<?> declaringBean() {
-        CdiBean<?> bean = declaringBean;
-        if (bean == null) {
-            bean = beanContext.getBean(CdiBeanContainer.class).beanOf(declaring);
-            declaringBean = bean;
-        }
-        return bean;
+        return container().beanOf(declaring);
     }
 
     @SuppressWarnings("unchecked")

@@ -88,7 +88,6 @@ public class CdiBean<T> implements Bean<T> {
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
-    private volatile @Nullable Optional<QualifierOverlay> overlay;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
@@ -326,12 +325,8 @@ public class CdiBean<T> implements Bean<T> {
                 compiled.add(declared);
             }
         }
-        Optional<QualifierOverlay> found = overlay;
-        if (found == null) {
-            // a bean of the context, the same for as long as it runs
-            found = beanContext.findBean(QualifierOverlay.class);
-            overlay = found;
-        }
+        // what a portable extension added, read as the qualifiers are asked for
+        Optional<QualifierOverlay> found = beanContext.findBean(QualifierOverlay.class);
         return found.isPresent() ? found.get().apply(definition, compiled) : compiled;
     }
 
