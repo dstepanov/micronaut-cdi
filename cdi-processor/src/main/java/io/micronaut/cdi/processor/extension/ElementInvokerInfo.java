@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiRecordedInvoker;
+import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerInfo;
@@ -48,6 +49,7 @@ record ElementInvokerInfo(String beanClassName, String methodName, String[] para
     AnnotationValue<CdiRecordedInvoker> toRecord() {
         return AnnotationValue.builder(CdiRecordedInvoker.class)
             .member("beanClass", beanClassName)
+            .member("beanType", new AnnotationClassValue<>(beanClassName))
             .member("method", methodName)
             .member("parameterTypes", parameterTypeNames)
             .member("staticMethod", staticMethod)

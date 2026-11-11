@@ -384,7 +384,8 @@ registered once the context runs, or retired or added by a development reload (`
 narrowed to the beans of the specification). The observer methods are the ones of the definitions a watch of the
 beans marked as observing hands over (`ObserverRegistry`, `WatchableBeanContext.definitions()` narrowed by
 `CdiObserving`), made again as the watch reports a change, and what an event resolves to is matched as it is fired
-rather than kept. The disposers resolved for a producer are not yet forgotten so. Core's active resolution
+rather than kept. The disposer of a producer and the bean and method an invoker names are found as they are
+needed, among the candidates the bean context keeps for the declaring class. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 

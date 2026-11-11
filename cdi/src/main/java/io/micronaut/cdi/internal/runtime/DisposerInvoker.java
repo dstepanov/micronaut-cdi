@@ -35,7 +35,6 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.inject.Singleton;
 
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Invokes the disposer method of a produced bean as the bean is destroyed.
@@ -57,12 +56,6 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
 
     private final BeanContext beanContext;
     /**
-     * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
-     * makes is disposed of by the same method.
-     */
-    private final ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
-        new ConcurrentHashMap<>();
-    /**
      * The container the parameters of a disposer are resolved through, which is a bean of the context like this
      * listener: obtained as a disposer first needs it.
      */
@@ -77,20 +70,16 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     public Object onPreDestroy(BeanPreDestroyEvent<Object> event) {
         Object bean = event.getBean();
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        Disposer found = disposers.get(definition);
-        if (found == null) {
-            AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
-            if (disposer == null) {
-                // every bean of the context is destroyed through here, and few of them were produced
-                return bean;
-            }
-            found = disposerOf(beanContext, disposer);
-            if (found == null) {
-                return bean;
-            }
-            disposers.putIfAbsent(definition, found);
+        AnnotationValue<CdiDisposer> recorded = definition.getAnnotation(CdiDisposer.class);
+        if (recorded == null) {
+            // every bean of the context is destroyed through here, and few of them were produced
+            return bean;
         }
-        Disposer disposer = found;
+        // the declaring bean is among the candidates the bean context keeps for its class
+        Disposer disposer = disposerOf(beanContext, recorded);
+        if (disposer == null) {
+            return bean;
+        }
         return event.withDependencies(dependencies -> {
             invoke(disposer, bean, dependencies);
             return bean;
