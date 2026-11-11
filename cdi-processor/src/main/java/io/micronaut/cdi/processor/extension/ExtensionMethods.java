@@ -200,6 +200,17 @@ final class ExtensionMethods {
     }
 
     /**
+     * Whether the compilation has no extension method of any phase: no extension at all, or only ones that
+     * declare none.
+     *
+     * @return Whether it has none
+     */
+    boolean isEmpty() {
+        return discoveries.isEmpty() && enhancers.isEmpty() && registrars.isEmpty() && synthesizers.isEmpty()
+            && validators.isEmpty();
+    }
+
+    /**
      * Whether any extension has a registration method (section 2.10.3).
      *
      * @return Whether one has

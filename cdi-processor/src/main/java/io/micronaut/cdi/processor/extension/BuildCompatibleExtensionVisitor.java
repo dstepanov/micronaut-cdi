@@ -133,20 +133,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * The synthesis and the validation run in {@link #finishCompilation(VisitorContext)} over the classes of the
-     * whole compilation, so this visitor has to see every class again whenever a class is changed, added or removed.
-     * An incremental compilation would otherwise give it the changed sources only, and a synthetic bean or a
-     * validation error that follows from an unchanged class would be lost.
+     * Where the compilation has build compatible extensions, the synthesis and the validation run in
+     * {@link #finishCompilation(VisitorContext)} over the classes of the whole compilation, so this visitor has to
+     * see every class again whenever a class is changed, added or removed. An incremental compilation would otherwise
+     * give it the changed sources only, and a synthetic bean or a validation error that follows from an unchanged
+     * class would be lost.
      *
      * <p>Under javac this makes the annotation processor aggregating for the incremental compilation of Gradle: every
      * class is processed again, without being compiled again, whenever a source changes. KSP cannot declare that
      * before it runs; Groovy and Python have no incremental annotation processing.</p>
      *
-     * @return {@code true}
+     * <p>A compilation without extensions - none the service loader finds on the processor path and none the
+     * compiler options name - has nothing to aggregate, and stays isolating. The extensions are loaded as the
+     * compilation starts this visitor, which Micronaut does before it asks.</p>
+     *
+     * @return Whether the compilation has build compatible extensions
      */
     @Override
     public boolean aggregatesCompilation() {
-        return true;
+        return !extensions.isEmpty();
     }
 
     /**
@@ -229,8 +234,9 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     public void visitClass(ClassElement element, VisitorContext context) {
         String name = element.getName();
         DiscoveredClasses started = discovered;
-        if (started == null || ScannedClassRegistrar.isGenerated(name)) {
-            // a class this visitor generated: the import of the scanned classes
+        if (started == null || extensions.isEmpty() || ScannedClassRegistrar.isGenerated(name)) {
+            // no extension to run, so nothing is kept of the class; or a class this visitor generated: the import
+            // of the scanned classes
             return;
         }
         started.visited(element);

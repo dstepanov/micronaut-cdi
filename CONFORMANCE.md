@@ -500,8 +500,10 @@ the record of the component is put on the definition as annotation values. The d
 first class of the compilation and has every class of it as an origin.
 
 Since what runs in `finishCompilation` follows from every class of the compilation, the visitor declares
-`TypeElementVisitor.aggregatesCompilation()`, so a module that has build compatible extensions on its processor path
-is not processed incrementally class by class. Under javac Micronaut's annotation processor is then an aggregating
+`TypeElementVisitor.aggregatesCompilation()` whenever the compilation has build compatible extensions - one the
+service loader finds on the processor path, or one the compiler options name - so such a module is not processed
+incrementally class by class. A module without extensions keeps nothing from one class to the next and stays
+isolating (`CompilationAggregationTest`). Under javac Micronaut's annotation processor is then an aggregating
 processor of every class for Gradle's incremental compilation: whenever a source is changed, added or removed, Gradle
 processes every class of the previous compilation again, without compiling the unchanged ones again, and writes again
 everything the processor wrote, so that synthesis and validation always see the whole compilation; an annotation of
@@ -532,9 +534,9 @@ container's, read as it starts from the metadata the classes were compiled with.
 What still aggregates is the build compatible extensions, whose phases the specification defines over the whole
 deployment, and it is confined to the one visitor that runs them (`BuildCompatibleExtensionVisitor`), made as the
 compilation starts it, read as its rounds and the compilation finish, and read by no other visitor. That visitor
-stays isolating for what it writes of each class it visits, and declares that it aggregates the compilation in
-`finishCompilation` (`aggregatesCompilation()`), which makes the processor aggregating for Gradle under javac (see
-above):
+stays isolating for what it writes of each class it visits, and, where the compilation has extensions, declares that
+it aggregates the compilation in `finishCompilation` (`aggregatesCompilation()`), which makes the processor
+aggregating for Gradle under javac (see above); without extensions it keeps none of the following:
 
 - `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
   `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
