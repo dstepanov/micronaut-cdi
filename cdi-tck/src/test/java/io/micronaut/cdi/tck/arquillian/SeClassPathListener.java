@@ -47,8 +47,8 @@ public final class SeClassPathListener implements IClassListener {
                 try {
                     Object archive = method.invoke(null);
                     if (archive instanceof Archive<?> built && ClassPath.isRepresentedBy(built)) {
-                        io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(
-                            MicronautDeployableContainer.classesOf(built));
+                        System.setProperty(io.micronaut.cdi.se.MicronautSeContainerInitializer.RESTRICTED_CLASSPATH,
+                            String.join(",", MicronautDeployableContainer.classesOf(built)));
                     }
                 } catch (ReflectiveOperationException e) {
                     throw new IllegalStateException("The deployment of " + type.getName()
@@ -62,7 +62,7 @@ public final class SeClassPathListener implements IClassListener {
     @Override
     public void onAfterClass(ITestClass testClass) {
         if (!org.jboss.arquillian.testng.Arquillian.class.isAssignableFrom(testClass.getRealClass())) {
-            io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(null);
+            System.clearProperty(io.micronaut.cdi.se.MicronautSeContainerInitializer.RESTRICTED_CLASSPATH);
         }
     }
 }

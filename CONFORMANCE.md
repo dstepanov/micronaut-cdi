@@ -1105,10 +1105,12 @@ own rather than the first one alone.
   (`ProcessorOptionsSystemProperties`), a value set before the compilation included; a compilation that ends
   without a final round, as one javac stops early does, has its values restored as the next compilation on its
   thread starts (since Micronaut Core 5.3), so the extensions of one deployment do not have their say in the
-  deployments compiled after it, and the harnesses keep none of the values themselves. One seam is left
-  for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
-  sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
-  `SeContainerInitializer.newInstance()`. The type hierarchy record of a class is found
+  deployments compiled after it, and the harnesses keep none of the values themselves. The classpath a
+  test's SE container sees, which the harness that runs the specification's test kit in one process restricts
+  because the kit builds the container itself through `SeContainerInitializer.newInstance()`, is an ordinary
+  property of the bootstrap (`MicronautSeContainerInitializer.RESTRICTED_CLASSPATH`), read from the bootstrap's
+  properties or the system properties as the container is initialized; the module keeps no static of its own
+  for it. The type hierarchy record of a class is found
   through the class loader of the container, and the class's own where that one finds none (`RecordedTypeIndex`):
   two deployments whose loaders see different records of a class of a loader they share each read their own.
   Micronaut finds a record once per class loader and keeps it with the class of the record (since Micronaut Core

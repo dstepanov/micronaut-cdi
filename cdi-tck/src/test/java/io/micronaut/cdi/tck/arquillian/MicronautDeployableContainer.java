@@ -87,7 +87,8 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             // standing in for that classpath: the bootstrap is told what the launched JVM would have held, and
             // the context started for the enricher holds the infrastructure alone, so that no scenario bean of
             // the archive observes this deployment's own startup
-            io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(classes);
+            System.setProperty(io.micronaut.cdi.se.MicronautSeContainerInitializer.RESTRICTED_CLASSPATH,
+                String.join(",", classes));
             restrictedTo = classes;
             try {
                 ApplicationContext context = ApplicationContext.builder()
@@ -331,7 +332,7 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         if (classesOf(archive).equals(restrictedTo)) {
             // the restriction is lifted by the deployment that made it: the next deployment may already be
             // there, with a restriction of its own, by the time the one before it is taken down
-            io.micronaut.cdi.se.MicronautSeContainerInitializer.restrictClasspath(null);
+            System.clearProperty(io.micronaut.cdi.se.MicronautSeContainerInitializer.RESTRICTED_CLASSPATH);
             restrictedTo = null;
         }
         try {

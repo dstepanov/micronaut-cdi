@@ -74,7 +74,16 @@ import java.util.StringJoiner;
 @Internal
 public final class MicronautSeContainerInitializer extends SeContainerInitializer {
 
-    private static volatile @Nullable Set<String> restrictedClasspath;
+    /**
+     * The property that restricts what a bootstrap may discover, in place of the classpath it cannot have: the
+     * application classes of the deployment, by name, separated by commas. It is what a harness that runs many
+     * logical deployments in one JVM - the kit's - sets around each, as a system property, since the kit builds
+     * the container itself through {@code SeContainerInitializer.newInstance()}; a program may give it as a
+     * property of the bootstrap. The launched JVM the specification's SE tests are written for holds only the
+     * deployment's archive; this stands in for that. Without it the whole classpath is discovered.
+     */
+    @Internal
+    public static final String RESTRICTED_CLASSPATH = "micronaut.cdi.se.restricted-classpath";
 
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
@@ -89,19 +98,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-    /**
-     * Restricts what a bootstrap on this JVM may discover, in place of the classpath it cannot have: what a
-     * harness that runs many logical deployments in one JVM — the kit's — sets around each. The launched JVM
-     * the specification's SE tests are written for holds only the deployment's archive; this stands in for
-     * that. Setting {@code null} puts the whole classpath back.
-     *
-     * @param classNames The application classes of the deployment, or {@code null} for no restriction
-     */
-    @Internal
-    public static void restrictClasspath(@Nullable Set<String> classNames) {
-        restrictedClasspath = classNames == null ? null : Set.copyOf(classNames);
-    }
 
     @Override
     public SeContainerInitializer addBeanClasses(Class<?>... classes) {
@@ -225,7 +221,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         if (!enabledInterceptors.isEmpty()) {
             builder.properties(Map.of(CdiInterceptorEnablement.ENABLED_CLASSES, joined(enabledInterceptors)));
         }
-        Set<String> classpath = restrictedClasspath;
+        Set<String> classpath = restrictedClasspath();
         if (discoveryDisabled) {
             builder.beansPredicate(bean -> belongsToSyntheticArchive(bean)
                 && (classpath == null || onClasspath(bean, classpath)));
@@ -275,6 +271,25 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             }
         }
         return null;
+    }
+
+    /**
+     * The classes {@link #RESTRICTED_CLASSPATH} restricts the bootstrap to: a property of the bootstrap, else the
+     * system property, read as the container is initialized.
+     */
+    private @Nullable Set<String> restrictedClasspath() {
+        Object given = properties.get(RESTRICTED_CLASSPATH);
+        String names = given != null ? given.toString() : System.getProperty(RESTRICTED_CLASSPATH);
+        if (names == null) {
+            return null;
+        }
+        Set<String> classes = new LinkedHashSet<>();
+        for (String name : names.split(",")) {
+            if (!name.isBlank()) {
+                classes.add(name.trim());
+            }
+        }
+        return Set.copyOf(classes);
     }
 
     private static String joined(Set<String> names) {
