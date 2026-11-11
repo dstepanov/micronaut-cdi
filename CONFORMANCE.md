@@ -483,7 +483,12 @@ its class and member up again by name and signature under KSP once its round is 
 language model an extension may keep - a class, a method, a field, a parameter, a record component, a class type -
 with the generic arguments of a type kept and equality and hash codes that do not change with the round
 (`CurrentElement`, `HandedOut`; `KeptDescriptionsTest`, `KeptDescriptionsUnderKspTest`,
-`KeptDescriptionsUnderGroovyTest`). Under javac, the import
+`KeptDescriptionsUnderGroovyTest`). What an enhancement added to a class or a member is seen on it once looked up
+again: since Micronaut Core 5.3 the annotations a visitor added are kept by the class's name and the member's
+signature rather than by the compiler's element of the round, under KSP, which makes new elements every round, and
+under javac alike, so a bean description an extension kept answers in synthesis and validation with the qualifiers,
+scope and other annotations an enhancement added
+(`KeptDescriptionsUnderKspTest.whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished`). Under javac, the import
 of the scanned classes is written as the first round that visits a class of the compilation finishes, so that a
 later round visits them; a scanned class another processor generates rounds later is imported all the same, since
 javac reads the import in the round that has the class, and one never found fails the compilation as the import
@@ -492,9 +497,20 @@ naming it.
 Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
 `VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
 the record of the component is put on the definition as annotation values. The definition is named after the
-first class of the compilation and has every class of it as an origin. What `finishCompilation` writes disables
-incremental annotation processing under Gradle: the subsequent compilations a change affects compile all the sources
-of the source set. Under KSP the definitions are aggregating outputs, written again whenever a source changes.
+first class of the compilation and has every class of it as an origin.
+
+Since what runs in `finishCompilation` follows from every class of the compilation, the visitor declares
+`TypeElementVisitor.aggregatesCompilation()`, so a module that has build compatible extensions on its processor path
+is not processed incrementally class by class. Under javac Micronaut's annotation processor is then an aggregating
+processor of every class for Gradle's incremental compilation: whenever a source is changed, added or removed, Gradle
+processes every class of the previous compilation again, without compiling the unchanged ones again, and writes again
+everything the processor wrote, so that synthesis and validation always see the whole compilation; an annotation of
+source retention in the compilation makes Gradle compile every source. Under KSP the definitions written in
+`finishCompilation` are aggregating outputs of the files of their origins, written again whenever a source changes;
+KSP cannot declare a processor aggregating before it runs, so until the extensions have written something an
+incremental KSP compilation hands the visitor the changed sources only, as the documentation of
+`TypeElementVisitor.finishCompilation` describes. The Groovy compiler and Python have no incremental annotation
+processing.
 
 Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
@@ -515,7 +531,10 @@ container's, read as it starts from the metadata the classes were compiled with.
 
 What still aggregates is the build compatible extensions, whose phases the specification defines over the whole
 deployment, and it is confined to the one visitor that runs them (`BuildCompatibleExtensionVisitor`), made as the
-compilation starts it, read as its rounds and the compilation finish, and read by no other visitor:
+compilation starts it, read as its rounds and the compilation finish, and read by no other visitor. That visitor
+stays isolating for what it writes of each class it visits, and declares that it aggregates the compilation in
+`finishCompilation` (`aggregatesCompilation()`), which makes the processor aggregating for Gradle under javac (see
+above):
 
 - `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
   `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
@@ -966,15 +985,6 @@ own rather than the first one alone.
 - **A field's annotation metadata does not include its declaring class's, a method's does.** The priority that
   selects an alternative producer field is therefore read from the declaring class explicitly
   (`ProducerVisitor.selectIfAlternative`).
-- **Under KSP, what a visitor annotated lasts one round.** Micronaut keeps the annotations a visitor added to an
-  element (`AbstractAnnotationMetadataBuilder`) by the element's native symbol, and KSP makes new symbols for every
-  round, so a class looked up again once the compilation is finished no longer carries what an enhancement added to
-  it. The language model and the descriptions of the registration phase look their elements up again once their
-  round is over (`CurrentElement`), so what an extension kept stays valid; but a bean description it kept and reads
-  in synthesis or validation answers under KSP without the qualifiers, scope and other annotations an enhancement
-  added (`KeptDescriptionsUnderKspTest.whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished`, disabled). Both
-  are needed: the elements looked up again, which this module does, and what a visitor annotated kept by the class's
-  name and the member's signature rather than by the round's symbols, which is Micronaut Core's.
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
