@@ -598,6 +598,31 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         return beans;
     }
 
+    /**
+     * Whether a name is a proper prefix of the name of a bean - one a lookup of {@code Object} with {@code Any}
+     * finds - that ends where a period separates two identifiers: what the expression language reads as a
+     * namespace. Only the definitions whose references carry a name are loaded, and no bean is described.
+     *
+     * @param prefix The name
+     * @return Whether it is a namespace
+     */
+    public boolean isNamespace(String prefix) {
+        String dotted = prefix + '.';
+        return hasNameUnder(dotted, Qualifiers.byStereotype(CdiName.class))
+            || hasNameUnder(dotted, Qualifiers.byStereotype(AnnotationUtil.NAMED));
+    }
+
+    private boolean hasNameUnder(String dotted, io.micronaut.context.Qualifier<Object> carrying) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(carrying)) {
+            String name = CdiBean.nameOf(definition);
+            if (name != null && name.length() > dotted.length() && name.startsWith(dotted)
+                && CdiBeanQualifier.isInjectable(definition)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void named(String name, io.micronaut.context.Qualifier<Object> carrying, Set<Bean<?>> beans) {
         for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(carrying)) {
             if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {

@@ -16,6 +16,7 @@
 package io.micronaut.cdi.el;
 
 import io.micronaut.aop.InterceptedProxy;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
@@ -181,9 +182,13 @@ public final class CdiELResolver extends ELResolver {
 
     /**
      * Whether the name is a proper prefix of a bean name that ends where a period separates two identifiers. It is
-     * read from the beans as they are when asked, so a bean registered once the container runs is seen.
+     * read from the beans as they are when asked, so a bean registered once the container runs is seen: of this
+     * implementation's container from the named definitions alone, before any bean is described.
      */
     private boolean isNamespace(String name) {
+        if (beans instanceof CdiBeanContainer container) {
+            return container.isNamespace(name);
+        }
         String prefix = name + '.';
         for (Bean<?> bean : beans.getBeans(Object.class, Any.Literal.INSTANCE)) {
             String beanName = bean.getName();
