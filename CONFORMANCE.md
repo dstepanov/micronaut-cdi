@@ -149,8 +149,10 @@ on the SE block, which lists its classes by name.
 *CDI 5.0 section 2.5.1, the kit's sealed classes.* A built-in scope annotation is `@Inherited`, and Java reads a
 class that inherits one as annotated with it. A bean archive discovers a class by a bean defining annotation the
 class declares, so a subclass that declares no scope, no stereotype and not `@Interceptor`, and no producer or
-observer method, is no bean of its own however its superclass is scoped (`CdiScopeVisitor`); one that declares a
-stereotype keeps the scope it inherits, as section 2.3 has it.
+observer method, is no bean of its own where it is discovered however its superclass is scoped (`CdiScopeVisitor`,
+`UndiscoveredSubclass`); one that declares a stereotype keeps the scope it inherits, as section 2.3 has it. A class
+handed to the synthetic archive of the SE bootstrap (`addBeanClasses` with discovery turned off) is a bean with the
+scope it inherits: the bootstrap names those classes in a property the condition reads.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 

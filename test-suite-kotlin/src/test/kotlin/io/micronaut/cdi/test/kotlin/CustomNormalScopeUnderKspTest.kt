@@ -12,6 +12,7 @@ import jakarta.enterprise.inject.Stereotype
 import jakarta.inject.Singleton
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.lang.annotation.Inherited
 
@@ -95,7 +96,7 @@ class CustomNormalScopeUnderKspTest {
     @Test
     fun theScopesOwnAnnotationLeadsTheApplicationScope() {
         ApplicationContext.run().use { context ->
-            for (type in listOf(Fog::class.java, Mist::class.java, Steam::class.java)) {
+            for (type in listOf(Fog::class.java, Steam::class.java)) {
                 val definition = context.findProxyTargetBeanDefinition(type, null).orElseThrow()
                 assertEquals(Foggy::class.java.name, definition.scopeName.orElse(null), type.name)
                 assertEquals(
@@ -104,7 +105,8 @@ class CustomNormalScopeUnderKspTest {
                     type.name
                 )
             }
-            assertEquals(context.getBean(Mist::class.java).id(), context.getBean(Mist::class.java).id())
+            // a subclass that declares no bean defining annotation is not discovered by the scope it inherits
+            assertTrue(context.getBeanDefinitions(Mist::class.java).isEmpty())
             assertEquals(context.getBean(Steam::class.java).id(), context.getBean(Steam::class.java).id())
         }
     }

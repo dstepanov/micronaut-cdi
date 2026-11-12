@@ -24,6 +24,7 @@ import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.runtime.UndiscoveredSubclass;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
@@ -247,6 +248,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         }
         if (!enabledInterceptors.isEmpty()) {
             builder.properties(Map.of(CdiInterceptorEnablement.ENABLED_CLASSES, joined(enabledInterceptors)));
+        }
+        if (discoveryDisabled && !beanClasses.isEmpty()) {
+            // a class handed to a synthetic archive is a bean even where it declares no bean defining annotation
+            builder.properties(Map.of(UndiscoveredSubclass.ADDED_CLASSES, joined(beanClasses)));
         }
         Set<String> classpath = restrictedClasspath();
         if (discoveryDisabled) {

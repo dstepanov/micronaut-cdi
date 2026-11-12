@@ -265,11 +265,11 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         }
         if (isDiscoveredOnlyThroughItsSuperclass(element, context)) {
             // a bean archive discovers a class by a bean defining annotation the class declares (section 2.5.1): a
-            // subclass that declares none and only inherits a scope is no bean of its own. Where a class is added
-            // to the deployment explicitly - an extension's scanned class - the scope it is given is declared
-            element.annotate(Requires.class, builder -> builder
-                .member("condition", new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.NotABean")));
-            return;
+            // subclass that declares none and only inherits a scope is no bean of its own where it is discovered.
+            // A class added to a synthetic archive explicitly is a bean with the scope it inherits, which the
+            // condition reads from what the SE bootstrap was handed
+            element.annotate(Requires.class, builder -> builder.member("condition",
+                new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.UndiscoveredSubclass")));
         }
         if (element.hasDeclaredAnnotation(CdiScope.class)) {
             // a mapper has already read what the class declares
@@ -313,6 +313,9 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         if (element.isAbstract() || element.isInterface() || scopeDeclaredOn(element, context) != null
             || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
             || element.hasDeclaredStereotype(AnnotationUtil.SCOPE)
+            || element.hasDeclaredStereotype(Cdi.NORMAL_SCOPE)
+            || element.hasDeclaredStereotype(Cdi.DEPENDENT)
+            || element.hasDeclaredStereotype(Cdi.STEREOTYPE)
             || element.hasDeclaredStereotype("io.micronaut.context.annotation.Bean")) {
             return false;
         }
