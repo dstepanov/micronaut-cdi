@@ -55,6 +55,8 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -90,6 +92,7 @@ import java.util.function.Supplier;
 public final class RecordedSynthesis {
 
     private static final String DEPENDENT = "jakarta.enterprise.context.Dependent";
+    private static final Logger LOG = LoggerFactory.getLogger(RecordedSynthesis.class);
 
     private final BeanContext beanContext;
 
@@ -298,16 +301,38 @@ public final class RecordedSynthesis {
             }
         }
         builder.exposedTypes(exposed);
-        if (disposer != null) {
+        boolean autoClose = record.booleanValue("autoClose").orElse(false);
+        if (disposer != null || autoClose) {
             // the definition disposes of each instance it created as the instance is destroyed, which is the
-            // moment the extension meant (section 2.10.5)
-            builder.injectedDisposer((disposalContext, instance) ->
-                dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, record, parameters, instance,
-                    disposalContext));
+            // moment the extension meant (section 2.10.5), and then closes an auto-closeable one (CDI 5.0, section
+            // 2.10): both before Micronaut releases what the creation obtained, which the instance may still use
+            builder.injectedDisposer((disposalContext, instance) -> {
+                try {
+                    if (disposer != null) {
+                        dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, record, parameters, instance,
+                            disposalContext);
+                    }
+                } finally {
+                    if (autoClose) {
+                        close(implementation, instance);
+                    }
+                }
+            });
         }
         RuntimeBeanDefinition<T> definition = builder.build();
         registered.set(definition);
         beanContext.registerBeanDefinition(definition);
+    }
+
+    private static void close(Class<?> implementation, Object instance) {
+        if (instance instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                // destruction may not throw (section 2.10)
+                LOG.error("Closing the auto-closeable synthetic bean {} failed", implementation.getName(), e);
+            }
+        }
     }
 
     /**

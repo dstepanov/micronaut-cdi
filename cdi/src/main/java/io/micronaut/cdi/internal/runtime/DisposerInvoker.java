@@ -21,6 +21,7 @@ import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanProvider;
+import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.event.BeanDestroyedEvent;
 import io.micronaut.context.event.BeanDestroyedEventListener;
@@ -56,7 +57,8 @@ import java.util.Optional;
  * section 2.10): a produced one right after its disposer method, as section 7.3.2 orders it, and any other once
  * Micronaut has destroyed it, which is after its {@code PreDestroy} callbacks. The call is made on the instance
  * itself - the target of a client proxy - so that it is no business method invocation, and what it throws is
- * logged, since destruction may not throw.</p>
+ * logged, since destruction may not throw. A synthetic bean is closed by the disposer of its runtime definition
+ * instead, which runs before its creation's dependents are released.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -108,8 +110,9 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     @Override
     public void onDestroyed(BeanDestroyedEvent<Object> event) {
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        // a produced bean was closed after its disposer, before its dependents went
-        if (!definition.hasAnnotation(CdiProducer.class)) {
+        // a produced bean was closed after its disposer, before its dependents went, and a synthetic one by the
+        // disposer of its runtime definition
+        if (!definition.hasAnnotation(CdiProducer.class) && !(definition instanceof RuntimeBeanDefinition<?>)) {
             closeIfAutoClose(definition, event.getBean());
         }
     }
