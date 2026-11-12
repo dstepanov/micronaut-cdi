@@ -85,7 +85,11 @@ final class DeploymentClassLoader extends ClassLoader {
             try {
                 if (parentHas(name)) {
                     // the shared compilation already produced this one, and the parent's copy is the one in
-                    // the scenario classes' runtime package
+                    // the scenario classes' runtime package - unless this deployment compiled it otherwise, its
+                    // extensions having their say, in which case its own bytes are served
+                    if (!sameAsParent(name)) {
+                        childFirst.add(name);
+                    }
                     continue;
                 }
                 Class<?> host = hostOf(name);
@@ -120,7 +124,7 @@ final class DeploymentClassLoader extends ClassLoader {
         // has to be served fresh too, or the stale one it links to is what the context reads
         for (String fresh : List.copyOf(childFirst)) {
             for (String name : compiled.keySet()) {
-                if (DEFINED_WITH_HOST.containsKey(name)
+                if ((DEFINED_WITH_HOST.containsKey(name) || parentHas(name))
                     && (name.startsWith(fresh + "$") || fresh.startsWith(name + "$"))) {
                     childFirst.add(name);
                 }
@@ -143,6 +147,22 @@ final class DeploymentClassLoader extends ClassLoader {
                 resolveClass(loaded);
             }
             return loaded;
+        }
+    }
+
+    /**
+     * Whether what this deployment compiled of a class is what the parent holds of it, byte for byte.
+     */
+    private boolean sameAsParent(String name) {
+        JavaFileObject file = compiled.get(name);
+        if (file == null) {
+            return true;
+        }
+        try (InputStream mine = file.openInputStream();
+             InputStream parents = getParent().getResourceAsStream(name.replace('.', '/') + ".class")) {
+            return parents != null && java.util.Arrays.equals(mine.readAllBytes(), parents.readAllBytes());
+        } catch (IOException e) {
+            return true;
         }
     }
 
