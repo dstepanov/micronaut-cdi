@@ -20,6 +20,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.core.type.WildcardArgument;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.inject.Provider;
@@ -58,6 +59,16 @@ public final class CdiInstanceFactory<T> extends AbstractCdiInjectionPointBeanDe
                                 BeanContext context,
                                 Argument<?> type,
                                 List<CdiQualifier> qualifiers) {
+        Argument<?> required = type;
+        if (type instanceof WildcardArgument<?> wildcard) {
+            // the required type of an Instance<? extends X> is X, of an Instance<?> Object; an Instance<? super X>
+            // names none (CDI 5.0, section 5.6.1): a definition error at an injection point, and refused here when a
+            // lookup asks for one
+            if (wildcard.hasLowerBound()) {
+                throw new IllegalArgumentException("An Instance<" + type.getTypeName() + "> names no type to look up");
+            }
+            required = wildcard.getUpperBounds().isEmpty() ? Argument.OBJECT_ARGUMENT : wildcard.getUpperBounds().get(0);
+        }
         InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
@@ -66,7 +77,7 @@ public final class CdiInstanceFactory<T> extends AbstractCdiInjectionPointBeanDe
         // what the lookup creates of dependent instances belongs to the bean it is injected into, and is destroyed
         // with it: the resolver of that bean creates it, under the segment of this injection point
         return new CdiInstance<>(context, injectedAt, segment,
-            OwnedDependents.ownedBy(context, resolutionContext.getDependencyResolver()), (Argument<T>) type,
+            OwnedDependents.ownedBy(context, resolutionContext.getDependencyResolver()), (Argument<T>) required,
             qualifiers);
     }
 }

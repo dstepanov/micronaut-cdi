@@ -254,6 +254,19 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     }
 
     @Override
+    public boolean isSealed() {
+        return element.get().isSealed();
+    }
+
+    @Override
+    public Collection<ClassInfo> permittedSubclasses() {
+        // what the class permits, each resolved to its declaration as the superclass and interfaces are
+        return element.get().getPermittedSubclasses().stream()
+            .map(subclass -> (ClassInfo) declarationOf(subclass, context()))
+            .toList();
+    }
+
+    @Override
     public int modifiers() {
         return modifiersOf(element.get().getModifiers());
     }

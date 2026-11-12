@@ -122,7 +122,8 @@ public final class SpecificationTypes {
      * @param type The type
      * @param <T>  The type
      * @return The argument
-     * @throws IllegalArgumentException For a type with a wildcard or a type variable in it
+     * @throws IllegalArgumentException For a type with a wildcard or a type variable in it, but for a wildcard argument
+     *                                  of the built-in {@code Instance}, {@code Provider} and {@code Event}
      */
     @SuppressWarnings("unchecked")
     public static <T> Argument<T> lookupArgumentOf(Type type) {
@@ -132,8 +133,14 @@ public final class SpecificationTypes {
         if (type instanceof ParameterizedType parameterized) {
             Type[] arguments = parameterized.getActualTypeArguments();
             Argument<?>[] resolved = new Argument<?>[arguments.length];
+            boolean builtIn = isBuiltInLookup(parameterized.getRawType());
             for (int i = 0; i < arguments.length; i++) {
-                resolved[i] = lookupArgumentOf(arguments[i]);
+                // the built-in Instance and Event beans are looked up with a wildcard as freely as they are
+                // injected with one (CDI 5.0, sections 5.6.1 and 9.2): what the wildcard stands for is theirs to
+                // read, and one that names nothing is refused as they are built. Any other type keeps the rule
+                // that a wildcard names no bean type to look up
+                resolved[i] = builtIn && arguments[i] instanceof WildcardType
+                    ? argumentOf(arguments[i], Map.of()) : lookupArgumentOf(arguments[i]);
             }
             return (Argument<T>) Argument.of((Class<?>) parameterized.getRawType(), resolved);
         }
@@ -144,6 +151,12 @@ public final class SpecificationTypes {
         }
         throw new IllegalArgumentException("A bean cannot be looked up by the type " + type + ": only a class, "
             + "a parameterized type and an array of one describe a bean");
+    }
+
+    private static boolean isBuiltInLookup(Type raw) {
+        return raw instanceof Class<?> type && ("jakarta.enterprise.inject.Instance".equals(type.getName())
+            || "jakarta.enterprise.event.Event".equals(type.getName())
+            || "jakarta.inject.Provider".equals(type.getName()));
     }
 
     private static Argument<?>[] argumentsOf(Type[] types, Map<String, Class<?>> converting) {

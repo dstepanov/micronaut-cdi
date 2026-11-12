@@ -29,6 +29,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
 import io.micronaut.inject.ProxyBeanDefinition;
+import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.enterprise.inject.spi.DefinitionException;
@@ -36,9 +37,15 @@ import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.spi.Extension;
 import org.jspecify.annotations.Nullable;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,8 +70,10 @@ import java.util.StringJoiner;
  *
  * <p>What belongs to CDI Full says so rather than pretending: a portable extension
  * ({@code addExtensions}) and a decorator ({@code enableDecorators}) have no compile-time counterpart here.
- * A build compatible extension is found through the service loader while the application compiles, so handing
- * one to the bootstrap at runtime is refused the same way. {@code enableInterceptors} accepts the interceptor
+ * A build compatible extension is found through the service loader while the application compiles, so one handed
+ * to the bootstrap at runtime ({@code addBuildCompatibleExtensions}, CDI 5.0) has already run where it is registered
+ * as a service provider, and adding it again changes nothing; one that is not registered could only run as the
+ * container starts, which is not how this container works, and the bootstrap fails naming it. {@code enableInterceptors} accepts the interceptor
  * classes the Jakarta Interceptors processor compiled and enables the ones that declare no priority, through the
  * property {@link CdiInterceptorEnablement} reads; interception itself was woven at compile time.</p>
  *
@@ -85,6 +94,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     @Internal
     public static final String RESTRICTED_CLASSPATH = "micronaut.cdi.se.restricted-classpath";
 
+    private static final String BUILD_COMPATIBLE_EXTENSION_SERVICES =
+        "META-INF/services/" + BuildCompatibleExtension.class.getName();
+
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
     private final Set<String> recursivePackages = new LinkedHashSet<>();
@@ -95,6 +107,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     private final List<Extension> extensionInstances = new ArrayList<>();
     private final List<Class<? extends Extension>> extensionClasses = new ArrayList<>();
+    private final Set<String> buildCompatibleExtensions = new LinkedHashSet<>();
 
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -145,6 +158,16 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     @Override
     public final SeContainerInitializer addExtensions(Class<? extends Extension>... extensions) {
         extensionClasses.addAll(List.of(extensions));
+        return this;
+    }
+
+    @SafeVarargs
+    @Override
+    public final SeContainerInitializer addBuildCompatibleExtensions(
+        Class<? extends BuildCompatibleExtension>... extensions) {
+        for (Class<? extends BuildCompatibleExtension> extension : extensions) {
+            buildCompatibleExtensions.add(extension.getName());
+        }
         return this;
     }
 
@@ -209,6 +232,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     @Override
     public SeContainer initialize() {
+        checkBuildCompatibleExtensionsRan();
         ApplicationContextBuilder builder = ApplicationContext.builder(classLoader)
             .properties(properties);
         if (!selectedAlternatives.isEmpty()) {
@@ -253,6 +277,43 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 throw said;
             }
             throw e;
+        }
+    }
+
+    /**
+     * Checks that every build compatible extension handed to the bootstrap is one the compilation ran: one
+     * registered as a service provider of {@link BuildCompatibleExtension}, the way the compiler discovers it.
+     * The service files are read as text; no extension is loaded or instantiated at runtime.
+     */
+    private void checkBuildCompatibleExtensionsRan() {
+        if (buildCompatibleExtensions.isEmpty()) {
+            return;
+        }
+        Set<String> registered = new LinkedHashSet<>();
+        try {
+            Enumeration<URL> files = classLoader.getResources(BUILD_COMPATIBLE_EXTENSION_SERVICES);
+            while (files.hasMoreElements()) {
+                try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(files.nextElement().openStream(), StandardCharsets.UTF_8))) {
+                    for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                        int comment = line.indexOf('#');
+                        String name = (comment < 0 ? line : line.substring(0, comment)).trim();
+                        if (!name.isEmpty()) {
+                            registered.add(name);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new DeploymentException("The build compatible extensions registered as service providers could "
+                + "not be read", e);
+        }
+        for (String extension : buildCompatibleExtensions) {
+            if (!registered.contains(extension)) {
+                throw new DeploymentException("The build compatible extension " + extension + " is not registered "
+                    + "in " + BUILD_COMPATIBLE_EXTENSION_SERVICES + ": a build compatible extension runs as the "
+                    + "application compiles, which is when it has to be found. See Conformance");
+            }
         }
     }
 

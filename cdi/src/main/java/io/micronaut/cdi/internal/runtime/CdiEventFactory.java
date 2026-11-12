@@ -20,6 +20,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.core.type.WildcardArgument;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 
@@ -59,6 +60,15 @@ public final class CdiEventFactory<T> extends AbstractCdiInjectionPointBeanDefin
         // qualifiers of the point it was injected into (section 10.2.1)
         List<CdiQualifier> injected = qualifiers.isEmpty()
             ? List.of(CdiQualifier.DEFAULT) : qualifiers;
+        Argument<?> specified = type;
+        if (type instanceof WildcardArgument<?> wildcard) {
+            // the specified type of an Event<? super X> is X; an Event<?> or Event<? extends X> names none (CDI 5.0,
+            // section 9.2): a definition error at an injection point, and refused here when a lookup asks for one
+            if (!wildcard.hasLowerBound()) {
+                throw new IllegalArgumentException("An Event<" + type.getTypeName() + "> names no type to fire");
+            }
+            specified = wildcard.getLowerBounds().get(0);
+        }
         InjectionPoint injectedAt = null;
         BeanResolutionContext.Segment<?, ?> segment = resolutionContext.getPath().currentSegment().orElse(null);
         if (segment != null) {
@@ -66,6 +76,6 @@ public final class CdiEventFactory<T> extends AbstractCdiInjectionPointBeanDefin
         }
         // an Argument is itself a Type, so the conversion is spelled out rather than left to overloading
         return new CdiEvent<>(context.getBean(ObserverRegistry.class),
-            type, injected, injectedAt);
+            specified, injected, injectedAt);
     }
 }

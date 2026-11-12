@@ -221,6 +221,55 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         checkType(parameter.getGenericType(), parameter, rules, context);
     }
 
+    /**
+     * What CDI 5.0 makes a definition error of a wildcard at an {@code Event} or {@code Instance} injection point
+     * (sections 5.6.1 and 9.2): {@code Event<?>} and {@code Event<? extends X>}, which name no type to fire,
+     * {@code Instance<? super X>}, which names no type to look up, and an {@code Instance} of an event no injection
+     * point may have - a raw one, or one of those two.
+     *
+     * @param type The type of the injection point
+     * @return The problem, or {@code null} where there is none
+     */
+    private static @Nullable String wildcardProblemOf(ClassElement type) {
+        if (EVENT.equals(type.getName())) {
+            return eventWildcardProblemOf(type);
+        }
+        if (!INSTANCE.equals(type.getName()) || type.isRawType()) {
+            return null;
+        }
+        ClassElement argument = type.getFirstTypeArgument().orElse(null);
+        if (argument == null) {
+            return null;
+        }
+        if (argument instanceof WildcardElement wildcard) {
+            if (!wildcard.getLowerBounds().isEmpty()) {
+                return "An Instance<? super X> names no type to look up (section 5.6.1)";
+            }
+            argument = wildcard.getUpperBounds().isEmpty() ? null : wildcard.getUpperBounds().get(0);
+            if (argument == null) {
+                return null;
+            }
+        }
+        if (EVENT.equals(argument.getName())) {
+            if (argument.isRawType()) {
+                return "An Instance of a raw Event looks up an event no injection point may have (section 5.6.1)";
+            }
+            String problem = eventWildcardProblemOf(argument);
+            if (problem != null) {
+                return "An Instance looks up an event no injection point may have: " + problem;
+            }
+        }
+        return null;
+    }
+
+    private static @Nullable String eventWildcardProblemOf(ClassElement event) {
+        ClassElement argument = event.getFirstTypeArgument().orElse(null);
+        if (argument instanceof WildcardElement wildcard && wildcard.getLowerBounds().isEmpty()) {
+            return "An Event<?> or Event<? extends X> names no type to fire an event as (section 9.2)";
+        }
+        return null;
+    }
+
     private void checkType(ClassElement type, Element at, InjectionSiteRules rules, VisitorContext context) {
         if (type.isGenericPlaceholder() && !rules.typeVariablesAllowed()) {
             context.fail("An injection point whose declared type is a type variable is a definition error "
@@ -230,6 +279,11 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         if ((INSTANCE.equals(type.getName()) || EVENT.equals(type.getName())) && type.isRawType()) {
             context.fail("A raw " + type.getSimpleName() + " names no type: parameterize it with the type it "
                 + "carries", at);
+            return;
+        }
+        String wildcardProblem = wildcardProblemOf(type);
+        if (wildcardProblem != null) {
+            context.fail(wildcardProblem, at);
             return;
         }
         checkMetadataInjection(type, at, rules.declaring(), rules.allowedMetadataType(), context);
