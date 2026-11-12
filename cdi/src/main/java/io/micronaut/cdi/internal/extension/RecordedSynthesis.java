@@ -16,15 +16,19 @@
 package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticInjectionPoint;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
+import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifiers;
+import io.micronaut.cdi.internal.runtime.CdiSyntheticInjections;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.runtime.RecordedTypes;
 import io.micronaut.cdi.internal.runtime.OwnedDependents;
@@ -61,6 +65,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * Registers the synthetic beans and observers the build compatible extensions described (section 2.10.5).
@@ -121,6 +127,7 @@ public final class RecordedSynthesis {
             return;
         }
         List<RecordedInvoker> invokers = new ArrayList<>();
+        List<AnnotationValue<CdiSyntheticBean>> syntheticInjectionPoints = new ArrayList<>();
         for (Map.Entry<String, BeanDefinition<?>> bean : beans.entrySet()) {
             AnnotationValue<CdiSyntheticBean> record =
                 bean.getValue().getAnnotationMetadata().getAnnotation(CdiSyntheticBean.class);
@@ -137,6 +144,7 @@ public final class RecordedSynthesis {
                     + "of the application: the definitions compiled with it are not on the classpath");
             }
             register(record, parameters, bean.getValue(), disposer);
+            syntheticInjectionPoints.add(record);
         }
         ObserverRegistry observerRegistry = beanContext.getBean(ObserverRegistry.class);
         for (BeanDefinition<?> observer : observers.values()) {
@@ -156,6 +164,11 @@ public final class RecordedSynthesis {
         // registered, rather than at the first invocation (CDI 4.1, chapter 7)
         for (RecordedInvoker invoker : invokers) {
             invoker.validateLookups();
+        }
+        // so are the injection points an extension registered for a synthetic bean (CDI 5.0, section 12.5)
+        for (AnnotationValue<CdiSyntheticBean> record : syntheticInjectionPoints) {
+            CdiSyntheticInjections.validate(beanContext, record.stringValue("implementation").orElse(""),
+                record.getAnnotations("injectionPoints", CdiSyntheticInjectionPoint.class));
         }
     }
 
@@ -241,10 +254,13 @@ public final class RecordedSynthesis {
                 + " of a synthetic bean is not on the classpath"));
         Class<? extends Annotation> scope = scopeOf(record);
         List<Argument<?>> types = typesOf(record);
+        // the definition being registered, which the creation tells the dependent instances it obtains through
+        // SyntheticInjections they are injected into (CDI 5.0): set once it is built, before anything is created
+        AtomicReference<@Nullable BeanDefinition<T>> registered = new AtomicReference<>();
         RuntimeBeanDefinition.Builder<T> builder = RuntimeBeanDefinition
             .builder(beanTypeOf(implementation, types), creationContext ->
-                create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, parameters,
-                    creationContext));
+                create(implementation, scope, (BeanDefinition<SyntheticBeanCreator<T>>) creator, record, parameters,
+                    creationContext, registered.get()));
         List<AnnotationValue<Annotation>> qualifiers = record.getAnnotations(CdiSyntheticBean.QUALIFIERS);
         Qualifier<T> qualifier = CdiQualifiers.declaredQualifierOf(qualifiers);
         String name = record.stringValue("name").filter(given -> !given.isEmpty()).orElse(null);
@@ -286,9 +302,12 @@ public final class RecordedSynthesis {
             // the definition disposes of each instance it created as the instance is destroyed, which is the
             // moment the extension meant (section 2.10.5)
             builder.injectedDisposer((disposalContext, instance) ->
-                dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, parameters, instance, disposalContext));
+                dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, record, parameters, instance,
+                    disposalContext));
         }
-        beanContext.registerBeanDefinition(builder.build());
+        RuntimeBeanDefinition<T> definition = builder.build();
+        registered.set(definition);
+        beanContext.registerBeanDefinition(definition);
     }
 
     /**
@@ -340,14 +359,22 @@ public final class RecordedSynthesis {
     /**
      * Disposes of an instance of a synthetic bean the way the extension said to (section 2.10.5).
      */
+    @SuppressWarnings("removal")
     private <T> void dispose(BeanDefinition<SyntheticBeanDisposer<T>> disposerDefinition,
+                             AnnotationValue<CdiSyntheticBean> record,
                              CdiParameters parameters, T instance,
                              RuntimeBeanDefinition.DisposalContext disposalContext) {
         SyntheticBeanDisposer<T> disposer = beanContext.getBean(disposerDefinition);
         // what the disposal function looks up as a dependent instance lives only as long as the disposal itself
         // (section 2.10.5): the resolver of the disposal destroys it as the disposer returns
         try (CdiInstance<Object> lookup = CdiInstance.ownedBy(beanContext, dependentsOf(disposalContext))) {
-            disposer.dispose(instance, lookup, parameters);
+            // the method the disposer implements, which the compiler read off its class (CDI 5.0)
+            if (record.booleanValue("disposerTakesInjections").orElse(false)) {
+                disposer.dispose(instance, CdiSyntheticInjections.of(beanContext, lookup, null,
+                    record.getAnnotations("injectionPoints", CdiSyntheticInjectionPoint.class), true), parameters);
+            } else {
+                disposer.dispose(instance, lookup, parameters);
+            }
         }
     }
 
@@ -422,6 +449,14 @@ public final class RecordedSynthesis {
         if (record.booleanValue("alternative").orElse(false)) {
             metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Alternative", Map.of());
         }
+        boolean reserve = record.booleanValue("reserve").orElse(false);
+        boolean eager = record.booleanValue("eager").orElse(false);
+        boolean autoClose = record.booleanValue("autoClose").orElse(false);
+        if (reserve || eager || autoClose) {
+            // the attributes of CDI 5.0, recorded as the compiler records them on a class bean
+            metadata.addDeclaredAnnotation(CdiBeanAttributes.class.getName(),
+                Map.of("reserve", reserve, "eager", eager, "autoClose", autoClose));
+        }
         // the bean types are the ones the definition is registered with, which are exactly the declared ones
         metadata.addDeclaredAnnotation(CdiDeclaredTypes.class.getName(), Map.of());
         return metadata;
@@ -437,20 +472,30 @@ public final class RecordedSynthesis {
      * ({@link OwnedDependents#within}), so the metadata finds the point the bean is created for on the path of the
      * resolution, as it finds it for any bean injected there.</p>
      */
+    @SuppressWarnings("removal")
     private <T> T create(Class<T> implementation,
                          @Nullable Class<? extends Annotation> scope,
                          BeanDefinition<SyntheticBeanCreator<T>> creatorDefinition,
+                         AnnotationValue<CdiSyntheticBean> record,
                          CdiParameters parameters,
-                         RuntimeBeanDefinition.CreationContext creationContext) {
+                         RuntimeBeanDefinition.CreationContext creationContext,
+                         @Nullable BeanDefinition<T> definition) {
         SyntheticBeanCreator<T> creator = beanContext.getBean(creatorDefinition);
         // what the creation function looks up as dependent instances belongs to the instance it creates, and is
         // destroyed with it (section 2.10.5): the resolver of the creation creates it
         OwnedDependents dependents = dependentsOf(creationContext);
         CdiInstance<Object> lookup = CdiInstance.ownedBy(beanContext, dependents);
+        // the method the creator implements, which the compiler read off its class (CDI 5.0): the one that takes
+        // the injections the extension registered, or the deprecated one that takes the lookup itself
+        Supplier<T> creation = record.booleanValue("creatorTakesInjections").orElse(false)
+            ? () -> creator.create(CdiSyntheticInjections.of(beanContext, lookup,
+                definition == null ? null : beanContext.getBean(CdiBeanContainer.class).beanOf(definition),
+                record.getAnnotations("injectionPoints", CdiSyntheticInjectionPoint.class), false), parameters)
+            : () -> creator.create(lookup, parameters);
         if (isCreatedForAnInjectionPoint(implementation, scope, creationContext)) {
-            return dependents.within(creationContext, () -> creator.create(lookup, parameters));
+            return dependents.within(creationContext, creation);
         }
-        return creator.create(lookup, parameters);
+        return creation.get();
     }
 
     /**

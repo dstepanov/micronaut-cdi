@@ -63,6 +63,11 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
     private @Nullable String name;
     private @Nullable Integer priority;
     private boolean alternative;
+    private boolean alternativeSet;
+    private @Nullable Boolean reserve;
+    private @Nullable Boolean eager;
+    private @Nullable Boolean autoClose;
+    private final List<InjectionPoint> injectionPoints = new ArrayList<>();
     private @Nullable ClassElement creator;
     private @Nullable ClassElement disposer;
 
@@ -119,6 +124,22 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     boolean alternative() {
         return alternative;
+    }
+
+    boolean reserve() {
+        return Boolean.TRUE.equals(reserve);
+    }
+
+    boolean eager() {
+        return Boolean.TRUE.equals(eager);
+    }
+
+    boolean autoClose() {
+        return Boolean.TRUE.equals(autoClose);
+    }
+
+    List<InjectionPoint> injectionPoints() {
+        return injectionPoints;
     }
 
     ClassElement creator() {
@@ -179,7 +200,94 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> alternative(boolean isAlternative) {
+        if (alternativeSet) {
+            throw new IllegalStateException("alternative() was already called for the synthetic bean "
+                + implementation.getName());
+        }
+        if (isAlternative && reserve()) {
+            throw new IllegalStateException("The synthetic bean " + implementation.getName()
+                + " is a reserve, and may not also be an alternative (section 2.8.1)");
+        }
+        this.alternativeSet = true;
         this.alternative = isAlternative;
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> reserve(boolean isReserve) {
+        if (reserve != null) {
+            throw new IllegalStateException("reserve() was already called for the synthetic bean "
+                + implementation.getName());
+        }
+        if (isReserve && alternative) {
+            throw new IllegalStateException("The synthetic bean " + implementation.getName()
+                + " is an alternative, and may not also be a reserve (section 2.8.1)");
+        }
+        this.reserve = isReserve;
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> eager(boolean isEager) {
+        if (eager != null) {
+            throw new IllegalStateException("eager() was already called for the synthetic bean "
+                + implementation.getName());
+        }
+        this.eager = isEager;
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> autoClose(boolean isAutoClose) {
+        if (autoClose != null) {
+            throw new IllegalStateException("autoClose() was already called for the synthetic bean "
+                + implementation.getName());
+        }
+        this.autoClose = isAutoClose;
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Class<?> type) {
+        return withInjectionPoint(type, new Annotation[0]);
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Class<?> type, Annotation... qualifiers) {
+        return withInjectionPoint(new VisitorTypes(context).of(type), qualifiers);
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Class<?> type, AnnotationInfo... qualifiers) {
+        return withInjectionPoint(new VisitorTypes(context).of(type), qualifiers);
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Type type) {
+        return withInjectionPoint(type, new Annotation[0]);
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Type type, Annotation... qualifiers) {
+        List<AnnotationValue<?>> values = new ArrayList<>(qualifiers == null ? 0 : qualifiers.length);
+        if (qualifiers != null) {
+            for (Annotation qualifier : qualifiers) {
+                values.add(SyntheticRecords.annotationOf(qualifier));
+            }
+        }
+        injectionPoints.add(new InjectionPoint(type, values));
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Type type, AnnotationInfo... qualifiers) {
+        List<AnnotationValue<?>> values = new ArrayList<>(qualifiers == null ? 0 : qualifiers.length);
+        if (qualifiers != null) {
+            for (AnnotationInfo qualifier : qualifiers) {
+                values.add(SyntheticRecords.annotationOf(context, qualifier));
+            }
+        }
+        injectionPoints.add(new InjectionPoint(type, values));
         return this;
     }
 
@@ -332,5 +440,14 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
     private SyntheticBeanBuilder<T> param(String key, AnnotationValue<CdiSyntheticParameter> value) {
         parameters.put(key, value);
         return this;
+    }
+
+    /**
+     * An injection point the creation or destruction function may look up (CDI 5.0).
+     *
+     * @param type       The required type
+     * @param qualifiers The required qualifiers, none standing for {@code @Default}
+     */
+    record InjectionPoint(Type type, List<AnnotationValue<?>> qualifiers) {
     }
 }

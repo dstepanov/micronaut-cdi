@@ -132,6 +132,51 @@ public @interface CdiSyntheticBean {
     String[] alternativeStereotypes() default {};
 
     /**
+     * Whether the bean is a reserve (CDI 5.0), declared so or through a stereotype.
+     *
+     * @return Whether it is a reserve
+     */
+    boolean reserve() default false;
+
+    /**
+     * Whether the bean is eagerly initialized (CDI 5.0), declared so or through a stereotype.
+     *
+     * @return Whether it is eager
+     */
+    boolean eager() default false;
+
+    /**
+     * Whether the bean is auto-closeable (CDI 5.0), declared so or through a stereotype.
+     *
+     * @return Whether it is auto-closeable
+     */
+    boolean autoClose() default false;
+
+    /**
+     * The injection points the extension registered for the creation and destruction functions to look up through
+     * {@code SyntheticInjections} (CDI 5.0).
+     *
+     * @return The injection points
+     */
+    CdiSyntheticInjectionPoint[] injectionPoints() default {};
+
+    /**
+     * Whether the creator implements {@code create(SyntheticInjections, Parameters)}, which the compiler read off
+     * the class the extension named, rather than the deprecated {@code create(Instance, Parameters)}.
+     *
+     * @return Whether the creator takes the injections
+     */
+    boolean creatorTakesInjections() default false;
+
+    /**
+     * Whether the disposer implements {@code dispose(T, SyntheticInjections, Parameters)} rather than the
+     * deprecated {@code dispose(T, Instance, Parameters)}.
+     *
+     * @return Whether the disposer takes the injections
+     */
+    boolean disposerTakesInjections() default false;
+
+    /**
      * Whether the extension named a disposer, whose definition carries {@link CdiSyntheticDisposer} with the
      * same {@link #id()}.
      *

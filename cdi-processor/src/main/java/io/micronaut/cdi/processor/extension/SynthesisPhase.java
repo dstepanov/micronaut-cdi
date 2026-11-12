@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticInjectionPoint;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
@@ -28,6 +29,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
@@ -37,6 +39,7 @@ import jakarta.enterprise.lang.model.types.Type;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +62,8 @@ import java.util.Map;
 final class SynthesisPhase {
 
     private static final String SCOPE = "jakarta.inject.Scope";
+    private static final String SYNTHETIC_INJECTIONS =
+        "jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections";
 
     private final VisitorContext context;
     private final DiscoveredClasses discovered;
@@ -125,7 +130,8 @@ final class SynthesisPhase {
     List<RecordingBeanBuilder<?>> enabledBeans() {
         List<RecordingBeanBuilder<?>> enabled = new ArrayList<>();
         for (RecordingBeanBuilder<?> bean : beans) {
-            if (!isAlternative(bean) || bean.priority() != null) {
+            // likewise a reserve, which only a priority selects (section 5.1.2)
+            if ((!isAlternative(bean) && !isReserve(bean)) || bean.priority() != null) {
                 enabled.add(bean);
             }
         }
@@ -145,6 +151,36 @@ final class SynthesisPhase {
 
     private boolean isAlternative(RecordingBeanBuilder<?> bean) {
         return bean.alternative() || !alternativeStereotypesOf(bean).isEmpty();
+    }
+
+    /**
+     * Whether the synthetic bean is a reserve: said so, or carrying a stereotype that says so (section 2.8.1).
+     */
+    static boolean isReserve(RecordingBeanBuilder<?> bean) {
+        return bean.reserve() || carriedByAStereotype(bean, Cdi.RESERVE);
+    }
+
+    /**
+     * Whether the synthetic bean is eagerly initialized: said so, or carrying a stereotype that says so.
+     */
+    static boolean isEager(RecordingBeanBuilder<?> bean) {
+        return bean.eager() || carriedByAStereotype(bean, Cdi.EAGER);
+    }
+
+    /**
+     * Whether the synthetic bean is auto-closeable: said so, or carrying a stereotype that says so.
+     */
+    static boolean isAutoClose(RecordingBeanBuilder<?> bean) {
+        return bean.autoClose() || carriedByAStereotype(bean, Cdi.AUTO_CLOSE);
+    }
+
+    private static boolean carriedByAStereotype(RecordingBeanBuilder<?> bean, String annotation) {
+        for (ClassElement stereotype : bean.stereotypes()) {
+            if (stereotype.hasDeclaredAnnotation(annotation)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static List<String> alternativeStereotypesOf(RecordingBeanBuilder<?> bean) {
@@ -260,7 +296,57 @@ final class SynthesisPhase {
         if (!bean.parameters().isEmpty()) {
             record.member("params", bean.parameters().toArray(new AnnotationValue<?>[0]));
         }
+        boolean reserve = isReserve(bean);
+        if (reserve && isAlternative(bean)) {
+            context.fail("The synthetic bean " + bean.implementation().getName() + " may not be both a reserve "
+                + "and an alternative (section 2.8.1)", bean.creator());
+        }
+        if (reserve) {
+            record.member("reserve", true);
+        }
+        if (isEager(bean)) {
+            // only an application scoped bean may be eagerly initialized: any other normal scope, and the dependent
+            // pseudo-scope, fails the registration (section 2.9)
+            if (!Cdi.APPLICATION_SCOPED.equals(scope.name()) && (scope.normal() || Cdi.DEPENDENT.equals(scope.name()))) {
+                context.fail("The synthetic bean " + bean.implementation().getName() + " is eagerly initialized, "
+                    + "which only an @ApplicationScoped bean may be; it is in " + scope.name() + " (section 2.9)",
+                    bean.creator());
+            }
+            record.member("eager", true);
+        }
+        if (isAutoClose(bean)) {
+            record.member("autoClose", true);
+        }
+        if (!bean.injectionPoints().isEmpty()) {
+            List<AnnotationValue<CdiSyntheticInjectionPoint>> points = new ArrayList<>();
+            for (RecordingBeanBuilder.InjectionPoint point : bean.injectionPoints()) {
+                List<AnnotationValue<?>> pointQualifiers = completed(point.qualifiers());
+                points.add(AnnotationValue.builder(CdiSyntheticInjectionPoint.class)
+                    .member("type", SyntheticRecords.typeOf(point.type()))
+                    .member(CdiSyntheticInjectionPoint.QUALIFIERS, pointQualifiers.toArray(new AnnotationValue<?>[0]))
+                    .member("qualifierTypes", typesOf(pointQualifiers))
+                    .build());
+            }
+            record.member("injectionPoints", points.toArray(new AnnotationValue<?>[0]));
+        }
+        // which of the two methods the creation and destruction functions implement, read off the classes the
+        // extension named: the container calls the one that exists (CDI 5.0), and is allowed to take the one that
+        // takes SyntheticInjections for declared on the class itself
+        if (takesInjections(bean.creator(), "create")) {
+            record.member("creatorTakesInjections", true);
+        }
+        ClassElement disposerClass = bean.disposer();
+        if (disposerClass != null && takesInjections(disposerClass, "dispose")) {
+            record.member("disposerTakesInjections", true);
+        }
         return record.build();
+    }
+
+    private static boolean takesInjections(ClassElement function, String methodName) {
+        return function.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().onlyInstance().named(methodName))
+            .stream()
+            .anyMatch(method -> !method.isAbstract() && Arrays.stream(method.getParameters()).anyMatch(
+                parameter -> SYNTHETIC_INJECTIONS.equals(parameter.getGenericType().getName())));
     }
 
     private AnnotationValue<CdiSyntheticObserver> recordOf(RecordingObserverBuilder<?> observer) {

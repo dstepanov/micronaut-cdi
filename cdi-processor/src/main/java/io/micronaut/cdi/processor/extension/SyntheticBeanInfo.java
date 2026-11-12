@@ -151,6 +151,21 @@ final class SyntheticBeanInfo implements BeanInfo {
     }
 
     @Override
+    public boolean isReserve() {
+        return SynthesisPhase.isReserve(bean);
+    }
+
+    @Override
+    public boolean isEager() {
+        return SynthesisPhase.isEager(bean);
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return SynthesisPhase.isAutoClose(bean);
+    }
+
+    @Override
     public @Nullable String name() {
         return bean.name();
     }

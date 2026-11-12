@@ -223,6 +223,19 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         return new CdiInstance<>(beanContext, injectedAt, injectionSegment, dependents, narrowedBy, argument, qualifiers);
     }
 
+    /**
+     * This lookup, standing for an injection point of the given bean: what the creation function of a synthetic bean
+     * looks its registered injection points up through (CDI 5.0), so that a dependent instance it obtains is told the
+     * synthetic bean as the bean its injection point belongs to, with no member and no annotated model.
+     *
+     * @param bean The bean the lookup's injection points belong to
+     * @return The lookup
+     */
+    CdiInstance<T> pointingAt(Bean<?> bean) {
+        return new CdiInstance<>(beanContext, new CdiInjectionPoint(beanContext, bean, type, null), injectionSegment,
+            dependents, narrowedBy, type, qualifiers);
+    }
+
     private List<CdiQualifier> and(List<CdiQualifier> more) {
         CdiQualifier.requireWellFormed(CompiledAnnotationTypes.of(beanContext), qualifiers, more);
         List<CdiQualifier> all = new ArrayList<>(qualifiers.size() + more.size());
