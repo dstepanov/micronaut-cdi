@@ -30,6 +30,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.WildcardElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -545,17 +546,92 @@ final class ExtensionMethods {
                 // an array is the same array of the same component, compared dimension by dimension
                 return element.isArray() && sameType(element.fromArray(), raw.getComponentType());
             }
+            // a raw type argument: Micronaut hands a raw generic class its type parameters' bounds as arguments
             return !element.isArray() && element.getName().equals(raw.getName())
-                && element.getTypeArguments().isEmpty();
+                && (element.getTypeArguments().isEmpty() || element.isRawType());
         }
         if (expected instanceof GenericArrayType array) {
             return element.isArray() && sameType(element.fromArray(), array.getGenericComponentType());
+        }
+        if (expected instanceof WildcardType wildcard) {
+            return element instanceof WildcardElement actual
+                && sameTypes(actual.getUpperBounds(), wildcard.getUpperBounds())
+                && sameTypes(actual.getLowerBounds(), wildcard.getLowerBounds());
         }
         if (expected instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
             return !element.isArray() && element.getName().equals(raw.getName())
                 && sameArguments(element.getTypeArguments(), parameterized);
         }
         return false;
+    }
+
+    private static boolean sameTypes(List<? extends ClassElement> elements, java.lang.reflect.Type[] expected) {
+        // an unbounded wildcard has Object for its upper bound in reflection, and may have none in the model
+        List<? extends ClassElement> actual = elements.stream()
+            .filter(element -> !element.getName().equals(Object.class.getName())).toList();
+        List<java.lang.reflect.Type> wanted = Arrays.stream(expected)
+            .filter(type -> type != Object.class).toList();
+        if (actual.size() != wanted.size()) {
+            return false;
+        }
+        for (int i = 0; i < wanted.size(); i++) {
+            if (!sameType(actual.get(i), wanted.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Whether the type arguments of an observed event type make it assignable to the expected parameterized type
+     * whose erasure it is assignable to (section 8.1.2, the rules for an observed event type): an argument is the
+     * expected one, or within the bounds of an expected wildcard.
+     */
+    private static boolean assignableArguments(Map<String, ClassElement> arguments, ParameterizedType expected) {
+        java.lang.reflect.Type[] expectedArguments = expected.getActualTypeArguments();
+        if (arguments.size() != expectedArguments.length) {
+            return false;
+        }
+        int i = 0;
+        for (ClassElement argument : arguments.values()) {
+            java.lang.reflect.Type wanted = expectedArguments[i++];
+            if (wanted instanceof WildcardType wildcard && !(argument instanceof WildcardElement)) {
+                if (!withinBounds(argument, wildcard)) {
+                    return false;
+                }
+            } else if (!sameType(argument, wanted)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean withinBounds(ClassElement argument, WildcardType wildcard) {
+        for (java.lang.reflect.Type upper : wildcard.getUpperBounds()) {
+            Class<?> bound = erasureOf(upper);
+            if (bound == null || bound != Object.class && !argument.isAssignable(bound)) {
+                return false;
+            }
+            if (upper instanceof ParameterizedType parameterized
+                && !assignableArguments(argument.getTypeArguments(bound.getName()), parameterized)) {
+                return false;
+            }
+        }
+        for (java.lang.reflect.Type lower : wildcard.getLowerBounds()) {
+            Class<?> bound = erasureOf(lower);
+            if (bound == null || !ClassElement.of(bound).isAssignable(argument)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static @Nullable Class<?> erasureOf(java.lang.reflect.Type type) {
+        if (type instanceof Class<?> raw) {
+            return raw;
+        }
+        return type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw
+            ? raw : null;
     }
 
     private static boolean sameArguments(Map<String, ClassElement> arguments, ParameterizedType expected) {
@@ -715,7 +791,7 @@ final class ExtensionMethods {
                     }
                 } else if (expected instanceof ParameterizedType parameterized
                     && parameterized.getRawType() instanceof Class<?> raw && type.isAssignable(raw)
-                    && sameArguments(type.getTypeArguments(raw.getName()), parameterized)) {
+                    && assignableArguments(type.getTypeArguments(raw.getName()), parameterized)) {
                     return true;
                 }
             }
