@@ -203,7 +203,7 @@ public final class CdiSyntheticInjections implements SyntheticInjections {
             throw new IllegalArgumentException("A disposal may not look up the InjectionPoint of a synthetic bean");
         }
         for (Registered point : registered) {
-            if (point.type().equalsType(type) && point.hasQualifiers(required)) {
+            if (point.type().equalsStructure(type) && point.hasQualifiers(required)) {
                 // the metadata of the injection point the bean is created for is the creation's own; anything else
                 // is looked up as an injection point of the synthetic bean (CDI 5.0, section 12.5)
                 CdiInstance<Object> through = type.getType() == InjectionPoint.class ? lookup : pointed;
