@@ -26,7 +26,9 @@ import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Prototype;
+import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -139,6 +141,8 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
         DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
+        // what the class bean itself is: a producer does not inherit it, but shadows its record
+        BeanAttributes classAttributes = BeanAttributes.ofClass(element);
         for (MemberElement producer : producers) {
             if (interceptorClass) {
                 // section 3.3.2/3.4.2: an interceptor declares no producers
@@ -193,6 +197,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // proxy - goes with it
                 CdiScopeVisitor.takeOffTheNormalScopeItOverrides(producer);
             }
+            recordAttributes(producer, element, classAttributes, context);
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
             // injected — the definition says so, so that resolution hands the null on instead of failing
             producer.annotate(AnnotationUtil.NULLABLE);
@@ -339,6 +344,49 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         // not made primary here: a producer that declares no qualifier is primary already, as the default bean
         // of its type (DefaultQualifierVisitor)
         Alternatives.select(producer, priority);
+    }
+
+    /**
+     * Reads, checks and records the attributes of CDI 5.0 a producer declares (sections 2.8 to 2.10): the record is
+     * written where the producer has any, and where its class has one it would otherwise inherit. A reserve producer
+     * is selected by a priority of its own only - unlike an alternative producer, it does not take the one of the
+     * class (section 5.1.2.1) - and one that declares none produces nothing.
+     */
+    private static void recordAttributes(MemberElement producer, ClassElement element,
+                                         BeanAttributes classAttributes, VisitorContext context) {
+        boolean alternative = producer.hasDeclaredAnnotation(Cdi.ALTERNATIVE)
+            || producer.hasDeclaredStereotype(Cdi.ALTERNATIVE);
+        if (classAttributes.reserve() && alternative) {
+            context.fail("A reserve may not declare an alternative producer (section 2.8.1)", producer);
+            return;
+        }
+        if (classAttributes.reserve() && Cdi.priorityOf(element.getAnnotationMetadata()) == null) {
+            // a producer of a disabled bean is disabled (section 5.1.3), and a reserve no priority selected is
+            // disabled: the condition the class was given is not one its producers are held to
+            disable(producer);
+            return;
+        }
+        BeanAttributes attributes = BeanAttributes.ofProducer(producer);
+        if (!attributes.any() && !classAttributes.any()) {
+            return;
+        }
+        if (!attributes.check(producer, alternative || element.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE),
+            BeanAttributes.scopeOf(producer), BeanAttributes.isNormalScoped(producer), context)
+            || (attributes.eager() && !BeanAttributes.checkEagerStereotypes(producer, context))) {
+            return;
+        }
+        attributes.recordOn(producer);
+        // the producer's own priority: a method's metadata carries its class's behind its own
+        AnnotationMetadata own = producer instanceof MethodElement method
+            ? method.getMethodAnnotationMetadata() : producer.getAnnotationMetadata();
+        if (attributes.reserve() && Cdi.priorityOf(own) == null) {
+            disable(producer);
+        }
+    }
+
+    private static void disable(MemberElement producer) {
+        producer.annotate(Requires.class, builder -> builder
+            .member("condition", new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.UnselectedReserve")));
     }
 
     /**

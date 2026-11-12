@@ -303,7 +303,15 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return CdiQualifier.instances(beanContext, qualifiers());
+        List<CdiQualifier> qualifiers = qualifiers();
+        if (definition instanceof AbstractCdiInjectionPointBeanDefinition<?> && !qualifiers.contains(CdiQualifier.DEFAULT)) {
+            // a built-in bean - Event, Instance, InjectionPoint - is resolved for whatever qualifiers its point
+            // declares, and reports the ones the specification gives it: @Any and @Default (CDI 5.0, sections 5.6.1
+            // and 9.2)
+            qualifiers = new ArrayList<>(qualifiers);
+            qualifiers.add(CdiQualifier.DEFAULT);
+        }
+        return CdiQualifier.instances(beanContext, qualifiers);
     }
 
     /**
@@ -386,6 +394,21 @@ public class CdiBean<T> implements Bean<T> {
     public boolean isAlternative() {
         return definition.getAnnotationMetadata().hasAnnotation(Alternative.class)
             || definition.getAnnotationMetadata().hasStereotype(Alternative.class);
+    }
+
+    @Override
+    public boolean isReserve() {
+        return CdiResolution.isReserve(definition);
+    }
+
+    @Override
+    public boolean isEager() {
+        return CdiResolution.isEager(definition);
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return CdiResolution.isAutoClose(definition);
     }
 
     @Override

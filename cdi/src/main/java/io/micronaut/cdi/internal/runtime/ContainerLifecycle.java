@@ -15,7 +15,9 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.context.ApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.annotation.Context;
@@ -24,6 +26,8 @@ import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.order.Ordered;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.BeforeDestroyed;
@@ -98,7 +102,26 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         beanContext.getBean(CdiBeanContainer.class).validateDeployment();
         // the order of section 2.9: the application context is initialized first, and Startup follows
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
+        initializeEagerBeans();
         fire(new Startup(), Startup.class, Set.of());
+    }
+
+    /**
+     * Creates the contextual instance of every eagerly initialized bean (CDI 5.0, section 2.9): no later than
+     * {@code Startup} is fired, as if by an observer of it of the lowest priority there is. An eager bean is in the
+     * application scope, so what the bean context hands out for it is its client proxy, and the instance behind it
+     * is what is created. The beans are found by the record the processor writes on them, which is on no other.
+     */
+    private void initializeEagerBeans() {
+        for (BeanDefinition<Object> definition
+            : beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiBeanAttributes.class))) {
+            if (CdiResolution.isEager(definition) && CdiBeanQualifier.isBean(definition)) {
+                Object reference = beanContext.getBean(definition);
+                if (reference instanceof InterceptedProxy<?> proxy) {
+                    proxy.interceptedTarget();
+                }
+            }
+        }
     }
 
     /**

@@ -125,6 +125,24 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
             notABean(element);
             return;
         }
+        BeanAttributes attributes = BeanAttributes.ofClass(element);
+        if (attributes.any() && SpecificationBeans.isClassBean(element)) {
+            if (!attributes.check(element, element.hasStereotype(Cdi.ALTERNATIVE), BeanAttributes.scopeOf(element),
+                SpecificationBeans.isNormalScoped(element), context)
+                || (attributes.eager() && !BeanAttributes.checkEagerStereotypes(element, context))) {
+                return;
+            }
+            attributes.recordOn(element);
+            if (attributes.reserve()) {
+                // a reserve is a bean only where a priority selects it for the application (section 5.1.2); unlike
+                // an alternative, no bootstrap can select it otherwise. A selected one keeps its priority, which is
+                // what the container ranks reserves by when only reserves are left to choose among (section 5.2.2)
+                if (Cdi.priorityOf(element.getAnnotationMetadata()) == null) {
+                    notABean(element);
+                }
+                return;
+            }
+        }
         // a stereotype may declare that the beans that carry it are alternatives, so the annotation is looked
         // for through the stereotypes as well as on the class itself
         if (!element.hasStereotype(Cdi.ALTERNATIVE)) {
