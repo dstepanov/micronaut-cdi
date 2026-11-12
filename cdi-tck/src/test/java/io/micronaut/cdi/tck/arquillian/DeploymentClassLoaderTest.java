@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -90,6 +91,38 @@ class DeploymentClassLoaderTest {
                 "the second deployment's metadata differs from what its parent holds, and is the one served");
         } finally {
             second.dispose();
+            first.dispose();
+        }
+    }
+
+    @Test
+    void refusesAClassItCannotTellFromItsParentsCopy() throws Exception {
+        String source = """
+            package tck.loader.unreadable;
+
+            @jakarta.enterprise.context.Dependent
+            public class Unreadable {
+            }
+            """;
+        ClassLoader parent = getClass().getClassLoader();
+        DeploymentClassLoader first = new DeploymentClassLoader(DeploymentCompiler.compile(Map.of(
+            "tck.loader.unreadable.Unreadable", source)), parent);
+        try {
+            List<javax.tools.JavaFileObject> unreadable = new java.util.ArrayList<>();
+            for (javax.tools.JavaFileObject file : DeploymentCompiler.compile(Map.of(
+                "tck.loader.unreadable.Unreadable", source))) {
+                unreadable.add(file.getKind() == javax.tools.JavaFileObject.Kind.CLASS
+                    && file.getName().contains("$Unreadable$Definition")
+                    ? new javax.tools.ForwardingJavaFileObject<>(file) {
+                        @Override
+                        public java.io.InputStream openInputStream() throws java.io.IOException {
+                            throw new java.io.IOException("unreadable");
+                        }
+                    } : file);
+            }
+            assertThrows(DeploymentClassLoader.UnreadableClass.class,
+                () -> new DeploymentClassLoader(unreadable, first));
+        } finally {
             first.dispose();
         }
     }

@@ -114,6 +114,8 @@ final class DeploymentClassLoader extends ClassLoader {
                     continue;
                 }
                 defineBesideHost(name, host);
+            } catch (UnreadableClass e) {
+                throw e;
             } catch (LinkageError | RuntimeException e) {
                 // left for findClass to serve from this loader instead
             }
@@ -188,7 +190,8 @@ final class DeploymentClassLoader extends ClassLoader {
              InputStream parents = getParent().getResourceAsStream(name.replace('.', '/') + ".class")) {
             return parents != null && java.util.Arrays.equals(mine.readAllBytes(), parents.readAllBytes());
         } catch (IOException e) {
-            return true;
+            // taking the parent's copy for this deployment's would serve a stale definition without a word
+            throw new UnreadableClass(name, e);
         }
     }
 
@@ -361,5 +364,17 @@ final class DeploymentClassLoader extends ClassLoader {
         String name = file.getName();
         int output = name.indexOf(CLASS_OUTPUT);
         return output < 0 ? null : name.substring(output + CLASS_OUTPUT.length());
+    }
+
+    /**
+     * A class the deployment compiled that could not be read to tell it from its parent's copy.
+     */
+    static final class UnreadableClass extends IllegalStateException {
+
+        private static final long serialVersionUID = 1L;
+
+        UnreadableClass(String name, IOException cause) {
+            super("The class " + name + " the deployment compiled could not be compared with its parent's", cause);
+        }
     }
 }
