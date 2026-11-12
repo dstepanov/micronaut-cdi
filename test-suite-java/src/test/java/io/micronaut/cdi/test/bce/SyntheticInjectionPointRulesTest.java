@@ -25,7 +25,11 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
+import jakarta.enterprise.inject.build.compatible.spi.Types;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.spi.Interceptor;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -60,6 +64,25 @@ class SyntheticInjectionPointRulesTest {
     @Test
     void theInjectionPointOfADependentBeanIsLegal() {
         assertDoesNotThrow(() -> compile(DependentInjectionPoint.class));
+    }
+
+    @Test
+    void theMetadataOfAnInterceptorIsADefinitionError() {
+        RuntimeException failure = assertThrows(RuntimeException.class, () -> compile(InterceptorMetadata.class));
+        assertTrue(failure.getMessage().contains("only an interceptor"), failure.getMessage());
+    }
+
+    @Test
+    void eventMetadataIsADefinitionError() {
+        RuntimeException failure = assertThrows(RuntimeException.class, () -> compile(EventMetadataPoint.class));
+        assertTrue(failure.getMessage().contains("only the parameter of an observer method"), failure.getMessage());
+    }
+
+    @Test
+    void theBeanOfAnotherClassIsADefinitionErrorAndTheBeanOfItsOwnIsLegal() {
+        RuntimeException failure = assertThrows(RuntimeException.class, () -> compile(OtherBeanMetadata.class));
+        assertTrue(failure.getMessage().contains("a Bean of its own class"), failure.getMessage());
+        assertDoesNotThrow(() -> compile(OwnBeanMetadata.class));
     }
 
     private static void compile(Class<? extends BuildCompatibleExtension> extension) {
@@ -100,6 +123,54 @@ class SyntheticInjectionPointRulesTest {
         public void synthesise(SyntheticComponents components) {
             components.addBean(Ruled.class).type(Ruled.class).scope(Dependent.class)
                 .withInjectionPoint(InjectionPoint.class)
+                .createWith(RuledCreator.class);
+        }
+    }
+
+    /**
+     * Registers the Interceptor metadata, which only an interceptor is handed.
+     */
+    public static final class InterceptorMetadata implements BuildCompatibleExtension {
+        @Synthesis
+        public void synthesise(SyntheticComponents components, Types types) {
+            components.addBean(Ruled.class).type(Ruled.class).scope(Dependent.class)
+                .withInjectionPoint(types.parameterized(Interceptor.class, Ruled.class))
+                .createWith(RuledCreator.class);
+        }
+    }
+
+    /**
+     * Registers EventMetadata, which only an observer method's parameter is handed.
+     */
+    public static final class EventMetadataPoint implements BuildCompatibleExtension {
+        @Synthesis
+        public void synthesise(SyntheticComponents components) {
+            components.addBean(Ruled.class).type(Ruled.class).scope(Dependent.class)
+                .withInjectionPoint(EventMetadata.class)
+                .createWith(RuledCreator.class);
+        }
+    }
+
+    /**
+     * Registers the Bean metadata of another class.
+     */
+    public static final class OtherBeanMetadata implements BuildCompatibleExtension {
+        @Synthesis
+        public void synthesise(SyntheticComponents components, Types types) {
+            components.addBean(Ruled.class).type(Ruled.class).scope(Dependent.class)
+                .withInjectionPoint(types.parameterized(Bean.class, String.class))
+                .createWith(RuledCreator.class);
+        }
+    }
+
+    /**
+     * Registers the Bean metadata of the bean's own class.
+     */
+    public static final class OwnBeanMetadata implements BuildCompatibleExtension {
+        @Synthesis
+        public void synthesise(SyntheticComponents components, Types types) {
+            components.addBean(Ruled.class).type(Ruled.class).scope(Dependent.class)
+                .withInjectionPoint(types.parameterized(Bean.class, Ruled.class))
                 .createWith(RuledCreator.class);
         }
     }

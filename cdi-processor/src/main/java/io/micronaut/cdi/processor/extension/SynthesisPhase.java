@@ -69,6 +69,10 @@ final class SynthesisPhase {
     private static final String INJECTION_POINT = "jakarta.enterprise.inject.spi.InjectionPoint";
     private static final String EVENT = "jakarta.enterprise.event.Event";
     private static final String INSTANCE = "jakarta.enterprise.inject.Instance";
+    private static final String BEAN = "jakarta.enterprise.inject.spi.Bean";
+    private static final String INTERCEPTOR = "jakarta.enterprise.inject.spi.Interceptor";
+    private static final String INTERCEPTED = "jakarta.enterprise.inject.Intercepted";
+    private static final String EVENT_METADATA = "jakarta.enterprise.inject.spi.EventMetadata";
     private static final String SYNTHETIC_INJECTIONS =
         "jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections";
 
@@ -328,7 +332,7 @@ final class SynthesisPhase {
         if (!bean.injectionPoints().isEmpty()) {
             List<AnnotationValue<CdiSyntheticInjectionPoint>> points = new ArrayList<>();
             for (RecordingBeanBuilder.InjectionPoint point : bean.injectionPoints()) {
-                String problem = problemOf(point, scope);
+                String problem = problemOf(point, scope, bean.implementation().getName());
                 if (problem != null) {
                     context.fail("The injection point " + point.type() + " registered for the synthetic bean "
                         + bean.implementation().getName() + " is illegal: " + problem, bean.creator());
@@ -359,19 +363,38 @@ final class SynthesisPhase {
      * What the rules of an injection point make a definition error of a point registered for a synthetic bean, as
      * they do of a point a class declares: a type variable; a raw {@code Event} or {@code Instance}, an
      * {@code Event<?>} or {@code Event<? extends X>}, an {@code Instance<? super X>} and an {@code Instance} of such an
-     * event (sections 5.6.1 and 9.2); and the {@code @Default InjectionPoint} of a bean that is not dependent, which
-     * outlives any one point it is injected into (section 6.5.3).
+     * event (sections 5.6.1 and 9.2); the {@code @Default InjectionPoint} of a bean that is not dependent, which
+     * outlives any one point it is injected into (section 6.5.3); the metadata only an interceptor is handed,
+     * {@code Interceptor} and the {@code @Intercepted Bean}, a {@code @Default Bean} of another type than the bean's
+     * implementation class, which stands for the class declaring the point (section 5.5.8); and {@code @Default
+     * EventMetadata}, which only an observer method's parameter is handed (section 9.4.3).
      */
-    private static @Nullable String problemOf(RecordingBeanBuilder.InjectionPoint point, Scope scope) {
+    private static @Nullable String problemOf(RecordingBeanBuilder.InjectionPoint point, Scope scope,
+                                              String implementation) {
         Type type = point.type();
         if (type.isTypeVariable()) {
             return "a type variable is not a legal injection point type (section 5.2.3)";
         }
         String raw = rawNameOf(type);
-        if (INJECTION_POINT.equals(raw) && !Cdi.DEPENDENT.equals(scope.name())
-            && (point.qualifiers().isEmpty() || point.qualifiers().stream()
-                .anyMatch(qualifier -> Cdi.DEFAULT.equals(qualifier.getAnnotationName())))) {
+        boolean byDefault = point.qualifiers().isEmpty() || point.qualifiers().stream()
+            .anyMatch(qualifier -> Cdi.DEFAULT.equals(qualifier.getAnnotationName()));
+        if (INJECTION_POINT.equals(raw) && !Cdi.DEPENDENT.equals(scope.name()) && byDefault) {
             return "only a dependent bean may be told the injection point it is injected into (section 6.5.3)";
+        }
+        if (INTERCEPTOR.equals(raw)) {
+            return "only an interceptor may be handed its Interceptor metadata (section 5.5.8)";
+        }
+        if (BEAN.equals(raw) && point.qualifiers().stream()
+            .anyMatch(qualifier -> INTERCEPTED.equals(qualifier.getAnnotationName()))) {
+            return "only an interceptor may be handed the @Intercepted Bean (section 5.5.8)";
+        }
+        if (BEAN.equals(raw) && byDefault && !(type.isParameterizedType()
+            && implementation.equals(rawNameOf(type.asParameterizedType().typeArguments().get(0))))) {
+            return "the Bean metadata a bean is handed is a Bean of its own class, " + implementation
+                + " (section 5.5.8)";
+        }
+        if (EVENT_METADATA.equals(raw) && byDefault) {
+            return "only the parameter of an observer method may be handed EventMetadata (section 9.4.3)";
         }
         if (raw != null && (EVENT.equals(raw) || INSTANCE.equals(raw))) {
             return builtInProblemOf(type, raw, true);

@@ -609,7 +609,7 @@ final class ExtensionMethods {
     private static boolean withinBounds(ClassElement argument, WildcardType wildcard) {
         for (java.lang.reflect.Type upper : wildcard.getUpperBounds()) {
             Class<?> bound = erasureOf(upper);
-            if (bound == null || bound != Object.class && !argument.isAssignable(bound)) {
+            if (bound == null || (bound != Object.class && !argument.isAssignable(bound))) {
                 return false;
             }
             if (upper instanceof ParameterizedType parameterized
