@@ -360,6 +360,16 @@ class PortableCustomNormalScopeTest {
     }
 
     @Test
+    void aSubclassHandedToTheBootstrapIsABeanWithDiscoveryOnAsWell() {
+        // section 25.1: addBeanClasses adds the class to the synthetic bean archive whether discovery is on or off
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = SeContainerInitializer.newInstance().addBeanClasses(Drizzle.class)
+            .addExtensions(adding).initialize()) {
+            assertTrue(container.select(Drizzle.class).isResolvable());
+        }
+    }
+
+    @Test
     void aBeanWhoseStereotypeCarriesTheScopeIsHeldByTheContext() {
         AddingCloudy adding = new AddingCloudy();
         try (SeContainer container = start(adding, Haze.class)) {

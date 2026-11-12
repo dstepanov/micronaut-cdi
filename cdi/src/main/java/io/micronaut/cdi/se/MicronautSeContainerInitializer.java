@@ -250,8 +250,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         if (!enabledInterceptors.isEmpty()) {
             builder.properties(Map.of(CdiInterceptorEnablement.ENABLED_CLASSES, joined(enabledInterceptors)));
         }
-        if (discoveryDisabled && !beanClasses.isEmpty()) {
-            // a class handed to a synthetic archive is a bean even where it declares no bean defining annotation
+        if (!beanClasses.isEmpty()) {
+            // a class handed to the synthetic archive is a bean even where it declares no bean defining annotation,
+            // whether discovery is on or off (section 25.1)
             builder.properties(Map.of(UndiscoveredSubclass.ADDED_CLASSES, joined(beanClasses)));
         }
         Set<String> classpath = restrictedClasspath();
