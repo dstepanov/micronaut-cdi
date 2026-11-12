@@ -15,6 +15,8 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
@@ -449,13 +451,22 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (!discovered().registering(element.getName())) {
             return;
         }
+        if (isUnselectedReserve(element.getAnnotationMetadata())) {
+            // a reserve no priority selected is no bean (section 5.1.3), and nor are its producers or observers:
+            // the deployment has none of them to tell an extension about
+            return;
+        }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
             beans.add(ElementBeanInfo.of(element, null, context));
         }
         for (MemberElement producer
             : SpecificationBeans.producersOf(element)) {
-            beans.add(ElementBeanInfo.of(element, producer, context));
+            AnnotationMetadata own = producer instanceof MethodElement method
+                ? method.getMethodAnnotationMetadata() : producer.getAnnotationMetadata();
+            if (!isUnselectedReserve(own)) {
+                beans.add(ElementBeanInfo.of(element, producer, context));
+            }
         }
         for (ElementBeanInfo bean : beans) {
             extensions.describeBean(bean, messages, context);
@@ -481,6 +492,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             extensions.describeObserver(
                 new ElementObserverInfo(element, method, observed, async, context), messages, context);
         }
+    }
+
+    /**
+     * Whether the metadata a class or a producer declares makes it a reserve that no priority of its own selects,
+     * which the processor took out of the deployment (CDI 5.0, section 5.1.2).
+     */
+    private static boolean isUnselectedReserve(AnnotationMetadata declared) {
+        return declared.booleanValue(CdiBeanAttributes.class, "reserve").orElse(false)
+            && Cdi.priorityOf(declared) == null;
     }
 
     /**
