@@ -82,12 +82,8 @@ final class AsyncInvocation {
         if (handler instanceof AsyncHandler.ParameterType parameterType) {
             return parameterType.transformReturnValue(original, completion);
         }
-        if (original instanceof CompletableFuture<?> future) {
-            // the stage returned completes after the action, which is completion run before it is propagated
-            return future.whenComplete((value, error) -> completion.run());
-        }
         if (original instanceof CompletionStage<?> stage) {
-            return stage.whenComplete((value, error) -> completion.run());
+            return completing(stage, completion);
         }
         if (original instanceof Flow.Publisher<?> publisher) {
             return new CompletingPublisher<>(publisher, completion);
@@ -95,6 +91,29 @@ final class AsyncInvocation {
         // nothing was returned to complete: the action is complete as the method returns
         completion.run();
         return original;
+    }
+
+    /**
+     * The stage handed to the caller of an asynchronous method whose original stage completes the invocation. The
+     * completion is observed on a stage of the container's own, which the caller never sees: a caller that cancels
+     * or completes what it was handed cannot keep the completion from running, and so cannot keep the dependent
+     * instances of the invocation alive. The stage handed back completes once the completion has run, as the
+     * specification recommends, with what the original completed with.
+     */
+    private static CompletableFuture<Object> completing(CompletionStage<?> original, Runnable completion) {
+        CompletableFuture<Object> handedBack = new CompletableFuture<>();
+        original.whenComplete((value, error) -> {
+            try {
+                completion.run();
+            } finally {
+                if (error != null) {
+                    handedBack.completeExceptionally(error);
+                } else {
+                    handedBack.complete(value);
+                }
+            }
+        });
+        return handedBack;
     }
 
     /**
