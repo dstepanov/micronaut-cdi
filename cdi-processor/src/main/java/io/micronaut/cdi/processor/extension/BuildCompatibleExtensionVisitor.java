@@ -40,6 +40,8 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver;
+import jakarta.enterprise.inject.spi.DefinitionException;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
@@ -108,7 +110,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION);
+        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION, AsyncHandlerTypes.OPTION);
     }
 
     @Override
@@ -210,6 +212,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // which looks through the loader of the API and does not always see the service entry of this module
         BuildServicesResolver.setBuildServices(
             new ElementBuildServices(context));
+        // the async handlers of method invokers (CDI 5.0) are read as every compilation starts, whatever extensions
+        // it has: what is wrong with one is a definition error of the deployment, however it is used
+        try {
+            AsyncHandlerTypes.of(context);
+        } catch (DefinitionException e) {
+            context.fail(String.valueOf(e.getMessage()), null);
+        } catch (DeploymentException e) {
+            context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + e.getMessage(), null);
+        }
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts. The discovery phase runs once, as it is first started
         DiscoveredClasses started = discovered;

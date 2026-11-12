@@ -46,14 +46,23 @@ import jakarta.enterprise.inject.spi.configurator.AnnotatedTypeConfigurator;
 import jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator;
 import jakarta.enterprise.inject.spi.configurator.BeanConfigurator;
 import jakarta.enterprise.inject.spi.configurator.ObserverMethodConfigurator;
+import io.micronaut.core.io.service.ServiceDefinition;
+import io.micronaut.core.io.service.SoftServiceLoader;
+import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.enterprise.invoke.AsyncHandler;
 import jakarta.enterprise.invoke.Invoker;
 import jakarta.enterprise.invoke.InvokerBuilder;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Flow;
+import java.util.function.Supplier;
 import java.util.function.Predicate;
 
 /**
@@ -67,6 +76,45 @@ import java.util.function.Predicate;
 final class PortableEvents {
 
     private PortableEvents() {
+    }
+
+    /**
+     * Whether an async handler exists for the async type (CDI 5.0, section 10.5): one of the built-in return type
+     * handlers, or a handler registered as a service provider whose async type - the erasure of the type argument
+     * to its direct {@code AsyncHandler.ReturnType} or {@code AsyncHandler.ParameterType} superinterface - is the
+     * type. The handler classes are read, not instantiated.
+     */
+    static boolean asyncHandlerExists(Class<?> asyncType) {
+        if (asyncType == CompletionStage.class || asyncType == CompletableFuture.class
+            || asyncType == Flow.Publisher.class) {
+            return true;
+        }
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        for (Class<?> kind : List.of(AsyncHandler.ReturnType.class, AsyncHandler.ParameterType.class)) {
+            for (ServiceDefinition<?> handler : SoftServiceLoader.load(kind, loader)) {
+                if (!handler.isPresent()) {
+                    continue;
+                }
+                Class<?> handlerClass = handler.load().getClass();
+                for (java.lang.reflect.Type type : handlerClass.getGenericInterfaces()) {
+                    if (type instanceof ParameterizedType parameterized && parameterized.getRawType() == kind
+                        && erasureOf(parameterized.getActualTypeArguments()[0]) == asyncType) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static @Nullable Class<?> erasureOf(java.lang.reflect.Type type) {
+        if (type instanceof Class<?> raw) {
+            return raw;
+        }
+        if (type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
+            return raw;
+        }
+        return null;
     }
 
     /**
@@ -250,10 +298,19 @@ final class PortableEvents {
     static final class AfterTypes extends PortableEvent implements AfterTypeDiscovery {
 
         private final List<Class<?>> alternatives;
+        private final List<Class<?>> reserves;
 
-        AfterTypes(List<Class<?>> alternatives) {
+        AfterTypes(List<Class<?>> alternatives, List<Class<?>> reserves) {
             super("AfterTypeDiscovery");
             this.alternatives = List.copyOf(alternatives);
+            this.reserves = List.copyOf(reserves);
+        }
+
+        @Override
+        public List<Class<?>> getReserves() {
+            whileNotifying();
+            // the reserves a priority selected as the application compiled, which the list cannot change either
+            return reserves;
         }
 
         @Override
@@ -537,6 +594,16 @@ final class PortableEvents {
         public void addDeploymentProblem(Throwable t) {
             whileNotifying();
             problems.add(t);
+        }
+
+        @Override
+        public void ensureAsyncHandlerExists(Class<?> asyncType, Supplier<String> message) {
+            whileNotifying();
+            if (!asyncHandlerExists(asyncType)) {
+                String said = message.get();
+                problems.add(new DeploymentException("No async handler exists for " + asyncType.getName()
+                    + (said != null ? ": " + said : "")));
+            }
         }
     }
 

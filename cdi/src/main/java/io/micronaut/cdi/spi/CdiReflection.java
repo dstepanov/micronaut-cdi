@@ -162,6 +162,18 @@ public interface CdiReflection {
     Set<Annotation> metaAnnotationsOf(Class<? extends Annotation> annotationType);
 
     /**
+     * A service provider, loaded and instantiated through the service loader: an async handler of a method invoker
+     * (CDI 5.0) other than the built-in ones, which the compiler matched the method to by its class name.
+     *
+     * @param service     The service type
+     * @param className   The class of the provider
+     * @param classLoader The class loader the service entries are read through
+     * @return The provider
+     * @throws IllegalStateException Where no such provider is registered
+     */
+    Object serviceProvider(Class<?> service, String className, ClassLoader classLoader);
+
+    /**
      * The implementation the application has, for a call that needs it.
      *
      * @param beanContext The bean context of the container, or {@code null} where none is running
