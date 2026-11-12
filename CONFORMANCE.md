@@ -135,6 +135,12 @@ problem. The built-in handlers are the container's; any other is
 instantiated through the service loader, which is reflection, and so is the optional `micronaut-cdi-reflection`
 module's: without it an invoker of a method a custom handler matched fails, naming the module.
 
+The specification leaves open when the action a built-in `Flow.Publisher` stands for is complete. Here it is when the
+first subscription to the publisher handed back terminates - completed, failed or cancelled: a publisher subscribed to
+again afterwards runs that subscription over dependent instances already destroyed, and one never subscribed to never
+has them destroyed. A publisher that is subscribed to once, as a reactive stream returned from a
+method usually is, sees its dependents live exactly as long as the subscription.
+
 ### A build compatible extension handed to the SE bootstrap is one the compilation ran
 
 *CDI 5.0 section 25.1.* `SeContainerInitializer.addBuildCompatibleExtensions` names extensions to run as the
