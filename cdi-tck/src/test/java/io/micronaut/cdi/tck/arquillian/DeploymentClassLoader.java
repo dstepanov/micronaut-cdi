@@ -87,7 +87,7 @@ final class DeploymentClassLoader extends ClassLoader {
                     // the shared compilation already produced this one, and the parent's copy is the one in
                     // the scenario classes' runtime package - unless this deployment compiled it otherwise, its
                     // extensions having their say, in which case its own bytes are served
-                    if (!sameAsParent(name)) {
+                    if (isGenerated(name) && !sameAsParent(name)) {
                         childFirst.add(name);
                     }
                     continue;
@@ -124,7 +124,7 @@ final class DeploymentClassLoader extends ClassLoader {
         // has to be served fresh too, or the stale one it links to is what the context reads
         for (String fresh : List.copyOf(childFirst)) {
             for (String name : compiled.keySet()) {
-                if ((DEFINED_WITH_HOST.containsKey(name) || parentHas(name))
+                if ((DEFINED_WITH_HOST.containsKey(name) || isGenerated(name) && parentHas(name))
                     && (name.startsWith(fresh + "$") || fresh.startsWith(name + "$"))) {
                     childFirst.add(name);
                 }
@@ -148,6 +148,15 @@ final class DeploymentClassLoader extends ClassLoader {
             }
             return loaded;
         }
+    }
+
+    /**
+     * Whether the class is one the processors generated - a definition, an interception, a type hierarchy - whose
+     * simple name Micronaut opens with a dollar. A scenario class compiled again is the scenario class the suite's
+     * classes name, and is never served beside the parent's: its identity is what the kit's tests compare.
+     */
+    private static boolean isGenerated(String name) {
+        return name.substring(name.lastIndexOf('.') + 1).startsWith("$");
     }
 
     /**
