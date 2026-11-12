@@ -74,7 +74,7 @@ visible in a test report as what passes.
 | 11.3 (5.0) | `BeanContainer.unwrapClientProxy`, through the scoped proxy's own resolution of its target | `CdiBeanContainer` |
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
-| 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension the compilation recorded running (or, where it recorded nothing, one registered as a service provider) | `MicronautSeContainerInitializer` |
+| 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
 
 ## Not yet implemented
 
@@ -148,14 +148,13 @@ method usually is, sees its dependents live exactly as long as the subscription.
 
 *CDI 5.0 section 25.1.* `SeContainerInitializer.addBuildCompatibleExtensions` names extensions to run as the
 container is built. An extension of this container runs as the application compiles, so the bootstrap accepts one
-the compilation recorded running - the synthetic beans and observers it described are recorded under its name,
-whether the compilation found it by its service entry or was handed it with the compiler option
-`micronaut.cdi.extensions` - and refuses one it recorded nothing of with a `DeploymentException`. An extension that
-describes no synthetic component leaves no record, and recording it would take a class generated for nothing else,
-which this module does not generate: for such an extension the service entry the compiler finds it by is taken as
-the evidence, so an extension registered only on the runtime class path and synthesising nothing is accepted
-although it never ran. The kit's `BootstrapSEContainerTest#testAddBuildCompatibleExtension` hands the
-bootstrap an extension its archive does not register, and is left out by name. `DiscoveredAndRegisteredBceTest` hands
+the compilation recorded running and refuses any other with a `DeploymentException`. Every compilation that runs
+extensions writes the definition of a `CdiDeploymentRecord` naming them - one bean definition of the kind every bean
+has, which the container reads and never creates - whether it found them by their service entries or was handed them
+with the compiler option `micronaut.cdi.extensions`; the synthetic beans and observers they described name them too.
+An extension registered only on the runtime class path is refused, as it never ran. The kit's
+`BootstrapSEContainerTest#testAddBuildCompatibleExtension` hands the bootstrap an extension its archive does not
+register, expecting it to run, and is left out by name. `DiscoveredAndRegisteredBceTest` hands
 it one its archive registers as a service provider: the kit adapter compiles that archive with the extension before
 the class runs (`SeClassPathListener`), as the launched application would have been compiled, and the test runs.
 

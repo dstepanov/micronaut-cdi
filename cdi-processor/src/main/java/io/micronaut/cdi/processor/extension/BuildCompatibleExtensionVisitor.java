@@ -315,7 +315,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         new ScannedClassRegistrar(this, started).registerScannedClasses(contributors, context);
         registerContexts(contributors, context);
-        registerQualifiers(contributors, context);
+        recordDeployment(contributors, context);
         synthesise(contributors, context);
     }
 
@@ -341,18 +341,26 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * Records the annotations the extensions made qualifiers of, on a bean registered for the purpose: no bean
-     * may use such an annotation, so the record is the one witness of it the container has.
+     * Records what the extensions said of the deployment as a whole on a bean registered for the purpose, the
+     * definition of a {@link CdiDeploymentRecord}: the extensions the compilation ran, which the SE bootstrap takes
+     * as the evidence that an extension it is handed ran, and the annotations they made qualifiers of - no bean may
+     * use such an annotation, so the record is the one witness of it the container has. It is written for every
+     * compilation that runs an extension: one definition, of the kind every bean has.
      */
-    private void registerQualifiers(Element[] contributors, VisitorContext context) {
-        if (discovered().registeredQualifiers().isEmpty()) {
+    private void recordDeployment(Element[] contributors, VisitorContext context) {
+        List<String> ran = extensions.names();
+        if (discovered().registeredQualifiers().isEmpty() && ran.isEmpty()) {
             return;
         }
         ClassElement record = context.getClassElement(CdiDeploymentRecord.class.getName()).orElse(null);
         if (record == null) {
-            context.fail("The qualifiers the build compatible extensions registered cannot be recorded: "
-                + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
-                + "compilation", contributors[0]);
+            if (!discovered().registeredQualifiers().isEmpty()) {
+                context.fail("The qualifiers the build compatible extensions registered cannot be recorded: "
+                    + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
+                    + "compilation", contributors[0]);
+            }
+            // a compilation without the container on its classpath - a library of extensions - has no container
+            // to tell which extensions ran
             return;
         }
         // the members of each, as the compilation sees its interface: an annotation no bean uses, one only an
@@ -372,12 +380,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                     .build());
             }
         }
-        context.registerBean(record, contributors)
-            .annotate(AnnotationValue.builder(CdiExtensionComponents.class).build())
-            .annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
+        BeanElementBuilder bean = context.registerBean(record, contributors);
+        bean.annotate(AnnotationValue.builder(CdiExtensionComponents.class)
+            .member("extensions", ran.toArray(new String[0]))
+            .build());
+        if (!discovered().registeredQualifiers().isEmpty()) {
+            bean.annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
                 .values(discovered().registeredQualifiers().toArray(new String[0]))
                 .member(CdiExtensionQualifiers.MEMBERS, members.toArray(new AnnotationValue[0]))
                 .build());
+        }
     }
 
     /**

@@ -98,9 +98,12 @@ final class ExtensionMethods {
     private final List<Registrar> registrars;
     private final List<ExtensionMethod> synthesizers;
     private final List<ExtensionMethod> validators;
+    private final List<String> names;
 
-    private ExtensionMethods(List<ExtensionMethod> discoveries, List<Enhancer> enhancers, List<Registrar> registrars,
-                             List<ExtensionMethod> synthesizers, List<ExtensionMethod> validators) {
+    private ExtensionMethods(List<String> names, List<ExtensionMethod> discoveries, List<Enhancer> enhancers,
+                             List<Registrar> registrars, List<ExtensionMethod> synthesizers,
+                             List<ExtensionMethod> validators) {
+        this.names = List.copyOf(names);
         this.discoveries = List.copyOf(discoveries);
         this.enhancers = List.copyOf(enhancers);
         this.registrars = List.copyOf(registrars);
@@ -114,7 +117,7 @@ final class ExtensionMethods {
      * @return The methods
      */
     static ExtensionMethods none() {
-        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of());
+        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
     }
 
     /**
@@ -193,7 +196,17 @@ final class ExtensionMethods {
             registrars.add(new Registrar(registration.extension(), registration.method(),
                 registration.method().getAnnotation(Registration.class)));
         }
-        return new ExtensionMethods(discoveries, enhancers, registrars, synthesizers, validators);
+        return new ExtensionMethods(extensions.stream().map(extension -> extension.getClass().getName()).toList(),
+            discoveries, enhancers, registrars, synthesizers, validators);
+    }
+
+    /**
+     * The extensions the compilation runs, by class name.
+     *
+     * @return The names
+     */
+    List<String> names() {
+        return names;
     }
 
     /**

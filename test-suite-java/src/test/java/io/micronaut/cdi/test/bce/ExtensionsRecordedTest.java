@@ -24,9 +24,20 @@ import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -34,6 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * it, whether the compilation was told to run it by a service entry or, as here, by the compiler option.
  */
 class ExtensionsRecordedTest {
+
+    @TempDir
+    Path entries;
 
     private static final String SOURCE = """
         package recorded;
@@ -50,6 +64,42 @@ class ExtensionsRecordedTest {
                 .contains(RecordedExtension.class.getName()));
             assertFalse(MicronautSeContainerInitializer.extensionsRecordedIn(context)
                 .contains(ExtensionsRecordedTest.class.getName()));
+        }
+    }
+
+    @Test
+    void anExtensionThatDescribesNothingIsRecordedAsRun() {
+        try (ApplicationContext context = ExtensionDeployment.start(SilentExtension.class, "recorded.Anchor",
+            SOURCE)) {
+            assertTrue(MicronautSeContainerInitializer.extensionsRecordedIn(context)
+                .contains(SilentExtension.class.getName()));
+        }
+    }
+
+    @Test
+    void anExtensionRegisteredOnlyAtRuntimeIsRefused() throws IOException {
+        Path services = entries.resolve("META-INF/services");
+        Files.createDirectories(services);
+        Files.writeString(services.resolve(BuildCompatibleExtension.class.getName()),
+            SilentExtension.class.getName() + "\n");
+        try (URLClassLoader loader = new URLClassLoader(new URL[] {entries.toUri().toURL()},
+            getClass().getClassLoader())) {
+            DeploymentException failure = assertThrows(DeploymentException.class, () -> {
+                try (SeContainer container = SeContainerInitializer.newInstance().disableDiscovery()
+                    .setClassLoader(loader).addBuildCompatibleExtensions(SilentExtension.class).initialize()) {
+                    container.isRunning();
+                }
+            });
+            assertTrue(failure.getMessage().contains("did not run"), failure.getMessage());
+        }
+    }
+
+    /**
+     * Describes nothing, so that only the record of the compilation names it.
+     */
+    public static final class SilentExtension implements BuildCompatibleExtension {
+        @Synthesis
+        public void synthesise(SyntheticComponents components) {
         }
     }
 

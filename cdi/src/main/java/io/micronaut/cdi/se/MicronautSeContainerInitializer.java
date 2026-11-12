@@ -16,6 +16,7 @@
 package io.micronaut.cdi.se;
 
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.context.BeanContext;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
@@ -43,15 +44,9 @@ import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.spi.Extension;
 import org.jspecify.annotations.Nullable;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -99,9 +94,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      */
     @Internal
     public static final String RESTRICTED_CLASSPATH = "micronaut.cdi.se.restricted-classpath";
-
-    private static final String BUILD_COMPATIBLE_EXTENSION_SERVICES =
-        "META-INF/services/" + BuildCompatibleExtension.class.getName();
 
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
@@ -294,37 +286,30 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     /**
      * Checks that every build compatible extension handed to the bootstrap is one the compilation ran. What the
-     * compilation recorded of it is the evidence: the synthetic components it described, whose records name it,
-     * however the compilation was told to run it - by its service entry or by the compiler option. An extension that
-     * described none left no record, and a record of its own would be a class the processor generates for nothing
-     * else; for it the service entry it is discovered by stands in, as the compiler finds it through that entry (see
-     * Conformance). The service files are read as text; no extension is loaded or instantiated at runtime.
+     * compilation recorded of it is the evidence: the deployment record of every compilation that ran extensions
+     * names them, however the compilation was told to run them - by their service entries or by the compiler option
+     * - and the synthetic components they described name them too. No extension is loaded or instantiated at
+     * runtime.
      */
     private void checkBuildCompatibleExtensionsRan(BeanContext started) {
         if (buildCompatibleExtensions.isEmpty()) {
             return;
         }
         Set<String> recorded = extensionsRecordedIn(started);
-        Set<String> registered = null;
         for (String extension : buildCompatibleExtensions) {
-            if (recorded.contains(extension)) {
-                continue;
-            }
-            if (registered == null) {
-                registered = registeredExtensions();
-            }
-            if (!registered.contains(extension)) {
+            if (!recorded.contains(extension)) {
                 throw new DeploymentException("The build compatible extension " + extension + " did not run as the "
-                    + "application compiled: it recorded nothing, and is not registered in "
-                    + BUILD_COMPATIBLE_EXTENSION_SERVICES + ". A build compatible extension runs as the application "
-                    + "compiles, which is when it has to be found. See Conformance");
+                    + "application compiled: no compilation of the application recorded running it. A build "
+                    + "compatible extension runs as the application compiles, found through its service entry on the "
+                    + "processor path or named with the compiler option micronaut.cdi.extensions. See Conformance");
             }
         }
     }
 
     /**
-     * The build compatible extensions whose synthetic beans and observers the compilations of an application
-     * recorded: a record is identified by its extension and the order it described the component in.
+     * The build compatible extensions the compilations of an application recorded running: the ones their
+     * deployment records name, and the ones their synthetic beans and observers name - a record is identified by
+     * its extension and the order it described the component in.
      *
      * @param beanContext The context of the application
      * @return The names of the extensions
@@ -332,6 +317,11 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     @Internal
     public static Set<String> extensionsRecordedIn(BeanContext beanContext) {
         Set<String> recorded = new LinkedHashSet<>();
+        for (BeanDefinition<?> definition
+            : beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiExtensionComponents.class))) {
+            recorded.addAll(List.of(definition.getAnnotationMetadata()
+                .stringValues(CdiExtensionComponents.class, "extensions")));
+        }
         for (Class<? extends Annotation> record : List.of(CdiSyntheticBean.class, CdiSyntheticObserver.class)) {
             for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Qualifiers.byStereotype(record))) {
                 definition.getAnnotationMetadata().stringValue(record, "id").ifPresent(id -> {
@@ -341,29 +331,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             }
         }
         return recorded;
-    }
-
-    private Set<String> registeredExtensions() {
-        Set<String> registered = new LinkedHashSet<>();
-        try {
-            Enumeration<URL> files = classLoader.getResources(BUILD_COMPATIBLE_EXTENSION_SERVICES);
-            while (files.hasMoreElements()) {
-                try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(files.nextElement().openStream(), StandardCharsets.UTF_8))) {
-                    for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                        int comment = line.indexOf('#');
-                        String name = (comment < 0 ? line : line.substring(0, comment)).trim();
-                        if (!name.isEmpty()) {
-                            registered.add(name);
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new DeploymentException("The build compatible extensions registered as service providers could "
-                + "not be read", e);
-        }
-        return registered;
     }
 
     /**

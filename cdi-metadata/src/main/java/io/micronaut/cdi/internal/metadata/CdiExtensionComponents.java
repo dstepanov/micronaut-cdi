@@ -26,7 +26,8 @@ import java.lang.annotation.Target;
 /**
  * Marks what the processor wrote for the build compatible extensions of a compilation that is no bean of the
  * application: the classes that record the generic hierarchies of a package, and the definition that records
- * what the extensions said of the deployment as a whole ({@link CdiDeploymentRecord}).
+ * what the extensions said of the deployment as a whole ({@link CdiDeploymentRecord}), which names the extensions
+ * the compilation ran.
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -36,4 +37,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Internal
 public @interface CdiExtensionComponents {
+
+    /**
+     * The build compatible extensions the compilation ran, by class name, on the deployment record: the evidence
+     * the SE bootstrap takes that an extension it is handed ran.
+     *
+     * @return The extensions
+     */
+    String[] extensions() default {};
 }
