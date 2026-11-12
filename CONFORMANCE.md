@@ -984,12 +984,12 @@ this module's processor, which depends on it, so the two are kept in step by han
 The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap,
 the invokers and the CDI 5.0 reserves, eager and auto-closeable beans, asynchronous invokers and synthetic bean
 injection points included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The kit has 982
-test methods outside `tests/full` (816 in 4.1.0), and 969 of them run, all passing, as part of `check`. The
-thirteen that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
+test methods outside `tests/full` (816 in 4.1.0), and 971 of them run, all passing, as part of `check`. The
+eleven that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
 that group drops, all three about passivation -
 `event.implicit.ImplicitEventTest#testImplicitEventIsPassivationCapable`,
 `lookup.clientProxy.ClientProxyTest#testSimpleBeanClientProxyIsSerializable` and
-`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the four SE tests above, and six
+`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the four SE tests above, and four
 left out by name for the differences recorded above, each with its reason in `tck-suite.xml` as well:
 
 | Test | Reason |
@@ -1006,7 +1006,7 @@ The kit's broken deployments of CDI 5.0 whose packages are not named for it - th
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 22 tests, all passing, which makes 991 in all. Each asserts something this implementation answers although
+own: 22 tests, all passing, which makes 993 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
