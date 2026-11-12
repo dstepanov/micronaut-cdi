@@ -15,12 +15,16 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticInjectionPoint;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
 import jakarta.enterprise.inject.spi.Bean;
@@ -31,7 +35,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * What the creation and the destruction function of a synthetic bean look beans up through (CDI 5.0,
@@ -46,6 +53,12 @@ import java.util.List;
  */
 @Internal
 public final class CdiSyntheticInjections implements SyntheticInjections {
+
+    /**
+     * The member of the record of a synthetic bean's declared types that carries the injection points the extension
+     * registered for it, on its runtime definition.
+     */
+    public static final String INJECTION_POINTS = "injectionPoints";
 
     private final CdiInstance<Object> lookup;
     private final CdiInstance<Object> pointed;
@@ -114,6 +127,40 @@ public final class CdiSyntheticInjections implements SyntheticInjections {
                 }
             }
         }
+    }
+
+    /**
+     * The injection points of a synthetic bean as the specification describes a bean's: the ones its extension
+     * registered, each of the type and with the qualifiers it was registered with, belonging to the bean, with no
+     * member and no annotated model.
+     *
+     * @param beanContext The context
+     * @param bean        The synthetic bean
+     * @param definition  Its definition
+     * @return The injection points, none where the bean is not synthetic or registered none
+     */
+    static Set<InjectionPoint> injectionPointsOf(BeanContext beanContext, Bean<?> bean, BeanDefinition<?> definition) {
+        AnnotationValue<CdiDeclaredTypes> declared = definition.getAnnotationMetadata()
+            .getAnnotation(CdiDeclaredTypes.class);
+        if (declared == null) {
+            return Set.of();
+        }
+        List<AnnotationValue<CdiSyntheticInjectionPoint>> points =
+            declared.getAnnotations(INJECTION_POINTS, CdiSyntheticInjectionPoint.class);
+        Set<InjectionPoint> described = new LinkedHashSet<>(points.size());
+        for (AnnotationValue<CdiSyntheticInjectionPoint> point : points) {
+            Argument<?> type = RecordedTypes.typeOf(point.getAnnotation("type", CdiRecordedType.class)
+                .orElseThrow(() -> new IllegalStateException("A synthetic injection point was recorded without a type")));
+            MutableAnnotationMetadata metadata = new MutableAnnotationMetadata();
+            for (AnnotationValue<Annotation> qualifier : point.getAnnotations(CdiSyntheticInjectionPoint.QUALIFIERS)) {
+                metadata.addDeclaredAnnotation(qualifier.getAnnotationName(), qualifier.getValues());
+                metadata.addDeclaredStereotype(List.of(qualifier.getAnnotationName()), AnnotationUtil.QUALIFIER,
+                    Map.of());
+            }
+            described.add(new CdiInjectionPoint(beanContext, bean,
+                Argument.of(type.getType(), type.getName(), metadata, type.getTypeParameters()), null));
+        }
+        return described;
     }
 
     private static List<Registered> registeredOf(CompiledAnnotationTypes types,

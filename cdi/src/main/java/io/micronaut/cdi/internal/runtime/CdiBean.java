@@ -413,6 +413,10 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<InjectionPoint> getInjectionPoints() {
+        if (definition.hasDeclaredAnnotation(CdiDeclaredTypes.class)) {
+            // a synthetic bean: the injection points its extension registered (CDI 5.0)
+            return CdiSyntheticInjections.injectionPointsOf(beanContext, this, definition);
+        }
         Set<InjectionPoint> points = new LinkedHashSet<>();
         Class<?> declaring = beanClass();
         // a bean in a normal scope resolves to its proxy definition, whose constructor and members are the

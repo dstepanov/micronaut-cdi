@@ -310,7 +310,7 @@ public final class RecordedSynthesis {
                 try {
                     if (disposer != null) {
                         dispose((BeanDefinition<SyntheticBeanDisposer<T>>) disposer, record, parameters, instance,
-                            disposalContext);
+                            disposalContext, registered.get());
                     }
                 } finally {
                     if (autoClose) {
@@ -388,14 +388,16 @@ public final class RecordedSynthesis {
     private <T> void dispose(BeanDefinition<SyntheticBeanDisposer<T>> disposerDefinition,
                              AnnotationValue<CdiSyntheticBean> record,
                              CdiParameters parameters, T instance,
-                             RuntimeBeanDefinition.DisposalContext disposalContext) {
+                             RuntimeBeanDefinition.DisposalContext disposalContext,
+                             @Nullable BeanDefinition<T> definition) {
         SyntheticBeanDisposer<T> disposer = beanContext.getBean(disposerDefinition);
         // what the disposal function looks up as a dependent instance lives only as long as the disposal itself
         // (section 2.10.5): the resolver of the disposal destroys it as the disposer returns
         try (CdiInstance<Object> lookup = CdiInstance.ownedBy(beanContext, dependentsOf(disposalContext))) {
             // the method the disposer implements, which the compiler read off its class (CDI 5.0)
             if (record.booleanValue("disposerTakesInjections").orElse(false)) {
-                disposer.dispose(instance, CdiSyntheticInjections.of(beanContext, lookup, null,
+                disposer.dispose(instance, CdiSyntheticInjections.of(beanContext, lookup,
+                    definition == null ? null : beanContext.getBean(CdiBeanContainer.class).beanOf(definition),
                     record.getAnnotations("injectionPoints", CdiSyntheticInjectionPoint.class), true), parameters);
             } else {
                 disposer.dispose(instance, lookup, parameters);
@@ -482,8 +484,12 @@ public final class RecordedSynthesis {
             metadata.addDeclaredAnnotation(CdiBeanAttributes.class.getName(),
                 Map.of("reserve", reserve, "eager", eager, "autoClose", autoClose));
         }
-        // the bean types are the ones the definition is registered with, which are exactly the declared ones
-        metadata.addDeclaredAnnotation(CdiDeclaredTypes.class.getName(), Map.of());
+        // the bean types are the ones the definition is registered with, which are exactly the declared ones; the
+        // record carries the injection points the extension registered (CDI 5.0), which are the bean's
+        List<AnnotationValue<CdiSyntheticInjectionPoint>> points =
+            record.getAnnotations("injectionPoints", CdiSyntheticInjectionPoint.class);
+        metadata.addDeclaredAnnotation(CdiDeclaredTypes.class.getName(), points.isEmpty() ? Map.of()
+            : Map.of(CdiSyntheticInjections.INJECTION_POINTS, points.toArray(new AnnotationValue<?>[0])));
         return metadata;
     }
 

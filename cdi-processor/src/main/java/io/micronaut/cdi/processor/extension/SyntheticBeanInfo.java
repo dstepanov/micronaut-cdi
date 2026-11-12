@@ -182,10 +182,34 @@ final class SyntheticBeanInfo implements BeanInfo {
         return List.of();
     }
 
+    /**
+     * The injection points the extension registered for the bean (CDI 5.0), which its creation and destruction
+     * functions look up through {@code SyntheticInjections}. Such a point is no member of a class: its declaration
+     * is reported as the class of the creation function that looks it up.
+     */
     @Override
     public Collection<InjectionPointInfo> injectionPoints() {
-        // a synthetic bean is created by a function, and has no injection point
-        return List.of();
+        List<InjectionPointInfo> points = new ArrayList<>(bean.injectionPoints().size());
+        for (RecordingBeanBuilder.InjectionPoint point : bean.injectionPoints()) {
+            List<AnnotationInfo> qualifiers = new ArrayList<>(point.qualifiers().size());
+            for (AnnotationValue<?> qualifier : point.qualifiers()) {
+                qualifiers.add(new ElementAnnotationInfo(qualifier, context));
+            }
+            points.add(new RegisteredPoint(point.type(), List.copyOf(qualifiers),
+                new ElementClassInfo(bean.creator(), context)));
+        }
+        return List.copyOf(points);
+    }
+
+    /**
+     * An injection point registered for a synthetic bean.
+     *
+     * @param type        The required type
+     * @param qualifiers  The qualifiers it was registered with
+     * @param declaration The class of the creation function
+     */
+    private record RegisteredPoint(Type type, Collection<AnnotationInfo> qualifiers, ClassInfo declaration)
+        implements InjectionPointInfo {
     }
 
     @Override
