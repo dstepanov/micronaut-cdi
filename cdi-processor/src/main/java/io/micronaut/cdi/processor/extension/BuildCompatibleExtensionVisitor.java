@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
@@ -461,6 +462,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             // the deployment has none of them to tell an extension about
             return;
         }
+        if (isUndiscovered(element.getAnnotationMetadata())) {
+            // a subclass that only inherits its scope is not discovered (section 2.5.1): the deployment has no
+            // bean of it unless the SE bootstrap is handed the class, which the compilation cannot know
+            return;
+        }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
             beans.add(ElementBeanInfo.of(element, null, context));
@@ -497,6 +503,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             extensions.describeObserver(
                 new ElementObserverInfo(element, method, observed, async, context), messages, context);
         }
+    }
+
+    /**
+     * Whether the processor took the class out of discovery for declaring no bean defining annotation of its own
+     * (CdiScopeVisitor), which it records as the condition UndiscoveredSubclass.
+     */
+    private static boolean isUndiscovered(AnnotationMetadata metadata) {
+        return metadata.getAnnotationValuesByType(Requires.class).stream()
+            .anyMatch(requires -> requires.stringValue("condition")
+                .filter("io.micronaut.cdi.internal.runtime.UndiscoveredSubclass"::equals).isPresent());
     }
 
     /**
