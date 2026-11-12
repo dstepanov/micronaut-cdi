@@ -541,10 +541,18 @@ final class ExtensionMethods {
      */
     private static boolean sameType(ClassElement element, java.lang.reflect.Type expected) {
         if (expected instanceof Class<?> raw) {
-            return element.getName().equals(raw.getName()) && element.getTypeArguments().isEmpty();
+            if (raw.isArray()) {
+                // an array is the same array of the same component, compared dimension by dimension
+                return element.isArray() && sameType(element.fromArray(), raw.getComponentType());
+            }
+            return !element.isArray() && element.getName().equals(raw.getName())
+                && element.getTypeArguments().isEmpty();
+        }
+        if (expected instanceof GenericArrayType array) {
+            return element.isArray() && sameType(element.fromArray(), array.getGenericComponentType());
         }
         if (expected instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
-            return element.getName().equals(raw.getName())
+            return !element.isArray() && element.getName().equals(raw.getName())
                 && sameArguments(element.getTypeArguments(), parameterized);
         }
         return false;
