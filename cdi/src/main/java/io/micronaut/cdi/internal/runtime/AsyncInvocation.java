@@ -44,6 +44,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Internal
 final class AsyncInvocation {
 
+    /**
+     * The async type of the built-in handler of {@code Flow.Publisher}, as the compiler records it.
+     */
+    static final String FLOW_PUBLISHER = "java.util.concurrent.Flow.Publisher";
+
     private AsyncInvocation() {
     }
 
@@ -69,24 +74,26 @@ final class AsyncInvocation {
      * What a return type handler makes of the value an asynchronous method returned.
      *
      * @param handler    The handler, {@code null} for a built-in one
+     * @param asyncType  The async type the compiler matched the method by, which picks the built-in handler: a
+     *                   value may be of more than one async type, and the method's declared type decides
      * @param original   The value
      * @param completion What is run as the asynchronous action completes
      * @return The value handed to the caller
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    static @Nullable Object transformReturnValue(@Nullable Object handler, @Nullable Object original,
-                                                 Runnable completion) {
+    static @Nullable Object transformReturnValue(@Nullable Object handler, String asyncType,
+                                                 @Nullable Object original, Runnable completion) {
         if (handler instanceof AsyncHandler.ReturnType returnType) {
             return returnType.transform(original, completion);
         }
         if (handler instanceof AsyncHandler.ParameterType parameterType) {
             return parameterType.transformReturnValue(original, completion);
         }
-        if (original instanceof CompletionStage<?> stage) {
-            return completing(stage, completion);
-        }
-        if (original instanceof Flow.Publisher<?> publisher) {
+        if (FLOW_PUBLISHER.equals(asyncType) && original instanceof Flow.Publisher<?> publisher) {
             return new CompletingPublisher<>(publisher, completion);
+        }
+        if (!FLOW_PUBLISHER.equals(asyncType) && original instanceof CompletionStage<?> stage) {
+            return completing(stage, completion);
         }
         // nothing was returned to complete: the action is complete as the method returns
         completion.run();

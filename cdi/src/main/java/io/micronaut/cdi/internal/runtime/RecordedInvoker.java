@@ -71,19 +71,25 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
      * The async handler, {@code null} for a built-in one or a method that is not asynchronous.
      */
     private final @Nullable Object asyncHandler;
+    /**
+     * The async type the compiler matched the method by, empty for a method that is not asynchronous.
+     */
+    private final String asyncType;
 
     public RecordedInvoker(BeanContext beanContext, String beanClassName, @Nullable Class<?> beanType,
                            String methodName, String[] parameterTypeNames,
                            boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups) {
         this(beanContext, beanClassName, beanType, methodName, parameterTypeNames, staticMethod, instanceLookup,
-            argumentLookups, false, -1, null);
+            argumentLookups, false, -1, null, "");
     }
 
     private RecordedInvoker(BeanContext beanContext, String beanClassName, @Nullable Class<?> beanType,
                             String methodName, String[] parameterTypeNames,
                             boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups,
-                            boolean async, int asyncParameter, @Nullable Object asyncHandler) {
+                            boolean async, int asyncParameter, @Nullable Object asyncHandler,
+                            String asyncType) {
         this.async = async;
+        this.asyncType = asyncType;
         this.asyncParameter = asyncParameter;
         this.asyncHandler = asyncHandler;
         this.beanContext = beanContext;
@@ -124,7 +130,8 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             async,
             asyncParameter,
             async ? AsyncInvocation.handlerOf(beanContext, record.stringValue("asyncHandler").orElse(""),
-                asyncParameter >= 0) : null);
+                asyncParameter >= 0) : null,
+            record.stringValue("asyncType").orElse(""));
     }
 
     // a static method is invoked on no instance, which the signature of an executable method has no way to say
@@ -195,7 +202,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                 invocationArguments[asyncParameter] = AsyncInvocation.transformArgument(asyncHandler,
                     invocationArguments[asyncParameter], completion);
             }
-            Object result = AsyncInvocation.transformReturnValue(asyncHandler,
+            Object result = AsyncInvocation.transformReturnValue(asyncHandler, asyncType,
                 invoke(method, target, invocationArguments), completion);
             returned = true;
             return result;
