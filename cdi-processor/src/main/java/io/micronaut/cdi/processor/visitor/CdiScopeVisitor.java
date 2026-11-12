@@ -15,6 +15,10 @@
  */
 package io.micronaut.cdi.processor.visitor;
 
+import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.context.annotation.Requires;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
@@ -259,6 +263,14 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         if (!checkStereotypesOf(element, context)) {
             return;
         }
+        if (isDiscoveredOnlyThroughItsSuperclass(element, context)) {
+            // a bean archive discovers a class by a bean defining annotation the class declares (section 2.5.1): a
+            // subclass that declares none and only inherits a scope is no bean of its own. Where a class is added
+            // to the deployment explicitly - an extension's scanned class - the scope it is given is declared
+            element.annotate(Requires.class, builder -> builder
+                .member("condition", new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.NotABean")));
+            return;
+        }
         if (element.hasDeclaredAnnotation(CdiScope.class)) {
             // a mapper has already read what the class declares
             takeOffTheDependentPseudoScope(element);
@@ -289,6 +301,41 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             : CdiScopes.annotationsOf(resolved, normal)) {
             element.annotate(annotation);
         }
+    }
+
+    /**
+     * Whether the class would be a bean only by a scope it inherits: it declares no bean defining annotation - no
+     * scope, no stereotype, not {@code Interceptor}, nothing that makes a Micronaut bean - and no producer or observer
+     * method, which make a bean of a class whatever it declares, while a superclass hands it a scope of the
+     * specification.
+     */
+    private static boolean isDiscoveredOnlyThroughItsSuperclass(ClassElement element, VisitorContext context) {
+        if (element.isAbstract() || element.isInterface() || scopeDeclaredOn(element, context) != null
+            || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
+            || element.hasDeclaredStereotype(AnnotationUtil.SCOPE)
+            || element.hasDeclaredStereotype("io.micronaut.context.annotation.Bean")) {
+            return false;
+        }
+        for (String stereotype : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.STEREOTYPE)) {
+            if (declaredContributorOf(element, stereotype, context) != null) {
+                return false;
+            }
+        }
+        if (!element.hasStereotype(Cdi.NORMAL_SCOPE) && !element.hasStereotype(Cdi.DEPENDENT)) {
+            return false;
+        }
+        if (!SpecificationBeans.producersOf(element).isEmpty()) {
+            return false;
+        }
+        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
+            for (ParameterElement parameter : method.getParameters()) {
+                if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES) || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)
+                    || parameter.hasDeclaredAnnotation(Cdi.DISPOSES)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**

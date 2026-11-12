@@ -144,14 +144,13 @@ bootstrap an extension its archive does not register, and `DiscoveredAndRegister
 but this module's shared compilation of the kit does not run; the first is left out by name, and the second is not
 on the SE block, which lists its classes by name.
 
-### A class is a bean by the scope it inherits
+### A class is discovered by a bean defining annotation it declares
 
-*CDI 5.0 section 3.11, the kit's sealed classes.* A built-in scope annotation is `@Inherited`, and this container
-reads a class that inherits one as declaring it, as Java does: a subclass that declares nothing of a dependent bean is
-a bean itself. A bean archive whose discovery mode is `annotated` discovers only classes that declare a bean defining
-annotation in other implementations. `SealedDependentBeanWithNoProxyTest` deploys a sealed dependent bean and the one
-final subclass it permits, which declares nothing; here the subclass is a bean too, so the injection point of the
-sealed class is ambiguous. The test is left out by name.
+*CDI 5.0 section 2.5.1, the kit's sealed classes.* A built-in scope annotation is `@Inherited`, and Java reads a
+class that inherits one as annotated with it. A bean archive discovers a class by a bean defining annotation the
+class declares, so a subclass that declares no scope, no stereotype and not `@Interceptor`, and no producer or
+observer method, is no bean of its own however its superclass is scoped (`CdiScopeVisitor`); one that declares a
+stereotype keeps the scope it inherits, as section 2.3 has it.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
@@ -996,7 +995,6 @@ left out by name for the differences recorded above, each with its reason in `tc
 | `implementation.simple.lifecycle.SimpleBeanLifecycleTest#testDependentsDestroyedAfterPreDestroyAndAutoClose` | An auto-closeable class bean is closed after its dependents (no Core hook between `PreDestroy` and the release of dependents) |
 | `interceptors.invocation.InterceptorInvocationTest#testCloseIsNotInterceptedDuringDestruction` | `close()` of an intercepted bean cannot be called past its interceptors |
 | `eager.synthetic.bean.EagerSyntheticBeanTest#testUnqualified`, `#testQualified` | A synthetic bean of a normal scope has no client proxy (known limitation) |
-| `lookup.clientProxy.unproxyable.sealed.SealedDependentBeanWithNoProxyTest#testSealedDependentBeanWithNoProxyWorks` | A class is a bean by the scope it inherits, so its deployment is ambiguous here |
 
 The kit's broken deployments of CDI 5.0 whose packages are not named for it - the async handlers that
 `invokers/lookup/dependent/async/**/invalid` registers, and the sealed classes of

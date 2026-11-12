@@ -77,18 +77,8 @@
             </run>
         </groups>
         <packages>
-            <package name="org.jboss.cdi.tck.tests.lookup.*">
-                <exclude name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.sealed"/>
-            </package>
+            <package name="org.jboss.cdi.tck.tests.lookup.*"/>
         </packages>
-        <classes>
-            <!-- CDI 5.0's sealed classes: the deployment of SealedDependentBeanWithNoProxyTest holds
-                 MyDependentSubclass, which declares nothing and inherits @Dependent, which is @Inherited; this
-                 container discovers a class by the bean defining annotation it inherits as well as by one it
-                 declares, so the injection point of MyDependent is ambiguous here. See CONFORMANCE.md -->
-            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.sealed.SealedNormalScopedBeanUnproxyableTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.sealed.SealedInterceptedClassUnproxyableTest"/>
-        </classes>
     </test>
     <test name="implementation">
         <groups>
