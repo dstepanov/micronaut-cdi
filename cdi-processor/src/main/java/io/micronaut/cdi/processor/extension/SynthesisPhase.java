@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The synthesis phase of section 2.10.5 for one compilation: what the extensions described, and the bean
@@ -61,6 +62,9 @@ import java.util.Map;
 @Internal
 final class SynthesisPhase {
 
+    private static final Set<String> SPECIFICATION_FUNCTIONS = Set.of(
+        "jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator",
+        "jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer");
     private static final String SCOPE = "jakarta.inject.Scope";
     private static final String INJECTION_POINT = "jakarta.enterprise.inject.spi.InjectionPoint";
     private static final String EVENT = "jakarta.enterprise.event.Event";
@@ -339,8 +343,8 @@ final class SynthesisPhase {
             record.member("injectionPoints", points.toArray(new AnnotationValue<?>[0]));
         }
         // which of the two methods the creation and destruction functions implement, read off the classes the
-        // extension named: the container calls the one that exists (CDI 5.0), and is allowed to take the one that
-        // takes SyntheticInjections for declared on the class itself
+        // extension named: the container calls the one that exists (CDI 5.0), whether the class declares it or
+        // inherits it
         if (takesInjections(bean.creator(), "create")) {
             record.member("creatorTakesInjections", true);
         }
@@ -408,11 +412,18 @@ final class SynthesisPhase {
         return null;
     }
 
+    /**
+     * Whether the function implements the method that takes {@code SyntheticInjections}, declared on its class or
+     * inherited from a superclass or an interface of its own; the default of the specification's interface, which
+     * throws, is no implementation.
+     */
     private static boolean takesInjections(ClassElement function, String methodName) {
-        return function.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared().onlyInstance().named(methodName))
+        return function.getEnclosedElements(ElementQuery.ALL_METHODS.onlyInstance().named(methodName))
             .stream()
-            .anyMatch(method -> !method.isAbstract() && Arrays.stream(method.getParameters()).anyMatch(
-                parameter -> SYNTHETIC_INJECTIONS.equals(parameter.getGenericType().getName())));
+            .anyMatch(method -> !method.isAbstract()
+                && !SPECIFICATION_FUNCTIONS.contains(method.getDeclaringType().getName())
+                && Arrays.stream(method.getParameters()).anyMatch(
+                    parameter -> SYNTHETIC_INJECTIONS.equals(parameter.getGenericType().getName())));
     }
 
     private AnnotationValue<CdiSyntheticObserver> recordOf(RecordingObserverBuilder<?> observer) {
