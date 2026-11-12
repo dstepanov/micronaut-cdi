@@ -243,18 +243,21 @@ public final class CdiAssignability {
      */
     static boolean isEventTypeMatching(@Nullable RecordedTypeIndex index,
                                        Argument<?> observedEventType, List<Argument<?>> eventTypeClosure) {
-        Class<?> observed = observedEventType.getType();
-        if (observed.isPrimitive() && observed != void.class) {
-            // a primitive and the class that boxes it are one type for observer resolution (CDI 5.0, section
-            // 9.3.2): an event is an object, so an observer of int hears an event of Integer
-            observedEventType = Argument.of(CdiTypes.boxedOf(observed));
-        }
+        // a primitive and the class that boxes it are one type for observer resolution (CDI 5.0, section 9.3.2), so
+        // both sides are compared boxed: an observer of int hears an event of Integer, and of int. An array of a
+        // primitive is a type of its own, and stays one
+        Argument<?> observed = boxed(observedEventType);
         for (Argument<?> type : eventTypeClosure) {
-            if (isEventAssignable(index, observedEventType, type)) {
+            if (isEventAssignable(index, observed, boxed(type))) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static Argument<?> boxed(Argument<?> type) {
+        Class<?> raw = type.getType();
+        return raw.isPrimitive() && raw != void.class ? Argument.of(CdiTypes.boxedOf(raw)) : type;
     }
 
     /**
