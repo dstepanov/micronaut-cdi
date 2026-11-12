@@ -150,7 +150,8 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
         // the container validates the deployment before the extensions are told it did (section 11.5.4)
         container.validateDeployment();
-        fire(observers, new PortableEvents.AfterValidation(problems), Argument.of(AfterDeploymentValidation.class),
+        fire(observers, new PortableEvents.AfterValidation(problems,
+            container.beanContext().getClassLoader()), Argument.of(AfterDeploymentValidation.class),
             problems);
         if (!problems.isEmpty()) {
             throw withTheRest(new DeploymentException(problems.get(0)), problems);

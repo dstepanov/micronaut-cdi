@@ -82,20 +82,22 @@ final class PortableEvents {
      * Whether an async handler exists for the async type (CDI 5.0, section 10.5): one of the built-in return type
      * handlers, or a handler registered as a service provider whose async type - the erasure of the type argument
      * to its direct {@code AsyncHandler.ReturnType} or {@code AsyncHandler.ParameterType} superinterface - is the
-     * type. The handler classes are read, not instantiated.
+     * type. The service entries are the ones the class loader of the container serves, which is where an invoker
+     * loads its handler; the handler classes are read, not instantiated.
      */
-    static boolean asyncHandlerExists(Class<?> asyncType) {
+    static boolean asyncHandlerExists(Class<?> asyncType, ClassLoader loader) {
         if (asyncType == CompletionStage.class || asyncType == CompletableFuture.class
             || asyncType == Flow.Publisher.class) {
             return true;
         }
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         for (Class<?> kind : List.of(AsyncHandler.ReturnType.class, AsyncHandler.ParameterType.class)) {
             for (ServiceDefinition<?> handler : SoftServiceLoader.load(kind, loader)) {
-                if (!handler.isPresent()) {
+                Class<?> handlerClass;
+                try {
+                    handlerClass = Class.forName(handler.getName(), false, loader);
+                } catch (ClassNotFoundException | LinkageError e) {
                     continue;
                 }
-                Class<?> handlerClass = handler.load().getClass();
                 for (java.lang.reflect.Type type : handlerClass.getGenericInterfaces()) {
                     if (type instanceof ParameterizedType parameterized && parameterized.getRawType() == kind
                         && erasureOf(parameterized.getActualTypeArguments()[0]) == asyncType) {
@@ -584,10 +586,12 @@ final class PortableEvents {
     static final class AfterValidation extends PortableEvent implements AfterDeploymentValidation {
 
         private final List<Throwable> problems;
+        private final ClassLoader loader;
 
-        AfterValidation(List<Throwable> problems) {
+        AfterValidation(List<Throwable> problems, ClassLoader loader) {
             super("AfterDeploymentValidation");
             this.problems = problems;
+            this.loader = loader;
         }
 
         @Override
@@ -599,7 +603,7 @@ final class PortableEvents {
         @Override
         public void ensureAsyncHandlerExists(Class<?> asyncType, Supplier<String> message) {
             whileNotifying();
-            if (!asyncHandlerExists(asyncType)) {
+            if (!asyncHandlerExists(asyncType, loader)) {
                 String said = message.get();
                 problems.add(new DeploymentException("No async handler exists for " + asyncType.getName()
                     + (said != null ? ": " + said : "")));
