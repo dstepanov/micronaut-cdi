@@ -74,7 +74,7 @@ visible in a test report as what passes.
 | 11.3 (5.0) | `BeanContainer.unwrapClientProxy`, through the scoped proxy's own resolution of its target | `CdiBeanContainer` |
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
-| 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension the compilation ran | `MicronautSeContainerInitializer` |
+| 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension the compilation recorded running (or, where it recorded nothing, one registered as a service provider) | `MicronautSeContainerInitializer` |
 
 ## Not yet implemented
 
@@ -133,8 +133,13 @@ module's: without it an invoker of a method a custom handler matched fails, nami
 
 *CDI 5.0 section 25.1.* `SeContainerInitializer.addBuildCompatibleExtensions` names extensions to run as the
 container is built. An extension of this container runs as the application compiles, so the bootstrap accepts one
-registered as a service provider of `BuildCompatibleExtension`, which the compilation ran, and refuses one that is
-not with a `DeploymentException`. The kit's `BootstrapSEContainerTest#testAddBuildCompatibleExtension` hands the
+the compilation recorded running - the synthetic beans and observers it described are recorded under its name,
+whether the compilation found it by its service entry or was handed it with the compiler option
+`micronaut.cdi.extensions` - and refuses one it recorded nothing of with a `DeploymentException`. An extension that
+describes no synthetic component leaves no record, and recording it would take a class generated for nothing else,
+which this module does not generate: for such an extension the service entry the compiler finds it by is taken as
+the evidence, so an extension registered only on the runtime class path and synthesising nothing is accepted
+although it never ran. The kit's `BootstrapSEContainerTest#testAddBuildCompatibleExtension` hands the
 bootstrap an extension its archive does not register, and `DiscoveredAndRegisteredBceTest` one its archive registers
 but this module's shared compilation of the kit does not run; the first is left out by name, and the second is not
 on the SE block, which lists its classes by name.

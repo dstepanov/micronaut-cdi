@@ -16,6 +16,10 @@
 package io.micronaut.cdi.se;
 
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import io.micronaut.context.BeanContext;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
@@ -232,7 +236,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     @Override
     public SeContainer initialize() {
-        checkBuildCompatibleExtensionsRan();
         ApplicationContextBuilder builder = ApplicationContext.builder(classLoader)
             .properties(properties);
         if (!selectedAlternatives.isEmpty()) {
@@ -258,7 +261,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             name -> classpath == null || classpath.contains(outerClassOf(name))));
         ApplicationContext context = builder.build();
         try {
-            return new MicronautSeContainer(context.start());
+            ApplicationContext started = context.start();
+            checkBuildCompatibleExtensionsRan(started);
+            return new MicronautSeContainer(started);
         } catch (RuntimeException | Error e) {
             // whatever the start failed with, the context is closed and its container is not left as the one
             // CDI.current() resolves to; what an extension said is reported as it said it
@@ -281,14 +286,57 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     }
 
     /**
-     * Checks that every build compatible extension handed to the bootstrap is one the compilation ran: one
-     * registered as a service provider of {@link BuildCompatibleExtension}, the way the compiler discovers it.
-     * The service files are read as text; no extension is loaded or instantiated at runtime.
+     * Checks that every build compatible extension handed to the bootstrap is one the compilation ran. What the
+     * compilation recorded of it is the evidence: the synthetic components it described, whose records name it,
+     * however the compilation was told to run it - by its service entry or by the compiler option. An extension that
+     * described none left no record, and a record of its own would be a class the processor generates for nothing
+     * else; for it the service entry it is discovered by stands in, as the compiler finds it through that entry (see
+     * Conformance). The service files are read as text; no extension is loaded or instantiated at runtime.
      */
-    private void checkBuildCompatibleExtensionsRan() {
+    private void checkBuildCompatibleExtensionsRan(BeanContext started) {
         if (buildCompatibleExtensions.isEmpty()) {
             return;
         }
+        Set<String> recorded = extensionsRecordedIn(started);
+        Set<String> registered = null;
+        for (String extension : buildCompatibleExtensions) {
+            if (recorded.contains(extension)) {
+                continue;
+            }
+            if (registered == null) {
+                registered = registeredExtensions();
+            }
+            if (!registered.contains(extension)) {
+                throw new DeploymentException("The build compatible extension " + extension + " did not run as the "
+                    + "application compiled: it recorded nothing, and is not registered in "
+                    + BUILD_COMPATIBLE_EXTENSION_SERVICES + ". A build compatible extension runs as the application "
+                    + "compiles, which is when it has to be found. See Conformance");
+            }
+        }
+    }
+
+    /**
+     * The build compatible extensions whose synthetic beans and observers the compilations of an application
+     * recorded: a record is identified by its extension and the order it described the component in.
+     *
+     * @param beanContext The context of the application
+     * @return The names of the extensions
+     */
+    @Internal
+    public static Set<String> extensionsRecordedIn(BeanContext beanContext) {
+        Set<String> recorded = new LinkedHashSet<>();
+        for (Class<? extends Annotation> record : List.of(CdiSyntheticBean.class, CdiSyntheticObserver.class)) {
+            for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Qualifiers.byStereotype(record))) {
+                definition.getAnnotationMetadata().stringValue(record, "id").ifPresent(id -> {
+                    int ordinal = id.lastIndexOf('#');
+                    recorded.add(ordinal < 0 ? id : id.substring(0, ordinal));
+                });
+            }
+        }
+        return recorded;
+    }
+
+    private Set<String> registeredExtensions() {
         Set<String> registered = new LinkedHashSet<>();
         try {
             Enumeration<URL> files = classLoader.getResources(BUILD_COMPATIBLE_EXTENSION_SERVICES);
@@ -308,13 +356,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             throw new DeploymentException("The build compatible extensions registered as service providers could "
                 + "not be read", e);
         }
-        for (String extension : buildCompatibleExtensions) {
-            if (!registered.contains(extension)) {
-                throw new DeploymentException("The build compatible extension " + extension + " is not registered "
-                    + "in " + BUILD_COMPATIBLE_EXTENSION_SERVICES + ": a build compatible extension runs as the "
-                    + "application compiles, which is when it has to be found. See Conformance");
-            }
-        }
+        return registered;
     }
 
     /**
