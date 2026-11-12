@@ -62,6 +62,9 @@ import java.util.Map;
 final class SynthesisPhase {
 
     private static final String SCOPE = "jakarta.inject.Scope";
+    private static final String INJECTION_POINT = "jakarta.enterprise.inject.spi.InjectionPoint";
+    private static final String EVENT = "jakarta.enterprise.event.Event";
+    private static final String INSTANCE = "jakarta.enterprise.inject.Instance";
     private static final String SYNTHETIC_INJECTIONS =
         "jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections";
 
@@ -320,6 +323,11 @@ final class SynthesisPhase {
         if (!bean.injectionPoints().isEmpty()) {
             List<AnnotationValue<CdiSyntheticInjectionPoint>> points = new ArrayList<>();
             for (RecordingBeanBuilder.InjectionPoint point : bean.injectionPoints()) {
+                String problem = problemOf(point, scope);
+                if (problem != null) {
+                    context.fail("The injection point " + point.type() + " registered for the synthetic bean "
+                        + bean.implementation().getName() + " is illegal: " + problem, bean.creator());
+                }
                 List<AnnotationValue<?>> pointQualifiers = completed(point.qualifiers());
                 points.add(AnnotationValue.builder(CdiSyntheticInjectionPoint.class)
                     .member("type", SyntheticRecords.typeOf(point.type()))
@@ -340,6 +348,63 @@ final class SynthesisPhase {
             record.member("disposerTakesInjections", true);
         }
         return record.build();
+    }
+
+    /**
+     * What the rules of an injection point make a definition error of a point registered for a synthetic bean, as
+     * they do of a point a class declares: a type variable; a raw {@code Event} or {@code Instance}, an
+     * {@code Event<?>} or {@code Event<? extends X>}, an {@code Instance<? super X>} and an {@code Instance} of such an
+     * event (sections 5.6.1 and 9.2); and the {@code @Default InjectionPoint} of a bean that is not dependent, which
+     * outlives any one point it is injected into (section 6.5.3).
+     */
+    private static @Nullable String problemOf(RecordingBeanBuilder.InjectionPoint point, Scope scope) {
+        Type type = point.type();
+        if (type.isTypeVariable()) {
+            return "a type variable is not a legal injection point type (section 5.2.3)";
+        }
+        String raw = rawNameOf(type);
+        if (INJECTION_POINT.equals(raw) && !Cdi.DEPENDENT.equals(scope.name())
+            && (point.qualifiers().isEmpty() || point.qualifiers().stream()
+                .anyMatch(qualifier -> Cdi.DEFAULT.equals(qualifier.getAnnotationName())))) {
+            return "only a dependent bean may be told the injection point it is injected into (section 6.5.3)";
+        }
+        if (raw != null && (EVENT.equals(raw) || INSTANCE.equals(raw))) {
+            return builtInProblemOf(type, raw, true);
+        }
+        return null;
+    }
+
+    private static @Nullable String builtInProblemOf(Type type, String raw, boolean outer) {
+        if (type.isClass()) {
+            return "a raw " + raw + " names no type";
+        }
+        Type argument = type.asParameterizedType().typeArguments().get(0);
+        if (EVENT.equals(raw)) {
+            if (argument.isWildcardType() && argument.asWildcardType().lowerBound() == null) {
+                return "an Event<?> or Event<? extends X> names no type to fire (section 9.2)";
+            }
+            return null;
+        }
+        if (argument.isWildcardType()) {
+            if (argument.asWildcardType().lowerBound() != null) {
+                return "an Instance<? super X> names no type to look up (section 5.6.1)";
+            }
+            argument = argument.asWildcardType().upperBound();
+        }
+        if (outer && argument != null && EVENT.equals(rawNameOf(argument))) {
+            return builtInProblemOf(argument, EVENT, false);
+        }
+        return null;
+    }
+
+    private static @Nullable String rawNameOf(Type type) {
+        if (type.isClass()) {
+            return type.asClass().declaration().name();
+        }
+        if (type.isParameterizedType()) {
+            return type.asParameterizedType().declaration().name();
+        }
+        return null;
     }
 
     private static boolean takesInjections(ClassElement function, String methodName) {
