@@ -17,6 +17,8 @@ package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.context.ApplicationScope;
 import io.micronaut.cdi.internal.context.RequestScope;
+import jakarta.enterprise.context.RequestScoped;
+import io.micronaut.cdi.internal.runtime.CdiContext;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
@@ -67,6 +69,8 @@ import java.util.Set;
 @Internal
 public final class ExtensionContexts {
 
+    private static final String REQUEST_SCOPED = "jakarta.enterprise.context.RequestScoped";
+
     private final BeanContext beanContext;
     private final Map<String, List<AlterableContext>> contextsByScope = new LinkedHashMap<>();
     private final Set<String> normalScopes = new LinkedHashSet<>();
@@ -104,6 +108,11 @@ public final class ExtensionContexts {
                 continue;
             }
             List<AlterableContext> contextsOfScope = new ArrayList<>();
+            if (REQUEST_SCOPED.equals(scopeName)) {
+                // the request scope is not global (CDI 5.0, section 6.4): a context an extension registers for it
+                // stands beside the container's own, and the one that is active serves the beans of the scope
+                contextsOfScope.add(CdiContext.ofRequest(RequestScoped.class, beanContext.getBean(RequestScope.class)));
+            }
             contextsOfScope.add(context);
             contextsByScope.put(scopeName, contextsOfScope);
             if (registered != null && registered.booleanValue("normal").orElse(false)) {

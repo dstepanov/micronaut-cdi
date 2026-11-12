@@ -67,7 +67,7 @@ visible in a test report as what passes.
 | 10.5 (5.0) | Asynchronous invokers: the async handlers found as the application compiles, malformed ones a definition error, two of one async type - of either kind, a built-in one among them - a deployment problem unless the compiler option `micronaut.cdi.asyncHandlerSelection` selects one, the built-in `CompletionStage`, `CompletableFuture` and `Flow.Publisher` handlers, and the dependent instances of an invocation destroyed once it has returned and its action completed; `InvokerValidation.ensureAsyncHandlerExists` in the validation phase | `AsyncHandlerTypes`, `ElementInvokerFactory`, `RecordedInvoker`, `AsyncInvocation` |
 | 12.5 (5.0) | Injection points of synthetic beans: `SyntheticBeanBuilder.withInjectionPoint`, validated as the container starts, looked up through `SyntheticInjections` - an unregistered one refused, a dependent instance told the synthetic bean as the bean of its injection point and destroyed with it - and whichever of the creator's and disposer's two methods the class implements, read as it compiles | `RecordingBeanBuilder`, `SynthesisPhase`, `RecordedSynthesis`, `CdiSyntheticInjections` |
 | 12.4 (5.0) | `@Registration(types = ...)` naming a `TypeLiteral` subclass for a parameterized type, matched against bean types and observed types; a raw `TypeLiteral` or a type variable a definition error | `ExtensionMethods` |
-| 6.4 (5.0) | Global scopes: the application and dependent scopes have the container's context alone, and a build compatible extension registering another for them is a deployment problem | `DiscoveredClasses` |
+| 6.4 (5.0) | Global scopes: the application and dependent scopes have the container's context alone, and a build compatible extension registering another for them is a deployment problem; a context an extension registers for the request scope stands beside the container's own, the active one serving the scope's beans | `DiscoveredClasses`, `ExtensionContexts` |
 | 5.6.1, 9.2 (5.0) | Wildcards: `Event<?>`, `Event<? extends X>`, `Instance<? super X>` and an `Instance` of such an `Event` as definition errors at an injection point; an `Instance<? extends X>` looks up `X` and an `Event<? super X>` fires `X`, and a programmatic lookup of one that names no type is refused | `InjectionPointRulesVisitor`, `CdiInstanceFactory`, `CdiEventFactory`, `SpecificationTypes` |
 | 9.3.2 (5.0) | An observer of a primitive type notified of an event of its wrapper | `CdiAssignability` |
 | 6.5.3 (5.0) | The `InjectionPoint` of a lookup through an `Instance` that was not injected: no bean, member or annotated model | `CdiInjectionPoint` |
@@ -152,14 +152,6 @@ a bean itself. A bean archive whose discovery mode is `annotated` discovers only
 annotation in other implementations. `SealedDependentBeanWithNoProxyTest` deploys a sealed dependent bean and the one
 final subclass it permits, which declares nothing; here the subclass is a bean too, so the injection point of the
 sealed class is ambiguous. The test is left out by name.
-
-### A context an extension registers for the request scope is not consulted
-
-*CDI 5.0 section 6.4.* The request scope is not global, so an extension may register a context for it beside the
-container's own, which takes over while it is active. The request scope is served by the container's own Micronaut
-scope, which a context registered at compile time takes no part in; a portable extension's context for it, added as
-the container starts, takes the container's place instead. The kit's `customContextForRequestScope` package is left
-out by name.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
@@ -1005,7 +997,6 @@ left out by name for the differences recorded above, each with its reason in `tc
 | `interceptors.invocation.InterceptorInvocationTest#testCloseIsNotInterceptedDuringDestruction` | `close()` of an intercepted bean cannot be called past its interceptors |
 | `eager.synthetic.bean.EagerSyntheticBeanTest#testUnqualified`, `#testQualified` | A synthetic bean of a normal scope has no client proxy (known limitation) |
 | `lookup.clientProxy.unproxyable.sealed.SealedDependentBeanWithNoProxyTest#testSealedDependentBeanWithNoProxyWorks` | A class is a bean by the scope it inherits, so its deployment is ambiguous here |
-| `build.compatible.extensions.customContextForRequestScope.CustomRequestContextTest#test` | A context an extension registers for the request scope is not consulted |
 
 The kit's broken deployments of CDI 5.0 whose packages are not named for it - the async handlers that
 `invokers/lookup/dependent/async/**/invalid` registers, and the sealed classes of

@@ -144,13 +144,7 @@
             </run>
         </groups>
         <packages>
-            <!-- CDI 5.0's custom context of a build compatible extension for the request scope, beside the
-                 container's own (customContextForRequestScope): the request scope is served by the container's
-                 own Micronaut scope, which a context an extension registers does not take part in. See
-                 CONFORMANCE.md -->
-            <package name="org.jboss.cdi.tck.tests.build.compatible.extensions.*">
-                <exclude name="org.jboss.cdi.tck.tests.build.compatible.extensions.customContextForRequestScope"/>
-            </package>
+            <package name="org.jboss.cdi.tck.tests.build.compatible.extensions.*"/>
         </packages>
     </test>
     <test name="event">
