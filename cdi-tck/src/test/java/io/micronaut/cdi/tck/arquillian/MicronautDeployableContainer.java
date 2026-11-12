@@ -286,6 +286,32 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
     }
 
     /**
+     * Compiles the classes of an SE archive with the build compatible extensions it registers, as the application
+     * of the launched JVM the kit writes the test for was compiled: the SE bootstrap finds what that compiled
+     * through the loader returned, made the context loader of the thread the test runs on.
+     *
+     * @param archive The archive
+     * @return The loader of what was compiled, or {@code null} where the archive registers no extension
+     */
+    static @org.jspecify.annotations.Nullable DeploymentClassLoader compileForTheBootstrap(Archive<?> archive) {
+        java.util.List<String> extensions = extensionsOf(archive);
+        if (extensions.isEmpty()) {
+            return null;
+        }
+        DeployableSources sources = DeployableSources.configured();
+        java.util.Map<String, String> compilable = new java.util.LinkedHashMap<>();
+        for (String name : classesOf(archive)) {
+            String source = sources.sourceOf(name);
+            if (source != null) {
+                compilable.put(name, source);
+            }
+        }
+        // the parent lists every definition the shared compilation generated, and this loader only what is new
+        return new DeploymentClassLoader(DeploymentCompiler.compile(compilable, extensions), Map.of(),
+            MicronautDeployableContainer.class.getClassLoader(), true);
+    }
+
+    /**
      * The loader of the compiled deployment that is up, and the context loader of the thread before it was.
      */
     private @org.jspecify.annotations.Nullable DeploymentClassLoader deployedLoader;

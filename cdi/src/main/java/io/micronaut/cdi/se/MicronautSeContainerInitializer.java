@@ -24,6 +24,7 @@ import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.cdi.internal.runtime.UndiscoveredSubclass;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
@@ -512,7 +513,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      */
     private static boolean isInfrastructure(BeanType<?> bean) {
         AnnotationMetadata metadata = bean.getAnnotationMetadata();
-        if (metadata.hasAnnotation(CdiBuiltIn.class)) {
+        if (metadata.hasAnnotation(CdiBuiltIn.class) || ExtensionComponents.isComponent(metadata)) {
+            // what a build compatible extension synthesised is recorded on the definition of a class it named, and
+            // is the container's whichever archive that class is in
             return true;
         }
         if (metadata.hasAnnotation(CdiScope.class) || producerOf(bean) != null) {

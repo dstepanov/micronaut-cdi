@@ -180,6 +180,9 @@
                     <exclude name="testAddBuildCompatibleExtension"/>
                 </methods>
             </class>
+            <!-- an extension the archive registers and hands the bootstrap: the archive is compiled with it as it is
+                 deployed -->
+            <class name="org.jboss.cdi.tck.tests.se.container.DiscoveredAndRegisteredBceTest"/>
             <class name="org.jboss.cdi.tck.tests.se.container.contextualReference.InvalidContextualReferenceTest"/>
             <class name="org.jboss.cdi.tck.tests.se.context.ContextSETest"/>
             <class name="org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest"/>

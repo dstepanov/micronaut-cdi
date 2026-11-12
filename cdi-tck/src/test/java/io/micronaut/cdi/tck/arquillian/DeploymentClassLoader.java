@@ -62,6 +62,22 @@ final class DeploymentClassLoader extends ClassLoader {
      */
     DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, Map<String, byte[]> archiveResources,
                           ClassLoader parent) {
+        this(generated, archiveResources, parent, false);
+    }
+
+    /**
+     * A loader whose service entries may list only the classes its parent does not have. A container that finds its
+     * definitions through the service entries of its class loader - the SE bootstrap's - would otherwise be listed
+     * every definition the compilation regenerated twice, once by the parent and once by this loader; a class the
+     * parent has is listed by the parent, and served by this loader where this deployment compiled it otherwise.
+     *
+     * @param generated        What the compilation generated
+     * @param archiveResources The resources the archive carries, by path
+     * @param parent           The parent
+     * @param newEntriesOnly   Whether a service entry naming a class the parent has is left out
+     */
+    DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, Map<String, byte[]> archiveResources,
+                          ClassLoader parent, boolean newEntriesOnly) {
         super(parent);
         Map<String, JavaFileObject> generatedResources = new LinkedHashMap<>();
         for (JavaFileObject file : generated) {
@@ -69,7 +85,8 @@ final class DeploymentClassLoader extends ClassLoader {
                 compiled.put(classNameOf(file), file);
             } else if (file.getKind() == JavaFileObject.Kind.OTHER) {
                 String path = outputPathOf(file);
-                if (path != null) {
+                if (path != null && !(newEntriesOnly && path.startsWith("META-INF/")
+                    && parentHas(path.substring(path.lastIndexOf('/') + 1)))) {
                     generatedResources.put(path, file);
                 }
             }

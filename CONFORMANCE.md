@@ -146,9 +146,9 @@ describes no synthetic component leaves no record, and recording it would take a
 which this module does not generate: for such an extension the service entry the compiler finds it by is taken as
 the evidence, so an extension registered only on the runtime class path and synthesising nothing is accepted
 although it never ran. The kit's `BootstrapSEContainerTest#testAddBuildCompatibleExtension` hands the
-bootstrap an extension its archive does not register, and `DiscoveredAndRegisteredBceTest` one its archive registers
-but this module's shared compilation of the kit does not run; the first is left out by name, and the second is not
-on the SE block, which lists its classes by name.
+bootstrap an extension its archive does not register, and is left out by name. `DiscoveredAndRegisteredBceTest` hands
+it one its archive registers as a service provider: the kit adapter compiles that archive with the extension before
+the class runs (`SeClassPathListener`), as the launched application would have been compiled, and the test runs.
 
 ### A class is discovered by a bean defining annotation it declares
 
@@ -976,7 +976,7 @@ than pretended here, and one on CDI 5.0's `addBuildCompatibleExtensions` (see th
 (decorators), and
 `TrimmedBeanArchiveSETest`, whose portable extension would now run but whose archive is a trimmed bean archive
 (section 24.4.3) with a producer that takes an `InterceptionFactory`, both of CDI Full. `DiscoveredAndRegisteredBceTest`,
-new in CDI 5.0, is not on the block, which lists its classes by name. The four that hand the bootstrap a portable extension -
+new in CDI 5.0, runs over its archive compiled with the extension it registers. The four that hand the bootstrap a portable extension -
 `testAddExtensionAsExtensionInstance`, `testAddExtensionAsClass`, `CustomClassLoaderSETest` and
 `CustomRequestContextSETest` - run, on the subset of portable extensions offered beyond Lite. The kit's
 deployments share one class path here, so the extensions its SE archives declare as service providers are
@@ -990,12 +990,12 @@ this module's processor, which depends on it, so the two are kept in step by han
 The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap,
 the invokers and the CDI 5.0 reserves, eager and auto-closeable beans, asynchronous invokers and synthetic bean
 injection points included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The kit has 982
-test methods outside `tests/full` (816 in 4.1.0), and 971 of them run, all passing, as part of `check`. The
-eleven that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
+test methods outside `tests/full` (816 in 4.1.0), and 972 of them run, all passing, as part of `check`. The
+ten that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
 that group drops, all three about passivation -
 `event.implicit.ImplicitEventTest#testImplicitEventIsPassivationCapable`,
 `lookup.clientProxy.ClientProxyTest#testSimpleBeanClientProxyIsSerializable` and
-`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the four SE tests above, and four
+`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the three SE tests above, and four
 left out by name for the differences recorded above, each with its reason in `tck-suite.xml` as well:
 
 | Test | Reason |
@@ -1012,7 +1012,7 @@ The kit's broken deployments of CDI 5.0 whose packages are not named for it - th
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 22 tests, all passing, which makes 993 in all. Each asserts something this implementation answers although
+own: 22 tests, all passing, which makes 994 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with

@@ -36,6 +36,13 @@ import java.lang.reflect.Modifier;
  */
 public final class SeClassPathListener implements IClassListener {
 
+    /**
+     * The loader of what the archive of the running class compiled with its extensions, and the context loader of
+     * the thread before it.
+     */
+    private @org.jspecify.annotations.Nullable DeploymentClassLoader compiled;
+    private @org.jspecify.annotations.Nullable ClassLoader contextLoaderBefore;
+
     @Override
     public void onBeforeClass(ITestClass testClass) {
         Class<?> type = testClass.getRealClass();
@@ -49,6 +56,13 @@ public final class SeClassPathListener implements IClassListener {
                     if (archive instanceof Archive<?> built && ClassPath.isRepresentedBy(built)) {
                         System.setProperty(io.micronaut.cdi.se.MicronautSeContainerInitializer.RESTRICTED_CLASSPATH,
                             String.join(",", MicronautDeployableContainer.classesOf(built)));
+                        // an archive that registers build compatible extensions was compiled with them
+                        DeploymentClassLoader loader = MicronautDeployableContainer.compileForTheBootstrap(built);
+                        if (loader != null) {
+                            compiled = loader;
+                            contextLoaderBefore = Thread.currentThread().getContextClassLoader();
+                            Thread.currentThread().setContextClassLoader(loader);
+                        }
                     }
                 } catch (ReflectiveOperationException e) {
                     throw new IllegalStateException("The deployment of " + type.getName()
@@ -63,6 +77,13 @@ public final class SeClassPathListener implements IClassListener {
     public void onAfterClass(ITestClass testClass) {
         if (!org.jboss.arquillian.testng.Arquillian.class.isAssignableFrom(testClass.getRealClass())) {
             System.clearProperty(io.micronaut.cdi.se.MicronautSeContainerInitializer.RESTRICTED_CLASSPATH);
+            DeploymentClassLoader loader = compiled;
+            if (loader != null) {
+                compiled = null;
+                Thread.currentThread().setContextClassLoader(contextLoaderBefore);
+                contextLoaderBefore = null;
+                loader.dispose();
+            }
         }
     }
 }
