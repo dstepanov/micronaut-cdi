@@ -1111,6 +1111,15 @@ own rather than the first one alone.
   access instead of returning nothing. The async handler scan catches it and warns; returning an empty iterable, or a
   public way to list a resource of the class path (`Filer` answers only the first file of a name), would leave nothing
   to catch. It also prints an "experimental" note on every call.
+- **A producer of a normal scoped class keeps the class's client proxy.** Core builds a produced bean's metadata
+  from the produced class's beneath the producer's and, where the producer declares a scope or a qualifier, takes
+  the class's scopes off (`FactoryBeanElementCreator.cleanupScopeAndQualifierAnnotations`). Where the class's scope
+  came from an annotation mapper - `@ApplicationScoped` read as `CdiApplicationScope` - the
+  `@InterceptorBinding(kind = AROUND, value = ScopedProxy)` it brought stays, so a dependent producer of an
+  application scoped class is proxied as well: it is a second proxy target of the type, and the class bean's own
+  client proxy, which looks its target up by type and `@Default`, finds no single one and fails with
+  `NoSuchBeanException`. Written directly, without a mapper, the same scope is taken off with its binding. Taking off
+  the bindings the removed scopes brought would close it (`ScopedClassWithNamedProducerTest`, disabled).
 - **Enum constants and typed arrays are not compiled into the metadata.** The metadata writer records an enum
   constant by its name (`AnnotationMetadataGenUtils`), so a synthetic component's enum parameter is turned back into
   its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.
