@@ -191,6 +191,8 @@ final class AsyncInvocation {
 
     /**
      * A publisher that runs the completion as its subscription terminates: completed, failed or cancelled.
+     *
+     * @param <T> The type of the items published
      */
     private static final class CompletingPublisher<T> implements Flow.Publisher<T> {
 

@@ -201,6 +201,11 @@ final class SyntheticBeanInfo implements BeanInfo {
         return List.copyOf(points);
     }
 
+    @Override
+    public String toString() {
+        return "Bean[" + bean.implementation().getName() + ", synthetic]";
+    }
+
     /**
      * An injection point registered for a synthetic bean.
      *
@@ -210,10 +215,5 @@ final class SyntheticBeanInfo implements BeanInfo {
      */
     private record RegisteredPoint(Type type, Collection<AnnotationInfo> qualifiers, ClassInfo declaration)
         implements InjectionPointInfo {
-    }
-
-    @Override
-    public String toString() {
-        return "Bean[" + bean.implementation().getName() + ", synthetic]";
     }
 }
