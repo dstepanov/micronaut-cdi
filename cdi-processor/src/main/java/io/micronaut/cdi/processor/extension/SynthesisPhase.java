@@ -179,7 +179,8 @@ final class SynthesisPhase {
 
     private static boolean carriedByAStereotype(RecordingBeanBuilder<?> bean, String annotation) {
         for (ClassElement stereotype : bean.stereotypes()) {
-            if (stereotype.hasDeclaredAnnotation(annotation)) {
+            // written on the stereotype or on a stereotype it declares, however deep, as a class bean's are read
+            if (stereotype.hasStereotype(annotation)) {
                 return true;
             }
         }
