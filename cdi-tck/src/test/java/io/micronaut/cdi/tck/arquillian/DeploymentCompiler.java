@@ -65,6 +65,22 @@ final class DeploymentCompiler {
      */
     static Iterable<? extends JavaFileObject> compile(Map<String, String> sourcesByClassName,
                                                       List<String> extensionClassNames) {
+        return compile(sourcesByClassName, extensionClassNames, List.of());
+    }
+
+    /**
+     * Compiles the given sources with the given build compatible extensions and the given async handlers of method
+     * invokers (CDI 5.0): the deployment's service entries of both, named to the compilation through the
+     * processor's options.
+     *
+     * @param sourcesByClassName  The source of each class
+     * @param extensionClassNames The extensions, by class name
+     * @param asyncHandlerNames   The async handlers, by class name
+     * @return The compiler's output
+     */
+    static Iterable<? extends JavaFileObject> compile(Map<String, String> sourcesByClassName,
+                                                      List<String> extensionClassNames,
+                                                      List<String> asyncHandlerNames) {
         JavaFileObject[] sources = sourcesByClassName.entrySet().stream()
             .map(entry -> sourceFile(entry.getKey(), entry.getValue()))
             .toArray(JavaFileObject[]::new);
@@ -76,6 +92,9 @@ final class DeploymentCompiler {
                     options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION + "="
                         + String.join(",", extensionClassNames));
                     options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION + "=true");
+                }
+                if (!asyncHandlerNames.isEmpty()) {
+                    options.add("-Amicronaut.cdi.asyncHandlers=" + String.join(",", asyncHandlerNames));
                 }
                 return options;
             }

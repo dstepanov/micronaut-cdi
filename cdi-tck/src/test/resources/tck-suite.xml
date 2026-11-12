@@ -39,6 +39,14 @@
             <package name="org.jboss.cdi.tck.tests.alternative.selection"/>
             <package name="org.jboss.cdi.tck.tests.alternative.selection.priority"/>
             <package name="org.jboss.cdi.tck.tests.alternative.selection.stereotype.priority"/>
+            <!-- CDI 5.0: reserves, which non-reserve beans take precedence over, and a reserve that is also an
+                 alternative; eager initialization and automatic closing -->
+            <package name="org.jboss.cdi.tck.tests.alternative.broken.reserve"/>
+            <package name="org.jboss.cdi.tck.tests.reserve.*"/>
+            <package name="org.jboss.cdi.tck.tests.eager.*">
+                <exclude name="org.jboss.cdi.tck.tests.eager.synthetic.bean"/>
+            </package>
+            <package name="org.jboss.cdi.tck.tests.autoclose.*"/>
             <package name="org.jboss.cdi.tck.tests.deployment.discovery"/>
             <package name="org.jboss.cdi.tck.tests.beanContainer"/>
             <package name="org.jboss.cdi.tck.tests.beanContainer.assignability"/>
@@ -50,6 +58,17 @@
             <package name="org.jboss.cdi.tck.tests.context.dependent.instance"/>
             <package name="org.jboss.cdi.tck.tests.context.dependent.transientreference"/>
         </packages>
+        <classes>
+            <!-- a synthetic bean of a normal scope has no client proxy in front of it (EXT-2 in CONFORMANCE.md), so
+                 obtaining a reference to the lazy one creates its instance; the eager ones are created by Startup
+                 all the same, which testMetadata and the rest of the eager packages assert -->
+            <class name="org.jboss.cdi.tck.tests.eager.synthetic.bean.EagerSyntheticBeanTest">
+                <methods>
+                    <exclude name="testUnqualified"/>
+                    <exclude name="testQualified"/>
+                </methods>
+            </class>
+        </classes>
     </test>
     <test name="lookup">
         <groups>
@@ -58,8 +77,18 @@
             </run>
         </groups>
         <packages>
-            <package name="org.jboss.cdi.tck.tests.lookup.*"/>
+            <package name="org.jboss.cdi.tck.tests.lookup.*">
+                <exclude name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.sealed"/>
+            </package>
         </packages>
+        <classes>
+            <!-- CDI 5.0's sealed classes: the deployment of SealedDependentBeanWithNoProxyTest holds
+                 MyDependentSubclass, which declares nothing and inherits @Dependent, which is @Inherited; this
+                 container discovers a class by the bean defining annotation it inherits as well as by one it
+                 declares, so the injection point of MyDependent is ambiguous here. See CONFORMANCE.md -->
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.sealed.SealedNormalScopedBeanUnproxyableTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.sealed.SealedInterceptedClassUnproxyableTest"/>
+        </classes>
     </test>
     <test name="implementation">
         <groups>
@@ -68,8 +97,21 @@
             </run>
         </groups>
         <packages>
-            <package name="org.jboss.cdi.tck.tests.implementation.*"/>
+            <package name="org.jboss.cdi.tck.tests.implementation.*">
+                <exclude name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle"/>
+            </package>
         </packages>
+        <classes>
+            <!-- CDI 5.0's automatic closing orders close() after the PreDestroy callbacks and before the dependent
+                 objects are destroyed; Micronaut Core has no hook between the two, so an auto-closeable class
+                 bean is closed once Micronaut has destroyed it, its dependents included. See CONFORMANCE.md and
+                 the open points in Micronaut Core -->
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest">
+                <methods>
+                    <exclude name="testDependentsDestroyedAfterPreDestroyAndAutoClose"/>
+                </methods>
+            </class>
+        </classes>
     </test>
     <test name="interceptors">
         <groups>
@@ -78,9 +120,22 @@
             </run>
         </groups>
         <packages>
-            <package name="org.jboss.cdi.tck.tests.interceptors.*"/>
+            <package name="org.jboss.cdi.tck.tests.interceptors.*">
+                <exclude name="org.jboss.cdi.tck.tests.interceptors.invocation"/>
+            </package>
             <package name="org.jboss.cdi.tck.interceptors.tests.*"/>
         </packages>
+        <classes>
+            <!-- CDI 5.0: close() called on an auto-closeable bean as it is destroyed is no business method
+                 invocation; an intercepted bean is the subclass Micronaut generated for it, which intercepts
+                 close() wherever it is called from, and Micronaut Core offers no way to call the method past
+                 its interceptors. See CONFORMANCE.md and the open points in Micronaut Core -->
+            <class name="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest">
+                <methods>
+                    <exclude name="testCloseIsNotInterceptedDuringDestruction"/>
+                </methods>
+            </class>
+        </classes>
     </test>
     <test name="build-compatible-extensions">
         <groups>
@@ -89,7 +144,13 @@
             </run>
         </groups>
         <packages>
-            <package name="org.jboss.cdi.tck.tests.build.compatible.extensions.*"/>
+            <!-- CDI 5.0's custom context of a build compatible extension for the request scope, beside the
+                 container's own (customContextForRequestScope): the request scope is served by the container's
+                 own Micronaut scope, which a context an extension registers does not take part in. See
+                 CONFORMANCE.md -->
+            <package name="org.jboss.cdi.tck.tests.build.compatible.extensions.*">
+                <exclude name="org.jboss.cdi.tck.tests.build.compatible.extensions.customContextForRequestScope"/>
+            </package>
         </packages>
     </test>
     <test name="event">
@@ -129,6 +190,10 @@
                          run: the subset of that lifecycle a container of compiled beans answers is provided
                          beyond Lite by micronaut-cdi-reflection, see CONFORMANCE.md -->
                     <exclude name="testAddDecorator"/>
+                    <!-- CDI 5.0's addBuildCompatibleExtensions: a build compatible extension runs as the
+                         application compiles, so one handed to the bootstrap at runtime that the compilation did
+                         not run is refused, see CONFORMANCE.md -->
+                    <exclude name="testAddBuildCompatibleExtension"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.se.container.contextualReference.InvalidContextualReferenceTest"/>

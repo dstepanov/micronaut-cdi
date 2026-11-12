@@ -53,6 +53,15 @@ final class DeploymentClassLoader extends ClassLoader {
     private final @org.jspecify.annotations.Nullable Path resources;
 
     DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, ClassLoader parent) {
+        this(generated, Map.of(), parent);
+    }
+
+    /**
+     * A loader that also serves resources the deployment's archive carries, by their path: the service entries of
+     * the async handlers of method invokers (CDI 5.0), which the container loads its handlers through.
+     */
+    DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, Map<String, byte[]> archiveResources,
+                          ClassLoader parent) {
         super(parent);
         Map<String, JavaFileObject> generatedResources = new LinkedHashMap<>();
         for (JavaFileObject file : generated) {
@@ -65,7 +74,7 @@ final class DeploymentClassLoader extends ClassLoader {
                 }
             }
         }
-        resources = writeResources(generatedResources);
+        resources = writeResources(generatedResources, archiveResources);
         // everything generated that has a scenario class to live beside is defined there now, eagerly: a
         // class defined through a lookup is not found by name later, so anything the app loader will resolve
         // against — one generated class naming another — has to exist before it is asked for
@@ -106,6 +115,34 @@ final class DeploymentClassLoader extends ClassLoader {
             } catch (IOException e) {
                 // served as it comes
             }
+        }
+        // a generated class and the classes nested in it go together: the reference of a definition served fresh
+        // has to be served fresh too, or the stale one it links to is what the context reads
+        for (String fresh : List.copyOf(childFirst)) {
+            for (String name : compiled.keySet()) {
+                if (DEFINED_WITH_HOST.containsKey(name)
+                    && (name.startsWith(fresh + "$") || fresh.startsWith(name + "$"))) {
+                    childFirst.add(name);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (!childFirst.contains(name)) {
+            return super.loadClass(name, resolve);
+        }
+        // the parent holds a stale copy another deployment defined beside its host: this deployment's bytes win
+        synchronized (getClassLoadingLock(name)) {
+            Class<?> loaded = findLoadedClass(name);
+            if (loaded == null) {
+                loaded = findClass(name);
+            }
+            if (resolve) {
+                resolveClass(loaded);
+            }
+            return loaded;
         }
     }
 
@@ -228,8 +265,9 @@ final class DeploymentClassLoader extends ClassLoader {
     /**
      * Writes the generated resources to a directory of their own, so that they have a directory to be walked.
      */
-    private static @org.jspecify.annotations.Nullable Path writeResources(Map<String, JavaFileObject> generated) {
-        if (generated.isEmpty()) {
+    private static @org.jspecify.annotations.Nullable Path writeResources(Map<String, JavaFileObject> generated,
+                                                                          Map<String, byte[]> archived) {
+        if (generated.isEmpty() && archived.isEmpty()) {
             return null;
         }
         try {
@@ -240,6 +278,11 @@ final class DeploymentClassLoader extends ClassLoader {
                 try (InputStream in = entry.getValue().openInputStream()) {
                     Files.copy(in, target);
                 }
+            }
+            for (Map.Entry<String, byte[]> entry : archived.entrySet()) {
+                Path target = directory.resolve(entry.getKey());
+                Files.createDirectories(target.getParent());
+                Files.write(target, entry.getValue());
             }
             return directory;
         } catch (IOException e) {

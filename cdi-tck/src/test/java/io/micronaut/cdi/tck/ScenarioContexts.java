@@ -22,9 +22,12 @@ final class ScenarioContexts {
      * build leaves out of it as a broken scenario - an unproxyable bean, a broken producer, an interceptor
      * injected as a bean, CDI Full's {@code InterceptionFactory} - and so belongs to a deployment the kit
      * compiles and expects rejected on its own; or, for the two consumers of {@code Dao}, is deployed by the kit
-     * in an archive of its own, and is ambiguous beside the other {@code Dao} beans of its package.
+     * in an archive of its own, and is ambiguous beside the other {@code Dao} beans of its package; or consumes a
+     * synthetic bean, which only the deployment's own build compatible extension describes (CDI 5.0's automatic
+     * closing of one).
      */
     private static final Set<String> OUTSIDE_A_DEPLOYMENT = Set.of(
+        KIT + "tests.autoclose.synthetic.bean.dependent.ConsumerBean",
         KIT + "tests.implementation.producer.field.lifecycle.NullSpiderConsumerForBrokenProducer",
         KIT + "tests.lookup.clientProxy.unproxyable.beanConstructor.InjectionPointBean",
         KIT + "tests.lookup.clientProxy.unproxyable.finalClass.FishFarm",
