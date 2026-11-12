@@ -110,7 +110,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION, AsyncHandlerTypes.OPTION);
+        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION, AsyncHandlerTypes.OPTION,
+            AsyncHandlerTypes.SELECTION_OPTION);
     }
 
     @Override

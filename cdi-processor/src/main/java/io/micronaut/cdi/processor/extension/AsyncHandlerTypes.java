@@ -32,6 +32,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +46,8 @@ import java.util.Set;
  * found the way the compiler finds a build compatible extension - registered in the service entries the processor
  * path holds - or named with the compiler option {@link #OPTION}. Its async type is the erasure of the type
  * argument to the one of the two it implements directly; implementing it indirectly or raw, with a type variable or
- * an array for an argument, and implementing both are definition errors; two handlers of one kind for one type are
- * a deployment problem.
+ * an array for an argument, and implementing both are definition errors; two handlers of one async type, of either
+ * kind or built in, are a deployment problem unless {@link #SELECTION_OPTION} selects one.
  * The built-in return type handlers for {@code CompletionStage}, {@code CompletableFuture} and
  * {@code Flow.Publisher} are the container's.</p>
  *
@@ -65,6 +66,13 @@ final class AsyncHandlerTypes {
      */
     static final String OPTION = "micronaut.cdi.asyncHandlers";
 
+    /**
+     * The compiler option selecting the async handler of an async type where more than one handles it, the means
+     * of configuration section 10.5 asks a container for: {@code asyncType=handlerClass} pairs separated by commas,
+     * a built-in type among them.
+     */
+    static final String SELECTION_OPTION = "micronaut.cdi.asyncHandlerSelection";
+
     static final String RETURN_TYPE = "jakarta.enterprise.invoke.AsyncHandler.ReturnType";
     static final String PARAMETER_TYPE = "jakarta.enterprise.invoke.AsyncHandler.ParameterType";
 
@@ -78,42 +86,103 @@ final class AsyncHandlerTypes {
     }
 
     /**
-     * Every async handler of the compilation, validated.
+     * The async handlers of the compilation, validated, as invokers are matched against them: the built-in ones and
+     * the registered ones, one for each async type. Two handlers of one async type, whatever their kinds and
+     * whether one is built in, are a deployment problem unless the compiler option {@link #SELECTION_OPTION}
+     * selects one of them for the type, which leaves the others out (section 10.5); a selection that names no
+     * registered handler, or one of another async type, is a deployment problem.
      *
      * @param context The compilation
-     * @return The handlers
+     * @return The handlers, a built-in one with no class
      * @throws DefinitionException Where a handler is malformed
-     * @throws DeploymentException Where two handlers of one kind handle one type
+     * @throws DeploymentException Where two handlers handle one type and none is selected, or a selection is wrong
      */
     static List<Handler> of(VisitorContext context) {
-        Set<String> names = new LinkedHashSet<>();
-        String named = context.getOptions().get(OPTION);
-        if (named != null) {
-            for (String name : named.split(",")) {
-                if (!name.isBlank()) {
-                    names.add(name.trim());
-                }
-            }
-        }
+        Set<String> names = new LinkedHashSet<>(namesIn(context.getOptions().get(OPTION)));
         ClassLoader loader = AsyncHandlerTypes.class.getClassLoader();
         names.addAll(registered(loader, "META-INF/services/jakarta.enterprise.invoke.AsyncHandler$ReturnType"));
         names.addAll(registered(loader, "META-INF/services/jakarta.enterprise.invoke.AsyncHandler$ParameterType"));
-        List<Handler> handlers = new ArrayList<>(names.size());
+        List<Handler> all = new ArrayList<>(BUILT_IN.size() + names.size());
+        for (String builtIn : BUILT_IN) {
+            all.add(new Handler(null, true, builtIn));
+        }
         for (String name : names) {
             ClassElement handler = context.getClassElement(name)
                 .or(() -> context.getClassElement(name.replace('$', '.')))
                 .orElseThrow(() -> new DefinitionException("The async handler " + name + " is registered and is not "
                     + "on the classpath of the compilation"));
-            Handler read = read(handler);
-            for (Handler other : handlers) {
-                if (other.returnType() == read.returnType() && other.asyncType().equals(read.asyncType())) {
-                    throw new DeploymentException("The async handlers " + other.className() + " and "
-                        + read.className() + " both handle the async type " + read.asyncType() + " (section 10.5)");
+            all.add(read(handler));
+        }
+        Map<String, String> selected = selectionsIn(context.getOptions().get(SELECTION_OPTION));
+        for (Map.Entry<String, String> selection : selected.entrySet()) {
+            Handler named = null;
+            for (Handler handler : all) {
+                if (handler.className() != null && sameName(handler.className(), selection.getValue())) {
+                    named = handler;
                 }
             }
-            handlers.add(read);
+            if (named == null) {
+                throw new DeploymentException("The async handler " + selection.getValue() + " selected for the async "
+                    + "type " + selection.getKey() + " is not a registered async handler (section 10.5)");
+            }
+            if (!named.asyncType().equals(selection.getKey())) {
+                throw new DeploymentException("The async handler " + selection.getValue() + " selected for the async "
+                    + "type " + selection.getKey() + " handles " + named.asyncType() + " (section 10.5)");
+            }
         }
-        return handlers;
+        List<Handler> effective = new ArrayList<>(all.size());
+        for (Handler handler : all) {
+            String chosen = selected.get(handler.asyncType());
+            if (chosen != null) {
+                if (handler.className() != null && sameName(handler.className(), chosen)) {
+                    effective.add(handler);
+                }
+                continue;
+            }
+            for (Handler other : effective) {
+                if (other.asyncType().equals(handler.asyncType())) {
+                    throw new DeploymentException("The async handlers " + describe(other) + " and " + describe(handler)
+                        + " both handle the async type " + handler.asyncType() + ", and the compiler option "
+                        + SELECTION_OPTION + " selects neither (section 10.5)");
+                }
+            }
+            effective.add(handler);
+        }
+        return effective;
+    }
+
+    private static String describe(Handler handler) {
+        return handler.className() == null ? "built into the container" : handler.className();
+    }
+
+    private static boolean sameName(String className, String named) {
+        return className.replace('$', '.').equals(named.replace('$', '.'));
+    }
+
+    private static List<String> namesIn(@Nullable String option) {
+        List<String> names = new ArrayList<>();
+        if (option != null) {
+            for (String name : option.split(",")) {
+                if (!name.isBlank()) {
+                    names.add(name.trim());
+                }
+            }
+        }
+        return names;
+    }
+
+    private static Map<String, String> selectionsIn(@Nullable String option) {
+        Map<String, String> selections = new LinkedHashMap<>();
+        for (String selection : namesIn(option)) {
+            int equals = selection.indexOf('=');
+            if (equals <= 0 || equals == selection.length() - 1) {
+                throw new DeploymentException("The compiler option " + SELECTION_OPTION + " selects a handler as "
+                    + "asyncType=handlerClass, not as " + selection);
+            }
+            selections.put(selection.substring(0, equals).trim().replace('$', '.'),
+                selection.substring(equals + 1).trim());
+        }
+        return selections;
     }
 
     /**
@@ -125,9 +194,6 @@ final class AsyncHandlerTypes {
      */
     static boolean exists(String asyncType, VisitorContext context) {
         String type = asyncType.replace('$', '.');
-        if (BUILT_IN.contains(type)) {
-            return true;
-        }
         for (Handler handler : of(context)) {
             if (handler.asyncType().equals(type)) {
                 return true;
@@ -146,9 +212,6 @@ final class AsyncHandlerTypes {
     static @Nullable Match match(MethodElement method, VisitorContext context) {
         List<Match> matches = new ArrayList<>(1);
         String returned = method.getReturnType().getName().replace('$', '.');
-        if (!method.getReturnType().isArray() && BUILT_IN.contains(returned)) {
-            matches.add(new Match(null, returned, -1));
-        }
         ParameterElement[] parameters = method.getParameters();
         for (Handler handler : of(context)) {
             if (handler.returnType()) {
@@ -236,11 +299,11 @@ final class AsyncHandlerTypes {
     /**
      * An async handler of the compilation.
      *
-     * @param className  The handler class
+     * @param className  The handler class, {@code null} for a built-in one
      * @param returnType Whether it is a return type handler, rather than a parameter type one
      * @param asyncType  The erasure of its async type
      */
-    record Handler(String className, boolean returnType, String asyncType) {
+    record Handler(@Nullable String className, boolean returnType, String asyncType) {
     }
 
     /**
