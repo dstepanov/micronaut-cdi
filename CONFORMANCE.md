@@ -119,9 +119,15 @@ is left out by name. Both are open points in Micronaut Core below.
 
 *CDI 5.0 section 10.5.* Whether a method is asynchronous turns on the type arguments of the async handlers, which
 are read where they are known: as the application compiles, from the service entries of
-`AsyncHandler.ReturnType` and `AsyncHandler.ParameterType` the processor path holds, as a build compatible extension
-is found, or from the compiler option `micronaut.cdi.asyncHandlers`. A handler on the application's runtime class
-path alone is not one the invoker was compiled with. Where two handlers have one async type the compiler option
+`AsyncHandler.ReturnType` and `AsyncHandler.ParameterType` on the class path of the compilation - a handler library
+the application depends on - read through Core's `VisitorContext.getClasspathResources`, from those the processor
+path holds, as a build compatible extension is found, or from the compiler option `micronaut.cdi.asyncHandlers`. A
+handler the module being compiled declares is on neither path while it compiles, and is named with the option; one on
+the application's runtime class path alone is not one the invoker was compiled with, and one on the processor path
+that the compilation cannot resolve is no handler of it. Core reaches the class path through the internals of javac;
+a compiler that does not export `com.sun.tools.javac.processing` to the processor makes Core's call fail rather than
+return nothing, and the processor then warns and reads only the processor path and the option (an open point in
+Micronaut Core below). Where two handlers have one async type the compiler option
 `micronaut.cdi.asyncHandlerSelection` - `asyncType=handlerClass` pairs separated by commas - is the means of
 configuration the specification asks for: it selects the handler of a type, a built-in type among them, and the
 others of that type are left out; a selection naming no registered handler, or one of another type, is a deployment
@@ -1087,6 +1093,13 @@ own rather than the first one alone.
   `getPermittedSubclasses()` are read from that list, so the language model kit's `SealedClasses` section stops at
   its enum (`verifySealedEnum`) and is pending. Reading `isSealed()` from the modifiers and the permitted classes of an
   enum from its constant bodies would close it.
+- **Reading the class path of a compilation fails instead of answering nothing (CDI 5.0).**
+  `JavaVisitorContext.getClasspathResources` reaches the file manager of javac through
+  `JavacProcessingEnvironment.getContext()`, and the reflective call of it sits outside the `try` that guards the rest,
+  so a compiler that does not export `com.sun.tools.javac.processing` to the processor fails the call with an illegal
+  access instead of returning nothing. The async handler scan catches it and warns; returning an empty iterable, or a
+  public way to list a resource of the class path (`Filer` answers only the first file of a name), would leave nothing
+  to catch. It also prints an "experimental" note on every call.
 - **Enum constants and typed arrays are not compiled into the metadata.** The metadata writer records an enum
   constant by its name (`AnnotationMetadataGenUtils`), so a synthetic component's enum parameter is turned back into
   its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.

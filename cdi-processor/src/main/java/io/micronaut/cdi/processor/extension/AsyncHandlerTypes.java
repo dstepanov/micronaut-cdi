@@ -33,9 +33,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -43,8 +43,10 @@ import java.util.Set;
  * type arguments of a handler are known, and where an invoker is built for the method it is to handle.
  *
  * <p>A handler is a service provider of {@code AsyncHandler.ReturnType} or {@code AsyncHandler.ParameterType},
- * found the way the compiler finds a build compatible extension - registered in the service entries the processor
- * path holds - or named with the compiler option {@link #OPTION}. Its async type is the erasure of the type
+ * registered in the service entries of the class path of the compilation (read through
+ * {@link VisitorContext#getClasspathResources(String)}) or of the processor path, where the compiler finds a build
+ * compatible extension, or named with the compiler option {@link #OPTION}: a handler the module being compiled
+ * declares is on neither path yet, and is named with the option. Its async type is the erasure of the type
  * argument to the one of the two it implements directly; implementing it indirectly or raw, with a type variable or
  * an array for an argument, and implementing both are definition errors; two handlers of one async type, of either
  * kind or built in, are a deployment problem unless {@link #SELECTION_OPTION} selects one.
@@ -82,6 +84,10 @@ final class AsyncHandlerTypes {
     static final Set<String> BUILT_IN = Set.of("java.util.concurrent.CompletionStage",
         "java.util.concurrent.CompletableFuture", "java.util.concurrent.Flow.Publisher");
 
+    private static final List<String> SERVICE_ENTRIES = List.of(
+        "META-INF/services/jakarta.enterprise.invoke.AsyncHandler$ReturnType",
+        "META-INF/services/jakarta.enterprise.invoke.AsyncHandler$ParameterType");
+
     private AsyncHandlerTypes() {
     }
 
@@ -98,20 +104,42 @@ final class AsyncHandlerTypes {
      * @throws DeploymentException Where two handlers handle one type and none is selected, or a selection is wrong
      */
     static List<Handler> of(VisitorContext context) {
-        Set<String> names = new LinkedHashSet<>(namesIn(context.getOptions().get(OPTION)));
+        // a name is read with the dots of its canonical form, so that a nested handler a service entry lists as
+        // a.B$C and the option names as a.B.C is one handler
+        Map<String, String> required = new LinkedHashMap<>();
+        for (String name : namesIn(context.getOptions().get(OPTION))) {
+            required.putIfAbsent(canonical(name), name);
+        }
+        for (String resource : SERVICE_ENTRIES) {
+            for (URL entries : classpathResources(context, resource)) {
+                for (String name : registered(entries, resource)) {
+                    required.putIfAbsent(canonical(name), name);
+                }
+            }
+        }
+        // the processor path is read besides the class path of the compilation, as a build compatible extension is
+        // found there; a handler registered there and not on the class path is no handler the application can run
+        Map<String, String> optional = new LinkedHashMap<>();
         ClassLoader loader = AsyncHandlerTypes.class.getClassLoader();
-        names.addAll(registered(loader, "META-INF/services/jakarta.enterprise.invoke.AsyncHandler$ReturnType"));
-        names.addAll(registered(loader, "META-INF/services/jakarta.enterprise.invoke.AsyncHandler$ParameterType"));
-        List<Handler> all = new ArrayList<>(BUILT_IN.size() + names.size());
+        for (String resource : SERVICE_ENTRIES) {
+            for (String name : registered(loader, resource)) {
+                if (!required.containsKey(canonical(name))) {
+                    optional.putIfAbsent(canonical(name), name);
+                }
+            }
+        }
+        List<Handler> all = new ArrayList<>(BUILT_IN.size() + required.size() + optional.size());
         for (String builtIn : BUILT_IN) {
             all.add(new Handler(null, true, builtIn));
         }
-        for (String name : names) {
-            ClassElement handler = context.getClassElement(name)
-                .or(() -> context.getClassElement(name.replace('$', '.')))
+        for (String name : required.values()) {
+            ClassElement handler = classElement(name, context)
                 .orElseThrow(() -> new DefinitionException("The async handler " + name + " is registered and is not "
                     + "on the classpath of the compilation"));
             all.add(read(handler));
+        }
+        for (String name : optional.values()) {
+            classElement(name, context).ifPresent(handler -> all.add(read(handler)));
         }
         Map<String, String> selected = selectionsIn(context.getOptions().get(SELECTION_OPTION));
         for (Map.Entry<String, String> selection : selected.entrySet()) {
@@ -149,6 +177,40 @@ final class AsyncHandlerTypes {
             effective.add(handler);
         }
         return effective;
+    }
+
+    /**
+     * Whether the service entries of the class path of the compilation can be read. Core reads them through the
+     * internals of javac, which a compiler that does not export them to the processor refuses; there only the
+     * processor path and the compiler option name handlers.
+     *
+     * @param context The compilation
+     * @return Whether they can
+     */
+    static boolean readsClassPath(VisitorContext context) {
+        try {
+            context.getClasspathResources(SERVICE_ENTRIES.get(0));
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    private static Iterable<URL> classpathResources(VisitorContext context, String resource) {
+        try {
+            return context.getClasspathResources(resource);
+        } catch (RuntimeException e) {
+            // reported once, as the compilation starts (readsClassPath)
+            return List.of();
+        }
+    }
+
+    private static Optional<ClassElement> classElement(String name, VisitorContext context) {
+        return context.getClassElement(name).or(() -> context.getClassElement(canonical(name)));
+    }
+
+    private static String canonical(String name) {
+        return name.replace('$', '.');
     }
 
     private static String describe(Handler handler) {
@@ -279,15 +341,24 @@ final class AsyncHandlerTypes {
         try {
             Enumeration<URL> files = loader.getResources(resource);
             while (files.hasMoreElements()) {
-                try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(files.nextElement().openStream(), StandardCharsets.UTF_8))) {
-                    for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                        int comment = line.indexOf('#');
-                        String name = (comment < 0 ? line : line.substring(0, comment)).trim();
-                        if (!name.isEmpty()) {
-                            names.add(name);
-                        }
-                    }
+                names.addAll(registered(files.nextElement(), resource));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("The service entries " + resource + " could not be read", e);
+        }
+        return names;
+    }
+
+    private static List<String> registered(URL file, String resource) {
+        // Core reads service entries only behind its service loader, which has nothing to hand a compilation
+        List<String> names = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(
+            new InputStreamReader(file.openStream(), StandardCharsets.UTF_8))) {
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                int comment = line.indexOf('#');
+                String name = (comment < 0 ? line : line.substring(0, comment)).trim();
+                if (!name.isEmpty()) {
+                    names.add(name);
                 }
             }
         } catch (IOException e) {

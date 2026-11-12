@@ -217,6 +217,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             new ElementBuildServices(context));
         // the async handlers of method invokers (CDI 5.0) are read as every compilation starts, whatever extensions
         // it has: what is wrong with one is a definition error of the deployment, however it is used
+        if (!AsyncHandlerTypes.readsClassPath(context)) {
+            context.warn("The service entries of async handlers on the class path of the compilation cannot be read: "
+                + "javac does not export com.sun.tools.javac.processing to the processor. Only handlers registered on "
+                + "the processor path or named with -A" + AsyncHandlerTypes.OPTION + " are async handlers", null);
+        }
         try {
             AsyncHandlerTypes.of(context);
         } catch (DefinitionException e) {
