@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -90,14 +89,13 @@ class SyntheticAutoCloseOrderTest {
      * The dependent resource the creation obtains, and the synthetic bean uses as it is closed.
      */
     @Dependent
-    public static class Resource implements Supplier<String> {
+    public static class Resource {
 
         @jakarta.annotation.PreDestroy
         void destroyed() {
             EVENTS.add("resource destroyed");
         }
 
-        @Override
         public String get() {
             return "resource";
         }
@@ -108,9 +106,9 @@ class SyntheticAutoCloseOrderTest {
      */
     public static final class Closing implements AutoCloseable {
 
-        private final Supplier<String> resource;
+        private final Resource resource;
 
-        Closing(Supplier<String> resource) {
+        Closing(Resource resource) {
             this.resource = resource;
         }
 
