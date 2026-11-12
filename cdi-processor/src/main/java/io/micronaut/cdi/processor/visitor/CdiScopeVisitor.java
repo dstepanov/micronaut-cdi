@@ -367,7 +367,8 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
         if (!SpecificationBeans.producersOf(element).isEmpty()) {
             return false;
         }
-        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
+        // an observer or disposer method a superclass declares is the superclass's, and makes no bean of this class
+        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
             for (ParameterElement parameter : method.getParameters()) {
                 if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES) || parameter.hasDeclaredAnnotation(Cdi.OBSERVES_ASYNC)
                     || parameter.hasDeclaredAnnotation(Cdi.DISPOSES)) {
