@@ -31,7 +31,7 @@ import jakarta.inject.Singleton;
 @Singleton
 final class CdiExpressionLanguage implements ExpressionLanguageBridge {
 
-    // one resolver for the container: it keeps no state but the namespaces of the bean names, read once
+    // one resolver for the container: it keeps no state, and reads the bean names as it is asked
     private final ELResolver resolver;
     private final BeanContext beanContext;
 

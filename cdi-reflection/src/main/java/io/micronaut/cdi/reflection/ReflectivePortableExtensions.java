@@ -104,7 +104,6 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         for (Extension extension : extensions) {
             contexts.registerExtension(extension);
         }
-        container.refreshCandidates();
         List<Observer> observers = new ArrayList<>();
         for (Extension extension : extensions) {
             observers.addAll(Observer.of(extension, container));
@@ -124,8 +123,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                 overlay.add(type.getName(), CdiQualifier.ofInstance(types, added));
             }
         }
-        // a bean reads its qualifiers once: the beans are read again, with what was added
-        container.refreshCandidates();
+        // the beans are read again, with what was added
         List<Bean<?>> beans = applicationBeans(container, extensions);
 
         List<Class<?>> alternatives = new ArrayList<>();
@@ -145,8 +143,6 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         if (!problems.isEmpty()) {
             throw withTheRest(new DefinitionException(problems.get(0)), problems);
         }
-        // a context or an observer an extension added is part of what the container answers with from here
-        container.refreshCandidates();
         // the container validates the deployment before the extensions are told it did (section 11.5.4)
         container.validateDeployment();
         fire(observers, new PortableEvents.AfterValidation(problems), Argument.of(AfterDeploymentValidation.class),
@@ -361,7 +357,6 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                                 + "@Enhancement(withAnnotations = ...) does the same while the classes compile");
                         }
                         requireNothingButTheContainer(method, i);
-                        method.setAccessible(true);
                         int priority = DEFAULT_PRIORITY;
                         for (Annotation annotation : annotations[i]) {
                             if (annotation instanceof Priority declared) {
@@ -450,7 +445,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
             }
             try {
                 // the instance is ignored where the observer is static
-                ReflectionUtils.invokeMethod(extension, method, arguments);
+                ReflectionUtils.invokeInaccessibleMethod(extension, method, arguments);
             } catch (InvocationException e) {
                 // what the observer itself threw is what the bootstrap reports, a refusal of this container's
                 // among it; a failure to invoke it at all is a problem of the deployment

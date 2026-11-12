@@ -16,6 +16,13 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.io.service.ServiceDefinition;
+import io.micronaut.core.io.service.SoftServiceLoader;
+import io.micronaut.core.reflect.ClassUtils;
+import io.micronaut.core.reflect.InstantiationUtils;
+import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.reflect.exception.InvocationException;
+import io.micronaut.core.reflect.exception.InstantiationException;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
@@ -58,7 +65,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.ServiceConfigurationError;
 
 /**
  * The build compatible extensions of a compilation and the methods of their phases (section 2.10): found as the
@@ -124,8 +131,7 @@ final class ExtensionMethods {
             }
         }
         if (!Boolean.parseBoolean(options.get(BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION))) {
-            for (BuildCompatibleExtension loaded : ServiceLoader.load(BuildCompatibleExtension.class,
-                BuildCompatibleExtensionVisitor.class.getClassLoader())) {
+            for (BuildCompatibleExtension loaded : registered(BuildCompatibleExtensionVisitor.class.getClassLoader())) {
                 // an extension both named and registered as a service runs once
                 if (extensions.stream().noneMatch(extension -> extension.getClass().equals(loaded.getClass()))) {
                     extensions.add(loaded);
@@ -140,7 +146,6 @@ final class ExtensionMethods {
             for (Method method : declaredMethodsOf(extension.getClass())) {
                 if (method.isAnnotationPresent(Discovery.class)) {
                     validateDiscovery(method);
-                    method.setAccessible(true);
                     discoveries.add(new ExtensionMethod(extension, method));
                 }
             }
@@ -152,22 +157,18 @@ final class ExtensionMethods {
             for (Method method : declaredMethodsOf(extension.getClass())) {
                 if (method.isAnnotationPresent(Enhancement.class)) {
                     validateEnhancement(method);
-                    method.setAccessible(true);
                     enhancements.add(new ExtensionMethod(extension, method));
                 }
                 if (method.isAnnotationPresent(Registration.class)) {
                     validateRegistration(method);
-                    method.setAccessible(true);
                     registrations.add(new ExtensionMethod(extension, method));
                 }
                 if (method.isAnnotationPresent(Synthesis.class)) {
                     validateHanded(Phase.SYNTHESIS, method, SyntheticComponents.class);
-                    method.setAccessible(true);
                     synthesizers.add(new ExtensionMethod(extension, method));
                 }
                 if (method.isAnnotationPresent(Validation.class)) {
                     validateHanded(Phase.VALIDATION, method, null);
-                    method.setAccessible(true);
                     validators.add(new ExtensionMethod(extension, method));
                 }
             }
@@ -197,6 +198,17 @@ final class ExtensionMethods {
         for (ExtensionMethod discovery : discoveries) {
             discover(discovery.extension(), discovery.method(), discovered, context);
         }
+    }
+
+    /**
+     * Whether the compilation has no extension method of any phase: no extension at all, or only ones that
+     * declare none.
+     *
+     * @return Whether it has none
+     */
+    boolean isEmpty() {
+        return discoveries.isEmpty() && enhancers.isEmpty() && registrars.isEmpty() && synthesizers.isEmpty()
+            && validators.isEmpty();
     }
 
     /**
@@ -345,29 +357,71 @@ final class ExtensionMethods {
     }
 
     /**
+     * Invokes a phase method of an extension, however accessible it is, through Micronaut's reflection helper,
+     * handing back what the invocation failed with as the exceptions of reflection, which each phase reports in
+     * its own way.
+     */
+    private static void invokePhaseMethod(Method method, Object extension, Object[] arguments)
+        throws IllegalAccessException, InvocationTargetException {
+        try {
+            ReflectionUtils.invokeInaccessibleMethod(extension, method, arguments);
+        } catch (InvocationException e) {
+            if (e.getCause() instanceof InvocationTargetException invoked) {
+                throw invoked;
+            }
+            if (e.getCause() instanceof IllegalAccessException inaccessible) {
+                throw inaccessible;
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * The extensions registered as services through the given loader, each instantiated: an extension a service
+     * entry names that cannot be loaded or instantiated fails the compilation, as the specification's service
+     * loader would, rather than being left out - its phases would otherwise not run, without a word.
+     *
+     * @param loader The loader the service entries are read through
+     * @return The extensions
+     * @throws IllegalStateException Where a registered extension cannot be loaded or instantiated
+     */
+    static List<BuildCompatibleExtension> registered(ClassLoader loader) {
+        List<BuildCompatibleExtension> registered = new ArrayList<>();
+        for (ServiceDefinition<BuildCompatibleExtension> service
+            : SoftServiceLoader.load(BuildCompatibleExtension.class, loader)) {
+            if (!service.isPresent()) {
+                throw new IllegalStateException("The build compatible extension " + service.getName()
+                    + ", registered as a service, is not on the classpath of the compilation, or a class it needs "
+                    + "is not");
+            }
+            try {
+                registered.add(service.load());
+            } catch (RuntimeException | ServiceConfigurationError | LinkageError e) {
+                throw new IllegalStateException("The build compatible extension " + service.getName()
+                    + ", registered as a service, could not be created through a constructor without parameters",
+                    e);
+            }
+        }
+        return registered;
+    }
+
+    /**
      * Creates the extension a compiler option named, through the loader of this module, which the processor
      * path's classes are visible to, or else through the loader of the thread the compilation runs on, which is
      * what a compilation run inside a test sees its classes through.
      */
     private static BuildCompatibleExtension instantiate(String name) {
-        Class<?> type;
-        try {
-            type = Class.forName(name, true, BuildCompatibleExtensionVisitor.class.getClassLoader());
-        } catch (ClassNotFoundException e) {
-            try {
-                type = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
-            } catch (ClassNotFoundException | RuntimeException other) {
-                throw new IllegalStateException("The build compatible extension " + name + ", named by the option "
-                    + EXTENSIONS_OPTION + ", is not on the classpath of the compilation", e);
-            }
-        }
+        Class<?> type = ClassUtils.forName(name, BuildCompatibleExtensionVisitor.class.getClassLoader())
+            .or(() -> ClassUtils.forName(name, Thread.currentThread().getContextClassLoader()))
+            .orElseThrow(() -> new IllegalStateException("The build compatible extension " + name
+                + ", named by the option " + EXTENSIONS_OPTION + ", is not on the classpath of the compilation"));
         if (!BuildCompatibleExtension.class.isAssignableFrom(type)) {
             throw new IllegalStateException("The class " + name + ", named by the option " + EXTENSIONS_OPTION
                 + ", is not a " + BuildCompatibleExtension.class.getName());
         }
         try {
-            return (BuildCompatibleExtension) type.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
+            return (BuildCompatibleExtension) InstantiationUtils.instantiate(type);
+        } catch (InstantiationException e) {
             throw new IllegalStateException("The build compatible extension " + name + ", named by the option "
                 + EXTENSIONS_OPTION + ", could not be created through a constructor without parameters", e);
         }
@@ -445,7 +499,7 @@ final class ExtensionMethods {
             }
         }
         try {
-            method.invoke(extension, arguments);
+            invokePhaseMethod(method, extension, arguments);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("The discovery method " + method + " failed", e);
         }
@@ -459,7 +513,7 @@ final class ExtensionMethods {
                                            VisitorContext context) {
         Method method = extensionMethod.method();
         try {
-            method.invoke(extensionMethod.extension(), arguments);
+            invokePhaseMethod(method, extensionMethod.extension(), arguments);
             return true;
         } catch (IllegalAccessException e) {
             context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the " + phase + " method " + method
@@ -557,7 +611,7 @@ final class ExtensionMethods {
                 }
             }
             try {
-                method.invoke(extension, arguments);
+                invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
                 context.fail("The registration method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
@@ -585,7 +639,7 @@ final class ExtensionMethods {
                 }
             }
             try {
-                method.invoke(extension, arguments);
+                invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
                 context.fail("The registration method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
@@ -735,7 +789,7 @@ final class ExtensionMethods {
 
         private void invoke(Object[] arguments, VisitorContext context) {
             try {
-                method.invoke(extension, arguments);
+                invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
                 context.fail("The enhancement method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -23,11 +24,13 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.ProxyBeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.invoke.Invoker;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,18 +53,19 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
 
     private final BeanContext beanContext;
     private final String beanClassName;
+    private final @Nullable Class<?> beanType;
     private final String methodName;
     private final String[] parameterTypeNames;
     private final boolean staticMethod;
     private final boolean instanceLookup;
     private final boolean[] argumentLookups;
-    private volatile @Nullable Target cachedTarget;
 
-    public RecordedInvoker(BeanContext beanContext, String beanClassName, String methodName,
-                           String[] parameterTypeNames,
+    public RecordedInvoker(BeanContext beanContext, String beanClassName, @Nullable Class<?> beanType,
+                           String methodName, String[] parameterTypeNames,
                            boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups) {
         this.beanContext = beanContext;
         this.beanClassName = beanClassName;
+        this.beanType = beanType;
         this.methodName = methodName;
         this.parameterTypeNames = parameterTypeNames;
         this.staticMethod = staticMethod;
@@ -86,6 +90,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         return new RecordedInvoker(
             beanContext,
             record.stringValue("beanClass").orElseThrow(),
+            record.classValue("beanType").filter(type -> type != Object.class).orElse(null),
             record.stringValue("method").orElseThrow(),
             parameterTypes,
             record.booleanValue("staticMethod").orElse(false),
@@ -102,16 +107,10 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
 
     @Override
     public @Nullable Object invoke(@Nullable Object instance, Object @Nullable [] arguments) throws Exception {
-        Target resolved = cachedTarget;
-        if (resolved == null) {
-            // found once: an invoker is meant to be called again and again
-            BeanDefinition<?> named = definitionOf(beanContext);
-            resolved = new Target(named, executable(named));
-            cachedTarget = resolved;
-        }
-        BeanDefinition<?> definition = resolved.definition();
+        // the candidates of the bean class are the ones the bean context keeps for it
+        BeanDefinition<?> definition = definitionOf(beanContext);
         Class<?> beanClass = beanClassOf(definition);
-        ExecutableMethod<Object, Object> method = resolved.method();
+        ExecutableMethod<Object, Object> method = executable(definition);
         Class<?>[] parameterTypes = method.getArgumentTypes();
 
         if (arguments == null) {
@@ -183,7 +182,6 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             BeanDefinition<?> definition = definitionOf(beanContext);
             beanClass = beanClassOf(definition);
             method = executable(definition);
-            cachedTarget = new Target(definition, method);
         } catch (IllegalStateException e) {
             throw new DeploymentException(
                 "The invoker of " + beanClassName + "#" + methodName + " names a class that is not there", e);
@@ -266,11 +264,19 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     }
 
     /**
-     * The definition of the bean the invoker names, found by the name of its class among the definitions of
-     * the container - the class is named, not loaded - as the declaring bean of a disposer is found.
+     * The definition of the bean the invoker names, found among the definitions of its class as the declaring bean
+     * of a disposer is found. A bean that narrowed its bean types with {@code Typed} is not a candidate of its own
+     * class, and a record may carry the class by its name alone: the bean is then found among the beans of the
+     * specification, which the bean context narrows to on their references before it loads any.
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private BeanDefinition<?> definitionOf(BeanContext beanContext) {
-        BeanDefinition<?> found = CdiResolution.declaringBeanOf(beanContext.getAllBeanDefinitions(), beanClassName);
+        BeanDefinition<?> found = beanType == null ? null
+            : CdiResolution.declaringBeanOf(beanContext.getBeanDefinitions(beanType), beanClassName);
+        if (found == null) {
+            found = CdiResolution.declaringBeanOf(
+                (Collection) beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class)), beanClassName);
+        }
         if (found == null) {
             throw new IllegalStateException("No bean of " + beanClassName + " to invoke");
         }
@@ -334,14 +340,5 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             }
             return null;
         }
-    }
-
-    /**
-     * The definition and the method an invoker invokes.
-     *
-     * @param definition The definition of the bean
-     * @param method     The method
-     */
-    private record Target(BeanDefinition<?> definition, ExecutableMethod<Object, Object> method) {
     }
 }

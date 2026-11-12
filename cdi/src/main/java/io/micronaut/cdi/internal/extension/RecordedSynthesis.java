@@ -23,7 +23,6 @@ import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
-import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiInstance;
 import io.micronaut.cdi.internal.runtime.CdiQualifiers;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
@@ -151,10 +150,6 @@ public final class RecordedSynthesis {
                 observerRegistry.registerSynthetic(
                     new SyntheticObserverMethod<>(beanContext, observer, record, parameters));
             }
-        }
-        if (!beans.isEmpty()) {
-            // the container may have read its beans already: what was just registered has to be seen
-            beanContext.findBean(CdiBeanContainer.class).ifPresent(CdiBeanContainer::refreshCandidates);
         }
         // an invoker an extension built and handed to a synthetic bean or observer names lookups; whether they
         // resolve is a property of the deployment, and is checked as it comes up, once every synthetic bean is

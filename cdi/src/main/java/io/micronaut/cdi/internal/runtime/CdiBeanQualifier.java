@@ -163,7 +163,7 @@ final class CdiBeanQualifier<T> implements Qualifier<T> {
             Class<?> raw = CdiTypes.classOf(required);
             return raw != null && builtIn.isBeanType(raw);
         }
-        CdiBean<?> bean = container.canonicalBean(definition);
+        CdiBean<?> bean = container.beanOf(definition);
         return CdiAssignability.isTypeMatching(container.typeIndex(), bean.types(), required)
             && CdiAssignability.areQualifiersMatching(bean.qualifiers(), qualifiers);
     }

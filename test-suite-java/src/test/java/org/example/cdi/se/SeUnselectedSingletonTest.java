@@ -6,7 +6,6 @@ import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import org.junit.jupiter.api.Test;
 
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,13 +35,12 @@ class SeUnselectedSingletonTest {
 
     @Test
     void aSingletonOffTheRestrictedClasspathIsNotABean() {
-        MicronautSeContainerInitializer.restrictClasspath(Set.of(SeUnselectedSingletonTest.class.getName()));
-        try (SeContainer container = SeContainerInitializer.newInstance().initialize()) {
+        try (SeContainer container = SeContainerInitializer.newInstance()
+            .addProperty(MicronautSeContainerInitializer.RESTRICTED_CLASSPATH, SeUnselectedSingletonTest.class.getName())
+            .initialize()) {
             assertTrue(container.select(Selected.class).isResolvable());
             assertTrue(container.select(UnselectedAppSingleton.class).isUnsatisfied(),
                 "an application singleton off the classpath of the deployment is not a bean of it");
-        } finally {
-            MicronautSeContainerInitializer.restrictClasspath(null);
         }
     }
 }

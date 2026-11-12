@@ -45,26 +45,27 @@ import java.util.function.Predicate;
 @Internal
 public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
-    private final Element element;
+    private final CurrentElement<? extends Element> element;
     private final VisitorContext context;
 
     /**
-     * @param element The Micronaut element the declaration is read from
+     * @param element The Micronaut element the declaration is read from, as the compilation has it whenever it is
+     *                read
      * @param context The compilation the element belongs to, which the declaration reads what the element does not
      *                answer on its own through, and hands to everything it is asked for
      */
-    protected ElementDeclarationInfo(Element element, VisitorContext context) {
+    protected ElementDeclarationInfo(CurrentElement<? extends Element> element, VisitorContext context) {
         this.element = element;
         this.context = context;
     }
 
     /**
-     * The Micronaut element this describes.
+     * The Micronaut element this describes, as the compilation has it now.
      *
      * @return The element
      */
     public final Element element() {
-        return element;
+        return element.get();
     }
 
     /**
@@ -98,7 +99,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
-        return ExtensionAnnotations.repeatableOn(element, annotationType.getName(), context);
+        return ExtensionAnnotations.repeatableOn(element(), annotationType.getName(), context);
     }
 
     @Override
@@ -108,7 +109,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public Collection<AnnotationInfo> annotations() {
-        return ExtensionAnnotations.declaredOn(element, context);
+        return ExtensionAnnotations.declaredOn(element(), context);
     }
 
     /**
@@ -141,16 +142,17 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     @Override
     public final boolean equals(Object o) {
-        return o instanceof ElementDeclarationInfo other && element.equals(other.element);
+        return o instanceof ElementDeclarationInfo other && element().equals(other.element());
     }
 
     @Override
     public final int hashCode() {
-        return element.hashCode();
+        // what identifies the element whatever the round, which equal elements share
+        return element.key().hashCode();
     }
 
     @Override
     public String toString() {
-        return element.getName();
+        return element.key();
     }
 }

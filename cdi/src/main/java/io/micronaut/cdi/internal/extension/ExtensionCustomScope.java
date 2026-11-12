@@ -66,7 +66,7 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
         AlterableContext context = activeContext();
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
         @SuppressWarnings("unchecked")
-        CdiBean<T> bean = (CdiBean<T>) container.canonicalBean(creationContext.definition());
+        CdiBean<T> bean = (CdiBean<T>) container.beanOf(creationContext.definition());
         @SuppressWarnings("unchecked")
         CreationalContext<T> creationalContext = (CreationalContext<T>) container.createCreationalContext(bean);
         T held = context.get(new CreatingContextual<>(beanContext, bean, creationContext), creationalContext);

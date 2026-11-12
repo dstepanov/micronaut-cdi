@@ -40,11 +40,7 @@ import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.provider.AbstractProviderDefinition;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.ConversationScoped;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.enterprise.context.SessionScoped;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.CreationException;
@@ -88,9 +84,6 @@ public class CdiBean<T> implements Bean<T> {
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
-    private volatile @Nullable List<CdiQualifier> qualifiers;
-    private volatile @Nullable Optional<QualifierOverlay> overlay;
-    private volatile @Nullable List<Argument<?>> types;
 
     public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
@@ -152,12 +145,7 @@ public class CdiBean<T> implements Bean<T> {
      */
     public List<Argument<?>> types() {
         // worked out once for the context, which Micronaut's own lookups of the bean compare too
-        List<Argument<?>> resolved = types;
-        if (resolved == null) {
-            resolved = RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
-            types = resolved;
-        }
-        return resolved;
+        return RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
     }
 
     /**
@@ -326,24 +314,15 @@ public class CdiBean<T> implements Bean<T> {
      * @return The qualifiers
      */
     final List<CdiQualifier> qualifiers() {
-        List<CdiQualifier> compiled = qualifiers;
-        if (compiled == null) {
-            List<CdiQualifier> all = new ArrayList<>(3);
-            all.add(CdiQualifier.ANY);
-            for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
-                if (!declared.isAny()) {
-                    all.add(declared);
-                }
+        List<CdiQualifier> compiled = new ArrayList<>(3);
+        compiled.add(CdiQualifier.ANY);
+        for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
+            if (!declared.isAny()) {
+                compiled.add(declared);
             }
-            compiled = List.copyOf(all);
-            qualifiers = compiled;
         }
-        Optional<QualifierOverlay> found = overlay;
-        if (found == null) {
-            // a bean of the context, the same for as long as it runs
-            found = beanContext.findBean(QualifierOverlay.class);
-            overlay = found;
-        }
+        // what a portable extension added, read as the qualifiers are asked for
+        Optional<QualifierOverlay> found = beanContext.findBean(QualifierOverlay.class);
         return found.isPresent() ? found.get().apply(definition, compiled) : compiled;
     }
 
@@ -366,16 +345,8 @@ public class CdiBean<T> implements Bean<T> {
      * annotation the bean was compiled with, whose class the compiled metadata refers to.
      */
     private static @Nullable Class<? extends Annotation> annotationNamed(AnnotationMetadata metadata, String name) {
-        return switch (name) {
-            case "jakarta.enterprise.context.Dependent" -> Dependent.class;
-            case "jakarta.enterprise.context.ApplicationScoped" -> ApplicationScoped.class;
-            case "jakarta.enterprise.context.RequestScoped" -> RequestScoped.class;
-            case "jakarta.enterprise.context.SessionScoped" -> SessionScoped.class;
-            case "jakarta.enterprise.context.ConversationScoped" ->
-                ConversationScoped.class;
-            case "jakarta.inject.Singleton" -> Singleton.class;
-            default -> metadata.getAnnotationType(name).orElse(null);
-        };
+        Class<? extends Annotation> builtIn = CdiContexts.builtInScope(name);
+        return builtIn != null ? builtIn : metadata.getAnnotationType(name).orElse(null);
     }
 
     @Override

@@ -31,7 +31,7 @@ import jakarta.enterprise.lang.model.types.Type;
 @Internal
 public final class ElementParameterInfo extends ElementDeclarationInfo implements ParameterInfo {
 
-    private final ParameterElement element;
+    private final CurrentElement<ParameterElement> element;
     private final MethodInfo declaringMethod;
 
     /**
@@ -40,6 +40,18 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
      * @param context         The compilation the parameter is read in
      */
     public ElementParameterInfo(ParameterElement element, MethodInfo declaringMethod, VisitorContext context) {
+        this(declaringMethod instanceof ElementMethodInfo method
+            ? CurrentElement.ofParameter(method.currentElement(), element, context)
+            : CurrentElement.asIs(element, context), declaringMethod, context);
+    }
+
+    /**
+     * @param element         The parameter, as the compilation has it whenever it is read
+     * @param declaringMethod The method that declares it
+     * @param context         The compilation the parameter is read in
+     */
+    ElementParameterInfo(CurrentElement<ParameterElement> element, MethodInfo declaringMethod,
+                         VisitorContext context) {
         super(element, context);
         this.element = element;
         this.declaringMethod = declaringMethod;
@@ -47,12 +59,12 @@ public final class ElementParameterInfo extends ElementDeclarationInfo implement
 
     @Override
     public String name() {
-        return element.getName();
+        return element.get().getName();
     }
 
     @Override
     public Type type() {
-        return SourceModel.of(context()).typeOf(element);
+        return SourceModel.of(context()).typeOf(element.get());
     }
 
     @Override

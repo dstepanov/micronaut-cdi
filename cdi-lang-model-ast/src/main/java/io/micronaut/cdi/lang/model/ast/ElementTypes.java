@@ -304,10 +304,19 @@ public final class ElementTypes {
             return elementOf(array.componentType()).toArray();
         }
         if (type instanceof Class classType) {
-            return classType.element;
+            return classType.element.get();
         }
         if (type instanceof Parameterized parameterized) {
-            return ((Class) parameterized.genericClass()).element;
+            CurrentElement<ClassElement> generic = ((Class) parameterized.genericClass()).element;
+            if (generic.isAsHandedOut()) {
+                return generic.get();
+            }
+            // the class looked up again is the class as declared: the arguments are the parameterized type's own
+            List<ClassElement> arguments = new ArrayList<>(parameterized.typeArguments().size());
+            for (Type argument : parameterized.typeArguments()) {
+                arguments.add(elementOf(argument));
+            }
+            return generic.get().withTypeArguments((Collection<ClassElement>) arguments);
         }
         if (type instanceof Wildcard wildcard) {
             Type upper = wildcard.upperBound();
@@ -527,31 +536,38 @@ public final class ElementTypes {
     @SuppressWarnings("AvoidCommonTypeNames")
     private static final class Class extends Annotated implements ClassType {
 
-        private final ClassElement element;
+        /**
+         * The class as it was used, with the arguments of the use, while its round lasts, and the class as declared
+         * once KSP has invalidated the round: the arguments of a parameterized type are its own, and a class type
+         * names the class alone.
+         */
+        private final CurrentElement<ClassElement> element;
+        private final String name;
 
         private Class(ClassElement element, List<AnnotationInfo> annotations, VisitorContext context) {
             super(annotations, context);
-            this.element = element;
+            this.element = CurrentElement.ofClass(element, context);
+            this.name = element.getName();
         }
 
         @Override
         public ClassInfo declaration() {
-            return ElementClassInfo.declarationOf(element, context);
+            return ElementClassInfo.declarationOf(element.get(), context);
         }
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof ClassType other && element.getName().equals(other.declaration().name());
+            return o instanceof ClassType other && name.equals(other.declaration().name());
         }
 
         @Override
         public int hashCode() {
-            return element.getName().hashCode();
+            return name.hashCode();
         }
 
         @Override
         public String toString() {
-            return element.getName();
+            return name;
         }
     }
 

@@ -20,16 +20,18 @@ import io.micronaut.cdi.MicronautEvent;
 import io.micronaut.cdi.MicronautInstance;
 import io.micronaut.cdi.internal.context.ApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.cdi.spi.ExpressionLanguageBridge;
 import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.cdi.internal.context.RequestScope;
+import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.WatchableBeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -79,9 +81,8 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -111,29 +112,10 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 @Internal
 public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
 
-    /**
-     * The number of injection points what they resolve to is kept for.
-     */
-    private static final int MAX_SELECTIONS = 16_384;
-
     private final BeanContext beanContext;
-    /**
-     * The container's own bean of each definition the bean context handed it, for everyone who describes the
-     * same bean to hold the same object, which reads the bean types of its definition once.
-     */
-    private final Map<BeanDefinition<?>, CdiBean<?>> canonical = new ConcurrentHashMap<>();
-    /**
-     * What each injection point resolves to ({@link #selectionFor}), by the identity of the point: the arguments of a
-     * compiled definition are constants, and two points of one type and name may declare different qualifiers.
-     * Emptied as synthetic beans are registered and portable extensions add qualifiers ({@link #refreshCandidates}),
-     * and as the definitions of the context change once it runs (a watch of the context).
-     * Micronaut keeps the candidates of a type, a destroyed dependent's included, but matching them by the rules of
-     * the specification and narrowing them is this container's work, which a dependent bean created over and over
-     * would do again for each of its points (see Conformance).
-     */
-    private volatile Map<PointKey, Selection> selections = new ConcurrentHashMap<>();
-    private volatile @Nullable RecordedTypeIndex typeIndex;
-    private volatile @Nullable CompiledAnnotationTypes types;
+    private final RecordedTypeIndex typeIndex;
+    private final CompiledAnnotationTypes types;
+    private final QualifierOverlay overlay;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -149,21 +131,15 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
 
     @Inject
     public CdiBeanContainer(BeanContext beanContext, RequestScope requestScope,
-                            ApplicationScope applicationScope, ObserverRegistry observers) {
+                            ApplicationScope applicationScope, ObserverRegistry observers,
+                            RecordedTypeIndex typeIndex, CompiledAnnotationTypes types,
+                            QualifierOverlay overlay, ExtensionContexts extensionContexts) {
         this.beanContext = beanContext;
         this.observers = observers;
-        this.contexts = new CdiContexts(beanContext, requestScope, applicationScope);
-        if (beanContext instanceof WatchableBeanContext watchable) {
-            // a definition registered with the context once it runs, or one a development reload retires or adds,
-            // changes what a point resolves to: the next resolution is made again. The watch belongs to this bean,
-            // and is closed as it is destroyed
-            watchable.definitions().watch(change -> {
-                if (!change.initial()) {
-                    change.removed().forEach(canonical::remove);
-                    refreshCandidates();
-                }
-            });
-        }
+        this.typeIndex = typeIndex;
+        this.types = types;
+        this.overlay = overlay;
+        this.contexts = new CdiContexts(beanContext, requestScope, applicationScope, extensionContexts);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered as the
         // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
@@ -311,7 +287,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(),
             Qualifiers.byQualifiers(matching,
                 (io.micronaut.context.Qualifier<Object>) qualifier))) {
-            beans.add(canonicalBean(definition));
+            beans.add(beanOf(definition));
         }
         return beans;
     }
@@ -344,28 +320,17 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * specification the qualifiers of the point rejected is not admitted again by Micronaut's, by the prefix of its
      * name or by being primary. So is a type with a type variable among its arguments, which no bean type is.</p>
      *
+     * <p>The container keeps nothing of it: the selection is made as the bean context looks up the concrete
+     * candidate of the class of the point by a {@link SelectionQualifier}, and the bean context keeps what it
+     * found and forgets it itself as definitions are registered or a development reload changes them. A qualifier
+     * a portable extension added makes the qualifier another one. A point no bean satisfies is selected again each
+     * time.</p>
+     *
      * @param point The injection point
      * @return What it resolves to
      * @throws AmbiguousResolutionException Where more than one bean remains
      */
     Selection selectionFor(Argument<?> point) {
-        Map<PointKey, Selection> cache = selections;
-        PointKey key = new PointKey(point);
-        Selection known = cache.get(key);
-        if (known != null) {
-            return known;
-        }
-        Selection selection = select(point);
-        if (cache.size() < MAX_SELECTIONS) {
-            // a point made anew for each injection - one Micronaut wraps to evaluate an expression - is not kept
-            // beyond a bound
-            cache.putIfAbsent(key, selection);
-        }
-        return selection;
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private Selection select(Argument<?> point) {
         CdiBeanQualifier<Object> matching;
         try {
             matching = matching(point, CdiQualifier.declared(point.getAnnotationMetadata()));
@@ -373,6 +338,30 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             // a type with a variable the declaring class gives a value the definition does not carry
             return Selection.Unselected.MICRONAUT;
         }
+        Object added = overlay.state();
+        Optional<BeanDefinition<Object>> selected = beanContext.findBeanDefinition(matching.lookupType(),
+            new SelectionQualifier<>(this, matching, added, false));
+        if (selected.isPresent()) {
+            return new Selection.Selected(selected.get());
+        }
+        if (beanContext.findBeanDefinition(matching.lookupType(),
+            new SelectionQualifier<>(this, matching, added, true)).isPresent()) {
+            return Selection.Unselected.MICRONAUT;
+        }
+        // no bean satisfies the point, or there is no candidate of its class at all, which the bean context does
+        // not hand a qualifier
+        return select(matching);
+    }
+
+    /**
+     * The selection of {@link #selectionFor} itself, made over the candidates of the class of the point.
+     *
+     * @param matching The qualifier of the point
+     * @return What it resolves to
+     * @throws AmbiguousResolutionException Where more than one bean remains
+     */
+    Selection select(CdiBeanQualifier<Object> matching) {
+        Argument<?> point = matching.required();
         // the candidates of the class of the point as the bean context enumerates them, which the qualifier of
         // the specification is then applied to: the same as asking for the definitions with the qualifier
         Collection<BeanDefinition<Object>> ofClass = beanContext.getBeanDefinitions(matching.lookupType());
@@ -400,7 +389,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         }
         Set<Bean<?>> eligible = new LinkedHashSet<>();
         for (BeanDefinition<Object> definition : matching.filterQualified(Object.class, ofClass)) {
-            eligible.add(canonicalBean(definition));
+            eligible.add(beanOf(definition));
         }
         if (micronaut && ofTheSpecification(eligible).isEmpty()) {
             // the beans of the specification of the class are not among the ones the qualifiers admit, and the
@@ -426,7 +415,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
             return builtIn.isBeanType(raw);
         }
         Class<?> boxed = CdiTypes.boxedOf(raw);
-        for (Argument<?> type : canonicalBean(definition).types()) {
+        for (Argument<?> type : beanOf(definition).types()) {
             Class<?> own = CdiTypes.classOf(type);
             if (own != null && CdiTypes.boxedOf(own) == boxed) {
                 return true;
@@ -475,7 +464,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         CdiBeanQualifier<Object> matching = matching(beanType, required);
         Set<Bean<?>> beans = new LinkedHashSet<>();
         for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(matching.lookupType(), matching)) {
-            beans.add(canonicalBean(definition));
+            beans.add(beanOf(definition));
         }
         return beans;
     }
@@ -518,47 +507,27 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
      * @return The index of this container
      */
     RecordedTypeIndex typeIndex() {
-        RecordedTypeIndex index = typeIndex;
-        if (index == null) {
-            // a bean of the context, the same for as long as it runs: looked up once rather than for each type compared
-            index = RecordedTypeIndex.of(beanContext);
-            typeIndex = index;
-        }
-        return index;
+        return typeIndex;
     }
 
     /**
      * What the application was compiled with of each qualifier and interceptor binding type.
      */
     private CompiledAnnotationTypes types() {
-        CompiledAnnotationTypes compiled = types;
-        if (compiled == null) {
-            compiled = CompiledAnnotationTypes.of(beanContext);
-            types = compiled;
-        }
-        return compiled;
+        return types;
     }
 
     /**
-     * The container's own bean for the given definition, so that everyone who describes the same bean holds
-     * the same object: the one {@code getBeans} answers with. The definition of the class of a bean in a normal
-     * scope - what its client proxy stands in front of, which a resolution creating the instance names - is the
-     * bean of the proxy.
+     * The container's bean for the given definition: the one {@code getBeans} answers with. The definition of the
+     * class of a bean in a normal scope - what its client proxy stands in front of, which a resolution creating the
+     * instance names - is the bean of the proxy. A bean is equal to every other one of the same definition, and
+     * holds nothing of its own: its types are the index's, so none is kept here.
      *
      * @param definition The definition
      * @return The bean
      */
-    public CdiBean<?> canonicalBean(BeanDefinition<?> definition) {
-        CdiBean<?> known = canonical.get(definition);
-        if (known != null) {
-            return known;
-        }
-        BeanDefinition<?> described = proxyOf(definition);
-        CdiBean<?> bean = canonical.computeIfAbsent(described, key -> new CdiBean<>(beanContext, key));
-        if (described != definition) {
-            canonical.putIfAbsent(definition, bean);
-        }
-        return bean;
+    public CdiBean<?> beanOf(BeanDefinition<?> definition) {
+        return new CdiBean<>(beanContext, proxyOf(definition));
     }
 
     /**
@@ -580,15 +549,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     }
 
     /**
-     * Forgets what the injection points were resolved to, so that beans registered while the container starts —
-     * the synthetic ones of section 2.10.5 — and qualifiers the portable extensions added are seen by the next
-     * resolution.
-     */
-    public void refreshCandidates() {
-        selections = new ConcurrentHashMap<>();
-    }
-
-    /**
      * Validates the deployment, once, the way {@link DeploymentValidation} has it. It is run as the container
      * starts, after the portable extensions have added what they add and before they are told the deployment
      * validated.
@@ -606,18 +566,21 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     }
 
     /**
-     * The beans of the deployment: every bean the bean context enumerates - everything that was compiled, minus
-     * what is disabled, minus what an environment narrowed away, and minus the ones another one replaces with
-     * Micronaut's {@code Replaces}, which are no beans of it, not of their name and not with dependencies to
-     * validate - that is a {@linkplain CdiBeanQualifier#isBean bean of the container}.
+     * The beans of the specification in the deployment: every bean the bean context enumerates - everything that
+     * was compiled, minus what is disabled, minus what an environment narrowed away, and minus the ones another one
+     * replaces with Micronaut's {@code Replaces}, which are no beans of it, not of their name and not with
+     * dependencies to validate - that was compiled with a scope of the specification ({@link CdiScope}) and is a
+     * {@linkplain CdiBeanQualifier#isBean bean of the container}. The scope is read from the reference of each
+     * definition, so the definitions of Micronaut's own beans are not loaded.
      *
      * @return The beans
      */
     List<CdiBean<?>> beans() {
         List<CdiBean<?>> beans = new ArrayList<>();
-        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(
+            Qualifiers.byStereotype(CdiScope.class))) {
             if (CdiBeanQualifier.isBean(definition)) {
-                beans.add(canonicalBean(definition));
+                beans.add(beanOf(definition));
             }
         }
         return beans;
@@ -627,14 +590,45 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     public Set<Bean<?>> getBeans(String name) {
         // the definitions are read for the exact name the bean was recorded with, and only a bean of the name is
         // described. Micronaut's lookup by name is no narrower: it falls back to the simple name of the class of an
-        // unnamed bean, and reads the name Micronaut materialized rather than one a stereotype gave (CdiName)
+        // unnamed bean, and reads the name Micronaut materialized rather than one a stereotype gave (CdiName). Only
+        // the definitions whose references carry a name are loaded
         Set<Bean<?>> beans = new LinkedHashSet<>();
-        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Argument.OBJECT_ARGUMENT)) {
-            if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {
-                beans.add(canonicalBean(definition));
+        named(name, Qualifiers.byStereotype(CdiName.class), beans);
+        named(name, Qualifiers.byStereotype(AnnotationUtil.NAMED), beans);
+        return beans;
+    }
+
+    /**
+     * Whether a name is a proper prefix of the name of a bean - one a lookup of {@code Object} with {@code Any}
+     * finds - that ends where a period separates two identifiers: what the expression language reads as a
+     * namespace. Only the definitions whose references carry a name are loaded, and no bean is described.
+     *
+     * @param prefix The name
+     * @return Whether it is a namespace
+     */
+    public boolean isNamespace(String prefix) {
+        String dotted = prefix + '.';
+        return hasNameUnder(dotted, Qualifiers.byStereotype(CdiName.class))
+            || hasNameUnder(dotted, Qualifiers.byStereotype(AnnotationUtil.NAMED));
+    }
+
+    private boolean hasNameUnder(String dotted, io.micronaut.context.Qualifier<Object> carrying) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(carrying)) {
+            String name = CdiBean.nameOf(definition);
+            if (name != null && name.length() > dotted.length() && name.startsWith(dotted)
+                && CdiBeanQualifier.isInjectable(definition)) {
+                return true;
             }
         }
-        return beans;
+        return false;
+    }
+
+    private void named(String name, io.micronaut.context.Qualifier<Object> carrying, Set<Bean<?>> beans) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(carrying)) {
+            if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {
+                beans.add(beanOf(definition));
+            }
+        }
     }
 
     @Override
@@ -1092,23 +1086,6 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     private static UnsupportedOperationException belongsToFull(String what) {
         return new UnsupportedOperationException(what + " belongs to CDI Full, which this module does not "
             + "implement. See Conformance");
-    }
-
-    /**
-     * An injection point as the key of what it resolves to: the point itself, compared by identity.
-     *
-     * @param point The injection point
-     */
-    private record PointKey(Argument<?> point) {
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof PointKey key && key.point == point;
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(point);
-        }
     }
 
     /**

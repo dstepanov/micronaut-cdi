@@ -19,6 +19,7 @@ import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanProvider;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -69,29 +70,31 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     private final boolean staticMethod;
     private final int priority;
     private final TransactionPhase during;
+    private final BeanProvider<CdiBeanContainer> container;
     /**
-     * The bean declaring the method, read when a notification first needs it.
+     * What the observer observes and how it is qualified, which every event fired is matched against: read as the
+     * observer is made, from what the processor recorded of the parameter.
      */
-    private volatile @Nullable CdiBean<?> declaringBean;
-    private volatile @Nullable CdiBeanContainer container;
-    // what the observer observes never changes, and resolving it walks the declaring class's methods: every
-    // event fired asks every observer, so the answer is worked out once and kept
-    private volatile @Nullable Type observedType;
-    private volatile @Nullable Argument<?> observedArgument;
-    private final @Nullable AnnotationValue<Annotation> recordedType;
-    private volatile @Nullable List<CdiQualifier> observedQualifiers;
-    private volatile @Nullable Set<Annotation> observedQualifierInstances;
+    private final Argument<?> observedArgument;
+    private final List<CdiQualifier> observedQualifiers;
 
     CdiObserverMethod(BeanContext beanContext,
+                      BeanProvider<CdiBeanContainer> container,
                       BeanDefinition<?> declaring,
                       ExecutableMethod<?, ?> method,
                       AnnotationValue<CdiObserver> observer) {
         this.beanContext = beanContext;
+        this.container = container;
         this.declaring = declaring;
         this.method = method;
         this.observedParameter = observer.intValue(CdiObserver.OBSERVED_PARAMETER).orElse(0);
         List<AnnotationValue<Annotation>> recorded = observer.getAnnotations(CdiObserver.OBSERVED_TYPE);
-        this.recordedType = recorded.isEmpty() ? null : recorded.get(0);
+        // the source of truth is what the processor recorded of the parameter: the compiled argument erases a
+        // wildcard or a variable, and the record keeps them, with the variables of a generic superclass that
+        // declares the method resolved for the bean class
+        Argument<?> recordedType = recorded.isEmpty() ? null : RecordedTypes.find(recorded.get(0));
+        this.observedArgument = recordedType != null ? recordedType : observed();
+        this.observedQualifiers = List.copyOf(CdiQualifier.declared(observed().getAnnotationMetadata()));
         this.async = observer.booleanValue(CdiObserver.ASYNC).orElse(false);
         this.ifExists = observer.booleanValue(CdiObserver.IF_EXISTS).orElse(false);
         this.staticMethod = observer.booleanValue(CdiObserver.STATIC_METHOD).orElse(false);
@@ -118,49 +121,22 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Type getObservedType() {
-        Type resolved = observedType;
-        if (resolved == null) {
-            resolved = observedArgument().asType();
-            observedType = resolved;
-        }
-        return resolved;
+        return observedArgument.asType();
     }
 
     @Override
     public Argument<?> observedArgument() {
-        Argument<?> resolved = observedArgument;
-        if (resolved == null) {
-            // the source of truth is what the processor recorded of the parameter: the compiled argument erases
-            // a wildcard or a variable, and the record keeps them, with the variables of a generic superclass
-            // that declares the method resolved for the bean class
-            Argument<?> recorded = recordedType == null ? null : RecordedTypes.find(recordedType);
-            resolved = recorded != null ? recorded : observed();
-            observedArgument = resolved;
-        }
-        return resolved;
+        return observedArgument;
     }
 
     @Override
     public Set<Annotation> getObservedQualifiers() {
-        Set<Annotation> resolved = observedQualifierInstances;
-        if (resolved == null) {
-            // kept unmodifiable: the set is shared by everyone who asks
-            resolved = Collections.unmodifiableSet(
-                CdiQualifier.instances(beanContext, observedQualifiers()));
-            observedQualifierInstances = resolved;
-        }
-        return resolved;
+        return Collections.unmodifiableSet(CdiQualifier.instances(beanContext, observedQualifiers));
     }
 
     @Override
     public List<CdiQualifier> observedQualifiers() {
-        List<CdiQualifier> resolved = observedQualifiers;
-        if (resolved == null) {
-            // shared by every resolution rather than built for each
-            resolved = List.copyOf(CdiQualifier.declared(observed().getAnnotationMetadata()));
-            observedQualifiers = resolved;
-        }
-        return resolved;
+        return observedQualifiers;
     }
 
     @Override
@@ -190,7 +166,7 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
 
     @Override
     public Bean<?> getDeclaringBean() {
-        return beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
+        return declaringBean();
     }
 
     @Override
@@ -337,21 +313,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     private CdiBeanContainer container() {
-        CdiBeanContainer found = container;
-        if (found == null) {
-            found = beanContext.getBean(CdiBeanContainer.class);
-            container = found;
-        }
-        return found;
+        return container.get();
     }
 
     private CdiBean<?> declaringBean() {
-        CdiBean<?> bean = declaringBean;
-        if (bean == null) {
-            bean = beanContext.getBean(CdiBeanContainer.class).canonicalBean(declaring);
-            declaringBean = bean;
-        }
-        return bean;
+        return container().beanOf(declaring);
     }
 
     @SuppressWarnings("unchecked")

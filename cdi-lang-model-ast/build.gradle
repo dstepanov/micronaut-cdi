@@ -7,9 +7,10 @@ plugins {
 // model's API and the AST it reads, and no more.
 noReflection {
     // like the processor, the model runs inside javac while an application compiles, and none of it reaches the
-    // runtime: an annotation member's array and enum values, and the registered annotation filters, are read
-    // the way an annotation processor reads them
-    allowIn 'io.micronaut.cdi.lang.model.ast.*'
+    // runtime: an annotation member's array and enum values are read the way an annotation processor reads them,
+    // and the registered annotation filters are found through Micronaut's service loader
+    allowIn 'io.micronaut.cdi.lang.model.ast.ElementAnnotationMember'
+    allowIn 'io.micronaut.cdi.lang.model.ast.LanguageModelAnnotationFilter'
 }
 
 dependencies {

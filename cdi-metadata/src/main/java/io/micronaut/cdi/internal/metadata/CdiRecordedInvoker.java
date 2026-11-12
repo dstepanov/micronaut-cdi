@@ -43,6 +43,13 @@ public @interface CdiRecordedInvoker {
     String beanClass();
 
     /**
+     * The bean class as a class value, which the definitions of the bean are looked up by.
+     *
+     * @return The bean class
+     */
+    Class<?> beanType() default Object.class;
+
+    /**
      * The name of the method.
      *
      * @return The method name

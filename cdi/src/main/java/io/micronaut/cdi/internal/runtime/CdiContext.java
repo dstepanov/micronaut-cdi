@@ -223,7 +223,7 @@ public final class CdiContext implements AlterableContext {
             CdiBeanContainer container = singletons.getBean(CdiBeanContainer.class);
             for (BeanRegistration<?> registration
                 : singletons.getActiveBeanRegistrations(bean.definition().getBeanType())) {
-                if (bean.equals(container.canonicalBean(registration.getBeanDefinition()))) {
+                if (bean.equals(container.beanOf(registration.getBeanDefinition()))) {
                     return (T) registration.bean();
                 }
             }
@@ -323,7 +323,7 @@ public final class CdiContext implements AlterableContext {
         CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
         for (BeanRegistration<?> registration
             : beanContext.getActiveBeanRegistrations(bean.definition().getBeanType())) {
-            if (bean.equals(container.canonicalBean(registration.getBeanDefinition()))) {
+            if (bean.equals(container.beanOf(registration.getBeanDefinition()))) {
                 beanContext.destroyBean(registration);
                 return;
             }

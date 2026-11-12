@@ -20,6 +20,7 @@ import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.core.reflect.GenericTypeUtils;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.type.Argument;
@@ -47,7 +48,6 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -65,13 +65,6 @@ import java.util.Set;
 @Singleton
 @Internal
 public final class ReflectiveCdi implements CdiReflection {
-
-    /**
-     * The primitive types, by the names a recorded parameter type names them by.
-     */
-    private static final Map<String, Class<?>> PRIMITIVES = Map.of(
-        "boolean", boolean.class, "byte", byte.class, "char", char.class, "short", short.class, "int", int.class,
-        "long", long.class, "float", float.class, "double", double.class);
 
     @SuppressWarnings("unchecked")
     @Override
@@ -195,13 +188,17 @@ public final class ReflectiveCdi implements CdiReflection {
                 name = name.substring(0, name.length() - 2);
                 dimensions++;
             }
-            Class<?> type = PRIMITIVES.get(name);
+            String component = name;
+            Class<?> type;
+            try {
+                type = ClassUtils.getPrimitiveType(component)
+                    .or(() -> ClassUtils.forName(component, loader))
+                    .orElse(null);
+            } catch (LinkageError e) {
+                type = null;
+            }
             if (type == null) {
-                try {
-                    type = Class.forName(name, false, loader);
-                } catch (ClassNotFoundException | LinkageError e) {
-                    return null;
-                }
+                return null;
             }
             for (int d = 0; d < dimensions; d++) {
                 type = type.arrayType();

@@ -29,15 +29,17 @@ import jakarta.enterprise.lang.model.declarations.PackageInfo;
 @Internal
 public final class ElementPackageInfo extends ElementDeclarationInfo implements PackageInfo {
 
-    private final PackageElement element;
+    private final String name;
 
     ElementPackageInfo(PackageElement element, VisitorContext context) {
-        super(element, context);
-        this.element = element;
+        // a package is not looked up again: its name is all it answers here, and what is written on it is read as
+        // it is handed out
+        super(CurrentElement.asIs(element, context), context);
+        this.name = element.getName();
     }
 
     @Override
     public String name() {
-        return element.getName();
+        return name;
     }
 }

@@ -19,6 +19,7 @@ import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanProvider;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
@@ -34,7 +35,6 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.inject.Singleton;
 
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Invokes the disposer method of a produced bean as the bean is destroyed.
@@ -56,35 +56,30 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
 
     private final BeanContext beanContext;
     /**
-     * The disposer of each producer whose product was destroyed, found once: every instance a dependent producer
-     * makes is disposed of by the same method.
+     * The container the parameters of a disposer are resolved through, which is a bean of the context like this
+     * listener: obtained as a disposer first needs it.
      */
-    private final ConcurrentHashMap<BeanDefinition<?>, Disposer> disposers =
-        new ConcurrentHashMap<>();
-    private volatile @Nullable CdiBeanContainer container;
+    private final BeanProvider<CdiBeanContainer> container;
 
-    public DisposerInvoker(BeanContext beanContext) {
+    public DisposerInvoker(BeanContext beanContext, BeanProvider<CdiBeanContainer> container) {
         this.beanContext = beanContext;
+        this.container = container;
     }
 
     @Override
     public Object onPreDestroy(BeanPreDestroyEvent<Object> event) {
         Object bean = event.getBean();
         BeanDefinition<Object> definition = event.getBeanDefinition();
-        Disposer found = disposers.get(definition);
-        if (found == null) {
-            AnnotationValue<CdiDisposer> disposer = definition.getAnnotation(CdiDisposer.class);
-            if (disposer == null) {
-                // every bean of the context is destroyed through here, and few of them were produced
-                return bean;
-            }
-            found = disposerOf(beanContext, disposer);
-            if (found == null) {
-                return bean;
-            }
-            disposers.putIfAbsent(definition, found);
+        AnnotationValue<CdiDisposer> recorded = definition.getAnnotation(CdiDisposer.class);
+        if (recorded == null) {
+            // every bean of the context is destroyed through here, and few of them were produced
+            return bean;
         }
-        Disposer disposer = found;
+        // the declaring bean is among the candidates the bean context keeps for its class
+        Disposer disposer = disposerOf(beanContext, recorded);
+        if (disposer == null) {
+            return bean;
+        }
         return event.withDependencies(dependencies -> {
             invoke(disposer, bean, dependencies);
             return bean;
@@ -183,13 +178,8 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
         }
-        CdiBeanContainer container = this.container;
-        if (container == null) {
-            container = beanContext.getBean(CdiBeanContainer.class);
-            this.container = container;
-        }
         Argument<Object> point = (Argument<Object>) argument;
-        return switch (container.selectionFor(argument)) {
+        return switch (container.get().selectionFor(argument)) {
             case Selection.Selected selected -> {
                 BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
                 Argument<Object> askedAs = CdiInstance.askedAs(beanContext, point, definition);

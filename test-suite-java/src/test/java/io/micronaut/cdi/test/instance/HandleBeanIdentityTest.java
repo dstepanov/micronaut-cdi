@@ -22,11 +22,11 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.CDI;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * The bean a handle reports is the container's own bean of its definition, the one the container answers with,
- * rather than another description of it made for each call.
+ * The bean a handle reports is the bean of its definition the container answers with: equal to it, and to itself
+ * on every call. Nothing is kept to make it the same object.
  */
 class HandleBeanIdentityTest {
 
@@ -39,8 +39,9 @@ class HandleBeanIdentityTest {
         try (ApplicationContext context = ApplicationContext.run()) {
             Bean<?> bean = CDI.current().getBeanContainer().getBeans(Lamp.class).iterator().next();
             Instance.Handle<Lamp> handle = CDI.current().select(Lamp.class).getHandle();
-            assertSame(bean, handle.getBean());
-            assertSame(handle.getBean(), handle.getBean());
+            assertEquals(bean, handle.getBean());
+            assertEquals(bean.hashCode(), handle.getBean().hashCode());
+            assertEquals(handle.getBean(), handle.getBean());
         }
     }
 }

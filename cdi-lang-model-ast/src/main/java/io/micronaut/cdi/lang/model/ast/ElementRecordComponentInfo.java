@@ -52,9 +52,9 @@ import java.util.List;
 @Internal
 public final class ElementRecordComponentInfo extends ElementDeclarationInfo implements RecordComponentInfo {
 
-    private final PropertyElement element;
-    private final FieldElement field;
-    private final MethodElement accessor;
+    private final CurrentElement<PropertyElement> element;
+    private final CurrentElement<FieldElement> field;
+    private final CurrentElement<MethodElement> accessor;
     private final ClassInfo declaringRecord;
     private final AnnotationMetadata declared;
 
@@ -67,10 +67,19 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
      */
     public ElementRecordComponentInfo(PropertyElement element, FieldElement field, MethodElement accessor,
                                       ClassInfo declaringRecord, VisitorContext context) {
-        super(element, context);
-        this.element = element;
-        this.field = field;
-        this.accessor = accessor;
+        this(declaringRecord instanceof ElementClassInfo record
+                ? CurrentElement.ofProperty(record.currentElement(), element, context)
+                : CurrentElement.asIs(element, context),
+            element, field, accessor, declaringRecord, context);
+    }
+
+    private ElementRecordComponentInfo(CurrentElement<PropertyElement> current, PropertyElement element,
+                                       FieldElement field, MethodElement accessor, ClassInfo declaringRecord,
+                                       VisitorContext context) {
+        super(current, context);
+        this.element = current;
+        this.field = CurrentElement.ofMember(field, context);
+        this.accessor = CurrentElement.ofMember(accessor, context);
         this.declaringRecord = declaringRecord;
         AnnotationMetadata read = element.getReadTypeAnnotationMetadata().orElse(null);
         this.declared = read instanceof AnnotationMetadataHierarchy hierarchy
@@ -81,7 +90,7 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
     public Collection<AnnotationInfo> annotations() {
         List<AnnotationInfo> found = new ArrayList<>();
         for (String name : declared.getDeclaredAnnotationNames()) {
-            if (!ExtensionAnnotations.isReported(element, name, context())) {
+            if (!ExtensionAnnotations.isReported(element.get(), name, context())) {
                 continue;
             }
             AnnotationValue<Annotation> annotation = declared.getDeclaredAnnotation(name);
@@ -95,7 +104,7 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
     @Override
     public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
         String name = annotationType.getName();
-        if (!ExtensionAnnotations.isReported(element, name, context())) {
+        if (!ExtensionAnnotations.isReported(element.get(), name, context())) {
             return List.of();
         }
         List<AnnotationInfo> found = new ArrayList<>();
@@ -107,22 +116,22 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
 
     @Override
     public String name() {
-        return element.getName();
+        return element.get().getName();
     }
 
     @Override
     public Type type() {
-        return SourceModel.of(context()).typeOf(field);
+        return SourceModel.of(context()).typeOf(field.get());
     }
 
     @Override
     public FieldInfo field() {
-        return new ElementFieldInfo(field, declaringRecord, context());
+        return new ElementFieldInfo(field.get(), declaringRecord, context());
     }
 
     @Override
     public MethodInfo accessor() {
-        return new ElementMethodInfo(accessor, declaringRecord, context());
+        return new ElementMethodInfo(accessor.get(), declaringRecord, context());
     }
 
     @Override

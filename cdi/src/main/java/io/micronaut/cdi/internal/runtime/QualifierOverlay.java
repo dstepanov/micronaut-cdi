@@ -64,6 +64,15 @@ public final class QualifierOverlay {
     }
 
     /**
+     * What was added, as it is now: the same object until a qualifier is added, which compares by identity.
+     *
+     * @return The state
+     */
+    Object state() {
+        return added;
+    }
+
+    /**
      * Whether nothing was added, which is the case of every container no portable extension ran in.
      *
      * @return Whether the overlay is empty

@@ -369,17 +369,32 @@ Resolving one bean narrows the candidates as section 2.4.2 has it, separately fr
 specification outranks a bean of Micronaut's own of the same type, and the alternatives outrank everything else
 (`CdiResolution.narrowToOne`); an alternative is not made Micronaut's primary bean, and nothing is chosen while
 the candidates are enumerated. What the container keeps beside Micronaut is what Micronaut has no form of and what
-measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`), the
-container's bean of each definition, once (`CdiBeanContainer.canonicalBean`), and what each injection point
-resolves to, once per point (`CdiBeanContainer.selectionFor`): Micronaut keeps the candidates of a type, and since
-Micronaut Core 5.3 (#14063) keeps them when a dependent bean is destroyed, but matching them by the rules of the
-specification and narrowing them is the container's own work, which a dependent bean created over and over would
-do again for each of its points (without it, creating a dependent bean with eight injected dependencies takes 28%
-longer and allocates 87% more). The selections and the container's beans follow the definitions of the context: a
-watch of the context (`WatchableBeanContext.definitions()`) forgets them as a definition is registered once the
-context runs, or retired or added by a development reload. The bean types of a definition, the disposers
-resolved for a producer and what was read of the qualifier and binding types (`CompiledAnnotationTypes`) are not
-yet forgotten so. Core's active resolution
+measurably costs to work out again: the bean types of each definition, once per context (`RecordedTypeIndex`).
+The container's bean of a definition is made as it is asked for (`CdiBeanContainer.beanOf`), equal to every other
+of the same definition, and holds nothing of its own. What an injection point resolves to is kept by
+Micronaut rather than by the container (`CdiBeanContainer.selectionFor`): the point is looked up with
+`BeanContext.findBeanDefinition` by a qualifier of its own (`SelectionQualifier`), which, handed the candidates of
+the class of the point, makes the container's selection - the rules of the specification, the narrowing of section
+2.4.2 and its ambiguity, the point left to Micronaut's rules among Micronaut's own beans - and admits one candidate
+or none, so Micronaut's own precedence among several never applies. Micronaut keeps the concrete candidate it found
+(a map bounded at 2048 lookups) and forgets it itself as definitions are registered or reloaded, so a synthetic bean
+and a definition registered once the context runs are seen by the next resolution; the qualifiers a portable
+extension added are part of the qualifier, so one added as the container starts selects again. The selection
+qualifier is never handed to the creation of the bean, which goes through the selected definition. A point no bean
+satisfies is selected again each time. Creating a dependent bean with eight injected dependencies (200,000
+creations and destructions, after as many to warm up) takes 4.9 us and allocates 10.1 KB per bean, against 9.9 us
+and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
+The bean types of a
+definition are kept for one generation of the definitions, a new one replacing it as the application's classes
+change (`WatchableBeanContext.classChanges()`) and once the definitions have changed, so that what is worked out
+from a retired definition while the change is made is never kept; and what was
+read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
+context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`), since the
+definitions of Micronaut's own beans are read as well. The observer methods are read from the definitions of the beans marked as
+observing (`CdiObserving`) and made again after any change a watch of every definition reports (`ObserverRegistry`):
+a replacement that observes nothing takes the observers of the bean it replaces, and a watch narrowed to the
+observing beans does not hear of it. What an event resolves to is matched as it is fired rather than kept. The disposer of a producer and the bean and method an invoker names are found as they are
+needed, among the candidates the bean context keeps for the declaring class. Core's active resolution
 context creates the selected definition and retains its dependent ownership and the path the injection point
 metadata is read from. Missing required producers are deployment errors.
 
@@ -419,7 +434,7 @@ listeners, and what its producer was injected with is released with it.
 
 *Section 12.* Discovery runs as the compilation starts. Enhancement runs as each class is compiled, and
 registration as the round that compiled it finishes. Synthesis, the registration of what it described, and
-validation run once every class of the compilation has been registered. An extension therefore goes on the annotation processor path of the project it
+validation run once every class of the compilation has been registered, after its last round. An extension therefore goes on the annotation processor path of the project it
 is written for rather than on its classpath, and is still found through the service loader as the specification
 says. The running application does not load it, and an extension that is only on the runtime classpath does
 nothing.
@@ -471,15 +486,48 @@ compilation is where the application is put together.
 The phases run the same way whichever language the application is compiled in - by javac, by the Groovy
 compiler, or by KSP - with no source generated for them. Micronaut calls `TypeElementVisitor.finishRound` once
 every visitor has visited every class of a round, and before the beans of the round are written, in all three: the
-registration phase is told about each class the round visited then, and the first round that visits a class of the
-compilation is the moment every class has been registered, and synthesis, the registration of what it described, and validation run then, once. Under
-javac, where the scanned classes are imported, they wait for the next round, which visits the imported classes.
+registration phase is told about each class the round visited then, while what it does to a bean - an invoker it
+asks for, for one - can still be written with the bean. It calls `TypeElementVisitor.finishCompilation` once, after
+the last round, when every class of the compilation has been registered - a class another annotation processor
+generated in a later round included, and under javac the scanned classes the import brought in - and synthesis,
+the registration of what it described, and validation run then (`LaterRoundBeanTest`). The classes of the
+compilation are kept by name and looked up again there, since KSP invalidates the elements of a round as the round
+ends; one that can no longer be found fails the compilation, naming it. For the same reason a bean or an observer
+the registration phase described in a round, which an extension may keep and read in synthesis or validation, looks
+its class and member up again by name and signature under KSP once its round is over, and so does everything of the
+language model an extension may keep - a class, a method, a field, a parameter, a record component, a class type -
+with the generic arguments of a type kept and equality and hash codes that do not change with the round
+(`CurrentElement`, `HandedOut`; `KeptDescriptionsTest`, `KeptDescriptionsUnderKspTest`,
+`KeptDescriptionsUnderGroovyTest`). What an enhancement added to a class or a member is seen on it once looked up
+again: since Micronaut Core 5.3 the annotations a visitor added are kept by the class's name and the member's
+signature rather than by the compiler's element of the round, under KSP, which makes new elements every round, and
+under javac alike, so a bean description an extension kept answers in synthesis and validation with the qualifiers,
+scope and other annotations an enhancement added
+(`KeptDescriptionsUnderKspTest.whatAnEnhancementAddedIsSeenOnceTheCompilationIsFinished`). Under javac, the import
+of the scanned classes is written as the first round that visits a class of the compilation finishes, so that a
+later round visits them; a scanned class another processor generates rounds later is imported all the same, since
+javac reads the import in the round that has the class, and one never found fails the compilation as the import
+names it. Under KSP and Groovy a scanned class that is neither compiled nor on the class path fails the compilation,
+naming it.
 Each class an extension named - a creator, a disposer, a synthetic observer, a context - is declared a bean with
 `VisitorContext.registerBean`, which is how a bean of a class compiled elsewhere is declared in all three, and
 the record of the component is put on the definition as annotation values. The definition is named after the
-first class of the compilation and has every class of it as an origin: under javac, Gradle then recompiles the
-whole source set when one changes, and under KSP the definitions are written again with any of them. A Groovy or
-Kotlin compilation that finished no round fails rather than leaving the phases out.
+first class of the compilation and has every class of it as an origin.
+
+Since what runs in `finishCompilation` follows from every class of the compilation, the visitor declares
+`TypeElementVisitor.aggregatesCompilation()` whenever the compilation has build compatible extensions - one the
+service loader finds on the processor path, or one the compiler options name - so such a module is not processed
+incrementally class by class. A module without extensions keeps nothing from one class to the next and stays
+isolating (`CompilationAggregationTest`). Under javac Micronaut's annotation processor is then an aggregating
+processor of every class for Gradle's incremental compilation: whenever a source is changed, added or removed, Gradle
+processes every class of the previous compilation again, without compiling the unchanged ones again, and writes again
+everything the processor wrote, so that synthesis and validation always see the whole compilation; an annotation of
+source retention in the compilation makes Gradle compile every source. Under KSP the definitions written in
+`finishCompilation` are aggregating outputs of the files of their origins, written again whenever a source changes;
+KSP cannot declare a processor aggregating before it runs, so until the extensions have written something an
+incremental KSP compilation hands the visitor the changed sources only, as the documentation of
+`TypeElementVisitor.finishCompilation` describes. The Groovy compiler and Python have no incremental annotation
+processing.
 
 Every compilation of an application that has the extension on
 its processor path runs it, so a synthetic component is recorded by each; the record carries the extension and
@@ -500,7 +548,10 @@ container's, read as it starts from the metadata the classes were compiled with.
 
 What still aggregates is the build compatible extensions, whose phases the specification defines over the whole
 deployment, and it is confined to the one visitor that runs them (`BuildCompatibleExtensionVisitor`), made as the
-compilation starts it, read as its rounds finish, and read by no other visitor:
+compilation starts it, read as its rounds and the compilation finish, and read by no other visitor. That visitor
+stays isolating for what it writes of each class it visits, and, where the compilation has extensions, declares that
+it aggregates the compilation in `finishCompilation` (`aggregatesCompilation()`), which makes the processor
+aggregating for Gradle under javac (see above); without extensions it keeps none of the following:
 
 - `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
   `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
@@ -508,10 +559,14 @@ compilation starts it, read as its rounds finish, and read by no other visitor:
   as each named class comes past; and the classes the compiler visited, by name, which the registration phase of
   section 2.10.3 is told about as their round finishes, and of which the ones of the compilation are the origins
   of what is written for the deployment as a whole (the import of the scanned classes, the record of the registered
-  qualifiers, the definitions of the contexts and of the synthetic components). Two flags say whether the scanned
-  classes were seen to and whether synthesis ran, which happen once.
+  qualifiers, the definitions of the contexts and of the synthetic components). A flag says whether
+  a round that visited a class of the compilation finished, after which the import of the scanned classes is
+  written under javac, once.
+- `CurrentElement`'s count of the rounds of the compilation that finished, which the visitor keeps up as each round
+  and the compilation finish and the language model reads to tell an element handed out in an earlier round: kept
+  with the compilation, on the attributes of its `VisitorContext`, and read by nothing else.
 - `SynthesisPhase`: the synthetic beans and observers the synthesis phase of section 2.10.5 described, made and
-  consumed as the round finishes, after every bean is known, followed by the registration of what it described and
+  consumed as the compilation finishes, after every bean is registered, followed by the registration of what it described and
   the validation of section 2.10.6, which are told about the deployment as a whole.
 - The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
   saw for a later one, as the specification allows and the kit's extensions do.
@@ -1045,11 +1100,18 @@ own rather than the first one alone.
   injection point a dependent instance obtained through a lookup is given is a segment of its resolution path
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
-  language model over the compiler's elements hold no static state that is not a constant, beside the registered
-  `LanguageModelAnnotationFilter` services: those are loaded once per class loader of the language model and kept
-  as long as it is (`LanguageModelAnnotationFilter.registered()`), so one filter instance serves every compilation
-  that loader runs, and a provider is expected to decide from its arguments alone and keep no state between
-  calls. A harness that
+  language model over the compiler's elements hold no static state that is not a constant: the registered
+  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` once per compilation and
+  kept on its `VisitorContext` (`LanguageModelAnnotationFilter.registered(VisitorContext)`), and a provider is
+  expected to decide from its arguments alone.
+  What they reflect goes through Micronaut's helpers where one exists - `SoftServiceLoader` for the extensions and
+  the filters, `ClassUtils.forName` and `InstantiationUtils` for an extension a compiler option names,
+  `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts three
+  classes, for what has no helper or what the check counts even through one: `ExtensionMethods`, which finds an
+  extension's phase methods among its declared methods by their annotations and reads their parameter types, as
+  the specification defines an extension (and loads services); `ElementAnnotationMember`, which reads an annotation
+  member's array and enum values as the language model's API hands them out; and `LanguageModelAnnotationFilter`,
+  for the service loading of the filters. A harness that
   compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated
@@ -1059,21 +1121,22 @@ own rather than the first one alone.
   (`ProcessorOptionsSystemProperties`), a value set before the compilation included; a compilation that ends
   without a final round, as one javac stops early does, has its values restored as the next compilation on its
   thread starts (since Micronaut Core 5.3), so the extensions of one deployment do not have their say in the
-  deployments compiled after it, and the harnesses keep none of the values themselves. One seam is left
-  for the harnesses that run the specification's test kit in one process: the classpath a test's SE container
-  sees (`MicronautSeContainerInitializer`), since the kit builds the container itself through
-  `SeContainerInitializer.newInstance()`. The type hierarchy record of a class is found
+  deployments compiled after it, and the harnesses keep none of the values themselves. The classpath a
+  test's SE container sees, which the harness that runs the specification's test kit in one process restricts
+  because the kit builds the container itself through `SeContainerInitializer.newInstance()`, is an ordinary
+  property of the bootstrap (`MicronautSeContainerInitializer.RESTRICTED_CLASSPATH`), read from the bootstrap's
+  properties or the system properties as the container is initialized; the module keeps no static of its own
+  for it. The type hierarchy record of a class is found
   through the class loader of the container, and the class's own where that one finds none (`RecordedTypeIndex`):
   two deployments whose loaders see different records of a class of a loader they share each read their own.
   Micronaut finds a record once per class loader and keeps it with the class of the record (since Micronaut Core
   5.3, #14064), so the container keeps none, and no record, nor the deployment loader it was found through, is kept
   with the shared class.
-- **The candidates of a type are kept for 30 types at most.** `DefaultBeanContext.beanCandidateCache` is a
-  least-recently-used cache of 30 lookup types, which a deployment of the specification exceeds; core #14063 left a
-  larger or configurable bound for a separate decision. The fixes of #14063 itself - a destroyed dependent no
-  longer purges the candidates of its types, a raw lookup of `Collection` finds a factory's `List`, and the untyped
-  `getBeanDefinitions(Qualifier)` drops a replaced bean before the qualifier - are pinned by
-  `MicronautCoreIssuesTest`.
+- **The fixes of core #14063** - a destroyed dependent no longer purges the candidates of its types, a raw lookup
+  of `Collection` finds a factory's `List`, and the untyped `getBeanDefinitions(Qualifier)` drops a replaced bean
+  before the qualifier - are pinned by `MicronautCoreIssuesTest`. The candidates of a type are kept in a map bounded
+  at 2048 types (`DefaultBeanContext.beanCandidateCache`), not the least-recently-used cache of 30 types of earlier
+  versions.
 - **The lookup argument of the resolution customizer widens one way.** Section 2.1.2 counts a primitive and its
   wrapper as one type; `resolveBeanLookupArgument` maps a lookup to one other argument, so a lookup of the primitive
   finds both and a lookup of the wrapper only the wrapper's beans. The container asks for a wrapper as the primitive.
