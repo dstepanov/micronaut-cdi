@@ -993,13 +993,17 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * The contextual instance behind a client proxy (CDI 5.0, section 11.3). A client proxy of a bean in a normal
      * scope is the scoped proxy Micronaut generated for it, and that proxy resolves its target from the scope as
      * every invocation does: so an inactive scope answers with its {@code ContextNotActiveException}, and a scope
-     * with more than one active context with its {@code IllegalStateException}. Anything else is not a client
-     * proxy and is returned as it is.
+     * with more than one active context with its {@code IllegalStateException}. Anything else - a proxy of
+     * Micronaut's own advice among it - is not a client proxy and is returned as it is.
      */
     @Override
     @SuppressWarnings("unchecked")
     public <T> T unwrapClientProxy(T reference) {
-        if (reference instanceof InterceptedProxy<?> proxy) {
+        // a proxy Micronaut generated for advice of its own targets a bean as well, and is no client proxy: only
+        // the proxy of a bean compiled into a normal scope is
+        if (reference instanceof InterceptedProxy<?> proxy && beanContext.findBeanDefinition(reference.getClass())
+            .map(definition -> CdiResolution.isNormalScoped(definition.getAnnotationMetadata()))
+            .orElse(false)) {
             return (T) proxy.interceptedTarget();
         }
         return reference;
