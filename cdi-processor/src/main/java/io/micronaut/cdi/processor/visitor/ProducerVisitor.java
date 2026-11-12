@@ -348,7 +348,8 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
     /**
      * Reads, checks and records the attributes of CDI 5.0 a producer declares (sections 2.8 to 2.10): the record is
-     * written where the producer has any, and where its class has one it would otherwise inherit. A reserve producer
+     * written on every producer, every member of it, because what a producer is read with is the metadata of the
+     * class it produces merged with its own, and the produced class may carry a record of its own. A reserve producer
      * is selected by a priority of its own only - unlike an alternative producer, it does not take the one of the
      * class (section 5.1.2.1) - and one that declares none produces nothing.
      */
@@ -367,9 +368,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             return;
         }
         BeanAttributes attributes = BeanAttributes.ofProducer(producer);
-        if (!attributes.any() && !classAttributes.any()) {
-            return;
-        }
         if (!attributes.check(producer, alternative || element.getAnnotationMetadata().hasStereotype(Cdi.ALTERNATIVE),
             BeanAttributes.scopeOf(producer), BeanAttributes.isNormalScoped(producer), context)
             || (attributes.eager() && !BeanAttributes.checkEagerStereotypes(producer, context))) {
