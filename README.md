@@ -1,7 +1,7 @@
 # Micronaut CDI
 
 An implementation of the
-[Jakarta Contexts and Dependency Injection 4.1](https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html)
+[Jakarta Contexts and Dependency Injection 5.0](https://jakarta.ee/specifications/cdi/5.0/jakarta-cdi-spec-5.0.html)
 **Lite** specification built on the compile-time dependency injection of Micronaut.
 
 A bean of the specification is read as the Micronaut bean it corresponds to while it is compiled: the scope it

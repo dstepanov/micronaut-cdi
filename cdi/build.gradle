@@ -27,6 +27,10 @@ dependencies {
     annotationProcessor libs.managed.micronaut.jakarta.interceptors.processor
 
     api libs.managed.jakarta.cdi.api
+    // the bean manager is an ELAwareBeanManager, as it was a BeanManager with the expression-language methods in
+    // CDI 4.1: CDI 5.0 moved them to this supplemental API, which brings the Expression Language API as the CDI 4.1
+    // API did. Evaluating an expression is still the optional micronaut-cdi-el module's
+    api libs.managed.jakarta.cdi.el.api
     api libs.managed.jakarta.inject.api
     api libs.managed.jakarta.annotation.api
     api libs.managed.jakarta.interceptor.api

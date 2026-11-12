@@ -1,5 +1,5 @@
 [versions]
-managed-jakarta-cdi = "4.1.0"
+managed-jakarta-cdi = "5.0.0"
 managed-jakarta-inject = "2.0.1"
 managed-jakarta-interceptor = "2.2.0"
 managed-jakarta-annotation = "3.0.0"
@@ -7,9 +7,10 @@ managed-jakarta-annotation = "3.0.0"
 micronaut = "5.3.0-SNAPSHOT"
 managed-micronaut-jakarta-interceptors = "1.0.0-SNAPSHOT"
 managed-micronaut-jakarta-el = "1.1.0"
+managed-jakarta-el = "6.0.1"
 
 junit = "5.14.4"
-cdi-tck = "4.1.0"
+cdi-tck = "5.0.0"
 testng = "7.10.2"
 arquillian = "1.9.1.Final"
 shrinkwrap = "1.2.6"
@@ -26,8 +27,12 @@ graalvm-buildtools = "0.11.5"
 micronaut-core = { module = 'io.micronaut:micronaut-core-bom', version.ref = 'micronaut' }
 
 # managed dependencies
-managed-jakarta-cdi-api = { module = 'jakarta.enterprise:jakarta.enterprise.cdi-api', version.ref = 'managed-jakarta-cdi' }
-managed-jakarta-lang-model = { module = 'jakarta.enterprise:jakarta.enterprise.lang-model', version.ref = 'managed-jakarta-cdi' }
+managed-jakarta-cdi-api = { module = 'jakarta.cdi:jakarta.cdi-api', version.ref = 'managed-jakarta-cdi' }
+managed-jakarta-lang-model = { module = 'jakarta.cdi:jakarta.cdi-lang-model-api', version.ref = 'managed-jakarta-cdi' }
+# the expression language integration of CDI, a supplemental API of its own since CDI 4.1 and no longer a
+# dependency of the CDI API since 5.0
+managed-jakarta-cdi-el-api = { module = 'jakarta.cdi:jakarta.cdi-el-api', version.ref = 'managed-jakarta-cdi' }
+managed-jakarta-el-api = { module = 'jakarta.el:jakarta.el-api', version.ref = 'managed-jakarta-el' }
 managed-jakarta-inject-api = { module = 'jakarta.inject:jakarta.inject-api', version.ref = 'managed-jakarta-inject' }
 managed-jakarta-interceptor-api = { module = 'jakarta.interceptor:jakarta.interceptor-api', version.ref = 'managed-jakarta-interceptor' }
 managed-jakarta-annotation-api = { module = 'jakarta.annotation:jakarta.annotation-api', version.ref = 'managed-jakarta-annotation' }
@@ -51,14 +56,14 @@ gradle-errorprone-no-reflection = { module = "io.micronaut.errorprone:micronaut-
 gradle-graalvm-native = { module = "org.graalvm.buildtools:native-gradle-plugin", version.ref = "graalvm-buildtools" }
 
 # the technology compatibility kit of this specification
-cdi-tck-core = { module = 'jakarta.enterprise:cdi-tck-core-impl', version.ref = 'cdi-tck' }
+cdi-tck-core = { module = 'jakarta.cdi:jakarta.cdi-tck-core-impl', version.ref = 'cdi-tck' }
 # the kit's language model assertions, verified by a build compatible extension as the classes compile
-cdi-tck-lang-model = { module = 'jakarta.enterprise:cdi-tck-lang-model', version.ref = 'cdi-tck' }
+cdi-tck-lang-model = { module = 'jakarta.cdi:jakarta.cdi-tck-lang-model', version.ref = 'cdi-tck' }
 # the kit's scenarios assert with TestNG, and record their invocations with its own ActionSequence
 testng = { module = 'org.testng:testng', version.ref = 'testng' }
 
 # the harness the kit's own test classes drive a container through
-cdi-tck-api = { module = 'jakarta.enterprise:cdi-tck-api', version.ref = 'cdi-tck' }
+cdi-tck-api = { module = 'jakarta.cdi:jakarta.cdi-tck-api', version.ref = 'cdi-tck' }
 arquillian-testng = { module = 'org.jboss.arquillian.testng:arquillian-testng-container', version.ref = 'arquillian' }
 arquillian-container-spi = { module = 'org.jboss.arquillian.container:arquillian-container-test-spi', version.ref = 'arquillian' }
 arquillian-container-impl = { module = 'org.jboss.arquillian.container:arquillian-container-impl-base', version.ref = 'arquillian' }

@@ -7,6 +7,7 @@ import jakarta.el.StandardELContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.el.ELAwareBeanManager;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ class NamedProducerExpressionTest {
     @Test
     void aNameResolvesTheProducerOfThatName() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
 
@@ -44,7 +45,7 @@ class NamedProducerExpressionTest {
     @Test
     void theTypeOfAProducedBeanIsWhatItProducesRatherThanTheClassDeclaringIt() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ELContext el = new StandardELContext(ExpressionFactory.newInstance());
 
             Class<?> type = manager.getELResolver().getType(el, null, "salutation");
