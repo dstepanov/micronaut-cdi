@@ -270,6 +270,14 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             // condition reads from what the SE bootstrap was handed
             element.annotate(Requires.class, builder -> builder.member("condition",
                 new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.UndiscoveredSubclass")));
+            String declared = whatMakesItLookLikeABean(element);
+            if (declared != null) {
+                // the class looks meant as a bean - a mock alternative of its superclass, say - and was one before
+                // CDI 5.0's rule was applied here: it is not left to start silently without it
+                context.warn(element.getName() + " inherits a scope but declares no bean defining annotation, so it "
+                    + "is not discovered as a bean (section 2.5.1) although it declares " + declared + "; declare its "
+                    + "scope or a stereotype on it to make it a bean", element);
+            }
         }
         if (element.hasDeclaredAnnotation(CdiScope.class)) {
             // a mapper has already read what the class declares
@@ -309,6 +317,35 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * method, which make a bean of a class whatever it declares, while a superclass hands it a scope of the
      * specification.
      */
+    /**
+     * What a class that is not discovered declares that only a bean would: an alternative, a priority, a qualifier, a
+     * name, an interceptor binding or an injected member; {@code null} where it declares none of them.
+     */
+    private static @Nullable String whatMakesItLookLikeABean(ClassElement element) {
+        if (element.hasDeclaredAnnotation(Cdi.ALTERNATIVE)) {
+            return "@Alternative";
+        }
+        if (element.hasDeclaredAnnotation(Cdi.PRIORITY)) {
+            return "@Priority";
+        }
+        if (element.hasDeclaredAnnotation(AnnotationUtil.NAMED)) {
+            return "@Named";
+        }
+        if (element.hasDeclaredStereotype(Cdi.QUALIFIER)) {
+            return "a qualifier";
+        }
+        if (element.hasDeclaredStereotype("jakarta.interceptor.InterceptorBinding")) {
+            return "an interceptor binding";
+        }
+        boolean injects = element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared()).stream()
+            .anyMatch(field -> field.hasDeclaredAnnotation(AnnotationUtil.INJECT))
+            || element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared()).stream()
+            .anyMatch(method -> method.hasDeclaredAnnotation(AnnotationUtil.INJECT))
+            || element.getEnclosedElements(ElementQuery.CONSTRUCTORS).stream()
+            .anyMatch(constructor -> constructor.hasDeclaredAnnotation(AnnotationUtil.INJECT));
+        return injects ? "an @Inject member" : null;
+    }
+
     private static boolean isDiscoveredOnlyThroughItsSuperclass(ClassElement element, VisitorContext context) {
         if (element.isAbstract() || element.isInterface() || scopeDeclaredOn(element, context) != null
             || element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")

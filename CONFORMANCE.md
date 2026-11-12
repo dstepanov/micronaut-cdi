@@ -158,7 +158,10 @@ class declares, so a subclass that declares no scope, no stereotype and not `@In
 observer method, is no bean of its own where it is discovered however its superclass is scoped (`CdiScopeVisitor`,
 `UndiscoveredSubclass`); one that declares a stereotype keeps the scope it inherits, as section 2.3 has it. A class
 handed to the synthetic archive of the SE bootstrap (`addBeanClasses` with discovery turned off) is a bean with the
-scope it inherits: the bootstrap names those classes in a property the condition reads.
+scope it inherits: the bootstrap names those classes in a property the condition reads. This differs from the 4.1 module,
+where such a subclass was a bean: the common case is a mock written as `@Alternative @Priority(1) class Mock extends
+Real`, which is now no bean and leaves `Real` in place. The processor warns where a class it does not discover
+declares `@Alternative`, `@Priority`, `@Named`, a qualifier, an interceptor binding or an `@Inject` member.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
