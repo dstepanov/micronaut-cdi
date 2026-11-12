@@ -22,11 +22,26 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("unchecked")
 class AsyncInvocationTest {
+
+    @Test
+    void aFailingReleaseDoesNotReplaceTheResultOfTheInvocation() {
+        AsyncInvocation.Completion completion = new AsyncInvocation.Completion(() -> {
+            throw new IllegalStateException("a dependent failed to be destroyed");
+        });
+        CompletableFuture<String> original = CompletableFuture.completedFuture("done");
+
+        CompletionStage<?> handedBack = (CompletionStage<?>) AsyncInvocation.transformReturnValue(null,
+            "java.util.concurrent.CompletableFuture", original, completion);
+        // the action is complete already, so the release runs as the method returns, in the invoker's finally
+        assertDoesNotThrow(completion::returned);
+        assertEquals("done", handedBack.toCompletableFuture().getNow(null));
+    }
 
     @Test
     void cancellingWhatTheCallerWasHandedDoesNotKeepTheInvocationFromCompleting() {

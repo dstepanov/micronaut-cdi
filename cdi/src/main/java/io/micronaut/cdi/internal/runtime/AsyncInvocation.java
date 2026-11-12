@@ -20,6 +20,8 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.invoke.AsyncHandler;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -48,6 +50,8 @@ final class AsyncInvocation {
      * The async type of the built-in handler of {@code Flow.Publisher}, as the compiler records it.
      */
     static final String FLOW_PUBLISHER = "java.util.concurrent.Flow.Publisher";
+
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncInvocation.class);
 
     private AsyncInvocation() {
     }
@@ -183,7 +187,9 @@ final class AsyncInvocation {
                 try {
                     release.close();
                 } catch (Exception e) {
-                    throw new IllegalStateException("Releasing what an asynchronous invocation looked up failed", e);
+                    // destroying an instance may not throw (section 10.2.1): what failed is logged, and neither the
+                    // value the invoker returns nor the thread that completed the action is handed the failure
+                    LOG.error("Releasing what an asynchronous invocation looked up failed", e);
                 }
             }
         }
