@@ -107,6 +107,14 @@ public abstract class AbstractCdiInjectionPointBeanDefinition<B>
     protected final B build(BeanResolutionContext resolutionContext,
                             BeanContext context,
                             @Nullable InjectionPoint<?> injectionPoint) {
+        if (injectionPoint instanceof LookupSegment<?, ?> lookup
+            && lookup.selected() instanceof CdiInjectionPoint selected) {
+            // obtained through a lookup rather than injected: the type and the qualifiers are the ones the lookup
+            // selected the bean with, which the member it was injected into, if any, does not say
+            return build(resolutionContext, context,
+                lookup.getArgument().getFirstTypeVariable().orElse(Argument.OBJECT_ARGUMENT),
+                selected.requiredQualifiers());
+        }
         Argument<?> type = Argument.OBJECT_ARGUMENT;
         AnnotationMetadata metadata = AnnotationMetadata.EMPTY_METADATA;
         if (injectionPoint != null) {
