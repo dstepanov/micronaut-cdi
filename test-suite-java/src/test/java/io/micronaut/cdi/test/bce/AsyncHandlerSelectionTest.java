@@ -64,6 +64,14 @@ class AsyncHandlerSelectionTest {
     }
 
     @Test
+    void theBuiltInHandlerMayBeSelectedOverARegisteredOne() {
+        assertDoesNotThrow(() -> compile(names(StageHandler.class), CompletionStage.class.getName() + "=builtin"));
+        RuntimeException failure = assertThrows(RuntimeException.class,
+            () -> compile(names(ReturnHandler.class), Async.class.getName() + "=builtin"));
+        assertTrue(failure.getMessage().contains("no built-in async handler"), failure.getMessage());
+    }
+
+    @Test
     void aSelectionOfAHandlerOfAnotherTypeIsADeploymentProblem() {
         RuntimeException failure = assertThrows(RuntimeException.class,
             () -> compile(names(ReturnHandler.class), CompletionStage.class.getName() + "="

@@ -130,8 +130,11 @@ return nothing, and the processor then warns and reads only the processor path a
 Micronaut Core below). Where two handlers have one async type the compiler option
 `micronaut.cdi.asyncHandlerSelection` - `asyncType=handlerClass` pairs separated by commas - is the means of
 configuration the specification asks for: it selects the handler of a type, a built-in type among them, and the
-others of that type are left out; a selection naming no registered handler, or one of another type, is a deployment
-problem. The built-in handlers are the container's; any other is
+others of that type are left out; `asyncType=builtin` keeps the container's own handler of a built-in type over a
+registered one. A selection naming no registered handler, one of another type, or `builtin` for a type with no
+built-in handler is a deployment problem. A handler class is matched by its canonical name, so `a.B$C` and `a.B.C`
+name one handler. The option is read per compilation: every module compiled with the colliding handlers on its paths
+repeats it. The built-in handlers are the container's; any other is
 instantiated through the service loader, which is reflection, and so is the optional `micronaut-cdi-reflection`
 module's: without it an invoker of a method a custom handler matched fails, naming the module.
 

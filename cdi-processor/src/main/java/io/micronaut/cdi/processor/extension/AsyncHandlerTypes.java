@@ -71,9 +71,15 @@ final class AsyncHandlerTypes {
     /**
      * The compiler option selecting the async handler of an async type where more than one handles it, the means
      * of configuration section 10.5 asks a container for: {@code asyncType=handlerClass} pairs separated by commas,
-     * a built-in type among them.
+     * a built-in type among them, and {@code asyncType=builtin} for the container's own handler of a built-in type.
+     * It is read per compilation: every module compiled with the colliding handlers on its paths repeats it.
      */
     static final String SELECTION_OPTION = "micronaut.cdi.asyncHandlerSelection";
+
+    /**
+     * What a selection names for the built-in handler of a type, which it keeps over a registered one.
+     */
+    static final String BUILT_IN_SELECTION = "builtin";
 
     static final String RETURN_TYPE = "jakarta.enterprise.invoke.AsyncHandler.ReturnType";
     static final String PARAMETER_TYPE = "jakarta.enterprise.invoke.AsyncHandler.ParameterType";
@@ -143,6 +149,13 @@ final class AsyncHandlerTypes {
         }
         Map<String, String> selected = selectionsIn(context.getOptions().get(SELECTION_OPTION));
         for (Map.Entry<String, String> selection : selected.entrySet()) {
+            if (BUILT_IN_SELECTION.equals(selection.getValue())) {
+                if (!BUILT_IN.contains(selection.getKey())) {
+                    throw new DeploymentException("The container has no built-in async handler of the async type "
+                        + selection.getKey() + " to select (section 10.5)");
+                }
+                continue;
+            }
             Handler named = null;
             for (Handler handler : all) {
                 if (handler.className() != null && sameName(handler.className(), selection.getValue())) {
@@ -162,7 +175,8 @@ final class AsyncHandlerTypes {
         for (Handler handler : all) {
             String chosen = selected.get(handler.asyncType());
             if (chosen != null) {
-                if (handler.className() != null && sameName(handler.className(), chosen)) {
+                if (handler.className() == null ? BUILT_IN_SELECTION.equals(chosen)
+                    : sameName(handler.className(), chosen)) {
                     effective.add(handler);
                 }
                 continue;
