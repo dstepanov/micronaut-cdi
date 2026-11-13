@@ -15,6 +15,9 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiDeploymentRecord;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
@@ -40,6 +43,8 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import jakarta.enterprise.inject.build.compatible.spi.BuildServicesResolver;
+import jakarta.enterprise.inject.spi.DefinitionException;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
@@ -108,7 +113,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION);
+        return Set.of(EXTENSIONS_OPTION, EXTENSIONS_ONLY_OPTION, AsyncHandlerTypes.OPTION,
+            AsyncHandlerTypes.SELECTION_OPTION);
     }
 
     @Override
@@ -210,6 +216,20 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // which looks through the loader of the API and does not always see the service entry of this module
         BuildServicesResolver.setBuildServices(
             new ElementBuildServices(context));
+        // the async handlers of method invokers (CDI 5.0) are read as every compilation starts, whatever extensions
+        // it has: what is wrong with one is a definition error of the deployment, however it is used
+        if (!AsyncHandlerTypes.readsClassPath(context)) {
+            context.warn("The service entries of async handlers on the class path of the compilation cannot be read: "
+                + "javac does not export com.sun.tools.javac.processing to the processor. Only handlers registered on "
+                + "the processor path or named with -A" + AsyncHandlerTypes.OPTION + " are async handlers", null);
+        }
+        try {
+            AsyncHandlerTypes.of(context);
+        } catch (DefinitionException e) {
+            context.fail(String.valueOf(e.getMessage()), null);
+        } catch (DeploymentException e) {
+            context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + e.getMessage(), null);
+        }
         // the visitor the compilation started is the one that visits its classes: a compiler may construct
         // others that it never starts. The discovery phase runs once, as it is first started
         DiscoveredClasses started = discovered;
@@ -295,7 +315,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         new ScannedClassRegistrar(this, started).registerScannedClasses(contributors, context);
         registerContexts(contributors, context);
-        registerQualifiers(contributors, context);
+        recordDeployment(contributors, context);
         synthesise(contributors, context);
     }
 
@@ -321,18 +341,26 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
-     * Records the annotations the extensions made qualifiers of, on a bean registered for the purpose: no bean
-     * may use such an annotation, so the record is the one witness of it the container has.
+     * Records what the extensions said of the deployment as a whole on a bean registered for the purpose, the
+     * definition of a {@link CdiDeploymentRecord}: the extensions the compilation ran, which the SE bootstrap takes
+     * as the evidence that an extension it is handed ran, and the annotations they made qualifiers of - no bean may
+     * use such an annotation, so the record is the one witness of it the container has. It is written for every
+     * compilation that runs an extension: one definition, of the kind every bean has.
      */
-    private void registerQualifiers(Element[] contributors, VisitorContext context) {
-        if (discovered().registeredQualifiers().isEmpty()) {
+    private void recordDeployment(Element[] contributors, VisitorContext context) {
+        List<String> ran = extensions.names();
+        if (discovered().registeredQualifiers().isEmpty() && ran.isEmpty()) {
             return;
         }
         ClassElement record = context.getClassElement(CdiDeploymentRecord.class.getName()).orElse(null);
         if (record == null) {
-            context.fail("The qualifiers the build compatible extensions registered cannot be recorded: "
-                + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
-                + "compilation", contributors[0]);
+            if (!discovered().registeredQualifiers().isEmpty()) {
+                context.fail("The qualifiers the build compatible extensions registered cannot be recorded: "
+                    + CdiDeploymentRecord.class.getName() + ", of micronaut-cdi, is not on the classpath of the "
+                    + "compilation", contributors[0]);
+            }
+            // a compilation without the container on its classpath - a library of extensions - has no container
+            // to tell which extensions ran
             return;
         }
         // the members of each, as the compilation sees its interface: an annotation no bean uses, one only an
@@ -352,12 +380,16 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                     .build());
             }
         }
-        context.registerBean(record, contributors)
-            .annotate(AnnotationValue.builder(CdiExtensionComponents.class).build())
-            .annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
+        BeanElementBuilder bean = context.registerBean(record, contributors);
+        bean.annotate(AnnotationValue.builder(CdiExtensionComponents.class)
+            .member("extensions", ran.toArray(new String[0]))
+            .build());
+        if (!discovered().registeredQualifiers().isEmpty()) {
+            bean.annotate(AnnotationValue.builder(CdiExtensionQualifiers.class)
                 .values(discovered().registeredQualifiers().toArray(new String[0]))
                 .member(CdiExtensionQualifiers.MEMBERS, members.toArray(new AnnotationValue[0]))
                 .build());
+        }
     }
 
     /**
@@ -437,13 +469,27 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (!discovered().registering(element.getName())) {
             return;
         }
+        if (isUnselectedReserve(element.getAnnotationMetadata())) {
+            // a reserve no priority selected is no bean (section 5.1.3), and nor are its producers or observers:
+            // the deployment has none of them to tell an extension about
+            return;
+        }
+        if (isUndiscovered(element.getAnnotationMetadata())) {
+            // a subclass that only inherits its scope is not discovered (section 2.5.1): the deployment has no
+            // bean of it unless the SE bootstrap is handed the class, which the compilation cannot know
+            return;
+        }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
             beans.add(ElementBeanInfo.of(element, null, context));
         }
         for (MemberElement producer
             : SpecificationBeans.producersOf(element)) {
-            beans.add(ElementBeanInfo.of(element, producer, context));
+            AnnotationMetadata own = producer instanceof MethodElement method
+                ? method.getMethodAnnotationMetadata() : producer.getAnnotationMetadata();
+            if (!isUnselectedReserve(own)) {
+                beans.add(ElementBeanInfo.of(element, producer, context));
+            }
         }
         for (ElementBeanInfo bean : beans) {
             extensions.describeBean(bean, messages, context);
@@ -469,6 +515,25 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             extensions.describeObserver(
                 new ElementObserverInfo(element, method, observed, async, context), messages, context);
         }
+    }
+
+    /**
+     * Whether the processor took the class out of discovery for declaring no bean defining annotation of its own
+     * (CdiScopeVisitor), which it records as the condition UndiscoveredSubclass.
+     */
+    private static boolean isUndiscovered(AnnotationMetadata metadata) {
+        return metadata.getAnnotationValuesByType(Requires.class).stream()
+            .anyMatch(requires -> requires.stringValue("condition")
+                .filter("io.micronaut.cdi.internal.runtime.UndiscoveredSubclass"::equals).isPresent());
+    }
+
+    /**
+     * Whether the metadata a class or a producer declares makes it a reserve that no priority of its own selects,
+     * which the processor took out of the deployment (CDI 5.0, section 5.1.2).
+     */
+    private static boolean isUnselectedReserve(AnnotationMetadata declared) {
+        return declared.booleanValue(CdiBeanAttributes.class, "reserve").orElse(false)
+            && Cdi.priorityOf(declared) == null;
     }
 
     /**

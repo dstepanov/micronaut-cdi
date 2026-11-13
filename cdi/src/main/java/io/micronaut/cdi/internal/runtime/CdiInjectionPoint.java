@@ -305,11 +305,12 @@ public final class CdiInjectionPoint implements MicronautInjectionPoint {
     }
 
     @Override
-    public Annotated getAnnotated() {
+    public @Nullable Annotated getAnnotated() {
         InjectionSite site = this.site;
         if (site == null) {
-            throw new UnsupportedOperationException("An injection point that stands for a programmatic lookup "
-                + "has no annotated model");
+            // an injection point that stands for a programmatic lookup through an Instance that was not injected
+            // - CDI.current(), the bean container's createInstance() - has no annotated model (CDI 5.0, section 6.5.3)
+            return null;
         }
         return CdiReflection.require(beanContext, "InjectionPoint.getAnnotated()").annotated(site);
     }

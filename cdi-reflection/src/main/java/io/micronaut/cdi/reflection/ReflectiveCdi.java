@@ -20,6 +20,8 @@ import io.micronaut.cdi.spi.InjectionSite;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.io.service.ServiceDefinition;
+import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.core.reflect.GenericTypeUtils;
 import io.micronaut.core.reflect.ReflectionUtils;
@@ -129,6 +131,17 @@ public final class ReflectiveCdi implements CdiReflection {
         // the members the specification marks Nonbinding are listed under $nonBinding by the customizer this module
         // registers, which every reflective read of Micronaut's applies
         return ReflectionAnnotations.valueOf(annotation);
+    }
+
+    @Override
+    public Object serviceProvider(Class<?> service, String className, ClassLoader classLoader) {
+        for (ServiceDefinition<?> definition : SoftServiceLoader.load(service, classLoader)) {
+            if (definition.getName().equals(className) && definition.isPresent()) {
+                return definition.load();
+            }
+        }
+        throw new IllegalStateException("No service provider " + className + " of " + service.getName()
+            + " is registered");
     }
 
     @Override

@@ -22,6 +22,7 @@ import jakarta.el.ExpressionFactory;
 import jakarta.el.StandardELContext;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.el.ELAwareBeanManager;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -118,7 +119,7 @@ class EvaluationCleanupFailureTest {
     }
 
     private static Throwable evaluate(ApplicationContext context, String expression) {
-        BeanManager manager = context.getBean(BeanManager.class);
+        ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
         ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
         ELContext el = new StandardELContext(factory);
         return assertThrows(Throwable.class,

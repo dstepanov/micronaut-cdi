@@ -23,12 +23,14 @@ import io.micronaut.core.reflect.InstantiationUtils;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.reflect.exception.InstantiationException;
+import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.WildcardElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -39,6 +41,12 @@ import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerFactory;
+import jakarta.enterprise.inject.build.compatible.spi.InvokerValidation;
+import jakarta.enterprise.util.TypeLiteral;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
@@ -90,9 +98,12 @@ final class ExtensionMethods {
     private final List<Registrar> registrars;
     private final List<ExtensionMethod> synthesizers;
     private final List<ExtensionMethod> validators;
+    private final List<String> names;
 
-    private ExtensionMethods(List<ExtensionMethod> discoveries, List<Enhancer> enhancers, List<Registrar> registrars,
-                             List<ExtensionMethod> synthesizers, List<ExtensionMethod> validators) {
+    private ExtensionMethods(List<String> names, List<ExtensionMethod> discoveries, List<Enhancer> enhancers,
+                             List<Registrar> registrars, List<ExtensionMethod> synthesizers,
+                             List<ExtensionMethod> validators) {
+        this.names = List.copyOf(names);
         this.discoveries = List.copyOf(discoveries);
         this.enhancers = List.copyOf(enhancers);
         this.registrars = List.copyOf(registrars);
@@ -106,7 +117,7 @@ final class ExtensionMethods {
      * @return The methods
      */
     static ExtensionMethods none() {
-        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of());
+        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
     }
 
     /**
@@ -185,7 +196,17 @@ final class ExtensionMethods {
             registrars.add(new Registrar(registration.extension(), registration.method(),
                 registration.method().getAnnotation(Registration.class)));
         }
-        return new ExtensionMethods(discoveries, enhancers, registrars, synthesizers, validators);
+        return new ExtensionMethods(extensions.stream().map(extension -> extension.getClass().getName()).toList(),
+            discoveries, enhancers, registrars, synthesizers, validators);
+    }
+
+    /**
+     * The extensions the compilation runs, by class name.
+     *
+     * @return The names
+     */
+    List<String> names() {
+        return names;
     }
 
     /**
@@ -456,6 +477,12 @@ final class ExtensionMethods {
     }
 
     private static void validateRegistration(Method method) {
+        Registration registration = method.getAnnotation(Registration.class);
+        if (registration != null) {
+            for (Class<?> type : registration.types()) {
+                expectedType(type);
+            }
+        }
         int queried = 0;
         for (Class<?> parameterType : method.getParameterTypes()) {
             if (parameterType.equals(BeanInfo.class)
@@ -470,6 +497,168 @@ final class ExtensionMethods {
             throw new DefinitionException("The @Registration method " + method
                 + " must declare exactly one parameter naming what it is told about (section 2.10.3)");
         }
+    }
+
+    /**
+     * The expected type a class named by {@code Registration.types()} stands for (CDI 5.0): the class itself, or -
+     * for a class whose direct superclass is {@code TypeLiteral} - the type argument to it, a parameterized type.
+     * A raw {@code TypeLiteral}, and a type argument with a type variable in it, are definition errors. The
+     * extension's classes are loaded in the compiler, which is where they are read.
+     */
+    private static java.lang.reflect.Type expectedType(Class<?> asked) {
+        if (asked.getSuperclass() != TypeLiteral.class) {
+            return asked;
+        }
+        if (!(asked.getGenericSuperclass() instanceof ParameterizedType literal)) {
+            throw new DefinitionException("The @Registration type " + asked.getName()
+                + " extends a raw TypeLiteral (section 12.4)");
+        }
+        java.lang.reflect.Type argument = literal.getActualTypeArguments()[0];
+        if (hasTypeVariable(argument)) {
+            throw new DefinitionException("The @Registration type " + asked.getName()
+                + " extends TypeLiteral with a type variable in its type argument " + argument + " (section 12.4)");
+        }
+        return argument;
+    }
+
+    private static boolean hasTypeVariable(java.lang.reflect.Type type) {
+        if (type instanceof TypeVariable<?>) {
+            return true;
+        }
+        if (type instanceof ParameterizedType parameterized) {
+            for (java.lang.reflect.Type argument : parameterized.getActualTypeArguments()) {
+                if (hasTypeVariable(argument)) {
+                    return true;
+                }
+            }
+        }
+        if (type instanceof GenericArrayType array) {
+            return hasTypeVariable(array.getGenericComponentType());
+        }
+        if (type instanceof WildcardType wildcard) {
+            for (java.lang.reflect.Type bound : wildcard.getUpperBounds()) {
+                if (hasTypeVariable(bound)) {
+                    return true;
+                }
+            }
+            for (java.lang.reflect.Type bound : wildcard.getLowerBounds()) {
+                if (hasTypeVariable(bound)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a type of the compilation is the expected type: the same class with the same type arguments.
+     */
+    private static boolean sameType(ClassElement element, java.lang.reflect.Type expected) {
+        if (expected instanceof Class<?> raw) {
+            if (raw.isArray()) {
+                // an array is the same array of the same component, compared dimension by dimension
+                return element.isArray() && sameType(element.fromArray(), raw.getComponentType());
+            }
+            // a raw type argument: Micronaut hands a raw generic class its type parameters' bounds as arguments
+            return !element.isArray() && element.getName().equals(raw.getName())
+                && (element.getTypeArguments().isEmpty() || element.isRawType());
+        }
+        if (expected instanceof GenericArrayType array) {
+            return element.isArray() && sameType(element.fromArray(), array.getGenericComponentType());
+        }
+        if (expected instanceof WildcardType wildcard) {
+            return element instanceof WildcardElement actual
+                && sameTypes(actual.getUpperBounds(), wildcard.getUpperBounds())
+                && sameTypes(actual.getLowerBounds(), wildcard.getLowerBounds());
+        }
+        if (expected instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
+            return !element.isArray() && element.getName().equals(raw.getName())
+                && sameArguments(element.getTypeArguments(), parameterized);
+        }
+        return false;
+    }
+
+    private static boolean sameTypes(List<? extends ClassElement> elements, java.lang.reflect.Type[] expected) {
+        // an unbounded wildcard has Object for its upper bound in reflection, and may have none in the model
+        List<? extends ClassElement> actual = elements.stream()
+            .filter(element -> !element.getName().equals(Object.class.getName())).toList();
+        List<java.lang.reflect.Type> wanted = Arrays.stream(expected)
+            .filter(type -> type != Object.class).toList();
+        if (actual.size() != wanted.size()) {
+            return false;
+        }
+        for (int i = 0; i < wanted.size(); i++) {
+            if (!sameType(actual.get(i), wanted.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Whether the type arguments of an observed event type make it assignable to the expected parameterized type
+     * whose erasure it is assignable to (section 8.1.2, the rules for an observed event type): an argument is the
+     * expected one, or within the bounds of an expected wildcard.
+     */
+    private static boolean assignableArguments(Map<String, ClassElement> arguments, ParameterizedType expected) {
+        java.lang.reflect.Type[] expectedArguments = expected.getActualTypeArguments();
+        if (arguments.size() != expectedArguments.length) {
+            return false;
+        }
+        int i = 0;
+        for (ClassElement argument : arguments.values()) {
+            java.lang.reflect.Type wanted = expectedArguments[i++];
+            if (wanted instanceof WildcardType wildcard && !(argument instanceof WildcardElement)) {
+                if (!withinBounds(argument, wildcard)) {
+                    return false;
+                }
+            } else if (!sameType(argument, wanted)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean withinBounds(ClassElement argument, WildcardType wildcard) {
+        for (java.lang.reflect.Type upper : wildcard.getUpperBounds()) {
+            Class<?> bound = erasureOf(upper);
+            if (bound == null || (bound != Object.class && !argument.isAssignable(bound))) {
+                return false;
+            }
+            if (upper instanceof ParameterizedType parameterized
+                && !assignableArguments(argument.getTypeArguments(bound.getName()), parameterized)) {
+                return false;
+            }
+        }
+        for (java.lang.reflect.Type lower : wildcard.getLowerBounds()) {
+            Class<?> bound = erasureOf(lower);
+            if (bound == null || !ClassElement.of(bound).isAssignable(argument)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static @Nullable Class<?> erasureOf(java.lang.reflect.Type type) {
+        if (type instanceof Class<?> raw) {
+            return raw;
+        }
+        return type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw
+            ? raw : null;
+    }
+
+    private static boolean sameArguments(Map<String, ClassElement> arguments, ParameterizedType expected) {
+        java.lang.reflect.Type[] expectedArguments = expected.getActualTypeArguments();
+        if (arguments.size() != expectedArguments.length) {
+            return false;
+        }
+        int i = 0;
+        for (ClassElement argument : arguments.values()) {
+            if (!sameType(argument, expectedArguments[i++])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void validateHanded(Phase phase, Method method,
@@ -500,7 +689,15 @@ final class ExtensionMethods {
         }
         try {
             invokePhaseMethod(method, extension, arguments);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof DeploymentException deployment) {
+                // a deployment problem the discovery phase reports, such as a context registered for a global
+                // scope (CDI 5.0, section 6.4): reported as one, which a harness tells from a definition error
+                throw new DeploymentException(VisitorMessages.DEPLOYMENT_PROBLEM + deployment.getMessage(),
+                    deployment);
+            }
+            throw new IllegalStateException("The discovery method " + method + " failed", e);
+        } catch (IllegalAccessException e) {
             throw new IllegalStateException("The discovery method " + method + " failed", e);
         }
     }
@@ -531,6 +728,20 @@ final class ExtensionMethods {
     }
 
     /**
+     * The methods a class declares, in an order every compilation sees alike: by name, then by parameter types. The
+     * order reflection hands them out in is unspecified, and the synthetic components of an extension are
+     * identified by the order its synthesis methods described them in, so two compilations of one application
+     * running the methods in different orders would record one component under two identities, and two components
+     * under one.
+     */
+    private static List<Method> declaredMethodsOf(Class<?> type) {
+        List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
+        methods.sort(Comparator.comparing(Method::getName)
+            .thenComparing(method -> Arrays.toString(method.getParameterTypes())));
+        return methods;
+    }
+
+    /**
      * One registration method of one extension, and the beans it asked to be told about.
      *
      * @param extension    The extension that declares the method
@@ -549,7 +760,9 @@ final class ExtensionMethods {
                 return false;
             }
             for (Class<?> asked : registration.types()) {
-                if (bean.hasTypeOfClass(asked.getName())) {
+                java.lang.reflect.Type expected = expectedType(asked);
+                if (expected instanceof Class<?> raw ? bean.hasTypeOfClass(raw.getName())
+                    : bean.types().stream().anyMatch(type -> sameType(ElementTypes.elementOf(type), expected))) {
                     return true;
                 }
             }
@@ -584,7 +797,14 @@ final class ExtensionMethods {
          */
         private boolean matches(ClassElement type) {
             for (Class<?> asked : registration.types()) {
-                if (type.isAssignable(asked)) {
+                java.lang.reflect.Type expected = expectedType(asked);
+                if (expected instanceof Class<?> raw) {
+                    if (type.isAssignable(raw)) {
+                        return true;
+                    }
+                } else if (expected instanceof ParameterizedType parameterized
+                    && parameterized.getRawType() instanceof Class<?> raw && type.isAssignable(raw)
+                    && assignableArguments(type.getTypeArguments(raw.getName()), parameterized)) {
                     return true;
                 }
             }
@@ -853,7 +1073,8 @@ final class ExtensionMethods {
         SYNTHESIS("@Synthesis", "2.10.4", Messages.class,
             Types.class),
         VALIDATION("@Validation", "2.10.5", Messages.class,
-            Types.class);
+            Types.class,
+            InvokerValidation.class);
 
         private final String annotation;
         private final String section;
@@ -885,7 +1106,17 @@ final class ExtensionMethods {
                     return new VisitorTypes(context);
                 }
                 if (parameterType.equals(InvokerFactory.class)) {
-                    return new ElementInvokerFactory();
+                    return new ElementInvokerFactory(context);
+                }
+                if (parameterType.equals(InvokerValidation.class)) {
+                    // CDI 5.0: whether an async handler exists, asked of the handlers the compilation finds
+                    return (InvokerValidation) (asyncType, message) -> {
+                        if (!AsyncHandlerTypes.exists(asyncType.getName(), context)) {
+                            String said = message.get();
+                            messages.error("No async handler exists for " + asyncType.getName()
+                                + (said != null ? ": " + said : ""));
+                        }
+                    };
                 }
             }
             throw new IllegalStateException("The " + annotation + " phase does not hand a "
@@ -905,20 +1136,6 @@ final class ExtensionMethods {
      * @param extension The extension
      * @param method    The method
      */
-    /**
-     * The methods a class declares, in an order every compilation sees alike: by name, then by parameter types. The
-     * order reflection hands them out in is unspecified, and the synthetic components of an extension are
-     * identified by the order its synthesis methods described them in, so two compilations of one application
-     * running the methods in different orders would record one component under two identities, and two components
-     * under one.
-     */
-    private static List<Method> declaredMethodsOf(Class<?> type) {
-        List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
-        methods.sort(Comparator.comparing(Method::getName)
-            .thenComparing(method -> Arrays.toString(method.getParameterTypes())));
-        return methods;
-    }
-
     private record ExtensionMethod(BuildCompatibleExtension extension, Method method) {
 
         private int priority() {

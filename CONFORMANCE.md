@@ -1,9 +1,13 @@
 # Conformance
 
 What this module implements of
-[Jakarta Contexts and Dependency Injection 4.1](https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html),
+[Jakarta Contexts and Dependency Injection 5.0](https://jakarta.ee/specifications/cdi/5.0/jakarta-cdi-spec-5.0.html),
 covering Part I.A — CDI Lite. Only CDI Lite is in scope; CDI Full (Part I.B) is not
-implemented and is not claimed.
+implemented and is not claimed. The API is `jakarta.cdi:jakarta.cdi-api:5.0.0` with
+`jakarta.cdi:jakarta.cdi-lang-model-api:5.0.0` and `jakarta.cdi:jakarta.cdi-el-api:5.0.0` (CDI 5.0 moved to the
+`jakarta.cdi` group; the packages are unchanged), held to the final `jakarta.cdi:jakarta.cdi-tck-*:5.0.0` kit.
+Section numbers below are those of CDI 5.0 where a CDI 5.0 feature is named, and are otherwise kept as they were
+written against 4.1.
 
 Every difference is recorded here. No test is disabled for one: a test of the kit that a difference rules out is
 left out by name, in `cdi-tck/build.gradle` and `tck-suite.xml`, and is named below, and the two sections of the
@@ -57,6 +61,20 @@ visible in a test report as what passes.
 | 6.5.2 | `@ActivateRequestContext` as the built-in Jakarta interceptor at `PLATFORM_BEFORE + 100`, so the application's interceptors stand on either side of it | `ActivateRequestContextJakartaInterceptor` |
 | 6.6 | The request context active during any bean's `@PostConstruct` and during asynchronous observer notification, and its `@Initialized`/`@BeforeDestroyed`/`@Destroyed` events | `RequestScope`, `ObserverRegistry` |
 | 10 | Method invokers: `InvokerFactory` in the registration phase, validated as the bean compiles, invoking the compiled executable method at runtime with the instance and argument lookups of the specification | `ElementInvokerFactory`, `RecordedInvoker` |
+| 2.8, 5.1.2, 5.2.2 (5.0) | Reserves: `@Reserve` on a class or a producer or through a stereotype, disabled unless a priority of its own selects it (a reserve producer does not take its class's), a producer of a disabled reserve disabled with it, a reserve that is also an alternative and a reserve that declares an alternative producer as definition errors, and the resolution of section 5.2.2 - reserves give way to any other bean, the highest priority wins among reserves alone - for injection points, lookups, names and the bean manager alike | `BeanAttributes`, `BeanDiscoveryVisitor`, `ProducerVisitor`, `UnselectedReserve`, `CdiResolution` |
+| 2.9 (5.0) | Eager initialization: `@Eager` on an application scoped class, producer, synthetic bean or stereotype, its contextual instance created before `Startup`; on a bean of another normal scope or the dependent pseudo-scope, or a stereotype declaring one, a definition error | `BeanAttributes`, `ContainerLifecycle`, `SynthesisPhase` |
+| 2.10 (5.0) | Automatic closing: `@AutoClose` on a class, producer, synthetic bean or stereotype, `close()` called on an instance whose class implements `AutoCloseable` as it is destroyed - a produced or synthetic one right after its disposer - with what it throws logged | `DisposerInvoker`, `RecordedSynthesis` |
+| 10.5 (5.0) | Asynchronous invokers: the async handlers found as the application compiles, malformed ones a definition error, two of one async type - of either kind, a built-in one among them - a deployment problem unless the compiler option `micronaut.cdi.asyncHandlerSelection` selects one, the built-in `CompletionStage`, `CompletableFuture` and `Flow.Publisher` handlers, and the dependent instances of an invocation destroyed once it has returned and its action completed; `InvokerValidation.ensureAsyncHandlerExists` in the validation phase | `AsyncHandlerTypes`, `ElementInvokerFactory`, `RecordedInvoker`, `AsyncInvocation` |
+| 12.5 (5.0) | Injection points of synthetic beans: `SyntheticBeanBuilder.withInjectionPoint`, validated as the container starts, looked up through `SyntheticInjections` - an unregistered one refused, a dependent instance told the synthetic bean as the bean of its injection point and destroyed with it - and whichever of the creator's and disposer's two methods the class implements, read as it compiles | `RecordingBeanBuilder`, `SynthesisPhase`, `RecordedSynthesis`, `CdiSyntheticInjections` |
+| 12.4 (5.0) | `@Registration(types = ...)` naming a `TypeLiteral` subclass for a parameterized type, matched against bean types and observed types; a raw `TypeLiteral` or a type variable a definition error | `ExtensionMethods` |
+| 6.4 (5.0) | Global scopes: the application and dependent scopes have the container's context alone, and a build compatible extension registering another for them is a deployment problem; a context an extension registers for the request scope stands beside the container's own, the active one serving the scope's beans | `DiscoveredClasses`, `ExtensionContexts` |
+| 5.6.1, 9.2 (5.0) | Wildcards: `Event<?>`, `Event<? extends X>`, `Instance<? super X>` and an `Instance` of such an `Event` as definition errors at an injection point; an `Instance<? extends X>` looks up `X` and an `Event<? super X>` fires `X`, and a programmatic lookup of one that names no type is refused | `InjectionPointRulesVisitor`, `CdiInstanceFactory`, `CdiEventFactory`, `SpecificationTypes` |
+| 9.3.2 (5.0) | An observer of a primitive type notified of an event of its wrapper | `CdiAssignability` |
+| 6.5.3 (5.0) | The `InjectionPoint` of a lookup through an `Instance` that was not injected: no bean, member or annotated model | `CdiInjectionPoint` |
+| 11.3 (5.0) | `BeanContainer.unwrapClientProxy`, through the scoped proxy's own resolution of its target | `CdiBeanContainer` |
+| 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
+| 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
+| 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
 
 ## Not yet implemented
 
@@ -64,6 +82,94 @@ The transaction phases an observer may name (9.4) have no transactions to observ
 if `IN_PROGRESS`.
 
 ## Differences
+
+### The bean manager is an `ELAwareBeanManager`
+
+*CDI 5.0.* The expression-language methods are gone from `BeanManager`; they are on `ELAwareBeanManager`, in the
+supplemental `jakarta.cdi:jakarta.cdi-el-api`, which depends on the Jakarta Expression Language API. The
+container's bean manager implements it, as it implemented the deprecated methods of CDI 4.1, so `micronaut-cdi`
+carries that API as `jakarta.enterprise.cdi-api:4.1.0` carried the Expression Language API before it: an
+application that evaluates no expressions has two small API jars it does not use. Evaluating an expression is still
+the optional `micronaut-cdi-el` module's, and the two methods fail naming that module where it is absent.
+
+### Reserves, eager and auto-closeable beans are recorded as they compile
+
+*CDI 5.0 sections 2.8 to 2.10.* What a bean is of the three is read from its class, its producer or its
+stereotypes while it compiles and recorded on its definition (`CdiBeanAttributes`), every member written on a
+producer so that what its class says does not reach it - none of the three is inherited by a producer. A reserve
+that no priority selects is no bean, as an unselected alternative is, and a producer of one is not a producer.
+
+### An auto-closeable class bean is closed once it is destroyed
+
+*CDI 5.0 sections 2.10 and 7.3.1.* `close()` is to be called after the `PreDestroy` callbacks of an
+auto-closeable managed bean and before its dependent objects are destroyed. Micronaut Core destroys a bean as one
+step - pre-destroy listeners, `PreDestroy` methods, the release of the dependents - with no hook between the last
+two, so a class bean is closed by a `BeanDestroyedEventListener`, after its dependents. A produced bean is closed in
+the right place, right after its disposer method, which the container invokes from the pre-destroy listener, and so
+is a synthetic bean, by the disposer of the runtime definition it is registered with, after its extension's disposer. The
+kit's `SimpleBeanLifecycleTest#testDependentsDestroyedAfterPreDestroyAndAutoClose`, which asserts the order, is left
+out by name.
+
+Calling `close()` on the instance is no business method invocation, so it is not to be intercepted. An intercepted
+bean is the subclass Micronaut generated for it, whose `close()` intercepts wherever it is called from, and Micronaut
+Core offers no way to call the method past its interceptors; `InterceptorInvocationTest#testCloseIsNotInterceptedDuringDestruction`
+is left out by name. Both are open points in Micronaut Core below.
+
+### Async handlers are found as the application compiles
+
+*CDI 5.0 section 10.5.* Whether a method is asynchronous turns on the type arguments of the async handlers, which
+are read where they are known: as the application compiles, from the service entries of
+`AsyncHandler.ReturnType` and `AsyncHandler.ParameterType` on the class path of the compilation - a handler library
+the application depends on - read through Core's `VisitorContext.getClasspathResources`, from those the processor
+path holds, as a build compatible extension is found, or from the compiler option `micronaut.cdi.asyncHandlers`. A
+handler the module being compiled declares is on neither path while it compiles, and is named with the option; one on
+the application's runtime class path alone is not one the invoker was compiled with, and one on the processor path
+that the compilation cannot resolve is no handler of it. Core reaches the class path through the internals of javac;
+a compiler that does not export `com.sun.tools.javac.processing` to the processor makes Core's call fail rather than
+return nothing, and the processor then warns and reads only the processor path and the option (an open point in
+Micronaut Core below). Where two handlers have one async type the compiler option
+`micronaut.cdi.asyncHandlerSelection` - `asyncType=handlerClass` pairs separated by commas - is the means of
+configuration the specification asks for: it selects the handler of a type, a built-in type among them, and the
+others of that type are left out; `asyncType=builtin` keeps the container's own handler of a built-in type over a
+registered one. A selection naming no registered handler, one of another type, or `builtin` for a type with no
+built-in handler is a deployment problem. A handler class is matched by its canonical name, so `a.B$C` and `a.B.C`
+name one handler. The option is read per compilation: every module compiled with the colliding handlers on its paths
+repeats it. The built-in handlers are the container's; any other is
+instantiated through the service loader, which is reflection, and so is the optional `micronaut-cdi-reflection`
+module's: without it an invoker of a method a custom handler matched fails, naming the module.
+
+The specification leaves open when the action a built-in `Flow.Publisher` stands for is complete. Here it is when the
+first subscription to the publisher handed back terminates - completed, failed or cancelled: a publisher subscribed to
+again afterwards runs that subscription over dependent instances already destroyed, and one never subscribed to never
+has them destroyed. A publisher that is subscribed to once, as a reactive stream returned from a
+method usually is, sees its dependents live exactly as long as the subscription.
+
+### A build compatible extension handed to the SE bootstrap is one the compilation ran
+
+*CDI 5.0 section 25.1.* `SeContainerInitializer.addBuildCompatibleExtensions` names extensions to run as the
+container is built. An extension of this container runs as the application compiles, so the bootstrap accepts one
+the compilation recorded running and refuses any other with a `DeploymentException`. Every compilation that runs
+extensions writes the definition of a `CdiDeploymentRecord` naming them - one bean definition of the kind every bean
+has, which the container reads and never creates - whether it found them by their service entries or was handed them
+with the compiler option `micronaut.cdi.extensions`; the synthetic beans and observers they described name them too.
+An extension registered only on the runtime class path is refused, as it never ran. The kit's
+`BootstrapSEContainerTest#testAddBuildCompatibleExtension` hands the bootstrap an extension its archive does not
+register, expecting it to run, and is left out by name. `DiscoveredAndRegisteredBceTest` hands
+it one its archive registers as a service provider: the kit adapter compiles that archive with the extension before
+the class runs (`SeClassPathListener`), as the launched application would have been compiled, and the test runs.
+
+### A class is discovered by a bean defining annotation it declares
+
+*CDI 5.0 section 2.5.1, the kit's sealed classes.* A built-in scope annotation is `@Inherited`, and Java reads a
+class that inherits one as annotated with it. A bean archive discovers a class by a bean defining annotation the
+class declares, so a subclass that declares no scope, no stereotype and not `@Interceptor`, and no producer or
+observer method of its own (one it inherits is its superclass's), is no bean of its own where it is discovered however its superclass is scoped (`CdiScopeVisitor`,
+`UndiscoveredSubclass`); one that declares a stereotype keeps the scope it inherits, as section 2.3 has it. A class
+handed to the synthetic archive of the SE bootstrap (`addBeanClasses`, with discovery on or off) is a bean with the
+scope it inherits: the bootstrap names those classes in a property the condition reads. This differs from the 4.1 module,
+where such a subclass was a bean: the common case is a mock written as `@Alternative @Priority(1) class Mock extends
+Real`, which is now no bean and leaves `Real` in place. The processor warns where a class it does not discover
+declares `@Alternative`, `@Priority`, `@Named`, a qualifier, an interceptor binding or an `@Inject` member.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
@@ -845,7 +951,10 @@ it compiled, and nothing is generated for a synthetic bean beyond the definition
 named. A reference to it injected into a bean of a wider scope is therefore the instance the scope's context held at
 injection, which a later request still sees, rather than a proxy that follows the active context
 (`NormalScopedSyntheticBeanTest`, disabled). Injecting a normal scoped synthetic bean into a bean of a wider scope
-is unsupported; look the bean up through `Instance` where it is used instead.
+is unsupported; look the bean up through `Instance` where it is used instead. For the same reason the kit's
+`EagerSyntheticBeanTest#testUnqualified` and `#testQualified`, which assert that a reference to a lazy application
+scoped synthetic bean does not create its instance, are left out by name; the eager synthetic beans of those tests
+are created by `Startup` all the same, which the rest of the class asserts.
 Closing this needs a proxy class per normal scoped synthetic bean - Micronaut's compiled scoped proxy of the
 implementation class, written by the processor beside the creator's definition - which the rule that the
 processor generates no class beyond Micronaut's own definitions currently rules out; see "Open points in
@@ -853,7 +962,8 @@ Micronaut Core".
 
 ## The technology compatibility kit
 
-The `micronaut-cdi-tck` module resolves `jakarta.enterprise:cdi-tck-core-impl` from Maven Central at build time,
+The `micronaut-cdi-tck` module resolves `jakarta.cdi:jakarta.cdi-tck-core-impl:5.0.0` - the final kit of CDI 5.0,
+under the `jakarta.cdi` group the kit moved to without a relocation - from Maven Central at build time,
 unpacks the CDI Lite scenarios — the beans, producers and qualifiers the specification's own authors wrote —
 and compiles them with this module's annotation processor. Nothing is vendored and nothing is modified.
 
@@ -865,12 +975,19 @@ processor, and what the compiler refuses is reported to Arquillian as the `Defin
 starts is reported the same way, from the cause chain of the failure to start; the adapter has no validation of
 its own. An SE test the kit runs without Arquillian bootstraps over the class path its own `Deployment` declares,
 as it would in the JVM the kit launches for it. An archive carrying a build
-compatible extension is likewise compiled per deployment, with that archive's extensions alone.
+compatible extension is likewise compiled per deployment, with that archive's extensions alone, and so is an
+archive carrying the service entries of async handlers (CDI 5.0), which the compilation is handed through
+`micronaut.cdi.asyncHandlers` and the deployment's class loader serves to the container. A class of one such
+deployment that an earlier deployment already defined beside its scenario class, with other bytes - the definition
+that records an extension's synthetic beans - is served fresh, together with the classes nested in it.
 
-Two SE bootstrap tests are left out by name, each resting on what belongs to CDI Full and is refused rather
-than pretended here: `BootstrapSEContainerTest`'s `testAddDecorator` (decorators), and
+Three SE bootstrap tests are left out by name, two resting on what belongs to CDI Full and is refused rather
+than pretended here, and one on CDI 5.0's `addBuildCompatibleExtensions` (see the difference above):
+`BootstrapSEContainerTest`'s `testAddBuildCompatibleExtension`; `BootstrapSEContainerTest`'s `testAddDecorator`
+(decorators), and
 `TrimmedBeanArchiveSETest`, whose portable extension would now run but whose archive is a trimmed bean archive
-(section 24.4.3) with a producer that takes an `InterceptionFactory`, both of CDI Full. The four that hand the bootstrap a portable extension -
+(section 24.4.3) with a producer that takes an `InterceptionFactory`, both of CDI Full. `DiscoveredAndRegisteredBceTest`,
+new in CDI 5.0, runs over its archive compiled with the extension it registers. The four that hand the bootstrap a portable extension -
 `testAddExtensionAsExtensionInstance`, `testAddExtensionAsClass`, `CustomClassLoaderSETest` and
 `CustomRequestContextSETest` - run, on the subset of portable extensions offered beyond Lite. The kit's
 deployments share one class path here, so the extensions its SE archives declare as service providers are
@@ -881,19 +998,32 @@ in its own build against a stand-in for CDI of four classes (its `cdi-tck-suppor
 mappers of the dependent, request and application scopes and its reading of producers: that build cannot use
 this module's processor, which depends on it, so the two are kept in step by hand.
 
-The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap
-and the CDI 4.1 invokers included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The
-kit has 816 test methods outside `tests/full`, and 811 of them run, all passing, as part of `check`. The five
-that do not are the two SE tests above and three methods the kit itself tags `cdi-full` inside Lite packages,
-which the exclusion of that group drops, all three about passivation:
+The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap,
+the invokers and the CDI 5.0 reserves, eager and auto-closeable beans, asynchronous invokers and synthetic bean
+injection points included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The kit has 982
+test methods outside `tests/full` (816 in 4.1.0), and 972 of them run, all passing, as part of `check`. The
+ten that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
+that group drops, all three about passivation -
 `event.implicit.ImplicitEventTest#testImplicitEventIsPassivationCapable`,
 `lookup.clientProxy.ClientProxyTest#testSimpleBeanClientProxyIsSerializable` and
-`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable`. A handful of ported assertions and
+`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the three SE tests above, and four
+left out by name for the differences recorded above, each with its reason in `tck-suite.xml` as well:
+
+| Test | Reason |
+| --- | --- |
+| `implementation.simple.lifecycle.SimpleBeanLifecycleTest#testDependentsDestroyedAfterPreDestroyAndAutoClose` | An auto-closeable class bean is closed after its dependents (no Core hook between `PreDestroy` and the release of dependents) |
+| `interceptors.invocation.InterceptorInvocationTest#testCloseIsNotInterceptedDuringDestruction` | `close()` of an intercepted bean cannot be called past its interceptors |
+| `eager.synthetic.bean.EagerSyntheticBeanTest#testUnqualified`, `#testQualified` | A synthetic bean of a normal scope has no client proxy (known limitation) |
+
+The kit's broken deployments of CDI 5.0 whose packages are not named for it - the async handlers that
+`invokers/lookup/dependent/async/**/invalid` registers, and the sealed classes of
+`lookup/clientProxy/unproxyable/sealed`, one of which cannot be intercepted - are compiled per deployment
+(`brokenScenarios` in `cdi-tck/build.gradle`). A handful of ported assertions and
 `ScenarioSweepTckTest` — which reads every scenario bean through one container at once — remain as local
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 22 tests, all passing, which makes 833 in all. Each asserts something this implementation answers although
+own: 22 tests, all passing, which makes 994 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
@@ -911,14 +1041,13 @@ as executable methods; a bean without a name, and an application without the mod
 still not claimed.
 
 The `tckSignatureTest` task checks the API dependencies resolved with `micronaut-cdi-reflection` against the
-official CDI 4.1.0 `sigtest-jdk17` baseline, using Jakarta SigTest 2.2 and its Java 17 platform API view.
-It checks `jakarta.decorator`, `jakarta.enterprise` (including subpackages), and `jakarta.interceptor`.
-The EL API is supplied only to resolve the deprecated BeanManager signatures. The task is part of `check`;
+official CDI 5.0.0 baseline (`jakarta.cdi-tck-core-impl-5.0.0-jdk17.sigfile`), using Jakarta SigTest 2.2 and its
+Java 17 platform API view. It checks `jakarta.decorator`, `jakarta.enterprise` (including subpackages, so
+`ELAwareBeanManager` of the supplemental EL API among them), and `jakarta.interceptor`. The task is part of `check`;
 its report is `cdi-tck/build/reports/tckSignatureTest/signatures.txt`. Passing this API check alone does not
 establish TCK conformance; the runtime and language-model tests are separate requirements.
 
-The kit has a second part, `jakarta.enterprise:cdi-tck-lang-model`: 985 `assert` statements, and 186 calls of
-its own assertion helpers, about the language model of
+The kit has a second part, `jakarta.cdi:jakarta.cdi-tck-lang-model:5.0.0`, about the language model of
 section 12 — the `ClassInfo`, `MethodInfo`, `Type` and `AnnotationInfo` a build compatible extension reads a
 class through — with one entry point, `LangModelVerifier.verify(ClassInfo)`, which asks the model everything
 about the verifier's own class: its members, inherited and declared, its enum constants and annotation members,
@@ -933,11 +1062,14 @@ read the way the specification's model reads it — a repeatable annotation Micr
 although it was written once is reported as itself, an annotation interface reports the retention it declares —
 and a deployment narrows what an extension sees by registering a `LanguageModelAnnotationFilter`; the kit
 module's filter leaves out what Micronaut's mappers write into its own packages and the non-null marker it adds
-in null-marked code, since the kit asserts on the source alone. Seventeen of the kit's eighteen sections pass on
-Micronaut Core 5.3, `AnnotatedTypes` among them: Core reports the annotations written on each array dimension, and
-the annotations of a type variable's use rather than of its declaration, in Java, Kotlin and Groovy alike.
-`RepeatableAnnotations` remains pending for a repetition written beside a hand-written container, which Core
-folds into one container (see [Open points in Micronaut Core](#open-points-in-micronaut-core)).
+in null-marked code, since the kit asserts on the source alone. CDI 5.0 added three sections - the members of a
+record, and sealed classes and interfaces with what they permit - and nineteen of the kit's twenty-one sections pass
+on Micronaut Core 5.3, `AnnotatedTypes`, `RecordMembers` and `SealedInterfaces` among them: Core reports the
+annotations written on each array dimension, and the annotations of a type variable's use rather than of its
+declaration, in Java, Kotlin and Groovy alike. `RepeatableAnnotations` remains pending for a repetition written
+beside a hand-written container, which Core folds into one container, and `SealedClasses` for an enum whose
+constants declare bodies, which Core does not report as sealed or as permitting their classes (see
+[Open points in Micronaut Core](#open-points-in-micronaut-core)).
 Because the model is built on the AST alone, `test-suite-kotlin`
 runs a build compatible extension against a Kotlin class as KSP compiles it, and `test-suite-groovy` against a
 Groovy class.
@@ -953,6 +1085,41 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **No destruction step between a bean's `PreDestroy` methods and the release of its dependents (CDI 5.0).**
+  `DefaultBeanContext.destroyRegistration` runs the pre-destroy listeners, the bean's `PreDestroy` methods and then
+  releases the dependents, with nothing to hook between the last two; `@AutoClose` asks for `close()` there. Core's
+  `@Bean(preDestroy = "close")` would call it in the right place, but it takes the method off the bean's advice -
+  a client's call of `close()` would no longer be intercepted - and it needs the method on the declared type, where
+  `@AutoClose` asks about the class of the instance. A disposal step that calls `close()` on an instance that
+  implements `AutoCloseable`, on the target rather than through its interceptors, would close both of the kit tests
+  left out for it.
+- **A method of an intercepted bean cannot be called past its interceptors (CDI 5.0).** An intercepted bean is the
+  subclass Micronaut generates for it, and every call of an advised method goes through the chain. `close()` of an
+  auto-closeable bean called as the bean is destroyed is no business method invocation, so it is not to be
+  intercepted; a way to invoke the superclass's method on the generated subclass - which the generated chain does
+  itself as it ends - would let the container do that.
+- **An implicitly sealed enum reports no permitted subclasses (CDI 5.0 language model).** An enum whose constants
+  declare bodies is sealed and permits the anonymous classes of those bodies. javac reports the `sealed` modifier of
+  such an enum compiled from source but no permitted subclasses, and `JavaClassElement.isSealed()` and
+  `getPermittedSubclasses()` are read from that list, so the language model kit's `SealedClasses` section stops at
+  its enum (`verifySealedEnum`) and is pending. Reading `isSealed()` from the modifiers and the permitted classes of an
+  enum from its constant bodies would close it.
+- **Reading the class path of a compilation fails instead of answering nothing (CDI 5.0).**
+  `JavaVisitorContext.getClasspathResources` reaches the file manager of javac through
+  `JavacProcessingEnvironment.getContext()`, and the reflective call of it sits outside the `try` that guards the rest,
+  so a compiler that does not export `com.sun.tools.javac.processing` to the processor fails the call with an illegal
+  access instead of returning nothing. The async handler scan catches it and warns; returning an empty iterable, or a
+  public way to list a resource of the class path (`Filer` answers only the first file of a name), would leave nothing
+  to catch. It also prints an "experimental" note on every call.
+- **A producer of a normal scoped class keeps the class's client proxy.** Core builds a produced bean's metadata
+  from the produced class's beneath the producer's and, where the producer declares a scope or a qualifier, takes
+  the class's scopes off (`FactoryBeanElementCreator.cleanupScopeAndQualifierAnnotations`). Where the class's scope
+  came from an annotation mapper - `@ApplicationScoped` read as `CdiApplicationScope` - the
+  `@InterceptorBinding(kind = AROUND, value = ScopedProxy)` it brought stays, so a dependent producer of an
+  application scoped class is proxied as well: it is a second proxy target of the type, and the class bean's own
+  client proxy, which looks its target up by type and `@Default`, finds no single one and fails with
+  `NoSuchBeanException`. Written directly, without a mapper, the same scope is taken off with its binding. Taking off
+  the bindings the removed scopes brought would close it (`ScopedClassWithNamedProducerTest`, disabled).
 - **Enum constants and typed arrays are not compiled into the metadata.** The metadata writer records an enum
   constant by its name (`AnnotationMetadataGenUtils`), so a synthetic component's enum parameter is turned back into
   its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.

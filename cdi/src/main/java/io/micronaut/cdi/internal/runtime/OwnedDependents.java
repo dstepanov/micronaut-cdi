@@ -148,9 +148,12 @@ public final class OwnedDependents implements AutoCloseable {
                                                   InjectionPoint selected,
                                                   BeanDefinition<? extends T> definition, Argument<T> type) {
         if (!CdiResolution.isDependent(definition)
-            || definition instanceof AbstractInjectionPointBeanDefinition<?>) {
+            || (definition instanceof AbstractInjectionPointBeanDefinition<?>
+                && !(definition instanceof AbstractCdiInjectionPointBeanDefinition<?>))) {
             return registration(definition, type);
         }
+        // a built-in Event or Instance of the specification is created under the lookup's segment as well, which
+        // tells it the type and the qualifiers the lookup selected it with (AbstractCdiInjectionPointBeanDefinition)
         LookupSegment<?, T> segment = injectedAt != null
             ? LookupSegment.injected(injectedAt, type, selected)
             : LookupSegment.standalone(beanContext.getBeanDefinition(CdiBeanContainer.class), type, selected);

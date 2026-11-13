@@ -94,6 +94,21 @@ public final class Cdi {
     public static final String ALTERNATIVE = "jakarta.enterprise.inject.Alternative";
 
     /**
+     * {@code jakarta.enterprise.inject.Reserve}, a default bean of CDI 5.0 (section 2.8).
+     */
+    public static final String RESERVE = "jakarta.enterprise.inject.Reserve";
+
+    /**
+     * {@code jakarta.enterprise.context.Eager}, eager initialization of CDI 5.0 (section 2.9).
+     */
+    public static final String EAGER = "jakarta.enterprise.context.Eager";
+
+    /**
+     * {@code jakarta.enterprise.context.AutoClose}, automatic closing of CDI 5.0 (section 2.10).
+     */
+    public static final String AUTO_CLOSE = "jakarta.enterprise.context.AutoClose";
+
+    /**
      * {@code jakarta.enterprise.inject.Stereotype}, the meta-annotation of the stereotypes.
      */
     public static final String STEREOTYPE = "jakarta.enterprise.inject.Stereotype";

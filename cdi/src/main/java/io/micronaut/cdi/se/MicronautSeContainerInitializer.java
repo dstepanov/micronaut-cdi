@@ -16,10 +16,17 @@
 package io.micronaut.cdi.se;
 
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import io.micronaut.context.BeanContext;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
+import io.micronaut.cdi.internal.extension.ExtensionComponents;
+import io.micronaut.cdi.internal.runtime.UndiscoveredSubclass;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
@@ -29,6 +36,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
 import io.micronaut.inject.ProxyBeanDefinition;
+import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.enterprise.inject.spi.DefinitionException;
@@ -63,8 +71,10 @@ import java.util.StringJoiner;
  *
  * <p>What belongs to CDI Full says so rather than pretending: a portable extension
  * ({@code addExtensions}) and a decorator ({@code enableDecorators}) have no compile-time counterpart here.
- * A build compatible extension is found through the service loader while the application compiles, so handing
- * one to the bootstrap at runtime is refused the same way. {@code enableInterceptors} accepts the interceptor
+ * A build compatible extension is found through the service loader while the application compiles, so one handed
+ * to the bootstrap at runtime ({@code addBuildCompatibleExtensions}, CDI 5.0) has already run where it is registered
+ * as a service provider, and adding it again changes nothing; one that is not registered could only run as the
+ * container starts, which is not how this container works, and the bootstrap fails naming it. {@code enableInterceptors} accepts the interceptor
  * classes the Jakarta Interceptors processor compiled and enables the ones that declare no priority, through the
  * property {@link CdiInterceptorEnablement} reads; interception itself was woven at compile time.</p>
  *
@@ -95,6 +105,7 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
 
     private final List<Extension> extensionInstances = new ArrayList<>();
     private final List<Class<? extends Extension>> extensionClasses = new ArrayList<>();
+    private final Set<String> buildCompatibleExtensions = new LinkedHashSet<>();
 
     private boolean discoveryDisabled;
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -145,6 +156,16 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     @Override
     public final SeContainerInitializer addExtensions(Class<? extends Extension>... extensions) {
         extensionClasses.addAll(List.of(extensions));
+        return this;
+    }
+
+    @SafeVarargs
+    @Override
+    public final SeContainerInitializer addBuildCompatibleExtensions(
+        Class<? extends BuildCompatibleExtension>... extensions) {
+        for (Class<? extends BuildCompatibleExtension> extension : extensions) {
+            buildCompatibleExtensions.add(extension.getName());
+        }
         return this;
     }
 
@@ -221,6 +242,11 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         if (!enabledInterceptors.isEmpty()) {
             builder.properties(Map.of(CdiInterceptorEnablement.ENABLED_CLASSES, joined(enabledInterceptors)));
         }
+        if (!beanClasses.isEmpty()) {
+            // a class handed to the synthetic archive is a bean even where it declares no bean defining annotation,
+            // whether discovery is on or off (section 25.1)
+            builder.properties(Map.of(UndiscoveredSubclass.ADDED_CLASSES, joined(beanClasses)));
+        }
         Set<String> classpath = restrictedClasspath();
         if (discoveryDisabled) {
             builder.beansPredicate(bean -> belongsToSyntheticArchive(bean)
@@ -234,7 +260,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             name -> classpath == null || classpath.contains(outerClassOf(name))));
         ApplicationContext context = builder.build();
         try {
-            return new MicronautSeContainer(context.start());
+            ApplicationContext started = context.start();
+            checkBuildCompatibleExtensionsRan(started);
+            return new MicronautSeContainer(started);
         } catch (RuntimeException | Error e) {
             // whatever the start failed with, the context is closed and its container is not left as the one
             // CDI.current() resolves to; what an extension said is reported as it said it
@@ -254,6 +282,55 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             }
             throw e;
         }
+    }
+
+    /**
+     * Checks that every build compatible extension handed to the bootstrap is one the compilation ran. What the
+     * compilation recorded of it is the evidence: the deployment record of every compilation that ran extensions
+     * names them, however the compilation was told to run them - by their service entries or by the compiler option
+     * - and the synthetic components they described name them too. No extension is loaded or instantiated at
+     * runtime.
+     */
+    private void checkBuildCompatibleExtensionsRan(BeanContext started) {
+        if (buildCompatibleExtensions.isEmpty()) {
+            return;
+        }
+        Set<String> recorded = extensionsRecordedIn(started);
+        for (String extension : buildCompatibleExtensions) {
+            if (!recorded.contains(extension)) {
+                throw new DeploymentException("The build compatible extension " + extension + " did not run as the "
+                    + "application compiled: no compilation of the application recorded running it. A build "
+                    + "compatible extension runs as the application compiles, found through its service entry on the "
+                    + "processor path or named with the compiler option micronaut.cdi.extensions. See Conformance");
+            }
+        }
+    }
+
+    /**
+     * The build compatible extensions the compilations of an application recorded running: the ones their
+     * deployment records name, and the ones their synthetic beans and observers name - a record is identified by
+     * its extension and the order it described the component in.
+     *
+     * @param beanContext The context of the application
+     * @return The names of the extensions
+     */
+    @Internal
+    public static Set<String> extensionsRecordedIn(BeanContext beanContext) {
+        Set<String> recorded = new LinkedHashSet<>();
+        for (BeanDefinition<?> definition
+            : beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiExtensionComponents.class))) {
+            recorded.addAll(List.of(definition.getAnnotationMetadata()
+                .stringValues(CdiExtensionComponents.class, "extensions")));
+        }
+        for (Class<? extends Annotation> record : List.of(CdiSyntheticBean.class, CdiSyntheticObserver.class)) {
+            for (BeanDefinition<?> definition : beanContext.getBeanDefinitions(Qualifiers.byStereotype(record))) {
+                definition.getAnnotationMetadata().stringValue(record, "id").ifPresent(id -> {
+                    int ordinal = id.lastIndexOf('#');
+                    recorded.add(ordinal < 0 ? id : id.substring(0, ordinal));
+                });
+            }
+        }
+        return recorded;
     }
 
     /**
@@ -404,7 +481,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
      */
     private static boolean isInfrastructure(BeanType<?> bean) {
         AnnotationMetadata metadata = bean.getAnnotationMetadata();
-        if (metadata.hasAnnotation(CdiBuiltIn.class)) {
+        if (metadata.hasAnnotation(CdiBuiltIn.class) || ExtensionComponents.isComponent(metadata)) {
+            // what a build compatible extension synthesised is recorded on the definition of a class it named, and
+            // is the container's whichever archive that class is in
             return true;
         }
         if (metadata.hasAnnotation(CdiScope.class) || producerOf(bean) != null) {

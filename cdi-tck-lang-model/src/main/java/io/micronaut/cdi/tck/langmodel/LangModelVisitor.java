@@ -77,6 +77,9 @@ public class LangModelVisitor implements TypeElementVisitor<Object, Object> {
         {"JavaLangObjectMethods$Verifier", "javaLangObjectMethods"}, {"PrimitiveTypes", "primitiveTypes"},
         {"BridgeMethods", "bridgeMethods"}, {"RepeatableAnnotations", "repeatableAnnotations"},
         {"DefaultConstructors", "defaultConstructors"}, {"Equality", "equality"},
+        // CDI 5.0: the members of a record, and sealed classes and interfaces with what they permit
+        {"RecordMembers$Verifier", "recordMembers"}, {"SealedClasses", "sealedClasses"},
+        {"SealedInterfaces", "sealedInterfaces"},
     };
 
     @Override

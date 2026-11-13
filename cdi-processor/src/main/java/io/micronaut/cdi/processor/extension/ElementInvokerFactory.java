@@ -22,6 +22,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerFactory;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerInfo;
@@ -45,6 +46,12 @@ import java.util.Set;
  */
 @Internal
 final class ElementInvokerFactory implements InvokerFactory {
+
+    private final VisitorContext context;
+
+    ElementInvokerFactory(VisitorContext context) {
+        this.context = context;
+    }
 
     @Override
     public InvokerBuilder<InvokerInfo> createInvoker(BeanInfo bean, MethodInfo method) {
@@ -79,7 +86,7 @@ final class ElementInvokerFactory implements InvokerFactory {
             throw new DeploymentException("The method " + declaredBy + "#" + element.getName()
                 + " is not a method of the bean " + beanClass.getName());
         }
-        return new ElementInvokerBuilder(beanClass, element);
+        return new ElementInvokerBuilder(beanClass, element, context);
     }
 
     /**
@@ -90,12 +97,14 @@ final class ElementInvokerFactory implements InvokerFactory {
 
         private final ClassElement beanClass;
         private final MethodElement method;
+        private final VisitorContext context;
         private final Set<Integer> argumentLookups = new LinkedHashSet<>();
         private boolean instanceLookup;
 
-        private ElementInvokerBuilder(ClassElement beanClass, MethodElement method) {
+        private ElementInvokerBuilder(ClassElement beanClass, MethodElement method, VisitorContext context) {
             this.beanClass = beanClass;
             this.method = method;
+            this.context = context;
         }
 
         @Override
@@ -128,8 +137,10 @@ final class ElementInvokerFactory implements InvokerFactory {
                 parameterTypeNames[i] = RecordedTypeValues.erasedName(parameters[i].getType());
                 lookups[i] = argumentLookups.contains(i);
             }
+            // whether the method is asynchronous - it matches exactly one async handler (CDI 5.0) - is known here,
+            // where the handlers' type arguments and the method's signature are
             return new ElementInvokerInfo(beanClass.getName(), method.getName(), parameterTypeNames,
-                method.isStatic(), instanceLookup, lookups);
+                method.isStatic(), instanceLookup, lookups, AsyncHandlerTypes.match(method, context));
         }
     }
 }

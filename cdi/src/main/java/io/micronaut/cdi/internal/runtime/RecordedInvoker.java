@@ -59,10 +59,39 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     private final boolean staticMethod;
     private final boolean instanceLookup;
     private final boolean[] argumentLookups;
+    /**
+     * Whether the method is asynchronous (CDI 5.0): it matched exactly one async handler as it compiled.
+     */
+    private final boolean async;
+    /**
+     * The position of the async parameter of a parameter type handler, -1 for a return type handler.
+     */
+    private final int asyncParameter;
+    /**
+     * The async handler, {@code null} for a built-in one or a method that is not asynchronous.
+     */
+    private final @Nullable Object asyncHandler;
+    /**
+     * The async type the compiler matched the method by, empty for a method that is not asynchronous.
+     */
+    private final String asyncType;
 
     public RecordedInvoker(BeanContext beanContext, String beanClassName, @Nullable Class<?> beanType,
                            String methodName, String[] parameterTypeNames,
                            boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups) {
+        this(beanContext, beanClassName, beanType, methodName, parameterTypeNames, staticMethod, instanceLookup,
+            argumentLookups, false, -1, null, "");
+    }
+
+    private RecordedInvoker(BeanContext beanContext, String beanClassName, @Nullable Class<?> beanType,
+                            String methodName, String[] parameterTypeNames,
+                            boolean staticMethod, boolean instanceLookup, boolean[] argumentLookups,
+                            boolean async, int asyncParameter, @Nullable Object asyncHandler,
+                            String asyncType) {
+        this.async = async;
+        this.asyncType = asyncType;
+        this.asyncParameter = asyncParameter;
+        this.asyncHandler = asyncHandler;
         this.beanContext = beanContext;
         this.beanClassName = beanClassName;
         this.beanType = beanType;
@@ -87,6 +116,8 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             // an array of nothing but false is not written
             lookups = Arrays.copyOf(lookups, parameterTypes.length);
         }
+        boolean async = record.booleanValue("async").orElse(false);
+        int asyncParameter = record.intValue("asyncParameter").orElse(-1);
         return new RecordedInvoker(
             beanContext,
             record.stringValue("beanClass").orElseThrow(),
@@ -95,7 +126,12 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             parameterTypes,
             record.booleanValue("staticMethod").orElse(false),
             record.booleanValue("instanceLookup").orElse(false),
-            lookups);
+            lookups,
+            async,
+            asyncParameter,
+            async ? AsyncInvocation.handlerOf(beanContext, record.stringValue("asyncHandler").orElse(""),
+                asyncParameter >= 0) : null,
+            record.stringValue("asyncType").orElse(""));
     }
 
     // a static method is invoked on no instance, which the signature of an executable method has no way to say
@@ -126,6 +162,9 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         }
 
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
+        // the dependent instances an asynchronous invocation looked up live until it completes (CDI 5.0)
+        AsyncInvocation.Completion completion = async ? new AsyncInvocation.Completion(lookup) : null;
+        boolean returned = false;
         try {
             Object target;
             if (staticMethod) {
@@ -156,11 +195,28 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                     invocationArguments[i] = checked(arguments[i], parameterTypes[i], i);
                 }
             }
-            return invoke(method, target, invocationArguments);
+            if (completion == null) {
+                return invoke(method, target, invocationArguments);
+            }
+            if (asyncParameter >= 0) {
+                invocationArguments[asyncParameter] = AsyncInvocation.transformArgument(asyncHandler,
+                    invocationArguments[asyncParameter], completion);
+            }
+            Object result = AsyncInvocation.transformReturnValue(asyncHandler, asyncType,
+                invoke(method, target, invocationArguments), completion);
+            returned = true;
+            return result;
         } finally {
             // what an invocation looked up — the instance included, when it was looked up — lives only as
-            // long as the invocation; a dependent among it is destroyed here
-            lookup.close();
+            // long as the invocation; a dependent among it is destroyed here, or - for an asynchronous one that
+            // returned normally - as the asynchronous action completes
+            if (completion == null) {
+                lookup.close();
+            } else if (returned) {
+                completion.returned();
+            } else {
+                completion.abandoned();
+            }
         }
     }
 

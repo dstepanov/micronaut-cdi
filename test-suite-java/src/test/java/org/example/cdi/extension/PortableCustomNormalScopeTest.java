@@ -1,5 +1,6 @@
 package org.example.cdi.extension;
 
+import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.Dependent;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -344,6 +346,26 @@ class PortableCustomNormalScopeTest {
             assertEquals("drizzle", container.select(Drizzle.class).get().name());
             assertEquals(1, adding.context.held.size());
             assertSame(adding.context.held.values().iterator().next()[0], heldFor(container, Drizzle.class));
+        }
+    }
+
+    @Test
+    void aSubclassThatOnlyInheritsTheScopeIsNotDiscovered() {
+        // section 2.5.1: discovery goes by a bean defining annotation the class declares; only a class handed to
+        // the synthetic archive is a bean by the scope it inherits
+        try (ApplicationContext context = ApplicationContext.run()) {
+            assertTrue(context.getBeanDefinitions(Drizzle.class).isEmpty());
+            assertFalse(context.getBeanDefinitions(Mist.class).isEmpty());
+        }
+    }
+
+    @Test
+    void aSubclassHandedToTheBootstrapIsABeanWithDiscoveryOnAsWell() {
+        // section 25.1: addBeanClasses adds the class to the synthetic bean archive whether discovery is on or off
+        AddingCloudy adding = new AddingCloudy();
+        try (SeContainer container = SeContainerInitializer.newInstance().addBeanClasses(Drizzle.class)
+            .addExtensions(adding).initialize()) {
+            assertTrue(container.select(Drizzle.class).isResolvable());
         }
     }
 

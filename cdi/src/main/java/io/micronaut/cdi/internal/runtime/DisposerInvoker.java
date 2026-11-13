@@ -18,9 +18,13 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanProvider;
+import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.BeanDependencyGroup;
+import io.micronaut.context.event.BeanDestroyedEvent;
+import io.micronaut.context.event.BeanDestroyedEventListener;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.context.exceptions.NoSuchBeanException;
@@ -33,6 +37,8 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -47,12 +53,22 @@ import java.util.Optional;
  * <p>The disposer takes the bean it disposes of as its {@code Disposes} parameter, and may take further
  * parameters, which are injection points and are resolved from the container as any other injection point is.</p>
  *
+ * <p>It also closes an instance of an auto-closeable bean whose class implements {@code AutoCloseable} (CDI 5.0,
+ * section 2.10): a produced one right after its disposer method, as section 7.3.2 orders it, and any other once
+ * Micronaut has destroyed it, which is after its {@code PreDestroy} callbacks. The call is made on the instance
+ * itself - the target of a client proxy - so that it is no business method invocation, and what it throws is
+ * logged, since destruction may not throw. A synthetic bean is closed by the disposer of its runtime definition
+ * instead, which runs before its creation's dependents are released.</p>
+ *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Singleton
 @Internal
-public final class DisposerInvoker implements BeanPreDestroyEventListener<Object> {
+public final class DisposerInvoker implements BeanPreDestroyEventListener<Object>,
+    BeanDestroyedEventListener<Object> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DisposerInvoker.class);
 
     private final BeanContext beanContext;
     /**
@@ -73,17 +89,42 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         AnnotationValue<CdiDisposer> recorded = definition.getAnnotation(CdiDisposer.class);
         if (recorded == null) {
             // every bean of the context is destroyed through here, and few of them were produced
+            if (definition.hasAnnotation(CdiProducer.class)) {
+                closeIfAutoClose(definition, bean);
+            }
             return bean;
         }
         // the declaring bean is among the candidates the bean context keeps for its class
         Disposer disposer = disposerOf(beanContext, recorded);
         if (disposer == null) {
+            closeIfAutoClose(definition, bean);
             return bean;
         }
         return event.withDependencies(dependencies -> {
             invoke(disposer, bean, dependencies);
+            closeIfAutoClose(definition, bean);
             return bean;
         });
+    }
+
+    @Override
+    public void onDestroyed(BeanDestroyedEvent<Object> event) {
+        BeanDefinition<Object> definition = event.getBeanDefinition();
+        // a produced bean was closed after its disposer, before its dependents went, and a synthetic one by the
+        // disposer of its runtime definition
+        if (!definition.hasAnnotation(CdiProducer.class) && !(definition instanceof RuntimeBeanDefinition<?>)) {
+            closeIfAutoClose(definition, event.getBean());
+        }
+    }
+
+    private static void closeIfAutoClose(BeanDefinition<?> definition, Object bean) {
+        if (bean instanceof AutoCloseable closeable && CdiResolution.isAutoClose(definition)) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                LOG.error("Closing the auto-closeable bean {} failed", definition.getBeanType().getName(), e);
+            }
+        }
     }
 
     /**

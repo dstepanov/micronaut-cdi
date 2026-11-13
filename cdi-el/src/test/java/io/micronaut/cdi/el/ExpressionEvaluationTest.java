@@ -26,6 +26,7 @@ import jakarta.el.StandardELContext;
 import jakarta.el.ValueExpression;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.el.ELAwareBeanManager;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -110,7 +111,7 @@ class ExpressionEvaluationTest {
     @Test
     void aDependentBeanProducedAsNullIsCreatedOnceForAnEvaluation() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
 
@@ -128,7 +129,7 @@ class ExpressionEvaluationTest {
     @Test
     void aNameThatIsAListOfIdentifiersResolvesItsBean() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
 
@@ -141,7 +142,7 @@ class ExpressionEvaluationTest {
     @Test
     void aDependentBeanIsCreatedOnceForAnEvaluationAndDestroyedAsItCompletes() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
 
@@ -158,7 +159,7 @@ class ExpressionEvaluationTest {
     @Test
     void eachEvaluationHasADependentBeanOfItsOwn() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
             ValueExpression expression = factory.createValueExpression(el, "${visitor.name}", String.class);
@@ -174,7 +175,7 @@ class ExpressionEvaluationTest {
     @Test
     void aValueExpressionIsCreatedAgainstNoContext() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(new ResolvingFactory());
             ValueExpression expression = factory.createValueExpression(null, "visitor", Object.class);
             assertNotNull(expression);
@@ -190,7 +191,7 @@ class ExpressionEvaluationTest {
     @Test
     void aMethodExpressionIsCreatedAgainstNoContext() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(new ResolvingFactory());
             MethodExpression expression = factory.createMethodExpression(null, "visitor", Object.class, null);
             assertNotNull(expression);

@@ -37,19 +37,18 @@ configurations {
 }
 
 dependencies {
-    tckSignatureBaseline "jakarta.enterprise:cdi-tck-core-impl:${libs.versions.cdi.tck.get()}:sigtest-jdk17@sig"
+    tckSignatureBaseline "jakarta.cdi:jakarta.cdi-tck-core-impl:${libs.versions.cdi.tck.get()}:jdk17@sigfile"
     tckSignatureTool 'jakarta.tck:sigtest-maven-plugin:2.2'
     tckSignatureRuntime platform(libs.micronaut.core)
+    // the runtime brings the expression-language integration API, ELAwareBeanManager, which the baseline carries
     tckSignatureRuntime projects.micronautCdiReflection
-    // Resolve the deprecated BeanManager EL signatures without adding CDI's optional EL integration API.
-    tckSignatureRuntime 'jakarta.el:jakarta.el-api:6.0.0'
     tckSources(variantOf(libs.cdi.tck.core) { classifier('sources') })
     tckSources(variantOf(libs.cdi.tck.api) { classifier('sources') })
 }
 
 // Use the official baseline against the APIs resolved with the runtime, so dependency drift fails verification.
 tasks.register('tckSignatureTest', JavaExec) {
-    description = 'Checks the runtime APIs against the official CDI 4.1 signature baseline.'
+    description = 'Checks the runtime APIs against the official CDI 5.0 signature baseline.'
     group = 'verification'
     classpath = configurations.tckSignatureTool
     mainClass = 'com.sun.tdk.signaturetest.SignatureTest'
@@ -112,6 +111,12 @@ def brokenScenarios = [
     'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/array/**',
     'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/primitive/**',
     'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/interceptor/**',
+    // the same of a sealed class (CDI 5.0): a sealed class permits only the subclasses it names, so an intercepted
+    // one is rejected as it compiles, and the deployments beside it that the kit expects to deploy compile alone
+    'org/jboss/cdi/tck/tests/lookup/clientProxy/unproxyable/sealed/**',
+    // the async handlers of method invokers (CDI 5.0) that the kit expects a container to reject: a handler is read
+    // as the deployment compiles, where its type arguments are known, so what is wrong with it fails the compilation
+    'org/jboss/cdi/tck/tests/invokers/lookup/dependent/async/**/invalid/**',
     // deployments the kit expects rejected whose packages are named for the mistake rather than named broken:
     // a bean constructor that tries to observe or dispose, one constructor too many, and a public field on a
     // bean in a normal scope

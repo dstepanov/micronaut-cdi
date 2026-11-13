@@ -127,12 +127,17 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         List<Bean<?>> beans = applicationBeans(container, extensions);
 
         List<Class<?>> alternatives = new ArrayList<>();
+        List<Class<?>> reserves = new ArrayList<>();
         for (Bean<?> bean : beans) {
             if (bean.isAlternative() && !alternatives.contains(bean.getBeanClass())) {
                 alternatives.add(bean.getBeanClass());
             }
+            if (bean.isReserve() && !reserves.contains(bean.getBeanClass())) {
+                reserves.add(bean.getBeanClass());
+            }
         }
-        fire(observers, new PortableEvents.AfterTypes(alternatives), Argument.of(AfterTypeDiscovery.class), problems);
+        fire(observers, new PortableEvents.AfterTypes(alternatives, reserves), Argument.of(AfterTypeDiscovery.class),
+            problems);
 
         for (Bean<?> bean : beans) {
             describe(bean, observers, problems);
@@ -145,7 +150,8 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
         // the container validates the deployment before the extensions are told it did (section 11.5.4)
         container.validateDeployment();
-        fire(observers, new PortableEvents.AfterValidation(problems), Argument.of(AfterDeploymentValidation.class),
+        fire(observers, new PortableEvents.AfterValidation(problems,
+            container.beanContext().getClassLoader()), Argument.of(AfterDeploymentValidation.class),
             problems);
         if (!problems.isEmpty()) {
             throw withTheRest(new DeploymentException(problems.get(0)), problems);

@@ -19,6 +19,7 @@ import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
+import io.micronaut.cdi.internal.metadata.CdiSyntheticInjectionPoint;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
@@ -28,6 +29,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
@@ -37,9 +39,11 @@ import jakarta.enterprise.lang.model.types.Type;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The synthesis phase of section 2.10.5 for one compilation: what the extensions described, and the bean
@@ -58,7 +62,19 @@ import java.util.Map;
 @Internal
 final class SynthesisPhase {
 
+    private static final Set<String> SPECIFICATION_FUNCTIONS = Set.of(
+        "jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator",
+        "jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer");
     private static final String SCOPE = "jakarta.inject.Scope";
+    private static final String INJECTION_POINT = "jakarta.enterprise.inject.spi.InjectionPoint";
+    private static final String EVENT = "jakarta.enterprise.event.Event";
+    private static final String INSTANCE = "jakarta.enterprise.inject.Instance";
+    private static final String BEAN = "jakarta.enterprise.inject.spi.Bean";
+    private static final String INTERCEPTOR = "jakarta.enterprise.inject.spi.Interceptor";
+    private static final String INTERCEPTED = "jakarta.enterprise.inject.Intercepted";
+    private static final String EVENT_METADATA = "jakarta.enterprise.inject.spi.EventMetadata";
+    private static final String SYNTHETIC_INJECTIONS =
+        "jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections";
 
     private final VisitorContext context;
     private final DiscoveredClasses discovered;
@@ -125,7 +141,8 @@ final class SynthesisPhase {
     List<RecordingBeanBuilder<?>> enabledBeans() {
         List<RecordingBeanBuilder<?>> enabled = new ArrayList<>();
         for (RecordingBeanBuilder<?> bean : beans) {
-            if (!isAlternative(bean) || bean.priority() != null) {
+            // likewise a reserve, which only a priority selects (section 5.1.2)
+            if ((!isAlternative(bean) && !isReserve(bean)) || bean.priority() != null) {
                 enabled.add(bean);
             }
         }
@@ -145,6 +162,37 @@ final class SynthesisPhase {
 
     private boolean isAlternative(RecordingBeanBuilder<?> bean) {
         return bean.alternative() || !alternativeStereotypesOf(bean).isEmpty();
+    }
+
+    /**
+     * Whether the synthetic bean is a reserve: said so, or carrying a stereotype that says so (section 2.8.1).
+     */
+    static boolean isReserve(RecordingBeanBuilder<?> bean) {
+        return bean.reserve() || carriedByAStereotype(bean, Cdi.RESERVE);
+    }
+
+    /**
+     * Whether the synthetic bean is eagerly initialized: said so, or carrying a stereotype that says so.
+     */
+    static boolean isEager(RecordingBeanBuilder<?> bean) {
+        return bean.eager() || carriedByAStereotype(bean, Cdi.EAGER);
+    }
+
+    /**
+     * Whether the synthetic bean is auto-closeable: said so, or carrying a stereotype that says so.
+     */
+    static boolean isAutoClose(RecordingBeanBuilder<?> bean) {
+        return bean.autoClose() || carriedByAStereotype(bean, Cdi.AUTO_CLOSE);
+    }
+
+    private static boolean carriedByAStereotype(RecordingBeanBuilder<?> bean, String annotation) {
+        for (ClassElement stereotype : bean.stereotypes()) {
+            // written on the stereotype or on a stereotype it declares, however deep, as a class bean's are read
+            if (stereotype.hasStereotype(annotation)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static List<String> alternativeStereotypesOf(RecordingBeanBuilder<?> bean) {
@@ -260,7 +308,145 @@ final class SynthesisPhase {
         if (!bean.parameters().isEmpty()) {
             record.member("params", bean.parameters().toArray(new AnnotationValue<?>[0]));
         }
+        boolean reserve = isReserve(bean);
+        if (reserve && isAlternative(bean)) {
+            context.fail("The synthetic bean " + bean.implementation().getName() + " may not be both a reserve "
+                + "and an alternative (section 2.8.1)", bean.creator());
+        }
+        if (reserve) {
+            record.member("reserve", true);
+        }
+        if (isEager(bean)) {
+            // only an application scoped bean may be eagerly initialized: any other normal scope, and the dependent
+            // pseudo-scope, fails the registration (section 2.9)
+            if (!Cdi.APPLICATION_SCOPED.equals(scope.name()) && (scope.normal() || Cdi.DEPENDENT.equals(scope.name()))) {
+                context.fail("The synthetic bean " + bean.implementation().getName() + " is eagerly initialized, "
+                    + "which only an @ApplicationScoped bean may be; it is in " + scope.name() + " (section 2.9)",
+                    bean.creator());
+            }
+            record.member("eager", true);
+        }
+        if (isAutoClose(bean)) {
+            record.member("autoClose", true);
+        }
+        if (!bean.injectionPoints().isEmpty()) {
+            List<AnnotationValue<CdiSyntheticInjectionPoint>> points = new ArrayList<>();
+            for (RecordingBeanBuilder.InjectionPoint point : bean.injectionPoints()) {
+                String problem = problemOf(point, scope, bean.implementation().getName());
+                if (problem != null) {
+                    context.fail("The injection point " + point.type() + " registered for the synthetic bean "
+                        + bean.implementation().getName() + " is illegal: " + problem, bean.creator());
+                }
+                List<AnnotationValue<?>> pointQualifiers = completed(point.qualifiers());
+                points.add(AnnotationValue.builder(CdiSyntheticInjectionPoint.class)
+                    .member("type", SyntheticRecords.typeOf(point.type()))
+                    .member(CdiSyntheticInjectionPoint.QUALIFIERS, pointQualifiers.toArray(new AnnotationValue<?>[0]))
+                    .member("qualifierTypes", typesOf(pointQualifiers))
+                    .build());
+            }
+            record.member("injectionPoints", points.toArray(new AnnotationValue<?>[0]));
+        }
+        // which of the two methods the creation and destruction functions implement, read off the classes the
+        // extension named: the container calls the one that exists (CDI 5.0), whether the class declares it or
+        // inherits it
+        if (takesInjections(bean.creator(), "create")) {
+            record.member("creatorTakesInjections", true);
+        }
+        ClassElement disposerClass = bean.disposer();
+        if (disposerClass != null && takesInjections(disposerClass, "dispose")) {
+            record.member("disposerTakesInjections", true);
+        }
         return record.build();
+    }
+
+    /**
+     * What the rules of an injection point make a definition error of a point registered for a synthetic bean, as
+     * they do of a point a class declares: a type variable; a raw {@code Event} or {@code Instance}, an
+     * {@code Event<?>} or {@code Event<? extends X>}, an {@code Instance<? super X>} and an {@code Instance} of such an
+     * event (sections 5.6.1 and 9.2); the {@code @Default InjectionPoint} of a bean that is not dependent, which
+     * outlives any one point it is injected into (section 6.5.3); the metadata only an interceptor is handed,
+     * {@code Interceptor} and the {@code @Intercepted Bean}, a {@code @Default Bean} of another type than the bean's
+     * implementation class, which stands for the class declaring the point (section 5.5.8); and {@code @Default
+     * EventMetadata}, which only an observer method's parameter is handed (section 9.4.3).
+     */
+    private static @Nullable String problemOf(RecordingBeanBuilder.InjectionPoint point, Scope scope,
+                                              String implementation) {
+        Type type = point.type();
+        if (type.isTypeVariable()) {
+            return "a type variable is not a legal injection point type (section 5.2.3)";
+        }
+        String raw = rawNameOf(type);
+        boolean byDefault = point.qualifiers().isEmpty() || point.qualifiers().stream()
+            .anyMatch(qualifier -> Cdi.DEFAULT.equals(qualifier.getAnnotationName()));
+        if (INJECTION_POINT.equals(raw) && !Cdi.DEPENDENT.equals(scope.name()) && byDefault) {
+            return "only a dependent bean may be told the injection point it is injected into (section 6.5.3)";
+        }
+        if (INTERCEPTOR.equals(raw)) {
+            return "only an interceptor may be handed its Interceptor metadata (section 5.5.8)";
+        }
+        if (BEAN.equals(raw) && point.qualifiers().stream()
+            .anyMatch(qualifier -> INTERCEPTED.equals(qualifier.getAnnotationName()))) {
+            return "only an interceptor may be handed the @Intercepted Bean (section 5.5.8)";
+        }
+        if (BEAN.equals(raw) && byDefault && !(type.isParameterizedType()
+            && implementation.equals(rawNameOf(type.asParameterizedType().typeArguments().get(0))))) {
+            return "the Bean metadata a bean is handed is a Bean of its own class, " + implementation
+                + " (section 5.5.8)";
+        }
+        if (EVENT_METADATA.equals(raw) && byDefault) {
+            return "only the parameter of an observer method may be handed EventMetadata (section 9.4.3)";
+        }
+        if (raw != null && (EVENT.equals(raw) || INSTANCE.equals(raw))) {
+            return builtInProblemOf(type, raw, true);
+        }
+        return null;
+    }
+
+    private static @Nullable String builtInProblemOf(Type type, String raw, boolean outer) {
+        if (type.isClass()) {
+            return "a raw " + raw + " names no type";
+        }
+        Type argument = type.asParameterizedType().typeArguments().get(0);
+        if (EVENT.equals(raw)) {
+            if (argument.isWildcardType() && argument.asWildcardType().lowerBound() == null) {
+                return "an Event<?> or Event<? extends X> names no type to fire (section 9.2)";
+            }
+            return null;
+        }
+        if (argument.isWildcardType()) {
+            if (argument.asWildcardType().lowerBound() != null) {
+                return "an Instance<? super X> names no type to look up (section 5.6.1)";
+            }
+            argument = argument.asWildcardType().upperBound();
+        }
+        if (outer && argument != null && EVENT.equals(rawNameOf(argument))) {
+            return builtInProblemOf(argument, EVENT, false);
+        }
+        return null;
+    }
+
+    private static @Nullable String rawNameOf(Type type) {
+        if (type.isClass()) {
+            return type.asClass().declaration().name();
+        }
+        if (type.isParameterizedType()) {
+            return type.asParameterizedType().declaration().name();
+        }
+        return null;
+    }
+
+    /**
+     * Whether the function implements the method that takes {@code SyntheticInjections}, declared on its class or
+     * inherited from a superclass or an interface of its own; the default of the specification's interface, which
+     * throws, is no implementation.
+     */
+    private static boolean takesInjections(ClassElement function, String methodName) {
+        return function.getEnclosedElements(ElementQuery.ALL_METHODS.onlyInstance().named(methodName))
+            .stream()
+            .anyMatch(method -> !method.isAbstract()
+                && !SPECIFICATION_FUNCTIONS.contains(method.getDeclaringType().getName())
+                && Arrays.stream(method.getParameters()).anyMatch(
+                    parameter -> SYNTHETIC_INJECTIONS.equals(parameter.getGenericType().getName())));
     }
 
     private AnnotationValue<CdiSyntheticObserver> recordOf(RecordingObserverBuilder<?> observer) {

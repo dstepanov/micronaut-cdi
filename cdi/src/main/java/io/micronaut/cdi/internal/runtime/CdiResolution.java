@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
@@ -54,8 +55,9 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
 /**
- * The one rule of section 2.4.2 that picks a bean from several candidates: the alternatives outrank everything
- * else, and among the alternatives the highest priority wins. Anything short of a single winner is an ambiguity.
+ * The one rule of section 5.2.2 that picks a bean from several candidates: reserves give way to every other bean,
+ * and among reserves alone the highest priority wins; the alternatives outrank everything else, and among the
+ * alternatives the highest priority wins. Anything short of a single winner is an ambiguity.
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -188,7 +190,7 @@ public final class CdiResolution {
     public static <T extends BeanDefinition<?>> List<T> narrow(Collection<T> candidates) {
         // the priority a selected alternative was written with is carried as its order, negated: an order
         // prefers the lowest where a priority prefers the highest
-        return narrow(candidates, CdiResolution::isAlternative, CdiResolution::priorityOf);
+        return narrow(candidates, CdiResolution::isReserve, CdiResolution::isAlternative, CdiResolution::priorityOf);
     }
 
     /**
@@ -305,29 +307,52 @@ public final class CdiResolution {
      * as well as the definitions the container reads. The result has one element where resolution succeeds, and
      * more where it is ambiguous.
      *
+     * <p>The steps of section 5.2.2 of CDI 5.0: the reserves are eliminated; one bean left is the one. Where only
+     * reserves were candidates, the ones of the highest priority are kept. Otherwise the beans that are not
+     * alternatives are eliminated - a producer of an alternative is one - and of the alternatives, which a priority
+     * selected, the ones of the highest priority are kept.</p>
+     *
      * @param candidates  The candidates
+     * @param reserve     Whether a candidate is a reserve
      * @param alternative Whether a candidate is an alternative
-     * @param priority    The priority of an alternative
+     * @param priority    The priority of a selected alternative or reserve
      * @param <T>         The candidate type
      * @return The narrowed candidates
      */
-    public static <T> List<T> narrow(Collection<T> candidates, Predicate<? super T> alternative,
-                                     ToIntFunction<? super T> priority) {
+    public static <T> List<T> narrow(Collection<T> candidates, Predicate<? super T> reserve,
+                                     Predicate<? super T> alternative, ToIntFunction<? super T> priority) {
         if (candidates.size() <= 1) {
             return List.copyOf(candidates);
         }
-        List<T> alternatives = new ArrayList<>();
+        List<T> others = new ArrayList<>(candidates.size());
         for (T candidate : candidates) {
+            if (!reserve.test(candidate)) {
+                others.add(candidate);
+            }
+        }
+        if (others.size() == 1) {
+            return List.copyOf(others);
+        }
+        if (others.isEmpty()) {
+            // only reserves: the highest priority wins among them
+            return highestPriority(candidates, priority);
+        }
+        List<T> alternatives = new ArrayList<>();
+        for (T candidate : others) {
             if (alternative.test(candidate)) {
                 alternatives.add(candidate);
             }
         }
         if (alternatives.isEmpty()) {
-            return List.copyOf(candidates);
+            return List.copyOf(others);
         }
+        return highestPriority(alternatives, priority);
+    }
+
+    private static <T> List<T> highestPriority(Collection<T> candidates, ToIntFunction<? super T> priority) {
         List<T> best = new ArrayList<>();
         int bestPriority = Integer.MIN_VALUE;
-        for (T candidate : alternatives) {
+        for (T candidate : candidates) {
             int candidatePriority = priority.applyAsInt(candidate);
             if (candidatePriority > bestPriority) {
                 bestPriority = candidatePriority;
@@ -338,6 +363,41 @@ public final class CdiResolution {
             }
         }
         return List.copyOf(best);
+    }
+
+    /**
+     * Whether the definition is a reserve (section 2.8), as the processor recorded it - on a class bean, on a
+     * producer, which shadows the record of its class, or on a synthetic bean.
+     *
+     * @param definition The definition
+     * @return Whether it is a reserve
+     */
+    public static boolean isReserve(BeanDefinition<?> definition) {
+        return attribute(definition, "reserve");
+    }
+
+    /**
+     * Whether the definition is eagerly initialized (section 2.9).
+     *
+     * @param definition The definition
+     * @return Whether it is eager
+     */
+    public static boolean isEager(BeanDefinition<?> definition) {
+        return attribute(definition, "eager");
+    }
+
+    /**
+     * Whether the definition is auto-closeable (section 2.10).
+     *
+     * @param definition The definition
+     * @return Whether it is auto-closeable
+     */
+    public static boolean isAutoClose(BeanDefinition<?> definition) {
+        return attribute(definition, "autoClose");
+    }
+
+    private static boolean attribute(BeanDefinition<?> definition, String member) {
+        return definition.getAnnotationMetadata().booleanValue(CdiBeanAttributes.class, member).orElse(false);
     }
 
     /**

@@ -20,6 +20,7 @@ import java.lang.annotation.Target
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertSame
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
  * A bean of a normal scope of the application's own compiled by the Groovy compiler is held first by the scope's own
@@ -139,14 +140,15 @@ class CustomNormalScopeUnderGroovyTest {
     @Test
     void theScopesOwnAnnotationLeadsTheApplicationScope() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            for (Class<?> type : [Fog, Mist, Steam]) {
+            for (Class<?> type : [Fog, Steam]) {
                 def definition = context.findProxyTargetBeanDefinition(type, null).orElseThrow()
                 assertEquals(Foggy.name, definition.scopeName.orElse(null), type.name)
                 assertEquals([Foggy.name, CdiApplicationScope.name],
                     definition.annotationMetadata.getAnnotationNamesByStereotype("jakarta.inject.Scope").take(2),
                     type.name)
             }
-            assertEquals(context.getBean(Mist).id(), context.getBean(Mist).id())
+            // a subclass that declares no bean defining annotation is not discovered by the scope it inherits
+            assertTrue(context.getBeanDefinitions(Mist).isEmpty())
             assertEquals(context.getBean(Steam).id(), context.getBean(Steam).id())
         }
     }

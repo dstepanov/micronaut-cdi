@@ -17,6 +17,7 @@ package io.micronaut.cdi.tck.arquillian;
 
 import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.core.type.TypeHierarchy;
+import io.micronaut.inject.BeanDefinitionReference;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -65,5 +67,70 @@ class DeploymentClassLoaderTest {
         assertTrue(Collections.list(loader.getResources(TYPE_HIERARCHY_SERVICE)).stream()
                 .noneMatch(url -> url.getPath().contains("cdi-tck-deployment")),
             "what the loader wrote is deleted with it");
+    }
+
+    @Test
+    void servesItsOwnDefinitionOfAClassTheParentCompiledOtherwise() throws Exception {
+        String source = """
+            package tck.loader.versioned;
+
+            @jakarta.enterprise.context.Dependent
+            @jakarta.inject.Named("%s")
+            public class Versioned {
+            }
+            """;
+        ClassLoader parent = getClass().getClassLoader();
+        DeploymentClassLoader first = new DeploymentClassLoader(DeploymentCompiler.compile(Map.of(
+            "tck.loader.versioned.Versioned", source.formatted("first"))), parent);
+        DeploymentClassLoader second = new DeploymentClassLoader(DeploymentCompiler.compile(Map.of(
+            "tck.loader.versioned.Versioned", source.formatted("second"))), first);
+        try {
+            String reference = "tck.loader.versioned.$Versioned$Definition";
+            assertEquals("first", nameOf(first, reference));
+            assertEquals("second", nameOf(second, reference),
+                "the second deployment's metadata differs from what its parent holds, and is the one served");
+        } finally {
+            second.dispose();
+            first.dispose();
+        }
+    }
+
+    @Test
+    void refusesAClassItCannotTellFromItsParentsCopy() throws Exception {
+        String source = """
+            package tck.loader.unreadable;
+
+            @jakarta.enterprise.context.Dependent
+            public class Unreadable {
+            }
+            """;
+        ClassLoader parent = getClass().getClassLoader();
+        DeploymentClassLoader first = new DeploymentClassLoader(DeploymentCompiler.compile(Map.of(
+            "tck.loader.unreadable.Unreadable", source)), parent);
+        try {
+            List<javax.tools.JavaFileObject> unreadable = new java.util.ArrayList<>();
+            for (javax.tools.JavaFileObject file : DeploymentCompiler.compile(Map.of(
+                "tck.loader.unreadable.Unreadable", source))) {
+                unreadable.add(file.getKind() == javax.tools.JavaFileObject.Kind.CLASS
+                    && file.getName().contains("$Unreadable$Definition")
+                    ? new javax.tools.ForwardingJavaFileObject<>(file) {
+                        @Override
+                        public java.io.InputStream openInputStream() throws java.io.IOException {
+                            throw new java.io.IOException("unreadable");
+                        }
+                    } : file);
+            }
+            assertThrows(DeploymentClassLoader.UnreadableClass.class,
+                () -> new DeploymentClassLoader(unreadable, first));
+        } finally {
+            first.dispose();
+        }
+    }
+
+    private static String nameOf(ClassLoader loader, String referenceClass) throws Exception {
+        Class<?> type = loader.loadClass(referenceClass);
+        BeanDefinitionReference<?> reference =
+            (BeanDefinitionReference<?>) type.getDeclaredConstructor().newInstance();
+        return reference.getAnnotationMetadata().stringValue("jakarta.inject.Named").orElse("");
     }
 }

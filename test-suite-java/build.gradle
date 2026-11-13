@@ -27,3 +27,10 @@ dependencies {
     testImplementation libs.junit.jupiter
     testRuntimeOnly libs.junit.jupiter.engine
 }
+
+tasks.named("test") {
+    // what the in-memory compilations need to read the service entries of their class path through Core, which
+    // reaches the file manager of javac through its internals; a Gradle compilation is given the same access
+    jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
+}

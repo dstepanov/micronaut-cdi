@@ -303,7 +303,15 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return CdiQualifier.instances(beanContext, qualifiers());
+        List<CdiQualifier> qualifiers = qualifiers();
+        if (definition instanceof AbstractCdiInjectionPointBeanDefinition<?> && !qualifiers.contains(CdiQualifier.DEFAULT)) {
+            // a built-in bean - Event, Instance, InjectionPoint - is resolved for whatever qualifiers its point
+            // declares, and reports the ones the specification gives it: @Any and @Default (CDI 5.0, sections 5.6.1
+            // and 9.2)
+            qualifiers = new ArrayList<>(qualifiers);
+            qualifiers.add(CdiQualifier.DEFAULT);
+        }
+        return CdiQualifier.instances(beanContext, qualifiers);
     }
 
     /**
@@ -389,7 +397,26 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     @Override
+    public boolean isReserve() {
+        return CdiResolution.isReserve(definition);
+    }
+
+    @Override
+    public boolean isEager() {
+        return CdiResolution.isEager(definition);
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return CdiResolution.isAutoClose(definition);
+    }
+
+    @Override
     public Set<InjectionPoint> getInjectionPoints() {
+        if (definition.hasDeclaredAnnotation(CdiDeclaredTypes.class)) {
+            // a synthetic bean: the injection points its extension registered (CDI 5.0)
+            return CdiSyntheticInjections.injectionPointsOf(beanContext, this, definition);
+        }
         Set<InjectionPoint> points = new LinkedHashSet<>();
         Class<?> declaring = beanClass();
         // a bean in a normal scope resolves to its proxy definition, whose constructor and members are the

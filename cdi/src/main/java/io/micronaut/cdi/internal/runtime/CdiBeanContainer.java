@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.MicronautBeanContainer;
 import io.micronaut.cdi.MicronautEvent;
 import io.micronaut.cdi.MicronautInstance;
@@ -61,12 +62,13 @@ import jakarta.enterprise.inject.spi.Decorator;
 import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.InjectionTargetFactory;
 import jakarta.enterprise.inject.spi.InterceptionFactory;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
+import jakarta.enterprise.inject.spi.el.ELAwareBeanManager;
+import jakarta.enterprise.inject.spi.Prioritized;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.inject.spi.ProducerFactory;
 import jakarta.inject.Inject;
@@ -97,8 +99,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  * <p>What CDI Lite asks for is the {@code BeanContainer}; the {@code BeanManager} of CDI Full extends it, and is
  * implemented here as far as CDI Lite can answer it. That is worth having even in a module that implements only
  * Lite: a program written against the specification reaches for the manager, and the parts of it that are about
- * Lite are ones this container knows. The expression language operations are delegated to the optional
- * micronaut-cdi-el module, and fail with the name of that module where it is absent. Everything else on it that
+ * Lite are ones this container knows. The expression language operations, which CDI 5.0 keeps on
+ * {@code ELAwareBeanManager} only, are delegated to the optional micronaut-cdi-el module, and fail with the name of
+ * that module where it is absent. Everything else on it that
  * belongs to CDI Full — decorators, passivation, portable extensions and building a bean out of an annotated
  * type — says so rather than answering with an empty result that would read as there being none.</p>
  *
@@ -110,7 +113,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 @CdiScope("jakarta.enterprise.context.Dependent")
 @Default
 @Internal
-public final class CdiBeanContainer implements BeanManager, MicronautBeanContainer {
+public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBeanContainer {
 
     private final BeanContext beanContext;
     private final RecordedTypeIndex typeIndex;
@@ -645,7 +648,7 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         // of a single winner is the ambiguity of section 2.4.2
         List<Bean<? extends X>> narrowed = CdiResolution.narrow(
             CdiResolution.resolvedAmong(beans, CdiBeanContainer::definitionOf, null, null, beanContext),
-            Bean::isAlternative, CdiBeanContainer::priorityOf);
+            Bean::isReserve, Bean::isAlternative, CdiBeanContainer::priorityOf);
         if (narrowed.size() == 1) {
             return narrowed.get(0);
         }
@@ -662,7 +665,8 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
         if (bean instanceof CdiBean<?> cdiBean) {
             return CdiResolution.priorityOf(cdiBean.definition());
         }
-        return Integer.MIN_VALUE;
+        // a bean a program handed in is selected with the priority it says it has (section 11.1.1)
+        return bean instanceof Prioritized prioritized ? prioritized.getPriority() : Integer.MIN_VALUE;
     }
 
     @Override
@@ -983,6 +987,26 @@ public final class CdiBeanContainer implements BeanManager, MicronautBeanContain
     @Override
     public void validate(InjectionPoint injectionPoint) {
         resolvedFor(injectionPoint);
+    }
+
+    /**
+     * The contextual instance behind a client proxy (CDI 5.0, section 11.3). A client proxy of a bean in a normal
+     * scope is the scoped proxy Micronaut generated for it, and that proxy resolves its target from the scope as
+     * every invocation does: so an inactive scope answers with its {@code ContextNotActiveException}, and a scope
+     * with more than one active context with its {@code IllegalStateException}. Anything else - a proxy of
+     * Micronaut's own advice among it - is not a client proxy and is returned as it is.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T unwrapClientProxy(T reference) {
+        // a proxy Micronaut generated for advice of its own targets a bean as well, and is no client proxy: only
+        // the proxy of a bean compiled into a normal scope is
+        if (reference instanceof InterceptedProxy<?> proxy && beanContext.findBeanDefinition(reference.getClass())
+            .map(definition -> CdiResolution.isNormalScoped(definition.getAnnotationMetadata()))
+            .orElse(false)) {
+            return (T) proxy.interceptedTarget();
+        }
+        return reference;
     }
 
     @Override

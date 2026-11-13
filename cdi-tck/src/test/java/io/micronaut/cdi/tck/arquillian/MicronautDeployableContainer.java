@@ -115,6 +115,11 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             // while the deployment is built
             return deployCompiled(archive, classes, sources, extensions);
         }
+        if (!asyncHandlerEntriesOf(archive).isEmpty()) {
+            // a deployment with async handlers of method invokers of its own (CDI 5.0): a handler is read as the
+            // deployment compiles, where its type arguments are known, so the archive is compiled with them
+            return deployCompiled(archive, classes, sources);
+        }
         if (classes.stream().anyMatch(sources::isBroken)
             || classes.stream().anyMatch(sources::declaresFilteredNestedBeans)) {
             // a deployment the kit expects the container to reject, or one whose beans are nested inside the
@@ -192,10 +197,12 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             }
         }
         Iterable<? extends javax.tools.JavaFileObject> generated;
+        Map<String, byte[]> asyncHandlerEntries = asyncHandlerEntriesOf(archive);
         try {
             // the deployment's extensions, and only those, are named to the compilation through the processor's
             // options: a compilation is handed nothing else
-            generated = DeploymentCompiler.compile(compilable, extensionClassNames);
+            generated = DeploymentCompiler.compile(compilable, extensionClassNames,
+                asyncHandlerNamesOf(asyncHandlerEntries));
         } catch (jakarta.enterprise.inject.spi.DefinitionException
                  | jakarta.enterprise.inject.spi.DeploymentException e) {
             throw new DeploymentException("The deployment was rejected as it compiled", e);
@@ -210,7 +217,10 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             }
             throw e;
         }
-        DeploymentClassLoader loader = new DeploymentClassLoader(generated, getClass().getClassLoader());
+        // the async handlers' service entries are served by the deployment's loader, which the container loads
+        // the handlers through as its invokers are built
+        DeploymentClassLoader loader = new DeploymentClassLoader(generated, asyncHandlerEntries,
+            getClass().getClassLoader());
         if (!beanArchive) {
             // only what the extensions scanned is a bean of an archive that is not a bean archive: the classes
             // the discovery phase added, read from the import of them the compilation generated
@@ -273,6 +283,32 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 new jakarta.enterprise.inject.spi.DeploymentException(
                     "The deployment could not be started", e));
         }
+    }
+
+    /**
+     * Compiles the classes of an SE archive with the build compatible extensions it registers, as the application
+     * of the launched JVM the kit writes the test for was compiled: the SE bootstrap finds what that compiled
+     * through the loader returned, made the context loader of the thread the test runs on.
+     *
+     * @param archive The archive
+     * @return The loader of what was compiled, or {@code null} where the archive registers no extension
+     */
+    static @org.jspecify.annotations.Nullable DeploymentClassLoader compileForTheBootstrap(Archive<?> archive) {
+        java.util.List<String> extensions = extensionsOf(archive);
+        if (extensions.isEmpty()) {
+            return null;
+        }
+        DeployableSources sources = DeployableSources.configured();
+        java.util.Map<String, String> compilable = new java.util.LinkedHashMap<>();
+        for (String name : classesOf(archive)) {
+            String source = sources.sourceOf(name);
+            if (source != null) {
+                compilable.put(name, source);
+            }
+        }
+        // the parent lists every definition the shared compilation generated, and this loader only what is new
+        return new DeploymentClassLoader(DeploymentCompiler.compile(compilable, extensions), Map.of(),
+            MicronautDeployableContainer.class.getClassLoader(), true);
     }
 
     /**
@@ -428,6 +464,53 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
                 throw new java.io.UncheckedIOException("The extension service entry could not be read", e);
             }
         }
+    }
+
+    /**
+     * The service entries of async handlers (CDI 5.0) an archive carries, by the path a class loader serves them at.
+     */
+    private static Map<String, byte[]> asyncHandlerEntriesOf(Archive<?> archive) {
+        Map<String, byte[]> entries = new java.util.LinkedHashMap<>();
+        collectAsyncHandlerEntries(archive, entries);
+        return entries;
+    }
+
+    private static void collectAsyncHandlerEntries(Archive<?> archive, Map<String, byte[]> entries) {
+        for (Map.Entry<ArchivePath, org.jboss.shrinkwrap.api.Node> entry : archive.getContent().entrySet()) {
+            String path = entry.getKey().get();
+            org.jboss.shrinkwrap.api.asset.Asset asset = entry.getValue().getAsset();
+            if (path.endsWith(".jar") && asset instanceof org.jboss.shrinkwrap.api.asset.ArchiveAsset nested) {
+                collectAsyncHandlerEntries(nested.getArchive(), entries);
+                continue;
+            }
+            int services = path.indexOf("services/jakarta.enterprise.invoke.AsyncHandler$");
+            if (asset == null || services < 0) {
+                continue;
+            }
+            try (java.io.InputStream in = asset.openStream()) {
+                entries.merge("META-INF/" + path.substring(services), in.readAllBytes(), (one, other) -> {
+                    byte[] both = java.util.Arrays.copyOf(one, one.length + 1 + other.length);
+                    both[one.length] = '\n';
+                    System.arraycopy(other, 0, both, one.length + 1, other.length);
+                    return both;
+                });
+            } catch (java.io.IOException e) {
+                throw new java.io.UncheckedIOException("The async handler service entry could not be read", e);
+            }
+        }
+    }
+
+    private static java.util.List<String> asyncHandlerNamesOf(Map<String, byte[]> entries) {
+        java.util.List<String> names = new java.util.ArrayList<>();
+        for (byte[] content : entries.values()) {
+            for (String line : new String(content, java.nio.charset.StandardCharsets.UTF_8).split("\n")) {
+                String name = line.trim();
+                if (!name.isEmpty() && !name.startsWith("#")) {
+                    names.add(name);
+                }
+            }
+        }
+        return names;
     }
 
     static Set<String> classesOf(Archive<?> archive) {

@@ -49,6 +49,9 @@ public final class ELImpl implements EL {
     }
 
     private static jakarta.el.ExpressionFactory factory(BeanManager beanManager) {
-        return beanManager.wrapExpressionFactory(jakarta.el.ExpressionFactory.newInstance());
+        // since CDI 5.0 the expression language is integrated through ELAwareBeanManager, which the bean manager
+        // is where the optional micronaut-cdi-el module is present
+        return ((jakarta.enterprise.inject.spi.el.ELAwareBeanManager) beanManager)
+            .wrapExpressionFactory(jakarta.el.ExpressionFactory.newInstance());
     }
 }

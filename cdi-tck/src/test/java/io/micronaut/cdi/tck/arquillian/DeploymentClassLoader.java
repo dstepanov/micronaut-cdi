@@ -53,6 +53,31 @@ final class DeploymentClassLoader extends ClassLoader {
     private final @org.jspecify.annotations.Nullable Path resources;
 
     DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, ClassLoader parent) {
+        this(generated, Map.of(), parent);
+    }
+
+    /**
+     * A loader that also serves resources the deployment's archive carries, by their path: the service entries of
+     * the async handlers of method invokers (CDI 5.0), which the container loads its handlers through.
+     */
+    DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, Map<String, byte[]> archiveResources,
+                          ClassLoader parent) {
+        this(generated, archiveResources, parent, false);
+    }
+
+    /**
+     * A loader whose service entries may list only the classes its parent does not have. A container that finds its
+     * definitions through the service entries of its class loader - the SE bootstrap's - would otherwise be listed
+     * every definition the compilation regenerated twice, once by the parent and once by this loader; a class the
+     * parent has is listed by the parent, and served by this loader where this deployment compiled it otherwise.
+     *
+     * @param generated        What the compilation generated
+     * @param archiveResources The resources the archive carries, by path
+     * @param parent           The parent
+     * @param newEntriesOnly   Whether a service entry naming a class the parent has is left out
+     */
+    DeploymentClassLoader(Iterable<? extends JavaFileObject> generated, Map<String, byte[]> archiveResources,
+                          ClassLoader parent, boolean newEntriesOnly) {
         super(parent);
         Map<String, JavaFileObject> generatedResources = new LinkedHashMap<>();
         for (JavaFileObject file : generated) {
@@ -60,12 +85,13 @@ final class DeploymentClassLoader extends ClassLoader {
                 compiled.put(classNameOf(file), file);
             } else if (file.getKind() == JavaFileObject.Kind.OTHER) {
                 String path = outputPathOf(file);
-                if (path != null) {
+                if (path != null && !(newEntriesOnly && path.startsWith("META-INF/")
+                    && parentHas(path.substring(path.lastIndexOf('/') + 1)))) {
                     generatedResources.put(path, file);
                 }
             }
         }
-        resources = writeResources(generatedResources);
+        resources = writeResources(generatedResources, archiveResources);
         // everything generated that has a scenario class to live beside is defined there now, eagerly: a
         // class defined through a lookup is not found by name later, so anything the app loader will resolve
         // against — one generated class naming another — has to exist before it is asked for
@@ -76,7 +102,11 @@ final class DeploymentClassLoader extends ClassLoader {
             try {
                 if (parentHas(name)) {
                     // the shared compilation already produced this one, and the parent's copy is the one in
-                    // the scenario classes' runtime package
+                    // the scenario classes' runtime package - unless this deployment compiled it otherwise, its
+                    // extensions having their say, in which case its own bytes are served
+                    if (isGenerated(name) && !sameAsParent(name)) {
+                        childFirst.add(name);
+                    }
                     continue;
                 }
                 Class<?> host = hostOf(name);
@@ -84,6 +114,8 @@ final class DeploymentClassLoader extends ClassLoader {
                     continue;
                 }
                 defineBesideHost(name, host);
+            } catch (UnreadableClass e) {
+                throw e;
             } catch (LinkageError | RuntimeException e) {
                 // left for findClass to serve from this loader instead
             }
@@ -106,6 +138,60 @@ final class DeploymentClassLoader extends ClassLoader {
             } catch (IOException e) {
                 // served as it comes
             }
+        }
+        // a generated class and the classes nested in it go together: the reference of a definition served fresh
+        // has to be served fresh too, or the stale one it links to is what the context reads
+        for (String fresh : List.copyOf(childFirst)) {
+            for (String name : compiled.keySet()) {
+                if ((DEFINED_WITH_HOST.containsKey(name) || isGenerated(name) && parentHas(name))
+                    && (name.startsWith(fresh + "$") || fresh.startsWith(name + "$"))) {
+                    childFirst.add(name);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (!childFirst.contains(name)) {
+            return super.loadClass(name, resolve);
+        }
+        // the parent holds a stale copy another deployment defined beside its host: this deployment's bytes win
+        synchronized (getClassLoadingLock(name)) {
+            Class<?> loaded = findLoadedClass(name);
+            if (loaded == null) {
+                loaded = findClass(name);
+            }
+            if (resolve) {
+                resolveClass(loaded);
+            }
+            return loaded;
+        }
+    }
+
+    /**
+     * Whether the class is one the processors generated - a definition, an interception, a type hierarchy - whose
+     * simple name Micronaut opens with a dollar. A scenario class compiled again is the scenario class the suite's
+     * classes name, and is never served beside the parent's: its identity is what the kit's tests compare.
+     */
+    private static boolean isGenerated(String name) {
+        return name.substring(name.lastIndexOf('.') + 1).startsWith("$");
+    }
+
+    /**
+     * Whether what this deployment compiled of a class is what the parent holds of it, byte for byte.
+     */
+    private boolean sameAsParent(String name) {
+        JavaFileObject file = compiled.get(name);
+        if (file == null) {
+            return true;
+        }
+        try (InputStream mine = file.openInputStream();
+             InputStream parents = getParent().getResourceAsStream(name.replace('.', '/') + ".class")) {
+            return parents != null && java.util.Arrays.equals(mine.readAllBytes(), parents.readAllBytes());
+        } catch (IOException e) {
+            // taking the parent's copy for this deployment's would serve a stale definition without a word
+            throw new UnreadableClass(name, e);
         }
     }
 
@@ -228,8 +314,9 @@ final class DeploymentClassLoader extends ClassLoader {
     /**
      * Writes the generated resources to a directory of their own, so that they have a directory to be walked.
      */
-    private static @org.jspecify.annotations.Nullable Path writeResources(Map<String, JavaFileObject> generated) {
-        if (generated.isEmpty()) {
+    private static @org.jspecify.annotations.Nullable Path writeResources(Map<String, JavaFileObject> generated,
+                                                                          Map<String, byte[]> archived) {
+        if (generated.isEmpty() && archived.isEmpty()) {
             return null;
         }
         try {
@@ -240,6 +327,11 @@ final class DeploymentClassLoader extends ClassLoader {
                 try (InputStream in = entry.getValue().openInputStream()) {
                     Files.copy(in, target);
                 }
+            }
+            for (Map.Entry<String, byte[]> entry : archived.entrySet()) {
+                Path target = directory.resolve(entry.getKey());
+                Files.createDirectories(target.getParent());
+                Files.write(target, entry.getValue());
             }
             return directory;
         } catch (IOException e) {
@@ -272,5 +364,17 @@ final class DeploymentClassLoader extends ClassLoader {
         String name = file.getName();
         int output = name.indexOf(CLASS_OUTPUT);
         return output < 0 ? null : name.substring(output + CLASS_OUTPUT.length());
+    }
+
+    /**
+     * A class the deployment compiled that could not be read to tell it from its parent's copy.
+     */
+    static final class UnreadableClass extends IllegalStateException {
+
+        private static final long serialVersionUID = 1L;
+
+        UnreadableClass(String name, IOException cause) {
+            super("The class " + name + " the deployment compiled could not be compared with its parent's", cause);
+        }
     }
 }

@@ -16,6 +16,7 @@
 package io.micronaut.cdi.processor.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiAny;
+import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiName;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
@@ -327,6 +328,29 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
             declared = declaringElement().getAnnotationMetadata().intValue(Cdi.PRIORITY, "value");
         }
         return declared.isPresent() ? declared.getAsInt() : null;
+    }
+
+    /**
+     * Whether the bean is a reserve (section 2.8), as the processor recorded it: on the class, or on the producer
+     * itself, which does not inherit it from its class.
+     */
+    @Override
+    public boolean isReserve() {
+        return attribute("reserve");
+    }
+
+    @Override
+    public boolean isEager() {
+        return attribute("eager");
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return attribute("autoClose");
+    }
+
+    private boolean attribute(String member) {
+        return declared().booleanValue(CdiBeanAttributes.class, member).orElse(false);
     }
 
     @Override

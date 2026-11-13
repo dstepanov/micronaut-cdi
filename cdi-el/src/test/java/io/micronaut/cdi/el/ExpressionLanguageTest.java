@@ -22,6 +22,7 @@ import jakarta.el.ExpressionFactory;
 import jakarta.el.StandardELContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.el.ELAwareBeanManager;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 
@@ -66,7 +67,7 @@ class ExpressionLanguageTest {
     @Test
     void aMethodExpressionInvokesAPublicMethodOfANamedBeanThatSaysNothingOfIt() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
             assertEquals("stamped this", factory
@@ -91,7 +92,7 @@ class ExpressionLanguageTest {
     @Test
     void aNameInAnExpressionResolvesTheBeanOfThatName() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
             Object value = factory.createValueExpression(el, "${greeter.greeting}", String.class).getValue(el);
@@ -102,7 +103,7 @@ class ExpressionLanguageTest {
     @Test
     void aMethodExpressionInvokesTheBeanOfThatName() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
             ELContext el = new StandardELContext(factory);
             Object value = factory
@@ -115,7 +116,7 @@ class ExpressionLanguageTest {
     @Test
     void theResolverAnswersTheNameOfABean() {
         try (ApplicationContext context = ApplicationContext.run()) {
-            BeanManager manager = context.getBean(BeanManager.class);
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
             ELResolver resolver = manager.getELResolver();
             assertNotNull(resolver);
             ExpressionFactory factory = ExpressionFactory.newInstance();

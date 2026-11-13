@@ -24,6 +24,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.spi.AlterableContext;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
@@ -289,6 +290,12 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private void registerContext(Class<? extends Annotation> scopeAnnotation, boolean isNormal,
                                  Class<? extends AlterableContext> contextClass) {
         String scopeName = scopeAnnotation.getName();
+        if (Cdi.APPLICATION_SCOPED.equals(scopeName) || Cdi.DEPENDENT.equals(scopeName)) {
+            // the application and the dependent scopes are global (CDI 5.0, section 6.4): each has exactly one
+            // context, the container's, and registering another is a deployment problem (section 6.2)
+            throw new DeploymentException("The scope " + scopeName + " is global, and a build compatible extension "
+                + "may not register a context for it: " + contextClass.getName() + " (section 6.4)");
+        }
         List<String> contextsOfScope = contexts.computeIfAbsent(scopeName, name -> new ArrayList<>());
         contextsOfScope.add(contextClass.getName());
         if (contextsOfScope.size() > 1) {

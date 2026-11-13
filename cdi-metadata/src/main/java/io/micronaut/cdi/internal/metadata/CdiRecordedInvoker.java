@@ -83,4 +83,33 @@ public @interface CdiRecordedInvoker {
      * @return One flag per parameter
      */
     boolean[] argumentLookups() default {};
+
+    /**
+     * Whether the method is asynchronous (CDI 5.0): it matches exactly one async handler, which the compiler found.
+     *
+     * @return Whether it is asynchronous
+     */
+    boolean async() default false;
+
+    /**
+     * The class of the async handler the method matches, a service provider of {@code AsyncHandler.ReturnType} or
+     * {@code AsyncHandler.ParameterType}; empty for a built-in return type handler.
+     *
+     * @return The handler class name
+     */
+    String asyncHandler() default "";
+
+    /**
+     * The async type the method matches the handler by.
+     *
+     * @return The name of the async type
+     */
+    String asyncType() default "";
+
+    /**
+     * The position of the async parameter of a parameter type handler; -1 for a return type handler.
+     *
+     * @return The position
+     */
+    int asyncParameter() default -1;
 }

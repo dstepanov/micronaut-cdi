@@ -51,7 +51,11 @@ class LangModelTckTest {
     private static final Map<String, String> PENDING = Map.of(
         "RepeatableAnnotations", "a repeatable annotation written once beside a container the source wrote is "
             + "folded into that container, and the two are not told apart (CONFORMANCE.md, Open points in Micronaut "
-            + "Core; the mixed case); accepted"
+            + "Core; the mixed case); accepted",
+        "SealedClasses", "an enum whose constants declare bodies is implicitly sealed and permits the anonymous "
+            + "classes of those bodies, which javac does not list among the permitted subclasses of a class it "
+            + "compiles from source, and Micronaut Core reads isSealed() and getPermittedSubclasses() from that "
+            + "list (CONFORMANCE.md, Open points in Micronaut Core); the section stops at verifySealedEnum"
     );
 
     @TestFactory
