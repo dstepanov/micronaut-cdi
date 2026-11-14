@@ -806,6 +806,10 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         if ("jakarta.enterprise.inject.Model".equals(annotationType.getName())) {
             return true;
         }
+        Boolean recorded = types().isStereotype(annotationType.getName());
+        if (recorded != null) {
+            return recorded;
+        }
         return reflection("BeanContainer.isStereotype", annotationType)
             .isAnnotated(annotationType, Stereotype.class);
     }
