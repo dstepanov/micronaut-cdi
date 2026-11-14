@@ -18,6 +18,7 @@ package io.micronaut.cdi.test;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.context.ApplicationContext;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Vetoed;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +51,44 @@ class VetoedBeanTest {
             assertEquals(0, container.getBeans(io.micronaut.cdi.test.vetoed.Unwanted.class).size());
             assertTrue(container.createInstance()
                 .select(io.micronaut.cdi.test.vetoed.Unwanted.class).isUnsatisfied());
+        }
+    }
+
+    @Test
+    void theProducersOfAVetoedClassProduceNothing() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            // Vetoed: neither the class nor the producer methods and fields it declares are beans
+            assertEquals(0, container.getBeans(Rejected.class).size());
+            assertTrue(container.createInstance().select(Rejected.class).isUnsatisfied());
+            assertEquals(0, container.getBeans(RejectedCount.class).size());
+        }
+    }
+
+    /**
+     * What the producers of a vetoed class would produce.
+     */
+    public record Rejected(String name) {
+    }
+
+    /**
+     * What the producer field of a vetoed class would produce.
+     */
+    public record RejectedCount(int count) {
+    }
+
+    /**
+     * A vetoed class that declares producers.
+     */
+    @Vetoed
+    @Dependent
+    public static class RefusedProducer {
+        @Produces
+        RejectedCount count = new RejectedCount(1);
+
+        @Produces
+        Rejected rejected() {
+            return new Rejected("rejected");
         }
     }
 
