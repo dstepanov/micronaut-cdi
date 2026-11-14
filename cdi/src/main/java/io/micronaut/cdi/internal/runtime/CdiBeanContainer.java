@@ -38,7 +38,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
@@ -558,25 +557,13 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * @return The bean
      */
     public CdiBean<?> beanOf(BeanDefinition<?> definition) {
-        return new CdiBean<>(beanContext, proxyOf(definition));
+        return beanOfDefinition(definition);
     }
 
-    /**
-     * The definition of the client proxy that stands in front of the given definition, where it is the target of
-     * one, which the bean context does not enumerate: the bean is the proxy.
-     */
-    private BeanDefinition<?> proxyOf(BeanDefinition<?> definition) {
-        if (definition instanceof ProxyBeanDefinition<?>
-            || !CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
-            return definition;
-        }
-        for (BeanDefinition<?> candidate : beanContext.getBeanDefinitions(Argument.of(definition.getBeanType()))) {
-            if (candidate instanceof ProxyBeanDefinition<?> proxy
-                && proxy.getTargetDefinitionType() == definition.getClass()) {
-                return candidate;
-            }
-        }
-        return definition;
+    private <T> CdiBean<T> beanOfDefinition(BeanDefinition<T> definition) {
+        // the definition of the client proxy in front of it, where it is the target of one, which the bean context
+        // does not enumerate: the bean is the proxy
+        return new CdiBean<>(beanContext, beanContext.findProxyBeanDefinition(definition).orElse(definition));
     }
 
     /**

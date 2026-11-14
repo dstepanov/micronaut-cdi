@@ -16,7 +16,6 @@
 package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.runtime.CdiBean;
-import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiContext;
 import io.micronaut.cdi.internal.runtime.CdiCreationalContext;
 import io.micronaut.context.BeanContext;
@@ -24,6 +23,7 @@ import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.context.scope.CustomScope;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.AlterableContext;
@@ -64,11 +64,11 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
     @Override
     public <T> T getOrCreate(BeanCreationContext<T> creationContext) {
         AlterableContext context = activeContext();
-        CdiBeanContainer container = beanContext.getBean(CdiBeanContainer.class);
-        @SuppressWarnings("unchecked")
-        CdiBean<T> bean = (CdiBean<T>) container.beanOf(creationContext.definition());
-        @SuppressWarnings("unchecked")
-        CreationalContext<T> creationalContext = (CreationalContext<T>) container.createCreationalContext(bean);
+        // the bean is the client proxy in front of the definition, where one is, as the container's bean of it
+        // (CdiBeanContainer.beanOf) is: the contextual handed to the context is that bean, made for this call alone
+        BeanDefinition<T> definition = creationContext.definition();
+        BeanDefinition<T> bean = beanContext.findProxyBeanDefinition(definition).orElse(definition);
+        CreationalContext<T> creationalContext = new CdiCreationalContext<>(beanContext);
         T held = context.get(new CreatingContextual<>(beanContext, bean, creationContext), creationalContext);
         if (held == null) {
             throw new ContextNotActiveException("The context of " + scopeAnnotation.getName()
@@ -104,8 +104,8 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
 
         private final BeanCreationContext<T> creation;
 
-        private CreatingContextual(BeanContext beanContext, CdiBean<T> bean, BeanCreationContext<T> creation) {
-            super(beanContext, bean.definition());
+        private CreatingContextual(BeanContext beanContext, BeanDefinition<T> bean, BeanCreationContext<T> creation) {
+            super(beanContext, bean);
             this.creation = creation;
         }
 
