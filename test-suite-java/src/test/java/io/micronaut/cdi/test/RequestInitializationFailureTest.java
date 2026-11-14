@@ -4,6 +4,7 @@ import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.ApplicationContext;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Destroyed;
 import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.event.Observes;
@@ -49,6 +50,13 @@ class RequestInitializationFailureTest {
             if (failing) {
                 ticket.touch();
                 throw new IllegalStateException("cannot initialize");
+            }
+        }
+
+        void destroyed(@Observes @Destroyed(RequestScoped.class) Object event) {
+            if (failing) {
+                // a request whose initialization failed was never begun, so it is not reported destroyed
+                EVENTS.add("request destroyed");
             }
         }
     }

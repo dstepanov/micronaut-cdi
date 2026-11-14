@@ -188,19 +188,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             work.run();
             return;
         }
-        Instances instances = newInstances();
-        try {
-            PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initialized(instances);
-                try {
-                    work.run();
-                } finally {
-                    endWhileActive(instances);
-                }
-            });
-        } finally {
-            destroyedEvent();
-        }
+        asNewRequest(() -> {
+            work.run();
+            return null;
+        });
     }
 
     /**
@@ -215,19 +206,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         if (isActive()) {
             return work.get();
         }
-        Instances instances = newInstances();
-        try {
-            return PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initialized(instances);
-                try {
-                    return work.get();
-                } finally {
-                    endWhileActive(instances);
-                }
-            });
-        } finally {
-            destroyedEvent();
-        }
+        return asNewRequest(work::get);
     }
 
     /**
@@ -244,9 +223,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             return work.call();
         }
         Instances instances = newInstances();
+        // told destroyed only once it was told initialized: a request whose initialization failed was never begun,
+        // as activate(Object) has it too
+        AtomicBoolean begun = new AtomicBoolean();
         try {
             return PropagatedContext.getOrEmpty().plus(instances).propagateCall(() -> {
                 initialized(instances);
+                begun.set(true);
                 try {
                     return work.call();
                 } finally {
@@ -254,7 +237,23 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 }
             });
         } finally {
-            destroyedEvent();
+            if (begun.get()) {
+                destroyedEvent();
+            }
+        }
+    }
+
+    /**
+     * Runs work that throws no checked exception as one new request ({@link #call}).
+     */
+    private <V> V asNewRequest(Callable<V> work) {
+        try {
+            return call(work);
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Exception e) {
+            // the work of run and supply throws no checked exception
+            throw new IllegalStateException(e);
         }
     }
 
