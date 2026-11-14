@@ -238,6 +238,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (started == null) {
             ExtensionMethods loaded = ExtensionMethods.load(context, asyncHandlers);
             extensions = loaded;
+            if (!loaded.isEmpty() && context.getLanguage() == VisitorContext.Language.KOTLIN) {
+                // KSP reads no resource of the class path of the compilation: said where an extension may build
+                // an invoker, which is what the handlers are for
+                context.warn("The service entries of async handlers on the class path of the compilation are not "
+                    + "read under KSP. Only handlers registered on the processor path or named with -A"
+                    + AsyncHandlerTypes.OPTION + " are async handlers", null);
+            }
             started = new DiscoveredClasses();
             discovered = started;
             started.compilation(context);
