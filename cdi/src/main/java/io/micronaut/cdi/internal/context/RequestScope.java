@@ -74,8 +74,11 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private final BeanContext beanContext;
 
     /**
-     * Every request this scope has begun and not yet ended, wherever its thread went: what shutdown destroys,
-     * so that a request suspended or left active on another thread still has its beans' destruction run.
+     * Every request begun by {@link #activate(Object)} - the one form whose caller returns before the request
+     * ends - and not yet ended, wherever its thread went, suspended ones included: what shutdown destroys, so that a
+     * request left active on another thread still has its beans' destruction run. A request run as work ({@link #run},
+     * {@link #supply}, {@link #call}, {@link #inNewRequest}) is ended by the work's own {@code finally}, and is not
+     * registered here.
      */
     private final Set<Instances> live = ConcurrentHashMap.newKeySet();
 
@@ -440,6 +443,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      */
     @SuppressWarnings("deprecation")
     private Activation propagate(Instances instances, @Nullable Object initiator) {
+        live.add(instances);
         Activation activation = new Activation(instances, initiator, false);
         activation.begin(PropagatedContext.getOrEmpty().plus(instances).plus(activation).propagate());
         return activation;
@@ -487,10 +491,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private Instances newInstances() {
-        Instances instances = new Instances(this, new RequestBeans(),
+        return new Instances(this, new RequestBeans(),
             new AtomicBoolean());
-        live.add(instances);
-        return instances;
     }
 
     /**
