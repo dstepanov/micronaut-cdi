@@ -64,10 +64,16 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
             }
             case Selection.Unselected.MICRONAUT -> {
                 // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own,
-                // with the qualifier Micronaut read off the point
-                Qualifier<T> micronaut = NonCdiBeanQualifier.forPoint(argument, qualifier);
-                yield nullable ? resolutionContext.findBean(argument, micronaut).orElse(null)
-                    : resolutionContext.getBean(argument, micronaut);
+                // with the qualifier Micronaut read off the point, and created through the definition they find
+                BeanDefinition<T> definition = container.micronautDefinitionOf(argument, qualifier);
+                if (definition != null) {
+                    yield resolutionContext.getBean(definition, argument);
+                }
+                if (nullable) {
+                    yield null;
+                }
+                // reported as Micronaut reports a point it finds no bean for
+                yield resolutionContext.getBean(argument, NonCdiBeanQualifier.forPoint(argument, qualifier));
             }
         };
     }

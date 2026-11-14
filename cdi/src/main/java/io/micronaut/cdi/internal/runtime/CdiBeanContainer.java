@@ -32,6 +32,7 @@ import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
+import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -307,6 +308,24 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     Set<Bean<?>> beansOf(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
         return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
+    }
+
+    /**
+     * The definition Micronaut's rules resolve a point left to them to ({@link Selection.Unselected#MICRONAUT}),
+     * among the beans of Micronaut's own and by the qualifier Micronaut reads off the point.
+     *
+     * <p>The bean is then created through the definition, as a selected one is: the qualifier the definition was
+     * found by is no part of the creation, where it would become part of the key a custom scope holds the instance
+     * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.</p>
+     *
+     * @param point     The injection point
+     * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point
+     * @param <T>       The bean type
+     * @return The definition, or {@code null} where Micronaut's rules find none
+     * @throws io.micronaut.context.exceptions.NonUniqueBeanException Where they find more than one
+     */
+    <T> @Nullable BeanDefinition<T> micronautDefinitionOf(Argument<T> point, @Nullable Qualifier<T> qualifier) {
+        return beanContext.findBeanDefinition(point, NonCdiBeanQualifier.forPoint(point, qualifier)).orElse(null);
     }
 
     /**

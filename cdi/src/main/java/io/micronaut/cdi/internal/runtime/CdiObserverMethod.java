@@ -346,9 +346,13 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                     }
                     throw new UnsatisfiedResolutionException("No bean for observer parameter " + argument);
                 }
-                case Selection.Unselected.MICRONAUT ->
-                    // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own
-                    registration = dependents.registration(point, NonCdiBeanQualifier.forPoint(point, null));
+                case Selection.Unselected.MICRONAUT -> {
+                    // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's
+                    // own, created through the definition they find (CdiBeanContainer.micronautDefinitionOf)
+                    BeanDefinition<Object> definition = container().micronautDefinitionOf(point, null);
+                    registration = definition != null ? dependents.registration(definition, point)
+                        : dependents.registration(point, NonCdiBeanQualifier.forPoint(point, null));
+                }
             }
         }
         // section 2.5.2.4, as for a field

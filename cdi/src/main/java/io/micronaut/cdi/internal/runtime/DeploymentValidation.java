@@ -218,8 +218,7 @@ final class DeploymentValidation {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
-            if (container.beanContext().findBeanDefinition((Argument) argument,
-                NonCdiBeanQualifier.forPoint((Argument) argument, null)).isEmpty()) {
+            if (container.micronautDefinitionOf((Argument) argument, null) == null) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }

@@ -237,7 +237,12 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             }
             // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own, as
             // at a bean's own point
-            case Selection.Unselected.MICRONAUT -> dependencies.getBean(point, NonCdiBeanQualifier.forPoint(point, null));
+            case Selection.Unselected.MICRONAUT -> {
+                // created through the definition Micronaut's rules find (CdiBeanContainer.micronautDefinitionOf)
+                BeanDefinition<Object> definition = container.get().micronautDefinitionOf(point, null);
+                yield definition != null ? dependencies.getBean(definition, point)
+                    : dependencies.getBean(point, NonCdiBeanQualifier.forPoint(point, null));
+            }
         };
     }
 
