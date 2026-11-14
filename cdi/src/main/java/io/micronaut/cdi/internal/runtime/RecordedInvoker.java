@@ -161,9 +161,11 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                 + parameterTypes.length + " arguments, and was invoked with " + arguments.length);
         }
 
-        CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
+        // a lookup, and the dependents it owns, only where the invoker looks something up
+        CdiInstance<Object> lookup = looksUp() ? new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT) : null;
         // the dependent instances an asynchronous invocation looked up live until it completes (CDI 5.0)
-        AsyncInvocation.Completion completion = async ? new AsyncInvocation.Completion(lookup) : null;
+        AsyncInvocation.Completion completion = !async ? null
+            : new AsyncInvocation.Completion(lookup != null ? lookup : () -> { });
         boolean returned = false;
         try {
             Object target;
@@ -173,7 +175,8 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                 // resolved the way the specification's lookup resolves — the @Default bean of the class, by
                 // the rules of typesafe resolution — rather than by Micronaut's own null-qualifier rules
                 @SuppressWarnings("unchecked")
-                Object looked = lookup.selectArgument((Argument<Object>) Argument.of(beanClass), List.of()).get();
+                Object looked = lookupOf(lookup).selectArgument((Argument<Object>) Argument.of(beanClass), List.of())
+                    .get();
                 target = looked;
             } else {
                 if (instance == null) {
@@ -190,7 +193,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             Argument<?>[] methodArguments = method.getArguments();
             for (int i = 0; i < parameterTypes.length; i++) {
                 if (argumentLookups[i]) {
-                    invocationArguments[i] = lookedUp(lookup, methodArguments[i]);
+                    invocationArguments[i] = lookedUp(lookupOf(lookup), methodArguments[i]);
                 } else {
                     invocationArguments[i] = checked(arguments[i], parameterTypes[i], i);
                 }
@@ -211,7 +214,9 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             // long as the invocation; a dependent among it is destroyed here, or - for an asynchronous one that
             // returned normally - as the asynchronous action completes
             if (completion == null) {
-                lookup.close();
+                if (lookup != null) {
+                    lookup.close();
+                }
             } else if (returned) {
                 completion.returned();
             } else {
@@ -221,15 +226,33 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     }
 
     /**
+     * Whether the invoker looks the instance or an argument up.
+     */
+    private boolean looksUp() {
+        if (instanceLookup) {
+            return true;
+        }
+        for (boolean lookup : argumentLookups) {
+            if (lookup) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static CdiInstance<Object> lookupOf(@Nullable CdiInstance<Object> lookup) {
+        if (lookup == null) {
+            throw new IllegalStateException("The invoker looks nothing up");
+        }
+        return lookup;
+    }
+
+    /**
      * Checks that every lookup the invoker names resolves to exactly one bean, which is what CDI 4.1 asks of
      * the deployment rather than of the first invocation. It is asked as the container starts.
      */
     public void validateLookups() {
-        boolean anyLookup = instanceLookup;
-        for (boolean lookup : argumentLookups) {
-            anyLookup = anyLookup || lookup;
-        }
-        if (!anyLookup) {
+        if (!looksUp()) {
             return;
         }
         Class<?> beanClass;
