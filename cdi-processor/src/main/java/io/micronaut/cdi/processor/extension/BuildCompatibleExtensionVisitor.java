@@ -223,8 +223,10 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 + "javac does not export com.sun.tools.javac.processing to the processor. Only handlers registered on "
                 + "the processor path or named with -A" + AsyncHandlerTypes.OPTION + " are async handlers", null);
         }
+        List<AsyncHandlerTypes.Handler> asyncHandlers = List.of();
         try {
-            AsyncHandlerTypes.of(context);
+            // read once for the compilation and handed to what builds and validates invokers
+            asyncHandlers = AsyncHandlerTypes.of(context);
         } catch (DefinitionException e) {
             context.fail(String.valueOf(e.getMessage()), null);
         } catch (DeploymentException e) {
@@ -234,7 +236,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // others that it never starts. The discovery phase runs once, as it is first started
         DiscoveredClasses started = discovered;
         if (started == null) {
-            ExtensionMethods loaded = ExtensionMethods.load(context);
+            ExtensionMethods loaded = ExtensionMethods.load(context, asyncHandlers);
             extensions = loaded;
             started = new DiscoveredClasses();
             discovered = started;
