@@ -533,6 +533,15 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     }
 
     /**
+     * The qualifiers portable extensions added, which every bean's qualifiers are read with.
+     *
+     * @return The overlay
+     */
+    QualifierOverlay overlay() {
+        return overlay;
+    }
+
+    /**
      * What the application was compiled with of each qualifier and interceptor binding type.
      */
     private CompiledAnnotationTypes types() {
