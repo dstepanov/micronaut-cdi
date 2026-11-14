@@ -61,7 +61,7 @@ public final class CdiTypes {
      * @return The raw class
      */
     public static @Nullable Class<?> rawClassOf(Type type) {
-        return SpecificationTypes.rawClassOf(type);
+        return rawClassOf(Argument.of(type));
     }
 
     /**
@@ -350,7 +350,7 @@ public final class CdiTypes {
         }
         CdiReflection reflection = reflection(index);
         return closureOf(index, reflection != null
-            ? SpecificationTypes.argumentOf(reflection.declaredTypeOf(beanClass)) : Argument.of(beanClass), true);
+            ? Argument.of(reflection.declaredTypeOf(beanClass)) : Argument.of(beanClass), true);
     }
 
     private static List<Argument<?>> closureOf(@Nullable RecordedTypeIndex index, Argument<?> type,
@@ -433,7 +433,7 @@ public final class CdiTypes {
      * @see #eventTypeOf(RecordedTypeIndex, Class, Argument)
      */
     public static Type eventTypeOf(@Nullable RecordedTypeIndex index, Class<?> runtimeClass, Type declaredType) {
-        return eventTypeOf(index, runtimeClass, SpecificationTypes.argumentOf(declaredType)).asType();
+        return eventTypeOf(index, runtimeClass, Argument.of(declaredType)).asType();
     }
 
     /**
@@ -515,7 +515,7 @@ public final class CdiTypes {
     public static Argument<?> eventTypeReadBy(CdiReflection reflection, Class<?> runtimeClass,
                                               Argument<?> declaredType) {
         Type declaration = reflection.declaredTypeOf(runtimeClass);
-        Argument<?> declared = SpecificationTypes.argumentOf(declaration);
+        Argument<?> declared = Argument.of(declaration);
         List<String> variables = new ArrayList<>();
         if (isParameterized(declared)) {
             for (Argument<?> variable : declared.getTypeParameters()) {

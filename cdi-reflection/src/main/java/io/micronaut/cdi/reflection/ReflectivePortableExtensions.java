@@ -28,7 +28,6 @@ import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.context.RuntimeBeanDefinition;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -381,7 +380,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                             }
                         }
                         found.add(new Observer(extension, method, i,
-                            SpecificationTypes.argumentOf(method.getGenericParameterTypes()[i]), priority, container));
+                            Argument.of(method.getGenericParameterTypes()[i]), priority, container));
                     }
                 }
                 below.addAll(Arrays.asList(methods));

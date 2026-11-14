@@ -16,9 +16,9 @@
 package io.micronaut.cdi.spi;
 
 import io.micronaut.cdi.internal.runtime.CdiTypes;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.Annotated;
 import org.jspecify.annotations.Nullable;
 
@@ -122,7 +122,7 @@ public interface CdiReflection {
      */
     @Deprecated(since = "1.0")
     default Type eventTypeOf(Class<?> runtimeClass, Type declaredType) {
-        return CdiTypes.eventTypeReadBy(this, runtimeClass, SpecificationTypes.argumentOf(declaredType)).asType();
+        return CdiTypes.eventTypeReadBy(this, runtimeClass, Argument.of(declaredType)).asType();
     }
 
     /**

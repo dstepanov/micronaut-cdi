@@ -17,7 +17,7 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.context.ApplicationContext;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
@@ -56,7 +56,7 @@ class GenericArrayBeanTypeTest {
             for (Type incompatible : new Type[]{Object[].class, Crate[].class,
                 new TypeLiteral<Crate<?>[]>() { }.getType()}) {
                 assertTrue(container.getBeans(incompatible).isEmpty(), "no CDI bean for " + incompatible);
-                assertTrue(context.findBean(SpecificationTypes.argumentOf(incompatible)).isEmpty(),
+                assertTrue(context.findBean(Argument.of(incompatible)).isEmpty(),
                     "Micronaut candidate resolution also rejects " + incompatible);
             }
             assertTrue(context.getBean(Consumer.class).wildcards.isUnsatisfied());

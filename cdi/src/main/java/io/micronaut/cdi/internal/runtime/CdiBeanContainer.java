@@ -207,7 +207,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     @Override
     public Object getReference(Bean<?> bean, Type beanType, CreationalContext<?> ctx) {
         boolean amongTheTypes = false;
-        Argument<?> required = SpecificationTypes.argumentOf(beanType);
+        Argument<?> required = Argument.of(beanType);
         List<Argument<?>> types = bean instanceof CdiBean<?> own ? own.types()
             : SpecificationTypes.argumentsOf(bean.getTypes());
         for (Argument<?> type : types) {
@@ -307,7 +307,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      */
     Set<Bean<?>> beansOf(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
-        return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
+        return beansOf(Argument.of(required), requiredQualifiers);
     }
 
     /**
@@ -918,7 +918,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         if (bean instanceof CdiBean<?> cdiBean && cdiBean.isDependent()
             && ctx instanceof CdiCreationalContext<?> creation) {
             Argument<?> type = injectionPoint instanceof CdiInjectionPoint own
-                ? own.argument() : SpecificationTypes.argumentOf(injectionPoint.getType());
+                ? own.argument() : Argument.of(injectionPoint.getType());
             try {
                 return creation.created().registrationAt(null, injectionPoint, (BeanDefinition) cdiBean.definition(),
                     (Argument) type).bean();
