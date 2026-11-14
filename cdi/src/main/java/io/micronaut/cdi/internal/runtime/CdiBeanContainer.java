@@ -86,6 +86,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Supplier;
 
 /**
  * The container itself, as a program reaches it: the object of section 2.9.1, through which a bean can be looked
@@ -325,6 +326,56 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      */
     <T> @Nullable BeanDefinition<T> micronautDefinitionOf(Argument<T> point, @Nullable Qualifier<T> qualifier) {
         return beanContext.findBeanDefinition(point, NonCdiBeanQualifier.forPoint(point, qualifier)).orElse(null);
+    }
+
+    /**
+     * Resolves a parameter the container selects ({@link #selectionFor}) - a bean's own point, a disposer's or an
+     * observer's - creating the bean through whoever owns what is created for it: the bean selected through its
+     * definition, a point left to Micronaut through the definition Micronaut's rules find
+     * ({@link #micronautDefinitionOf}), and a point nothing satisfies as unsatisfied, or as {@code null} where it may
+     * be.
+     *
+     * @param point       The parameter
+     * @param qualifier   The qualifier Micronaut handed over for it, or {@code null} to read it off the point
+     * @param nullable    Whether the parameter may be left {@code null}
+     * @param creation    What creates the bean
+     * @param unsatisfied The failure of a parameter nothing satisfies
+     * @return The bean, the default of a primitive where a dependent producer returned {@code null} (section
+     * 2.5.2.4)
+     */
+    @SuppressWarnings("unchecked")
+    @Nullable Object resolveSelected(Argument<?> point, @Nullable Qualifier<?> qualifier, boolean nullable,
+                                     Creation creation, Supplier<? extends RuntimeException> unsatisfied) {
+        Argument<Object> argument = (Argument<Object>) point;
+        Object bean = switch (selectionFor(argument)) {
+            case Selection.Selected selected -> {
+                // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
+                // narrowing the candidates to it would become part of the key its scope holds the instance under
+                BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
+                yield creation.of(definition, CdiInstance.askedAs(beanContext, argument, definition));
+            }
+            case Selection.Unselected.UNSATISFIED -> {
+                if (nullable) {
+                    yield null;
+                }
+                throw unsatisfied.get();
+            }
+            case Selection.Unselected.MICRONAUT -> {
+                // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own,
+                // with the qualifier Micronaut read off the point
+                Qualifier<Object> read = (Qualifier<Object>) qualifier;
+                BeanDefinition<Object> definition = micronautDefinitionOf(argument, read);
+                if (definition != null) {
+                    yield creation.of(definition, argument);
+                }
+                if (nullable) {
+                    yield null;
+                }
+                // reported as Micronaut reports a point it finds no bean for
+                yield creation.byLookup(argument, NonCdiBeanQualifier.forPoint(argument, read));
+            }
+        };
+        return CdiResolution.orPrimitiveDefault(bean, point);
     }
 
     /**
@@ -1161,5 +1212,31 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
              */
             MICRONAUT
         }
+    }
+
+    /**
+     * What creates the bean of a parameter the container selects, on behalf of whoever owns it.
+     */
+    interface Creation {
+
+        /**
+         * Creates the bean of a definition.
+         *
+         * @param definition The definition
+         * @param type       The type it is asked as
+         * @param <T>        The bean type
+         * @return The bean
+         */
+        <T> @Nullable Object of(BeanDefinition<T> definition, Argument<T> type);
+
+        /**
+         * Looks the bean up by Micronaut's rules, which report a point they find no bean for.
+         *
+         * @param type      The type
+         * @param qualifier The qualifier
+         * @param <T>       The bean type
+         * @return The bean
+         */
+        <T> @Nullable Object byLookup(Argument<T> type, Qualifier<T> qualifier);
     }
 }

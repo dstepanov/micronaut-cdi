@@ -17,10 +17,9 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
-import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanProvider;
-import io.micronaut.context.BeanRegistration;
+import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -326,37 +325,25 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             // a provider of the application's own supplies it, as it does a field of the bean
             return CdiResolution.fromApplicationProvider(beanContext, declaring, argument);
         }
-        Argument<Object> point = (Argument<Object>) argument;
-        BeanRegistration<Object> registration;
         if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             // one Micronaut resolves itself, which the processor left unmarked - a lookup, the event metadata
-            registration = dependents.registration(point, Qualifiers.forArgument(point));
-        } else {
-            // a parameter the processor marked is resolved as a bean's own and a disposer's are: among the beans of
-            // its full declared type the container selects
-            switch (container().selectionFor(argument)) {
-                case Selection.Selected selected -> {
-                    BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
-                    registration = dependents.registration(definition,
-                        CdiInstance.askedAs(beanContext, point, definition));
-                }
-                case Selection.Unselected.UNSATISFIED -> {
-                    if (argument.isNullable()) {
-                        return null;
-                    }
-                    throw new UnsatisfiedResolutionException("No bean for observer parameter " + argument);
-                }
-                case Selection.Unselected.MICRONAUT -> {
-                    // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's
-                    // own, created through the definition they find (CdiBeanContainer.micronautDefinitionOf)
-                    BeanDefinition<Object> definition = container().micronautDefinitionOf(point, null);
-                    registration = definition != null ? dependents.registration(definition, point)
-                        : dependents.registration(point, NonCdiBeanQualifier.forPoint(point, null));
-                }
-            }
+            Argument<Object> point = (Argument<Object>) argument;
+            return CdiResolution.orPrimitiveDefault(
+                dependents.registration(point, Qualifiers.forArgument(point)).bean(), argument);
         }
-        // section 2.5.2.4, as for a field
-        return CdiResolution.orPrimitiveDefault(registration.bean(), argument);
+        // a parameter the processor marked is resolved as a bean's own and a disposer's are: among the beans of its
+        // full declared type the container selects; section 2.5.2.4, as for a field
+        return container().resolveSelected(argument, null, argument.isNullable(), new CdiBeanContainer.Creation() {
+            @Override
+            public <T> @Nullable Object of(BeanDefinition<T> definition, Argument<T> type) {
+                return dependents.registration(definition, type).bean();
+            }
+
+            @Override
+            public <T> @Nullable Object byLookup(Argument<T> type, Qualifier<T> qualifier) {
+                return dependents.registration(type, qualifier).bean();
+            }
+        }, () -> new UnsatisfiedResolutionException("No bean for observer parameter " + argument));
     }
 
     @Override

@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
-import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.context.BeanInjectionProvider;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
@@ -48,33 +47,16 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
     @Override
     public <T> @Nullable T get(BeanResolutionContext resolutionContext, Argument<T> argument,
                                @Nullable Qualifier<T> qualifier, boolean nullable) {
-        return switch (container.selectionFor(argument)) {
-            case Selection.Selected selected -> {
-                BeanDefinition<T> definition = (BeanDefinition<T>) selected.definition();
-                // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
-                // narrowing the candidates to it would become part of the key its scope holds the instance under
-                yield (T) CdiResolution.orPrimitiveDefault(resolutionContext.getBean(definition,
-                    CdiInstance.askedAs(resolutionContext.getContext(), argument, definition)), argument);
+        return (T) container.resolveSelected(argument, qualifier, nullable, new CdiBeanContainer.Creation() {
+            @Override
+            public <B> Object of(BeanDefinition<B> definition, Argument<B> type) {
+                return resolutionContext.getBean(definition, type);
             }
-            case Selection.Unselected.UNSATISFIED -> {
-                if (nullable) {
-                    yield null;
-                }
-                throw new NoSuchBeanException(argument, qualifier);
+
+            @Override
+            public <B> Object byLookup(Argument<B> type, Qualifier<B> lookup) {
+                return resolutionContext.getBean(type, lookup);
             }
-            case Selection.Unselected.MICRONAUT -> {
-                // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own,
-                // with the qualifier Micronaut read off the point, and created through the definition they find
-                BeanDefinition<T> definition = container.micronautDefinitionOf(argument, qualifier);
-                if (definition != null) {
-                    yield resolutionContext.getBean(definition, argument);
-                }
-                if (nullable) {
-                    yield null;
-                }
-                // reported as Micronaut reports a point it finds no bean for
-                yield resolutionContext.getBean(argument, NonCdiBeanQualifier.forPoint(argument, qualifier));
-            }
-        };
+        }, () -> new NoSuchBeanException(argument, qualifier));
     }
 }
