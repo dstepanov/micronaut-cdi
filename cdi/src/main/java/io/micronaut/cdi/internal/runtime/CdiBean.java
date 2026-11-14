@@ -144,8 +144,8 @@ public class CdiBean<T> implements Bean<T> {
      * @return The bean types
      */
     public List<Argument<?>> types() {
-        // worked out once for the context, which Micronaut's own lookups of the bean compare too
-        return RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
+        // kept on the definition, which Micronaut's own lookups of the bean compare too
+        return RecordedTypeIndex.beanTypesOf(beanContext, definition);
     }
 
     /**

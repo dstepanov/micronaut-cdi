@@ -493,9 +493,8 @@ satisfies is selected again each time. Creating a dependent bean with eight inje
 creations and destructions, after as many to warm up) takes 4.9 us and allocates 10.1 KB per bean, against 9.9 us
 and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
 The bean types of a
-definition are kept for one generation of the definitions, a new one replacing it as the application's classes
-change (`WatchableBeanContext.classChanges()`) and once the definitions have changed, so that what is worked out
-from a retired definition while the change is made is never kept; and what was
+definition are kept on the definition (`BeanDefinition.getCachedUnevaluatedValue`), so they go with the context and
+with a definition a development reload retires, and the container keeps no map of them; what was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
 context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`), since the
 definitions of Micronaut's own beans are read as well. The observer methods are read from the definitions of the beans marked as
