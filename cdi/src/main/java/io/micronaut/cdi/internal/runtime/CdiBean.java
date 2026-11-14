@@ -60,7 +60,6 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -144,8 +143,8 @@ public class CdiBean<T> implements Bean<T> {
      * @return The bean types
      */
     public List<Argument<?>> types() {
-        // worked out once for the context, which Micronaut's own lookups of the bean compare too
-        return RecordedTypeIndex.of(beanContext).beanTypesOf(definition);
+        // kept on the definition, which Micronaut's own lookups of the bean compare too
+        return RecordedTypeIndex.beanTypesOf(beanContext, definition);
     }
 
     /**
@@ -322,6 +321,18 @@ public class CdiBean<T> implements Bean<T> {
      * @return The qualifiers
      */
     final List<CdiQualifier> qualifiers() {
+        // what a portable extension added, read as the qualifiers are asked for
+        return qualifiers(beanContext.findBean(QualifierOverlay.class).orElse(null));
+    }
+
+    /**
+     * The qualifiers of the bean, with what a portable extension added as the given overlay holds it: what a caller
+     * that holds the overlay asks, rather than looking it up for every bean.
+     *
+     * @param overlay The qualifiers portable extensions added, or {@code null} where there are none
+     * @return The qualifiers
+     */
+    final List<CdiQualifier> qualifiers(@Nullable QualifierOverlay overlay) {
         List<CdiQualifier> compiled = new ArrayList<>(3);
         compiled.add(CdiQualifier.ANY);
         for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
@@ -329,9 +340,7 @@ public class CdiBean<T> implements Bean<T> {
                 compiled.add(declared);
             }
         }
-        // what a portable extension added, read as the qualifiers are asked for
-        Optional<QualifierOverlay> found = beanContext.findBean(QualifierOverlay.class);
-        return found.isPresent() ? found.get().apply(definition, compiled) : compiled;
+        return overlay != null ? overlay.apply(definition, compiled) : compiled;
     }
 
     @Override

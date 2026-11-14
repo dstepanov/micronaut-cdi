@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * The contexts of the container's scopes, which {@link CdiBeanContainer} answers for: the views of the built-in
@@ -129,18 +128,15 @@ final class CdiContexts {
         if (PSEUDO_SCOPES.containsKey(name)) {
             return false;
         }
-        Optional<ExtensionContexts> extensions = beanContext.findBean(ExtensionContexts.class);
-        if (extensions.isPresent() && !extensions.get().contextsFor(annotationType).isEmpty()) {
+        if (!extensionContexts.contextsFor(annotationType).isEmpty()) {
             // a scope an extension registered is normal where the extension registered it as one
-            return extensions.get().isNormal(annotationType);
+            return extensionContexts.isNormal(annotationType);
         }
         return reflection("BeanContainer.isNormalScope", annotationType).isAnnotated(annotationType, NormalScope.class);
     }
 
     private boolean isRegisteredScope(Class<? extends Annotation> annotationType) {
-        return beanContext.findBean(ExtensionContexts.class)
-            .map(contexts -> !contexts.contextsFor(annotationType).isEmpty())
-            .orElse(false);
+        return !extensionContexts.contextsFor(annotationType).isEmpty();
     }
 
     /**

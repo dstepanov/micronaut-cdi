@@ -74,8 +74,11 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private final BeanContext beanContext;
 
     /**
-     * Every request this scope has begun and not yet ended, wherever its thread went: what shutdown destroys,
-     * so that a request suspended or left active on another thread still has its beans' destruction run.
+     * Every request begun by {@link #activate(Object)} - the one form whose caller returns before the request
+     * ends - and not yet ended, wherever its thread went, suspended ones included: what shutdown destroys, so that a
+     * request left active on another thread still has its beans' destruction run. A request run as work ({@link #run},
+     * {@link #supply}, {@link #call}, {@link #inNewRequest}) is ended by the work's own {@code finally}, and is not
+     * registered here.
      */
     private final Set<Instances> live = ConcurrentHashMap.newKeySet();
 
@@ -188,19 +191,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             work.run();
             return;
         }
-        Instances instances = newInstances();
-        try {
-            PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initialized(instances);
-                try {
-                    work.run();
-                } finally {
-                    endWhileActive(instances);
-                }
-            });
-        } finally {
-            destroyedEvent();
-        }
+        asNewRequest(() -> {
+            work.run();
+            return null;
+        });
     }
 
     /**
@@ -215,19 +209,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         if (isActive()) {
             return work.get();
         }
-        Instances instances = newInstances();
-        try {
-            return PropagatedContext.getOrEmpty().plus(instances).propagate(() -> {
-                initialized(instances);
-                try {
-                    return work.get();
-                } finally {
-                    endWhileActive(instances);
-                }
-            });
-        } finally {
-            destroyedEvent();
-        }
+        return asNewRequest(work::get);
     }
 
     /**
@@ -244,9 +226,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             return work.call();
         }
         Instances instances = newInstances();
+        // told destroyed only once it was told initialized: a request whose initialization failed was never begun,
+        // as activate(Object) has it too
+        AtomicBoolean begun = new AtomicBoolean();
         try {
             return PropagatedContext.getOrEmpty().plus(instances).propagateCall(() -> {
                 initialized(instances);
+                begun.set(true);
                 try {
                     return work.call();
                 } finally {
@@ -254,7 +240,23 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 }
             });
         } finally {
-            destroyedEvent();
+            if (begun.get()) {
+                destroyedEvent();
+            }
+        }
+    }
+
+    /**
+     * Runs work that throws no checked exception as one new request ({@link #call}).
+     */
+    private <V> V asNewRequest(Callable<V> work) {
+        try {
+            return call(work);
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Exception e) {
+            // the work of run and supply throws no checked exception
+            throw new IllegalStateException(e);
         }
     }
 
@@ -441,6 +443,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      */
     @SuppressWarnings("deprecation")
     private Activation propagate(Instances instances, @Nullable Object initiator) {
+        live.add(instances);
         Activation activation = new Activation(instances, initiator, false);
         activation.begin(PropagatedContext.getOrEmpty().plus(instances).plus(activation).propagate());
         return activation;
@@ -488,10 +491,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private Instances newInstances() {
-        Instances instances = new Instances(this, new RequestBeans(),
+        return new Instances(this, new RequestBeans(),
             new AtomicBoolean());
-        live.add(instances);
-        return instances;
     }
 
     /**

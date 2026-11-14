@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * An SE container is a lookup of its beans, and the dependent instances obtained through it belong to it: closing
@@ -68,5 +70,15 @@ class SeContainerCloseTest {
             assertEquals(List.of("resource destroyed"), EVENTS);
         }
         assertEquals(List.of("resource destroyed", "ledger destroyed"), EVENTS);
+    }
+
+    @Test
+    void aContainerWhoseContextWasClosedIsNotRunning() {
+        SeContainer container = SeContainerInitializer.newInstance().initialize();
+        ((io.micronaut.context.ApplicationContext) ((io.micronaut.cdi.internal.runtime.CdiBeanContainer)
+            container.getBeanManager()).beanContext()).close();
+        assertFalse(container.isRunning(), "the context the container runs is closed");
+        // and it cannot be shut down a second time
+        assertThrows(IllegalStateException.class, container::close);
     }
 }

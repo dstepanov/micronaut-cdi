@@ -48,6 +48,9 @@ import jakarta.enterprise.inject.spi.configurator.BeanConfigurator;
 import jakarta.enterprise.inject.spi.configurator.ObserverMethodConfigurator;
 import io.micronaut.core.io.service.ServiceDefinition;
 import io.micronaut.core.io.service.SoftServiceLoader;
+import io.micronaut.core.reflect.ClassUtils;
+import io.micronaut.core.type.Argument;
+import io.micronaut.reflection.ReflectionArguments;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.invoke.AsyncHandler;
 import jakarta.enterprise.invoke.Invoker;
@@ -55,7 +58,6 @@ import jakarta.enterprise.invoke.InvokerBuilder;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -80,10 +82,10 @@ final class PortableEvents {
 
     /**
      * Whether an async handler exists for the async type (CDI 5.0, section 10.5): one of the built-in return type
-     * handlers, or a handler registered as a service provider whose async type - the erasure of the type argument
-     * to its direct {@code AsyncHandler.ReturnType} or {@code AsyncHandler.ParameterType} superinterface - is the
-     * type. The service entries are the ones the class loader of the container serves, which is where an invoker
-     * loads its handler; the handler classes are read, not instantiated.
+     * handlers, or a handler registered as a service provider whose async type - the erasure of its type argument to
+     * {@code AsyncHandler.ReturnType} or {@code AsyncHandler.ParameterType}, which Micronaut resolves through the
+     * superclasses as well - is the type. The service entries are the ones the class loader of the container serves,
+     * which is where an invoker loads its handler; the handler classes are read, not instantiated.
      */
     static boolean asyncHandlerExists(Class<?> asyncType, ClassLoader loader) {
         if (asyncType == CompletionStage.class || asyncType == CompletableFuture.class
@@ -94,29 +96,19 @@ final class PortableEvents {
             for (ServiceDefinition<?> handler : SoftServiceLoader.load(kind, loader)) {
                 Class<?> handlerClass;
                 try {
-                    handlerClass = Class.forName(handler.getName(), false, loader);
-                } catch (ClassNotFoundException | LinkageError e) {
-                    continue;
+                    handlerClass = ClassUtils.forName(handler.getName(), loader).orElse(null);
+                } catch (LinkageError e) {
+                    handlerClass = null;
                 }
-                for (java.lang.reflect.Type type : handlerClass.getGenericInterfaces()) {
-                    if (type instanceof ParameterizedType parameterized && parameterized.getRawType() == kind
-                        && erasureOf(parameterized.getActualTypeArguments()[0]) == asyncType) {
-                        return true;
-                    }
+                Argument<?> implemented = handlerClass == null ? null
+                    : ReflectionArguments.resolveGenericToArgument(handlerClass, kind);
+                if (implemented != null && implemented.getTypeParameters().length == 1
+                    && implemented.getTypeParameters()[0].getType() == asyncType) {
+                    return true;
                 }
             }
         }
         return false;
-    }
-
-    private static @Nullable Class<?> erasureOf(java.lang.reflect.Type type) {
-        if (type instanceof Class<?> raw) {
-            return raw;
-        }
-        if (type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
-            return raw;
-        }
-        return null;
     }
 
     /**

@@ -32,12 +32,12 @@ import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.BeanDependencyGroup;
+import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
@@ -86,6 +86,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Supplier;
 
 /**
  * The container itself, as a program reaches it: the object of section 2.9.1, through which a bean can be looked
@@ -206,7 +207,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     @Override
     public Object getReference(Bean<?> bean, Type beanType, CreationalContext<?> ctx) {
         boolean amongTheTypes = false;
-        Argument<?> required = SpecificationTypes.argumentOf(beanType);
+        Argument<?> required = Argument.of(beanType);
         List<Argument<?>> types = bean instanceof CdiBean<?> own ? own.types()
             : SpecificationTypes.argumentsOf(bean.getTypes());
         for (Argument<?> type : types) {
@@ -306,7 +307,75 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      */
     Set<Bean<?>> beansOf(Type required, List<CdiQualifier> requiredQualifiers) {
         // Micronaut's own form of a type is one of the types a lookup may be made by
-        return beansOf(SpecificationTypes.argumentOf(required), requiredQualifiers);
+        return beansOf(Argument.of(required), requiredQualifiers);
+    }
+
+    /**
+     * The definition Micronaut's rules resolve a point left to them to ({@link Selection.Unselected#MICRONAUT}),
+     * among the beans of Micronaut's own and by the qualifier Micronaut reads off the point.
+     *
+     * <p>The bean is then created through the definition, as a selected one is: the qualifier the definition was
+     * found by is no part of the creation, where it would become part of the key a custom scope holds the instance
+     * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.</p>
+     *
+     * @param point     The injection point
+     * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point
+     * @param <T>       The bean type
+     * @return The definition, or {@code null} where Micronaut's rules find none
+     * @throws io.micronaut.context.exceptions.NonUniqueBeanException Where they find more than one
+     */
+    <T> @Nullable BeanDefinition<T> micronautDefinitionOf(Argument<T> point, @Nullable Qualifier<T> qualifier) {
+        return beanContext.findBeanDefinition(point, NonCdiBeanQualifier.forPoint(point, qualifier)).orElse(null);
+    }
+
+    /**
+     * Resolves a parameter the container selects ({@link #selectionFor}) - a bean's own point, a disposer's or an
+     * observer's - creating the bean through whoever owns what is created for it: the bean selected through its
+     * definition, a point left to Micronaut through the definition Micronaut's rules find
+     * ({@link #micronautDefinitionOf}), and a point nothing satisfies as unsatisfied, or as {@code null} where it may
+     * be.
+     *
+     * @param point       The parameter
+     * @param qualifier   The qualifier Micronaut handed over for it, or {@code null} to read it off the point
+     * @param nullable    Whether the parameter may be left {@code null}
+     * @param creation    What creates the bean
+     * @param unsatisfied The failure of a parameter nothing satisfies
+     * @return The bean, the default of a primitive where a dependent producer returned {@code null} (section
+     * 2.5.2.4)
+     */
+    @SuppressWarnings("unchecked")
+    @Nullable Object resolveSelected(Argument<?> point, @Nullable Qualifier<?> qualifier, boolean nullable,
+                                     Creation creation, Supplier<? extends RuntimeException> unsatisfied) {
+        Argument<Object> argument = (Argument<Object>) point;
+        Object bean = switch (selectionFor(argument)) {
+            case Selection.Selected selected -> {
+                // the definition CDI chose is resolved as it is, with no candidate lookup of its own: a qualifier
+                // narrowing the candidates to it would become part of the key its scope holds the instance under
+                BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
+                yield creation.of(definition, CdiInstance.askedAs(beanContext, argument, definition));
+            }
+            case Selection.Unselected.UNSATISFIED -> {
+                if (nullable) {
+                    yield null;
+                }
+                throw unsatisfied.get();
+            }
+            case Selection.Unselected.MICRONAUT -> {
+                // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own,
+                // with the qualifier Micronaut read off the point
+                Qualifier<Object> read = (Qualifier<Object>) qualifier;
+                BeanDefinition<Object> definition = micronautDefinitionOf(argument, read);
+                if (definition != null) {
+                    yield creation.of(definition, argument);
+                }
+                if (nullable) {
+                    yield null;
+                }
+                // reported as Micronaut reports a point it finds no bean for
+                yield creation.byLookup(argument, NonCdiBeanQualifier.forPoint(argument, read));
+            }
+        };
+        return CdiResolution.orPrimitiveDefault(bean, point);
     }
 
     /**
@@ -514,6 +583,15 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     }
 
     /**
+     * The qualifiers portable extensions added, which every bean's qualifiers are read with.
+     *
+     * @return The overlay
+     */
+    QualifierOverlay overlay() {
+        return overlay;
+    }
+
+    /**
      * What the application was compiled with of each qualifier and interceptor binding type.
      */
     private CompiledAnnotationTypes types() {
@@ -530,25 +608,13 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * @return The bean
      */
     public CdiBean<?> beanOf(BeanDefinition<?> definition) {
-        return new CdiBean<>(beanContext, proxyOf(definition));
+        return beanOfDefinition(definition);
     }
 
-    /**
-     * The definition of the client proxy that stands in front of the given definition, where it is the target of
-     * one, which the bean context does not enumerate: the bean is the proxy.
-     */
-    private BeanDefinition<?> proxyOf(BeanDefinition<?> definition) {
-        if (definition instanceof ProxyBeanDefinition<?>
-            || !CdiResolution.isNormalScoped(definition.getAnnotationMetadata())) {
-            return definition;
-        }
-        for (BeanDefinition<?> candidate : beanContext.getBeanDefinitions(Argument.of(definition.getBeanType()))) {
-            if (candidate instanceof ProxyBeanDefinition<?> proxy
-                && proxy.getTargetDefinitionType() == definition.getClass()) {
-                return candidate;
-            }
-        }
-        return definition;
+    private <T> CdiBean<T> beanOfDefinition(BeanDefinition<T> definition) {
+        // the definition of the client proxy in front of it, where it is the target of one, which the bean context
+        // does not enumerate: the bean is the proxy
+        return new CdiBean<>(beanContext, beanContext.findProxyBeanDefinition(definition).orElse(definition));
     }
 
     /**
@@ -787,6 +853,10 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         if ("jakarta.enterprise.inject.Model".equals(annotationType.getName())) {
             return true;
         }
+        Boolean recorded = types().isStereotype(annotationType.getName());
+        if (recorded != null) {
+            return recorded;
+        }
         return reflection("BeanContainer.isStereotype", annotationType)
             .isAnnotated(annotationType, Stereotype.class);
     }
@@ -895,7 +965,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         if (bean instanceof CdiBean<?> cdiBean && cdiBean.isDependent()
             && ctx instanceof CdiCreationalContext<?> creation) {
             Argument<?> type = injectionPoint instanceof CdiInjectionPoint own
-                ? own.argument() : SpecificationTypes.argumentOf(injectionPoint.getType());
+                ? own.argument() : Argument.of(injectionPoint.getType());
             try {
                 return creation.created().registrationAt(null, injectionPoint, (BeanDefinition) cdiBean.definition(),
                     (Argument) type).bean();
@@ -1142,5 +1212,31 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
              */
             MICRONAUT
         }
+    }
+
+    /**
+     * What creates the bean of a parameter the container selects, on behalf of whoever owns it.
+     */
+    interface Creation {
+
+        /**
+         * Creates the bean of a definition.
+         *
+         * @param definition The definition
+         * @param type       The type it is asked as
+         * @param <T>        The bean type
+         * @return The bean
+         */
+        <T> @Nullable Object of(BeanDefinition<T> definition, Argument<T> type);
+
+        /**
+         * Looks the bean up by Micronaut's rules, which report a point they find no bean for.
+         *
+         * @param type      The type
+         * @param qualifier The qualifier
+         * @param <T>       The bean type
+         * @return The bean
+         */
+        <T> @Nullable Object byLookup(Argument<T> type, Qualifier<T> qualifier);
     }
 }
