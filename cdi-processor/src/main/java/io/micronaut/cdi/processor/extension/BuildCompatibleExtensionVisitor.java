@@ -210,12 +210,6 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
 
     @Override
     public void start(VisitorContext context) {
-        // what AnnotationBuilder.of composes with, reading the annotation interfaces through this compilation. The
-        // specification's resolver is the static entry point of its build time API, which an extension calls with
-        // nothing to hand it; it is set here, as the compilation starts, rather than left to the service loader,
-        // which looks through the loader of the API and does not always see the service entry of this module
-        BuildServicesResolver.setBuildServices(
-            new ElementBuildServices(context));
         // the async handlers of method invokers (CDI 5.0) are read as every compilation starts, whatever extensions
         // it has: what is wrong with one is a definition error of the deployment, however it is used
         List<AsyncHandlerTypes.Handler> asyncHandlers = List.of();
@@ -233,6 +227,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (started == null) {
             ExtensionMethods loaded = ExtensionMethods.load(context, asyncHandlers);
             extensions = loaded;
+            useBuildServicesOf(context);
             if (!loaded.isEmpty() && context.getLanguage() == VisitorContext.Language.KOTLIN) {
                 // KSP reads no resource of the class path of the compilation: said where an extension may build
                 // an invoker, which is what the handlers are for
@@ -244,6 +239,8 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             discovered = started;
             started.compilation(context);
             loaded.discover(started, context);
+        } else {
+            useBuildServicesOf(context);
         }
         // what the discovery phase said about annotations is put on the annotation types before any class is
         // visited: a class's metadata folds its annotations' metadata in as it is built, and a qualifier or
@@ -251,6 +248,20 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // annotation interface is read from there by Micronaut as it reads each occurrence
         for (String describedClass : started.describedClassNames()) {
             context.getClassElement(describedClass).ifPresent(this::applyDiscovery);
+        }
+    }
+
+    /**
+     * Has {@code AnnotationBuilder.of} compose with the given compilation, reading the annotation interfaces
+     * through it, where the compilation runs extensions. The specification's resolver is the static entry point of
+     * its build time API, which an extension calls with nothing to hand it; it is set as the compilation starts
+     * rather than left to the service loader, which looks through the loader of the API and does not always see the
+     * service entry of this module. It is a static of the API's, so it is set only where an extension may call it,
+     * and given back a context-free one as the compilation finishes ({@link #finishCompilation}).
+     */
+    private void useBuildServicesOf(VisitorContext context) {
+        if (!extensions.isEmpty()) {
+            BuildServicesResolver.setBuildServices(new ElementBuildServices(context));
         }
     }
 
@@ -309,18 +320,26 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         if (started == null) {
             return;
         }
-        CurrentElement.roundFinished(context);
-        if (started.contributors().isEmpty()) {
-            return;
+        try {
+            CurrentElement.roundFinished(context);
+            if (started.contributors().isEmpty()) {
+                return;
+            }
+            Element[] contributors = contributors(context);
+            if (contributors == null) {
+                return;
+            }
+            new ScannedClassRegistrar(this, started).registerScannedClasses(contributors, context);
+            registerContexts(contributors, context);
+            recordDeployment(contributors, context);
+            synthesise(contributors, context);
+        } finally {
+            if (!extensions.isEmpty()) {
+                // the static of the specification's API keeps no compilation once it is over: the class loader of
+                // the processor may outlive it, in a build daemon or a compiler worker
+                BuildServicesResolver.setBuildServices(new ElementBuildServices());
+            }
         }
-        Element[] contributors = contributors(context);
-        if (contributors == null) {
-            return;
-        }
-        new ScannedClassRegistrar(this, started).registerScannedClasses(contributors, context);
-        registerContexts(contributors, context);
-        recordDeployment(contributors, context);
-        synthesise(contributors, context);
     }
 
     /**
