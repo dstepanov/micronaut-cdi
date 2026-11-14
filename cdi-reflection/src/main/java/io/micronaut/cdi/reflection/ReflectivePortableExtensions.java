@@ -23,10 +23,11 @@ import io.micronaut.cdi.internal.runtime.CdiQualifier;
 import io.micronaut.cdi.internal.runtime.CompiledAnnotationTypes;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.cdi.internal.runtime.QualifierOverlay;
+import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
 import io.micronaut.cdi.spi.PortableExtensions;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
+import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -210,10 +211,19 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
         List<Bean<?>> beans = new ArrayList<>();
         for (Bean<?> bean : container.getBeans(Object.class, Any.Literal.INSTANCE)) {
-            Class<?> beanClass = bean.getBeanClass();
-            String name = beanClass.getName();
-            if (!extensionClasses.contains(beanClass) && !name.startsWith("io.micronaut.")
-                && !name.startsWith("jakarta.")) {
+            // the rule the SE bootstrap selects the beans of an archive by: a bean of the specification is the
+            // application's whatever its package
+            if (extensionClasses.contains(bean.getBeanClass())) {
+                continue;
+            }
+            // a synthetic bean a build compatible extension registered is no class of the application, and has
+            // no annotated type to process
+            boolean infrastructure = bean instanceof CdiBean<?> described
+                ? described.definition() instanceof RuntimeBeanDefinition<?>
+                    || ExtensionComponents.isInfrastructure(described.definition())
+                : bean.getBeanClass().getName().startsWith("io.micronaut.")
+                    || bean.getBeanClass().getName().startsWith("jakarta.");
+            if (!infrastructure) {
                 beans.add(bean);
             }
         }
@@ -370,7 +380,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                             }
                         }
                         found.add(new Observer(extension, method, i,
-                            SpecificationTypes.argumentOf(method.getGenericParameterTypes()[i]), priority, container));
+                            Argument.of(method.getGenericParameterTypes()[i]), priority, container));
                     }
                 }
                 below.addAll(Arrays.asList(methods));

@@ -82,7 +82,7 @@ public final class CompiledAnnotationTypes {
      * while the extensions run and read by every question asked of a qualifier, without a lock.
      */
     private volatile Set<String> added = Set.of();
-    private volatile @Nullable Map<String, Recorded> fromClasses;
+    private volatile @Nullable Classes fromClasses;
     private volatile @Nullable Map<String, Recorded> fromMembers;
 
     /**
@@ -160,6 +160,18 @@ public final class CompiledAnnotationTypes {
     }
 
     /**
+     * Whether the annotation type of the given name is a stereotype, as far as the class metadata of the beans
+     * the application was compiled with says.
+     *
+     * @param name The annotation type name
+     * @return {@code true} where a bean carries it as a stereotype, or {@code null} where no bean does
+     */
+    public @Nullable Boolean isStereotype(String name) {
+        // a stereotype is read off the class metadata of the beans that carry it; one no bean carries is not known
+        return fromClasses().stereotypes().contains(name) ? Boolean.TRUE : null;
+    }
+
+    /**
      * Whether the annotation type of the given name is an interceptor binding, as far as what the application was
      * compiled with says.
      *
@@ -232,7 +244,7 @@ public final class CompiledAnnotationTypes {
     }
 
     private @Nullable Recorded recorded(String name) {
-        Recorded recorded = fromClasses().get(name);
+        Recorded recorded = fromClasses().types().get(name);
         if (recorded != null && recorded.membersKnown) {
             return recorded;
         }
@@ -242,8 +254,8 @@ public final class CompiledAnnotationTypes {
         return occurring != null ? occurring : recorded;
     }
 
-    private Map<String, Recorded> fromClasses() {
-        Map<String, Recorded> read = fromClasses;
+    private Classes fromClasses() {
+        Classes read = fromClasses;
         if (read == null) {
             synchronized (this) {
                 read = fromClasses;
@@ -270,13 +282,15 @@ public final class CompiledAnnotationTypes {
         return read;
     }
 
-    private Map<String, Recorded> readClasses() {
+    private Classes readClasses() {
         Map<String, Recorded> types = new HashMap<>();
+        Set<String> stereotypes = new HashSet<>();
         Collection<BeanDefinitionReference<Object>> references = beanContext instanceof
             BeanDefinitionRegistry registry ? registry.getBeanDefinitionReferences() : List.of();
         for (BeanDefinitionReference<Object> reference : references) {
             AnnotationMetadata metadata = reference.getAnnotationMetadata();
             read(metadata, types);
+            stereotypes.addAll(metadata.getAnnotationNamesByStereotype(STEREOTYPE));
             AnnotationValue<CdiExtensionQualifiers> registered =
                 metadata.getAnnotation(CdiExtensionQualifiers.class);
             if (registered != null) {
@@ -299,7 +313,7 @@ public final class CompiledAnnotationTypes {
             readNested(metadata.getAnnotation(CdiSyntheticObserver.class),
                 CdiSyntheticObserver.QUALIFIERS, types);
         }
-        return types;
+        return new Classes(types, Set.copyOf(stereotypes));
     }
 
     private Map<String, Recorded> readMembers() {
@@ -362,6 +376,15 @@ public final class CompiledAnnotationTypes {
                 recorded.read(binding);
             }
         }
+    }
+
+    /**
+     * What the class level metadata of the beans says.
+     *
+     * @param types       The qualifiers and bindings, by name
+     * @param stereotypes The names of the stereotypes the beans carry
+     */
+    private record Classes(Map<String, Recorded> types, Set<String> stereotypes) {
     }
 
     /**

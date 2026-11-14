@@ -4,24 +4,12 @@ plugins {
 
 // Resolving and injecting a bean reads nothing back from a class: what a bean is, what an observer observes and how a
 // class relates to the types above it were recorded while it was compiled, and the container holds each type as a
-// Micronaut Argument. No class or package is allowed reflection, and no call is suppressed in the source. What is
-// allowed is a short list of calls, none of which looks anything up on a class. The interfaces of the specification are
-// written in java.lang.reflect.Type, so a type a program hands in is read, once, into an argument, in
-// io.micronaut.cdi.internal.type and nowhere else, and a type the container reports is the one Micronaut renders an
-// argument into (Argument.asType), which reads no class either. Reading a class
-// back - its hierarchy, its members, its annotations - is what the optional micronaut-cdi-reflection module does where
-// an application asks. Anything else, anywhere, fails the build.
-//
-// The calls are listed rather than the package allowed the GENERIC_SIGNATURES kind: that kind also covers
-// Class.getGenericSuperclass and its like, which would then pass unreported in the very package that must not read
-// a class.
-noReflection {
-    // the accessors of a type that was handed in: the value is already there, and asking for it resolves nothing
-    allowCalls 'java.lang.reflect.ParameterizedType#getRawType|getActualTypeArguments|getOwnerType'
-    allowCalls 'java.lang.reflect.TypeVariable#getBounds|getName'
-    allowCalls 'java.lang.reflect.WildcardType#getUpperBounds|getLowerBounds'
-    allowCalls 'java.lang.reflect.GenericArrayType#getGenericComponentType'
-}
+// Micronaut Argument. No class, package or call is allowed reflection. The interfaces of the specification are written
+// in java.lang.reflect.Type, and a type a program hands in is read into an argument by Micronaut (Argument.of(Type)),
+// which calls only the accessors of the type; a type the container reports is the one Micronaut renders an argument
+// into (Argument.asType), which reads no class either. Reading a class back - its hierarchy, its members, its
+// annotations - is what the optional micronaut-cdi-reflection module does where an application asks. Anything else,
+// anywhere, fails the build.
 
 dependencies {
     annotationProcessor libs.managed.micronaut.jakarta.interceptors.processor

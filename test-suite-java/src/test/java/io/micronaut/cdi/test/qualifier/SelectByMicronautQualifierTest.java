@@ -140,7 +140,7 @@ class SelectByMicronautQualifierTest {
         try (ApplicationContext context = ApplicationContext.run()) {
             // the closest type argument is a choice among the candidates rather than a test of each, made by the
             // type that was asked for. A raw type is not a required type a converter of numbers matches
-            Argument<?> converters = io.micronaut.cdi.internal.type.SpecificationTypes.argumentOf(
+            Argument<?> converters = Argument.of(
                 new jakarta.enterprise.util.TypeLiteral<Converter<? super Integer>>() { }.getType());
             Set<Bean<?>> beans = context.getBean(MicronautBeanContainer.class)
                 .getBeans(converters, Qualifiers.byTypeArgumentsClosest(Integer.class));

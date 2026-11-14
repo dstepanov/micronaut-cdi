@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.el;
 
-import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import jakarta.el.ELContext;
@@ -36,9 +35,12 @@ import java.util.Set;
  * The resolver of section 12.4: a name at the base of an expression names the bean of that name.
  *
  * <p>It answers only the base of an expression — a name with nothing to the left of it — and only when a bean
- * of the container carries that name. What the name resolves to is a contextual reference to that bean, so a
- * normal-scoped bean resolves to its client proxy and the expression follows the context the way an injection
- * would. Everything after the base is the business of the resolvers of the expression language itself.</p>
+ * of the container carries that name. What the name resolves to is the contextual instance of that bean: a
+ * normal-scoped bean resolves to the instance its client proxy stands in front of in the context active as the
+ * name is resolved, since the expression language reads a type through the introspection compiled for it and the
+ * client proxy has none. A proxy of Micronaut's own advice in front of a bean is no client proxy and is what the
+ * name resolves to. Everything after the base is the business of the resolvers of the expression language
+ * itself.</p>
  *
  * <p>The name of a bean may be a list of identifiers separated by periods, which an expression reads as a
  * property of a property. The first identifiers of such a name resolve to a namespace, a value that stands for
@@ -84,15 +86,13 @@ public final class CdiELResolver extends ELResolver {
 
     /**
      * The instance behind a client proxy, which is what an expression is evaluated against: the expression
-     * language reads a type through the introspection compiled for it, and the proxy of a normal scoped bean
-     * is a class of the container's own making with no introspection of its own.
+     * language reads a type through the introspection compiled for it, and the client proxy of a normal scoped
+     * bean is a class of the container's own making with no introspection of its own. Only a client proxy is
+     * looked behind ({@link BeanContainer#unwrapClientProxy}): a proxy of Micronaut's own advice that targets the
+     * bean is the bean as the application sees it, and what an expression invokes on it goes through the advice.
      */
-    private static Object unproxied(Object reference) {
-        if (reference instanceof InterceptedProxy<?> proxy) {
-            Object target = proxy.interceptedTarget();
-            return target == null ? reference : target;
-        }
-        return reference;
+    private Object unproxied(Object reference) {
+        return beans.unwrapClientProxy(reference);
     }
 
     @Override

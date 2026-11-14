@@ -99,11 +99,17 @@ final class ExtensionMethods {
     private final List<ExtensionMethod> synthesizers;
     private final List<ExtensionMethod> validators;
     private final List<String> names;
+    /**
+     * The async handlers of the compilation, read once as it starts: what an invoker is matched against as it is
+     * built and what the validation phase asks of.
+     */
+    private final List<AsyncHandlerTypes.Handler> asyncHandlers;
 
     private ExtensionMethods(List<String> names, List<ExtensionMethod> discoveries, List<Enhancer> enhancers,
                              List<Registrar> registrars, List<ExtensionMethod> synthesizers,
-                             List<ExtensionMethod> validators) {
+                             List<ExtensionMethod> validators, List<AsyncHandlerTypes.Handler> asyncHandlers) {
         this.names = List.copyOf(names);
+        this.asyncHandlers = List.copyOf(asyncHandlers);
         this.discoveries = List.copyOf(discoveries);
         this.enhancers = List.copyOf(enhancers);
         this.registrars = List.copyOf(registrars);
@@ -117,7 +123,7 @@ final class ExtensionMethods {
      * @return The methods
      */
     static ExtensionMethods none() {
-        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
     }
 
     /**
@@ -125,7 +131,7 @@ final class ExtensionMethods {
      * visitor: the ones the compiler options name, and the ones the service loader finds unless the options say
      * the named ones are all of them.
      */
-    static ExtensionMethods load(VisitorContext context) {
+    static ExtensionMethods load(VisitorContext context, List<AsyncHandlerTypes.Handler> asyncHandlers) {
         Map<String, String> options = context.getOptions();
         List<ExtensionMethod> discoveries = new ArrayList<>();
         List<ExtensionMethod> synthesizers = new ArrayList<>();
@@ -194,10 +200,10 @@ final class ExtensionMethods {
         }
         for (ExtensionMethod registration : registrations) {
             registrars.add(new Registrar(registration.extension(), registration.method(),
-                registration.method().getAnnotation(Registration.class)));
+                registration.method().getAnnotation(Registration.class), List.copyOf(asyncHandlers)));
         }
         return new ExtensionMethods(extensions.stream().map(extension -> extension.getClass().getName()).toList(),
-            discoveries, enhancers, registrars, synthesizers, validators);
+            discoveries, enhancers, registrars, synthesizers, validators, asyncHandlers);
     }
 
     /**
@@ -351,7 +357,7 @@ final class ExtensionMethods {
             Class<?>[] parameterTypes = validator.method().getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
-                arguments[i] = Phase.VALIDATION.argument(parameterTypes[i], messages, context);
+                arguments[i] = Phase.VALIDATION.argument(parameterTypes[i], messages, context, asyncHandlers);
             }
             if (!invokeLatePhase("validation", validator, arguments, context)) {
                 return;
@@ -744,11 +750,13 @@ final class ExtensionMethods {
     /**
      * One registration method of one extension, and the beans it asked to be told about.
      *
-     * @param extension    The extension that declares the method
-     * @param method       The registration method
-     * @param registration What it asked to be told about
+     * @param extension     The extension that declares the method
+     * @param method        The registration method
+     * @param registration  What it asked to be told about
+     * @param asyncHandlers The async handlers of the compilation, which the invoker factory it is handed matches
      */
-    private record Registrar(BuildCompatibleExtension extension, Method method, Registration registration) {
+    private record Registrar(BuildCompatibleExtension extension, Method method, Registration registration,
+                             List<AsyncHandlerTypes.Handler> asyncHandlers) {
 
         /**
          * Whether the method asks to be told about the bean: a method that asks for a bean asks about any, one
@@ -823,7 +831,7 @@ final class ExtensionMethods {
                 if (parameterTypes[i].equals(ObserverInfo.class)) {
                     arguments[i] = observer;
                 } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
-                    arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context);
+                    arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context, asyncHandlers);
                 } else {
                     context.fail("The registration method " + method + " asks for a "
                         + parameterTypes[i].getName() + ", which this module does not hand to one", null);
@@ -851,7 +859,7 @@ final class ExtensionMethods {
                         && bean instanceof InterceptorInfo)) {
                     arguments[i] = bean;
                 } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
-                    arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context);
+                    arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context, asyncHandlers);
                 } else {
                     context.fail("The registration method " + method + " asks for a "
                         + parameterTypes[i].getName() + ", which this module does not hand to one", null);
@@ -1098,6 +1106,15 @@ final class ExtensionMethods {
          */
         Object argument(Class<?> parameterType, Messages messages,
                         @Nullable VisitorContext context) {
+            // the phases that hand no invoker factory and no invoker validation, which alone read the handlers
+            return argument(parameterType, messages, context, List.of());
+        }
+
+        /**
+         * What a parameter of a type the phase hands is given, the async handlers of the compilation at hand.
+         */
+        Object argument(Class<?> parameterType, Messages messages,
+                        @Nullable VisitorContext context, List<AsyncHandlerTypes.Handler> asyncHandlers) {
             if (parameterType.equals(Messages.class)) {
                 return messages;
             }
@@ -1106,12 +1123,12 @@ final class ExtensionMethods {
                     return new VisitorTypes(context);
                 }
                 if (parameterType.equals(InvokerFactory.class)) {
-                    return new ElementInvokerFactory(context);
+                    return new ElementInvokerFactory(asyncHandlers);
                 }
                 if (parameterType.equals(InvokerValidation.class)) {
                     // CDI 5.0: whether an async handler exists, asked of the handlers the compilation finds
                     return (InvokerValidation) (asyncType, message) -> {
-                        if (!AsyncHandlerTypes.exists(asyncType.getName(), context)) {
+                        if (!AsyncHandlerTypes.exists(asyncType.getName(), asyncHandlers)) {
                             String said = message.get();
                             messages.error("No async handler exists for " + asyncType.getName()
                                 + (said != null ? ": " + said : ""));

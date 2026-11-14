@@ -53,8 +53,9 @@ import java.util.Set;
  * The built-in return type handlers for {@code CompletionStage}, {@code CompletableFuture} and
  * {@code Flow.Publisher} are the container's.</p>
  *
- * <p>Nothing is held between the questions: each reads the service entries again, which a compilation asks for
- * once to validate the handlers and once per invoker built.</p>
+ * <p>The service entries are read once per compilation, as it starts the build compatible extension visitor,
+ * which hands the handlers to what builds and validates invokers: each read of the class path is a scan Core
+ * announces with a compiler note.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -117,7 +118,9 @@ final class AsyncHandlerTypes {
             required.putIfAbsent(canonical(name), name);
         }
         for (String resource : SERVICE_ENTRIES) {
-            for (URL entries : classpathResources(context, resource)) {
+            // nothing where the compiler gives no access to its class path: javac not exporting its internals to the
+            // processor, which Core reports once, or KSP, which reads none
+            for (URL entries : context.getClasspathResources(resource)) {
                 for (String name : registered(entries, resource)) {
                     required.putIfAbsent(canonical(name), name);
                 }
@@ -193,32 +196,6 @@ final class AsyncHandlerTypes {
         return effective;
     }
 
-    /**
-     * Whether the service entries of the class path of the compilation can be read. Core reads them through the
-     * internals of javac, which a compiler that does not export them to the processor refuses; there only the
-     * processor path and the compiler option name handlers.
-     *
-     * @param context The compilation
-     * @return Whether they can
-     */
-    static boolean readsClassPath(VisitorContext context) {
-        try {
-            context.getClasspathResources(SERVICE_ENTRIES.get(0));
-            return true;
-        } catch (RuntimeException e) {
-            return false;
-        }
-    }
-
-    private static Iterable<URL> classpathResources(VisitorContext context, String resource) {
-        try {
-            return context.getClasspathResources(resource);
-        } catch (RuntimeException e) {
-            // reported once, as the compilation starts (readsClassPath)
-            return List.of();
-        }
-    }
-
     private static Optional<ClassElement> classElement(String name, VisitorContext context) {
         return context.getClassElement(name).or(() -> context.getClassElement(canonical(name)));
     }
@@ -265,12 +242,12 @@ final class AsyncHandlerTypes {
      * Whether a handler exists for the async type: a built-in one or a registered one.
      *
      * @param asyncType The name of the async type
-     * @param context   The compilation
+     * @param handlers  The handlers of the compilation ({@link #of})
      * @return Whether one exists
      */
-    static boolean exists(String asyncType, VisitorContext context) {
+    static boolean exists(String asyncType, List<Handler> handlers) {
         String type = asyncType.replace('$', '.');
-        for (Handler handler : of(context)) {
+        for (Handler handler : handlers) {
             if (handler.asyncType().equals(type)) {
                 return true;
             }
@@ -281,15 +258,15 @@ final class AsyncHandlerTypes {
     /**
      * The async handler a method matches, which is what makes it asynchronous: exactly one, or none.
      *
-     * @param method  The target method of an invoker
-     * @param context The compilation
+     * @param method   The target method of an invoker
+     * @param handlers The handlers of the compilation ({@link #of})
      * @return The match, or {@code null} where the method is not asynchronous
      */
-    static @Nullable Match match(MethodElement method, VisitorContext context) {
+    static @Nullable Match match(MethodElement method, List<Handler> handlers) {
         List<Match> matches = new ArrayList<>(1);
         String returned = method.getReturnType().getName().replace('$', '.');
         ParameterElement[] parameters = method.getParameters();
-        for (Handler handler : of(context)) {
+        for (Handler handler : handlers) {
             if (handler.returnType()) {
                 if (!method.getReturnType().isArray() && handler.asyncType().equals(returned)) {
                     matches.add(new Match(handler.className(), handler.asyncType(), -1));

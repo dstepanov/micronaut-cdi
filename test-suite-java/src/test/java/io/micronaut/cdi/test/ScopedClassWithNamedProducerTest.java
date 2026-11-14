@@ -8,7 +8,6 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.inject.Named;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,16 +16,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * A normal scoped class bean whose type a named dependent producer also produces: both are beans of the type with
  * the qualifier {@code @Default}, and the client proxy of the class bean still reaches the instance of the class bean.
  *
- * <p>Disabled on Micronaut Core: the produced bean is proxied although it is dependent. Core merges the metadata of
- * the produced class beneath the producer's and takes the class's scope off where the producer declares one
- * ({@code FactoryBeanElementCreator.cleanupScopeAndQualifierAnnotations}), but the interceptor binding of the
- * {@code ScopedProxy} a mapped scope brought stays, so the producer gets a client proxy of its own and is a second
- * proxy target of the type, and the class bean's proxy finds no single target (see CONFORMANCE.md).</p>
+ * <p>Micronaut Core takes the scope of the produced class off where the producer declares one, and with it the
+ * interceptor binding of the {@code ScopedProxy} a mapped scope brought, so the dependent producer gets no client
+ * proxy of its own and is no second proxy target of the type.</p>
  */
 class ScopedClassWithNamedProducerTest {
 
     @Test
-    @Disabled("Micronaut Core keeps the ScopedProxy binding of a mapped scope it takes off a produced type")
     void theClientProxyOfTheClassBeanReachesItsInstance() {
         try (ApplicationContext context = ApplicationContext.run()) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);

@@ -23,7 +23,12 @@ import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.inject.BeanIdentifier;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Disposes;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +66,31 @@ class MicronautScopedLookupTest {
             assertEquals(2, watcher.seen().size());
             assertSame(watcher.seen().get(0), watcher.seen().get(1));
             assertEquals(0, Pooled.DESTROYED.get());
+            // the instance Micronaut's own lookup finds in the scope: a point left to Micronaut's rules is no
+            // second key in the scope
+            assertSame(context.getBean(Pooled.class), watcher.seen().get(0));
+        }
+    }
+
+    @Test
+    void aFieldOfABeanOfTheSpecificationSharesTheInstanceTheScopeHoldsForMicronaut() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Pooled micronauts = context.getBean(Pooled.class);
+            assertSame(micronauts, context.getBean(Holder.class).pooled());
+        }
+    }
+
+    @Test
+    void aDisposerParameterSharesTheInstanceTheScopeHoldsForMicronaut() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Pooled micronauts = context.getBean(Pooled.class);
+            Instance.Handle<Ticket> handle = context.getBean(CdiBeanContainer.class).createInstance()
+                .select(Ticket.class).getHandle();
+            handle.get();
+            handle.destroy();
+            Tickets tickets = context.getBean(Tickets.class);
+            assertEquals(1, tickets.disposedWith().size());
+            assertSame(micronauts, tickets.disposedWith().get(0));
         }
     }
 
@@ -105,6 +135,38 @@ class MicronautScopedLookupTest {
     }
 
     public record Ping() {
+    }
+
+    public record Ticket() {
+    }
+
+    @ApplicationScoped
+    public static class Holder {
+        @Inject
+        Pooled pooled;
+
+        Pooled pooled() {
+            return pooled;
+        }
+    }
+
+    @ApplicationScoped
+    public static class Tickets {
+        private final List<Pooled> disposedWith = new CopyOnWriteArrayList<>();
+
+        @Produces
+        @Dependent
+        Ticket ticket() {
+            return new Ticket();
+        }
+
+        void dispose(@Disposes Ticket ticket, Pooled pooled) {
+            disposedWith.add(pooled);
+        }
+
+        List<Pooled> disposedWith() {
+            return disposedWith;
+        }
     }
 
     @ApplicationScoped

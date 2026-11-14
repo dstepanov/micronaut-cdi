@@ -74,7 +74,7 @@ public final class CdiAssignability {
         requireQualifiers(types, beanQualifiers);
         requireQualifiers(types, requiredQualifiers);
         RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
-        Argument<?> required = SpecificationTypes.argumentOf(requiredType);
+        Argument<?> required = Argument.of(requiredType);
         requireNoTypeVariable(required);
         // a type that is not a legal bean type — one with a wildcard in it — is passed over rather than
         // failing the whole set, and matches nothing, not even itself
@@ -182,9 +182,9 @@ public final class CdiAssignability {
         requireQualifiers(types, specifiedQualifiers);
         requireQualifiers(types, observedEventQualifiers);
         RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
-        Argument<?> specified = SpecificationTypes.argumentOf(specifiedType);
+        Argument<?> specified = Argument.of(specifiedType);
         requireEventType(specified, "A type variable does not describe an event: " + specifiedType);
-        if (!isEventTypeMatching(index, SpecificationTypes.argumentOf(observedEventType), specified)) {
+        if (!isEventTypeMatching(index, Argument.of(observedEventType), specified)) {
             return false;
         }
         // the qualifiers an event was fired with always include Any

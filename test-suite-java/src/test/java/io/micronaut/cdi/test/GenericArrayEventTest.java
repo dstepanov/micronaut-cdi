@@ -17,11 +17,10 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
-import io.micronaut.cdi.reflection.ReflectiveCdi;
 import io.micronaut.cdi.test.extension.UnrecordedArrayPayload;
 import io.micronaut.cdi.test.extension.UnrecordedPayload;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.TypeHierarchies;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -93,12 +92,12 @@ class GenericArrayEventTest {
         try (ApplicationContext context = ApplicationContext.run()) {
             RecordedTypeIndex index = RecordedTypeIndex.of(context);
             ParameterizedType strings = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(index,
-                ArrayPayload.class, SpecificationTypes.argumentOf(new TypeLiteral<Payload<String[]>>() { }.getType()))
+                ArrayPayload.class, Argument.of(new TypeLiteral<Payload<String[]>>() { }.getType()))
                 .asType());
             assertEquals(String.class, strings.getActualTypeArguments()[0]);
             ParameterizedType lists = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(index,
                 ListArrayPayload.class,
-                SpecificationTypes.argumentOf(new TypeLiteral<Payload<List<String>[]>>() { }.getType())).asType());
+                Argument.of(new TypeLiteral<Payload<List<String>[]>>() { }.getType())).asType());
             assertEquals(String.class, lists.getActualTypeArguments()[0]);
         }
     }
@@ -110,13 +109,9 @@ class GenericArrayEventTest {
         Type fired = new TypeLiteral<UnrecordedPayload<String[]>>() { }.getType();
         try (ApplicationContext context = ApplicationContext.run()) {
             ParameterizedType strings = assertInstanceOf(ParameterizedType.class, CdiTypes.eventTypeOf(
-                RecordedTypeIndex.of(context), UnrecordedArrayPayload.class, SpecificationTypes.argumentOf(fired))
+                RecordedTypeIndex.of(context), UnrecordedArrayPayload.class, Argument.of(fired))
                 .asType());
             assertEquals(String.class, strings.getActualTypeArguments()[0]);
         }
-        // the deprecated entry of the module answers the same inference
-        ParameterizedType bridged = assertInstanceOf(ParameterizedType.class,
-            new ReflectiveCdi().eventTypeOf(UnrecordedArrayPayload.class, fired));
-        assertEquals(String.class, bridged.getActualTypeArguments()[0]);
     }
 }

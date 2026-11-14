@@ -124,10 +124,12 @@ the application depends on - read through Core's `VisitorContext.getClasspathRes
 path holds, as a build compatible extension is found, or from the compiler option `micronaut.cdi.asyncHandlers`. A
 handler the module being compiled declares is on neither path while it compiles, and is named with the option; one on
 the application's runtime class path alone is not one the invoker was compiled with, and one on the processor path
-that the compilation cannot resolve is no handler of it. Core reaches the class path through the internals of javac;
-a compiler that does not export `com.sun.tools.javac.processing` to the processor makes Core's call fail rather than
-return nothing, and the processor then warns and reads only the processor path and the option (an open point in
-Micronaut Core below). Where two handlers have one async type the compiler option
+that the compilation cannot resolve is no handler of it. The handlers are read once per compilation, as it starts.
+Core reaches the class path through the internals of javac: where a compiler does not export
+`com.sun.tools.javac.processing` to the processor, Core reads nothing there and says so once, and only the processor
+path and the option name handlers. KSP reads no resource of the class path at all, and a Kotlin compilation that runs
+build compatible extensions is warned of it. Each read of the class path prints Core's "experimental" note, once for
+each of the two service entries. Where two handlers have one async type the compiler option
 `micronaut.cdi.asyncHandlerSelection` - `asyncType=handlerClass` pairs separated by commas - is the means of
 configuration the specification asks for: it selects the handler of a type, a built-in type among them, and the
 others of that type are left out; `asyncType=builtin` keeps the container's own handler of a built-in type over a
@@ -414,7 +416,8 @@ annotation that is not one of the specification's and whose type the application
 `@RegisterAnnotations` (Micronaut Core generates a builder for a type listed there, which makes the instance
 without reflection); an annotation literal with binding members handed to a lookup, unless it carries its
 values as an instance such a builder made does; `isScope`, `isNormalScope`, `isQualifier`, `isStereotype` and
-`isInterceptorBinding` for an annotation the build recorded nothing of; `getStereotypeDefinition` and
+`isInterceptorBinding` for an annotation the build recorded nothing of (a stereotype is recorded where a bean carries
+it); `getStereotypeDefinition` and
 `getInterceptorBindingDefinition`; and the generic hierarchy of a class no compilation with this processor has
 seen. Everything else - resolution, injection, events, interception, the contexts, what an extension registered -
 needs only `micronaut-cdi`, and
@@ -483,7 +486,9 @@ Micronaut rather than by the container (`CdiBeanContainer.selectionFor`): the po
 the class of the point, makes the container's selection - the rules of the specification, the narrowing of section
 2.4.2 and its ambiguity, the point left to Micronaut's rules among Micronaut's own beans - and admits one candidate
 or none, so Micronaut's own precedence among several never applies. Micronaut keeps the concrete candidate it found
-(a map bounded at 2048 lookups) and forgets it itself as definitions are registered or reloaded, so a synthetic bean
+(a map that stops taking entries at 2048 lookups, shared with every lookup of Micronaut's own; each point takes one
+or two, and once the map is full every further point is selected again on each injection, with no warning, which the
+measurement below does not cover) and forgets it itself as definitions are registered or reloaded, so a synthetic bean
 and a definition registered once the context runs are seen by the next resolution; the qualifiers a portable
 extension added are part of the qualifier, so one added as the container starts selects again. The selection
 qualifier is never handed to the creation of the bean, which goes through the selected definition. A point no bean
@@ -491,9 +496,8 @@ satisfies is selected again each time. Creating a dependent bean with eight inje
 creations and destructions, after as many to warm up) takes 4.9 us and allocates 10.1 KB per bean, against 9.9 us
 and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
 The bean types of a
-definition are kept for one generation of the definitions, a new one replacing it as the application's classes
-change (`WatchableBeanContext.classChanges()`) and once the definitions have changed, so that what is worked out
-from a retired definition while the change is made is never kept; and what was
+definition are kept on the definition (`BeanDefinition.getCachedUnevaluatedValue`), so they go with the context and
+with a definition a development reload retires, and the container keeps no map of them; what was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
 context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`), since the
 definitions of Micronaut's own beans are read as well. The observer methods are read from the definitions of the beans marked as
@@ -645,7 +649,8 @@ compilations recorded it.
 Every visitor of the processor is isolating and writes what it records of a class from that class alone: the
 scope, the injection points, the name, the producers and observers, the default qualifier, the proxyability, the
 bean types and the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`), none of which keeps
-anything from one class to the next, on itself, in a static field or on the attributes of the `VisitorContext`. The
+anything from one class to the next, on itself, in a static field or on the attributes of the `VisitorContext`; the
+one attribute the processor keeps is `CurrentElement`'s count of the rounds, below. The
 non-binding members of a qualifier are Micronaut's to list on each occurrence it reads, from the compilation's view
 of the annotation interface, guarded by Micronaut against two interfaces whose members are annotated with each
 other; the processor lists them only on a qualifier an extension composed for a synthetic component, reading the
@@ -657,7 +662,8 @@ deployment, and it is confined to the one visitor that runs them (`BuildCompatib
 compilation starts it, read as its rounds and the compilation finish, and read by no other visitor. That visitor
 stays isolating for what it writes of each class it visits, and, where the compilation has extensions, declares that
 it aggregates the compilation in `finishCompilation` (`aggregatesCompilation()`), which makes the processor
-aggregating for Gradle under javac (see above); without extensions it keeps none of the following:
+aggregating for Gradle under javac (see above). Without extensions it keeps nothing of what the following describe,
+but the round count, which it keeps up in every compilation, and an empty `DiscoveredClasses` made as it starts:
 
 - `DiscoveredClasses`: what the discovery phase said - the classes `ScannedClasses.add` named, the annotations
   `MetaAnnotations` made qualifiers, interceptor bindings or stereotypes, what it marked on their members, the
@@ -676,7 +682,9 @@ aggregating for Gradle under javac (see above); without extensions it keeps none
   the validation of section 2.10.6, which are told about the deployment as a whole.
 - The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
   saw for a later one, as the specification allows and the kit's extensions do.
-- The specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as it starts. The
+- The specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as a compilation
+  with extensions starts and gives back a context-free one as it finishes, so that no compilation outlives itself
+  there. The
   extensions themselves are found as the compilation starts the visitor: the ones the service loader finds on
   the processor path, and the ones the compiler options name (`-Amicronaut.cdi.extensions=a.B,c.D`, which
   `-Amicronaut.cdi.extensions.only=true` makes all of them), which is how a harness that compiles a deployment at
@@ -732,7 +740,8 @@ What an extension can do:
   from the compiled metadata of the definitions;
 - `AfterTypeDiscovery.getAlternatives()` lists the classes of the selected alternatives, and cannot change them;
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
-  place of the container's own; `addObserverMethod(ObserverMethod)` adds an observer method; and
+  place of the container's own (a context a build compatible extension registers for the request scope stands beside
+  the container's own instead, CDI 5.0 section 6.4); `addObserverMethod(ObserverMethod)` adds an observer method; and
   `getAnnotatedType`/`getAnnotatedTypes` describe a class. A context added for a normal scope the application
   declares with `@NormalScope` serves the beans of that scope - a class declaring it, inheriting it or carrying it
   with a stereotype, and a producer declaring it: an instance is created into the context and found in it again,
@@ -957,8 +966,9 @@ scoped synthetic bean does not create its instance, are left out by name; the ea
 are created by `Startup` all the same, which the rest of the class asserts.
 Closing this needs a proxy class per normal scoped synthetic bean - Micronaut's compiled scoped proxy of the
 implementation class, written by the processor beside the creator's definition - which the rule that the
-processor generates no class beyond Micronaut's own definitions currently rules out; see "Open points in
-Micronaut Core".
+processor generates no class beyond Micronaut's own definitions and records currently rules out (the one exception is
+the import of the scanned classes javac needs, `ScannedClassesImport`, described under "Compile-time aggregation");
+see "Open points in Micronaut Core".
 
 ## The technology compatibility kit
 
@@ -1104,26 +1114,46 @@ own rather than the first one alone.
   `getPermittedSubclasses()` are read from that list, so the language model kit's `SealedClasses` section stops at
   its enum (`verifySealedEnum`) and is pending. Reading `isSealed()` from the modifiers and the permitted classes of an
   enum from its constant bodies would close it.
-- **Reading the class path of a compilation fails instead of answering nothing (CDI 5.0).**
-  `JavaVisitorContext.getClasspathResources` reaches the file manager of javac through
-  `JavacProcessingEnvironment.getContext()`, and the reflective call of it sits outside the `try` that guards the rest,
-  so a compiler that does not export `com.sun.tools.javac.processing` to the processor fails the call with an illegal
-  access instead of returning nothing. The async handler scan catches it and warns; returning an empty iterable, or a
-  public way to list a resource of the class path (`Filer` answers only the first file of a name), would leave nothing
-  to catch. It also prints an "experimental" note on every call.
-- **A producer of a normal scoped class keeps the class's client proxy.** Core builds a produced bean's metadata
-  from the produced class's beneath the producer's and, where the producer declares a scope or a qualifier, takes
-  the class's scopes off (`FactoryBeanElementCreator.cleanupScopeAndQualifierAnnotations`). Where the class's scope
-  came from an annotation mapper - `@ApplicationScoped` read as `CdiApplicationScope` - the
-  `@InterceptorBinding(kind = AROUND, value = ScopedProxy)` it brought stays, so a dependent producer of an
-  application scoped class is proxied as well: it is a second proxy target of the type, and the class bean's own
-  client proxy, which looks its target up by type and `@Default`, finds no single one and fails with
-  `NoSuchBeanException`. Written directly, without a mapper, the same scope is taken off with its binding. Taking off
-  the bindings the removed scopes brought would close it (`ScopedClassWithNamedProducerTest`, disabled).
 - **Enum constants and typed arrays are not compiled into the metadata.** The metadata writer records an enum
   constant by its name (`AnnotationMetadataGenUtils`), so a synthetic component's enum parameter is turned back into
   its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.
   Emitting the constant and the array in the generated metadata would leave `Parameters` nothing to look up.
+- **An observer a generic superclass declares is compiled with the superclass's variable.** The compiled argument
+  of the observed parameter keeps wildcards and variables (`ArgumentExpUtils` writes `Argument.ofWildcard` and
+  placeholders), but the executable method of a subclass's definition for a method its generic superclass declares
+  leaves the superclass's variable unbound: `TextListener extends Listener<String>` observes `Box<T>`, not
+  `Box<String>`. The processor therefore records the observed type itself (`CdiObserver.observedType`, resolved with
+  `getAllTypeArguments()`), and `ObservedTypesWithoutReflectionTest` fails without it. Binding the inherited
+  executable method's arguments to the subclass would leave the observed parameter's own argument enough.
+- **A compilation does not say which round it is in.** KSP invalidates the elements of a round as it ends, and the
+  language model looks an element of an earlier round up again; looking every element up again in its own round as
+  well fails (an annotation interface's member is not found by the member query), so the processor counts the
+  rounds on an attribute of the `VisitorContext` (`CurrentElement`). A round number, or an `isValid()` of an element,
+  on the visitor context would remove the count.
+- **The facts of an annotation type are known only from its occurrences.** Whether a type is a qualifier, an
+  interceptor binding or a stereotype, its retention and its non-binding members are read from the occurrences the
+  beans were compiled with (`CompiledAnnotationTypes`): a type no class carries is found by walking the injection
+  points and executable methods of every definition, `getAllBeanDefinitions()` included, which loads definitions
+  the application would not have loaded. Registering those facts beside the defaults the generated metadata already
+  registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader, would make each question a
+  lookup and remove the index.
+- **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
+  class a build compatible extension scanned is imported by a generated `ScannedClassesImport` source, so that a
+  later round makes a bean of it; KSP and Groovy register it with `registerBean`. Tolerating a class the same
+  compilation already writes a definition for would let javac take the same path and remove the generated class.
+- **An empty-string default is left out of the written metadata.** `EmptyDefaultsRemapper` puts it back for the
+  qualifier and binding types, which compare members at their defaults. Recording the empty defaults of a type that
+  is a qualifier or an interceptor binding would remove it.
+- **`AnnotationValue.equals` ignores a member the other value lacks.** Two values of equal size with different
+  member names compare equal while their hash codes differ, so `RecordedSynthesis` compares records member by member
+  (`sameRecord`). Treating a member the other value lacks as unequal would restore the contract.
+- **The rule of which declared method overrides which is package-private.** `io.micronaut.reflection.MethodHierarchy`
+  has it; the portable extension runtime walks a class's methods and their overrides itself to find observer methods
+  of an extension. A public "declared methods, overridden ones removed" helper in `ReflectionExecutables` would
+  replace that walk.
+- **KSP reads no resource of the class path.** `VisitorContext.getClasspathResources` is empty under KSP, so an async
+  handler registered on the class path of a Kotlin compilation is not found; the processor warns a compilation with
+  extensions of it. An implementation for KSP would close it.
 - **A failed start is not rolled back.** `DefaultBeanContext.start()` rethrows a startup failure without destroying
   what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
   on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
@@ -1268,9 +1298,9 @@ own rather than the first one alone.
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
   language model over the compiler's elements hold no static state that is not a constant: the registered
-  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` once per compilation and
-  kept on its `VisitorContext` (`LanguageModelAnnotationFilter.registered(VisitorContext)`), and a provider is
-  expected to decide from its arguments alone.
+  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` where an annotation is
+  reported, and kept nowhere (`LanguageModelAnnotationFilter.registered()`), and a provider is expected to decide
+  from its arguments alone.
   What they reflect goes through Micronaut's helpers where one exists - `SoftServiceLoader` for the extensions and
   the filters, `ClassUtils.forName` and `InstantiationUtils` for an extension a compiler option names,
   `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts three

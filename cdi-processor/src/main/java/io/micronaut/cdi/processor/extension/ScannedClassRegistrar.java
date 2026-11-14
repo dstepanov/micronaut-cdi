@@ -299,8 +299,8 @@ final class ScannedClassRegistrar {
      * another name would leave the definitions Micronaut wrote for the old ones behind, naming classes that are
      * gone. Where the build names the module being compiled, as the Micronaut Gradle plugin does,
      * the name is made from that, and from how many compilations of the same module are on the class path
-     * already - the main classes are, to the test classes. Otherwise it is made from the first class the
-     * compilation compiles, which a build that compiles everything at once comes to first every time.</p>
+     * already - the main classes are, to the test classes. Otherwise it is made from the first, by name, of the classes
+     * the first round of the compilation visited, whichever order it visited them in.</p>
      */
     private static String suffixOf(String firstClass, VisitorContext context) {
         Map<String, String> options = context.getOptions();

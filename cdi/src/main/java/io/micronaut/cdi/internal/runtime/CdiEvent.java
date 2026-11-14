@@ -16,7 +16,6 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.MicronautEvent;
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -65,7 +64,7 @@ public final class CdiEvent<T> implements MicronautEvent<T> {
 
     public CdiEvent(ObserverRegistry registry, Type type, Set<Annotation> qualifiers,
                     @Nullable InjectionPoint injectedAt) {
-        this(registry, SpecificationTypes.argumentOf(type),
+        this(registry, Argument.of(type),
             CdiQualifier.ofInstances(registry.types(), qualifiers), injectedAt);
     }
 
@@ -140,7 +139,7 @@ public final class CdiEvent<T> implements MicronautEvent<T> {
 
     @Override
     public <U extends T> MicronautEvent<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        Argument<?> selected = SpecificationTypes.argumentOf(subtype.getType());
+        Argument<?> selected = Argument.of(subtype.getType());
         requireNoTypeVariable(selected);
         return new CdiEvent<>(registry, selected, and(CdiQualifier.ofInstances(registry.types(), qualifiers)), injectedAt);
     }

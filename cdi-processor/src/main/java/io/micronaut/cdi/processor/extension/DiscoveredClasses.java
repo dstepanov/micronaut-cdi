@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 
 /**
@@ -85,11 +86,12 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
     private final Map<String, Boolean> normalContexts = new LinkedHashMap<>();
     private final Map<String, List<AnnotationValue<?>>> metaAnnotations = new LinkedHashMap<>();
     /**
-     * The classes the compiler visited, by name; those of the compilation in the order it visited them; those the
-     * registration phase has not been told about yet; and those it has.
+     * The classes the compiler visited, by name; those of the compilation, sorted by name, so that what is named
+     * after the first of them is named the same whichever order the compiler visits them in; those the registration
+     * phase has not been told about yet; and those it has.
      */
     private final Set<String> visited = new HashSet<>();
-    private final Map<String, String> contributors = new LinkedHashMap<>();
+    private final Map<String, String> contributors = new TreeMap<>();
     private final List<ClassElement> unregistered = new ArrayList<>();
     private final Set<String> registered = new HashSet<>();
     private boolean roundFinished;

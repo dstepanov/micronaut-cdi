@@ -21,8 +21,10 @@ import io.micronaut.el.resolver.ELResolvers;
 import jakarta.el.CompositeELResolver;
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
+import jakarta.el.EvaluationListener;
 import jakarta.el.ExpressionFactory;
 import jakarta.el.FunctionMapper;
+import jakarta.el.ImportHandler;
 import jakarta.el.MethodExpression;
 import jakarta.el.MethodInfo;
 import jakarta.el.ValueExpression;
@@ -30,6 +32,7 @@ import jakarta.el.VariableMapper;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -198,6 +201,58 @@ final class CdiExpressionFactory extends ExpressionFactory {
         @Override
         public void putContext(Class<?> key, Object contextObject) {
             wrapped.putContext(key, contextObject);
+        }
+
+        @Override
+        public ImportHandler getImportHandler() {
+            // what the caller imported is what the expression sees
+            return wrapped.getImportHandler();
+        }
+
+        @Override
+        public void addEvaluationListener(EvaluationListener listener) {
+            wrapped.addEvaluationListener(listener);
+        }
+
+        @Override
+        public List<EvaluationListener> getEvaluationListeners() {
+            return wrapped.getEvaluationListeners();
+        }
+
+        @Override
+        public void notifyBeforeEvaluation(String expression) {
+            // the caller's listeners, told by the caller's context
+            wrapped.notifyBeforeEvaluation(expression);
+        }
+
+        @Override
+        public void notifyAfterEvaluation(String expression) {
+            wrapped.notifyAfterEvaluation(expression);
+        }
+
+        @Override
+        public void notifyPropertyResolved(Object base, Object property) {
+            wrapped.notifyPropertyResolved(base, property);
+        }
+
+        @Override
+        public boolean isLambdaArgument(String argument) {
+            return wrapped.isLambdaArgument(argument);
+        }
+
+        @Override
+        public Object getLambdaArgument(String argument) {
+            return wrapped.getLambdaArgument(argument);
+        }
+
+        @Override
+        public void enterLambdaScope(Map<String, Object> arguments) {
+            wrapped.enterLambdaScope(arguments);
+        }
+
+        @Override
+        public void exitLambdaScope() {
+            wrapped.exitLambdaScope();
         }
 
         @Override

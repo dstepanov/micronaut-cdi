@@ -68,6 +68,14 @@ class ReflectiveApiWithoutReflectionTest {
     static class Stereotyped {
     }
 
+    /**
+     * A stereotype no bean carries, so the build recorded nothing of it.
+     */
+    @Stereotype
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Unused {
+    }
+
     private ApplicationContext context;
     private CdiBeanContainer container;
 
@@ -115,8 +123,14 @@ class ReflectiveApiWithoutReflectionTest {
         // anything else is asked of the annotation class itself
         assertNamesTheModule(() -> container.isQualifier(Plain.class));
         assertNamesTheModule(() -> container.isScope(Plain.class));
-        assertNamesTheModule(() -> container.isStereotype(Plain.class));
+        assertNamesTheModule(() -> container.isStereotype(Unused.class));
         assertNamesTheModule(() -> container.isInterceptorBinding(Plain.class));
+    }
+
+    @Test
+    void aStereotypeABeanCarriesIsKnownForOneWithoutTheModule() {
+        // the class metadata of the bean that carries it records it as a stereotype
+        assertTrue(container.isStereotype(Plain.class));
     }
 
     @Test

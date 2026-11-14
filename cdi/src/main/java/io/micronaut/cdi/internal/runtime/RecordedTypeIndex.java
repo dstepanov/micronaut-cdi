@@ -20,7 +20,6 @@ import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.WatchableBeanContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -39,7 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * The generic hierarchies of the classes the application was compiled with, as the processor recorded them:
@@ -59,55 +58,42 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RecordedTypeIndex {
 
     private final BeanContext beanContext;
-    /**
-     * The bean types of each definition, worked out once from what was recorded: the container compares them for
-     * every lookup it makes, and the resolution customizer for every lookup Micronaut makes of a bean of the
-     * specification, and what the processor recorded does not change. A compiled definition is equal to another
-     * of its class and a runtime one only to itself, which is what tells the beans apart.
-     *
-     * <p>The map is of one generation of the definitions: a new, empty one replaces it as the application's
-     * classes change and again once the definitions have changed - a definition registered, retired or added by a
-     * development reload - rather than the one map being emptied. Bean types worked out from a definition of the
-     * generation before, while the change was made, are put in the map of that generation, which nothing reads any
-     * more, so no retired definition, nor its class loader, is kept, and no closure of a class that changed is
-     * read.</p>
-     */
-    private volatile Map<BeanDefinition<?>, List<Argument<?>>> beanTypes = new ConcurrentHashMap<>();
 
     public RecordedTypeIndex(BeanContext beanContext) {
         this.beanContext = beanContext;
-        if (beanContext instanceof WatchableBeanContext watchable) {
-            // the watches belong to this bean, and are closed as it is destroyed. A class change comes before any
-            // bean of the retired generation is touched, and registers no first batch; the change of the
-            // definitions comes once the new generation replaced the retired one, which closes the window between
-            watchable.classChanges().watch(change -> newGeneration());
-            watchable.definitions().watch(change -> {
-                if (!change.initial()) {
-                    newGeneration();
-                }
-            });
-        }
-    }
-
-    private void newGeneration() {
-        beanTypes = new ConcurrentHashMap<>();
     }
 
     /**
-     * The bean types of the bean a definition describes ({@link CdiBean#typesOf}).
+     * The bean types of the bean a definition describes ({@link CdiBean#typesOf}), worked out once from what was
+     * recorded and kept on the definition: the container compares them for every lookup it makes, and the resolution
+     * customizer for every lookup Micronaut makes of a bean of the specification. They are read from the recorded
+     * metadata and the type hierarchy records alone, never from an evaluated expression, which is what Micronaut
+     * keeps an unevaluated value for. The value goes with the definition: with the context it belongs to, and with a
+     * definition a development reload retires.
      *
      * @param definition The definition
      * @return The bean types
      */
     List<Argument<?>> beanTypesOf(BeanDefinition<?> definition) {
-        Map<BeanDefinition<?>, List<Argument<?>>> generation = beanTypes;
-        List<Argument<?>> known = generation.get(definition);
-        if (known != null) {
-            return known;
-        }
-        List<Argument<?>> types = List.copyOf(CdiBean.typesOf(this, definition, beanClassOf(definition)));
-        List<Argument<?>> raced = generation.putIfAbsent(definition, types);
-        return raced != null ? raced : types;
+        return kept(definition, () -> this);
+    }
+
+    /**
+     * The bean types of the bean a definition describes, as {@link #beanTypesOf(BeanDefinition)} keeps them, the
+     * index of the given context read only where they are worked out.
+     *
+     * @param beanContext The context of the container
+     * @param definition  The definition
+     * @return The bean types
+     */
+    static List<Argument<?>> beanTypesOf(BeanContext beanContext, BeanDefinition<?> definition) {
+        return kept(definition, () -> of(beanContext));
+    }
+
+    private static <T> List<Argument<?>> kept(BeanDefinition<T> definition, Supplier<RecordedTypeIndex> index) {
+        // the factory reads the definition it is handed, which is the one a delegating definition wraps
+        return definition.getCachedUnevaluatedValue(BeanTypes.class, kept -> new BeanTypes(List.copyOf(
+            CdiBean.typesOf(index.get(), kept, beanClassOf(kept))))).types();
     }
 
     /**
@@ -326,5 +312,13 @@ public final class RecordedTypeIndex {
             }
             return arguments;
         }
+    }
+
+    /**
+     * The key and the value of the bean types kept on a definition.
+     *
+     * @param types The bean types
+     */
+    private record BeanTypes(List<Argument<?>> types) {
     }
 }

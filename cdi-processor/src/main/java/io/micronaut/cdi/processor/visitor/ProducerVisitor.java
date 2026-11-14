@@ -118,9 +118,11 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             .filter(ProducerVisitor::isDisposer)
             .toList();
 
-        if (!isABean(element)) {
+        if (SpecificationBeans.isVetoed(element) || !isABean(element)) {
             // a producer declared by a class that is not a bean is not a producer, and what it would have
-            // produced is not a bean either
+            // produced is not a bean either. A vetoed class is none (Vetoed): its definition is kept under the
+            // NotABean condition, which lets through whatever carries CdiProducer, so its producers are left
+            // unmarked here
             return;
         }
         boolean interceptorClass = element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor");

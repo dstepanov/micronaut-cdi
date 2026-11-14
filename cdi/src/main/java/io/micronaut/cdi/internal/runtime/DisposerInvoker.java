@@ -16,11 +16,11 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.aop.InterceptedProxy;
-import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanProvider;
+import io.micronaut.context.Qualifier;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.BeanDependencyGroup;
 import io.micronaut.context.event.BeanDestroyedEvent;
@@ -219,26 +219,19 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             return dependencies.getBean((Argument<Object>) argument, Qualifiers.forArgument((Argument<Object>) argument));
         }
-        Argument<Object> point = (Argument<Object>) argument;
-        return switch (container.get().selectionFor(argument)) {
-            case Selection.Selected selected -> {
-                BeanDefinition<Object> definition = (BeanDefinition<Object>) selected.definition();
-                Argument<Object> askedAs = CdiInstance.askedAs(beanContext, point, definition);
-                // a dependent producer may satisfy it with null, which the disposal destroys as it does any other
-                // dependent; section 2.5.2.4 as for a field
-                yield CdiResolution.orPrimitiveDefault(
-                    dependencies.getBeanRegistration(definition, askedAs).bean(), argument);
+        // a dependent producer may satisfy it with null, which the disposal destroys as it does any other
+        // dependent; section 2.5.2.4 as for a field
+        return container.get().resolveSelected(argument, null, argument.isNullable(), new CdiBeanContainer.Creation() {
+            @Override
+            public <T> @Nullable Object of(BeanDefinition<T> definition, Argument<T> type) {
+                return dependencies.getBeanRegistration(definition, type).bean();
             }
-            case Selection.Unselected.UNSATISFIED -> {
-                if (argument.isNullable()) {
-                    yield null;
-                }
-                throw new UnsatisfiedResolutionException("No bean for disposer parameter " + argument);
+
+            @Override
+            public <T> Object byLookup(Argument<T> type, Qualifier<T> qualifier) {
+                return dependencies.getBean(type, qualifier);
             }
-            // no bean of the specification is a candidate: Micronaut's rules among the beans of Micronaut's own, as
-            // at a bean's own point
-            case Selection.Unselected.MICRONAUT -> dependencies.getBean(point, NonCdiBeanQualifier.forPoint(point, null));
-        };
+        }, () -> new UnsatisfiedResolutionException("No bean for disposer parameter " + argument));
     }
 
     /**

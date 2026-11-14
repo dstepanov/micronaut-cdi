@@ -15,7 +15,6 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
-import io.micronaut.cdi.internal.type.SpecificationTypes;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import jakarta.enterprise.event.Reception;
@@ -46,7 +45,7 @@ final class ForeignObserverMethod<T> implements ObserverMethod<T>, CdiNotifiable
 
     ForeignObserverMethod(ObserverMethod<T> delegate, CompiledAnnotationTypes types) {
         this.delegate = delegate;
-        this.observed = SpecificationTypes.argumentOf(delegate.getObservedType());
+        this.observed = Argument.of(delegate.getObservedType());
         this.qualifiers = CdiQualifier.ofInstances(types, delegate.getObservedQualifiers());
     }
 

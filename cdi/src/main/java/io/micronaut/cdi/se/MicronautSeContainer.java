@@ -31,6 +31,7 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * One running SE container: the Micronaut application context the initializer built, worn as the
@@ -50,7 +51,10 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
 
     private final ApplicationContext context;
     private final CdiInstance<Object> lookup;
-    private volatile boolean running = true;
+    /**
+     * Whether the container was shut down: taken once, by the one call to {@link #close()} that shuts it down.
+     */
+    private final AtomicBoolean shutDown = new AtomicBoolean();
 
     MicronautSeContainer(ApplicationContext context) {
         this.context = context;
@@ -63,17 +67,18 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
 
     @Override
     public void close() {
-        if (!running) {
+        // one of two concurrent calls shuts the container down; a context closed some other way is shut down too
+        if (!context.isRunning() || !shutDown.compareAndSet(false, true)) {
             throw new IllegalStateException("The container is not running: it was already shut down, and a "
                 + "container is shut down once");
         }
-        running = false;
         context.close();
     }
 
     @Override
     public boolean isRunning() {
-        return running;
+        // the context the container runs may be closed without the container, by whoever holds it
+        return !shutDown.get() && context.isRunning();
     }
 
     @Override
@@ -87,7 +92,7 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
     }
 
     private CdiBeanContainer container() {
-        if (!running) {
+        if (!isRunning()) {
             throw new IllegalStateException("The container is not running");
         }
         return context.getBean(CdiBeanContainer.class);
@@ -176,7 +181,7 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
     }
 
     private MicronautInstance<Object> active() {
-        if (!running) {
+        if (!isRunning()) {
             throw new IllegalStateException("The container is not running");
         }
         return lookup;

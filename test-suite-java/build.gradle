@@ -30,7 +30,8 @@ dependencies {
 
 tasks.named("test") {
     // what the in-memory compilations need to read the service entries of their class path through Core, which
-    // reaches the file manager of javac through its internals; a Gradle compilation is given the same access
+    // reaches the file manager of javac through its internals: without it Core reads nothing there, and an async
+    // handler registered on the class path of a compilation (AsyncHandlerClasspathTest) is not found
     jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
         "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
 }
