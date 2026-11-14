@@ -30,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The async handlers of the method invokers are read from the class path once per compilation, however many
@@ -66,6 +67,8 @@ class AsyncHandlerReadsTest {
         assertEquals(3, with.built(), "the extension built an invoker for each method");
         // the handlers are read as the compilation starts, and not again for each invoker built
         assertEquals(without.scans(), with.scans(), "the class path was scanned " + with.scans() + " times");
+        // one read of each of the two service entries of the async handlers, and no probe beside them
+        assertTrue(with.scans() <= 2, "the class path was scanned " + with.scans() + " times");
     }
 
     private static Compiled compile(String extension) {

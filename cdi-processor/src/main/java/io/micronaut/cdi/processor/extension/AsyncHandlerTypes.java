@@ -118,7 +118,9 @@ final class AsyncHandlerTypes {
             required.putIfAbsent(canonical(name), name);
         }
         for (String resource : SERVICE_ENTRIES) {
-            for (URL entries : classpathResources(context, resource)) {
+            // nothing where the compiler gives no access to its class path: javac not exporting its internals to the
+            // processor, which Core reports once, or KSP, which reads none
+            for (URL entries : context.getClasspathResources(resource)) {
                 for (String name : registered(entries, resource)) {
                     required.putIfAbsent(canonical(name), name);
                 }
@@ -192,32 +194,6 @@ final class AsyncHandlerTypes {
             effective.add(handler);
         }
         return effective;
-    }
-
-    /**
-     * Whether the service entries of the class path of the compilation can be read. Core reads them through the
-     * internals of javac, which a compiler that does not export them to the processor refuses; there only the
-     * processor path and the compiler option name handlers.
-     *
-     * @param context The compilation
-     * @return Whether they can
-     */
-    static boolean readsClassPath(VisitorContext context) {
-        try {
-            context.getClasspathResources(SERVICE_ENTRIES.get(0));
-            return true;
-        } catch (RuntimeException e) {
-            return false;
-        }
-    }
-
-    private static Iterable<URL> classpathResources(VisitorContext context, String resource) {
-        try {
-            return context.getClasspathResources(resource);
-        } catch (RuntimeException e) {
-            // reported once, as the compilation starts (readsClassPath)
-            return List.of();
-        }
     }
 
     private static Optional<ClassElement> classElement(String name, VisitorContext context) {

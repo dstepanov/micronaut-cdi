@@ -124,10 +124,12 @@ the application depends on - read through Core's `VisitorContext.getClasspathRes
 path holds, as a build compatible extension is found, or from the compiler option `micronaut.cdi.asyncHandlers`. A
 handler the module being compiled declares is on neither path while it compiles, and is named with the option; one on
 the application's runtime class path alone is not one the invoker was compiled with, and one on the processor path
-that the compilation cannot resolve is no handler of it. Core reaches the class path through the internals of javac;
-a compiler that does not export `com.sun.tools.javac.processing` to the processor makes Core's call fail rather than
-return nothing, and the processor then warns and reads only the processor path and the option (an open point in
-Micronaut Core below). Where two handlers have one async type the compiler option
+that the compilation cannot resolve is no handler of it. The handlers are read once per compilation, as it starts.
+Core reaches the class path through the internals of javac: where a compiler does not export
+`com.sun.tools.javac.processing` to the processor, Core reads nothing there and says so once, and only the processor
+path and the option name handlers. KSP reads no resource of the class path at all, and a Kotlin compilation that runs
+build compatible extensions is warned of it. Each read of the class path prints Core's "experimental" note, once for
+each of the two service entries. Where two handlers have one async type the compiler option
 `micronaut.cdi.asyncHandlerSelection` - `asyncType=handlerClass` pairs separated by commas - is the means of
 configuration the specification asks for: it selects the handler of a type, a built-in type among them, and the
 others of that type are left out; `asyncType=builtin` keeps the container's own handler of a built-in type over a
@@ -1104,22 +1106,6 @@ own rather than the first one alone.
   `getPermittedSubclasses()` are read from that list, so the language model kit's `SealedClasses` section stops at
   its enum (`verifySealedEnum`) and is pending. Reading `isSealed()` from the modifiers and the permitted classes of an
   enum from its constant bodies would close it.
-- **Reading the class path of a compilation fails instead of answering nothing (CDI 5.0).**
-  `JavaVisitorContext.getClasspathResources` reaches the file manager of javac through
-  `JavacProcessingEnvironment.getContext()`, and the reflective call of it sits outside the `try` that guards the rest,
-  so a compiler that does not export `com.sun.tools.javac.processing` to the processor fails the call with an illegal
-  access instead of returning nothing. The async handler scan catches it and warns; returning an empty iterable, or a
-  public way to list a resource of the class path (`Filer` answers only the first file of a name), would leave nothing
-  to catch. It also prints an "experimental" note on every call.
-- **A producer of a normal scoped class keeps the class's client proxy.** Core builds a produced bean's metadata
-  from the produced class's beneath the producer's and, where the producer declares a scope or a qualifier, takes
-  the class's scopes off (`FactoryBeanElementCreator.cleanupScopeAndQualifierAnnotations`). Where the class's scope
-  came from an annotation mapper - `@ApplicationScoped` read as `CdiApplicationScope` - the
-  `@InterceptorBinding(kind = AROUND, value = ScopedProxy)` it brought stays, so a dependent producer of an
-  application scoped class is proxied as well: it is a second proxy target of the type, and the class bean's own
-  client proxy, which looks its target up by type and `@Default`, finds no single one and fails with
-  `NoSuchBeanException`. Written directly, without a mapper, the same scope is taken off with its binding. Taking off
-  the bindings the removed scopes brought would close it (`ScopedClassWithNamedProducerTest`, disabled).
 - **Enum constants and typed arrays are not compiled into the metadata.** The metadata writer records an enum
   constant by its name (`AnnotationMetadataGenUtils`), so a synthetic component's enum parameter is turned back into
   its constant through `ConversionService` and `Enum.valueOf`, and a typed array through `Array.newInstance`.
