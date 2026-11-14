@@ -406,7 +406,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * with the record of what it stands for on its definition, which the container finds it by.
      *
      * <p>The class is compiled elsewhere, often with the extension, and the bean is registered for it without a
-     * source: its definition is named after the first class of the compilation, and every class of the
+     * source: its definition is named after the first class of the compilation by name, and every class of the
      * compilation is its origin, as the compilation as a whole is what described it. The class is instantiated through its constructor without parameters, as the specification has it.</p>
      */
     private void registerComponent(Element[] contributors, VisitorContext context,
