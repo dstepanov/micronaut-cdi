@@ -332,6 +332,10 @@ public final class ObserverRegistry {
                         return null;
                     });
                 }
+            } catch (VirtualMachineError e) {
+                // no failure of the observer but of the virtual machine, which notifying the others would only
+                // make worse: it ends the notification, as it does a synchronous one
+                throw e;
             } catch (Throwable e) {
                 thrown.add(e);
             }
