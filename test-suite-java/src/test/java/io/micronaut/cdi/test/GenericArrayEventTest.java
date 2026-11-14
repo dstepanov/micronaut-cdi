@@ -17,7 +17,6 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.internal.runtime.CdiTypes;
 import io.micronaut.cdi.internal.runtime.RecordedTypeIndex;
-import io.micronaut.cdi.reflection.ReflectiveCdi;
 import io.micronaut.cdi.test.extension.UnrecordedArrayPayload;
 import io.micronaut.cdi.test.extension.UnrecordedPayload;
 import io.micronaut.context.ApplicationContext;
@@ -114,9 +113,5 @@ class GenericArrayEventTest {
                 .asType());
             assertEquals(String.class, strings.getActualTypeArguments()[0]);
         }
-        // the deprecated entry of the module answers the same inference
-        ParameterizedType bridged = assertInstanceOf(ParameterizedType.class,
-            new ReflectiveCdi().eventTypeOf(UnrecordedArrayPayload.class, fired));
-        assertEquals(String.class, bridged.getActualTypeArguments()[0]);
     }
 }

@@ -124,7 +124,8 @@ class ReflectiveTypeClosureTest {
     void aVariableOfTheEventClassIsResolvedThroughItsSupertype() {
         Type declared = io.micronaut.core.reflect.GenericTypeUtils.parameterizedType(Foo.class, new Type[] {Integer.class});
         assertEquals(Bar.class.getName() + "<java.lang.Integer>",
-            describe(reflection.eventTypeOf(Bar.class, declared)));
+            describe(io.micronaut.cdi.internal.runtime.CdiTypes.eventTypeReadBy(reflection, Bar.class,
+                io.micronaut.core.type.Argument.of(declared)).asType()));
     }
 
     private static Set<String> described(List<Type> types) {
