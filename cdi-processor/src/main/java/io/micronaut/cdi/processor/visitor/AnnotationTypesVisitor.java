@@ -144,9 +144,6 @@ public final class AnnotationTypesVisitor implements TypeElementVisitor<Object, 
             // the members Micronaut lists as not binding on each occurrence, a build compatible extension's marks
             // included
             nonbinding.addAll(List.of(occurrence.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)));
-            if (occurrence.getRetentionPolicy() == RetentionPolicy.RUNTIME) {
-                runtime.add(occurrence.getAnnotationName());
-            }
         }
 
         AnnotationValue<CdiAnnotationTypes> record(VisitorContext context) {
@@ -163,6 +160,12 @@ public final class AnnotationTypesVisitor implements TypeElementVisitor<Object, 
                     // the interface is not on the compilation's classpath: the name alone says nothing of its
                     // members, and no record of them is written
                     return;
+                }
+                // the retention the interface declares: an occurrence read off the compiler's elements does not
+                // carry it
+                if (declaration instanceof AnnotationElement annotation
+                    && annotation.getRetentionPolicy() == RetentionPolicy.RUNTIME) {
+                    runtime.add(name);
                 }
                 Set<String> nonbinding = new LinkedHashSet<>(NonbindingMembers.nonbindingMembersOf(declaration));
                 nonbinding.addAll(occurring);

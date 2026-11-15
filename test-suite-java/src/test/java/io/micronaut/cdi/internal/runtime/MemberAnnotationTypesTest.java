@@ -56,6 +56,12 @@ class MemberAnnotationTypesTest {
         String note() default "";
     }
 
+    @Qualifier
+    @Retention(RetentionPolicy.CLASS)
+    @Target({ElementType.FIELD, ElementType.PARAMETER})
+    public @interface Compiled {
+    }
+
     @InterceptorBinding
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
@@ -70,6 +76,10 @@ class MemberAnnotationTypesTest {
         @Inject
         @Grade(value = "fine", note = "polished")
         Instance<Material> material;
+
+        @Inject
+        @Compiled
+        Instance<Material> compiled;
 
         @Audited
         public void work() {
@@ -92,6 +102,9 @@ class MemberAnnotationTypesTest {
             assertEquals(Set.of("note"), types.nonbindingOf(Grade.class.getName()));
             assertEquals(Boolean.FALSE, types.isMarker(Grade.class.getName()));
             assertEquals(Boolean.TRUE, types.isRetainedAtRuntime(Grade.class.getName()));
+            // the retention the interface declares, which an occurrence the compiler read does not carry
+            assertEquals(Boolean.TRUE, types.isQualifier(Compiled.class.getName()));
+            assertEquals(Boolean.FALSE, types.isRetainedAtRuntime(Compiled.class.getName()));
             assertEquals(Boolean.TRUE, types.isInterceptorBinding(Audited.class.getName()));
             assertEquals(Boolean.TRUE, types.isMarker(Audited.class.getName()));
         }

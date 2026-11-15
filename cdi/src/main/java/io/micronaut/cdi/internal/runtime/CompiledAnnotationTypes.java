@@ -299,15 +299,18 @@ public final class CompiledAnnotationTypes {
         }
         Set<String> runtime = Set.of(used.stringValues(CdiAnnotationTypes.RUNTIME));
         for (String qualifier : used.stringValues(CdiAnnotationTypes.QUALIFIERS)) {
-            types.computeIfAbsent(qualifier, Recorded::named).used(runtime).qualifier = true;
+            types.computeIfAbsent(qualifier, Recorded::named).qualifier = true;
         }
         for (String binding : used.stringValues(CdiAnnotationTypes.BINDINGS)) {
-            types.computeIfAbsent(binding, Recorded::named).used(runtime).binding = true;
+            types.computeIfAbsent(binding, Recorded::named).binding = true;
         }
+        // what the compilation saw of the interface: its members and its retention; a type whose interface it did
+        // not see is known by its name alone
         for (AnnotationValue<Annotation> members : used.getAnnotations(MEMBERS)) {
             String type = members.stringValue(Members.NAME).orElse(null);
             if (type != null) {
                 types.computeIfAbsent(type, Recorded::new)
+                    .used(runtime)
                     .declared(members.stringValues(MEMBERS), members.stringValues(Members.NONBINDING));
             }
         }
@@ -392,8 +395,8 @@ public final class CompiledAnnotationTypes {
         }
 
         /**
-         * Whether the type is retained at runtime, as the processor recorded it where it was used, unless an
-         * occurrence said so already.
+         * Whether the type is retained at runtime, as the processor recorded it from the interface the compilation
+         * saw, unless an occurrence said so already.
          */
         Recorded used(Set<String> runtime) {
             if (retention == null) {
