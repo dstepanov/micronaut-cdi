@@ -90,7 +90,8 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     }
 
     /**
-     * The customizer of one context, which holds the context and the bean types it worked out for it. One builder
+     * The customizer of one context, which holds the context and the type index of its container, the bean types
+     * being kept on each definition ({@link RecordedTypeIndex#beanTypesOf}). One builder
      * may build several contexts, and a context that reads a bootstrap environment builds another from its
      * configuration: each is served by a customizer of its own, over the one the customizer installed before this
      * one hands that context.
@@ -259,7 +260,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
             // which Micronaut checks against the type it is asked as
             RecordedTypeIndex index = typeIndex();
             try {
-                // the bean types the container compares too, worked out once for the context
+                // the bean types the container compares too, kept on the definition (but for a runtime one)
                 List<Argument<?>> types = index != null ? index.beanTypesOf(definition)
                     : CdiBean.typesOf(null, definition, RecordedTypeIndex.beanClassOf(definition));
                 return CdiAssignability.isTypeMatching(index, types, beanType);

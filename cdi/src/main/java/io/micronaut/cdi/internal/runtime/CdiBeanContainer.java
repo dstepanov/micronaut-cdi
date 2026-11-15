@@ -619,7 +619,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * The container's bean for the given definition: the one {@code getBeans} answers with. The definition of the
      * class of a bean in a normal scope - what its client proxy stands in front of, which a resolution creating the
      * instance names - is the bean of the proxy. A bean is equal to every other one of the same definition, and
-     * holds nothing of its own: its types are the index's, so none is kept here.
+     * holds nothing of its own: its types are kept on its definition ({@link RecordedTypeIndex#beanTypesOf}), not
+     * here.
      *
      * @param definition The definition
      * @return The bean

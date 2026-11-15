@@ -406,7 +406,8 @@ states the event type in full and needs no record and no module.
 
 *Sections 5.5.7, 5.5.8, 5.6, 9.4.3, 11.1.4 and 11.1.8 to 11.1.10, and of CDI Full 23.1 and 23.3.10.*
 `micronaut-cdi` reads no class back, and the build holds it to that: the `NoReflection` check allows it nothing
-but the accessors of a `java.lang.reflect.Type` it was handed. A type it reports - a bean type, the type of an
+(no `allowIn` and no `allowCalls` is left in `cdi/build.gradle`); a `java.lang.reflect.Type` it is handed is read
+into Micronaut's form of it by core's `Argument.of(Type)`. A type it reports - a bean type, the type of an
 injection point, of an observed event or of an event's metadata - is the one Micronaut renders the argument it holds
 into (`Argument.asType()`, since Micronaut Core 5.3, #14081), exactly as the declaration wrote it, which reads no
 class: a parameterized type, a wildcard and a generic array are equal to the ones the JDK reflects, with their hash
@@ -656,7 +657,8 @@ compilations recorded it.
 
 Every visitor of the processor is isolating and writes what it records of a class from that class alone: the
 scope, the injection points, the name, the producers and observers, the default qualifier, the proxyability, the
-bean types and the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`), none of which keeps
+bean types, the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`) and the qualifier and binding
+types the members of the class use (`AnnotationTypesVisitor`), none of which keeps
 anything from one class to the next, on itself, in a static field or on the attributes of the `VisitorContext`; the
 one attribute the processor keeps is `CurrentElement`'s count of the rounds, below. The
 non-binding members of a qualifier are Micronaut's to list on each occurrence it reads, from the compilation's view
@@ -1270,9 +1272,9 @@ own rather than the first one alone.
   resolved through, with them (`ReflectiveCdi.typeClosureOf`, `eventTypeOf`), the closure of an array included,
   which `typeClosureOf` lists as the processor does: the arrays of the supertypes of the component, the arrays of
   fewer dimensions, `Cloneable` and `Serializable`. They are in `micronaut-reflection`, which reads classes back,
-  and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
-  `Argument` in `io.micronaut.cdi.internal.type`, by the accessors of the type alone, and one the specification's
-  API reports is rendered by Micronaut (`Argument.asType()`). The reflection module reads a type it is handed with
+  and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is read into an
+  `Argument` by core's `Argument.of(Type)`, and one the specification's API reports is rendered by Micronaut
+  (`Argument.asType()`). The reflection module reads a type it is handed with
   `ofExact` itself, the ones the container reported as well. A variable Micronaut renders has no declaration and
   is equal to another so rendered, not to the variable the class declares, so the reflection module tells the
   variables of an event's class apart by their names.
