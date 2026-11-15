@@ -16,7 +16,6 @@
 package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.Type;
 
@@ -26,7 +25,8 @@ import jakarta.enterprise.lang.model.types.Type;
  * <p>A class is handed in as the {@link ClassElement} a Micronaut visitor is given, and is answered as the
  * {@link ClassInfo} a build compatible extension reads; everything reached from it - members, annotations,
  * types - is read from the same AST, lazily. The model reports the annotations Micronaut retained until runtime,
- * narrowed by the {@link LanguageModelAnnotationFilter}s registered as services.</p>
+ * narrowed by the {@link LanguageModelAnnotationFilter}s the {@link SourceModel} of the compilation was made with:
+ * the ones registered as services, which the processor loads once as the compilation starts.</p>
  *
  * <p>It is the model read from the AST as a class compiles; a model read from loaded classes would be a sibling
  * of this one.</p>
@@ -43,12 +43,13 @@ public final class AstLanguageModel {
      * The class, as the language model has it.
      *
      * @param element The class
-     * @param context The visitor context the class was handed with: what the model reads beyond the element at
+     * @param context The model of the compilation the class was handed in: what the model reads beyond the element at
      *                hand - an annotation's retention, the defaults of its members, a class the element names - is
-     *                asked of the compiler through it, by the class and by everything reached from it
+     *                asked of the compiler through it, by the class and by everything reached from it, and the
+     *                annotations it reports are the ones its filters allow
      * @return The class info
      */
-    public static ClassInfo classInfo(ClassElement element, VisitorContext context) {
+    public static ClassInfo classInfo(ClassElement element, SourceModel context) {
         return ElementClassInfo.declarationOf(element, context);
     }
 
@@ -56,10 +57,10 @@ public final class AstLanguageModel {
      * A type, as the language model has it.
      *
      * @param type    The type
-     * @param context The visitor context of the compilation the type is read in
+     * @param context The model of the compilation the type is read in
      * @return The type
      */
-    public static Type type(ClassElement type, VisitorContext context) {
+    public static Type type(ClassElement type, SourceModel context) {
         return ElementTypes.of(type, context);
     }
 }

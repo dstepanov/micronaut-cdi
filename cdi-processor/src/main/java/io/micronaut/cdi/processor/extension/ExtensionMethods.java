@@ -24,6 +24,8 @@ import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.reflect.exception.InstantiationException;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
+import io.micronaut.cdi.lang.model.ast.LanguageModelAnnotationFilter;
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
@@ -104,12 +106,19 @@ final class ExtensionMethods {
      * built and what the validation phase asks of.
      */
     private final List<AsyncHandlerTypes.Handler> asyncHandlers;
+    /**
+     * The language model's annotation filters registered on the processor path, loaded once as the compilation
+     * starts: what the model of the compilation reports annotations through ({@link #model}).
+     */
+    private final List<LanguageModelAnnotationFilter> annotationFilters;
 
     private ExtensionMethods(List<String> names, List<ExtensionMethod> discoveries, List<Enhancer> enhancers,
                              List<Registrar> registrars, List<ExtensionMethod> synthesizers,
-                             List<ExtensionMethod> validators, List<AsyncHandlerTypes.Handler> asyncHandlers) {
+                             List<ExtensionMethod> validators, List<AsyncHandlerTypes.Handler> asyncHandlers,
+                             List<LanguageModelAnnotationFilter> annotationFilters) {
         this.names = List.copyOf(names);
         this.asyncHandlers = List.copyOf(asyncHandlers);
+        this.annotationFilters = List.copyOf(annotationFilters);
         this.discoveries = List.copyOf(discoveries);
         this.enhancers = List.copyOf(enhancers);
         this.registrars = List.copyOf(registrars);
@@ -123,7 +132,8 @@ final class ExtensionMethods {
      * @return The methods
      */
     static ExtensionMethods none() {
-        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+        return new ExtensionMethods(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+            List.of());
     }
 
     /**
@@ -203,7 +213,19 @@ final class ExtensionMethods {
                 registration.method().getAnnotation(Registration.class), List.copyOf(asyncHandlers)));
         }
         return new ExtensionMethods(extensions.stream().map(extension -> extension.getClass().getName()).toList(),
-            discoveries, enhancers, registrars, synthesizers, validators, asyncHandlers);
+            discoveries, enhancers, registrars, synthesizers, validators, asyncHandlers,
+            List.copyOf(SoftServiceLoader.load(LanguageModelAnnotationFilter.class,
+                LanguageModelAnnotationFilter.class.getClassLoader()).collectAll()));
+    }
+
+    /**
+     * The language model of the given compilation, reporting annotations through the filters loaded as it started.
+     *
+     * @param context The compilation
+     * @return The model
+     */
+    SourceModel model(VisitorContext context) {
+        return SourceModel.of(context, annotationFilters);
     }
 
     /**
@@ -223,7 +245,7 @@ final class ExtensionMethods {
      */
     void discover(DiscoveredClasses discovered, VisitorContext context) {
         for (ExtensionMethod discovery : discoveries) {
-            discover(discovery.extension(), discovery.method(), discovered, context);
+            discover(discovery.extension(), discovery.method(), discovered, model(context));
         }
     }
 
@@ -267,7 +289,7 @@ final class ExtensionMethods {
     void describeBean(ElementBeanInfo bean, Messages messages, VisitorContext context) {
         for (Registrar registrar : registrars) {
             if (registrar.matches(bean)) {
-                registrar.describe(bean, messages, context);
+                registrar.describe(bean, messages, model(context));
             }
         }
     }
@@ -282,7 +304,7 @@ final class ExtensionMethods {
     void describeObserver(ElementObserverInfo observer, Messages messages, VisitorContext context) {
         for (Registrar registrar : registrars) {
             if (registrar.matchesObserver(observer)) {
-                registrar.describeObserver(observer, messages, context);
+                registrar.describeObserver(observer, messages, model(context));
             }
         }
     }
@@ -299,7 +321,7 @@ final class ExtensionMethods {
                                VisitorContext context) {
         for (Registrar registrar : registrars) {
             if (registrar.asksForBeans(false) && registrar.matches(beanType)) {
-                registrar.describe(bean, messages, context);
+                registrar.describe(bean, messages, model(context));
             }
         }
     }
@@ -316,7 +338,7 @@ final class ExtensionMethods {
                                    VisitorContext context) {
         for (Registrar registrar : registrars) {
             if (registrar.asksForObservers() && registrar.matches(eventType)) {
-                registrar.describeObserver(observer, messages, context);
+                registrar.describeObserver(observer, messages, model(context));
             }
         }
     }
@@ -337,7 +359,7 @@ final class ExtensionMethods {
             for (int i = 0; i < parameterTypes.length; i++) {
                 arguments[i] = parameterTypes[i].equals(SyntheticComponents.class)
                     ? synthesis.componentsOf(synthesizer.extension())
-                    : Phase.SYNTHESIS.argument(parameterTypes[i], messages, context);
+                    : Phase.SYNTHESIS.argument(parameterTypes[i], messages, model(context));
             }
             if (!invokeLatePhase("synthesis", synthesizer, arguments, context)) {
                 return false;
@@ -357,7 +379,7 @@ final class ExtensionMethods {
             Class<?>[] parameterTypes = validator.method().getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
-                arguments[i] = Phase.VALIDATION.argument(parameterTypes[i], messages, context, asyncHandlers);
+                arguments[i] = Phase.VALIDATION.argument(parameterTypes[i], messages, model(context), asyncHandlers);
             }
             if (!invokeLatePhase("validation", validator, arguments, context)) {
                 return;
@@ -378,7 +400,7 @@ final class ExtensionMethods {
         Messages messages = new VisitorMessages(context);
         for (Enhancer enhancer : enhancers) {
             if (enhancer.matches(element)) {
-                enhancer.enhance(element, messages, context);
+                enhancer.enhance(element, messages, model(context));
             }
         }
     }
@@ -680,14 +702,15 @@ final class ExtensionMethods {
      * Runs one discovery method, handing it what it asked for.
      */
     private static void discover(BuildCompatibleExtension extension, Method method, DiscoveredClasses discovered,
-                                 VisitorContext context) {
+                                 SourceModel context) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object[] arguments = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i].equals(ScannedClasses.class) || parameterTypes[i].equals(MetaAnnotations.class)) {
                 arguments[i] = discovered;
             } else if (Phase.DISCOVERY.hands(parameterTypes[i])) {
-                arguments[i] = Phase.DISCOVERY.argument(parameterTypes[i], new VisitorMessages(context), context);
+                arguments[i] = Phase.DISCOVERY.argument(parameterTypes[i], new VisitorMessages(context.visitorContext()),
+                    context);
             } else {
                 throw new IllegalStateException("The discovery method " + method + " asks for a "
                     + parameterTypes[i].getName() + ", which this module does not hand to one");
@@ -824,7 +847,7 @@ final class ExtensionMethods {
         }
 
         private void describeObserver(ObserverInfo observer,
-                                      Messages messages, VisitorContext context) {
+                                      Messages messages, SourceModel context) {
             Class<?>[] parameterTypes = method.getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
@@ -833,7 +856,7 @@ final class ExtensionMethods {
                 } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
                     arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context, asyncHandlers);
                 } else {
-                    context.fail("The registration method " + method + " asks for a "
+                    context.visitorContext().fail("The registration method " + method + " asks for a "
                         + parameterTypes[i].getName() + ", which this module does not hand to one", null);
                     return;
                 }
@@ -841,15 +864,15 @@ final class ExtensionMethods {
             try {
                 invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
-                context.fail("The registration method " + method + " could not be invoked: " + e, null);
+                context.visitorContext().fail("The registration method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause() == null ? e : e.getCause();
                 rethrowDeploymentProblem(cause);
-                context.fail("The registration method " + method + " failed: " + cause, null);
+                context.visitorContext().fail("The registration method " + method + " failed: " + cause, null);
             }
         }
 
-        private void describe(BeanInfo bean, Messages messages, VisitorContext context) {
+        private void describe(BeanInfo bean, Messages messages, SourceModel context) {
             Class<?>[] parameterTypes = method.getParameterTypes();
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
@@ -861,7 +884,7 @@ final class ExtensionMethods {
                 } else if (Phase.REGISTRATION.hands(parameterTypes[i])) {
                     arguments[i] = Phase.REGISTRATION.argument(parameterTypes[i], messages, context, asyncHandlers);
                 } else {
-                    context.fail("The registration method " + method + " asks for a "
+                    context.visitorContext().fail("The registration method " + method + " asks for a "
                         + parameterTypes[i].getName() + ", which this module does not hand to one", null);
                     return;
                 }
@@ -869,11 +892,11 @@ final class ExtensionMethods {
             try {
                 invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
-                context.fail("The registration method " + method + " could not be invoked: " + e, null);
+                context.visitorContext().fail("The registration method " + method + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause() == null ? e : e.getCause();
                 rethrowDeploymentProblem(cause);
-                context.fail("The registration method " + method + " failed: " + cause, null);
+                context.visitorContext().fail("The registration method " + method + " failed: " + cause, null);
             }
         }
 
@@ -993,7 +1016,7 @@ final class ExtensionMethods {
             return metadata.getDeclaredAnnotationNames().stream().anyMatch(carriers::contains);
         }
 
-        private void enhance(ClassElement element, Messages messages, VisitorContext context) {
+        private void enhance(ClassElement element, Messages messages, SourceModel context) {
             ElementClassConfig classConfig = new ElementClassConfig(element, context);
             Class<?>[] parameterTypes = method.getParameterTypes();
             // a method taking a configuration of a member is invoked once for each of those members, and one
@@ -1011,7 +1034,7 @@ final class ExtensionMethods {
                 invocations.add(arguments(parameterTypes, classConfig, messages, context));
             }
             for (Object[] arguments : invocations) {
-                invoke(arguments, context);
+                invoke(arguments, context.visitorContext());
             }
         }
 
@@ -1036,7 +1059,7 @@ final class ExtensionMethods {
         }
 
         private static Object[] arguments(Class<?>[] parameterTypes, Object config, Messages messages,
-                                          VisitorContext context) {
+                                          SourceModel context) {
             Object[] arguments = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
                 arguments[i] = Phase.ENHANCEMENT.hands(parameterTypes[i])
@@ -1105,7 +1128,7 @@ final class ExtensionMethods {
          * What a parameter of a type the phase hands is given.
          */
         Object argument(Class<?> parameterType, Messages messages,
-                        @Nullable VisitorContext context) {
+                        @Nullable SourceModel context) {
             // the phases that hand no invoker factory and no invoker validation, which alone read the handlers
             return argument(parameterType, messages, context, List.of());
         }
@@ -1114,7 +1137,7 @@ final class ExtensionMethods {
          * What a parameter of a type the phase hands is given, the async handlers of the compilation at hand.
          */
         Object argument(Class<?> parameterType, Messages messages,
-                        @Nullable VisitorContext context, List<AsyncHandlerTypes.Handler> asyncHandlers) {
+                        @Nullable SourceModel context, List<AsyncHandlerTypes.Handler> asyncHandlers) {
             if (parameterType.equals(Messages.class)) {
                 return messages;
             }

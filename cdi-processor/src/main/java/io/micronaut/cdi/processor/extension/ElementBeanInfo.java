@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.internal.metadata.CdiName;
@@ -34,7 +35,6 @@ import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
@@ -84,10 +84,10 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
         CdiAny.class.getName()
     );
 
-    final VisitorContext context;
+    final SourceModel context;
     private final HandedOut handedOut;
 
-    ElementBeanInfo(HandedOut handedOut, VisitorContext context) {
+    ElementBeanInfo(HandedOut handedOut, SourceModel context) {
         this.handedOut = handedOut;
         this.context = context;
     }
@@ -101,7 +101,7 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * @param context        The visitor context
      * @return The description
      */
-    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, VisitorContext context) {
+    static ElementBeanInfo of(ClassElement declaringClass, @Nullable MemberElement producer, SourceModel context) {
         return of(new HandedOut(declaringClass, producer, context), context);
     }
 
@@ -112,7 +112,7 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
      * @param context   The visitor context
      * @return The description
      */
-    static ElementBeanInfo of(HandedOut handedOut, VisitorContext context) {
+    static ElementBeanInfo of(HandedOut handedOut, SourceModel context) {
         return handedOut.member() == null
             && handedOut.declaringClass().hasDeclaredAnnotation("jakarta.interceptor.Interceptor")
             ? new ElementInterceptorInfo(handedOut, context)
@@ -205,7 +205,7 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
                 types.add(type);
             }
         }
-        context.getClassElement(Object.class).ifPresent(object -> types.add(ElementTypes.of(object, context)));
+        context.visitorContext().getClassElement(Object.class).ifPresent(object -> types.add(ElementTypes.of(object, context)));
         return types;
     }
 

@@ -15,12 +15,12 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ElementQuery;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.lang.model.AnnotationInfo;
@@ -40,7 +40,7 @@ import java.util.List;
 @Internal
 final class ElementInterceptorInfo extends ElementBeanInfo implements InterceptorInfo {
 
-    ElementInterceptorInfo(HandedOut handedOut, VisitorContext context) {
+    ElementInterceptorInfo(HandedOut handedOut, SourceModel context) {
         super(handedOut, context);
     }
 

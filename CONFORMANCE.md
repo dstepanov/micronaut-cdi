@@ -337,9 +337,13 @@ form of the same selection is an `AnnotationValue`, through `MicronautInstance`,
 
 What the container has to know of a qualifier or interceptor binding type - whether it is one, its members and
 which of them bind, whether it is repeatable, its retention - is read from the compiled metadata of the beans
-(`CompiledAnnotationTypes`): the class level metadata of every definition, the records of the synthetic components
-and of the qualifiers an extension registered, and, for a type no bean class carries, the injection points and
-executable methods of the definitions. The record of a qualifier a build compatible extension registered carries the
+(`CompiledAnnotationTypes`): the class level metadata of every definition, which loads no definition, the records
+of the synthetic components and of the qualifiers an extension registered. A type no bean class carries, used only
+where a bean is injected or a method of it invoked, is known from the class level metadata as well: the processor
+records on every class it visits the qualifier and binding types its constructors, fields and methods - inherited
+ones included - and their parameters use, with the members of each as the compilation saw its interface, the ones
+that do not bind and whether it is retained at runtime (`AnnotationTypesVisitor`, `CdiAnnotationTypes`). A type
+only a bean compiled without this processor uses that way has no record. The record of a qualifier a build compatible extension registered carries the
 members the compilation saw its interface declare and the ones that do not bind, so that one no bean class carries
 is not taken for a marker by its name alone. A member is whatever the interface declares, a name with a leading
 dollar sign included; only the names Micronaut keeps among the values of an annotation (`$nonBinding`,
@@ -402,7 +406,8 @@ states the event type in full and needs no record and no module.
 
 *Sections 5.5.7, 5.5.8, 5.6, 9.4.3, 11.1.4 and 11.1.8 to 11.1.10, and of CDI Full 23.1 and 23.3.10.*
 `micronaut-cdi` reads no class back, and the build holds it to that: the `NoReflection` check allows it nothing
-but the accessors of a `java.lang.reflect.Type` it was handed. A type it reports - a bean type, the type of an
+(no `allowIn` and no `allowCalls` is left in `cdi/build.gradle`); a `java.lang.reflect.Type` it is handed is read
+into Micronaut's form of it by core's `Argument.of(Type)`. A type it reports - a bean type, the type of an
 injection point, of an observed event or of an event's metadata - is the one Micronaut renders the argument it holds
 into (`Argument.asType()`, since Micronaut Core 5.3, #14081), exactly as the declaration wrote it, which reads no
 class: a parameterized type, a wildcard and a generic array are equal to the ones the JDK reflects, with their hash
@@ -497,7 +502,11 @@ creations and destructions, after as many to warm up) takes 4.9 us and allocates
 and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
 The bean types of a
 definition are kept on the definition (`BeanDefinition.getCachedUnevaluatedValue`), so they go with the context and
-with a definition a development reload retires, and the container keeps no map of them; what was
+with a definition a development reload retires, and the container keeps no map of them. A runtime definition is one
+object for every context it is registered with and keeps its values for every one of them, so the types of one are
+worked out each time they are asked rather than kept with the first context's index; and Micronaut drops a kept
+value whenever the property sources change (`CACHE_PER_REVISION`), so the types are worked out again then, though
+they read no placeholder. What was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
 context runs, or retired or added by a development reload (`WatchableBeanContext.definitions()`), since the
 definitions of Micronaut's own beans are read as well. The observer methods are read from the definitions of the beans marked as
@@ -648,7 +657,8 @@ compilations recorded it.
 
 Every visitor of the processor is isolating and writes what it records of a class from that class alone: the
 scope, the injection points, the name, the producers and observers, the default qualifier, the proxyability, the
-bean types and the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`), none of which keeps
+bean types, the type hierarchy records (`TypeHierarchyRecords`, `TypeHierarchyVisitor`) and the qualifier and binding
+types the members of the class use (`AnnotationTypesVisitor`), none of which keeps
 anything from one class to the next, on itself, in a static field or on the attributes of the `VisitorContext`; the
 one attribute the processor keeps is `CurrentElement`'s count of the rounds, below. The
 non-binding members of a qualifier are Micronaut's to list on each occurrence it reads, from the compilation's view
@@ -683,8 +693,8 @@ but the round count, which it keeps up in every compilation, and an empty `Disco
 - The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
   saw for a later one, as the specification allows and the kit's extensions do.
 - The specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as a compilation
-  with extensions starts and gives back a context-free one as it finishes, so that no compilation outlives itself
-  there. The
+  with extensions starts and whose services it releases in place as the compilation finishes, so that no
+  compilation outlives itself there and services another compilation set meanwhile are not replaced. The
   extensions themselves are found as the compilation starts the visitor: the ones the service loader finds on
   the processor path, and the ones the compiler options name (`-Amicronaut.cdi.extensions=a.B,c.D`, which
   `-Amicronaut.cdi.extensions.only=true` makes all of them), which is how a harness that compiles a deployment at
@@ -770,7 +780,11 @@ Not fired: `ProcessInjectionPoint`, `ProcessProducer`, `ProcessObserverMethod`, 
 bean is described by `ProcessBeanAttributes` and a plain `ProcessBean`, and `getAnnotated()` of a producer
 method is not described. An extension with an observer of any other event - an event of the application among
 them - is refused as the bootstrap starts, rather than left waiting for it. The beans Micronaut and this
-container bring of their own, which are the ones under `io.micronaut` and `jakarta`, are not described.
+container bring of their own are not described: the beans of classes compiled without the processor of this module,
+which records on every class it visits what its members use (`CdiAnnotationTypes`), whatever their package
+(`ExtensionComponents.isInfrastructure`), the SE bootstrap selecting the beans of an archive by the same rule. A
+bean the container knows by its class alone, with no definition, is the container's where its class is under
+`io.micronaut` or `jakarta`.
 
 ### A normal scope of the application's own
 
@@ -892,6 +906,22 @@ annotation is not a bean, and a producer it declares is inert. Here the producer
 because bean-archive membership is a per-deployment question a global compilation cannot answer — the SE
 bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
 deployment ever admits is the difference visible to code that counts beans.
+
+### The priority of an alternative producer field is read from its declaring class
+
+*Section 2.7.1.* A producer of an alternative bean class that declares a priority is selected by that priority.
+Micronaut composes a method's annotation metadata with its declaring class's and a field's without it; the processor
+reads the declaring class's priority explicitly for a producer field (`ProducerVisitor.selectIfAlternative`). This is
+the adapter applying the specification's rule with Micronaut's existing API, not a gap in Micronaut Core: changing how
+all field metadata composes would be broader than the rule needs.
+
+### An alternative interceptor runs by the priority it declares
+
+*Section 2.7 / Jakarta Interceptors 5.2.1.* The processor writes the priority of a selected alternative into
+Micronaut's `@Order`, negated (`Alternatives.select`), and does so for an interceptor class that is also an
+alternative, which the specification calls non-portable. The interceptor chain of Jakarta Interceptors orders by the
+declared `@Priority` first and falls back to `@Order` only where none is declared, so such an interceptor keeps its
+place among the others (`AlternativeInterceptorOrderTest`).
 
 ### Two findings of a reading of ArC's test suite, reported as the class compiles
 
@@ -1132,11 +1162,12 @@ own rather than the first one alone.
   on the visitor context would remove the count.
 - **The facts of an annotation type are known only from its occurrences.** Whether a type is a qualifier, an
   interceptor binding or a stereotype, its retention and its non-binding members are read from the occurrences the
-  beans were compiled with (`CompiledAnnotationTypes`): a type no class carries is found by walking the injection
-  points and executable methods of every definition, `getAllBeanDefinitions()` included, which loads definitions
-  the application would not have loaded. Registering those facts beside the defaults the generated metadata already
-  registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader, would make each question a
-  lookup and remove the index.
+  beans were compiled with (`CompiledAnnotationTypes`). The processor records on each class what its members use
+  (`CdiAnnotationTypes`), so no definition is loaded to learn of a type only an injection point or an executable
+  method uses; a type only a bean compiled without the processor uses that way - one of Micronaut's own beans - is
+  not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
+  generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
+  would make each question a lookup, cover every bean, and remove both the record and the index.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
   class a build compatible extension scanned is imported by a generated `ScannedClassesImport` source, so that a
   later round makes a bean of it; KSP and Groovy register it with `registerBean`. Tolerating a class the same
@@ -1144,9 +1175,6 @@ own rather than the first one alone.
 - **An empty-string default is left out of the written metadata.** `EmptyDefaultsRemapper` puts it back for the
   qualifier and binding types, which compare members at their defaults. Recording the empty defaults of a type that
   is a qualifier or an interceptor binding would remove it.
-- **`AnnotationValue.equals` ignores a member the other value lacks.** Two values of equal size with different
-  member names compare equal while their hash codes differ, so `RecordedSynthesis` compares records member by member
-  (`sameRecord`). Treating a member the other value lacks as unequal would restore the contract.
 - **The rule of which declared method overrides which is package-private.** `io.micronaut.reflection.MethodHierarchy`
   has it; the portable extension runtime walks a class's methods and their overrides itself to find observer methods
   of an extension. A public "declared methods, overridden ones removed" helper in `ReflectionExecutables` would
@@ -1196,9 +1224,6 @@ own rather than the first one alone.
   instance method has one derived from the declaring type; the Java implementation answers only a written `this`
   parameter, and the Kotlin and Groovy ones never do. `ElementMethodInfo.receiverType()` supplies the declaring
   type itself.
-- **A field's annotation metadata does not include its declaring class's, a method's does.** The priority that
-  selects an alternative producer field is therefore read from the declaring class explicitly
-  (`ProducerVisitor.selectIfAlternative`).
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
@@ -1218,6 +1243,17 @@ own rather than the first one alone.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
   marker of its own (`CdiAny`) rather than into Micronaut's.
+- **A bean is created through its definition under the qualifier the definition declares.** A point of a bean of the
+  specification left to Micronaut's rules is created through the definition Micronaut's rules found
+  (`CdiBeanContainer.resolveSelected`), so that the qualifier it was found by does not become a second key in the
+  bean's scope. `DefaultBeanContext.getBeanRegistration(resolutionContext, definition, ...)` creates the bean under
+  `definition.getDeclaredQualifier()`, which for a bean declared with Micronaut's `@Any` is `@Any` itself, where a
+  lookup creates it for the qualifier asked (`BeanDefinitionDelegate.create(definition, qualifier)`). Such a bean is
+  therefore looked up by the qualifier of the point instead (`MicronautAnyFactoryTest`): a lookup Micronaut keys
+  by that qualifier, as its own lookups of the bean are. A creation by definition that takes the qualifier the bean
+  is created for (`BeanResolutionContext.getBean(definition, argument, qualifier)` and its
+  `BeanDependencyResolver` twin), proposed to core, would let the container create it through the definition as
+  every other bean.
 - **A qualifier an extension composes for a synthetic component is the processor's to complete.** Since Micronaut
   Core 5.3 Micronaut lists every `@NonBinding` member of an annotation under `$nonBinding` on each occurrence,
   written or not, and on its qualifier stereotype, reading the members from the compilation's view of the
@@ -1236,9 +1272,9 @@ own rather than the first one alone.
   resolved through, with them (`ReflectiveCdi.typeClosureOf`, `eventTypeOf`), the closure of an array included,
   which `typeClosureOf` lists as the processor does: the arrays of the supertypes of the component, the arrays of
   fewer dimensions, `Cloneable` and `Serializable`. They are in `micronaut-reflection`, which reads classes back,
-  and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is still read into an
-  `Argument` in `io.micronaut.cdi.internal.type`, by the accessors of the type alone, and one the specification's
-  API reports is rendered by Micronaut (`Argument.asType()`). The reflection module reads a type it is handed with
+  and the runtime of this module does not: a `java.lang.reflect.Type` a program hands in is read into an
+  `Argument` by core's `Argument.of(Type)`, and one the specification's API reports is rendered by Micronaut
+  (`Argument.asType()`). The reflection module reads a type it is handed with
   `ofExact` itself, the ones the container reported as well. A variable Micronaut renders has no declaration and
   is equal to another so rendered, not to the variable the class declares, so the reflection module tells the
   variables of an event's class apart by their names.
@@ -1288,9 +1324,18 @@ own rather than the first one alone.
   to, and keeps a bean of the specification that implements one of them from taking the context's place. A public
   list, or a definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
-  to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
+  to hand it, and resolves to the container started last. The containers that run are held by the provider of this
+  module the specification's API holds (`MicronautCDIProvider`), which a container registers with as it starts and
+  installs with `CDI.setCDIProvider` where the API holds none of this module yet, reading the API's own record of
+  its provider (`MicronautCDI.installedProvider`); the module keeps no static of its own for it, and the container
+  itself never asks it. A provider a program set itself is left in place;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
-  compilation starts. Thread state is held by Micronaut's `PropagatedContext` and by the resolution context, never
+  compilation with extensions starts and released in place as it finishes - the services let go of the compilation
+  rather than being replaced, so that services another compilation set meanwhile stay. What remains is inherent in
+  the static: two compilations with extensions that share the processor's class loader and overlap (an in-process
+  parallel harness, a daemon caching the processor loader) share one resolver, and the one that started last is the
+  one `AnnotationBuilder.of` composes with until it finishes; the other then composes without a compilation, as
+  given. Thread state is held by Micronaut's `PropagatedContext` and by the resolution context, never
   by a `ThreadLocal`: a request begun by `RequestContextController` is an activation in the propagated context
   beside the request's beans, with the scope that ends it, the thread it was begun on and who began it
   (`RequestScope.activate(Object)`), so work the context is carried to sees the request and does not end it; the
@@ -1298,17 +1343,18 @@ own rather than the first one alone.
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
   language model over the compiler's elements hold no static state that is not a constant: the registered
-  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` where an annotation is
-  reported, and kept nowhere (`LanguageModelAnnotationFilter.registered()`), and a provider is expected to decide
-  from its arguments alone.
+  `LanguageModelAnnotationFilter` services are loaded through Micronaut's `SoftServiceLoader` once per compilation,
+  as the processor starts it (`ExtensionMethods.load`), and handed to the model of that compilation
+  (`SourceModel.of`), which every declaration and type of the model is read through; a provider is expected to
+  decide from its arguments alone.
   What they reflect goes through Micronaut's helpers where one exists - `SoftServiceLoader` for the extensions and
   the filters, `ClassUtils.forName` and `InstantiationUtils` for an extension a compiler option names,
-  `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts three
+  `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts two
   classes, for what has no helper or what the check counts even through one: `ExtensionMethods`, which finds an
   extension's phase methods among its declared methods by their annotations and reads their parameter types, as
-  the specification defines an extension (and loads services); `ElementAnnotationMember`, which reads an annotation
-  member's array and enum values as the language model's API hands them out; and `LanguageModelAnnotationFilter`,
-  for the service loading of the filters. A harness that
+  the specification defines an extension (and loads services, the filters' included); and
+  `ElementAnnotationMember`, which reads an annotation member's array and enum values as the language model's API
+  hands them out. A harness that
   compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated

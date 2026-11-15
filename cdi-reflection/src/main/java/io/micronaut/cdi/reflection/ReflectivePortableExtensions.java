@@ -221,8 +221,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
             boolean infrastructure = bean instanceof CdiBean<?> described
                 ? described.definition() instanceof RuntimeBeanDefinition<?>
                     || ExtensionComponents.isInfrastructure(described.definition())
-                : bean.getBeanClass().getName().startsWith("io.micronaut.")
-                    || bean.getBeanClass().getName().startsWith("jakarta.");
+                : ExtensionComponents.isInfrastructure(bean.getBeanClass());
             if (!infrastructure) {
                 beans.add(bean);
             }

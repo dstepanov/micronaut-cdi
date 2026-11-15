@@ -110,6 +110,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * compiler constructs and never starts has none.
      */
     private @Nullable DiscoveredClasses discovered;
+    /**
+     * The build services this visitor set in the specification's resolver for its compilation, which it releases as
+     * the compilation finishes: none where the compilation has no extensions.
+     */
+    private @Nullable ElementBuildServices buildServices;
 
     @Override
     public Set<String> getSupportedOptions() {
@@ -257,11 +262,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * its build time API, which an extension calls with nothing to hand it; it is set as the compilation starts
      * rather than left to the service loader, which looks through the loader of the API and does not always see the
      * service entry of this module. It is a static of the API's, so it is set only where an extension may call it,
-     * and given back a context-free one as the compilation finishes ({@link #finishCompilation}).
+     * and the services set are released in place as the compilation finishes ({@link #finishCompilation}), never
+     * replaced: another compilation sharing the class loader of the processor may have set services of its own since.
+     * That one compilation starting while another runs takes the resolver from it is the specification's static.
      */
     private void useBuildServicesOf(VisitorContext context) {
         if (!extensions.isEmpty()) {
-            BuildServicesResolver.setBuildServices(new ElementBuildServices(context));
+            ElementBuildServices mine = new ElementBuildServices(extensions.model(context));
+            BuildServicesResolver.setBuildServices(mine);
+            ElementBuildServices previous = buildServices;
+            buildServices = mine;
+            if (previous != null) {
+                previous.release();
+            }
         }
     }
 
@@ -334,10 +347,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             recordDeployment(contributors, context);
             synthesise(contributors, context);
         } finally {
-            if (!extensions.isEmpty()) {
+            ElementBuildServices mine = buildServices;
+            if (mine != null) {
                 // the static of the specification's API keeps no compilation once it is over: the class loader of
-                // the processor may outlive it, in a build daemon or a compiler worker
-                BuildServicesResolver.setBuildServices(new ElementBuildServices());
+                // the processor may outlive it, in a build daemon or a compiler worker. The services are released
+                // where they are, so that services another compilation set meanwhile stay
+                buildServices = null;
+                mine.release();
             }
         }
     }
@@ -442,7 +458,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // what an extension reports from here on is about the deployment as a whole rather than about a
         // definition the compiler is looking at
         Messages messages = VisitorMessages.ofTheDeployment(context);
-        SynthesisPhase synthesis = new SynthesisPhase(context, discovered());
+        SynthesisPhase synthesis = new SynthesisPhase(extensions.model(context), discovered());
         if (!extensions.synthesize(synthesis, messages, context)) {
             return;
         }
@@ -461,14 +477,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             extensions.describeSyntheticBean(info, info.beanType(), messages, context);
         }
         for (RecordingObserverBuilder<?> observer : synthesis.observers()) {
-            SyntheticObserverInfo info = new SyntheticObserverInfo(observer, context);
+            SyntheticObserverInfo info = new SyntheticObserverInfo(observer, extensions.model(context));
             extensions.describeSyntheticObserver(info, ElementTypes.elementOf(observer.eventType()), messages,
                 context);
         }
         // the built-in beans are beans of the application too (section 2.10.3): no class of the compilation
         // declares them, so the phase is told about them here
         context.getClassElement("io.micronaut.cdi.internal.runtime.CdiBeanContainer").ifPresent(container -> {
-            extensions.describeBean(ElementBeanInfo.of(container, null, context), messages, context);
+            extensions.describeBean(ElementBeanInfo.of(container, null, extensions.model(context)), messages, context);
         });
         // and the validation phase is the last word on it
         extensions.validate(messages, context);
@@ -504,14 +520,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
-            beans.add(ElementBeanInfo.of(element, null, context));
+            beans.add(ElementBeanInfo.of(element, null, extensions.model(context)));
         }
         for (MemberElement producer
             : SpecificationBeans.producersOf(element)) {
             AnnotationMetadata own = producer instanceof MethodElement method
                 ? method.getMethodAnnotationMetadata() : producer.getAnnotationMetadata();
             if (!isUnselectedReserve(own)) {
-                beans.add(ElementBeanInfo.of(element, producer, context));
+                beans.add(ElementBeanInfo.of(element, producer, extensions.model(context)));
             }
         }
         for (ElementBeanInfo bean : beans) {
@@ -536,7 +552,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 continue;
             }
             extensions.describeObserver(
-                new ElementObserverInfo(element, method, observed, async, context), messages, context);
+                new ElementObserverInfo(element, method, observed, async, extensions.model(context)), messages, context);
         }
     }
 

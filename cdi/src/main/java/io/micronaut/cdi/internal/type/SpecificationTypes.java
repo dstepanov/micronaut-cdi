@@ -60,7 +60,8 @@ public final class SpecificationTypes {
 
     /**
      * The argument a bean is looked up by for the given type: a class, a parameterized type of them, or an array
-     * of either.
+     * of either. The type is read by core's {@link Argument#of(Type)}, so an {@link Argument} handed in as a
+     * {@code Type} - as Micronaut renders one - is taken as it is.
      *
      * @param type The type
      * @param <T>  The type

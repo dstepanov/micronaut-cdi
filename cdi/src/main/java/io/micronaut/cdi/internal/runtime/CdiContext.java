@@ -477,6 +477,12 @@ public final class CdiContext implements AlterableContext {
 
         private static final BeanIdentifier ID = CONTEXTUAL_STORE_ID;
 
+        /**
+         * One runtime definition for every container of the class loader. A runtime definition keeps the values it
+         * is asked for ({@code getCachedValue}, {@code getCachedUnevaluatedValue}) for good and for every context,
+         * so nothing may ask this one for a kept value: it stays a key the scope holds the store under, never a
+         * definition the container reads.
+         */
         @SuppressWarnings({"unchecked", "rawtypes"})
         private static final BeanDefinition<Store> DEFINITION = (BeanDefinition)
             RuntimeBeanDefinition.of(StoreCreation.class, StoreCreation::new);

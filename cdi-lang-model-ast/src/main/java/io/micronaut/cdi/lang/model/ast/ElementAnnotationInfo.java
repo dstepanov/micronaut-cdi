@@ -18,7 +18,6 @@ package io.micronaut.cdi.lang.model.ast;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -42,7 +41,7 @@ import java.util.Map;
 public final class ElementAnnotationInfo implements AnnotationInfo {
 
     private final AnnotationValue<?> annotation;
-    private final @Nullable VisitorContext context;
+    private final @Nullable SourceModel context;
     private @Nullable Map<CharSequence, Object> resolvedMembers;
 
     /**
@@ -50,11 +49,11 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
      * @param context    The compilation the annotation is read in, which is asked for its interface and the
      *                   defaults of its members
      */
-    public ElementAnnotationInfo(AnnotationValue<?> annotation, VisitorContext context) {
+    public ElementAnnotationInfo(AnnotationValue<?> annotation, SourceModel context) {
         this(context, annotation);
     }
 
-    private ElementAnnotationInfo(@Nullable VisitorContext context, AnnotationValue<?> annotation) {
+    private ElementAnnotationInfo(@Nullable SourceModel context, AnnotationValue<?> annotation) {
         this.annotation = annotation;
         this.context = context;
     }
@@ -84,9 +83,9 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
     public ClassInfo declaration() {
         // an annotation is recorded by name and by the values written for it, so the interface it names is asked
         // of the compiler rather than read off the record
-        VisitorContext compilation = context;
+        SourceModel compilation = context;
         ClassElement declaration = compilation == null ? null
-            : ExtensionAnnotationTypes.declarationOf(annotation.getAnnotationName(), compilation);
+            : ExtensionAnnotationTypes.declarationOf(annotation.getAnnotationName(), compilation.visitorContext());
         if (compilation == null || declaration == null) {
             throw new IllegalStateException("The annotation interface " + annotation.getAnnotationName()
                 + " is not on the compilation's classpath");
@@ -130,7 +129,7 @@ public final class ElementAnnotationInfo implements AnnotationInfo {
                 recorded.forEach(values::putIfAbsent);
             }
             if (context != null) {
-                context.getAnnotationDefaultValues(annotation.getAnnotationName()).forEach(values::putIfAbsent);
+                context.visitorContext().getAnnotationDefaultValues(annotation.getAnnotationName()).forEach(values::putIfAbsent);
             }
             resolvedMembers = values;
         }

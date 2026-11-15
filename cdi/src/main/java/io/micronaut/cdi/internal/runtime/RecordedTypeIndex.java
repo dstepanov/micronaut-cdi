@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -29,6 +30,7 @@ import io.micronaut.core.type.TypeHierarchies;
 import io.micronaut.core.type.TypeHierarchy;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.DelegatingBeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
@@ -71,6 +73,13 @@ public final class RecordedTypeIndex {
      * keeps an unevaluated value for. The value goes with the definition: with the context it belongs to, and with a
      * definition a development reload retires.
      *
+     * <p>The types are worked out through the index of the context (its class loader, its definitions, whether the
+     * module that reads classes is there), so they are kept only on a definition that belongs to one context. A
+     * {@link RuntimeBeanDefinition} is one object for every context it is registered with, and keeps a value for good
+     * for all of them: its types are worked out again each time it is asked. With an {@code Environment}, Micronaut
+     * keeps a value until the property sources change ({@code CACHE_PER_REVISION}), so a change of them drops the types
+     * of every definition, though they read no placeholder; an environment that keeps no revision keeps none.</p>
+     *
      * @param definition The definition
      * @return The bean types
      */
@@ -91,9 +100,27 @@ public final class RecordedTypeIndex {
     }
 
     private static <T> List<Argument<?>> kept(BeanDefinition<T> definition, Supplier<RecordedTypeIndex> index) {
+        if (isShared(definition)) {
+            // kept for good and seen by every context it is registered with: the types of one context are not the
+            // types another works out
+            return List.copyOf(CdiBean.typesOf(index.get(), definition, beanClassOf(definition)));
+        }
         // the factory reads the definition it is handed, which is the one a delegating definition wraps
         return definition.getCachedUnevaluatedValue(BeanTypes.class, kept -> new BeanTypes(List.copyOf(
             CdiBean.typesOf(index.get(), kept, beanClassOf(kept))))).types();
+    }
+
+    /**
+     * Whether the values a definition keeps are seen by more than one context: a runtime definition, which a
+     * delegating definition hands the call to. A compiled definition is loaded by each context, and one of another
+     * kind keeps nothing.
+     */
+    private static boolean isShared(BeanDefinition<?> definition) {
+        BeanDefinition<?> target = definition;
+        while (target instanceof DelegatingBeanDefinition<?> delegating) {
+            target = delegating.getTarget();
+        }
+        return target instanceof RuntimeBeanDefinition<?>;
     }
 
     /**

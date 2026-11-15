@@ -56,6 +56,7 @@ public final class CdiAssignability {
      * type and qualifiers.
      *
      * @param types              What the application was compiled with
+     * @param index              The recorded type hierarchies of the container
      * @param beanTypes          The bean types of the bean
      * @param beanQualifiers     The qualifiers of the bean
      * @param requiredType       The required type of the injection point
@@ -63,6 +64,7 @@ public final class CdiAssignability {
      * @return Whether the bean is eligible
      */
     public static boolean isMatchingBean(CompiledAnnotationTypes types,
+                                         RecordedTypeIndex index,
                                          Set<Type> beanTypes,
                                          Set<Annotation> beanQualifiers,
                                          Type requiredType,
@@ -73,7 +75,6 @@ public final class CdiAssignability {
         requireNonNull(requiredQualifiers, "The required qualifiers");
         requireQualifiers(types, beanQualifiers);
         requireQualifiers(types, requiredQualifiers);
-        RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
         Argument<?> required = Argument.of(requiredType);
         requireNoTypeVariable(required);
         // a type that is not a legal bean type — one with a wildcard in it — is passed over rather than
@@ -164,6 +165,7 @@ public final class CdiAssignability {
      * with, rather than the other way round.</p>
      *
      * @param types                   What the application was compiled with
+     * @param index                   The recorded type hierarchies of the container
      * @param specifiedType           The type of the event
      * @param specifiedQualifiers     The qualifiers of the event
      * @param observedEventType       The type the observer observes
@@ -171,6 +173,7 @@ public final class CdiAssignability {
      * @return Whether the observer is notified
      */
     public static boolean isMatchingEvent(CompiledAnnotationTypes types,
+                                          RecordedTypeIndex index,
                                           Type specifiedType,
                                           Set<Annotation> specifiedQualifiers,
                                           Type observedEventType,
@@ -181,7 +184,6 @@ public final class CdiAssignability {
         requireNonNull(observedEventQualifiers, "The observed qualifiers");
         requireQualifiers(types, specifiedQualifiers);
         requireQualifiers(types, observedEventQualifiers);
-        RecordedTypeIndex index = RecordedTypeIndex.of(types.beanContext());
         Argument<?> specified = Argument.of(specifiedType);
         requireEventType(specified, "A type variable does not describe an event: " + specifiedType);
         if (!isEventTypeMatching(index, Argument.of(observedEventType), specified)) {

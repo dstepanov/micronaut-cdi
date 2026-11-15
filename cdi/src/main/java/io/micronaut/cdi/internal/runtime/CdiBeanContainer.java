@@ -38,6 +38,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
@@ -120,6 +121,10 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     private final RecordedTypeIndex typeIndex;
     private final CompiledAnnotationTypes types;
     private final QualifierOverlay overlay;
+    /**
+     * The provider of the specification's entry point this container registered with as it started.
+     */
+    private final MicronautCDIProvider provider;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -145,9 +150,11 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         this.overlay = overlay;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope, extensionContexts);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
-        // for it to resolve through: the specification's own entry point is static. It is registered as the
-        // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
-        CdiRunning.started(this);
+        // for it to resolve through: the specification's own entry point is static. It is registered with the
+        // provider the API holds as the container starts, which is what makes this bean one Micronaut creates
+        // eagerly rather than on demand
+        this.provider = MicronautCDI.installedProvider();
+        provider.started(this);
     }
 
     /**
@@ -158,7 +165,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * @param beanContext The context that failed to start
      */
     public static void failedToStart(BeanContext beanContext) {
-        CdiRunning.stoppedFor(beanContext);
+        MicronautCDI.installedProvider().stoppedFor(beanContext);
     }
 
     @PreDestroy
@@ -176,7 +183,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
             }
         }
         // no longer what CDI.current() resolves to, whatever a group threw as it closed
-        CdiRunning.stopped(this);
+        provider.stopped(this);
         if (failure instanceof Error error) {
             throw error;
         }
@@ -316,7 +323,10 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      *
      * <p>The bean is then created through the definition, as a selected one is: the qualifier the definition was
      * found by is no part of the creation, where it would become part of the key a custom scope holds the instance
-     * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.</p>
+     * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.
+     * A definition declared with Micronaut's {@code @Any} is the exception: the bean context creates it for the
+     * qualifier of the lookup, which a creation through the definition replaces by {@code @Any}, so it is looked up
+     * by the qualifier of the point instead.</p>
      *
      * @param point     The injection point
      * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point
@@ -366,6 +376,13 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                 Qualifier<Object> read = (Qualifier<Object>) qualifier;
                 BeanDefinition<Object> definition = micronautDefinitionOf(argument, read);
                 if (definition != null) {
+                    Qualifier<Object> ofPoint = read != null ? read : Qualifiers.forArgument(argument);
+                    if (ofPoint != null && AnyQualifier.INSTANCE.equals(definition.getDeclaredQualifier())) {
+                        // a bean of Micronaut's declared @Any is created for the qualifier it is asked by, which
+                        // the bean context creates a definition by alone: a lookup by the qualifier of the point,
+                        // keyed as Micronaut's own lookups of it are (an open point in CONFORMANCE.md)
+                        yield creation.byLookup(argument, ofPoint);
+                    }
                     yield creation.of(definition, argument);
                 }
                 if (nullable) {
@@ -602,7 +619,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * The container's bean for the given definition: the one {@code getBeans} answers with. The definition of the
      * class of a bean in a normal scope - what its client proxy stands in front of, which a resolution creating the
      * instance names - is the bean of the proxy. A bean is equal to every other one of the same definition, and
-     * holds nothing of its own: its types are the index's, so none is kept here.
+     * holds nothing of its own: its types are kept on its definition ({@link RecordedTypeIndex#beanTypesOf}), not
+     * here.
      *
      * @param definition The definition
      * @return The bean
@@ -614,7 +632,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     private <T> CdiBean<T> beanOfDefinition(BeanDefinition<T> definition) {
         // the definition of the client proxy in front of it, where it is the target of one, which the bean context
         // does not enumerate: the bean is the proxy
-        return new CdiBean<>(beanContext, beanContext.findProxyBeanDefinition(definition).orElse(definition));
+        return new CdiBean<>(beanContext, beanContext.findProxyBeanDefinition(definition).orElse(definition), overlay);
     }
 
     /**
@@ -794,7 +812,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         List<Interceptor<?>> resolved = new ArrayList<>();
         for (BeanDefinition<?> definition : InterceptorBindings
             .boundInterceptors(beanContext, given)) {
-            CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
+            CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition, overlay);
             // a chain holds the interceptor classes whatever they interpose on; the question is asked for one kind
             if (interceptor.intercepts(type)) {
                 resolved.add(interceptor);
@@ -921,7 +939,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                                   Set<Annotation> beanQualifiers,
                                   Type requiredType,
                                   Set<Annotation> requiredQualifiers) {
-        return CdiAssignability.isMatchingBean(types(), beanTypes, beanQualifiers, requiredType, requiredQualifiers);
+        return CdiAssignability.isMatchingBean(types(), typeIndex, beanTypes, beanQualifiers, requiredType,
+            requiredQualifiers);
     }
 
     @Override
@@ -929,8 +948,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                                    Set<Annotation> specifiedQualifiers,
                                    Type observedEventType,
                                    Set<Annotation> observedEventQualifiers) {
-        return CdiAssignability.isMatchingEvent(types(), specifiedType, specifiedQualifiers, observedEventType,
-            observedEventQualifiers);
+        return CdiAssignability.isMatchingEvent(types(), typeIndex, specifiedType, specifiedQualifiers,
+            observedEventType, observedEventQualifiers);
     }
 
     @Override

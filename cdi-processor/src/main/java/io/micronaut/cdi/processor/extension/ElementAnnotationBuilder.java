@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationMember;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
@@ -23,7 +24,6 @@ import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.AnnotationBuilder;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
@@ -54,13 +54,13 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
 
     private final String annotation;
     private final Map<CharSequence, Object> members = new LinkedHashMap<>();
-    private final @Nullable VisitorContext context;
+    private final @Nullable SourceModel context;
 
     /**
      * @param annotation The name of the annotation interface
      * @param context    The compilation its interface is read through, or {@code null} outside one
      */
-    ElementAnnotationBuilder(String annotation, @Nullable VisitorContext context) {
+    ElementAnnotationBuilder(String annotation, @Nullable SourceModel context) {
         this.annotation = annotation;
         this.context = context;
     }
@@ -68,7 +68,7 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
     @Override
     public AnnotationInfo build() {
         Map<CharSequence, Object> values = new LinkedHashMap<>(members);
-        VisitorContext compilation = context;
+        SourceModel compilation = context;
         if (compilation == null) {
             // composed through the services the service loader found, with no compilation to read the
             // interface through: the annotation is what it was given
@@ -76,8 +76,8 @@ final class ElementAnnotationBuilder implements AnnotationBuilder {
         }
         // a member that was not given is the default its interface declares, and one without a default
         // has to be given (section 2.10)
-        compilation.getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
-        ClassElement declaration = compilation.getClassElement(annotation).orElse(null);
+        compilation.visitorContext().getAnnotationDefaultValues(annotation).forEach(values::putIfAbsent);
+        ClassElement declaration = compilation.visitorContext().getClassElement(annotation).orElse(null);
         if (declaration != null) {
             // the members the interface declares, as Micronaut answers them under every compiler
             for (String member : NonbindingMembers.memberElementsOf(declaration).keySet()) {

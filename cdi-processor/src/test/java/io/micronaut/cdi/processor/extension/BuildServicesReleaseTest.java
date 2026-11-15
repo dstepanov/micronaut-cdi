@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * The build services the specification's API keeps in a static of its own hold no compilation once it is over:
@@ -64,6 +65,52 @@ class BuildServicesReleaseTest {
         Field context = ElementBuildServices.class.getDeclaredField("context");
         context.setAccessible(true);
         assertNull(context.get(element), "the compilation's context is still held");
+    }
+
+    @Test
+    void aFinishedCompilationLeavesTheBuildServicesAnotherCompilationSet() throws ReflectiveOperationException {
+        Overtaking.ANOTHER.set(null);
+        Overtaking.OWN.set(null);
+        try (JavaParser parser = new JavaParser() {
+            @Override
+            protected Set<String> getCompilerOptions() {
+                Set<String> options = new LinkedHashSet<>(super.getCompilerOptions());
+                options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_OPTION + "=" + Overtaking.class.getName());
+                options.add("-A" + BuildCompatibleExtensionVisitor.EXTENSIONS_ONLY_OPTION + "=true");
+                return options;
+            }
+        }) {
+            parser.generate("released.Subject", SOURCE);
+        }
+        // another compilation started while this one ran: its services stay as this one finishes
+        assertSame(Overtaking.ANOTHER.get(), configured());
+        // and this one's own let go of its compilation where they are
+        Field context = ElementBuildServices.class.getDeclaredField("context");
+        context.setAccessible(true);
+        assertNull(context.get(Overtaking.OWN.get()), "the compilation's context is still held");
+    }
+
+    private static Object configured() throws ReflectiveOperationException {
+        Field configured = BuildServicesResolver.class.getDeclaredField("configuredBuildServices");
+        configured.setAccessible(true);
+        return ((AtomicReference<?>) configured.get(null)).get();
+    }
+
+    /**
+     * An extension whose discovery stands for another compilation sharing the processor's class loader that starts
+     * while this one runs, and sets services of its own.
+     */
+    public static final class Overtaking implements BuildCompatibleExtension {
+        static final AtomicReference<ElementBuildServices> ANOTHER = new AtomicReference<>();
+        static final AtomicReference<ElementBuildServices> OWN = new AtomicReference<>();
+
+        @Discovery
+        public void discover() throws ReflectiveOperationException {
+            OWN.set((ElementBuildServices) configured());
+            ElementBuildServices another = new ElementBuildServices();
+            ANOTHER.set(another);
+            BuildServicesResolver.setBuildServices(another);
+        }
     }
 
     /**

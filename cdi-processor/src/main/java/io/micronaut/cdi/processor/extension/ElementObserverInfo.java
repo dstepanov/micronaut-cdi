@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
@@ -25,7 +26,6 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -57,10 +57,10 @@ final class ElementObserverInfo implements ObserverInfo {
     private final HandedOut handedOut;
     private final int observedIndex;
     private final boolean async;
-    private final VisitorContext context;
+    private final SourceModel context;
 
     ElementObserverInfo(ClassElement declaringClass, MethodElement method, ParameterElement observed,
-                        boolean async, VisitorContext context) {
+                        boolean async, SourceModel context) {
         this.handedOut = new HandedOut(declaringClass, method, context);
         this.observedIndex = Arrays.asList(method.getParameters()).indexOf(observed);
         this.async = async;

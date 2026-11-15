@@ -17,7 +17,6 @@ package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.FieldElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.types.Type;
@@ -39,11 +38,11 @@ public final class ElementFieldInfo extends ElementDeclarationInfo implements Fi
      * @param declaringClass The class that declares it
      * @param context        The compilation the field is read in
      */
-    public ElementFieldInfo(FieldElement element, ClassInfo declaringClass, VisitorContext context) {
-        this(CurrentElement.ofMember(element, context), declaringClass, context);
+    public ElementFieldInfo(FieldElement element, ClassInfo declaringClass, SourceModel context) {
+        this(CurrentElement.ofMember(element, context.visitorContext()), declaringClass, context);
     }
 
-    private ElementFieldInfo(CurrentElement<FieldElement> element, ClassInfo declaringClass, VisitorContext context) {
+    private ElementFieldInfo(CurrentElement<FieldElement> element, ClassInfo declaringClass, SourceModel context) {
         super(element, context);
         this.element = element;
         this.declaringClass = declaringClass;
@@ -56,7 +55,7 @@ public final class ElementFieldInfo extends ElementDeclarationInfo implements Fi
 
     @Override
     public Type type() {
-        return SourceModel.of(context()).typeOf(element.get());
+        return context().typeOf(element.get());
     }
 
     @Override

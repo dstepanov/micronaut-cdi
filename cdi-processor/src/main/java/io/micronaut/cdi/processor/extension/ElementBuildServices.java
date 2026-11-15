@@ -15,8 +15,8 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.AnnotationBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.AnnotationBuilderFactory;
 import jakarta.enterprise.inject.build.compatible.spi.BuildServices;
@@ -40,7 +40,7 @@ import org.jspecify.annotations.Nullable;
 @Internal
 public final class ElementBuildServices implements BuildServices {
 
-    private final @Nullable VisitorContext context;
+    private volatile @Nullable SourceModel context;
 
     /**
      * The services as the service loader finds them, outside a compilation: an annotation is composed as given,
@@ -53,8 +53,17 @@ public final class ElementBuildServices implements BuildServices {
     /**
      * @param context The compilation the annotation interfaces are read through, or {@code null} for none
      */
-    public ElementBuildServices(@Nullable VisitorContext context) {
+    public ElementBuildServices(@Nullable SourceModel context) {
         this.context = context;
+    }
+
+    /**
+     * Lets go of the compilation, as it finishes: the services compose as the context-free ones do from then on.
+     * They are released where they are rather than replaced in the specification's static resolver, which another
+     * compilation sharing the class loader of the processor may have set to services of its own meanwhile.
+     */
+    void release() {
+        context = null;
     }
 
     @Override

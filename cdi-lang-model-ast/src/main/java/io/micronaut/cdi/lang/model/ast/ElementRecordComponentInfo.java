@@ -22,7 +22,6 @@ import io.micronaut.inject.annotation.AnnotationMetadataHierarchy;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.PropertyElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -66,20 +65,20 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
      * @param context         The compilation the component is read in
      */
     public ElementRecordComponentInfo(PropertyElement element, FieldElement field, MethodElement accessor,
-                                      ClassInfo declaringRecord, VisitorContext context) {
+                                      ClassInfo declaringRecord, SourceModel context) {
         this(declaringRecord instanceof ElementClassInfo record
-                ? CurrentElement.ofProperty(record.currentElement(), element, context)
-                : CurrentElement.asIs(element, context),
+                ? CurrentElement.ofProperty(record.currentElement(), element, context.visitorContext())
+                : CurrentElement.asIs(element, context.visitorContext()),
             element, field, accessor, declaringRecord, context);
     }
 
     private ElementRecordComponentInfo(CurrentElement<PropertyElement> current, PropertyElement element,
                                        FieldElement field, MethodElement accessor, ClassInfo declaringRecord,
-                                       VisitorContext context) {
+                                       SourceModel context) {
         super(current, context);
         this.element = current;
-        this.field = CurrentElement.ofMember(field, context);
-        this.accessor = CurrentElement.ofMember(accessor, context);
+        this.field = CurrentElement.ofMember(field, context.visitorContext());
+        this.accessor = CurrentElement.ofMember(accessor, context.visitorContext());
         this.declaringRecord = declaringRecord;
         AnnotationMetadata read = element.getReadTypeAnnotationMetadata().orElse(null);
         this.declared = read instanceof AnnotationMetadataHierarchy hierarchy
@@ -121,7 +120,7 @@ public final class ElementRecordComponentInfo extends ElementDeclarationInfo imp
 
     @Override
     public Type type() {
-        return SourceModel.of(context()).typeOf(field.get());
+        return context().typeOf(field.get());
     }
 
     @Override

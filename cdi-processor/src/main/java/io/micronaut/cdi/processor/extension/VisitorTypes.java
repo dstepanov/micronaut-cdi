@@ -15,11 +15,11 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.PrimitiveElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.ArrayType;
@@ -42,9 +42,9 @@ import java.util.List;
 @Internal
 final class VisitorTypes implements Types {
 
-    private final VisitorContext context;
+    private final SourceModel context;
 
-    VisitorTypes(VisitorContext context) {
+    VisitorTypes(SourceModel context) {
         this.context = context;
     }
 
@@ -153,7 +153,7 @@ final class VisitorTypes implements Types {
     }
 
     private Type element(String name) {
-        ClassElement element = context.getClassElement(name).orElseThrow(() ->
+        ClassElement element = context.visitorContext().getClassElement(name).orElseThrow(() ->
             new IllegalArgumentException("The type " + name + " is not on the compilation's classpath"));
         // a class named by itself is the class type, whatever type parameters it declares: the arguments of a
         // parameterized type are given to parameterized

@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiAnnotationTypes;
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
 import io.micronaut.cdi.internal.metadata.CdiExtensionComponents;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
@@ -69,9 +70,10 @@ public final class ExtensionComponents {
      * bean of the specification - one the processor recorded a scope or a producer of - is not: it is a bean of the
      * application whatever its package, even under {@code io.micronaut}. A bean with nothing of the specification
      * recorded - a plain {@code jakarta.inject} singleton of the application as much as one of Micronaut's own - is
-     * infrastructure only where its class is the framework's, under {@code io.micronaut} or {@code jakarta}: missing
-     * metadata alone does not make a bean the framework's. A bean such a class produces as a factory is the
-     * framework's too.</p>
+     * the application's where its class was compiled with the processor of this module, which records on every class
+     * it visits what its members use ({@link CdiAnnotationTypes}), and infrastructure where it was not: Micronaut's
+     * own beans, and the ones of this module, are compiled without it. A bean a factory produces carries the record
+     * of the factory's class, and goes with it.</p>
      *
      * @param bean The bean
      * @return Whether it is infrastructure
@@ -86,14 +88,21 @@ public final class ExtensionComponents {
         if (metadata.hasAnnotation(CdiScope.class) || producerOf(bean) != null) {
             return false;
         }
-        // a bean Micronaut produces from a factory of its own is the framework's whatever type it produces
-        Class<?> declaring = bean instanceof BeanDefinition<?> definition && !(bean instanceof ProxyBeanDefinition<?>)
-            ? definition.getDeclaringType().orElse(null) : null;
-        return isFrameworkClass(classOf(bean)) || declaring != null && isFrameworkClass(declaring);
+        // compiled without the processor of this module: Micronaut's own, whatever its package. The record is
+        // part of the metadata of the class, which a bean a factory produces reads through as well
+        return !metadata.hasAnnotation(CdiAnnotationTypes.class);
     }
 
-    private static boolean isFrameworkClass(Class<?> type) {
-        String name = type.getName();
+    /**
+     * Whether a bean the container knows by its class alone, with no definition to read what compiled it, is
+     * infrastructure: one of the container's own, which is the framework's by its package, under
+     * {@code io.micronaut} or {@code jakarta}.
+     *
+     * @param beanClass The class of the bean
+     * @return Whether it is infrastructure
+     */
+    public static boolean isInfrastructure(Class<?> beanClass) {
+        String name = beanClass.getName();
         return name.startsWith("io.micronaut.") || name.startsWith("jakarta.");
     }
 

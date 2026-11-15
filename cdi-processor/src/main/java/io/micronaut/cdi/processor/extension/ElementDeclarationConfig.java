@@ -15,11 +15,11 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.Element;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
@@ -45,23 +45,23 @@ import java.util.function.Predicate;
 public abstract class ElementDeclarationConfig<C extends DeclarationConfig> implements DeclarationConfig {
 
     private final Element element;
-    private final VisitorContext context;
+    private final SourceModel context;
 
     /**
      * @param element The declaration being enhanced
      * @param context The compilation it belongs to, which what the configuration reports is read in
      */
-    protected ElementDeclarationConfig(Element element, VisitorContext context) {
+    protected ElementDeclarationConfig(Element element, SourceModel context) {
         this.element = element;
         this.context = context;
     }
 
     /**
-     * The compilation the declaration belongs to.
+     * The model of the compilation the declaration belongs to.
      *
-     * @return The visitor context
+     * @return The model
      */
-    protected final VisitorContext context() {
+    protected final SourceModel context() {
         return context;
     }
 

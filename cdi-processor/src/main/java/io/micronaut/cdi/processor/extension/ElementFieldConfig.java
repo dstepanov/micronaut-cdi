@@ -15,10 +15,10 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementFieldInfo;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.FieldElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -34,7 +34,7 @@ public final class ElementFieldConfig extends ElementDeclarationConfig<FieldConf
 
     private final ElementFieldInfo info;
 
-    ElementFieldConfig(FieldElement element, ClassInfo declaringClass, VisitorContext context) {
+    ElementFieldConfig(FieldElement element, ClassInfo declaringClass, SourceModel context) {
         super(element, context);
         this.info = new ElementFieldInfo(element, declaringClass, context);
     }

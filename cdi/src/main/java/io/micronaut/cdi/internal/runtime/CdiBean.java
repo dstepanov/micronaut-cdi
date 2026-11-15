@@ -83,10 +83,22 @@ public class CdiBean<T> implements Bean<T> {
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
+    /**
+     * The qualifiers portable extensions added, held rather than looked up as the qualifiers are asked for: the
+     * overlay is a bean of the container, replaced as a whole by each addition, so holding it still reads what an
+     * extension adds after the bean was made.
+     */
+    private final @Nullable QualifierOverlay overlay;
 
-    public CdiBean(BeanContext beanContext, BeanDefinition<T> definition) {
+    /**
+     * @param beanContext The context of the container
+     * @param definition  The definition the bean is read from
+     * @param overlay     The qualifiers portable extensions added, or {@code null} where there are none
+     */
+    public CdiBean(BeanContext beanContext, BeanDefinition<T> definition, @Nullable QualifierOverlay overlay) {
         this.beanContext = beanContext;
         this.definition = definition;
+        this.overlay = overlay;
     }
 
     /**
@@ -321,8 +333,8 @@ public class CdiBean<T> implements Bean<T> {
      * @return The qualifiers
      */
     final List<CdiQualifier> qualifiers() {
-        // what a portable extension added, read as the qualifiers are asked for
-        return qualifiers(beanContext.findBean(QualifierOverlay.class).orElse(null));
+        // what a portable extension added, read from the overlay as the qualifiers are asked for
+        return qualifiers(overlay);
     }
 
     /**

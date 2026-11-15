@@ -15,10 +15,10 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.CurrentElement;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MemberElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -33,16 +33,16 @@ final class HandedOut {
 
     private final CurrentElement<ClassElement> declaringClass;
     private final @Nullable CurrentElement<MemberElement> member;
-    private final VisitorContext context;
+    private final SourceModel context;
 
     /**
      * @param declaringClass The class
      * @param member         The member of it, or {@code null} for the class alone
      * @param context        The compilation
      */
-    HandedOut(ClassElement declaringClass, @Nullable MemberElement member, VisitorContext context) {
-        this.declaringClass = CurrentElement.ofClass(declaringClass, context);
-        this.member = member == null ? null : CurrentElement.ofMember(member, context);
+    HandedOut(ClassElement declaringClass, @Nullable MemberElement member, SourceModel context) {
+        this.declaringClass = CurrentElement.ofClass(declaringClass, context.visitorContext());
+        this.member = member == null ? null : CurrentElement.ofMember(member, context.visitorContext());
         this.context = context;
     }
 
