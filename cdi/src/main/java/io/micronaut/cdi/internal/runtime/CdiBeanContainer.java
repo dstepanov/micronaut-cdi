@@ -631,7 +631,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     private <T> CdiBean<T> beanOfDefinition(BeanDefinition<T> definition) {
         // the definition of the client proxy in front of it, where it is the target of one, which the bean context
         // does not enumerate: the bean is the proxy
-        return new CdiBean<>(beanContext, beanContext.findProxyBeanDefinition(definition).orElse(definition));
+        return new CdiBean<>(beanContext, beanContext.findProxyBeanDefinition(definition).orElse(definition), overlay);
     }
 
     /**
@@ -811,7 +811,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         List<Interceptor<?>> resolved = new ArrayList<>();
         for (BeanDefinition<?> definition : InterceptorBindings
             .boundInterceptors(beanContext, given)) {
-            CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition);
+            CdiInterceptor<?> interceptor = new CdiInterceptor<>(beanContext, definition, overlay);
             // a chain holds the interceptor classes whatever they interpose on; the question is asked for one kind
             if (interceptor.intercepts(type)) {
                 resolved.add(interceptor);
@@ -938,7 +938,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                                   Set<Annotation> beanQualifiers,
                                   Type requiredType,
                                   Set<Annotation> requiredQualifiers) {
-        return CdiAssignability.isMatchingBean(types(), beanTypes, beanQualifiers, requiredType, requiredQualifiers);
+        return CdiAssignability.isMatchingBean(types(), typeIndex, beanTypes, beanQualifiers, requiredType,
+            requiredQualifiers);
     }
 
     @Override
@@ -946,8 +947,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                                    Set<Annotation> specifiedQualifiers,
                                    Type observedEventType,
                                    Set<Annotation> observedEventQualifiers) {
-        return CdiAssignability.isMatchingEvent(types(), specifiedType, specifiedQualifiers, observedEventType,
-            observedEventQualifiers);
+        return CdiAssignability.isMatchingEvent(types(), typeIndex, specifiedType, specifiedQualifiers,
+            observedEventType, observedEventQualifiers);
     }
 
     @Override

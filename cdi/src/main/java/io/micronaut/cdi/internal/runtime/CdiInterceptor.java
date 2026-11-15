@@ -58,10 +58,10 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
     private final BeanDefinition<T> definition;
     private final CdiBean<T> bean;
 
-    CdiInterceptor(BeanContext beanContext, BeanDefinition<T> definition) {
+    CdiInterceptor(BeanContext beanContext, BeanDefinition<T> definition, @Nullable QualifierOverlay overlay) {
         this.beanContext = beanContext;
         this.definition = definition;
-        this.bean = new CdiBean<>(beanContext, definition);
+        this.bean = new CdiBean<>(beanContext, definition, overlay);
     }
 
     @Override

@@ -18,6 +18,7 @@ package io.micronaut.cdi.internal.extension;
 import io.micronaut.cdi.internal.runtime.CdiBean;
 import io.micronaut.cdi.internal.runtime.CdiContext;
 import io.micronaut.cdi.internal.runtime.CdiCreationalContext;
+import io.micronaut.cdi.internal.runtime.QualifierOverlay;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
@@ -47,12 +48,15 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
     private final Class<? extends Annotation> scopeAnnotation;
     private final List<AlterableContext> contexts;
     private final BeanContext beanContext;
+    private final QualifierOverlay overlay;
 
     ExtensionCustomScope(Class<? extends Annotation> scopeAnnotation, List<AlterableContext> contexts,
                          BeanContext beanContext) {
         this.scopeAnnotation = scopeAnnotation;
         this.contexts = contexts;
         this.beanContext = beanContext;
+        // held for the beans handed to the context, rather than looked up for each of them
+        this.overlay = beanContext.getBean(QualifierOverlay.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -64,12 +68,14 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
     @Override
     public <T> T getOrCreate(BeanCreationContext<T> creationContext) {
         AlterableContext context = activeContext();
-        // the bean is the client proxy in front of the definition, where one is, as the container's bean of it
-        // (CdiBeanContainer.beanOf) is: the contextual handed to the context is that bean, made for this call alone
+        // the contextual handed to the context, made for this call alone, is equal to the container's bean of the
+        // definition (CdiBeanContainer.beanOf), which is the client proxy in front of it where one is: a bean of a
+        // proxy is equal to, and hashes as, the bean of its target (CdiBean.identity), so the target's definition is
+        // handed over as it is, with no lookup of the proxy for each call through it
         BeanDefinition<T> definition = creationContext.definition();
-        BeanDefinition<T> bean = beanContext.findProxyBeanDefinition(definition).orElse(definition);
         CreationalContext<T> creationalContext = new CdiCreationalContext<>(beanContext);
-        T held = context.get(new CreatingContextual<>(beanContext, bean, creationContext), creationalContext);
+        T held = context.get(new CreatingContextual<>(beanContext, definition, overlay, creationContext),
+            creationalContext);
         if (held == null) {
             throw new ContextNotActiveException("The context of " + scopeAnnotation.getName()
                 + " holds no instance and created none");
@@ -104,8 +110,9 @@ final class ExtensionCustomScope implements CustomScope<Annotation> {
 
         private final BeanCreationContext<T> creation;
 
-        private CreatingContextual(BeanContext beanContext, BeanDefinition<T> bean, BeanCreationContext<T> creation) {
-            super(beanContext, bean);
+        private CreatingContextual(BeanContext beanContext, BeanDefinition<T> bean, QualifierOverlay overlay,
+                                   BeanCreationContext<T> creation) {
+            super(beanContext, bean, overlay);
             this.creation = creation;
         }
 
