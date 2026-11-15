@@ -1148,9 +1148,6 @@ own rather than the first one alone.
 - **An empty-string default is left out of the written metadata.** `EmptyDefaultsRemapper` puts it back for the
   qualifier and binding types, which compare members at their defaults. Recording the empty defaults of a type that
   is a qualifier or an interceptor binding would remove it.
-- **`AnnotationValue.equals` ignores a member the other value lacks.** Two values of equal size with different
-  member names compare equal while their hash codes differ, so `RecordedSynthesis` compares records member by member
-  (`sameRecord`). Treating a member the other value lacks as unequal would restore the contract.
 - **The rule of which declared method overrides which is package-private.** `io.micronaut.reflection.MethodHierarchy`
   has it; the portable extension runtime walks a class's methods and their overrides itself to find observer methods
   of an extension. A public "declared methods, overridden ones removed" helper in `ReflectionExecutables` would
