@@ -11,10 +11,16 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The beans of a request are destroyed while the request context is still active: a bean that uses another bean of
@@ -23,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class RequestDestructionTest {
 
-    static final List<String> EVENTS = new ArrayList<>();
+    static final List<String> EVENTS = new CopyOnWriteArrayList<>();
 
     @RequestScoped
     public static class Journal {
@@ -128,6 +134,40 @@ class RequestDestructionTest {
             context.getBean(Session.class).open();
         }
         assertEquals(List.of("session closed"), EVENTS);
+    }
+
+    @Test
+    void aRequestRunAsWorkOnAnotherThreadIsDestroyedWithTheContainerOnce() throws Exception {
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<?> work;
+            try (ApplicationContext context = ApplicationContext.run()) {
+                RequestScope scope = context.getBean(RequestScope.class);
+                work = executor.submit(() -> scope.run(() -> {
+                    context.getBean(Session.class).open();
+                    started.countDown();
+                    try {
+                        // still running as the container closes
+                        release.await(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }));
+                assertTrue(started.await(10, TimeUnit.SECONDS));
+            }
+            // the container destroyed the request of the work that had not returned
+            assertEquals(List.of("session closed"), EVENTS);
+
+            release.countDown();
+            work.get(10, TimeUnit.SECONDS);
+            // and the work's own end did not destroy it again
+            assertEquals(List.of("session closed"), EVENTS);
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
     }
 
     @Test
