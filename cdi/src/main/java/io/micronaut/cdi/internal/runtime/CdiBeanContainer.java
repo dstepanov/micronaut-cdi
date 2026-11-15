@@ -38,6 +38,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
@@ -316,7 +317,10 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      *
      * <p>The bean is then created through the definition, as a selected one is: the qualifier the definition was
      * found by is no part of the creation, where it would become part of the key a custom scope holds the instance
-     * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.</p>
+     * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.
+     * A definition declared with Micronaut's {@code @Any} is the exception: the bean context creates it for the
+     * qualifier of the lookup, which a creation through the definition replaces by {@code @Any}, so it is looked up
+     * by the qualifier of the point instead.</p>
      *
      * @param point     The injection point
      * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point
@@ -366,6 +370,13 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                 Qualifier<Object> read = (Qualifier<Object>) qualifier;
                 BeanDefinition<Object> definition = micronautDefinitionOf(argument, read);
                 if (definition != null) {
+                    Qualifier<Object> ofPoint = read != null ? read : Qualifiers.forArgument(argument);
+                    if (ofPoint != null && AnyQualifier.INSTANCE.equals(definition.getDeclaredQualifier())) {
+                        // a bean of Micronaut's declared @Any is created for the qualifier it is asked by, which
+                        // the bean context creates a definition by alone: a lookup by the qualifier of the point,
+                        // keyed as Micronaut's own lookups of it are (an open point in CONFORMANCE.md)
+                        yield creation.byLookup(argument, ofPoint);
+                    }
                     yield creation.of(definition, argument);
                 }
                 if (nullable) {
