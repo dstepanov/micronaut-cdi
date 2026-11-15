@@ -337,9 +337,13 @@ form of the same selection is an `AnnotationValue`, through `MicronautInstance`,
 
 What the container has to know of a qualifier or interceptor binding type - whether it is one, its members and
 which of them bind, whether it is repeatable, its retention - is read from the compiled metadata of the beans
-(`CompiledAnnotationTypes`): the class level metadata of every definition, the records of the synthetic components
-and of the qualifiers an extension registered, and, for a type no bean class carries, the injection points and
-executable methods of the definitions. The record of a qualifier a build compatible extension registered carries the
+(`CompiledAnnotationTypes`): the class level metadata of every definition, which loads no definition, the records
+of the synthetic components and of the qualifiers an extension registered. A type no bean class carries, used only
+where a bean is injected or a method of it invoked, is known from the class level metadata as well: the processor
+records on every class it visits the qualifier and binding types its constructors, fields and methods - inherited
+ones included - and their parameters use, with the members of each as the compilation saw its interface, the ones
+that do not bind and whether it is retained at runtime (`AnnotationTypesVisitor`, `CdiAnnotationTypes`). A type
+only a bean compiled without this processor uses that way has no record. The record of a qualifier a build compatible extension registered carries the
 members the compilation saw its interface declare and the ones that do not bind, so that one no bean class carries
 is not taken for a marker by its name alone. A member is whatever the interface declares, a name with a leading
 dollar sign included; only the names Micronaut keeps among the values of an annotation (`$nonBinding`,
@@ -1136,11 +1140,12 @@ own rather than the first one alone.
   on the visitor context would remove the count.
 - **The facts of an annotation type are known only from its occurrences.** Whether a type is a qualifier, an
   interceptor binding or a stereotype, its retention and its non-binding members are read from the occurrences the
-  beans were compiled with (`CompiledAnnotationTypes`): a type no class carries is found by walking the injection
-  points and executable methods of every definition, `getAllBeanDefinitions()` included, which loads definitions
-  the application would not have loaded. Registering those facts beside the defaults the generated metadata already
-  registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader, would make each question a
-  lookup and remove the index.
+  beans were compiled with (`CompiledAnnotationTypes`). The processor records on each class what its members use
+  (`CdiAnnotationTypes`), so no definition is loaded to learn of a type only an injection point or an executable
+  method uses; a type only a bean compiled without the processor uses that way - one of Micronaut's own beans - is
+  not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
+  generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
+  would make each question a lookup, cover every bean, and remove both the record and the index.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
   class a build compatible extension scanned is imported by a generated `ScannedClassesImport` source, so that a
   later round makes a bean of it; KSP and Groovy register it with `registerBean`. Tolerating a class the same

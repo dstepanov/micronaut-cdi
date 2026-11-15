@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiAnnotationTypes;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers.Members;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
@@ -26,13 +27,8 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.type.Argument;
-import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.annotation.AnnotationMetadataSupport;
 import io.micronaut.inject.BeanDefinitionReference;
-import io.micronaut.inject.ExecutableMethod;
-import io.micronaut.inject.FieldInjectionPoint;
-import io.micronaut.inject.MethodInjectionPoint;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
 
@@ -60,9 +56,10 @@ import java.util.Set;
  *
  * <p>The record is built once per container, from the class level metadata of every bean definition - which reads
  * no definition - and the records of the synthetic components and of the qualifiers an extension registered. A
- * type used only where a bean is injected or an event observed is found by reading the injection points and the
- * executable methods of the definitions, the first time a type is asked for that the class level metadata does not
- * know. A portable extension may add a qualifier as the container starts.</p>
+ * type used only where a bean is injected or an event observed is known from the class level metadata as well: the
+ * processor records on each class the qualifier and binding types its members use ({@link CdiAnnotationTypes}). A
+ * type only a bean compiled without the processor uses that way is not known here, and is left to the module that
+ * reads classes. A portable extension may add a qualifier as the container starts.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -83,7 +80,6 @@ public final class CompiledAnnotationTypes {
      */
     private volatile Set<String> added = Set.of();
     private volatile @Nullable Classes fromClasses;
-    private volatile @Nullable Map<String, Recorded> fromMembers;
 
     /**
      * @param beanContext The context whose beans are read
@@ -106,7 +102,6 @@ public final class CompiledAnnotationTypes {
 
     private synchronized void forget() {
         fromClasses = null;
-        fromMembers = null;
     }
 
     /**
@@ -244,14 +239,7 @@ public final class CompiledAnnotationTypes {
     }
 
     private @Nullable Recorded recorded(String name) {
-        Recorded recorded = fromClasses().types().get(name);
-        if (recorded != null && recorded.membersKnown) {
-            return recorded;
-        }
-        // a type the classes do not carry, or name alone - as a registration compiled without the members of the
-        // annotation does - may be one an injection point or an observer is qualified by
-        Recorded occurring = fromMembers().get(name);
-        return occurring != null ? occurring : recorded;
+        return fromClasses().types().get(name);
     }
 
     private Classes fromClasses() {
@@ -262,20 +250,6 @@ public final class CompiledAnnotationTypes {
                 if (read == null) {
                     read = readClasses();
                     fromClasses = read;
-                }
-            }
-        }
-        return read;
-    }
-
-    private Map<String, Recorded> fromMembers() {
-        Map<String, Recorded> read = fromMembers;
-        if (read == null) {
-            synchronized (this) {
-                read = fromMembers;
-                if (read == null) {
-                    read = readMembers();
-                    fromMembers = read;
                 }
             }
         }
@@ -307,6 +281,9 @@ public final class CompiledAnnotationTypes {
                     }
                 }
             }
+            // the qualifier and binding types the members of a class compiled with the processor use, which its
+            // definition need not be loaded to read
+            readUsed(metadata.getAnnotation(CdiAnnotationTypes.class), types);
             // the qualifiers of a synthetic component are recorded as values nested in its record
             readNested(metadata.getAnnotation(CdiSyntheticBean.class),
                 CdiSyntheticBean.QUALIFIERS, types);
@@ -316,28 +293,24 @@ public final class CompiledAnnotationTypes {
         return new Classes(types, Set.copyOf(stereotypes));
     }
 
-    private Map<String, Recorded> readMembers() {
-        Map<String, Recorded> types = new HashMap<>();
-        for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
-            for (Argument<?> argument : definition.getConstructor().getArguments()) {
-                read(argument.getAnnotationMetadata(), types);
-            }
-            for (FieldInjectionPoint<?, ?> field : definition.getInjectedFields()) {
-                read(field.getAnnotationMetadata(), types);
-            }
-            for (MethodInjectionPoint<?, ?> method : definition.getInjectedMethods()) {
-                for (Argument<?> argument : method.getArguments()) {
-                    read(argument.getAnnotationMetadata(), types);
-                }
-            }
-            for (ExecutableMethod<?, ?> method : definition.getExecutableMethods()) {
-                read(method.getAnnotationMetadata(), types);
-                for (Argument<?> argument : method.getArguments()) {
-                    read(argument.getAnnotationMetadata(), types);
-                }
+    private static void readUsed(@Nullable AnnotationValue<CdiAnnotationTypes> used, Map<String, Recorded> types) {
+        if (used == null) {
+            return;
+        }
+        Set<String> runtime = Set.of(used.stringValues(CdiAnnotationTypes.RUNTIME));
+        for (String qualifier : used.stringValues(CdiAnnotationTypes.QUALIFIERS)) {
+            types.computeIfAbsent(qualifier, Recorded::named).used(runtime).qualifier = true;
+        }
+        for (String binding : used.stringValues(CdiAnnotationTypes.BINDINGS)) {
+            types.computeIfAbsent(binding, Recorded::named).used(runtime).binding = true;
+        }
+        for (AnnotationValue<Annotation> members : used.getAnnotations(MEMBERS)) {
+            String type = members.stringValue(Members.NAME).orElse(null);
+            if (type != null) {
+                types.computeIfAbsent(type, Recorded::new)
+                    .declared(members.stringValues(MEMBERS), members.stringValues(Members.NONBINDING));
             }
         }
-        return types;
     }
 
     private static void readNested(@Nullable AnnotationValue<?> record, String member,
@@ -416,6 +389,17 @@ public final class CompiledAnnotationTypes {
             Recorded recorded = new Recorded(name);
             recorded.membersKnown = false;
             return recorded;
+        }
+
+        /**
+         * Whether the type is retained at runtime, as the processor recorded it where it was used, unless an
+         * occurrence said so already.
+         */
+        Recorded used(Set<String> runtime) {
+            if (retention == null) {
+                retention = runtime.contains(name) ? RetentionPolicy.RUNTIME : RetentionPolicy.CLASS;
+            }
+            return this;
         }
 
         /**
