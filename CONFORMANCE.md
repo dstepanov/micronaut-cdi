@@ -687,8 +687,8 @@ but the round count, which it keeps up in every compilation, and an empty `Disco
 - The extensions themselves, one instance of each for the compilation, which may keep what one of their phases
   saw for a later one, as the specification allows and the kit's extensions do.
 - The specification's `BuildServicesResolver`, a static entry point of its API the visitor sets as a compilation
-  with extensions starts and gives back a context-free one as it finishes, so that no compilation outlives itself
-  there. The
+  with extensions starts and whose services it releases in place as the compilation finishes, so that no
+  compilation outlives itself there and services another compilation set meanwhile are not replaced. The
   extensions themselves are found as the compilation starts the visitor: the ones the service loader finds on
   the processor path, and the ones the compiler options name (`-Amicronaut.cdi.extensions=a.B,c.D`, which
   `-Amicronaut.cdi.extensions.only=true` makes all of them), which is how a harness that compiles a deployment at
@@ -1305,7 +1305,12 @@ own rather than the first one alone.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
   to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
-  compilation starts. Thread state is held by Micronaut's `PropagatedContext` and by the resolution context, never
+  compilation with extensions starts and released in place as it finishes - the services let go of the compilation
+  rather than being replaced, so that services another compilation set meanwhile stay. What remains is inherent in
+  the static: two compilations with extensions that share the processor's class loader and overlap (an in-process
+  parallel harness, a daemon caching the processor loader) share one resolver, and the one that started last is the
+  one `AnnotationBuilder.of` composes with until it finishes; the other then composes without a compilation, as
+  given. Thread state is held by Micronaut's `PropagatedContext` and by the resolution context, never
   by a `ThreadLocal`: a request begun by `RequestContextController` is an activation in the propagated context
   beside the request's beans, with the scope that ends it, the thread it was begun on and who began it
   (`RequestScope.activate(Object)`), so work the context is carried to sees the request and does not end it; the

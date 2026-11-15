@@ -110,6 +110,11 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * compiler constructs and never starts has none.
      */
     private @Nullable DiscoveredClasses discovered;
+    /**
+     * The build services this visitor set in the specification's resolver for its compilation, which it releases as
+     * the compilation finishes: none where the compilation has no extensions.
+     */
+    private @Nullable ElementBuildServices buildServices;
 
     @Override
     public Set<String> getSupportedOptions() {
@@ -257,11 +262,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      * its build time API, which an extension calls with nothing to hand it; it is set as the compilation starts
      * rather than left to the service loader, which looks through the loader of the API and does not always see the
      * service entry of this module. It is a static of the API's, so it is set only where an extension may call it,
-     * and given back a context-free one as the compilation finishes ({@link #finishCompilation}).
+     * and the services set are released in place as the compilation finishes ({@link #finishCompilation}), never
+     * replaced: another compilation sharing the class loader of the processor may have set services of its own since.
+     * That one compilation starting while another runs takes the resolver from it is the specification's static.
      */
     private void useBuildServicesOf(VisitorContext context) {
         if (!extensions.isEmpty()) {
-            BuildServicesResolver.setBuildServices(new ElementBuildServices(context));
+            ElementBuildServices mine = new ElementBuildServices(context);
+            BuildServicesResolver.setBuildServices(mine);
+            ElementBuildServices previous = buildServices;
+            buildServices = mine;
+            if (previous != null) {
+                previous.release();
+            }
         }
     }
 
@@ -334,10 +347,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             recordDeployment(contributors, context);
             synthesise(contributors, context);
         } finally {
-            if (!extensions.isEmpty()) {
+            ElementBuildServices mine = buildServices;
+            if (mine != null) {
                 // the static of the specification's API keeps no compilation once it is over: the class loader of
-                // the processor may outlive it, in a build daemon or a compiler worker
-                BuildServicesResolver.setBuildServices(new ElementBuildServices());
+                // the processor may outlive it, in a build daemon or a compiler worker. The services are released
+                // where they are, so that services another compilation set meanwhile stay
+                buildServices = null;
+                mine.release();
             }
         }
     }

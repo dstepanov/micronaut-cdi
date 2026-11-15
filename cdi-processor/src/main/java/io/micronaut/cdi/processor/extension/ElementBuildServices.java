@@ -40,7 +40,7 @@ import org.jspecify.annotations.Nullable;
 @Internal
 public final class ElementBuildServices implements BuildServices {
 
-    private final @Nullable VisitorContext context;
+    private volatile @Nullable VisitorContext context;
 
     /**
      * The services as the service loader finds them, outside a compilation: an annotation is composed as given,
@@ -55,6 +55,15 @@ public final class ElementBuildServices implements BuildServices {
      */
     public ElementBuildServices(@Nullable VisitorContext context) {
         this.context = context;
+    }
+
+    /**
+     * Lets go of the compilation, as it finishes: the services compose as the context-free ones do from then on.
+     * They are released where they are rather than replaced in the specification's static resolver, which another
+     * compilation sharing the class loader of the processor may have set to services of its own meanwhile.
+     */
+    void release() {
+        context = null;
     }
 
     @Override
