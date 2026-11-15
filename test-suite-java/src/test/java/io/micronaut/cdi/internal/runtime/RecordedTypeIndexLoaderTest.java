@@ -1,6 +1,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.TypeHierarchies;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,38 @@ public class RecordedTypeIndexLoaderTest {
             assertEquals(Integer.class, recordedArgument(second));
         } finally {
             TypeHierarchies.invalidate();
+        }
+    }
+
+    @Test
+    void aRuntimeDefinitionSharedByTwoContainersHasTheBeanTypesOfEach(@TempDir Path directory) throws Exception {
+        // one runtime definition is one object for every context it is registered with, and keeps a value for
+        // every one of them: the bean types one container works out are not the other's
+        RuntimeBeanDefinition<SharedPayload> definition = RuntimeBeanDefinition.of(SharedPayload.class,
+            SharedPayload::new);
+        try (URLClassLoader first = deployment(directory.resolve("first"), "first", String.class);
+             URLClassLoader second = deployment(directory.resolve("second"), "second", Integer.class)) {
+            assertEquals(String.class, comparableArgumentOfBeanTypes(first, definition));
+            assertEquals(Integer.class, comparableArgumentOfBeanTypes(second, definition));
+        } finally {
+            TypeHierarchies.invalidate();
+        }
+    }
+
+    /**
+     * The argument of {@code Comparable} among the bean types the container of the given loader works out for the
+     * definition.
+     */
+    private static Class<?> comparableArgumentOfBeanTypes(ClassLoader loader, RuntimeBeanDefinition<?> definition) {
+        Thread thread = Thread.currentThread();
+        ClassLoader previous = thread.getContextClassLoader();
+        thread.setContextClassLoader(loader);
+        try (ApplicationContext context = ApplicationContext.builder().classLoader(loader).start()) {
+            return RecordedTypeIndex.beanTypesOf(context, definition).stream()
+                .filter(type -> type.getType() == Comparable.class)
+                .findFirst().orElseThrow().getTypeParameters()[0].getType();
+        } finally {
+            thread.setContextClassLoader(previous);
         }
     }
 
