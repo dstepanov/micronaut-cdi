@@ -778,7 +778,11 @@ Not fired: `ProcessInjectionPoint`, `ProcessProducer`, `ProcessObserverMethod`, 
 bean is described by `ProcessBeanAttributes` and a plain `ProcessBean`, and `getAnnotated()` of a producer
 method is not described. An extension with an observer of any other event - an event of the application among
 them - is refused as the bootstrap starts, rather than left waiting for it. The beans Micronaut and this
-container bring of their own, which are the ones under `io.micronaut` and `jakarta`, are not described.
+container bring of their own are not described: the beans of classes compiled without the processor of this module,
+which records on every class it visits what its members use (`CdiAnnotationTypes`), whatever their package
+(`ExtensionComponents.isInfrastructure`), the SE bootstrap selecting the beans of an archive by the same rule. A
+bean the container knows by its class alone, with no definition, is the container's where its class is under
+`io.micronaut` or `jakarta`.
 
 ### A normal scope of the application's own
 
