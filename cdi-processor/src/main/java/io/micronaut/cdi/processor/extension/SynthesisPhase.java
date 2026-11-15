@@ -21,6 +21,7 @@ import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticDisposer;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticInjectionPoint;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
@@ -76,14 +77,16 @@ final class SynthesisPhase {
     private static final String SYNTHETIC_INJECTIONS =
         "jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections";
 
+    private final SourceModel model;
     private final VisitorContext context;
     private final DiscoveredClasses discovered;
     private final List<RecordingBeanBuilder<?>> beans = new ArrayList<>();
     private final List<RecordingObserverBuilder<?>> observers = new ArrayList<>();
     private final Map<String, Integer> ordinals = new LinkedHashMap<>();
 
-    SynthesisPhase(VisitorContext context, DiscoveredClasses discovered) {
-        this.context = context;
+    SynthesisPhase(SourceModel model, DiscoveredClasses discovered) {
+        this.model = model;
+        this.context = model.visitorContext();
         this.discovered = discovered;
     }
 
@@ -100,7 +103,7 @@ final class SynthesisPhase {
         return new SyntheticComponents() {
             @Override
             public <T> SyntheticBeanBuilder<T> addBean(Class<T> implementationClass) {
-                RecordingBeanBuilder<T> builder = new RecordingBeanBuilder<>(context, nextId(extensionName),
+                RecordingBeanBuilder<T> builder = new RecordingBeanBuilder<>(model, nextId(extensionName),
                     implementationClass);
                 beans.add(builder);
                 return builder;
@@ -108,7 +111,7 @@ final class SynthesisPhase {
 
             @Override
             public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
-                Type type = new VisitorTypes(context).of(eventType);
+                Type type = new VisitorTypes(model).of(eventType);
                 return observer(type, SyntheticRecords.typeOf(type));
             }
 
@@ -157,7 +160,7 @@ final class SynthesisPhase {
      * The synthetic bean as the registration phase is told about it.
      */
     SyntheticBeanInfo describe(RecordingBeanBuilder<?> bean) {
-        return new SyntheticBeanInfo(bean, scopeOf(bean), isAlternative(bean), context);
+        return new SyntheticBeanInfo(bean, scopeOf(bean), isAlternative(bean), model);
     }
 
     private boolean isAlternative(RecordingBeanBuilder<?> bean) {

@@ -17,7 +17,6 @@ package io.micronaut.cdi.lang.model.ast;
 
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.PackageElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.PackageInfo;
 
 /**
@@ -31,10 +30,10 @@ public final class ElementPackageInfo extends ElementDeclarationInfo implements 
 
     private final String name;
 
-    ElementPackageInfo(PackageElement element, VisitorContext context) {
+    ElementPackageInfo(PackageElement element, SourceModel context) {
         // a package is not looked up again: its name is all it answers here, and what is written on it is read as
         // it is handed out
-        super(CurrentElement.asIs(element, context), context);
+        super(CurrentElement.asIs(element, context.visitorContext()), context);
         this.name = element.getName();
     }
 

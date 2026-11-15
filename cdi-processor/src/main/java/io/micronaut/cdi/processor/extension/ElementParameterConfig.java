@@ -15,10 +15,10 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementParameterInfo;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ParameterElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.ParameterConfig;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.ParameterInfo;
@@ -35,7 +35,7 @@ public final class ElementParameterConfig extends ElementDeclarationConfig<Param
 
     private final ElementParameterInfo info;
 
-    ElementParameterConfig(ParameterElement element, MethodInfo declaringMethod, VisitorContext context) {
+    ElementParameterConfig(ParameterElement element, MethodInfo declaringMethod, SourceModel context) {
         super(element, context);
         this.info = new ElementParameterInfo(element, declaringMethod, context);
     }

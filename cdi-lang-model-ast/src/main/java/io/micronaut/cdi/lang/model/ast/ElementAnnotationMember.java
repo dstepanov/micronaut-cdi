@@ -21,7 +21,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.AnnotationElement;
 import io.micronaut.inject.ast.AnnotationMemberElement;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -50,14 +49,14 @@ public final class ElementAnnotationMember implements AnnotationMember {
     private final @Nullable String member;
     // null for a member of an annotation an extension composed with no compilation under way, which only
     // answers what it was given
-    private final @Nullable VisitorContext context;
+    private final @Nullable SourceModel context;
 
-    ElementAnnotationMember(Object value, VisitorContext context) {
+    ElementAnnotationMember(Object value, SourceModel context) {
         this(value, null, null, context);
     }
 
     ElementAnnotationMember(Object value, @Nullable String annotation, @Nullable String member,
-                            @Nullable VisitorContext context) {
+                            @Nullable SourceModel context) {
         this.value = value;
         this.annotation = annotation;
         this.member = member;
@@ -226,7 +225,7 @@ public final class ElementAnnotationMember implements AnnotationMember {
         if (annotation == null || member == null || context == null) {
             return null;
         }
-        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation, context);
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(annotation, context.visitorContext());
         if (!(declaration instanceof AnnotationElement annotationElement)) {
             return null;
         }
@@ -243,7 +242,7 @@ public final class ElementAnnotationMember implements AnnotationMember {
      * The compilation the classes a member names are resolved in, which an annotation composed with none
      * cannot name a class through.
      */
-    private VisitorContext compilation() {
+    private SourceModel compilation() {
         if (context == null) {
             throw new IllegalStateException("The member " + member + " of " + annotation
                 + " was composed with no compilation under way to resolve what it names in");

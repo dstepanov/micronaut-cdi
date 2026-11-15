@@ -15,13 +15,9 @@
  */
 package io.micronaut.cdi.lang.model.ast;
 
-import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import org.jspecify.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * Decides which of the annotations Micronaut recorded on a declaration or on a use of a type are reported to
@@ -34,8 +30,9 @@ import java.util.List;
  * the specification's language model would report of the source; every registered filter must agree for an
  * annotation to be reported.</p>
  *
- * <p>The filters are loaded through Micronaut's service loader as an annotation is reported, and nothing of them is
- * kept: a filter decides from its arguments alone.</p>
+ * <p>The filters are loaded through Micronaut's service loader once per compilation, as the processor starts it, and
+ * handed to the model of that compilation ({@link SourceModel#of}): nothing of them outlives it, and a filter decides
+ * from its arguments alone.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -50,17 +47,6 @@ public interface LanguageModelAnnotationFilter {
      * @return Whether it is reported
      */
     boolean isReported(String annotationName, Place place);
-
-    /**
-     * The registered filters, as the service loader of the class loader of this interface finds them.
-     *
-     * @return The filters, possibly none
-     */
-    @Internal
-    static List<LanguageModelAnnotationFilter> registered() {
-        return List.copyOf(SoftServiceLoader.load(LanguageModelAnnotationFilter.class,
-            LanguageModelAnnotationFilter.class.getClassLoader()).collectAll());
-    }
 
     /**
      * Where an annotation was recorded: on a declaration, or on a use of a type within one.

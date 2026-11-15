@@ -22,7 +22,6 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.ParameterElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import org.jspecify.annotations.Nullable;
@@ -51,8 +50,8 @@ final class ExtensionAnnotations {
      * @param context The compilation the declaration is read in
      * @return The annotations
      */
-    static List<AnnotationInfo> declaredOn(Element element, VisitorContext context) {
-        return SourceModel.of(context).annotationsOf(element);
+    static List<AnnotationInfo> declaredOn(Element element, SourceModel context) {
+        return context.annotationsOf(element);
     }
 
     /**
@@ -65,8 +64,8 @@ final class ExtensionAnnotations {
      * @param context    The compilation the declaration is read in
      * @return The annotations, in the order they were written
      */
-    static List<AnnotationInfo> repeatableOn(Element element, String annotation, VisitorContext context) {
-        return SourceModel.of(context).repeatableOn(element, annotation);
+    static List<AnnotationInfo> repeatableOn(Element element, String annotation, SourceModel context) {
+        return context.repeatableOn(element, annotation);
     }
 
     /**
@@ -79,8 +78,8 @@ final class ExtensionAnnotations {
      * @return The annotations, in the order they were written
      */
     static List<AnnotationInfo> repeatableIn(Collection<AnnotationInfo> annotations, String annotation,
-                                             VisitorContext context) {
-        String container = SourceModel.of(context).containerOf(annotation);
+                                             SourceModel context) {
+        String container = context.containerOf(annotation);
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationInfo written : annotations) {
             if (written.name().equals(annotation)) {
@@ -122,8 +121,8 @@ final class ExtensionAnnotations {
      * @param context    The compilation to look the interface up in
      * @return Whether it is marked {@code Inherited}
      */
-    static boolean isInherited(String annotation, VisitorContext context) {
-        return ExtensionAnnotationTypes.declarationOf(annotation, context) instanceof AnnotationElement declaration
+    static boolean isInherited(String annotation, SourceModel context) {
+        return ExtensionAnnotationTypes.declarationOf(annotation, context.visitorContext()) instanceof AnnotationElement declaration
             && declaration.isInherited();
     }
 
@@ -136,8 +135,8 @@ final class ExtensionAnnotations {
      * @param context    The compilation to look the interface up in
      * @return Whether {@code TYPE_USE} is among its targets
      */
-    static boolean isTypeUse(String annotation, VisitorContext context) {
-        return SourceModel.of(context).isTypeUse(annotation);
+    static boolean isTypeUse(String annotation, SourceModel context) {
+        return context.isTypeUse(annotation);
     }
 
     /**
@@ -149,9 +148,10 @@ final class ExtensionAnnotations {
      * @param context    The compilation the declaration is read in
      * @return Whether it is reported
      */
-    static boolean isReported(Element element, String annotation, VisitorContext context) {
-        return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context)
-            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false));
+    static boolean isReported(Element element, String annotation, SourceModel context) {
+        return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context.visitorContext())
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(element, declaringTypeOf(element), false),
+                context.filters());
     }
 
     /**
@@ -164,9 +164,10 @@ final class ExtensionAnnotations {
      * @return Whether it is reported
      */
     static boolean isReportedOnType(String annotation, @Nullable ClassElement declaringType,
-                                    VisitorContext context) {
-        return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context)
-            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(null, declaringType, true));
+                                    SourceModel context) {
+        return ExtensionAnnotationTypes.isRuntimeRetained(annotation, context.visitorContext())
+            && isAllowed(annotation, new LanguageModelAnnotationFilter.Place(null, declaringType, true),
+                context.filters());
     }
 
     /**
@@ -207,8 +208,9 @@ final class ExtensionAnnotations {
         return repetition;
     }
 
-    private static boolean isAllowed(String annotation, LanguageModelAnnotationFilter.Place place) {
-        for (LanguageModelAnnotationFilter filter : LanguageModelAnnotationFilter.registered()) {
+    private static boolean isAllowed(String annotation, LanguageModelAnnotationFilter.Place place,
+                                     List<LanguageModelAnnotationFilter> filters) {
+        for (LanguageModelAnnotationFilter filter : filters) {
             if (!filter.isReported(annotation, place)) {
                 return false;
             }

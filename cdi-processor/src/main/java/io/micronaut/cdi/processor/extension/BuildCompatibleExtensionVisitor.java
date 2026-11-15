@@ -268,7 +268,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
      */
     private void useBuildServicesOf(VisitorContext context) {
         if (!extensions.isEmpty()) {
-            ElementBuildServices mine = new ElementBuildServices(context);
+            ElementBuildServices mine = new ElementBuildServices(extensions.model(context));
             BuildServicesResolver.setBuildServices(mine);
             ElementBuildServices previous = buildServices;
             buildServices = mine;
@@ -458,7 +458,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // what an extension reports from here on is about the deployment as a whole rather than about a
         // definition the compiler is looking at
         Messages messages = VisitorMessages.ofTheDeployment(context);
-        SynthesisPhase synthesis = new SynthesisPhase(context, discovered());
+        SynthesisPhase synthesis = new SynthesisPhase(extensions.model(context), discovered());
         if (!extensions.synthesize(synthesis, messages, context)) {
             return;
         }
@@ -477,14 +477,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             extensions.describeSyntheticBean(info, info.beanType(), messages, context);
         }
         for (RecordingObserverBuilder<?> observer : synthesis.observers()) {
-            SyntheticObserverInfo info = new SyntheticObserverInfo(observer, context);
+            SyntheticObserverInfo info = new SyntheticObserverInfo(observer, extensions.model(context));
             extensions.describeSyntheticObserver(info, ElementTypes.elementOf(observer.eventType()), messages,
                 context);
         }
         // the built-in beans are beans of the application too (section 2.10.3): no class of the compilation
         // declares them, so the phase is told about them here
         context.getClassElement("io.micronaut.cdi.internal.runtime.CdiBeanContainer").ifPresent(container -> {
-            extensions.describeBean(ElementBeanInfo.of(container, null, context), messages, context);
+            extensions.describeBean(ElementBeanInfo.of(container, null, extensions.model(context)), messages, context);
         });
         // and the validation phase is the last word on it
         extensions.validate(messages, context);
@@ -520,14 +520,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         }
         List<ElementBeanInfo> beans = new ArrayList<>();
         if (SpecificationBeans.isClassBean(element)) {
-            beans.add(ElementBeanInfo.of(element, null, context));
+            beans.add(ElementBeanInfo.of(element, null, extensions.model(context)));
         }
         for (MemberElement producer
             : SpecificationBeans.producersOf(element)) {
             AnnotationMetadata own = producer instanceof MethodElement method
                 ? method.getMethodAnnotationMetadata() : producer.getAnnotationMetadata();
             if (!isUnselectedReserve(own)) {
-                beans.add(ElementBeanInfo.of(element, producer, context));
+                beans.add(ElementBeanInfo.of(element, producer, extensions.model(context)));
             }
         }
         for (ElementBeanInfo bean : beans) {
@@ -552,7 +552,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
                 continue;
             }
             extensions.describeObserver(
-                new ElementObserverInfo(element, method, observed, async, context), messages, context);
+                new ElementObserverInfo(element, method, observed, async, extensions.model(context)), messages, context);
         }
     }
 

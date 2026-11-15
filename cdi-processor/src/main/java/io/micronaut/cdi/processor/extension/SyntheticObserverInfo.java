@@ -15,11 +15,11 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -46,9 +46,9 @@ import java.util.List;
 final class SyntheticObserverInfo implements ObserverInfo {
 
     private final RecordingObserverBuilder<?> observer;
-    private final VisitorContext context;
+    private final SourceModel context;
 
-    SyntheticObserverInfo(RecordingObserverBuilder<?> observer, VisitorContext context) {
+    SyntheticObserverInfo(RecordingObserverBuilder<?> observer, SourceModel context) {
         this.observer = observer;
         this.context = context;
     }

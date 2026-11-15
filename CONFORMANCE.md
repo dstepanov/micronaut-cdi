@@ -1318,17 +1318,18 @@ own rather than the first one alone.
   (`LookupSegment`). The build's Error Prone check `ThreadLocalForbidden` fails the compilation of any
   main source that declares, creates or initializes a thread local, and warns in the tests. The processor and the
   language model over the compiler's elements hold no static state that is not a constant: the registered
-  `LanguageModelAnnotationFilter` services are found through Micronaut's `SoftServiceLoader` where an annotation is
-  reported, and kept nowhere (`LanguageModelAnnotationFilter.registered()`), and a provider is expected to decide
-  from its arguments alone.
+  `LanguageModelAnnotationFilter` services are loaded through Micronaut's `SoftServiceLoader` once per compilation,
+  as the processor starts it (`ExtensionMethods.load`), and handed to the model of that compilation
+  (`SourceModel.of`), which every declaration and type of the model is read through; a provider is expected to
+  decide from its arguments alone.
   What they reflect goes through Micronaut's helpers where one exists - `SoftServiceLoader` for the extensions and
   the filters, `ClassUtils.forName` and `InstantiationUtils` for an extension a compiler option names,
-  `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts three
+  `ReflectionUtils.invokeInaccessibleMethod` for the phase methods - and the NoReflection check exempts two
   classes, for what has no helper or what the check counts even through one: `ExtensionMethods`, which finds an
   extension's phase methods among its declared methods by their annotations and reads their parameter types, as
-  the specification defines an extension (and loads services); `ElementAnnotationMember`, which reads an annotation
-  member's array and enum values as the language model's API hands them out; and `LanguageModelAnnotationFilter`,
-  for the service loading of the filters. A harness that
+  the specification defines an extension (and loads services, the filters' included); and
+  `ElementAnnotationMember`, which reads an annotation member's array and enum values as the language model's API
+  hands them out. A harness that
   compiles a deployment at a time names the deployment's extensions to each compilation through the compiler
   options (`micronaut.cdi.extensions`, `micronaut.cdi.extensions.only`), since options are what a compilation is
   handed, and reads the classes their discovery phase scanned from what the compilation generated

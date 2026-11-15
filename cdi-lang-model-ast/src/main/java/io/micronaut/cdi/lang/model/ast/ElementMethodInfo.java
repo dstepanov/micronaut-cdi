@@ -19,7 +19,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.ParameterInfo;
@@ -48,12 +47,12 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
      * @param declaringClass The class that declares it
      * @param context        The compilation the method is read in
      */
-    public ElementMethodInfo(MethodElement element, ClassInfo declaringClass, VisitorContext context) {
-        this(CurrentElement.ofMember(element, context), declaringClass, context);
+    public ElementMethodInfo(MethodElement element, ClassInfo declaringClass, SourceModel context) {
+        this(CurrentElement.ofMember(element, context.visitorContext()), declaringClass, context);
     }
 
     private ElementMethodInfo(CurrentElement<MethodElement> element, ClassInfo declaringClass,
-                              VisitorContext context) {
+                              SourceModel context) {
         super(element, context);
         this.element = element;
         this.declaringClass = declaringClass;
@@ -89,7 +88,7 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
         List<ParameterInfo> parameters = new ArrayList<>();
         MethodElement method = element.get();
         for (ParameterElement parameter : method.getParameters()) {
-            parameters.add(new ElementParameterInfo(CurrentElement.ofParameter(element, parameter, context()), this,
+            parameters.add(new ElementParameterInfo(CurrentElement.ofParameter(element, parameter, context().visitorContext()), this,
                 context()));
         }
         return List.copyOf(parameters);
@@ -99,23 +98,23 @@ public final class ElementMethodInfo extends ElementDeclarationInfo implements M
     public Type returnType() {
         // a constructor returns the class it constructs, where both Micronaut and the compiler report the void a
         // class file declares; the annotations of the use are the ones written on the constructor
-        return isConstructor() ? SourceModel.of(context()).constructorReturnTypeOf(element.get())
-            : SourceModel.of(context()).returnTypeOf(element.get());
+        return isConstructor() ? context().constructorReturnTypeOf(element.get())
+            : context().returnTypeOf(element.get());
     }
 
     @Override
     public @Nullable Type receiverType() {
-        return SourceModel.of(context()).receiverTypeOf(element.get());
+        return context().receiverTypeOf(element.get());
     }
 
     @Override
     public List<Type> throwsTypes() {
-        return SourceModel.of(context()).throwsTypesOf(element.get());
+        return context().throwsTypesOf(element.get());
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
-        return SourceModel.of(context()).typeParametersOf(element.get());
+        return context().typeParametersOf(element.get());
     }
 
     @Override

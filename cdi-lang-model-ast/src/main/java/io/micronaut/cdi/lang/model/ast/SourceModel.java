@@ -62,27 +62,50 @@ import java.util.Set;
  * @since 1.0
  */
 @Internal
-final class SourceModel {
+public final class SourceModel {
 
     private static final String OBJECT = "java.lang.Object";
     private static final String RETENTION = "java.lang.annotation.Retention";
     private static final String REPEATABLE = "java.lang.annotation.Repeatable";
 
     private final VisitorContext context;
+    private final List<LanguageModelAnnotationFilter> filters;
 
-    private SourceModel(VisitorContext context) {
+    private SourceModel(VisitorContext context, List<LanguageModelAnnotationFilter> filters) {
         this.context = context;
+        this.filters = filters;
     }
 
     /**
      * The model of a compilation, which reads what an element does not answer on its own - the interface an
-     * annotation names, its retention and its targets - through the compiler.
+     * annotation names, its retention and its targets - through the compiler, and reports the annotations the
+     * given filters allow. Every declaration and type of the model is read through it, and it is made where the
+     * compilation starts, with the filters loaded once for it.
      *
      * @param context The compilation
+     * @param filters The registered filters of the compilation, possibly none
      * @return The model
      */
-    static SourceModel of(VisitorContext context) {
-        return new SourceModel(context);
+    public static SourceModel of(VisitorContext context, List<LanguageModelAnnotationFilter> filters) {
+        return new SourceModel(context, List.copyOf(filters));
+    }
+
+    /**
+     * The compilation the model is read in.
+     *
+     * @return The visitor context
+     */
+    public VisitorContext visitorContext() {
+        return context;
+    }
+
+    /**
+     * The filters that decide which annotations are reported.
+     *
+     * @return The filters, possibly none
+     */
+    List<LanguageModelAnnotationFilter> filters() {
+        return filters;
     }
 
     /**
@@ -95,16 +118,16 @@ final class SourceModel {
     public List<AnnotationInfo> annotationsOf(Element element) {
         List<AnnotationInfo> found = new ArrayList<>();
         for (String name : element.getDeclaredAnnotationNames()) {
-            if (!ExtensionAnnotations.isReported(element, name, context)) {
+            if (!ExtensionAnnotations.isReported(element, name, this)) {
                 continue;
             }
             AnnotationValue<Annotation> annotation = element.getDeclaredAnnotation(name);
             if (annotation != null) {
-                found.add(new ElementAnnotationInfo(annotation, context));
+                found.add(new ElementAnnotationInfo(annotation, this));
             }
         }
         if (element instanceof AnnotationElement annotation) {
-            addMetaAnnotations(annotation, found, context);
+            addMetaAnnotations(annotation, found, this);
         }
         return ExtensionAnnotations.unfoldSingleRepetitions(found, element);
     }
@@ -119,7 +142,7 @@ final class SourceModel {
      * declared ones.
      */
     private static void addMetaAnnotations(AnnotationElement annotation, List<AnnotationInfo> found,
-                                           VisitorContext context) {
+                                           SourceModel context) {
         Set<String> present = new HashSet<>();
         found.forEach(each -> present.add(each.name()));
         RetentionPolicy retention = annotation.getRetentionPolicy();
@@ -147,12 +170,12 @@ final class SourceModel {
     public List<AnnotationInfo> repeatableOn(Element element, String annotation) {
         // Micronaut resolves the container of a repeatable annotation itself when asked for the annotations of
         // one name, whether they were written one by one or inside the container
-        if (!ExtensionAnnotations.isReported(element, annotation, context)) {
+        if (!ExtensionAnnotations.isReported(element, annotation, this)) {
             return List.of();
         }
         List<AnnotationInfo> found = new ArrayList<>();
         for (AnnotationValue<Annotation> value : element.getDeclaredAnnotationValuesByName(annotation)) {
-            found.add(new ElementAnnotationInfo(value, context));
+            found.add(new ElementAnnotationInfo(value, this));
         }
         return List.copyOf(found);
     }
@@ -164,7 +187,7 @@ final class SourceModel {
      * @return The type
      */
     public Type typeOf(FieldElement field) {
-        return ElementTypes.of(field.getType(), field.getDeclaringType(), context);
+        return ElementTypes.of(field.getType(), field.getDeclaringType(), this);
     }
 
     /**
@@ -174,7 +197,7 @@ final class SourceModel {
      * @return The type
      */
     public Type typeOf(ParameterElement parameter) {
-        return ElementTypes.of(parameter.getType(), parameter.getMethodElement().getDeclaringType(), context);
+        return ElementTypes.of(parameter.getType(), parameter.getMethodElement().getDeclaringType(), this);
     }
 
     /**
@@ -184,7 +207,7 @@ final class SourceModel {
      * @return The type
      */
     public Type returnTypeOf(MethodElement method) {
-        return ElementTypes.of(method.getReturnType(), method.getDeclaringType(), context);
+        return ElementTypes.of(method.getReturnType(), method.getDeclaringType(), this);
     }
 
     /**
@@ -202,7 +225,7 @@ final class SourceModel {
                 annotations.add(annotation);
             }
         }
-        return ElementTypes.rawClassOf(constructor.getDeclaringType(), annotations, context);
+        return ElementTypes.rawClassOf(constructor.getDeclaringType(), annotations, this);
     }
 
     /**
@@ -226,8 +249,8 @@ final class SourceModel {
         // inner class the enclosing instance (JLS 8.4.1), where nothing is written of it
         ClassElement receiver = method instanceof ConstructorElement
             ? declaring.getEnclosingType().orElse(declaring) : declaring;
-        return method.getReceiverType().map(type -> ElementTypes.of(type, context))
-            .orElseGet(() -> ElementTypes.of(receiver, context));
+        return method.getReceiverType().map(type -> ElementTypes.of(type, this))
+            .orElseGet(() -> ElementTypes.of(receiver, this));
     }
 
     /**
@@ -240,7 +263,7 @@ final class SourceModel {
         ClassElement[] thrown = method.getThrownTypes();
         List<Type> types = new ArrayList<>(thrown.length);
         for (ClassElement type : thrown) {
-            types.add(ElementTypes.of(type, context));
+            types.add(ElementTypes.of(type, this));
         }
         return List.copyOf(types);
     }
@@ -268,7 +291,7 @@ final class SourceModel {
     private List<TypeVariable> variablesOf(List<? extends GenericPlaceholderElement> placeholders) {
         List<TypeVariable> variables = new ArrayList<>(placeholders.size());
         for (GenericPlaceholderElement placeholder : placeholders) {
-            variables.add(ElementTypes.variableOf(placeholder, context));
+            variables.add(ElementTypes.variableOf(placeholder, this));
         }
         return List.copyOf(variables);
     }
@@ -285,8 +308,8 @@ final class SourceModel {
             return null;
         }
         // a class whose superclass is Object still has one, though Micronaut's model leaves it implicit
-        return clazz.getSuperType().map(type -> ElementTypes.of(type, context))
-            .orElseGet(() -> ElementTypes.objectType(context));
+        return clazz.getSuperType().map(type -> ElementTypes.of(type, this))
+            .orElseGet(() -> ElementTypes.objectType(this));
     }
 
     /**
@@ -298,7 +321,7 @@ final class SourceModel {
     public List<Type> superInterfacesOf(ClassElement clazz) {
         List<Type> types = new ArrayList<>();
         for (ClassElement type : clazz.getInterfaces()) {
-            types.add(ElementTypes.of(type, context));
+            types.add(ElementTypes.of(type, this));
         }
         return List.copyOf(types);
     }

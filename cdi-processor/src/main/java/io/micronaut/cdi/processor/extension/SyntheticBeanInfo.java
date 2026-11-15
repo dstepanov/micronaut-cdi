@@ -15,6 +15,7 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementAnnotationInfo;
 import io.micronaut.cdi.lang.model.ast.ElementClassInfo;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
@@ -22,7 +23,6 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
@@ -53,10 +53,10 @@ final class SyntheticBeanInfo implements BeanInfo {
     private final RecordingBeanBuilder<?> bean;
     private final SynthesisPhase.Scope scope;
     private final boolean alternative;
-    private final VisitorContext context;
+    private final SourceModel context;
 
     SyntheticBeanInfo(RecordingBeanBuilder<?> bean, SynthesisPhase.Scope scope, boolean alternative,
-                      VisitorContext context) {
+                      SourceModel context) {
         this.bean = bean;
         this.scope = scope;
         this.alternative = alternative;

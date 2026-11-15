@@ -15,12 +15,12 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.lang.model.ast.SourceModel;
 import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticParameter;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
@@ -52,7 +52,7 @@ import java.util.Map;
 @Internal
 final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
-    private final VisitorContext context;
+    private final SourceModel context;
     private final String id;
     private final ClassElement implementation;
     private final List<Type> types = new ArrayList<>();
@@ -71,10 +71,10 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
     private @Nullable ClassElement creator;
     private @Nullable ClassElement disposer;
 
-    RecordingBeanBuilder(VisitorContext context, String id, Class<T> implementationClass) {
+    RecordingBeanBuilder(SourceModel context, String id, Class<T> implementationClass) {
         this.context = context;
         this.id = id;
-        this.implementation = SyntheticRecords.classElement(context, implementationClass,
+        this.implementation = SyntheticRecords.classElement(context.visitorContext(), implementationClass,
             "implementation class of a synthetic bean");
     }
 
@@ -176,13 +176,13 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> qualifier(Class<? extends Annotation> annotationType) {
-        qualifiers.add(SyntheticRecords.annotationOf(context, annotationType));
+        qualifiers.add(SyntheticRecords.annotationOf(context.visitorContext(), annotationType));
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> qualifier(AnnotationInfo qualifierAnnotation) {
-        qualifiers.add(SyntheticRecords.annotationOf(context, qualifierAnnotation));
+        qualifiers.add(SyntheticRecords.annotationOf(context.visitorContext(), qualifierAnnotation));
         return this;
     }
 
@@ -194,7 +194,7 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> scope(Class<? extends Annotation> scopeAnnotation) {
-        this.scope = SyntheticRecords.classElement(context, scopeAnnotation, "scope");
+        this.scope = SyntheticRecords.classElement(context.visitorContext(), scopeAnnotation, "scope");
         return this;
     }
 
@@ -284,7 +284,7 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
         List<AnnotationValue<?>> values = new ArrayList<>(qualifiers == null ? 0 : qualifiers.length);
         if (qualifiers != null) {
             for (AnnotationInfo qualifier : qualifiers) {
-                values.add(SyntheticRecords.annotationOf(context, qualifier));
+                values.add(SyntheticRecords.annotationOf(context.visitorContext(), qualifier));
             }
         }
         injectionPoints.add(new InjectionPoint(type, values));
@@ -305,25 +305,25 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> stereotype(Class<? extends Annotation> stereotypeAnnotation) {
-        stereotypes.add(SyntheticRecords.classElement(context, stereotypeAnnotation, "stereotype"));
+        stereotypes.add(SyntheticRecords.classElement(context.visitorContext(), stereotypeAnnotation, "stereotype"));
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> stereotype(ClassInfo stereotypeAnnotation) {
-        stereotypes.add(SyntheticRecords.classElement(context, stereotypeAnnotation.name(), "stereotype"));
+        stereotypes.add(SyntheticRecords.classElement(context.visitorContext(), stereotypeAnnotation.name(), "stereotype"));
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> createWith(Class<? extends SyntheticBeanCreator<T>> creatorClass) {
-        this.creator = SyntheticRecords.classElement(context, creatorClass, "creator");
+        this.creator = SyntheticRecords.classElement(context.visitorContext(), creatorClass, "creator");
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> disposeWith(Class<? extends SyntheticBeanDisposer<T>> disposerClass) {
-        this.disposer = SyntheticRecords.classElement(context, disposerClass, "disposer");
+        this.disposer = SyntheticRecords.classElement(context.visitorContext(), disposerClass, "disposer");
         return this;
     }
 
@@ -409,7 +409,7 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, AnnotationInfo value) {
-        return param(key, SyntheticRecords.annotations(key, false, SyntheticRecords.valuesOf(context, value)));
+        return param(key, SyntheticRecords.annotations(key, false, SyntheticRecords.valuesOf(context.visitorContext(), value)));
     }
 
     @Override
@@ -419,7 +419,7 @@ final class RecordingBeanBuilder<T> implements SyntheticBeanBuilder<T> {
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, AnnotationInfo[] value) {
-        return param(key, SyntheticRecords.annotations(key, true, SyntheticRecords.valuesOf(context, value)));
+        return param(key, SyntheticRecords.annotations(key, true, SyntheticRecords.valuesOf(context.visitorContext(), value)));
     }
 
     @Override

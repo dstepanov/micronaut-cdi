@@ -16,6 +16,9 @@
 package io.micronaut.cdi.tck.langmodel;
 
 import io.micronaut.cdi.lang.model.ast.AstLanguageModel;
+import io.micronaut.cdi.lang.model.ast.LanguageModelAnnotationFilter;
+import io.micronaut.cdi.lang.model.ast.SourceModel;
+import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -28,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -82,15 +86,27 @@ public class LangModelVisitor implements TypeElementVisitor<Object, Object> {
         {"SealedInterfaces", "sealedInterfaces"},
     };
 
+    /**
+     * The annotation filters registered on the processor path - the kit's own among them - loaded as the compilation
+     * starts the visitor and handed to the model of the compilation.
+     */
+    private List<LanguageModelAnnotationFilter> filters = List.of();
+
     @Override
     public VisitorKind getVisitorKind() {
         return VisitorKind.ISOLATING;
     }
 
     @Override
+    public void start(VisitorContext visitorContext) {
+        filters = List.copyOf(SoftServiceLoader.load(LanguageModelAnnotationFilter.class,
+            LanguageModelAnnotationFilter.class.getClassLoader()).collectAll());
+    }
+
+    @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         if (element.getName().equals(LangModelVerifier.class.getName())) {
-            verify(AstLanguageModel.classInfo(element, context));
+            verify(AstLanguageModel.classInfo(element, SourceModel.of(context, filters)));
         }
     }
 

@@ -18,7 +18,6 @@ package io.micronaut.cdi.lang.model.ast;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementModifier;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import org.jspecify.annotations.Nullable;
@@ -46,7 +45,7 @@ import java.util.function.Predicate;
 public abstract class ElementDeclarationInfo implements DeclarationInfo {
 
     private final CurrentElement<? extends Element> element;
-    private final VisitorContext context;
+    private final SourceModel context;
 
     /**
      * @param element The Micronaut element the declaration is read from, as the compilation has it whenever it is
@@ -54,7 +53,7 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
      * @param context The compilation the element belongs to, which the declaration reads what the element does not
      *                answer on its own through, and hands to everything it is asked for
      */
-    protected ElementDeclarationInfo(CurrentElement<? extends Element> element, VisitorContext context) {
+    protected ElementDeclarationInfo(CurrentElement<? extends Element> element, SourceModel context) {
         this.element = element;
         this.context = context;
     }
@@ -69,11 +68,11 @@ public abstract class ElementDeclarationInfo implements DeclarationInfo {
     }
 
     /**
-     * The compilation the declaration is read in.
+     * The model of the compilation the declaration is read in.
      *
-     * @return The visitor context
+     * @return The model
      */
-    public final VisitorContext context() {
+    public final SourceModel context() {
         return context;
     }
 

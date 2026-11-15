@@ -23,7 +23,6 @@ import io.micronaut.inject.ast.EnumElement;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.PropertyElement;
-import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -60,11 +59,11 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      * @param element The class
      * @param context The compilation the class is read in
      */
-    public ElementClassInfo(ClassElement element, VisitorContext context) {
-        this(CurrentElement.ofClass(element, context), context);
+    public ElementClassInfo(ClassElement element, SourceModel context) {
+        this(CurrentElement.ofClass(element, context.visitorContext()), context);
     }
 
-    private ElementClassInfo(CurrentElement<ClassElement> element, VisitorContext context) {
+    private ElementClassInfo(CurrentElement<ClassElement> element, SourceModel context) {
         super(element, context);
         this.element = element;
     }
@@ -78,8 +77,8 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
      * @param context The compilation to resolve the name in
      * @return The class
      */
-    static ElementClassInfo declarationOf(ClassElement element, VisitorContext context) {
-        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(element.getName(), context);
+    static ElementClassInfo declarationOf(ClassElement element, SourceModel context) {
+        ClassElement declaration = ExtensionAnnotationTypes.declarationOf(element.getName(), context.visitorContext());
         return new ElementClassInfo(declaration != null ? declaration : element, context);
     }
 
@@ -111,7 +110,7 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
         if (current instanceof AnnotationElement || current instanceof EnumElement) {
             return current;
         }
-        ClassElement resolved = ExtensionAnnotationTypes.declarationOf(current.getName(), context());
+        ClassElement resolved = ExtensionAnnotationTypes.declarationOf(current.getName(), context().visitorContext());
         return resolved != null ? resolved : current;
     }
 
@@ -180,12 +179,12 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
 
     @Override
     public List<TypeVariable> typeParameters() {
-        return SourceModel.of(context()).typeParametersOf(element.get());
+        return context().typeParametersOf(element.get());
     }
 
     @Override
     public @Nullable Type superClass() {
-        return SourceModel.of(context()).superClassOf(element.get());
+        return context().superClassOf(element.get());
     }
 
     @Override
@@ -195,14 +194,14 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
             if (element.get().isInterface() || "java.lang.Object".equals(element.get().getName())) {
                 return null;
             }
-            ClassElement object = ExtensionAnnotationTypes.declarationOf("java.lang.Object", context());
+            ClassElement object = ExtensionAnnotationTypes.declarationOf("java.lang.Object", context().visitorContext());
             return object == null ? null : new ElementClassInfo(object, context());
         });
     }
 
     @Override
     public List<Type> superInterfaces() {
-        return SourceModel.of(context()).superInterfacesOf(element.get());
+        return context().superInterfacesOf(element.get());
     }
 
     @Override
