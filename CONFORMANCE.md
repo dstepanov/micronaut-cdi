@@ -905,6 +905,22 @@ because bean-archive membership is a per-deployment question a global compilatio
 bootstrap's {@code addBeanClasses} makes exactly such a class a bean by fiat. A producer in a class no
 deployment ever admits is the difference visible to code that counts beans.
 
+### The priority of an alternative producer field is read from its declaring class
+
+*Section 2.7.1.* A producer of an alternative bean class that declares a priority is selected by that priority.
+Micronaut composes a method's annotation metadata with its declaring class's and a field's without it; the processor
+reads the declaring class's priority explicitly for a producer field (`ProducerVisitor.selectIfAlternative`). This is
+the adapter applying the specification's rule with Micronaut's existing API, not a gap in Micronaut Core: changing how
+all field metadata composes would be broader than the rule needs.
+
+### An alternative interceptor runs by the priority it declares
+
+*Section 2.7 / Jakarta Interceptors 5.2.1.* The processor writes the priority of a selected alternative into
+Micronaut's `@Order`, negated (`Alternatives.select`), and does so for an interceptor class that is also an
+alternative, which the specification calls non-portable. The interceptor chain of Jakarta Interceptors orders by the
+declared `@Priority` first and falls back to `@Order` only where none is declared, so such an interceptor keeps its
+place among the others (`AlternativeInterceptorOrderTest`).
+
 ### Two findings of a reading of ArC's test suite, reported as the class compiles
 
 Both are reported by the compiler rather than at runtime, so neither has a test that runs. A disposer method is
@@ -1206,9 +1222,6 @@ own rather than the first one alone.
   instance method has one derived from the declaring type; the Java implementation answers only a written `this`
   parameter, and the Kotlin and Groovy ones never do. `ElementMethodInfo.receiverType()` supplies the declaring
   type itself.
-- **A field's annotation metadata does not include its declaring class's, a method's does.** The priority that
-  selects an alternative producer field is therefore read from the declaring class explicitly
-  (`ProducerVisitor.selectIfAlternative`).
 - **What a Kotlin compilation cannot answer.** KSP has no package element, so the annotations of a package read
   as none; a Java record seen from KSP is not known to be one; thrown types come only from `@Throws`. The
   language model answers less in a Kotlin compilation in those places. KSP also answers the members of an
