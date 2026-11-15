@@ -1305,7 +1305,11 @@ own rather than the first one alone.
   to, and keeps a bean of the specification that implements one of them from taking the context's place. A public
   list, or a definition for each, would remove the copy.
 - **The static state that remains is the specification's.** `CDI.current()` is a static entry point with nothing
-  to hand it, and resolves to the container started last (`CdiRunning`), which the container itself never asks;
+  to hand it, and resolves to the container started last. The containers that run are held by the provider of this
+  module the specification's API holds (`MicronautCDIProvider`), which a container registers with as it starts and
+  installs with `CDI.setCDIProvider` where the API holds none of this module yet, reading the API's own record of
+  its provider (`MicronautCDI.installedProvider`); the module keeps no static of its own for it, and the container
+  itself never asks it. A provider a program set itself is left in place;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
   compilation with extensions starts and released in place as it finishes - the services let go of the compilation
   rather than being replaced, so that services another compilation set meanwhile stay. What remains is inherent in

@@ -121,6 +121,10 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     private final RecordedTypeIndex typeIndex;
     private final CompiledAnnotationTypes types;
     private final QualifierOverlay overlay;
+    /**
+     * The provider of the specification's entry point this container registered with as it started.
+     */
+    private final MicronautCDIProvider provider;
     private boolean validated;
     private final ObserverRegistry observers;
     /**
@@ -146,9 +150,11 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         this.overlay = overlay;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope, extensionContexts);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
-        // for it to resolve through: the specification's own entry point is static. It is registered as the
-        // container starts, which is what makes this bean one Micronaut creates eagerly rather than on demand
-        CdiRunning.started(this);
+        // for it to resolve through: the specification's own entry point is static. It is registered with the
+        // provider the API holds as the container starts, which is what makes this bean one Micronaut creates
+        // eagerly rather than on demand
+        this.provider = MicronautCDI.installedProvider();
+        provider.started(this);
     }
 
     /**
@@ -159,7 +165,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * @param beanContext The context that failed to start
      */
     public static void failedToStart(BeanContext beanContext) {
-        CdiRunning.stoppedFor(beanContext);
+        MicronautCDI.installedProvider().stoppedFor(beanContext);
     }
 
     @PreDestroy
@@ -177,7 +183,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
             }
         }
         // no longer what CDI.current() resolves to, whatever a group threw as it closed
-        CdiRunning.stopped(this);
+        provider.stopped(this);
         if (failure instanceof Error error) {
             throw error;
         }
