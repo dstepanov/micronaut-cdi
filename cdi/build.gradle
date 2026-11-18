@@ -8,8 +8,10 @@ plugins {
 // in java.lang.reflect.Type, and a type a program hands in is read into an argument by Micronaut (Argument.of(Type)),
 // which calls only the accessors of the type; a type the container reports is the one Micronaut renders an argument
 // into (Argument.asType), which reads no class either. Reading a class back - its hierarchy, its members, its
-// annotations - is what the optional micronaut-cdi-reflection module does where an application asks. Anything else,
-// anywhere, fails the build.
+// annotations - is what the optional micronaut-cdi-reflection module does where an application asks. The one
+// exception, suppressed where it is, is the service loading of MicronautCDIProvider, which hands CDI.current() over to
+// the providers of other implementations the specification's API would find, through Micronaut's SoftServiceLoader.
+// Anything else, anywhere, fails the build.
 
 dependencies {
     annotationProcessor libs.managed.micronaut.jakarta.interceptors.processor

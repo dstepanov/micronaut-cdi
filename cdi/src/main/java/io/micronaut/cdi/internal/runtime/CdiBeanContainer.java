@@ -159,12 +159,16 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     /**
      * Takes the container of a context that failed to start off what {@code CDI.current()} resolves to: Micronaut
      * destroys the beans of a context that is running alone, so the container of one whose start failed is not
-     * destroyed, and would otherwise stay the current one.
+     * destroyed, and would otherwise stay the current one. Nothing is installed: where the specification's API holds
+     * no provider of this module, the container registered with one of its own, which nothing reaches.
      *
      * @param beanContext The context that failed to start
      */
     public static void failedToStart(BeanContext beanContext) {
-        MicronautCDI.installedProvider().stoppedFor(beanContext);
+        MicronautCDIProvider held = MicronautCDI.heldProvider();
+        if (held != null) {
+            held.stoppedFor(beanContext);
+        }
     }
 
     @PreDestroy

@@ -30,7 +30,7 @@ visible in a test report as what passes.
 | 5.6 | Programmatic lookup through `Instance`, including handles | `CdiInstance` |
 | 11.1 | The `BeanContainer`, and the `Bean` a lookup resolves to | `CdiBeanContainer`, `CdiBean` |
 | 11.1 | The `BeanManager` of CDI Full, as far as CDI Lite can answer it, and injectable as a bean | `CdiBeanContainer` |
-| 11.1 | `CDI.current()`, found through the service loader | `MicronautCDIProvider`, `MicronautCDI` |
+| 11.1 | `CDI.current()`, installed with `CDI.setCDIProvider` as a container starts, handing over to the providers the service loader finds while none runs | `MicronautCDIProvider`, `MicronautCDI` |
 | 6.2 | The `Context` of each scope, and whether it is active | `CdiContext` |
 | 5.2 | The rules of resolution applied to types and qualifiers on their own | `CdiAssignability` |
 | 11.1.9 | Interceptor resolution through the bean container | `CdiBeanContainer` |
@@ -1336,7 +1336,18 @@ own rather than the first one alone.
   module the specification's API holds (`MicronautCDIProvider`), which a container registers with as it starts and
   installs with `CDI.setCDIProvider` where the API holds none of this module yet, reading the API's own record of
   its provider (`MicronautCDI.installedProvider`); the module keeps no static of its own for it, and the container
-  itself never asks it. A provider a program set itself is left in place;
+  itself never asks it. The API makes a new instance of each provider its service loader finds, which holds no
+  container, so only an installed one reaches the containers of this module: a provider the API found itself, of
+  another implementation, is replaced as a container starts, which no static of the module's own would avoid. The
+  API takes an installed provider as set manually, never leaves it and rethrows what it throws, so the provider hands
+  over itself: while none of its containers runs, `CDI.current()` resolves through the first of the other providers
+  the service loader of the API's class loader finds, by descending priority, that answers (`CurrentContainerTest`),
+  and fails as the API does where none answers. That service loading, through Micronaut's `SoftServiceLoader`, is
+  the one the runtime does, allowed where it is by the build's reflection check. The service entry of the provider stays: an instance the API finds
+  before any container started hands over the same way, and a container that starts registers with it. A container
+  whose start failed takes itself off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
+  program set itself is left in place, and a container then registers with a provider of its own that the entry point
+  does not reach;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
   compilation with extensions starts and released in place as it finishes - the services let go of the compilation
   rather than being replaced, so that services another compilation set meanwhile stay. What remains is inherent in
