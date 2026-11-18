@@ -525,7 +525,9 @@ convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selecti
 is created through the definition those rules found, for the qualifier of the point
 (`BeanResolutionContext.getQualifiedBean` and its `BeanDependencyResolver` twin, since Micronaut Core 5.3, #14485):
 a bean declared with Micronaut's `@Any` is created and held for that qualifier, as a lookup by it would create it,
-and any other is created under the qualifier it declares (`MicronautAnyFactoryTest`). The point keeps
+and any other is created under the qualifier it declares (`MicronautAnyFactoryTest`). A point with no qualifier
+is created through the definition alone, and an `@Any` singleton then is another instance than a lookup by type
+alone finds (an open point of Micronaut Core). The point keeps
 its full declared type: a `List<Foo>` is resolved as a bean of that type, as the specification has it, rather than
 collected as Micronaut collects one at a point of a bean of its own. A
 bean of the specification the qualifiers of the point rejected is not admitted again by Micronaut's rules: an
@@ -1173,6 +1175,18 @@ own rather than the first one alone.
   not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
   generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
   would make each question a lookup, cover every bean, and remove both the record and the index.
+- **An `@Any` singleton reached with no qualifier through its definition is another instance.** A point of a bean of
+  the specification left to Micronaut's rules is created through the definition Micronaut found
+  (`CdiBeanContainer.resolveSelected`); with no qualifier on the point that is `getBean(definition, type)`, which
+  `DefaultBeanContext.getBeanRegistration` resolves under the definition's declared qualifier, `@Any`, and holds the
+  singleton under a delegate qualified by it, while a lookup by type alone (`getBean(Engine.class)`) holds it under
+  the plain definition. A Micronaut factory `@Any @Singleton Engine engine(Qualifier<Engine>)` then makes two
+  engines, the CDI point's handed `@Any` and Micronaut's handed none. No clean adapter fix exists: a lookup by type
+  would let a bean of the specification the point rejected back in, and a lookup by `NonCdiBeanQualifier` keys the
+  singleton by that qualifier. The core change being made resolves a definition declared `@Any` for the qualifier
+  given, `null` included, in `getBeanRegistration` and `resolveBeanRegistration`, so that a definition asked for with
+  no qualifier is what a lookup by type alone is; `MicronautAnyFactoryTest.anUnqualifiedPointSharesTheInstanceOfAnUnqualifiedLookup`
+  is disabled until it lands.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
   class a build compatible extension scanned is imported by a generated `ScannedClassesImport` source, so that a
   later round makes a bean of it; KSP and Groovy register it with `registerBean`. Tolerating a class the same

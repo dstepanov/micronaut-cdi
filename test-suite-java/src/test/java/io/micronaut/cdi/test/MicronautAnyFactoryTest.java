@@ -25,6 +25,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * A bean of Micronaut's own declared with Micronaut's {@code @Any} is created for the qualifier it is asked by: a
  * point of a bean of the specification left to Micronaut's rules hands the factory the qualifier of the point, and
- * shares the instance Micronaut's own lookup by that qualifier finds.
+ * shares the instance Micronaut's own lookup by that qualifier finds. A point with no qualifier is meant to share the
+ * instance of a lookup with none, which waits on Micronaut Core.
  */
 class MicronautAnyFactoryTest {
 
@@ -47,6 +49,17 @@ class MicronautAnyFactoryTest {
             assertNotSame(garage.v8, garage.v6);
             assertSame(context.getBean(Engine.class, Qualifiers.byName("v8")), garage.v8);
             assertSame(context.getBean(Engine.class, Qualifiers.byName("v6")), garage.v6);
+        }
+    }
+
+    @Test
+    @Disabled("Micronaut Core creates a definition declared @Any, asked for through the definition with no qualifier, "
+        + "under the qualifier @Any, and a lookup by type alone under none: two singletons, until core resolves the "
+        + "first for no qualifier too (DefaultBeanContext.getBeanRegistration, see Open points in CONFORMANCE.md)")
+    void anUnqualifiedPointSharesTheInstanceOfAnUnqualifiedLookup() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Workshop workshop = context.getBean(Workshop.class);
+            assertSame(context.getBean(Engine.class), workshop.engine);
         }
     }
 
@@ -73,5 +86,11 @@ class MicronautAnyFactoryTest {
         @Inject
         @jakarta.inject.Named("v6")
         Engine v6;
+    }
+
+    @Dependent
+    public static class Workshop {
+        @Inject
+        Engine engine;
     }
 }
