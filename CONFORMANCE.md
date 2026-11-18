@@ -343,8 +343,11 @@ of the synthetic components and of the qualifiers an extension registered. A typ
 where a bean is injected or a method of it invoked, is known from the class level metadata as well: the processor
 records on every class it visits the qualifier and binding types its constructors, fields and methods - inherited
 ones included - and their parameters use, with the members of each as the compilation saw its interface, the ones
-that do not bind and whether it is retained at runtime (`AnnotationTypesVisitor`, `CdiAnnotationTypes`). A type
-only a bean compiled without this processor uses that way has no record. The record of a qualifier a build compatible extension registered carries the
+that do not bind and whether it is retained at runtime (`AnnotationTypesVisitor`, `CdiAnnotationTypes`). The
+members are read only of a class Micronaut may write a definition of - declared a bean, executable, qualified, a
+factory, configuration, advised, or concrete with an injected member, as Micronaut's `BeanDefinitionCreatorFactory`
+decides - since the record is read from definitions alone; every other class carries the record empty, as the mark
+that the processor compiled it. A type only a bean compiled without this processor uses that way has no record. The record of a qualifier a build compatible extension registered carries the
 members the compilation saw its interface declare and the ones that do not bind, so that one no bean class carries
 is not taken for a marker by its name alone. A member is whatever the interface declares, a name with a leading
 dollar sign included; only the names Micronaut keeps among the values of an annotation (`$nonBinding`,
