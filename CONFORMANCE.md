@@ -520,7 +520,11 @@ metadata is read from. Missing required producers are deployment errors.
 A bean of the specification may be injected with a bean of Micronaut's own: where no bean of the specification
 is of the class of the point, or none of them qualifies while beans of Micronaut's own are of it, the point is
 resolved by Micronaut's rules - its qualifier, its primary bean, the one that is not secondary, its name
-convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selectionFor`), and validated by them. The point keeps
+convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selectionFor`), and validated by them. The bean
+is created through the definition those rules found, for the qualifier of the point
+(`BeanResolutionContext.getQualifiedBean` and its `BeanDependencyResolver` twin, since Micronaut Core 5.3, #14485):
+a bean declared with Micronaut's `@Any` is created and held for that qualifier, as a lookup by it would create it,
+and any other is created under the qualifier it declares (`MicronautAnyFactoryTest`). The point keeps
 its full declared type: a `List<Foo>` is resolved as a bean of that type, as the specification has it, rather than
 collected as Micronaut collects one at a point of a bean of its own. A
 bean of the specification the qualifiers of the point rejected is not admitted again by Micronaut's rules: an
@@ -1243,17 +1247,6 @@ own rather than the first one alone.
 - **Micronaut's `@Any` on a bean satisfies every lookup.** A bean carrying `io.micronaut.context.annotation.Any`
   is selected by any qualifier; the specification's `@Any` on a bean is inert, so the processor reads it into a
   marker of its own (`CdiAny`) rather than into Micronaut's.
-- **A bean is created through its definition under the qualifier the definition declares.** A point of a bean of the
-  specification left to Micronaut's rules is created through the definition Micronaut's rules found
-  (`CdiBeanContainer.resolveSelected`), so that the qualifier it was found by does not become a second key in the
-  bean's scope. `DefaultBeanContext.getBeanRegistration(resolutionContext, definition, ...)` creates the bean under
-  `definition.getDeclaredQualifier()`, which for a bean declared with Micronaut's `@Any` is `@Any` itself, where a
-  lookup creates it for the qualifier asked (`BeanDefinitionDelegate.create(definition, qualifier)`). Such a bean is
-  therefore looked up by the qualifier of the point instead (`MicronautAnyFactoryTest`): a lookup Micronaut keys
-  by that qualifier, as its own lookups of the bean are. A creation by definition that takes the qualifier the bean
-  is created for (`BeanResolutionContext.getBean(definition, argument, qualifier)` and its
-  `BeanDependencyResolver` twin), proposed to core, would let the container create it through the definition as
-  every other bean.
 - **A qualifier an extension composes for a synthetic component is the processor's to complete.** Since Micronaut
   Core 5.3 Micronaut lists every `@NonBinding` member of an annotation under `$nonBinding` on each occurrence,
   written or not, and on its qualifier stereotype, reading the members from the compilation's view of the

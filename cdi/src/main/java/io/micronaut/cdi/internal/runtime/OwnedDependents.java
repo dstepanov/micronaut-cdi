@@ -123,6 +123,25 @@ public final class OwnedDependents implements AutoCloseable {
     }
 
     /**
+     * The registration of the bean of the given definition for the qualifier of the point, as
+     * {@link #registration(BeanDefinition, Argument)} creates it: a definition declared with Micronaut's {@code @Any}
+     * is created and held for that qualifier, any other ignores it ({@code getQualifiedBeanRegistration}).
+     *
+     * @param definition The definition
+     * @param type       The type it is asked for as
+     * @param qualifier  The qualifier of the point
+     * @param <T>        The bean type
+     * @return The registration
+     */
+    public <T> BeanRegistration<T> qualifiedRegistration(BeanDefinition<? extends T> definition, Argument<T> type,
+                                                         Qualifier<T> qualifier) {
+        if (resolver == null && !CdiResolution.isDependent(definition)) {
+            return beanContext.getQualifiedBeanRegistration(definition, type, qualifier);
+        }
+        return resolve(owner -> owner.getQualifiedBeanRegistration(definition, type, qualifier));
+    }
+
+    /**
      * The registration of a dependent instance of the bean of the given definition, created for the injection point
      * of a lookup (section 2.5.2.5): under a segment of the resolution path that is that point
      * ({@link LookupSegment}), so that the instance reads it off the path as a bean injected there would - the point

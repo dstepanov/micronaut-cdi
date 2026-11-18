@@ -228,6 +228,12 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             }
 
             @Override
+            public <T> @Nullable Object qualified(BeanDefinition<T> definition, Argument<T> type,
+                                                  Qualifier<T> qualifier) {
+                return dependencies.getQualifiedBeanRegistration(definition, type, qualifier).bean();
+            }
+
+            @Override
             public <T> Object byLookup(Argument<T> type, Qualifier<T> qualifier) {
                 return dependencies.getBean(type, qualifier);
             }
