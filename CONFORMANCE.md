@@ -1205,7 +1205,10 @@ own rather than the first one alone.
   what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
   on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
   the singletons and scoped beans created before the failure are not destroyed and are left to the garbage
-  collector. A full rollback belongs in Core.
+  collector. A full rollback belongs in Core. Outside the SE bootstrap - a plain `ApplicationContext.run()` whose
+  start fails after the container was created - nothing takes the container off; `CDI.current()` passes over, and
+  lets go of, a container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so
+  it resolves to a container still running, or hands over as when none runs (`CurrentContainerTest`).
 - **A runtime definition's generic metadata is incomplete.** `RuntimeBeanDefinition.Builder.typeArguments` answers
   `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
   query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the

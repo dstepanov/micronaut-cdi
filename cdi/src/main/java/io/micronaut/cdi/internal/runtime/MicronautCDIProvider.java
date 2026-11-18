@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.core.io.service.SoftServiceLoader;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.CDIProvider;
@@ -67,14 +68,33 @@ public final class MicronautCDIProvider implements CDIProvider {
     }
 
     /**
-     * The container the static entry point resolves to.
+     * The container the static entry point resolves to. A container whose context failed to start is never it: a
+     * context Micronaut failed to start is not stopped unless its starter cleans it up, so its container never takes
+     * itself off, and is let go of here instead. One whose context is still starting is.
      *
      * @return The most recently started container, or {@code null} when none is running
      */
     @Nullable CdiBeanContainer current() {
         // one snapshot: a container going down on another thread must not turn the read into an index error
         Object[] containers = running.toArray();
-        return containers.length == 0 ? null : (CdiBeanContainer) containers[containers.length - 1];
+        for (int i = containers.length - 1; i >= 0; i--) {
+            CdiBeanContainer container = (CdiBeanContainer) containers[i];
+            if (!failedToStart(container.beanContext())) {
+                return container;
+            }
+            running.remove(container);
+        }
+        return null;
+    }
+
+    /**
+     * Whether the start of a context failed: it does not run, and is not starting either, which Micronaut's own
+     * context tells apart ({@link DefaultBeanContext#isStoppingOrStopped()}). A context that stopped takes its
+     * container off as it stops.
+     */
+    private static boolean failedToStart(BeanContext beanContext) {
+        return !beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
+            && context.isStoppingOrStopped();
     }
 
     @Override
