@@ -20,6 +20,7 @@ import io.micronaut.cdi.internal.context.RequestScope;
 import jakarta.enterprise.context.RequestScoped;
 import io.micronaut.cdi.internal.runtime.CdiContext;
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
+import io.micronaut.cdi.internal.metadata.CdiBuiltForContext;
 import io.micronaut.cdi.internal.metadata.CdiRegisteredContext;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.metadata.CdiScope;
@@ -28,6 +29,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.scope.CustomScope;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -123,6 +125,7 @@ public final class ExtensionContexts {
                     () -> new ExtensionCustomScope(scopeAnnotation, contextsOfScope, beanContext))
                 .singleton(true)
                 .typeArguments(Argument.of(scopeAnnotation))
+                .annotationMetadata(builtForContext())
                 .build());
         }
     }
@@ -173,7 +176,8 @@ public final class ExtensionContexts {
             .builder(CustomScope.class,
                 () -> new ExtensionCustomScope(served, contextsOfScope, beanContext))
             .singleton(true)
-            .typeArguments(Argument.of(served));
+            .typeArguments(Argument.of(served))
+            .annotationMetadata(builtForContext());
         if (served == CdiApplicationScope.class) {
             builder.replaces(ApplicationScope.class);
         } else if (served == CdiRequestScope.class) {
@@ -207,11 +211,21 @@ public final class ExtensionContexts {
         // section 3.9 has the bean of an extension application scoped; there is one instance and no proxy
         metadata.addDeclaredAnnotation(CdiScope.class.getName(),
             Map.of("value", "jakarta.enterprise.context.ApplicationScoped", "normal", false));
+        metadata.addDeclaredAnnotation(CdiBuiltForContext.class.getName(), Map.of());
         beanContext.registerBeanDefinition(RuntimeBeanDefinition
             .builder((Class) extension.getClass(), () -> extension)
             .singleton(true)
             .annotationMetadata(metadata)
             .build());
+    }
+
+    /**
+     * The metadata of a definition built for this context alone.
+     */
+    private static AnnotationMetadata builtForContext() {
+        MutableAnnotationMetadata metadata = new MutableAnnotationMetadata();
+        metadata.addDeclaredAnnotation(CdiBuiltForContext.class.getName(), Map.of());
+        return metadata;
     }
 
     /**

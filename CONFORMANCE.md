@@ -30,7 +30,7 @@ visible in a test report as what passes.
 | 5.6 | Programmatic lookup through `Instance`, including handles | `CdiInstance` |
 | 11.1 | The `BeanContainer`, and the `Bean` a lookup resolves to | `CdiBeanContainer`, `CdiBean` |
 | 11.1 | The `BeanManager` of CDI Full, as far as CDI Lite can answer it, and injectable as a bean | `CdiBeanContainer` |
-| 11.1 | `CDI.current()`, found through the service loader | `MicronautCDIProvider`, `MicronautCDI` |
+| 11.1 | `CDI.current()`, installed with `CDI.setCDIProvider` as a container starts, handing over to the providers the service loader finds while none runs | `MicronautCDIProvider`, `MicronautCDI` |
 | 6.2 | The `Context` of each scope, and whether it is active | `CdiContext` |
 | 5.2 | The rules of resolution applied to types and qualifiers on their own | `CdiAssignability` |
 | 11.1.9 | Interceptor resolution through the bean container | `CdiBeanContainer` |
@@ -168,7 +168,15 @@ class declares, so a subclass that declares no scope, no stereotype and not `@In
 observer method of its own (one it inherits is its superclass's), is no bean of its own where it is discovered however its superclass is scoped (`CdiScopeVisitor`,
 `UndiscoveredSubclass`); one that declares a stereotype keeps the scope it inherits, as section 2.3 has it. A class
 handed to the synthetic archive of the SE bootstrap (`addBeanClasses`, with discovery on or off) is a bean with the
-scope it inherits: the bootstrap names those classes in a property the condition reads. This differs from the 4.1 module,
+scope it inherits: the bootstrap names those classes in a property the condition reads. The archive, and the classpath
+a restricted bootstrap narrows to, also keep the container's infrastructure, which is told by the processor's record
+on a class (`ExtensionComponents.isInfrastructure`): a bean with nothing of the specification recorded - no scope of
+the specification, no producer - whose class was not compiled with `micronaut-cdi-processor` counts as
+infrastructure. That is Micronaut's own beans and this module's, but also a plain `@Singleton` of the application
+compiled without the processor - a library module built with `micronaut-inject-java` alone - which is therefore a bean
+of every container, whatever `disableDiscovery().addBeanClasses(...)` or `addPackages(...)` selected, and is not
+reported to a portable extension as a bean of the application. A class the processor did not compile is not part of
+a CDI archive; compile such a module with the processor to have its beans selected like the application's. This differs from the 4.1 module,
 where such a subclass was a bean: the common case is a mock written as `@Alternative @Priority(1) class Mock extends
 Real`, which is now no bean and leaves `Real` in place. The processor warns where a class it does not discover
 declares `@Alternative`, `@Priority`, `@Named`, a qualifier, an interceptor binding or an `@Inject` member.
@@ -343,8 +351,11 @@ of the synthetic components and of the qualifiers an extension registered. A typ
 where a bean is injected or a method of it invoked, is known from the class level metadata as well: the processor
 records on every class it visits the qualifier and binding types its constructors, fields and methods - inherited
 ones included - and their parameters use, with the members of each as the compilation saw its interface, the ones
-that do not bind and whether it is retained at runtime (`AnnotationTypesVisitor`, `CdiAnnotationTypes`). A type
-only a bean compiled without this processor uses that way has no record. The record of a qualifier a build compatible extension registered carries the
+that do not bind and whether it is retained at runtime (`AnnotationTypesVisitor`, `CdiAnnotationTypes`). The
+members are read only of a class Micronaut may write a definition of - declared a bean, executable, qualified, a
+factory, configuration, advised, or concrete with an injected member, as Micronaut's `BeanDefinitionCreatorFactory`
+decides - since the record is read from definitions alone; every other class carries the record empty, as the mark
+that the processor compiled it. A type only a bean compiled without this processor uses that way has no record. The record of a qualifier a build compatible extension registered carries the
 members the compilation saw its interface declare and the ones that do not bind, so that one no bean class carries
 is not taken for a marker by its name alone. A member is whatever the interface declares, a name with a leading
 dollar sign included; only the names Micronaut keeps among the values of an annotation (`$nonBinding`,
@@ -503,9 +514,12 @@ creations and destructions, after as many to warm up) takes 4.9 us and allocates
 and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
 The bean types of a
 definition are kept on the definition (`BeanDefinition.getCachedUnevaluatedValue`), so they go with the context and
-with a definition a development reload retires, and the container keeps no map of them. A runtime definition is one
-object for every context it is registered with and keeps its values for every one of them, so the types of one are
-worked out each time they are asked rather than kept with the first context's index; and Micronaut drops a kept
+with a definition a development reload retires, and the container keeps no map of them. A runtime definition a
+program built, `registerSingleton` included, may be one object for every context it is registered with and keeps its
+values for every one of them, so the types of one are worked out each time they are asked rather than kept with the
+first context's index; the runtime definitions the container builds for its context and registers with it alone - a
+synthetic bean, the bean of a portable extension, the scope of a context an extension registered - carry a marker
+(`CdiBuiltForContext`) and keep theirs (`RecordedTypeIndexLoaderTest`); and Micronaut drops a kept
 value whenever the property sources change (`CACHE_PER_REVISION`), so the types are worked out again then, though
 they read no placeholder. What was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
@@ -525,7 +539,9 @@ convention - among the beans of Micronaut's own alone (`CdiBeanContainer.selecti
 is created through the definition those rules found, for the qualifier of the point
 (`BeanResolutionContext.getQualifiedBean` and its `BeanDependencyResolver` twin, since Micronaut Core 5.3, #14485):
 a bean declared with Micronaut's `@Any` is created and held for that qualifier, as a lookup by it would create it,
-and any other is created under the qualifier it declares (`MicronautAnyFactoryTest`). The point keeps
+and any other is created under the qualifier it declares (`MicronautAnyFactoryTest`). A point with no qualifier
+is created through the definition alone, and an `@Any` singleton then is another instance than a lookup by type
+alone finds (an open point of Micronaut Core). The point keeps
 its full declared type: a `List<Foo>` is resolved as a bean of that type, as the specification has it, rather than
 collected as Micronaut collects one at a point of a bean of its own. A
 bean of the specification the qualifiers of the point rejected is not admitted again by Micronaut's rules: an
@@ -988,6 +1004,15 @@ when that thread needs to create the same bean — a bean is created under a loc
 of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
 
+A request still open as the container closes - left active by `activate()` on any thread, suspended, or the request
+of work that has not returned - is destroyed by the container, once, while the observers are still beans of the
+context: told `@BeforeDestroyed(RequestScoped.class)`, its beans destroyed while it is active, then told
+`@Destroyed(RequestScoped.class)`, as its own end would have told it, where it was told it was initialized
+(`RequestDestructionTest`). Whichever of the container and the request's own end claims it first destroys it: an
+end that has begun telling its observers is left to finish, even past the close, and then tells a context that
+stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
+propagated context as it deactivates, and is then told the context is not active.
+
 A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
 `RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
 the context's instance and the context destroys it; but Micronaut generates a scoped proxy only for a definition
@@ -1173,6 +1198,18 @@ own rather than the first one alone.
   not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
   generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
   would make each question a lookup, cover every bean, and remove both the record and the index.
+- **An `@Any` singleton reached with no qualifier through its definition is another instance.** A point of a bean of
+  the specification left to Micronaut's rules is created through the definition Micronaut found
+  (`CdiBeanContainer.resolveSelected`); with no qualifier on the point that is `getBean(definition, type)`, which
+  `DefaultBeanContext.getBeanRegistration` resolves under the definition's declared qualifier, `@Any`, and holds the
+  singleton under a delegate qualified by it, while a lookup by type alone (`getBean(Engine.class)`) holds it under
+  the plain definition. A Micronaut factory `@Any @Singleton Engine engine(Qualifier<Engine>)` then makes two
+  engines, the CDI point's handed `@Any` and Micronaut's handed none. No clean adapter fix exists: a lookup by type
+  would let a bean of the specification the point rejected back in, and a lookup by `NonCdiBeanQualifier` keys the
+  singleton by that qualifier. The core change being made resolves a definition declared `@Any` for the qualifier
+  given, `null` included, in `getBeanRegistration` and `resolveBeanRegistration`, so that a definition asked for with
+  no qualifier is what a lookup by type alone is; `MicronautAnyFactoryTest.anUnqualifiedPointSharesTheInstanceOfAnUnqualifiedLookup`
+  is disabled until it lands.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
   class a build compatible extension scanned is imported by a generated `ScannedClassesImport` source, so that a
   later round makes a bean of it; KSP and Groovy register it with `registerBean`. Tolerating a class the same
@@ -1191,7 +1228,10 @@ own rather than the first one alone.
   what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
   on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
   the singletons and scoped beans created before the failure are not destroyed and are left to the garbage
-  collector. A full rollback belongs in Core.
+  collector. A full rollback belongs in Core. Outside the SE bootstrap - a plain `ApplicationContext.run()` whose
+  start fails after the container was created - nothing takes the container off; `CDI.current()` passes over, and
+  lets go of, a container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so
+  it resolves to a container still running, or hands over as when none runs (`CurrentContainerTest`).
 - **A runtime definition's generic metadata is incomplete.** `RuntimeBeanDefinition.Builder.typeArguments` answers
   `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
   query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the
@@ -1322,7 +1362,18 @@ own rather than the first one alone.
   module the specification's API holds (`MicronautCDIProvider`), which a container registers with as it starts and
   installs with `CDI.setCDIProvider` where the API holds none of this module yet, reading the API's own record of
   its provider (`MicronautCDI.installedProvider`); the module keeps no static of its own for it, and the container
-  itself never asks it. A provider a program set itself is left in place;
+  itself never asks it. The API makes a new instance of each provider its service loader finds, which holds no
+  container, so only an installed one reaches the containers of this module: a provider the API found itself, of
+  another implementation, is replaced as a container starts, which no static of the module's own would avoid. The
+  API takes an installed provider as set manually, never leaves it and rethrows what it throws, so the provider hands
+  over itself: while none of its containers runs, `CDI.current()` resolves through the first of the other providers
+  the service loader of the API's class loader finds, by descending priority, that answers (`CurrentContainerTest`),
+  and fails as the API does where none answers. That service loading, through Micronaut's `SoftServiceLoader`, is
+  the one the runtime does, allowed where it is by the build's reflection check. The service entry of the provider stays: an instance the API finds
+  before any container started hands over the same way, and a container that starts registers with it. A container
+  whose start failed takes itself off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
+  program set itself is left in place, and a container then registers with a provider of its own that the entry point
+  does not reach;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each
   compilation with extensions starts and released in place as it finishes - the services let go of the compilation
   rather than being replaced, so that services another compilation set meanwhile stay. What remains is inherent in

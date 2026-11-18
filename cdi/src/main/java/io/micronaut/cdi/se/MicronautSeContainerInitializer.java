@@ -374,7 +374,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     /**
      * Whether a bean belongs to the synthetic archive of a bootstrap that turned discovery off: one of the
      * classes or packages the program named, or the infrastructure of the container itself, which every
-     * container has.
+     * container has. Infrastructure is whatever {@link ExtensionComponents#isInfrastructure} says: a bean with
+     * nothing of the specification recorded whose class was not compiled with the processor of this module - a
+     * plain {@code @Singleton} of a library built with Micronaut's processor alone as much as one of Micronaut's own -
+     * is the container's, and is kept whatever classes and packages the program named.
      */
     private boolean belongsToSyntheticArchive(BeanType<?> bean) {
         if (ExtensionComponents.isInfrastructure(bean)) {

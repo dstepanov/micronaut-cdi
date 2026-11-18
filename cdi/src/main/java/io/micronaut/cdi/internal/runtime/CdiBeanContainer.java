@@ -159,12 +159,16 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     /**
      * Takes the container of a context that failed to start off what {@code CDI.current()} resolves to: Micronaut
      * destroys the beans of a context that is running alone, so the container of one whose start failed is not
-     * destroyed, and would otherwise stay the current one.
+     * destroyed, and would otherwise stay the current one. Nothing is installed: where the specification's API holds
+     * no provider of this module, the container registered with one of its own, which nothing reaches.
      *
      * @param beanContext The context that failed to start
      */
     public static void failedToStart(BeanContext beanContext) {
-        MicronautCDI.installedProvider().stoppedFor(beanContext);
+        MicronautCDIProvider held = MicronautCDI.heldProvider();
+        if (held != null) {
+            held.stoppedFor(beanContext);
+        }
     }
 
     @PreDestroy
@@ -323,9 +327,11 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * <p>The bean is then created through the definition, as a selected one is: the qualifier the definition was
      * found by is no part of the creation, where it would become part of the key a custom scope holds the instance
      * under, and the instance would be another one than Micronaut's own lookups of the bean find in the scope.
-     * A definition declared with Micronaut's {@code @Any} is the exception: the bean context creates it for the
-     * qualifier of the lookup, which a creation through the definition replaces by {@code @Any}, so it is looked up
-     * by the qualifier of the point instead.</p>
+     * A definition declared with Micronaut's {@code @Any} is created through the definition as well, but for the
+     * qualifier of the point ({@code getQualifiedBean}), which the bean context creates and holds such a bean for, as a
+     * lookup by that qualifier would. A point with no qualifier is created through the definition alone, which the
+     * bean context holds under {@code @Any} where a lookup by type alone holds it under none: two instances of an
+     * {@code @Any} singleton, an open point of Micronaut Core (see Conformance).</p>
      *
      * @param point     The injection point
      * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point

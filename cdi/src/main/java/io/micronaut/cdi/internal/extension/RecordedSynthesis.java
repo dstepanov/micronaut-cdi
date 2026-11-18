@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.extension;
 
 import io.micronaut.cdi.internal.metadata.CdiApplicationScope;
 import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
+import io.micronaut.cdi.internal.metadata.CdiBuiltForContext;
 import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.internal.metadata.CdiScope;
@@ -442,6 +443,8 @@ public final class RecordedSynthesis {
             record.getAnnotations("injectionPoints", CdiSyntheticInjectionPoint.class);
         metadata.addDeclaredAnnotation(CdiDeclaredTypes.class.getName(), points.isEmpty() ? Map.of()
             : Map.of(CdiSyntheticInjections.INJECTION_POINTS, points.toArray(new AnnotationValue<?>[0])));
+        // built for this context alone, which keeps what it works out of the definition on it
+        metadata.addDeclaredAnnotation(CdiBuiltForContext.class.getName(), Map.of());
         return metadata;
     }
 

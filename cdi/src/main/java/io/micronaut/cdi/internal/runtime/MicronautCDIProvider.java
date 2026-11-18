@@ -16,20 +16,30 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.DefaultBeanContext;
+import io.micronaut.core.io.service.SoftServiceLoader;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.CDIProvider;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Hands the static entry point of the specification the container that is running.
  *
- * <p>It is found the way the specification says a provider is found, through the service loader, so that a
- * program which calls {@code CDI.current()} reaches the container of this module without naming it; a container
- * that starts installs one with {@code CDI.setCDIProvider} where none of this module is the specification's
- * provider yet ({@link MicronautCDI#installedProvider()}), and registers with that one.</p>
+ * <p>The specification's API finds providers through the service loader, and makes a new instance of each every time
+ * it looks: an instance it finds holds no container, and only the instance a container registered with can answer.
+ * A container that starts therefore installs one with {@code CDI.setCDIProvider} where the API holds none of this
+ * module ({@link MicronautCDI#installedProvider()}), and registers with it. A provider a program set itself is left
+ * in place; one the API found itself, of another implementation, is replaced, as only an installed instance reaches
+ * the containers of this module without a static of its own. The service entry of this class stays: an instance the
+ * API finds before any container started hands over as below, and a container that starts registers with it.</p>
+ *
+ * <p>The API never leaves a provider set with {@code setCDIProvider}, so this one hands over itself: while none of
+ * its containers runs, it answers with the first of the other providers the service loader finds, by their priority,
+ * that answers, as the API would have picked one, and fails as the API does where none answers.</p>
  *
  * <p>The provider holds the containers that are running, so that the static entry point has one to resolve to: a
  * container registers itself as it starts and takes itself off as it shuts down. More than one can run at once - a
@@ -58,23 +68,74 @@ public final class MicronautCDIProvider implements CDIProvider {
     }
 
     /**
-     * The container the static entry point resolves to.
+     * The container the static entry point resolves to. A container whose context failed to start is never it: a
+     * context Micronaut failed to start is not stopped unless its starter cleans it up, so its container never takes
+     * itself off, and is let go of here instead. One whose context is still starting is.
      *
      * @return The most recently started container, or {@code null} when none is running
      */
     @Nullable CdiBeanContainer current() {
         // one snapshot: a container going down on another thread must not turn the read into an index error
         Object[] containers = running.toArray();
-        return containers.length == 0 ? null : (CdiBeanContainer) containers[containers.length - 1];
+        for (int i = containers.length - 1; i >= 0; i--) {
+            CdiBeanContainer container = (CdiBeanContainer) containers[i];
+            if (!failedToStart(container.beanContext())) {
+                return container;
+            }
+            running.remove(container);
+        }
+        return null;
+    }
+
+    /**
+     * Whether the start of a context failed: it does not run, and is not starting either, which Micronaut's own
+     * context tells apart ({@link DefaultBeanContext#isStoppingOrStopped()}). A context that stopped takes its
+     * container off as it stops.
+     */
+    private static boolean failedToStart(BeanContext beanContext) {
+        return !beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
+            && context.isStoppingOrStopped();
     }
 
     @Override
     public CDI<Object> getCDI() {
         CdiBeanContainer container = current();
-        if (container == null) {
-            throw new IllegalStateException("No container is running. A container of this module is a Micronaut "
-                + "bean context, and CDI.current() resolves to one only while it is running");
+        if (container != null) {
+            return new MicronautCDI(container);
         }
-        return new MicronautCDI(container);
+        CDI<Object> other = otherImplementation();
+        if (other != null) {
+            return other;
+        }
+        throw new IllegalStateException("No container is running. A container of this module is a Micronaut "
+            + "bean context, and CDI.current() resolves to one only while it is running");
+    }
+
+    /**
+     * What the first provider of another implementation that answers resolves to, the providers taken as the
+     * specification's API finds them: through the service loader of the API's class loader, by descending priority.
+     * A provider of this module - this class, from whichever class loader - is passed over: it holds no container,
+     * and would hand over in turn.
+     *
+     * @return The entry point of another implementation, or {@code null} where none answers
+     */
+    private static @Nullable CDI<Object> otherImplementation() {
+        // the one service loading of the runtime, and no reflection of its own: the specification's API finds its
+        // providers this way, and the hand-over finds the ones it would have found
+        @SuppressWarnings("NoReflection")
+        List<CDIProvider> providers = SoftServiceLoader.load(CDIProvider.class, CDI.class.getClassLoader())
+            .collectAll(provider -> !provider.getClass().getName().equals(MicronautCDIProvider.class.getName()));
+        providers.sort(Comparator.comparingInt(CDIProvider::getPriority).reversed());
+        for (CDIProvider provider : providers) {
+            try {
+                CDI<Object> cdi = provider.getCDI();
+                if (cdi != null) {
+                    return cdi;
+                }
+            } catch (IllegalStateException e) {
+                // what a provider says when its implementation runs no container either, as the API takes it
+            }
+        }
+        return null;
     }
 }

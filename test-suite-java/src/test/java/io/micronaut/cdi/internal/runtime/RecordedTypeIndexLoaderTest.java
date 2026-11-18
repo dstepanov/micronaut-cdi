@@ -1,9 +1,11 @@
 package io.micronaut.cdi.internal.runtime;
 
+import io.micronaut.cdi.internal.metadata.CdiDeclaredTypes;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.TypeHierarchies;
+import io.micronaut.inject.BeanDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -17,8 +19,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * The type hierarchy record of a class is what the class loader of the container finds, and is kept by that
@@ -58,6 +63,28 @@ public class RecordedTypeIndexLoaderTest {
             assertEquals(Integer.class, comparableArgumentOfBeanTypes(second, definition));
         } finally {
             TypeHierarchies.invalidate();
+        }
+    }
+
+    @Test
+    void theRuntimeDefinitionsTheContainerBuiltForItsContextKeepTheirBeanTypes() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            // the synthetic beans the extensions of this suite added, built for this context alone
+            List<BeanDefinition<?>> synthetic = context.getAllBeanDefinitions().stream()
+                .filter(definition -> definition instanceof RuntimeBeanDefinition<?>
+                    && definition.hasDeclaredAnnotation(CdiDeclaredTypes.class))
+                .<BeanDefinition<?>>map(definition -> definition)
+                .toList();
+            assertFalse(synthetic.isEmpty());
+            for (BeanDefinition<?> definition : synthetic) {
+                assertSame(RecordedTypeIndex.beanTypesOf(context, definition),
+                    RecordedTypeIndex.beanTypesOf(context, definition), definition::toString);
+            }
+            // a runtime definition a program registers may be registered with another context as well
+            context.registerSingleton(new SharedPayload());
+            BeanDefinition<SharedPayload> registered = context.getBeanDefinition(SharedPayload.class);
+            assertNotSame(RecordedTypeIndex.beanTypesOf(context, registered),
+                RecordedTypeIndex.beanTypesOf(context, registered));
         }
     }
 

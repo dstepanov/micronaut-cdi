@@ -24,8 +24,8 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
-import jakarta.enterprise.inject.spi.CDIProvider;
 import jakarta.enterprise.util.TypeLiteral;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
@@ -59,25 +59,38 @@ public final class MicronautCDI extends CDI<Object> implements MicronautInstance
      * The provider of this module the specification's entry point resolves through, which a container registers
      * with as it starts: the one the specification's API holds, or one installed with {@code CDI.setCDIProvider}
      * where the API holds none of this module. A provider a program set itself is left in place, and the container
-     * is then registered with one of its own that the entry point does not reach. The provider is read from the
-     * API's own record of it, which a subclass of {@code CDI} sees, under the lock of the API class, so that two
-     * containers starting at once install one provider.
+     * is then registered with one of its own that the entry point does not reach. A provider the API found itself is
+     * replaced: the API makes a new instance of each provider it finds, which holds no container, so only an installed
+     * one reaches the containers of this module, and it hands over to the providers the API would find while none of
+     * them runs ({@link MicronautCDIProvider#getCDI()}). The provider is read from the API's own record of it, which a
+     * subclass of {@code CDI} sees, under the lock of the API class, so that two containers starting at once install
+     * one provider.
      *
      * @return The provider
      */
     static MicronautCDIProvider installedProvider() {
         synchronized (CDI.class) {
-            ProviderState state = providerState.get();
-            CDIProvider installed = state == null ? null : state.provider();
-            if (installed instanceof MicronautCDIProvider mine) {
-                return mine;
+            MicronautCDIProvider held = heldProvider();
+            if (held != null) {
+                return held;
             }
+            ProviderState state = providerState.get();
             MicronautCDIProvider mine = new MicronautCDIProvider();
-            if (state == null || installed == null || !state.setManually()) {
+            if (state == null || state.provider() == null || !state.setManually()) {
                 CDI.setCDIProvider(mine);
             }
             return mine;
         }
+    }
+
+    /**
+     * The provider of this module the specification's API holds, read without installing one.
+     *
+     * @return The provider, or {@code null} where the API holds none of this module
+     */
+    static @Nullable MicronautCDIProvider heldProvider() {
+        ProviderState state = providerState.get();
+        return state != null && state.provider() instanceof MicronautCDIProvider mine ? mine : null;
     }
 
     @Override

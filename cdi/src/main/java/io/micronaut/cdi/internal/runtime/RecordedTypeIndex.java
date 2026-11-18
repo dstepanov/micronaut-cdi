@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiBeanTypes;
+import io.micronaut.cdi.internal.metadata.CdiBuiltForContext;
 import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.CdiRecordedType;
 import io.micronaut.cdi.spi.CdiReflection;
@@ -75,8 +76,10 @@ public final class RecordedTypeIndex {
      *
      * <p>The types are worked out through the index of the context (its class loader, its definitions, whether the
      * module that reads classes is there), so they are kept only on a definition that belongs to one context. A
-     * {@link RuntimeBeanDefinition} is one object for every context it is registered with, and keeps a value for good
-     * for all of them: its types are worked out again each time it is asked. With an {@code Environment}, Micronaut
+     * {@link RuntimeBeanDefinition} may be one object for every context it is registered with, and keeps a value for
+     * good for all of them: the types of one a program built, {@code registerSingleton} included, are worked out
+     * again each time they are asked. The runtime definitions the container built for its context and registered
+     * with it alone ({@link CdiBuiltForContext}) keep theirs. With an {@code Environment}, Micronaut
      * keeps a value until the property sources change ({@code CACHE_PER_REVISION}), so a change of them drops the types
      * of every definition, though they read no placeholder; an environment that keeps no revision keeps none.</p>
      *
@@ -111,16 +114,16 @@ public final class RecordedTypeIndex {
     }
 
     /**
-     * Whether the values a definition keeps are seen by more than one context: a runtime definition, which a
-     * delegating definition hands the call to. A compiled definition is loaded by each context, and one of another
-     * kind keeps nothing.
+     * Whether the values a definition keeps may be seen by more than one context: a runtime definition, which a
+     * delegating definition hands the call to, that the container did not build for its context alone. A compiled
+     * definition is loaded by each context, and one of another kind keeps nothing.
      */
     private static boolean isShared(BeanDefinition<?> definition) {
         BeanDefinition<?> target = definition;
         while (target instanceof DelegatingBeanDefinition<?> delegating) {
             target = delegating.getTarget();
         }
-        return target instanceof RuntimeBeanDefinition<?>;
+        return target instanceof RuntimeBeanDefinition<?> && !target.hasDeclaredAnnotation(CdiBuiltForContext.class);
     }
 
     /**

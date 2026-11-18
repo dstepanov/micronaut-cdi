@@ -18,6 +18,7 @@ package io.micronaut.cdi.internal.context;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
@@ -143,6 +144,12 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * no request object to hand over.
      */
     private void requestContextEvent(Annotation moment) {
+        if (!beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
+            && context.isStoppingOrStopped()) {
+            // a context that stopped, or never started, has no observers left to tell: a request whose work ends
+            // after the container closed ends quietly
+            return;
+        }
         beanContext.findBean(ObserverRegistry.class).ifPresent(observers ->
             observers.notifyObservers(new Object(), Argument.OBJECT_ARGUMENT,
                 Set.of(moment), false));
@@ -346,6 +353,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private void initialized(Instances instances) {
         try {
             initializedEvent();
+            instances.told().set(true);
         } catch (RuntimeException | Error e) {
             try {
                 destroy(instances);
@@ -365,6 +373,9 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      */
     public void deactivate() {
         if (!isActive()) {
+            // a request the container destroyed as it closed leaves its activation in this thread's propagated
+            // context, which only this thread can take out
+            endDestroyedActivation(activation -> true);
             throw new ContextNotActiveException("The request scope is not active on the current thread");
         }
         Activation activation = currentActivation();
@@ -382,11 +393,29 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      */
     public boolean deactivate(Object initiator) {
         Activation activation = currentActivation();
-        if (activation == null || activation.initiator() != initiator) {
+        if (activation == null) {
+            endDestroyedActivation(destroyed -> destroyed.initiator() == initiator);
+            return false;
+        }
+        if (activation.initiator() != initiator) {
             return false;
         }
         end(activation);
         return true;
+    }
+
+    /**
+     * Takes out of the calling thread's propagated context the activation of a request of this scope begun on it
+     * that the container destroyed as it closed: a pooled thread would otherwise keep it, and through it the request,
+     * this scope and the closed context, in scope for good.
+     */
+    private void endDestroyedActivation(Predicate<Activation> ofTheCaller) {
+        Activation destroyed = PropagatedContext.getOrEmpty().findOrNull(Activation.class,
+            activation -> activation.instances().owner() == this && activation.instances().ended().get()
+                && !activation.suspended() && activation.isOfTheCallingThread() && ofTheCaller.test(activation));
+        if (destroyed != null) {
+            destroyed.end();
+        }
     }
 
     /**
@@ -403,6 +432,21 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         return true;
     }
 
+    /**
+     * Destroys, as the scope stops, the beans of the request of the calling thread, which Micronaut asks for before it
+     * closes the scope: destroyed as every other request the container closes on is ({@link #close()}), told so, and
+     * once.
+     */
+    @Override
+    protected void destroyScope(@Nullable Map<BeanIdentifier, CreatedBean<?>> scopeMap) {
+        Instances current = currentInstances();
+        if (current != null && current.beans() == scopeMap) {
+            destroyAtShutdown(current);
+        } else {
+            super.destroyScope(scopeMap);
+        }
+    }
+
     @Override
     public void close() {
         // the activations of this scope the calling thread still has in scope, the innermost first, are taken out
@@ -415,13 +459,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             elements = PropagatedContext.getOrEmpty().getAllElements();
         }
         // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
-        // are the container's to destroy as it goes down
+        // are the container's to destroy as it goes down, each told so as its end would have told it
         Throwable failure = null;
         for (Instances instances : List.copyOf(live)) {
             // each as the request it is: whichever thread it was left on, its beans reach one another as they go.
             // One request failing to be destroyed leaves the others to be destroyed all the same
             try {
-                PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroy(instances));
+                PropagatedContext.getOrEmpty().plus(instances).propagate(() -> destroyAtShutdown(instances));
             } catch (RuntimeException | Error e) {
                 if (failure == null) {
                     failure = e;
@@ -494,7 +538,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     }
 
     private Instances newInstances() {
-        Instances instances = new Instances(this, new RequestBeans(), new AtomicBoolean(), new AtomicBoolean());
+        Instances instances = new Instances(this, new RequestBeans(), new AtomicBoolean(), new AtomicBoolean(),
+            new AtomicBoolean());
         live.add(instances);
         return instances;
     }
@@ -507,16 +552,39 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @return Whether this call ended it, which it does not where the container destroyed it as it closed
      */
     private boolean endWhileActive(Instances instances) {
-        if (instances.destroying().get()) {
+        // claimed before anything is told: the container closing on another thread then leaves the request to this
+        // end, rather than destroying its beans while its observers are told it is about to be
+        if (!claim(instances)) {
             return false;
         }
         try {
             // fired while the request is still being handled, which is what "before" means
             beforeDestroyedEvent();
         } finally {
-            destroy(instances);
+            destroyClaimed(instances);
         }
         return true;
+    }
+
+    /**
+     * Destroys, as the container closes, a request whose own end has not got there: told it is about to be destroyed
+     * and that it was, as its end would have told it, where it was told it was initialized. Its end then tells
+     * nothing again.
+     */
+    private void destroyAtShutdown(Instances instances) {
+        if (!claim(instances)) {
+            return;
+        }
+        if (!instances.told().get()) {
+            destroyClaimed(instances);
+            return;
+        }
+        try {
+            beforeDestroyedEvent();
+        } finally {
+            destroyClaimed(instances);
+        }
+        destroyedEvent();
     }
 
     /**
@@ -524,18 +592,33 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * the end of the request may both get here, on two threads, and the first one destroys it.
      */
     private void destroy(Instances instances) {
-        if (!instances.destroying().compareAndSet(false, true)) {
-            return;
+        if (claim(instances)) {
+            destroyClaimed(instances);
         }
+    }
+
+    /**
+     * Claims the destruction of a request, which only one caller gets.
+     *
+     * @return Whether this call claimed it
+     */
+    private static boolean claim(Instances instances) {
+        return instances.destroying().compareAndSet(false, true);
+    }
+
+    /**
+     * Destroys the beans of a request this caller claimed ({@link #claim}).
+     */
+    private void destroyClaimed(Instances instances) {
         try {
-            destroyScope(instances.beans());
+            super.destroyScope(instances.beans());
         } finally {
             try {
                 // a creation that found the request before it ended, and announced itself only after the beans were
                 // destroyed, would otherwise put its bean where nothing destroys it again: from here on the request
                 // refuses it, and what slipped in before is destroyed now
                 instances.beans().end();
-                destroyScope(instances.beans());
+                super.destroyScope(instances.beans());
             } finally {
                 ended(instances);
             }
@@ -594,9 +677,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param beans The beans of the request
      * @param ended      Whether the request has ended, its beans destroyed
      * @param destroying Whether the destruction of the request has begun, which happens once
+     * @param told       Whether its observers were told it was initialized, and so are told it is destroyed
      */
     private record Instances(RequestScope owner, RequestBeans beans,
-                             AtomicBoolean ended, AtomicBoolean destroying)
+                             AtomicBoolean ended, AtomicBoolean destroying, AtomicBoolean told)
         implements PropagatedContextElement {
 
         // one request is one object: the generated equality would compare the bean maps, making every

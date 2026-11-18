@@ -19,7 +19,7 @@ import io.micronaut.cdi.internal.context.ApplicationScope;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.RuntimeBeanDefinition;
+import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.exceptions.BeanDestructionException;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.BeanCreationContext;
@@ -478,14 +478,12 @@ public final class CdiContext implements AlterableContext {
         private static final BeanIdentifier ID = CONTEXTUAL_STORE_ID;
 
         /**
-         * One runtime definition for every container of the class loader. A runtime definition keeps the values it
-         * is asked for ({@code getCachedValue}, {@code getCachedUnevaluatedValue}) for good and for every context,
-         * so nothing may ask this one for a kept value: it stays a key the scope holds the store under, never a
-         * definition the container reads.
+         * One definition for every container of the class loader, which holds nothing: it answers the type of the
+         * store and the defaults of {@link BeanDefinition} alone, so a value asked of it ({@code getCachedValue},
+         * {@code getCachedUnevaluatedValue}) is computed on every call and kept nowhere. A runtime definition would
+         * keep it, for good and for every container.
          */
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        private static final BeanDefinition<Store> DEFINITION = (BeanDefinition)
-            RuntimeBeanDefinition.of(StoreCreation.class, StoreCreation::new);
+        private static final BeanDefinition<Store> DEFINITION = new StoreDefinition();
 
         @Override
         public BeanDefinition<Store> definition() {
@@ -527,6 +525,22 @@ public final class CdiContext implements AlterableContext {
                     }
                 }
             };
+        }
+    }
+
+    /**
+     * The definition the scope holds the store under: the type of the store, and nothing else.
+     */
+    private static final class StoreDefinition implements BeanDefinition<Store> {
+
+        @Override
+        public Class<Store> getBeanType() {
+            return Store.class;
+        }
+
+        @Override
+        public boolean isEnabled(BeanContext context, @Nullable BeanResolutionContext resolutionContext) {
+            return true;
         }
     }
 }
