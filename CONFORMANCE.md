@@ -503,9 +503,12 @@ creations and destructions, after as many to warm up) takes 4.9 us and allocates
 and 17.8 KB with nothing kept and 4.4 us and 7.1 KB with the container's former cache per point.
 The bean types of a
 definition are kept on the definition (`BeanDefinition.getCachedUnevaluatedValue`), so they go with the context and
-with a definition a development reload retires, and the container keeps no map of them. A runtime definition is one
-object for every context it is registered with and keeps its values for every one of them, so the types of one are
-worked out each time they are asked rather than kept with the first context's index; and Micronaut drops a kept
+with a definition a development reload retires, and the container keeps no map of them. A runtime definition a
+program built, `registerSingleton` included, may be one object for every context it is registered with and keeps its
+values for every one of them, so the types of one are worked out each time they are asked rather than kept with the
+first context's index; the runtime definitions the container builds for its context and registers with it alone - a
+synthetic bean, the bean of a portable extension, the scope of a context an extension registered - carry a marker
+(`CdiBuiltForContext`) and keep theirs (`RecordedTypeIndexLoaderTest`); and Micronaut drops a kept
 value whenever the property sources change (`CACHE_PER_REVISION`), so the types are worked out again then, though
 they read no placeholder. What was
 read of the qualifier and binding types (`CompiledAnnotationTypes`) as well as a definition is registered once the
