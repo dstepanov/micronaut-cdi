@@ -38,7 +38,6 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
@@ -376,14 +375,12 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
                 Qualifier<Object> read = (Qualifier<Object>) qualifier;
                 BeanDefinition<Object> definition = micronautDefinitionOf(argument, read);
                 if (definition != null) {
+                    // created through the definition for the qualifier of the point, which a bean of Micronaut's
+                    // declared @Any is held and created for, as a lookup by it would, and any other ignores
                     Qualifier<Object> ofPoint = read != null ? read : Qualifiers.forArgument(argument);
-                    if (ofPoint != null && AnyQualifier.INSTANCE.equals(definition.getDeclaredQualifier())) {
-                        // a bean of Micronaut's declared @Any is created for the qualifier it is asked by, which
-                        // the bean context creates a definition by alone: a lookup by the qualifier of the point,
-                        // keyed as Micronaut's own lookups of it are (an open point in CONFORMANCE.md)
-                        yield creation.byLookup(argument, ofPoint);
-                    }
-                    yield creation.of(definition, argument);
+                    yield ofPoint != null
+                        ? creation.qualified(definition, argument, ofPoint)
+                        : creation.of(definition, argument);
                 }
                 if (nullable) {
                     yield null;
@@ -1247,6 +1244,18 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
          * @return The bean
          */
         <T> @Nullable Object of(BeanDefinition<T> definition, Argument<T> type);
+
+        /**
+         * Creates the bean of a definition for the qualifier of the point, which Micronaut applies to a definition
+         * declared with its {@code @Any} alone ({@code getQualifiedBean}).
+         *
+         * @param definition The definition
+         * @param type       The type it is asked as
+         * @param qualifier  The qualifier of the point
+         * @param <T>        The bean type
+         * @return The bean
+         */
+        <T> @Nullable Object qualified(BeanDefinition<T> definition, Argument<T> type, Qualifier<T> qualifier);
 
         /**
          * Looks the bean up by Micronaut's rules, which report a point they find no bean for.

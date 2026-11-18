@@ -340,6 +340,12 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             }
 
             @Override
+            public <T> @Nullable Object qualified(BeanDefinition<T> definition, Argument<T> type,
+                                                  Qualifier<T> qualifier) {
+                return dependents.qualifiedRegistration(definition, type, qualifier).bean();
+            }
+
+            @Override
             public <T> @Nullable Object byLookup(Argument<T> type, Qualifier<T> qualifier) {
                 return dependents.registration(type, qualifier).bean();
             }

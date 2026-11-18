@@ -64,9 +64,12 @@ public final class CdiAnnotations {
      * The annotation the given values describe.
      *
      * <p>An annotation type the application listed in {@link io.micronaut.core.annotation.RegisterAnnotations}
-     * has a builder generated for it, which makes the instance without reflection. Any other annotation instance
-     * is a reflection object: it is made by the module that answers the reflective parts of the specification's
-     * API, and asking for one without that module fails with a message that names it.</p>
+     * has a builder generated for it, which makes the instance without reflection. It is found by
+     * {@link AnnotationBuilder#find(Class, ClassLoader)} among the builders of Micronaut, then of the class loader of
+     * the annotation type, then of the class loader of the application: a library and its builders can be loaded
+     * below Micronaut, and an application that registers a library's annotation below the library. Any other
+     * annotation instance is a reflection object: it is made by the module that answers the reflective parts of the
+     * specification's API, and asking for one without that module fails with a message that names it.</p>
      *
      * @param beanContext The context of the container asking, whose reflection module makes the instance
      * @param type        The annotation type
@@ -78,48 +81,13 @@ public final class CdiAnnotations {
      */
     public static <A extends Annotation> A annotationOf(BeanContext beanContext, Class<A> type,
                                                        @Nullable AnnotationValue<?> value) {
-        AnnotationBuilder<A> builder = builderOf(beanContext, type);
+        AnnotationBuilder<A> builder = AnnotationBuilder.find(type, beanContext.getClassLoader()).orElse(null);
         if (builder != null) {
             return value == null ? builder.build(Map.of()) : builder.build(value);
         }
         String what = "An instance of the annotation " + type.getName();
         return CdiReflection.require(beanContext, what)
             .annotation(type, value);
-    }
-
-    /**
-     * The builder generated for an annotation type, among the builders of Micronaut, then of the class loader of
-     * the annotation type, then of the class loader of the application: a library and its builders can be loaded
-     * below Micronaut, and an application that registers a library's annotation below the library.
-     *
-     * <p>Micronaut's own registry, which reads the class loader Micronaut was loaded by, keeps what it found. A
-     * class loader below it is asked only where it is another loader, which is a deployment that isolates its
-     * classes, and is asked every time: nothing is kept here.</p>
-     *
-     * @param beanContext The context of the container asking, whose class loader is the application's
-     * @param type        The annotation type
-     * @param <A>         The annotation type
-     * @return The builder, or {@code null} where none is registered for the type
-     */
-    public static <A extends Annotation> @Nullable AnnotationBuilder<A> builderOf(BeanContext beanContext,
-                                                                                  Class<A> type) {
-        AnnotationBuilder<A> builder = AnnotationBuilder.find(type).orElse(null);
-        if (builder != null) {
-            return builder;
-        }
-        ClassLoader micronauts = AnnotationBuilder.class.getClassLoader();
-        ClassLoader annotations = type.getClassLoader();
-        if (annotations != null && annotations != micronauts) {
-            builder = AnnotationBuilder.find(type, annotations).orElse(null);
-            if (builder != null) {
-                return builder;
-            }
-        }
-        ClassLoader application = beanContext.getClassLoader();
-        if (application != micronauts && application != annotations) {
-            builder = AnnotationBuilder.find(type, application).orElse(null);
-        }
-        return builder;
     }
 
     /**
@@ -140,7 +108,7 @@ public final class CdiAnnotations {
             return provider.annotationValue();
         }
         Class<Annotation> type = (Class<Annotation>) annotation.annotationType();
-        AnnotationBuilder<Annotation> builder = builderOf(beanContext, type);
+        AnnotationBuilder<Annotation> builder = AnnotationBuilder.find(type, beanContext.getClassLoader()).orElse(null);
         if (builder != null) {
             Map<String, Object> members = readByBuilder(beanContext, builder, annotation);
             if (members != null) {

@@ -54,6 +54,11 @@ public final class CdiBeanInjectionProvider implements BeanInjectionProvider {
             }
 
             @Override
+            public <B> Object qualified(BeanDefinition<B> definition, Argument<B> type, Qualifier<B> lookup) {
+                return resolutionContext.getQualifiedBean(definition, type, lookup);
+            }
+
+            @Override
             public <B> Object byLookup(Argument<B> type, Qualifier<B> lookup) {
                 return resolutionContext.getBean(type, lookup);
             }
