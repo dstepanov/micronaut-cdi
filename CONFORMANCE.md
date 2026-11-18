@@ -990,6 +990,15 @@ when that thread needs to create the same bean — a bean is created under a loc
 of its scope, which is also what guarantees one instance per context. A creation that waits for another thread
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
 
+A request still open as the container closes - left active by `activate()` on any thread, suspended, or the request
+of work that has not returned - is destroyed by the container, once, while the observers are still beans of the
+context: told `@BeforeDestroyed(RequestScoped.class)`, its beans destroyed while it is active, then told
+`@Destroyed(RequestScoped.class)`, as its own end would have told it, where it was told it was initialized
+(`RequestDestructionTest`). Whichever of the container and the request's own end claims it first destroys it: an
+end that has begun telling its observers is left to finish, even past the close, and then tells a context that
+stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
+propagated context as it deactivates, and is then told the context is not active.
+
 A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
 `RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
 the context's instance and the context destroys it; but Micronaut generates a scoped proxy only for a definition
