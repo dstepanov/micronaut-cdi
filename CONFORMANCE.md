@@ -168,7 +168,15 @@ class declares, so a subclass that declares no scope, no stereotype and not `@In
 observer method of its own (one it inherits is its superclass's), is no bean of its own where it is discovered however its superclass is scoped (`CdiScopeVisitor`,
 `UndiscoveredSubclass`); one that declares a stereotype keeps the scope it inherits, as section 2.3 has it. A class
 handed to the synthetic archive of the SE bootstrap (`addBeanClasses`, with discovery on or off) is a bean with the
-scope it inherits: the bootstrap names those classes in a property the condition reads. This differs from the 4.1 module,
+scope it inherits: the bootstrap names those classes in a property the condition reads. The archive, and the classpath
+a restricted bootstrap narrows to, also keep the container's infrastructure, which is told by the processor's record
+on a class (`ExtensionComponents.isInfrastructure`): a bean with nothing of the specification recorded - no scope of
+the specification, no producer - whose class was not compiled with `micronaut-cdi-processor` counts as
+infrastructure. That is Micronaut's own beans and this module's, but also a plain `@Singleton` of the application
+compiled without the processor - a library module built with `micronaut-inject-java` alone - which is therefore a bean
+of every container, whatever `disableDiscovery().addBeanClasses(...)` or `addPackages(...)` selected, and is not
+reported to a portable extension as a bean of the application. A class the processor did not compile is not part of
+a CDI archive; compile such a module with the processor to have its beans selected like the application's. This differs from the 4.1 module,
 where such a subclass was a bean: the common case is a mock written as `@Alternative @Priority(1) class Mock extends
 Real`, which is now no bean and leaves `Real` in place. The processor warns where a class it does not discover
 declares `@Alternative`, `@Priority`, `@Named`, a qualifier, an interceptor binding or an `@Inject` member.
