@@ -10,7 +10,8 @@ plugins {
 // into (Argument.asType), which reads no class either. Reading a class back - its hierarchy, its members, its
 // annotations - is what the optional micronaut-cdi-reflection module does where an application asks. The one
 // exception, suppressed where it is, is the service loading of MicronautCDIProvider, which hands CDI.current() over to
-// the providers of other implementations the specification's API would find, through Micronaut's SoftServiceLoader.
+// the providers of other implementations the specification's API would find, through the JDK's ServiceLoader as the
+// API finds them.
 // Anything else, anywhere, fails the build.
 
 dependencies {

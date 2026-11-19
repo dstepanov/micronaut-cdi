@@ -1377,8 +1377,13 @@ own rather than the first one alone.
   API takes an installed provider as set manually, never leaves it and rethrows what it throws, so the provider hands
   over itself: while none of its containers runs, `CDI.current()` resolves through the first of the other providers
   the service loader of the API's class loader finds, by descending priority, that answers (`CurrentContainerTest`),
-  and fails as the API does where none answers. That service loading, through Micronaut's `SoftServiceLoader`, is
-  the one the runtime does, allowed where it is by the build's reflection check. The service entry of the provider stays: an instance the API finds
+  and fails as the API does where none answers. That service loading, through the JDK's `ServiceLoader` with the
+  API's class loader as the API itself loads them - so a provider a named module declares only with `provides` is
+  found too - is the one the runtime does, allowed where it is by the build's reflection check. It is done again on
+  every `CDI.current()` while no container of this module runs, each other provider instantiated anew, as the API
+  does each time it looks: keeping what was found would be a static of the module's own, so a program that keeps
+  calling `CDI.current()` on another implementation after a Micronaut container stopped in the same JVM pays a
+  service lookup each time. The service entry of the provider stays: an instance the API finds
   before any container started hands over the same way, and a container that starts registers with it. A container
   whose SE start failed is destroyed by the rollback and takes itself off; one that registered and never became a
   bean of its context is taken off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
