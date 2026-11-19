@@ -1205,6 +1205,14 @@ own rather than the first one alone.
   not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
   generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
   would make each question a lookup, cover every bean, and remove both the record and the index.
+- **Whether Micronaut may write a definition of a class is decided in a private method.** The processor reads the
+  members of a class for its qualifier and binding types only where Micronaut may write a definition of it
+  (`AnnotationTypesVisitor.mayHaveADefinition`), and restates for that the decision of
+  `BeanDefinitionCreatorFactory.produceInternal` - of which only `isDeclaredBeanInMetadata` is public - including a
+  copy of its private `containsInjectPoint`. The copy accepts a superset today, so nothing is missed; a way of
+  becoming a bean Core adds later would leave the record of such a class empty, and a qualifier or binding type only
+  its members use unknown, with no error. A public `BeanDefinitionCreatorFactory.mayProduce(ClassElement)`, being
+  proposed to Core, would replace the copy.
 - **An `@Any` singleton reached with no qualifier through its definition is another instance.** A point of a bean of
   the specification left to Micronaut's rules is created through the definition Micronaut found
   (`CdiBeanContainer.resolveSelected`); with no qualifier on the point that is `getBean(definition, type)`, which
