@@ -16,7 +16,6 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.core.io.service.SoftServiceLoader;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.CDIProvider;
@@ -79,22 +78,12 @@ public final class MicronautCDIProvider implements CDIProvider {
         Object[] containers = running.toArray();
         for (int i = containers.length - 1; i >= 0; i--) {
             CdiBeanContainer container = (CdiBeanContainer) containers[i];
-            if (!failedToStart(container.beanContext())) {
+            if (!ContainerLifecycle.isStoppedOrFailedToStart(container.beanContext())) {
                 return container;
             }
             running.remove(container);
         }
         return null;
-    }
-
-    /**
-     * Whether the start of a context failed: it does not run, and is not starting either, which Micronaut's own
-     * context tells apart ({@link DefaultBeanContext#isStoppingOrStopped()}). A context that stopped takes its
-     * container off as it stops.
-     */
-    private static boolean failedToStart(BeanContext beanContext) {
-        return !beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
-            && context.isStoppingOrStopped();
     }
 
     @Override

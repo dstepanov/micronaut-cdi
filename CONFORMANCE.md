@@ -443,9 +443,15 @@ needs only `micronaut-cdi`, and
 ### The application context is destroyed as the context begins to stop
 
 *Sections 6.6.2 and 9.6.* As a Micronaut context begins to stop, before it destroys any bean, `Shutdown` is
-fired, then `@BeforeDestroyed(ApplicationScoped.class)`; the application context is then destroyed - every
-application scoped bean, and the dependent objects of each - and `@Destroyed(ApplicationScoped.class)` is fired.
-Two things follow from the order. A bean of the singleton pseudo-scope belongs to no context and is destroyed by
+fired; then every request still open - left active on a thread, suspended, or the work of a request that has not
+returned - is destroyed, each told `@BeforeDestroyed(RequestScoped.class)` and `@Destroyed(RequestScoped.class)`
+where it was told it was initialized; then `@BeforeDestroyed(ApplicationScoped.class)` is fired, the application
+context is destroyed - every application scoped bean, and the dependent objects of each - and
+`@Destroyed(ApplicationScoped.class)` is fired. A request scoped bean that uses an application scoped bean or a
+singleton as it is destroyed therefore reaches the instance it used while the request ran, whatever order Micronaut
+destroys the singletons in (`RequestOpenAtShutdownTest`); a request begun after that - by a shutdown callback, or by
+a bean as it is destroyed - is destroyed as Micronaut stops the request scope, the last moment there is. Two more
+things follow from the order. A bean of the singleton pseudo-scope belongs to no context and is destroyed by
 Micronaut afterwards, so after `@Destroyed(ApplicationScoped.class)`. And an application scoped bean that
 observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as it is destroyed, is a new
 instance created for that, and is destroyed when the context has stopped. What an observer of these events

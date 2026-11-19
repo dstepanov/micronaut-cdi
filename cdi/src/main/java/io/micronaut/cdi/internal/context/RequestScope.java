@@ -16,9 +16,9 @@
 package io.micronaut.cdi.internal.context;
 
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
+import io.micronaut.cdi.internal.runtime.ContainerLifecycle;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
@@ -73,12 +73,20 @@ import java.util.function.Supplier;
 public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequestScope> {
 
     private final BeanContext beanContext;
+    /**
+     * The observers the lifecycle events of a request are fired to, held rather than looked up: a request the
+     * container destroys as it goes down tells the registry it was created with, whichever of the two Micronaut
+     * destroys first.
+     */
+    private final ObserverRegistry observers;
 
     /**
      * Every request this scope has begun and not yet ended, wherever its thread went, suspended ones included: what
      * shutdown destroys, so that a request left active on another thread, or work run as a request that has not
-     * returned as the container closes, still has its beans' destruction run. A request is destroyed once, by
-     * whichever of shutdown and its own end gets there first ({@link #destroy}).
+     * returned as the container closes, still has its beans' destruction run. The container destroys them as it
+     * begins to stop, before the application context ({@link #destroyLive()}, called by {@link ContainerLifecycle});
+     * what is begun after that is destroyed as Micronaut stops this scope ({@link #close()}). A request is destroyed
+     * once, by whichever of shutdown and its own end gets there first ({@link #destroy}).
      */
     private final Set<Instances> live = ConcurrentHashMap.newKeySet();
 
@@ -92,11 +100,12 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private final Predicate<Instances> liveRequestOfThisScope =
         instances -> instances.owner() == this && !instances.ended().get();
 
-    public RequestScope(BeanContext beanContext) {
+    public RequestScope(BeanContext beanContext, ObserverRegistry observers) {
         // each bean is created under a lock of its own, so that a creation may wait for another thread creating
         // another bean of the scope
         super(CdiRequestScope.class, true);
         this.beanContext = beanContext;
+        this.observers = observers;
     }
 
     /**
@@ -144,15 +153,12 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * no request object to hand over.
      */
     private void requestContextEvent(Annotation moment) {
-        if (!beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
-            && context.isStoppingOrStopped()) {
+        if (ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
             // a context that stopped, or never started, has no observers left to tell: a request whose work ends
             // after the container closed ends quietly
             return;
         }
-        beanContext.findBean(ObserverRegistry.class).ifPresent(observers ->
-            observers.notifyObservers(new Object(), Argument.OBJECT_ARGUMENT,
-                Set.of(moment), false));
+        observers.notifyObservers(new Object(), Argument.OBJECT_ARGUMENT, Set.of(moment), false);
     }
 
     private void initializedEvent() {
@@ -434,8 +440,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     /**
      * Destroys, as the scope stops, the beans of the request of the calling thread, which Micronaut asks for before it
-     * closes the scope: destroyed as every other request the container closes on is ({@link #close()}), told so, and
-     * once.
+     * closes the scope: destroyed as every other request the container closes on is ({@link #destroyLive()}), told
+     * so, and once.
      */
     @Override
     protected void destroyScope(@Nullable Map<BeanIdentifier, CreatedBean<?>> scopeMap) {
@@ -458,8 +464,18 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             && activation.instances().owner() == this && activation.isOfTheCallingThread() && activation.end()) {
             elements = PropagatedContext.getOrEmpty().getAllElements();
         }
-        // whatever requests are still open anywhere — suspended, or active on threads that never ended them —
-        // are the container's to destroy as it goes down, each told so as its end would have told it
+        // the requests the container destroyed as it began to stop are gone; what is left was begun since - by a
+        // callback of the shutdown, or by a bean as it was destroyed - and is destroyed now, the last moment there is
+        destroyLive();
+    }
+
+    /**
+     * Destroys whatever requests are still open anywhere - suspended, or active on threads that never ended them -
+     * each told so as its end would have told it, and once: the container calls it as it begins to stop, before the
+     * application context says it is going, so that what a request scoped bean uses as it is destroyed - an
+     * application scoped bean, a singleton - is still the instance it used while the request ran.
+     */
+    public void destroyLive() {
         Throwable failure = null;
         for (Instances instances : List.copyOf(live)) {
             // each as the request it is: whichever thread it was left on, its beans reach one another as they go.
