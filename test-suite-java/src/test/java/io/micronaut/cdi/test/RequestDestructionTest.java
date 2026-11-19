@@ -10,6 +10,7 @@ import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.Destroyed;
+import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.context.control.RequestContextController;
@@ -45,9 +46,21 @@ class RequestDestructionTest {
     static volatile boolean recording;
     static volatile @Nullable CountDownLatch beforeDestroyedReached;
     static volatile @Nullable CountDownLatch beforeDestroyedRelease;
+    static volatile @Nullable CountDownLatch initializedReached;
+    static volatile @Nullable CountDownLatch initializedRelease;
 
     @ApplicationScoped
     public static class Lifecycle {
+        void initialized(@Observes @Initialized(RequestScoped.class) Object event) throws InterruptedException {
+            CountDownLatch reached = initializedReached;
+            CountDownLatch release = initializedRelease;
+            if (recording && reached != null && release != null) {
+                EVENTS.add("initialized");
+                reached.countDown();
+                release.await(10, TimeUnit.SECONDS);
+            }
+        }
+
         void beforeDestroyed(@Observes @BeforeDestroyed(RequestScoped.class) Object event) throws InterruptedException {
             if (recording) {
                 EVENTS.add("before destroyed");
@@ -133,6 +146,8 @@ class RequestDestructionTest {
         recording = false;
         beforeDestroyedReached = null;
         beforeDestroyedRelease = null;
+        initializedReached = null;
+        initializedRelease = null;
     }
 
     @Test
@@ -306,6 +321,36 @@ class RequestDestructionTest {
             work.get(10, TimeUnit.SECONDS);
             // destroyed once, by the end; the context it would tell it was destroyed has stopped
             assertEquals(List.of("before destroyed", "ticket closed"), EVENTS);
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void aRequestTheContainerDestroysWhileItsObserversAreToldItBeganIsToldItWasDestroyed() throws Exception {
+        CountDownLatch reached = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        initializedReached = reached;
+        initializedRelease = release;
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<?> work;
+            try (ApplicationContext context = ApplicationContext.run()) {
+                context.getBean(Lifecycle.class);
+                RequestScope scope = context.getBean(RequestScope.class);
+                recording = true;
+                work = executor.submit(() -> scope.run(() -> EVENTS.add("work")));
+                // the observer of Initialized is running as the container closes
+                assertTrue(reached.await(10, TimeUnit.SECONDS));
+            }
+            // a request whose observers were told it was initialized is told it was destroyed, by the container
+            assertEquals(List.of("initialized", "before destroyed", "destroyed"), EVENTS);
+
+            release.countDown();
+            work.get(10, TimeUnit.SECONDS);
+            // and its own end tells nothing again
+            assertEquals(List.of("initialized", "before destroyed", "destroyed", "work"), EVENTS);
         } finally {
             release.countDown();
             executor.shutdownNow();

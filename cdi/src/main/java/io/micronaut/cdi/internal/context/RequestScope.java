@@ -355,12 +355,18 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * Tells the observers that the request was initialized, from inside it. An observer that throws ends the
      * request: what it created in the request is destroyed, while the request is still active, and the failure
      * comes out, rather than the request staying open until the container stops.
+     *
+     * <p>The request counts as told before its observers are: a container closing on another thread while they run
+     * destroys it as one that was told, telling them it was, rather than silently, which would leave them with an
+     * {@code Initialized} and never a {@code Destroyed}. A request whose initialization failed is, as before, not
+     * told.</p>
      */
     private void initialized(Instances instances) {
+        instances.told().set(true);
         try {
             initializedEvent();
-            instances.told().set(true);
         } catch (RuntimeException | Error e) {
+            instances.told().set(false);
             try {
                 destroy(instances);
             } catch (RuntimeException | Error destruction) {
@@ -693,7 +699,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param beans The beans of the request
      * @param ended      Whether the request has ended, its beans destroyed
      * @param destroying Whether the destruction of the request has begun, which happens once
-     * @param told       Whether its observers were told it was initialized, and so are told it is destroyed
+     * @param told       Whether its observers are or were told it was initialized, and so are told it is destroyed
      */
     private record Instances(RequestScope owner, RequestBeans beans,
                              AtomicBoolean ended, AtomicBoolean destroying, AtomicBoolean told)
