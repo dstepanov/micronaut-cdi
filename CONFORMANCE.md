@@ -1012,10 +1012,13 @@ of its scope, which is also what guarantees one instance per context. A creation
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
 
 A request still open as the container closes - left active by `activate()` on any thread, suspended, or the request
-of work that has not returned - is destroyed by the container, once, while the observers are still beans of the
-context: told `@BeforeDestroyed(RequestScoped.class)`, its beans destroyed while it is active, then told
-`@Destroyed(RequestScoped.class)`, as its own end would have told it, where it was told it was initialized
-(`RequestDestructionTest`). Whichever of the container and the request's own end claims it first destroys it: an
+of work that has not returned - is destroyed by the container, once, as it begins to stop: after `Shutdown` and
+before `@BeforeDestroyed(ApplicationScoped.class)`, so the observers, and the application scoped beans and
+singletons its beans use as they are destroyed, are still the instances they were (`RequestOpenAtShutdownTest`).
+It is told `@BeforeDestroyed(RequestScoped.class)`, its beans are destroyed while it is active, and it is told
+`@Destroyed(RequestScoped.class)`, as its own end would have told it, where its observers were told, or are being
+told, it was initialized (`RequestDestructionTest`). A request begun after that, by a shutdown callback or a bean as
+it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
 end that has begun telling its observers is left to finish, even past the close, and then tells a context that
 stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
 propagated context as it deactivates, and is then told the context is not active.
@@ -1221,8 +1224,8 @@ own rather than the first one alone.
   the plain definition. A Micronaut factory `@Any @Singleton Engine engine(Qualifier<Engine>)` then makes two
   engines, the CDI point's handed `@Any` and Micronaut's handed none. No clean adapter fix exists: a lookup by type
   would let a bean of the specification the point rejected back in, and a lookup by `NonCdiBeanQualifier` keys the
-  singleton by that qualifier. The core change being made resolves a definition declared `@Any` for the qualifier
-  given, `null` included, in `getBeanRegistration` and `resolveBeanRegistration`, so that a definition asked for with
+  singleton by that qualifier. The core change being made (micronaut-core #14500, open) resolves a definition
+  declared `@Any` for the qualifier given, `null` included, in `getBeanRegistration` and `resolveBeanRegistration`, so that a definition asked for with
   no qualifier is what a lookup by type alone is; `MicronautAnyFactoryTest.anUnqualifiedPointSharesTheInstanceOfAnUnqualifiedLookup`
   is disabled until it lands.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
