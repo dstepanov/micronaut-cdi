@@ -1230,14 +1230,16 @@ own rather than the first one alone.
 - **KSP reads no resource of the class path.** `VisitorContext.getClasspathResources` is empty under KSP, so an async
   handler registered on the class path of a Kotlin compilation is not found; the processor warns a compilation with
   extensions of it. An implementation for KSP would close it.
-- **A failed start is not rolled back.** `DefaultBeanContext.start()` rethrows a startup failure without destroying
-  what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
-  on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
-  the singletons and scoped beans created before the failure are not destroyed and are left to the garbage
-  collector. A full rollback belongs in Core. Outside the SE bootstrap - a plain `ApplicationContext.run()` whose
-  start fails after the container was created - nothing takes the container off; `CDI.current()` passes over, and
-  lets go of, a container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so
-  it resolves to a container still running, or hands over as when none runs (`CurrentContainerTest`).
+- **A failed start is rolled back through an internal API.** The SE bootstrap rolls a failed start back with
+  `DefaultBeanContext.stopFailedStart`, which destroys the singletons and scoped beans the start created - the
+  container among them, which takes itself off `CDI.current()` - and stops the environment (`SeFailedStartupTest`);
+  the API is `@Internal @Experimental` in Core. The shutdown event of the rollback tells the application nothing
+  where it was never told the container started: `ContainerLifecycle` fires `Shutdown` and the application
+  context's events only after it fired `Startup`, and does nothing where the event is what creates it. Outside the
+  SE bootstrap - a plain `ApplicationContext.run()` whose start fails after the container was created - it is for
+  whoever started the context to roll it back; until it does, `CDI.current()` passes over, and lets go of, a
+  container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so it resolves to
+  a container still running, or hands over as when none runs (`CurrentContainerTest`).
 - **A runtime definition's generic metadata is incomplete.** `RuntimeBeanDefinition.Builder.typeArguments` answers
   `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
   query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the
@@ -1377,7 +1379,8 @@ own rather than the first one alone.
   and fails as the API does where none answers. That service loading, through Micronaut's `SoftServiceLoader`, is
   the one the runtime does, allowed where it is by the build's reflection check. The service entry of the provider stays: an instance the API finds
   before any container started hands over the same way, and a container that starts registers with it. A container
-  whose start failed takes itself off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
+  whose SE start failed is destroyed by the rollback and takes itself off; one that registered and never became a
+  bean of its context is taken off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
   program set itself is left in place, and a container then registers with a provider of its own that the entry point
   does not reach;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

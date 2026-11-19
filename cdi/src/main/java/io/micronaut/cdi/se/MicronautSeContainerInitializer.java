@@ -28,6 +28,7 @@ import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
+import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
@@ -255,17 +256,26 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             List.copyOf(extensionClasses), classLoader,
             name -> classpath == null || classpath.contains(outerClassOf(name))));
         ApplicationContext context = builder.build();
+        boolean startReturned = false;
         try {
             ApplicationContext started = context.start();
+            startReturned = true;
             checkBuildCompatibleExtensionsRan(started);
             return new MicronautSeContainer(started);
         } catch (RuntimeException | Error e) {
-            // whatever the start failed with, the context is closed and its container is not left as the one
+            // whatever the start failed with, what it created is destroyed and its container is not left as the one
             // CDI.current() resolves to; what an extension said is reported as it said it
             RuntimeException said = e instanceof RuntimeException runtime ? whatAnExtensionSaid(runtime) : null;
             Throwable reported = said != null ? said : e;
             try {
-                context.close();
+                if (!startReturned && context instanceof DefaultBeanContext failed) {
+                    // a context whose start failed is not stopped by close(): Micronaut's rollback destroys the
+                    // singletons and scoped beans the start created, the container among them, which takes itself
+                    // off CDI.current(), and stops the environment. It logs what the destruction threw
+                    failed.stopFailedStart(List.of());
+                } else {
+                    context.close();
+                }
             } catch (RuntimeException | Error closing) {
                 if (closing != reported) {
                     reported.addSuppressed(closing);

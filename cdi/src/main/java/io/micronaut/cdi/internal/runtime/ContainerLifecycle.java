@@ -80,6 +80,11 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final RequestScope requestScope;
     // what was obtained through the container itself and is released as it stops, see addShutdownCallback
     private final List<Runnable> releases = new CopyOnWriteArrayList<>();
+    /**
+     * Whether the application was told the container started: only then is it told it stops. A start that failed
+     * before {@code Startup} was fired is rolled back with no event of the shutdown.
+     */
+    private volatile boolean started;
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope,
                               RequestScope requestScope) {
@@ -104,6 +109,12 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
 
     @PostConstruct
     void started() {
+        if (beanContext instanceof DefaultBeanContext context && context.isStoppingOrStopped()) {
+            // created by the shutdown event of a context whose start failed, which is being rolled back
+            // (DefaultBeanContext.stopFailedStart): nothing is run, validated or fired for a container that is
+            // going down without having started
+            return;
+        }
         // the portable extensions an SE bootstrap asked for run first: what they add - a context, an observer,
         // a qualifier - is there by the time the application is told the container has started
         beanContext.findBean(PortableExtensions.Request.class)
@@ -124,6 +135,7 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
         initializeEagerBeans();
         fire(new Startup(), Startup.class, Set.of());
+        started = true;
     }
 
     /**
@@ -165,7 +177,9 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
 
     @Override
     public void onApplicationEvent(ShutdownEvent event) {
-        if (event.getSource() != beanContext) {
+        if (event.getSource() != beanContext || !started) {
+            // a container whose start failed before the application was told it started tells it of no shutdown:
+            // what its start created is destroyed by Micronaut, the scopes with it
             return;
         }
         // Shutdown first, then the application context says it is going. One observer throwing must not
