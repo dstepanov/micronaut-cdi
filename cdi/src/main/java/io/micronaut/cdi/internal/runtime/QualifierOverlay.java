@@ -32,8 +32,10 @@ import java.util.Map;
  * beside it.
  *
  * <p>It is read where this container compares qualifiers itself - a programmatic lookup, the bean container, the
- * qualifiers a bean reports. An injection point is resolved by Micronaut from the compiled metadata of the
- * definitions, which this does not reach.</p>
+ * qualifiers a bean reports, the injection points of a bean of the specification, and the default bean the
+ * resolution customizer picks for a lookup Micronaut makes itself ({@link CdiResolutionCustomizer}). A lookup that
+ * names a qualifier of Micronaut's is matched by Micronaut from the compiled metadata of the definitions, which this
+ * does not reach.</p>
  *
  * @author Denis Stepanov
  * @since 1.0

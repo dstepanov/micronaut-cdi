@@ -119,6 +119,18 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
     }
 
     /**
+     * The qualifiers portable extensions added in the context this customizer serves, where any were: none in a
+     * context no portable extension ran in, which is nearly every one.
+     */
+    private @Nullable QualifierOverlay overlay() {
+        if (beanContext == null) {
+            return null;
+        }
+        QualifierOverlay overlay = beanContext.findBean(QualifierOverlay.class).orElse(null);
+        return overlay == null || overlay.isEmpty() ? null : overlay;
+    }
+
+    /**
      * The default value of a primitive type, which a producer returning null satisfies a point of it with.
      *
      * @param type The primitive type
@@ -180,18 +192,35 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
      * priority outrank the rest (section 2.4.2). That the bean is not declared Micronaut's primary leaves an
      * application's own primary bean deciding, as it does without this module.
      *
+     * <p>Whether a bean is a default one is read from the qualifiers the container records of it, as everywhere else:
+     * what it was compiled with, and what a portable extension added to its class ({@link QualifierOverlay}), which
+     * takes {@code Default} away. The overlay is looked up only where a lookup with no qualifier meets a bean of the
+     * specification.</p>
+     *
      * @return The bean, or {@code null} where the rules do not pick one, or no bean of the specification is a candidate
      */
-    private static <T> @Nullable BeanDefinition<T> ofTheSpecification(
+    private <T> @Nullable BeanDefinition<T> ofTheSpecification(
         @Nullable Qualifier<T> qualifier,
         Collection<BeanDefinition<T>> candidates) {
         List<BeanDefinition<T>> eligible = new ArrayList<>(candidates.size());
+        QualifierOverlay overlay = null;
+        boolean overlayRead = false;
         for (BeanDefinition<T> candidate : candidates) {
-            if (CdiResolution.isBeanOfTheSpecification(candidate)
-                && (qualifier != null || CdiAssignability.areQualifiersMatching(
-                    CdiQualifier.declared(candidate.getAnnotationMetadata()), List.of()))) {
-                eligible.add(candidate);
+            if (!CdiResolution.isBeanOfTheSpecification(candidate)) {
+                continue;
             }
+            if (qualifier == null) {
+                if (!overlayRead) {
+                    overlay = overlay();
+                    overlayRead = true;
+                }
+                List<CdiQualifier> declared = CdiQualifier.declared(candidate.getAnnotationMetadata());
+                List<CdiQualifier> qualifiers = overlay != null ? overlay.apply(candidate, declared) : declared;
+                if (!CdiAssignability.areQualifiersMatching(qualifiers, List.of())) {
+                    continue;
+                }
+            }
+            eligible.add(candidate);
         }
         if (eligible.isEmpty()) {
             return null;

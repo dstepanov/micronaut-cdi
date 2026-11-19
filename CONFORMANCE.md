@@ -196,8 +196,9 @@ The injection points of a bean of Micronaut's own are not resolved by the contai
 own `BeanContext.getBean`. Where several beans are candidates for one and no primary bean decides, Micronaut asks
 the container's resolution customizer (`CdiResolutionCustomizer.resolveNonUniqueBean`), which picks among the
 beans of the specification as the specification does: one that names no qualifier resolves to the bean with the
-default qualifier rather than being ambiguous, and a selected alternative of the highest priority outranks the
-rest. No bean is declared Micronaut's `@Primary` for it, so an application's own primary bean decides as it does
+default qualifier rather than being ambiguous - by the qualifiers the container records of each bean, so a bean a
+portable extension gave a qualifier of its own is no longer a default one (`PortableQualifierDefaultBeanTest`) -
+and a selected alternative of the highest priority outranks the rest. No bean is declared Micronaut's `@Primary` for it, so an application's own primary bean decides as it does
 without this module, a class written with the singleton pseudo-scope alone among them. The difference left is
 there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
 qualifier where every candidate is qualified, the specification has no bean to resolve, and Micronaut resolves
