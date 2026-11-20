@@ -75,11 +75,21 @@ visible in a test report as what passes.
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
 | 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
+| 2.5.1 (5.0) | The bean discovery mode of `beans.xml`: `all` a deployment problem as any container starts, `none` no bean archive of an SE container that discovers; nothing else of a descriptor is read | `BeanArchives`, `DeploymentValidation`, `MicronautSeContainerInitializer` |
+| 5.5.8 (5.0) | Bean metadata: the dependent `@Default Bean` of the bean an injection point belongs to - a class bean at a field, constructor or initializer, the produced bean at a parameter of its producer or disposer method, the declaring bean at a parameter of an observer method, a synthetic bean through `SyntheticInjections` - and the `@Default Interceptor` of an interceptor class, each the container's own `Bean` or `Interceptor` of it, read off the resolution path as the bean is created; the `@Intercepted Bean` is not yet implemented, see below | `CdiBeanMetadataFactory`, `CdiInterceptorMetadataFactory`, `ContainerInjectionVisitor`, `CdiObserverMethod`, `DisposerInvoker` |
 
 ## Not yet implemented
 
 The transaction phases an observer may name (9.4) have no transactions to observe here and are notified as
 if `IN_PROGRESS`.
+
+The `@Intercepted Bean` of section 5.5.8 - the metadata of the bean an interceptor instance intercepts - is not
+built. The processor accepts the point on an interceptor as written `Bean<?>` and refuses it elsewhere, but creating
+an interceptor instance that declares one fails with an `UnsupportedOperationException`. The metadata of the bean an
+injection point belongs to is read off the resolution path, and an interceptor instance is created by the Jakarta
+Interceptors advice through the `BeanDependencyResolver` Micronaut hands it, whose resolution begins a path of its
+own: it names the interceptor's own construction and nothing of the bean being intercepted, whose
+`InterceptionTarget` only the advice is handed. See "Open points in Micronaut Core".
 
 ## Differences
 
@@ -186,6 +196,31 @@ when it discovers, leaves out every bean whose definition was compiled into that
 from, because the processor compiles a library before it is packaged with its descriptor; a directory of classes
 counts as an archive only where its `beans.xml` sits beside the classes, so a build that keeps resources in a
 directory of their own - Gradle's `build/resources/main` - is not narrowed until it is packaged.
+
+### beans.xml and bean archives
+
+*CDI 5.0 section 2.5.1.* An implementation that does not support CDI Full ignores a `beans.xml` except for its bean
+discovery mode, and this one reads nothing else of it. The descriptors are found at runtime, as the
+`META-INF/beans.xml` resources the application's class loader lists, each standing for the archive whose URL prefix
+it was found under - a jar, or a directory of classes with its descriptor beside them; the mode is read outside the
+descriptor's comments, and an empty descriptor or one that names no mode is `annotated` (`BeanArchives`).
+
+- `all` belongs to CDI Full: an archive that declares it is a deployment problem, a jakarta `DeploymentException`
+  reported by the deployment validation as the container starts, whether it is started by the SE bootstrap or as a
+  Micronaut application context with this module on the class path (`AllDiscoveryArchiveTest`).
+- `none` makes an archive no bean archive. The SE bootstrap, when it discovers, leaves out the beans compiled into it,
+  as described above; a Micronaut application context started directly deploys what the processor compiled, an
+  archive with such a descriptor included, since what is deployed there is decided by what was compiled with the
+  processor rather than by archives.
+- An archive that registers a portable or build compatible extension and has no `beans.xml` is no bean archive: only
+  the classes its extensions add are beans of it. This is not enforced by the container. The processor compiles a
+  library before it is packaged, with or without a descriptor, and a class an extension adds through
+  `ScannedClasses` is compiled as any other, so telling the two apart at runtime would take a record of the scanned
+  classes of each archive beside the descriptors the class loader lists, and the archives a program or test builds in
+  memory have no URL to list them by. The kit's adapter decides it for the archives it deploys
+  (`MicronautDeployableContainer`), from the archive's entries, keeping only the classes the deployment's extensions
+  scanned. An application whose library registers an extension and should contribute no beans of its own leaves that
+  library's classes out of the processor's compilation, or vetoes them.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
@@ -1079,8 +1114,17 @@ The kit's own unmodified test classes run here, through a purpose-built Arquilli
 the archive's classes; a deployment the kit expects to be rejected is compiled per-deployment with the module's
 processor, and what the compiler refuses is reported to Arquillian as the `DefinitionException` or
 `DeploymentException` the test asserts — deployment here *is* compilation. What the container validates as it
-starts is reported the same way, from the cause chain of the failure to start; the adapter has no validation of
-its own. An SE test the kit runs without Arquillian bootstraps over the class path its own `Deployment` declares,
+starts is reported the same way, from the cause chain of the failure to start. The adapter validates no bean
+itself, but decides two things of its own. It classifies failures (`DeploymentCompiler`,
+`MicronautDeployableContainer.deploymentProblemIn`): a compile error a processor reported is a `DefinitionException`,
+or a `DeploymentException` where the diagnostic names a bean that cannot be proxied, a final method under a class
+level interceptor binding, or a deployment problem an extension reported; a failure to start is a deployment problem
+only where a jakarta `DefinitionException` or `DeploymentException` is in its cause chain, and no Micronaut exception
+is read as one, as the kit needs none; a compilation that javac alone rejects or in which a visitor of the processor
+crashed with nothing reported beside it, and any other failure to start, fail the test rather than pass one that
+expects a rejected deployment. And it decides which classes of an archive are beans: each deployment is narrowed to
+its archive's classes, and an archive that carries an extension and no `beans.xml` keeps only the classes its
+extensions scanned (see "beans.xml and bean archives"). An SE test the kit runs without Arquillian bootstraps over the class path its own `Deployment` declares,
 as it would in the JVM the kit launches for it. An archive carrying a build
 compatible extension is likewise compiled per deployment, with that archive's extensions alone, and so is an
 archive carrying the service entries of async handlers (CDI 5.0), which the compilation is handed through
@@ -1192,6 +1236,13 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A dependent created through a bean's `BeanDependencyResolver` does not know whose dependent it is (CDI 5.0,
+  section 5.5.8).** The Jakarta Interceptors advice of a bean creates the bean's interceptor instances with
+  `dependencies.getBean(...)`, and the resolution that starts has a path of its own, a null root definition and no
+  attribute naming the bean that owns the resolver, so the built-in `@Intercepted Bean` cannot tell which bean an
+  interceptor instance intercepts. Either a resolver that carries its owner's resolution path into the resolutions it
+  starts, or one that exposes the definition it was created for (the `InterceptionTarget` of the advice) to the
+  resolution context, would let `CdiBeanMetadataFactory` answer it as it answers the `@Default Bean`.
 - **No destruction step between a bean's `PreDestroy` methods and the release of its dependents (CDI 5.0).**
   `DefaultBeanContext.destroyRegistration` runs the pre-destroy listeners, the bean's `PreDestroy` methods and then
   releases the dependents, with nothing to hook between the last two; `@AutoClose` asks for `close()` there. Core's

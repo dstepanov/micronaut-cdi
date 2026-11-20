@@ -41,6 +41,11 @@ import java.util.Set;
  */
 final class DeploymentCompiler {
 
+    /**
+     * The code javac gives an error a processor reported through its messager.
+     */
+    private static final String PROCESSOR_MESSAGE = "compiler.err.proc.messager";
+
     private DeploymentCompiler() {
     }
 
@@ -117,18 +122,52 @@ final class DeploymentCompiler {
         };
     }
 
-    private static RuntimeException classified(List<Diagnostic<? extends JavaFileObject>> diagnostics,
-                                               RuntimeException failure) {
+    /**
+     * The messages Micronaut's processor reports a visitor that failed with: a crash of the compilation, which says
+     * nothing of the deployment.
+     */
+    private static final List<String> PROCESSOR_CRASHES = List.of(
+        "Error initializing type visitor",
+        "Error finishing the round of type visitor",
+        "Error finalizing type visitor",
+        "Error initializing bean element visitor",
+        "Error finalizing bean element visitor",
+        "Unexpected error:");
+
+    /**
+     * Classifies a compilation that failed by its error diagnostics. An error a processor reported through the
+     * compiler's messager is the processor's finding about the deployment: a deployment problem where the diagnostic
+     * says so - a bean that cannot be proxied, or an extension that reported one - and otherwise a definition error.
+     * A compilation that failed with no finding a processor reported - only errors javac itself raised, a visitor
+     * that crashed, or no error at all - is no finding about the deployment: it is returned as an
+     * {@code IllegalStateException} carrying the diagnostics, not as a jakarta exception, so a test that expects a
+     * deployment to be rejected fails rather than passes on it.
+     *
+     * @param diagnostics The compiler's diagnostics
+     * @param failure     The failure of the compilation
+     * @return What to throw
+     */
+    static RuntimeException classified(List<? extends Diagnostic<? extends JavaFileObject>> diagnostics,
+                                       RuntimeException failure) {
         StringBuilder report = new StringBuilder("The deployment does not compile:");
         boolean unproxyable = false;
-        boolean anyError = false;
+        boolean reported = false;
+        boolean crashed = false;
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics) {
             if (diagnostic.getKind() != Diagnostic.Kind.ERROR) {
                 continue;
             }
-            anyError = true;
             String message = diagnostic.getMessage(null);
             report.append('\n').append(message);
+            if (!PROCESSOR_MESSAGE.equals(diagnostic.getCode())) {
+                // javac's own error: the source does not compile, whatever a processor makes of it
+                continue;
+            }
+            if (PROCESSOR_CRASHES.stream().anyMatch(message::startsWith)) {
+                crashed = true;
+                continue;
+            }
+            reported = true;
             // the proxy writer's own diagnostics: a bean that cannot be proxied cannot live in its normal
             // scope, which the specification calls a problem with the deployment rather than the definition
             if (message.contains("Cannot apply AOP advice")
@@ -147,9 +186,12 @@ final class DeploymentCompiler {
                 unproxyable = true;
             }
         }
-        if (!anyError) {
-            // the compiler failed without an error diagnostic, which is a harness problem rather than a finding
-            return failure;
+        if (!reported) {
+            // no finding of a processor, only javac's own errors or a visitor that crashed: what a processor
+            // reported is the finding, and a crash beside it - the bytecode of a definition the finding made
+            // impossible - is a consequence of it
+            return new IllegalStateException(crashed
+                ? report.append("\n(a visitor of the processor failed)").toString() : report.toString(), failure);
         }
         return unproxyable
             ? new DeploymentException(report.toString(), failure)
