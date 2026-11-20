@@ -223,6 +223,24 @@ descriptor's comments, and an empty descriptor or one that names no mode is `ann
   scanned. An application whose library registers an extension and should contribute no beans of its own leaves that
   library's classes out of the processor's compilation, or vetoes them.
 
+### A class written as a decorator is no bean
+
+*CDI Full, chapter 8 of 4.1.* Decorators belong to CDI Full and are not implemented. A class annotated
+`jakarta.decorator.Decorator` is no bean here (`BeanDiscoveryVisitor`): it is not resolvable, decorates nothing, and
+is not reported as an error, so the beans it would have decorated are invoked undecorated
+(`FullOnlyDeploymentsTest`). It is left out rather than made a plain bean, whose delegate injection point would be
+ambiguous between the decorator and what it decorates. Asking for the metadata of a decorator - `Decorator<X>`, the
+`@Decorated Bean<X>` - is a definition error as the class compiles (`DecoratorMetadataInjectionTest`).
+
+### A cycle of pseudo-scoped beans fails as it is created
+
+*Section 5.4.* The container supports a dependency cycle when one of the beans in it has a normal scope, through its
+client proxy, and the specification requires no more. A cycle through beans of pseudo-scopes alone - `@Dependent`,
+`@Singleton` - is not detected as the container starts: the deployment deploys, and the creation of a bean of the
+cycle fails with Micronaut's circular dependency failure (`FullOnlyDeploymentsTest`). Weld rejects such a deployment
+as it starts; this container validates the injection points of each bean one at a time, and does not walk the graph
+of the deployment for cycles.
+
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
 Section 3.8 has an injection point that declares no qualifier looking for the default qualifier, and section
