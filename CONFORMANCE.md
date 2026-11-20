@@ -1096,6 +1096,11 @@ end that has begun telling its observers is left to finish, even past the close,
 stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
 propagated context as it deactivates, and is then told the context is not active.
 
+A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
+after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in
+Micronaut Core". Declare such a producer on a `@Dependent` bean, or make the product's scope the declaring bean's,
+until it is fixed there.
+
 A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
 `RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
 the context's instance and the context destroys it; but Micronaut generates a scoped proxy only for a definition
@@ -1247,6 +1252,16 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **The factory of a product is destroyed as a bean of its own once the product is created.** Once a bean produced by
+  a factory method or field has been created, `DefaultBeanContext.createRegistrationInContext` destroys the factory
+  registration the resolution recorded (`getAndResetDependentFactoryBean`) with `destroyBean(registration)`, that is
+  as a bean that is not a dependent. Where the declaring bean is in a normal scope, the registration is that of its
+  client proxy, and destroying a proxy that is not a dependent removes its target from the scope: the contextual
+  instance of an `@ApplicationScoped` bean that produces a `@Dependent` bean has its `@PreDestroy` run after every
+  product, a fresh one serves the next, and none is destroyed as the context ends
+  (`NormalScopedFactoryLifecycleTest`, disabled). Destroying the recorded factory as a dependent - which leaves a
+  scoped target in its scope, as the destruction of any other dependent proxy does - would close it; only a
+  `@Dependent` declaring instance is to be destroyed once the call completes (CDI 4.1 section 6.4.2).
 - **The bean declaring a producer is resolved by its class.** `BeanResolutionContext.getFactoryBean` looks the
   factory up with `getBean(factoryType, qualifier)`, which a bean whose `Typed` leaves its class out of its bean
   types is no candidate of. The processor widens Micronaut's `typed` of such a class to keep it resolvable; resolving
