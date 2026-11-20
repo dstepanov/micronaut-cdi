@@ -64,7 +64,7 @@ final class SyntheticBeanInfo implements BeanInfo {
     }
 
     /**
-     * The class the bean is created as, which is what a registration method's types are matched against.
+     * The class the bean is created as.
      */
     ClassElement beanType() {
         return bean.implementation();

@@ -507,7 +507,7 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // is left is the ones it did not see: the synthetic ones, and the container's own
         for (RecordingBeanBuilder<?> bean : synthesis.enabledBeans()) {
             SyntheticBeanInfo info = synthesis.describe(bean);
-            extensions.describeSyntheticBean(info, info.beanType(), messages, context);
+            extensions.describeSyntheticBean(info, messages, context);
         }
         for (RecordingObserverBuilder<?> observer : synthesis.observers()) {
             SyntheticObserverInfo info = new SyntheticObserverInfo(observer, extensions.model(context));

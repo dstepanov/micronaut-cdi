@@ -313,17 +313,17 @@ final class ExtensionMethods {
     }
 
     /**
-     * Describes a synthetic bean to each registration method that asks about beans of a type it has.
+     * Describes a synthetic bean to each registration method that asks about beans of one of the bean types its
+     * builder declared.
      *
      * @param bean     The bean
-     * @param beanType Its bean type
      * @param messages What the methods report through
      * @param context  The compilation
      */
-    void describeSyntheticBean(SyntheticBeanInfo bean, ClassElement beanType, Messages messages,
+    void describeSyntheticBean(SyntheticBeanInfo bean, Messages messages,
                                VisitorContext context) {
         for (Registrar registrar : registrars) {
-            if (registrar.asksForBeans(false) && registrar.matches(beanType)) {
+            if (registrar.asksForBeans(false) && registrar.matchesTypes(bean.types())) {
                 registrar.describe(bean, messages, model(context));
             }
         }
@@ -849,6 +849,24 @@ final class ExtensionMethods {
         /**
          * Whether the type is one the method asked to be told about.
          */
+        /**
+         * Whether one of the given bean types is one the method asks about, as the bean types of a class bean are
+         * compared: a class asked for is a bean type of that class, a parameterized type asked for is the same type.
+         */
+        private boolean matchesTypes(java.util.Collection<jakarta.enterprise.lang.model.types.Type> beanTypes) {
+            for (Class<?> asked : registration.types()) {
+                java.lang.reflect.Type expected = expectedType(asked);
+                for (jakarta.enterprise.lang.model.types.Type type : beanTypes) {
+                    ClassElement element = ElementTypes.elementOf(type);
+                    if (expected instanceof Class<?> raw ? element.getName().equals(raw.getName())
+                        : sameType(element, expected)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private boolean matches(ClassElement type) {
             for (Class<?> asked : registration.types()) {
                 java.lang.reflect.Type expected = expectedType(asked);
