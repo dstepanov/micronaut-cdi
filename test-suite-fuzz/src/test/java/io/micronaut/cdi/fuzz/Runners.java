@@ -114,7 +114,8 @@ final class Runners {
             try (URLClassLoader loader = new URLClassLoader(new URL[] {output.toUri().toURL()}, weldLoader())) {
                 return inContext(loader, () -> {
                     Class<?> weldType = loader.loadClass("org.jboss.weld.environment.se.Weld");
-                    Object weld = weldType.getConstructor(String.class).newInstance("fuzz-" + System.nanoTime());
+                    String id = weldContainerId(rendered);
+                    Object weld = weldType.getConstructor(String.class).newInstance(id);
                     weldType.getMethod("disableDiscovery").invoke(weld);
                     List<Class<?>> beanClasses = new ArrayList<>();
                     for (String name : rendered.beanClasses()) {
@@ -130,6 +131,7 @@ final class Runners {
                     try {
                         container = weldType.getMethod("initialize").invoke(weld);
                     } catch (InvocationTargetException e) {
+                        discardFailed(loader, id);
                         return RunResult.refused(e.getCause());
                     }
                     Class<?> seContainer = loader.loadClass("jakarta.enterprise.inject.se.SeContainer");
@@ -170,7 +172,29 @@ final class Runners {
         }
     }
 
-    private static URLClassLoader weldLoader() {
+    /**
+     * The id of the Weld container of a scenario, one for each, since the package of every rendering is new.
+     */
+    static String weldContainerId(Rendered rendered) {
+        return "fuzz-" + rendered.packageName();
+    }
+
+    /**
+     * Takes out of Weld's registry, shared by every run, the container whose start failed: Weld leaves it there, and
+     * a campaign would otherwise keep every refused deployment.
+     */
+    static void discardFailed(ClassLoader loader, String id) {
+        try {
+            Class<?> container = loader.loadClass("org.jboss.weld.Container");
+            if ((boolean) container.getMethod("isSet", String.class).invoke(null, id)) {
+                container.getMethod("cleanup").invoke(container.getMethod("instance", String.class).invoke(null, id));
+            }
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            // nothing was registered, or it was already gone
+        }
+    }
+
+    static URLClassLoader weldLoader() {
         URLClassLoader loader = weldLoader;
         if (loader == null) {
             synchronized (Runners.class) {

@@ -204,6 +204,21 @@ class HarnessTest {
     }
 
     @Test
+    void weldKeepsNothingOfADeploymentItRefused(@TempDir Path dir) throws Exception {
+        BeanDef unsatisfied = new BeanDef("B1", Scope.DEPENDENT, List.of("S1"), null, false, List.of(), null, false,
+            null, List.of(), List.of(), false, false, false,
+            List.of(new Scenario.InjectionPointDef("ip1", Scenario.IpKind.FIELD, "S3", List.of())), List.of(), List.of());
+        Scenario scenario = new Scenario(0, List.of(unsatisfied), List.of(), List.of(), List.of(
+            new Probe("X1", ProbeKind.SELECT, "S1", List.of(), false)));
+        ScenarioRenderer.Rendered rendered = ScenarioRenderer.render(scenario, "fuzz.refused");
+        RunResult result = Runners.runWeld(rendered, dir);
+        assertEquals(Outcome.DEPLOYMENT_ERROR, result.outcome(), result.detail());
+        Class<?> container = Runners.weldLoader().loadClass("org.jboss.weld.Container");
+        assertEquals(false, container.getMethod("isSet", String.class)
+            .invoke(null, Runners.weldContainerId(rendered)));
+    }
+
+    @Test
     void aScenarioBothImplementationsAgreeOnAgrees(@TempDir Path dir) {
         BeanDef service = new BeanDef("B1", Scope.APPLICATION, List.of("S1"), null, false, List.of(), null, false, null,
             List.of(), List.of(), true, true, false, List.of(), List.of(),
