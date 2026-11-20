@@ -59,11 +59,15 @@ final class FuzzConfig {
     }
 
     /**
-     * The seed to run alone, or {@code null} for a campaign.
+     * The seeds to run alone, separated by commas, or {@code null} for a campaign.
      */
-    static Long replay() {
+    static java.util.List<Long> replay() {
         String value = System.getProperty("fuzz.replay");
-        return value == null || value.isBlank() ? null : Long.valueOf(value);
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return java.util.Arrays.stream(value.split(",")).map(String::trim).filter(v -> !v.isEmpty())
+            .map(Long::valueOf).toList();
     }
 
     /**

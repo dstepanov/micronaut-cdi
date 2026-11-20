@@ -213,6 +213,13 @@ class HarnessTest {
         Divergence divergence = TraceComparison.compare(micronaut, weld);
         assertTrue(KnownDifferences.match(scenario, divergence, micronaut, weld).isPresent());
 
+        RunResult intercepted = RunResult.deployed(List.of("#X5", "{", "I1.preDestroy@B1", "each=P1", "produce P1", "}",
+            "#shutdown", "{", "}"));
+        RunResult weldIntercepted = RunResult.deployed(List.of("#X5", "{", "each=P1", "produce P1", "}", "#shutdown",
+            "{", "I1.preDestroy@B1", "}"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(intercepted, weldIntercepted), intercepted,
+            weldIntercepted).isPresent());
+
         RunResult missing = RunResult.deployed(List.of("#X5", "{", "}", "#shutdown", "{", "B1.preDestroy@B1", "}"));
         assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(missing, weld), missing, weld).isEmpty());
     }
@@ -228,6 +235,24 @@ class HarnessTest {
         RunResult failed = RunResult.deployed(List.of("#X3", "B1.postConstruct@B1", "!java.lang.ClassCastException",
             "#shutdown"));
         assertTrue(KnownDifferences.match(empty, TraceComparison.compare(failed, weld), failed, weld).isEmpty());
+    }
+
+    @Test
+    void aProducerOfAnUnselectedAlternativeIsAKnownDifference() {
+        Scenario.ProducerDef producer = new Scenario.ProducerDef("P3", false, false, Scope.DEPENDENT, "Gen<String>",
+            List.of(), null, true, 20, false, List.of());
+        BeanDef declaring = new BeanDef("B8", Scope.DEPENDENT, List.of(), null, false, List.of(), null, true, null,
+            List.of(), List.of(), false, false, false, List.of(), List.of(producer), List.of());
+        Scenario scenario = new Scenario(313, List.of(declaring), List.of(), List.of(),
+            List.of(new Probe("X13", ProbeKind.SELECT, "Gen<String>", List.of(), false)));
+        RunResult micronaut = RunResult.deployed(List.of("#X13", "unsatisfied=true ambiguous=false",
+            "!jakarta.enterprise.inject.UnsatisfiedResolutionException", "#shutdown"));
+        RunResult weld = RunResult.deployed(List.of("#X13", "unsatisfied=false ambiguous=false", "produce P3", "get=P3",
+            "#shutdown"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(micronaut, weld), micronaut, weld)
+            .isPresent());
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(weld, micronaut), weld, micronaut)
+            .isEmpty());
     }
 
     @Test
