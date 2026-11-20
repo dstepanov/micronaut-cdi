@@ -203,6 +203,37 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void anUnsatisfiedInjectionPointOfAnEnabledInterceptorIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.interceptor.Interceptor
+            @jakarta.annotation.Priority(jakarta.interceptor.Interceptor.Priority.APPLICATION)
+            @Consumer.Logged
+            public class Consumer {
+
+                @jakarta.inject.Inject
+                Missing missing;
+
+                @jakarta.interceptor.AroundInvoke
+                Object around(jakarta.interceptor.InvocationContext context) throws Exception {
+                    return context.proceed();
+                }
+
+                public interface Missing {
+                }
+
+                @jakarta.interceptor.InterceptorBinding
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                @java.lang.annotation.Target({java.lang.annotation.ElementType.TYPE,
+                    java.lang.annotation.ElementType.METHOD})
+                public @interface Logged {
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
     void missingOptionalAndCollectionProducersAreDeploymentProblems() {
         for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
             "java.util.Set<Element>", "java.util.Collection<Element>", "java.util.Map<String, Element>",

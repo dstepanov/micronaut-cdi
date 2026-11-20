@@ -25,6 +25,8 @@ import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.context.BeanContext;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.FieldInjectionPoint;
@@ -79,11 +81,14 @@ final class DeploymentValidation {
      */
     void validate() {
         List<CdiBean<?>> beans = container.beans();
+        List<BeanDefinition<?>> validated = new ArrayList<>(beans.size());
         for (CdiBean<?> bean : beans) {
-            BeanDefinition<?> definition = bean.definition();
-            if (!isOfTheSpecification(definition)) {
-                continue;
+            if (isOfTheSpecification(bean.definition())) {
+                validated.add(bean.definition());
             }
+        }
+        validated.addAll(enabledInterceptors());
+        for (BeanDefinition<?> definition : validated) {
             boolean proxy = CdiResolution.isProxyDefinition(definition);
             for (Argument<?> argument : definition.getConstructor().getArguments()) {
                 // what the container itself hands the constructor of a generated subclass is no injection point
@@ -180,6 +185,24 @@ final class DeploymentValidation {
         return CdiResolution.isBeanOfTheSpecification(definition)
             && !definition.hasAnnotation(CdiBuiltIn.class)
             && !definition.getAnnotationMetadata().hasAnnotation(Interceptor.class);
+    }
+
+    /**
+     * The interceptors that are enabled: their injection points are those of a bean
+     * (section 5.2.2), validated as the container starts whether or not anything intercepted has been created yet.
+     */
+    private List<BeanDefinition<?>> enabledInterceptors() {
+        BeanContext beanContext = container.beanContext();
+        CdiInterceptorEnablement enablement = beanContext.getBean(CdiInterceptorEnablement.class);
+        List<BeanDefinition<?>> interceptors = new ArrayList<>();
+        // an interceptor class has no scope of the specification: it is found by the annotation that makes it one
+        for (BeanDefinition<Object> definition
+            : beanContext.getBeanDefinitions(Qualifiers.byStereotype(Interceptor.class))) {
+            if (!definition.isAbstract() && enablement.isEnabled(definition)) {
+                interceptors.add(definition);
+            }
+        }
+        return interceptors;
     }
 
     /**
