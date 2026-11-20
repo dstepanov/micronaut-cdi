@@ -105,11 +105,12 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final AtomicBoolean stopped = new AtomicBoolean();
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope,
-                              RequestScope requestScope) {
+                              RequestScope requestScope, ContainerStopGuard stopGuard) {
         this.beanContext = beanContext;
         this.observers = observers;
         this.applicationScope = applicationScope;
         this.requestScope = requestScope;
+        stopGuard.guard(this);
     }
 
     /**
@@ -226,6 +227,19 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     @PreDestroy
     void destroyed() {
         stop();
+    }
+
+    /**
+     * Takes the container down, where the shutdown event did not get to this listener, as Micronaut is about to destroy
+     * the first bean of a context that is stopping ({@link ContainerStopGuard}): Micronaut destroys its singletons in
+     * an order of its own, by name where nothing else orders them, so a singleton the container does not depend on -
+     * one a request scoped bean uses as it is destroyed - may otherwise go before this bean does, and the request
+     * still open would find it closed. Where the event got here there is nothing left to do.
+     */
+    void beforeTheFirstBeanIsDestroyed() {
+        if (!stopped.get()) {
+            stop();
+        }
     }
 
     /**

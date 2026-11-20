@@ -1126,10 +1126,10 @@ ending it would take out what came after it too (`ControllerAfterShutdownTest`).
 
 The container takes itself down from the shutdown event Micronaut publishes before it destroys any bean. Micronaut
 stops publishing that event at the first listener that throws, so where a listener of the shutdown ordered before the
-container's throws, the container goes down from its own `@PreDestroy` instead: `Shutdown`, the requests still open
-and the application context are each still announced and destroyed, but by then Micronaut may already have destroyed
-singletons the container does not depend on, which a request scoped bean that uses one as it is destroyed then finds
-closed. Shutdown listeners that may throw should catch what they throw.
+container's throws, the container goes down as Micronaut is about to destroy the first bean of the stopping context
+instead (`ContainerStopGuard`, a listener of the destruction of beans, which Micronaut destroys after the beans it
+listens to): `Shutdown`, the requests still open and the application context are each still announced and destroyed,
+while every singleton is still there, whatever order Micronaut destroys the singletons in (`ShutdownFallbackTest`).
 
 A `Typed` that names an array type on a producer is refused as the bean compiles: Micronaut does not expose an array
 type as a bean type it can look up. A producer of an array has exactly the array type and `Object` as bean types
