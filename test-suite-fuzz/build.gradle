@@ -1,0 +1,96 @@
+plugins {
+    id "io.micronaut.build.internal.cdi-test-suite"
+}
+
+// A differential fuzzer: it generates CDI Lite deployments from a seed, runs each on this implementation and on the
+// reference implementation, Weld, and reports where the two disagree. See README.md in this directory.
+//
+// Each scenario is compiled twice as it runs: once with this module's processors, since a bean of this
+// implementation is a bean once it is compiled, and once with plain javac for Weld. Weld is not on the test
+// classpath: it runs in a class loader of its own, built from the weld configuration, so that its CDI providers and
+// this implementation's never meet.
+
+configurations {
+    // the processors a scenario is compiled with for this implementation
+    fuzzProcessor {
+        canBeConsumed = false
+    }
+    // the reference implementation and the API it brings, isolated from the test classpath
+    weld {
+        canBeConsumed = false
+    }
+}
+
+dependencies {
+    fuzzProcessor platform(libs.micronaut.core)
+    fuzzProcessor projects.micronautCdiProcessor
+    fuzzProcessor mn.micronaut.inject.java
+    fuzzProcessor libs.managed.micronaut.jakarta.interceptors.processor
+
+    weld 'org.jboss.weld.se:weld-se-core:7.0.0.Final'
+
+    testImplementation platform(libs.micronaut.core)
+    testImplementation projects.micronautCdi
+    testImplementation projects.micronautCdiReflection
+    testImplementation mn.micronaut.inject
+    testImplementation mn.micronaut.context
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.jupiter.engine
+}
+
+def fuzzSystemProperties = { JavaForkOptions task ->
+    task.jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        "-Xss4m")
+}
+
+tasks.named('test', Test) { Test test ->
+    fuzzSystemProperties(test)
+    def processorPath = configurations.fuzzProcessor
+    def weldPath = configurations.weld
+    inputs.files(processorPath).withPropertyName('fuzzProcessor').withNormalizer(ClasspathNormalizer)
+    inputs.files(weldPath).withPropertyName('weld').withNormalizer(ClasspathNormalizer)
+    doFirst {
+        test.systemProperty('fuzz.processorPath', processorPath.asPath)
+        test.systemProperty('fuzz.weldPath', weldPath.asPath)
+        test.systemProperty('fuzz.reportDir', layout.buildDirectory.dir('fuzz').get().asFile.absolutePath)
+    }
+    // the campaign itself runs only from the fuzz task; check runs the harness's own tests
+    test.useJUnitPlatform {
+        excludeTags 'campaign'
+    }
+}
+
+// ./gradlew :micronaut-cdi-test-suite-fuzz:fuzz -Pfuzz.seed=1 -Pfuzz.count=200 [-Pfuzz.shrink=true]
+// [-Pfuzz.shrinkBudget=150] [-Pfuzz.size=medium]
+tasks.register('fuzz', Test) { Test test ->
+    description = 'Runs a campaign of the differential fuzzer against Weld.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    fuzzSystemProperties(test)
+    outputs.upToDateWhen { false }
+    def processorPath = configurations.fuzzProcessor
+    def weldPath = configurations.weld
+    inputs.files(processorPath).withNormalizer(ClasspathNormalizer)
+    inputs.files(weldPath).withNormalizer(ClasspathNormalizer)
+    test.useJUnitPlatform {
+        includeTags 'campaign'
+    }
+    test.testLogging {
+        showStandardStreams = true
+    }
+    doFirst {
+        test.systemProperty('fuzz.processorPath', processorPath.asPath)
+        test.systemProperty('fuzz.weldPath', weldPath.asPath)
+        test.systemProperty('fuzz.reportDir', layout.buildDirectory.dir('fuzz').get().asFile.absolutePath)
+        ['seed', 'count', 'shrink', 'shrinkBudget', 'size', 'replay', 'keepAll'].each { name ->
+            def value = providers.gradleProperty("fuzz.${name}").orNull
+            if (value != null) {
+                test.systemProperty("fuzz.${name}", value)
+            }
+        }
+    }
+}
