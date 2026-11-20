@@ -176,18 +176,11 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 }
             }
             producer.annotate(Bean.class);
-            if (producer instanceof FieldElement field && !producer.hasDeclaredAnnotation(Cdi.TYPED)
-                && element.hasDeclaredAnnotation(Cdi.TYPED)) {
+            if (producer instanceof FieldElement field && element.hasDeclaredAnnotation(Cdi.TYPED)) {
                 // the Typed of the class narrows the class bean alone (section 2.2.2), but the metadata of a producer
                 // field carries the class's, and Micronaut would expose the product only by the types the class is
-                // narrowed to: the types of the product itself, written on the member, shadow them
-                ClassElement produced = field.getGenericType();
-                Set<String> types = new LinkedHashSet<>();
-                types.add(produced.getName());
-                for (ClassElement supertype : BeanTypesVisitor.closureOf(produced)) {
-                    types.add(supertype.getName());
-                }
-                writeFieldTypes(producer, types, element);
+                // narrowed to: the types of the product itself, written on the member, go before them
+                writeProducerTypes(producer, typesOfProduct(producer, field.getGenericType()), element);
             }
             selectIfAlternative(producer, element);
             // what produced the bean is recorded so that the container can report it without working it out
@@ -223,6 +216,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // (section 2.7.2), and what the mappers read that one into - the scope it is held in, the client
                 // proxy - goes with it
                 CdiScopeVisitor.takeOffTheNormalScopeItOverrides(producer);
+            }
+            if (producer instanceof MethodElement method && element.hasDeclaredAnnotation(Cdi.TYPED)
+                && isNormalScoped(producer)) {
+                // the client proxy of a normal scoped product is exposed by the types of the producer method followed
+                // by those of its class, as the product of a field is, rather than by the method's alone: the types
+                // of the product itself, written on the method, go before those the class is narrowed to
+                writeProducerTypes(producer, typesOfProduct(producer, method.getGenericReturnType()), element);
             }
             recordAttributes(producer, element, classAttributes, context);
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
@@ -385,14 +385,12 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 .member("declaringType", new AnnotationClassValue<>(declaring))
                 .member("member", member.getName())
                 .member("field", isField));
-            if (isField) {
-                // Micronaut exposes the product of a field by the types the field names followed by those its class
-                // names, and compiles no type named twice
-                Set<String> types = new LinkedHashSet<>(
-                    java.util.Arrays.asList(member.getAnnotationMetadata().stringValues(Bean.class, "typed")));
-                if (!types.isEmpty()) {
-                    writeFieldTypes(member, types, element);
-                }
+            // Micronaut exposes the product of a field, and the client proxy of a product, by the types the producer
+            // names followed by those its class names, and compiles no type named twice
+            AnnotationValue<Bean> own = member.getDeclaredAnnotation(Bean.class);
+            if (own != null && own.stringValues("typed").length > 0) {
+                writeProducerTypes(member, new LinkedHashSet<>(java.util.Arrays.asList(own.stringValues("typed"))),
+                    element);
             }
         }
         element.annotate(io.micronaut.cdi.internal.metadata.CdiInheritedProducers.class,
@@ -495,24 +493,57 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * Writes the types of the product of a producer field: Micronaut exposes it by the types the field names followed
-     * by those its class names, and fails to compile a type named twice, so a type the class is exposed by is left to
-     * the class. What the class names that the product is not an instance of is no type of the product to the
-     * container, which leaves it out of the candidates of a lookup by it ({@code CdiResolutionCustomizer}).
+     * The types of the product of a producer: those its own {@code Typed} names, or else its type and the closure of
+     * its supertypes.
      *
-     * @param field The producer field, as read through the class
-     * @param types The types of the product
-     * @param owner The class the field is read through
+     * @param producer The producer
+     * @param produced The type it produces
+     * @return The types
      */
-    private static void writeFieldTypes(MemberElement field, Set<String> types, ClassElement owner) {
+    private static Set<String> typesOfProduct(MemberElement producer, ClassElement produced) {
+        Set<String> types = new LinkedHashSet<>();
+        if (producer.hasDeclaredAnnotation(Cdi.TYPED)) {
+            AnnotationValue<Bean> own = producer.getDeclaredAnnotation(Bean.class);
+            if (own != null) {
+                types.addAll(java.util.Arrays.asList(own.stringValues("typed")));
+            }
+            return types;
+        }
+        types.add(produced.getName());
+        for (ClassElement supertype : BeanTypesVisitor.closureOf(produced)) {
+            types.add(supertype.getName());
+        }
+        return types;
+    }
+
+    /**
+     * Whether a producer's product is of a normal scope, as the record of its scope written on it says.
+     */
+    private static boolean isNormalScoped(MemberElement producer) {
+        AnnotationValue<CdiScope> scope = producer.getDeclaredAnnotation(CdiScope.class);
+        return scope != null && scope.booleanValue("normal").orElse(false);
+    }
+
+    /**
+     * Writes the types of the product of a producer field, or of the client proxy of the product of a producer
+     * method: Micronaut exposes it by the types the producer names followed by those its class names, and fails to
+     * compile a type named twice, so a type the class is exposed by is left to the class. What the class names that
+     * the product is not an instance of is no type of the product to the container, which leaves it out of the
+     * candidates of a lookup by it ({@code CdiResolutionCustomizer}).
+     *
+     * @param producer The producer, as read through the class
+     * @param types    The types of the product
+     * @param owner    The class the producer is read through
+     */
+    private static void writeProducerTypes(MemberElement producer, Set<String> types, ClassElement owner) {
         Set<String> own = new LinkedHashSet<>(types);
         own.removeAll(classTypesOf(owner));
         if (own.isEmpty()) {
-            // every type of the product is one the class is exposed by, which Micronaut merges in: the field names
-            // none of its own, or Object where the class does not name it
+            // every type of the product is one the class is exposed by, which Micronaut merges in: the producer
+            // names none of its own, or Object where the class does not name it
             if (classTypesOf(owner).contains("java.lang.Object")) {
-                field.removeAnnotation(Bean.class);
-                field.annotate(Bean.class);
+                producer.removeAnnotation(Bean.class);
+                producer.annotate(Bean.class);
                 return;
             }
             own.add("java.lang.Object");
@@ -520,8 +551,8 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         AnnotationClassValue<?>[] written = own.stream()
             .map(AnnotationClassValue::new)
             .toArray(AnnotationClassValue<?>[]::new);
-        field.removeAnnotation(Bean.class);
-        field.annotate(Bean.class, builder -> builder.member("typed", written));
+        producer.removeAnnotation(Bean.class);
+        producer.annotate(Bean.class, builder -> builder.member("typed", written));
     }
 
     private static boolean containsWildcard(ClassElement type) {

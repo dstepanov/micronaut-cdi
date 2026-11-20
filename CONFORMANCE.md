@@ -285,9 +285,11 @@ resolves the bean declaring its producer by the declaring class (`BeanResolution
 interceptors runtime finds the definition describing the around-invoke methods a class declares or inherits by the
 class, so the processor keeps every such class resolvable by its class to Micronaut: `BeanContext.getBean` of the
 class finds such a bean, while the container's resolution - injection points, `Instance`, `BeanContainer.getBeans` -
-compares the bean types its `Typed` gives it, and does not. Micronaut gives the product of a producer field the types its class is resolvable by as
-well; the processor writes the product's own types on the field, and a product is no candidate of a class it is no
-instance of. A `getFactoryBean` that resolved the declaring
+compares the bean types its `Typed` gives it, and does not. Micronaut gives the product of a producer field, and the
+client proxy of a normal scoped product of a producer method, the types its class is resolvable by as well, after
+those the producer names, and compiles no type named twice; the processor writes the product's own types on the
+producer, leaving out those the class names, and a product is no candidate of a class it is no instance of
+(`ProducerTypesMatrixTest`). A `getFactoryBean` that resolved the declaring
 definition the product names rather than a bean of its class would make this unnecessary; see "Open points in
 Micronaut Core".
 
