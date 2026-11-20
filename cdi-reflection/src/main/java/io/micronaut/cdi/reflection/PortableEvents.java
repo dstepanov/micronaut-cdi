@@ -583,11 +583,13 @@ final class PortableEvents {
         }
 
         @Override
-        public <T> @Nullable AnnotatedType<T> getAnnotatedType(Class<T> type, String id) {
+        public <T> @Nullable AnnotatedType<T> getAnnotatedType(Class<T> type, @Nullable String id) {
             whileNotifying();
-            // a discovered class is the one annotated type of its class, and its id is the name of the class
+            // a discovered class is the one annotated type of its class, and its id is the name of the class, which
+            // is also the id a null one stands for
             List<Annotation> added = discovered.get(type);
-            return added == null || !type.getName().equals(id) ? null : new ReflectiveAnnotatedType<>(type, added);
+            return added == null || (id != null && !type.getName().equals(id)) ? null
+                : new ReflectiveAnnotatedType<>(type, added);
         }
 
         @Override
