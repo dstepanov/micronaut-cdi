@@ -132,7 +132,8 @@ class PortableContextCreationTest {
             assertEquals(1, adding.second.held.size());
 
             adding.first.active = true;
-            assertThrows(IllegalStateException.class, () -> manager.getContext(RequestScoped.class));
+            // BeanContainer.getContext names IllegalArgumentException for more than one active context
+            assertThrows(IllegalArgumentException.class, () -> manager.getContext(RequestScoped.class));
             assertThrows(IllegalStateException.class, () -> container.select(Stay.class).get().name());
             assertEquals(0, adding.first.held.size(), "Ambiguity must be detected before creating an instance");
 

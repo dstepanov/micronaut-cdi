@@ -31,7 +31,7 @@ visible in a test report as what passes.
 | 11.1 | The `BeanContainer`, and the `Bean` a lookup resolves to | `CdiBeanContainer`, `CdiBean` |
 | 11.1 | The `BeanManager` of CDI Full, as far as CDI Lite can answer it, and injectable as a bean | `CdiBeanContainer` |
 | 11.1 | `CDI.current()`, installed with `CDI.setCDIProvider` as a container starts, handing over to the providers the service loader finds while none runs | `MicronautCDIProvider`, `MicronautCDI` |
-| 6.2 | The `Context` of each scope, and whether it is active | `CdiContext` |
+| 6.2 | The `Context` of each scope, and whether it is active; `BeanContainer.getContext` throwing `ContextNotActiveException` for a scope with no active context, one with no context registered included, and `IllegalArgumentException` for more than one active context or an annotation that is no scope | `CdiContext`, `CdiBeanContainer` |
 | 5.2 | The rules of resolution applied to types and qualifiers on their own | `CdiAssignability` |
 | 11.1.9 | Interceptor resolution through the bean container | `CdiBeanContainer` |
 | 9.2 | Firing an event, synchronously and asynchronously, and narrowing one with `select` | `CdiEvent` |

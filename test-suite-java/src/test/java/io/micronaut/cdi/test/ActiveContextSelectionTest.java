@@ -57,6 +57,10 @@ class ActiveContextSelectionTest {
             BeanContainer container = context.getBean(BeanContainer.class);
             assertTrue(container.getContexts(Unregistered.class).isEmpty());
             assertThrows(IllegalArgumentException.class, () -> container.getContext(Unregistered.class));
+            // a scope with no context registered for it has no active context (BeanContainer.getContext)
+            ContextNotActiveException none = assertThrows(ContextNotActiveException.class,
+                () -> container.getContext(jakarta.enterprise.context.SessionScoped.class));
+            assertTrue(none.getMessage().contains("SessionScoped"), none.getMessage());
             assertThrows(ContextNotActiveException.class, () -> container.getContext(RequestScoped.class));
             assertTrue(container.getContext(ApplicationScoped.class).isActive());
         }
