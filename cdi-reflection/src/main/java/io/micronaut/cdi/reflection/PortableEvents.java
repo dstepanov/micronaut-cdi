@@ -188,7 +188,7 @@ final class PortableEvents {
 
         AnnotatedTypeEvent(Class<X> type, CompiledAnnotationTypes types) {
             super("ProcessAnnotatedType");
-            this.type = new ReflectiveAnnotatedType<>(type);
+            this.type = new ReflectiveAnnotatedType<>(type, added);
             this.types = types;
         }
 
