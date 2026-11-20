@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Asking an {@code Instance} whether it is unsatisfied or ambiguous creates nothing, and each {@code get} invokes a
@@ -118,9 +117,15 @@ class InterceptedProducerLookupCountTest {
             assertEquals(false, prints.isUnsatisfied());
             assertEquals(false, prints.isAmbiguous());
             assertEquals(List.of(), EVENTS);
-            // the creation destroys the bureau holding the lookup, which refuses the product as it is done
-            assertThrows(IllegalStateException.class, prints::get);
-            assertEquals(List.of("produce", "bureau destroyed"), EVENTS);
+            // with Micronaut Core as it is, the creation destroys the bureau holding the lookup, which refuses the
+            // product as it is done; once Core takes the declaring instance for the factory, the product is returned.
+            // Either way the producer is invoked once: the lookup is not made again
+            try {
+                assertEquals("bureau", prints.get().by());
+            } catch (IllegalStateException refused) {
+                assertEquals(List.of("produce", "bureau destroyed"), EVENTS);
+            }
+            assertEquals(1, EVENTS.stream().filter("produce"::equals).count(), EVENTS.toString());
         }
     }
 

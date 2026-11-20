@@ -167,7 +167,9 @@ class UnboundInterceptorBindingDeclaringBeanTest {
             assertEquals(List.of("produce", "folder destroyed"), EVENTS);
             EVENTS.clear();
             sheets.destroy(sheet);
-            assertEquals(List.of("pen destroyed", "dispose", "folder destroyed"), EVENTS.stream().sorted().toList());
+            // the disposer runs on an instance of its own, destroyed as the call completes (section 6.4.2), and then
+            // the dependent objects of the product are (section 6.4.1)
+            assertEquals(List.of("dispose", "folder destroyed", "pen destroyed"), EVENTS);
         }
     }
 
