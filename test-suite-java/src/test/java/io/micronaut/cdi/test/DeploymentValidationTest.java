@@ -172,6 +172,28 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void anUnsatisfiedParameterizedConstructorParameterOfANormalScopedBeanIsADeploymentProblem() {
+        // the class also declares a constructor without parameters, which its client proxy is generated with
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.ApplicationScoped
+            public class Consumer {
+
+                public interface Gen<T> {
+                }
+
+                public Consumer() {
+                }
+
+                @jakarta.inject.Inject
+                public Consumer(Gen<String> missing) {
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
     void twoBeansOfOneNameAreADeploymentProblem() {
         assertRejected("""
             package invalid;
