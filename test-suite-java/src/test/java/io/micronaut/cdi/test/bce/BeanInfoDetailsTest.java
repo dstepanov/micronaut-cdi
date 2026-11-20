@@ -102,8 +102,10 @@ class BeanInfoDetailsTest {
                 "class Shade stereotypes [jakarta.enterprise.context.Dependent named alternative=false priority=7] "
                     + "points [detailed.Lamp.Wick [detailed.Lamp.Blue], detailed.Lamp.Wick "
                     + "[jakarta.enterprise.inject.Default]]",
-                "producer make stereotypes [] points [detailed.Lamp.Shade [jakarta.enterprise.inject.Default], "
-                    + "detailed.Lamp.Shade [jakarta.enterprise.inject.Default]] disposer dispose 0"),
+                // the producer's own parameters: the disposer's are its disposer's, as the bean's Bean has them at
+                // runtime and as ArC describes a producer
+                "producer make stereotypes [] points [detailed.Lamp.Shade [jakarta.enterprise.inject.Default]] "
+                    + "disposer dispose 0"),
                 Recording.READ.stream().sorted().toList());
         }
     }
