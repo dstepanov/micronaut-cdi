@@ -16,6 +16,7 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.MicronautInstance;
+import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
@@ -288,9 +289,11 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
             // the lookup is made in, where there is one, whose path says what that point is. Any other is created on a
             // path that says what the lookup's injection point is
             Argument<U> asked = askedAs(beanContext, selected, definition);
-            return lookedUpAt == null
+            // the request context is active during the PostConstruct of any bean (section 6.7.1): one of its own
+            // spans the creation where the thread has none
+            return beanContext.getBean(RequestScope.class).duringCreation(() -> lookedUpAt == null
                 ? dependents.registrationAtCurrentPoint(definition, asked)
-                : dependents.registrationAt(injectionSegment, lookedUpAt, definition, asked);
+                : dependents.registrationAt(injectionSegment, lookedUpAt, definition, asked));
         } catch (BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
