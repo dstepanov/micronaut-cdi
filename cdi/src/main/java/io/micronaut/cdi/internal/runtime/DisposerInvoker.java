@@ -148,8 +148,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
         boolean staticMethod = disposer.booleanValue("staticMethod").orElse(false);
         // the bean of the declaring class itself: a selected alternative that extends it is another bean
-        BeanDefinition<?> declaring = CdiResolution.declaringBeanOf(
-            beanContext.getBeanDefinitions(declaringType.get()), declaringType.get().getName());
+        BeanDefinition<?> declaring = CdiResolution.declaringBeanOf(beanContext, declaringType.get());
         if (declaring == null) {
             throw new NoSuchBeanException(declaringType.get());
         }

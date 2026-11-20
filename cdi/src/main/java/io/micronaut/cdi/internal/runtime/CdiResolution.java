@@ -442,6 +442,27 @@ public final class CdiResolution {
         return found.isEmpty() ? null : found.get(0);
     }
 
+    /**
+     * The bean of the given class itself, found the way {@link #declaringBeanOf(Collection, String)} finds it among
+     * the candidates of the class, and among the beans of the specification where none is: a bean that narrowed its
+     * bean types with {@code Typed} is not a candidate of its own class, and still declares its producers,
+     * disposers and invoked methods.
+     *
+     * @param beanContext The bean context
+     * @param type        The class
+     * @return The definition, or {@code null} where no bean is of the class
+     * @throws NonUniqueBeanException Where more than one bean is of the class
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static @Nullable BeanDefinition<?> declaringBeanOf(BeanContext beanContext, Class<?> type) {
+        BeanDefinition<?> found = declaringBeanOf(beanContext.getBeanDefinitions(type), type.getName());
+        if (found == null) {
+            found = declaringBeanOf(
+                (Collection) beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class)), type.getName());
+        }
+        return found;
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static NonUniqueBeanException nonUnique(List<BeanDefinition<?>> found) {
         List raw = found;
