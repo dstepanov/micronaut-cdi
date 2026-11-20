@@ -2,6 +2,7 @@ package io.micronaut.cdi.test;
 
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.context.ApplicationContext;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.Produces;
@@ -20,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * A producer of a bean that is not enabled is not enabled either (section 5.1.2): what an alternative class
- * declares is produced only where the class was selected.
+ * declares is produced only where the class was selected, also where the producer is an alternative with a priority
+ * of its own, which Weld enables (CONFORMANCE.md, Differences).
  */
 class DisabledAlternativeProducersTest {
 
@@ -68,6 +70,35 @@ class DisabledAlternativeProducersTest {
         @Right
         public Glove method() {
             return FIELD;
+        }
+    }
+
+    /**
+     * An unselected alternative class whose producer method is an alternative with a priority of its own.
+     */
+    @Alternative
+    @Dependent
+    public static class PrioritizedGloves {
+        @Produces
+        @Alternative
+        @Priority(20)
+        public Mitten method() {
+            return new Mitten();
+        }
+    }
+
+    /**
+     * What only the prioritized producer of the unselected class produces.
+     */
+    public static class Mitten {
+    }
+
+    @Test
+    void aPrioritizedAlternativeProducerOfAnUnselectedAlternativeClassProducesNothing() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            BeanManager manager = context.getBean(BeanManager.class);
+            assertEquals(0, manager.getBeans(Mitten.class).size());
+            assertEquals(true, manager.createInstance().select(Mitten.class).isUnsatisfied());
         }
     }
 

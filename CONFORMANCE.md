@@ -1050,6 +1050,14 @@ both "more than one disposer" and "no producer". And an interceptor binding decl
 producer methods of that class, so what a producer of an intercepted class produces is proxied as though it were
 intercepted — which a primitive cannot be, and the class is refused.
 
+### A prioritized alternative producer of an unselected alternative class is not enabled
+
+*Sections 2.7.1 and 5.1.2.* A producer method or field is enabled only where the bean declaring it is enabled, and an
+alternative class that is neither selected nor given a priority is not. Its producer stays disabled here even where
+the producer is an alternative with a `@Priority` of its own, while Weld enables such a producer and resolves to it
+(`DisabledAlternativeProducersTest.aPrioritizedAlternativeProducerOfAnUnselectedAlternativeClassProducesNothing`).
+Give the declaring class the priority, or declare the producer on a class that is not an alternative.
+
 ### An asynchronous event is notified on Micronaut's executor of blocking work
 
 *CDI 4.1 section 2.8.5.* The specification leaves the executor of `fireAsync` without `NotificationOptions` to the
