@@ -17,6 +17,7 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiAny;
 import io.micronaut.cdi.internal.metadata.CdiName;
+import io.micronaut.cdi.internal.metadata.CdiProducer;
 import io.micronaut.cdi.internal.metadata.MicronautQualifiers;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
@@ -445,11 +446,23 @@ public final class CdiQualifier {
     }
 
     /**
+     * The qualifiers a bean was compiled with: those its class declares, or those a producer declares itself.
+     *
+     * @param metadata The metadata of the bean's definition
+     * @return The qualifiers
+     */
+    public static List<CdiQualifier> ofBean(AnnotationMetadata metadata) {
+        // the metadata of a producer carries the annotations of the class declaring it as well, and a producer has
+        // the qualifiers it declares itself alone (sections 2.3.1 and 3.2)
+        return declared(metadata.hasAnnotation(CdiProducer.class) ? metadata.getDeclaredMetadata() : metadata);
+    }
+
+    /**
      * The qualifiers an element was annotated with, and only those.
      *
-     * <p>It is what a bean's qualifiers are read from, and it is also what an observer method observes and what
-     * an injected event or lookup is qualified by: in each of those the qualifiers are the ones that were
-     * written, with nothing added. {@code Any} itself is kept where it was written, because at an injection
+     * <p>It is what a bean's qualifiers are read from ({@link #ofBean}), and it is also what an observer method
+     * observes and what an injected event or lookup is qualified by: in each of those the qualifiers are the ones
+     * that were written, with nothing added. {@code Any} itself is kept where it was written, because at an injection
      * point it is the difference between asking for every bean of the type and asking for the default one.</p>
      *
      * @param metadata The metadata of the element

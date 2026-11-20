@@ -184,7 +184,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         if (!disposer.staticMethod()) {
             host = resolveDefinition(disposer.declaring(), dependencies);
             if (host instanceof InterceptedProxy<?> proxy && !disposer.publicMethod()
-                && !CdiResolution.isBoundToInterceptors(method.getAnnotationMetadata())) {
+                && !CdiResolution.isInterceptedThroughTheProxy(beanContext, disposer.declaring(), method.getAnnotationMetadata())) {
                 // A non-public disposer is invoked on the contextual target; public methods retain interception, and
                 // so does one bound to interceptors, a business method the proxy intercepts (section 7.2).
                 host = proxy.interceptedTarget();

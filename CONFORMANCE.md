@@ -22,7 +22,7 @@ visible in a test report as what passes.
 | 2.4, 6.6 | The application scope, read as a proxied Micronaut scope | `ApplicationScope`, `CdiApplicationScope` |
 | 2.4, 6.6 | The request scope, and the `ContextNotActiveException` of reaching for it outside a request | `RequestScope`, `CdiRequestScope` |
 | 2.3, 3.8 | Qualifiers, and the rule that a bean declaring none has the default qualifier and an injection point declaring none requires it | `DefaultQualifierVisitor`, `CdiBeanContainer` |
-| 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields | `ProducerVisitor` |
+| 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields; a producer not inherited by a subclass, which is made a factory itself and whose products of the inherited producers a condition takes out (4.2), so that neither a producer field is injected into it nor a producer method of a normal scope makes it a proxy | `ProducerVisitor`, `InheritedProducer` |
 | 3.4 | Disposer methods, resolved to their producer while it is compiled | `ProducerVisitor`, `DisposerInvoker` |
 | 3.5, 3.6, 3.7 | Bean constructors, injected fields and initializer methods, each point resolved by the container | Micronaut's own injection, `CdiBeanInjectionProvider` |
 | 2.2 | Narrowing the bean types of a bean with `@Typed`, a type it names that a bean class or a producer does not have a definition error | `TypedAnnotationMapper`, `BeanDiscoveryVisitor`, `ProducerVisitor` |
@@ -79,7 +79,7 @@ visible in a test report as what passes.
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
 | 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
-| 7.2 | The container's invocations of observer, producer and disposer methods as business method invocations, intercepted by the bean's method interceptors - through the client proxy of a normal scoped bean where the method is bound to interceptors, whether the bean declares it or inherits it | `CdiObserverMethod`, `DisposerInvoker`, `CdiResolution` |
+| 7.2 | The container's invocations of observer, producer and disposer methods as business method invocations, intercepted by the bean's method interceptors - through the client proxy of a normal scoped bean where the method is bound to interceptors or the bean's class declares or inherits an around-invoke method, whether the bean declares the method or inherits it | `CdiObserverMethod`, `DisposerInvoker`, `CdiResolution` |
 | 2.5.1 (5.0) | The bean discovery mode of `beans.xml`: `all` a deployment problem as any container starts, `none` no bean archive of an SE container that discovers; nothing else of a descriptor is read | `BeanArchives`, `DeploymentValidation`, `MicronautSeContainerInitializer` |
 | 5.5.8 (5.0) | Bean metadata: the dependent `@Default Bean` of the bean an injection point belongs to - a class bean at a field, constructor or initializer, the produced bean at a parameter of its producer or disposer method, the declaring bean at a parameter of an observer method, a synthetic bean through `SyntheticInjections` - and the `@Default Interceptor` of an interceptor class, each the container's own `Bean` or `Interceptor` of it, read off the resolution path as the bean is created, a `Bean` of another type than the one the point is handed - of the declaring class at a producer or disposer parameter among them - a definition error; the `@Intercepted Bean` is not yet implemented, see below | `CdiBeanMetadataFactory`, `CdiInterceptorMetadataFactory`, `ContainerInjectionVisitor`, `CdiObserverMethod`, `DisposerInvoker` |
 
@@ -281,10 +281,15 @@ specification, is held to the rule.
 A bean whose `Typed` leaves its own class out of its bean types, or names no type, is still the bean that declares its
 producers, disposers and observer methods, and is created as `Object` where the container already chose it
 (`CdiResolution.creationTypeOf`, `TypedAwayDeclaringBeanTest`). The definition Micronaut generates for a product
-resolves the bean declaring its producer by the declaring class (`BeanResolutionContext.getFactoryBean`), so the
-processor keeps a class that declares producers resolvable by its class to Micronaut: `BeanContext.getBean` of the
+resolves the bean declaring its producer by the declaring class (`BeanResolutionContext.getFactoryBean`), and the
+interceptors runtime finds the definition describing the around-invoke methods a class declares or inherits by the
+class, so the processor keeps every such class resolvable by its class to Micronaut: `BeanContext.getBean` of the
 class finds such a bean, while the container's resolution - injection points, `Instance`, `BeanContainer.getBeans` -
-compares the bean types its `Typed` gives it, and does not. A `getFactoryBean` that resolved the declaring
+compares the bean types its `Typed` gives it, and does not. Micronaut gives the product of a producer field, and the
+client proxy of a normal scoped product of a producer method, the types its class is resolvable by as well, after
+those the producer names, and compiles no type named twice; the processor writes the product's own types on the
+producer, leaving out those the class names, and a product is no candidate of a class it is no instance of
+(`ProducerTypesMatrixTest`). A `getFactoryBean` that resolved the declaring
 definition the product names rather than a bean of its class would make this unnecessary; see "Open points in
 Micronaut Core".
 
@@ -1047,6 +1052,14 @@ both "more than one disposer" and "no producer". And an interceptor binding decl
 producer methods of that class, so what a producer of an intercepted class produces is proxied as though it were
 intercepted — which a primitive cannot be, and the class is refused.
 
+### A prioritized alternative producer of an unselected alternative class is not enabled
+
+*Sections 2.7.1 and 5.1.2.* A producer method or field is enabled only where the bean declaring it is enabled, and an
+alternative class that is neither selected nor given a priority is not. Its producer stays disabled here even where
+the producer is an alternative with a `@Priority` of its own, while Weld enables such a producer and resolves to it
+(`DisabledAlternativeProducersTest.aPrioritizedAlternativeProducerOfAnUnselectedAlternativeClassProducesNothing`).
+Give the declaring class the priority, or declare the producer on a class that is not an alternative.
+
 ### An asynchronous event is notified on Micronaut's executor of blocking work
 
 *CDI 4.1 section 2.8.5.* The specification leaves the executor of `fireAsync` without `NotificationOptions` to the
@@ -1143,9 +1156,17 @@ A synthetic bean of an array type is refused as its extension describes it: Micr
 an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
 type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
-A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
-after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in
-Micronaut Core". Declare such a producer on a `@Dependent` bean, or make the product's scope the declaring bean's,
+A dependent bean bound to an interceptor cannot declare a producer of a bean of a normal scope: creating the product
+fails; see "Open points in Micronaut Core". Declare the producer on a bean that is not intercepted, or produce in the
+dependent pseudo-scope.
+
+A bean of a normal scope that injects the product of its own producer method fails to be created, since Micronaut has
+no way to reach the instance under construction from the producer; see "Open points in Micronaut Core". Inject an
+`Instance` of the product, or move the producer to another bean.
+
+A bean in a normal scope that declares a producer has its contextual instance destroyed after each product is
+created, whether the product is of another scope or of the declaring bean's own, because of how Micronaut Core
+destroys the factory it recorded; see "Open points in Micronaut Core". Declare such a producer on a `@Dependent` bean
 until it is fixed there.
 
 A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
@@ -1304,14 +1325,62 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A static producer of a product of a normal scope on a bean of a normal scope does not compile.** The scope of the
+  product is written on the producer method, and a normal scope is a scoped proxy, an around advice, to Micronaut.
+  Where the declaring class is an AOP proxy itself - a bean of a normal scope - Micronaut's processor visits its
+  methods for advice, and `DeclaredBeanElementCreator.visitAopMethod` takes the around advice the static method
+  declares for its own and refuses it ("Method defines AOP advice but is declared static",
+  `StaticScopedProducerTest`, disabled). A non-static producer is claimed as a factory member before that. Skipping a
+  member that declares a bean - the `Bean` stereotype - in `visitAopMethod`, as `FactoryBeanElementCreator.visitMethod`
+  does, would close it; until then, declare the producer non-static, or on a bean of a pseudo-scope.
+- **A product of a normal scope declared by an intercepted dependent bean cannot be created.** A dependent bean bound to
+  an interceptor, at its class or at a method, is the subclass Micronaut generates for it. Creating the contextual
+  instance of a product of a normal scope it declares, the product's definition looks its factory up
+  (`AbstractBeanResolutionContext.getFactoryBean`), and `DefaultBeanContext.resolveBeanRegistration` asks
+  `findCustomScope` for the scope of the factory, a prototype: `findInjectionPointDeclaredScope` returns the scope the
+  current segment - the product's - declares unless the definition is the factory of the segment's bean, which
+  `isFactoryOf` tells by `producedBean.getDeclaringType() == definition.getBeanType()`. The bean type of the
+  intercepted definition is the generated subclass, not the declaring class, so the product's application scope is
+  taken for the factory's, the definition, a proxy, is swapped for its proxy target (`getProxyTargetBeanDefinition`),
+  which an intercepted dependent bean does not have, and the creation fails with `NoSuchBeanException` for the
+  declaring class (`InterceptedFactoryTest`, the normal scoped case disabled). A dependent product of the same bean is
+  created. `isFactoryOf` comparing with `isAssignableFrom`, or with the intercepted type of an advised definition,
+  would close it.
+- **The factory of a product whose definition is intercepted is taken to be the first dependent it resolved.** A
+  producer method of a class with an interceptor binding of its own, bound to an interceptor or not, has a product
+  definition that is an `InterceptedBeanDefinition`, the class's bindings being in the product's metadata, and its
+  `instantiate` resolves the parameters of the producer method before `doInstantiate` looks up the declaring instance
+  through `BeanResolutionContext.getFactoryBean`. `AbstractBeanResolutionContext.markDependentAsFactory` then takes the
+  first dependent that is no interceptor for the factory, which is the first dependent parameter: it is destroyed as
+  soon as the product is created, as the factory is, while a dependent declaring instance stays a dependent of the
+  product and is destroyed only with it (sections 6.4.1 and 6.4.2;
+  `UnboundInterceptorBindingDeclaringBeanTest`, the two cases with a parameter disabled). With a declaring bean of a
+  normal scope the parameter is destroyed as the product is created. Where that parameter is a bean of a normal scope,
+  its client proxy is destroyed as the factory is, which removes the contextual instance from its scope; if that
+  instance holds the `Instance` the product was looked up through, the lookup fails with an `IllegalStateException`
+  as the product is done, its owner having been destroyed (`InterceptedProducerLookupCountTest`). `getFactoryBean`
+  marking the registration its own `getBean` added - the dependents past the count before it - would close it.
+- **A scoped bean under construction is not reachable from its own injection (section 5.4).** A bean of a normal scope
+  that injects what its own producer method produces - a field or initializer injected with the product - has the
+  producer invoked on it through its client proxy while it is being created, and Weld hands the producer the instance
+  under construction. Micronaut resolves the proxy's target through the scope again, which finds no instance yet and
+  begins a second creation of the bean, which fails with a `BeanInstantiationException` that names no cause
+  (`SelfProducingShutdownObserverTest`, disabled). The bean is then not created at all: where it observes
+  `Shutdown`, the failure aborts the notification of the observers after it, as a failing observer does, and is
+  logged by the container. Core registers an instance under construction as in flight only for
+  `BeanContext.inject(instance)`; doing the same for a scoped bean as its constructor returns - on the resolution
+  context of its creation, consulted by `getProxyTargetBean` - would hand the producer the instance. A constructor
+  injected with the product of the bean's own producer cannot be supported by any container.
 - **The factory of a product is destroyed as a bean of its own once the product is created.** Once a bean produced by
   a factory method or field has been created, `DefaultBeanContext.createRegistrationInContext` destroys the factory
   registration the resolution recorded (`getAndResetDependentFactoryBean`) with `destroyBean(registration)`, that is
   as a bean that is not a dependent. Where the declaring bean is in a normal scope, the registration is that of its
   client proxy, and destroying a proxy that is not a dependent removes its target from the scope: the contextual
   instance of an `@ApplicationScoped` bean that produces a `@Dependent` bean has its `@PreDestroy` run after every
-  product, a fresh one serves the next, and none is destroyed as the context ends
-  (`NormalScopedFactoryLifecycleTest`, disabled). Destroying the recorded factory as a dependent - which leaves a
+  product, a fresh one serves the next, and none is destroyed as the context ends; one that produces an
+  `@ApplicationScoped` bean has it run once its product is created (`NormalScopedFactoryLifecycleTest`, both cases
+  disabled). Commit 7c5014595c on Micronaut Core's `denis/uninterceptable-close` branch destroys the proxy as a
+  dependent, by its description; this module has not been run against it. Destroying the recorded factory as a dependent - which leaves a
   scoped target in its scope, as the destruction of any other dependent proxy does - would close it; only a
   `@Dependent` declaring instance is to be destroyed once the call completes (CDI 4.1 section 6.4.2).
 - **The bean declaring a producer is resolved by its class.** `BeanResolutionContext.getFactoryBean` looks the

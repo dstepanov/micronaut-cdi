@@ -54,7 +54,7 @@ class TypedAwayDeclaringBeanTest {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
             List<String> produced = container.createInstance().select(Produced.class).stream()
                 .map(Produced::by).sorted().toList();
-            assertEquals(List.of("Factory", "ScopedFactory"), produced);
+            assertEquals(List.of("Factory", "FieldFactory", "ScopedFactory", "ScopedFieldFactory"), produced);
             // and the classes are still no bean types of the factories
             assertTrue(container.createInstance().select(Factory.class).isUnsatisfied());
             assertTrue(container.createInstance().select(ScopedFactory.class).isUnsatisfied());
@@ -177,6 +177,27 @@ class TypedAwayDeclaringBeanTest {
         Produced produce() {
             return new Produced("Factory");
         }
+    }
+
+    /**
+     * A bean of no type, producing through a field.
+     */
+    @Dependent
+    @Typed
+    public static class FieldFactory {
+        @Produces
+        Produced produced = new Produced("FieldFactory");
+    }
+
+    /**
+     * A bean in a normal scope typed as {@code Object} alone, producing through a field.
+     */
+    @ApplicationScoped
+    @Typed(Object.class)
+    public static class ScopedFieldFactory {
+        @Produces
+        @Dependent
+        Produced produced = new Produced("ScopedFieldFactory");
     }
 
     /**

@@ -45,7 +45,9 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -129,6 +131,14 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         for (MethodElement disposer : disposers) {
             checkDisposer(disposer, interceptorClass, context);
         }
+        if (producers.isEmpty() && excludeInheritedProducers(element)) {
+            // a subclass of a class with producers: Micronaut would take each producer field, which carries the
+            // qualifiers of its product, for a field to inject, and each producer method of a normal scope, which
+            // carries the client proxy of its product, for a method to intercept, making the subclass a proxy that
+            // is never destroyed as itself. As a factory it claims them as producers instead, whose products the
+            // class's condition takes out, a producer being no member a subclass inherits (section 4.2)
+            element.annotate(Factory.class);
+        }
         if (producers.isEmpty()) {
             if (!interceptorClass && !disposers.isEmpty()) {
                 // section 3.3.7: a disposer belongs to a producer of the same class, and this class has none
@@ -140,7 +150,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
-        keepResolvableByItsClass(element);
+        excludeInheritedProducers(element);
 
         DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
@@ -166,6 +176,12 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 }
             }
             producer.annotate(Bean.class);
+            if (producer instanceof FieldElement field && element.hasDeclaredAnnotation(Cdi.TYPED)) {
+                // the Typed of the class narrows the class bean alone (section 2.2.2), but the metadata of a producer
+                // field carries the class's, and Micronaut would expose the product only by the types the class is
+                // narrowed to: the types of the product itself, written on the member, go before them
+                writeProducerTypes(producer, typesOfProduct(producer, field.getGenericType()), element);
+            }
             selectIfAlternative(producer, element);
             // what produced the bean is recorded so that the container can report it without working it out
             boolean isField = producer instanceof FieldElement;
@@ -200,6 +216,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // (section 2.7.2), and what the mappers read that one into - the scope it is held in, the client
                 // proxy - goes with it
                 CdiScopeVisitor.takeOffTheNormalScopeItOverrides(producer);
+            }
+            if (producer instanceof MethodElement method && element.hasDeclaredAnnotation(Cdi.TYPED)
+                && isNormalScoped(producer)) {
+                // the client proxy of a normal scoped product is exposed by the types of the producer method followed
+                // by those of its class, as the product of a field is, rather than by the method's alone: the types
+                // of the product itself, written on the method, go before those the class is narrowed to
+                writeProducerTypes(producer, typesOfProduct(producer, method.getGenericReturnType()), element);
             }
             recordAttributes(producer, element, classAttributes, context);
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
@@ -323,6 +346,61 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
+     * Takes out of a class that produces the products Micronaut would build under it of the producers it inherits:
+     * Micronaut builds the products of every producer field and producer method of a factory, those it inherits
+     * included, and a producer is no member a subclass inherits (section 4.2). The producers are recorded on the
+     * class, and its condition ({@code InheritedProducer}) leaves out the products of the recorded ones. What is written
+     * on a member read through this class reaches the products Micronaut builds of it under this class and not those
+     * of the class declaring it: each inherited producer is given the record of its producer, which the condition
+     * reads, and a producer field the types of its own that its class does not name, which Micronaut compiles with
+     * those of the class.
+     *
+     * @return Whether the class inherits producers
+     */
+    private static boolean excludeInheritedProducers(ClassElement element) {
+        List<String> inherited = new ArrayList<>();
+        List<MemberElement> members = new ArrayList<>();
+        for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.includeHiddenElements())) {
+            if (field.hasDeclaredAnnotation(Cdi.PRODUCES) && !field.getDeclaringType().getName().equals(element.getName())) {
+                members.add(field);
+            }
+        }
+        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
+            if (method.hasDeclaredAnnotation(Cdi.PRODUCES) && !method.getDeclaringType().getName().equals(element.getName())) {
+                members.add(method);
+            }
+        }
+        if (members.isEmpty()) {
+            return false;
+        }
+        for (MemberElement member : members) {
+            String declaring = member.getDeclaringType().getName();
+            inherited.add(declaring + "#" + member.getName());
+            // what is written on a member read through this class is written for the products Micronaut builds of
+            // it under this class alone, which the condition is to recognise: the record its declaring class writes
+            // is not seen through this one
+            boolean isField = member instanceof FieldElement;
+            member.removeAnnotation(CdiProducer.class);
+            member.annotate(CdiProducer.class, builder -> builder
+                .member("declaringType", new AnnotationClassValue<>(declaring))
+                .member("member", member.getName())
+                .member("field", isField));
+            // Micronaut exposes the product of a field, and the client proxy of a product, by the types the producer
+            // names followed by those its class names, and compiles no type named twice
+            AnnotationValue<Bean> own = member.getDeclaredAnnotation(Bean.class);
+            if (own != null && own.stringValues("typed").length > 0) {
+                writeProducerTypes(member, new LinkedHashSet<>(java.util.Arrays.asList(own.stringValues("typed"))),
+                    element);
+            }
+        }
+        element.annotate(io.micronaut.cdi.internal.metadata.CdiInheritedProducers.class,
+            builder -> builder.values(inherited.toArray(new String[0])));
+        element.annotate(io.micronaut.context.annotation.Requires.class, builder -> builder.member("condition",
+            new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.InheritedProducer")));
+        return true;
+    }
+
+    /**
      * The source name of an array type, as {@code java.lang.String[][]}.
      */
     private static String arrayName(ClassElement array) {
@@ -368,11 +446,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     /**
      * Keeps a class whose {@code Typed} leaves the class out of its bean types resolvable by the class to Micronaut:
      * the definition of each product resolves the bean declaring its producer by the declaring class
-     * ({@code BeanResolutionContext.getFactoryBean}), and such a bean still declares its producers (section 3.2). The
+     * ({@code BeanResolutionContext.getFactoryBean}), and the interceptors runtime finds the definition describing the
+     * around-invoke methods a class declares or inherits by the class, and such a bean still declares its producers
+     * (section 3.2) and is still its own interceptor class. The
      * container reads the bean types of a bean of the specification from its {@code Typed}, which this leaves as it
      * is, so the class is still no bean type of it; Micronaut's own lookup of the class finds it.
      */
-    private static void keepResolvableByItsClass(ClassElement element) {
+    static void keepResolvableByItsClass(ClassElement element) {
         AnnotationValue<?> typedAnnotation = element.getDeclaredAnnotation(Cdi.TYPED);
         if (typedAnnotation == null) {
             return;
@@ -383,16 +463,96 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 return;
             }
         }
-        // what the Typed annotation mapper wrote, Object standing for a Typed naming nothing, and the class
-        AnnotationClassValue<?>[] widened = java.util.Arrays.copyOf(typed, typed.length + 1);
-        widened[typed.length] = new AnnotationClassValue<>(element.getName());
-        if (typed.length == 0) {
-            widened = new AnnotationClassValue<?>[] {new AnnotationClassValue<>(Object.class),
-                new AnnotationClassValue<>(element.getName())};
-        }
-        AnnotationClassValue<?>[] written = widened;
+        AnnotationClassValue<?>[] written = classTypesOf(element).stream()
+            .map(AnnotationClassValue::new)
+            .toArray(AnnotationClassValue<?>[]::new);
         element.removeAnnotation(io.micronaut.context.annotation.Bean.class);
         element.annotate(io.micronaut.context.annotation.Bean.class, builder -> builder.member("typed", written));
+    }
+
+    /**
+     * The types Micronaut exposes a class bean by once its {@code Typed} is read: those the {@code Typed} annotation
+     * mapper wrote, Object standing for a Typed naming nothing, and the class itself where the Typed leaves it out
+     * ({@link #keepResolvableByItsClass}). Object goes without saying to Micronaut, which finds every bean by it, and
+     * is left out where the Typed names nothing.
+     *
+     * @param element The class
+     * @return The types, none where the class declares no Typed
+     */
+    private static Set<String> classTypesOf(ClassElement element) {
+        Set<String> types = new LinkedHashSet<>();
+        AnnotationValue<?> typedAnnotation = element.getDeclaredAnnotation(Cdi.TYPED);
+        if (typedAnnotation == null) {
+            return types;
+        }
+        for (AnnotationClassValue<?> type : typedAnnotation.annotationClassValues(AnnotationMetadata.VALUE_MEMBER)) {
+            types.add(type.getName());
+        }
+        types.add(element.getName());
+        return types;
+    }
+
+    /**
+     * The types of the product of a producer: those its own {@code Typed} names, or else its type and the closure of
+     * its supertypes.
+     *
+     * @param producer The producer
+     * @param produced The type it produces
+     * @return The types
+     */
+    private static Set<String> typesOfProduct(MemberElement producer, ClassElement produced) {
+        Set<String> types = new LinkedHashSet<>();
+        if (producer.hasDeclaredAnnotation(Cdi.TYPED)) {
+            AnnotationValue<Bean> own = producer.getDeclaredAnnotation(Bean.class);
+            if (own != null) {
+                types.addAll(java.util.Arrays.asList(own.stringValues("typed")));
+            }
+            return types;
+        }
+        types.add(produced.getName());
+        for (ClassElement supertype : BeanTypesVisitor.closureOf(produced)) {
+            types.add(supertype.getName());
+        }
+        return types;
+    }
+
+    /**
+     * Whether a producer's product is of a normal scope, as the record of its scope written on it says.
+     */
+    private static boolean isNormalScoped(MemberElement producer) {
+        AnnotationValue<CdiScope> scope = producer.getDeclaredAnnotation(CdiScope.class);
+        return scope != null && scope.booleanValue("normal").orElse(false);
+    }
+
+    /**
+     * Writes the types of the product of a producer field, or of the client proxy of the product of a producer
+     * method: Micronaut exposes it by the types the producer names followed by those its class names, and fails to
+     * compile a type named twice, so a type the class is exposed by is left to the class. What the class names that
+     * the product is not an instance of is no type of the product to the container, which leaves it out of the
+     * candidates of a lookup by it ({@code CdiResolutionCustomizer}).
+     *
+     * @param producer The producer, as read through the class
+     * @param types    The types of the product
+     * @param owner    The class the producer is read through
+     */
+    private static void writeProducerTypes(MemberElement producer, Set<String> types, ClassElement owner) {
+        Set<String> own = new LinkedHashSet<>(types);
+        own.removeAll(classTypesOf(owner));
+        if (own.isEmpty()) {
+            // every type of the product is one the class is exposed by, which Micronaut merges in: the producer
+            // names none of its own, or Object where the class does not name it
+            if (classTypesOf(owner).contains("java.lang.Object")) {
+                producer.removeAnnotation(Bean.class);
+                producer.annotate(Bean.class);
+                return;
+            }
+            own.add("java.lang.Object");
+        }
+        AnnotationClassValue<?>[] written = own.stream()
+            .map(AnnotationClassValue::new)
+            .toArray(AnnotationClassValue<?>[]::new);
+        producer.removeAnnotation(Bean.class);
+        producer.annotate(Bean.class, builder -> builder.member("typed", written));
     }
 
     private static boolean containsWildcard(ClassElement type) {

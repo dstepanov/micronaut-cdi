@@ -365,7 +365,7 @@ public class CdiBean<T> implements Bean<T> {
     final List<CdiQualifier> qualifiers(@Nullable QualifierOverlay overlay) {
         List<CdiQualifier> compiled = new ArrayList<>(3);
         compiled.add(CdiQualifier.ANY);
-        for (CdiQualifier declared : CdiQualifier.declared(definition.getAnnotationMetadata())) {
+        for (CdiQualifier declared : CdiQualifier.ofBean(definition.getAnnotationMetadata())) {
             if (!declared.isAny()) {
                 compiled.add(declared);
             }

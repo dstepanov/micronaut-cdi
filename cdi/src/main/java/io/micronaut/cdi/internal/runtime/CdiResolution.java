@@ -487,6 +487,41 @@ public final class CdiResolution {
     }
 
     /**
+     * Whether the client proxy of a bean intercepts a method of it, which the container then calls through the proxy -
+     * an observer, producer or disposer method (CDI 4.1 section 7.2): the method is bound to interceptors
+     * ({@link #isBoundToInterceptors}), or the bean's class declares an around-invoke method of its own or inherits
+     * one, which interposes on every business method of the bean (Jakarta Interceptors 2.2 section 2.4).
+     *
+     * @param beanContext The bean context
+     * @param declaring   The definition of the bean declaring the method, its client proxy's or its own
+     * @param metadata    The metadata of the method
+     * @return Whether it is intercepted through the proxy
+     */
+    public static boolean isInterceptedThroughTheProxy(BeanContext beanContext, BeanDefinition<?> declaring,
+                                                       AnnotationMetadata metadata) {
+        if (isBoundToInterceptors(metadata)) {
+            return true;
+        }
+        BeanDefinition<?> target = targetOf(beanContext, declaring);
+        return declaresAroundInvoke(target) || target != declaring && declaresAroundInvoke(declaring);
+    }
+
+    private static <T> BeanDefinition<T> targetOf(BeanContext beanContext, BeanDefinition<T> definition) {
+        return beanContext.findProxyTargetBeanDefinition(definition).orElse(definition);
+    }
+
+    private static boolean declaresAroundInvoke(BeanDefinition<?> definition) {
+        try {
+            return !io.micronaut.interceptor.spi.InterceptorMethods.of(definition,
+                io.micronaut.interceptor.metadata.InterceptionKind.AROUND_INVOKE).isEmpty();
+        } catch (IllegalStateException e) {
+            // a definition of the class with no executable method for an interceptor method the class records - a
+            // proxy's - which says nothing of its own of whether the class interposes on its methods
+            return false;
+        }
+    }
+
+    /**
      * The type a definition the container already chose is created as: its own class, or {@code Object} where its
      * {@code Typed} leaves the class out of its bean types - which makes it no candidate of a lookup of the class to
      * Micronaut, although it is the bean, and still declares its producers, disposers and observer methods.
