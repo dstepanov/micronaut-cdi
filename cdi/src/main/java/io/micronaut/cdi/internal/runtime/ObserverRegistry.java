@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.BooleanSupplier;
 
 /**
  * The observer methods of every bean in the container, and the resolution of the ones an event notifies.
@@ -257,6 +258,35 @@ public final class ObserverRegistry {
         CdiTypes.EventType eventType = CdiTypes.eventTypeAndClosureOf(typeIndex(), event.getClass(), declaredType);
         notifyObservers(event, eventType.type(), eventType.above(), CdiQualifier.ofInstances(types(), eventQualifiers),
             async, null);
+    }
+
+    /**
+     * Notifies the observer methods an event notifies, in order, for as long as the context has not stopped and the
+     * caller still has them told: a notification still under way on another thread as the container goes down
+     * leaves the observers after the one it is in untold, rather than telling them of a request the container has
+     * meanwhile destroyed, or resolving them through a context that has stopped. What the container fires on its own
+     * behalf at any moment - a request beginning or ending - is notified this way.
+     *
+     * @param event           The event
+     * @param declaredType    The type the event was declared as
+     * @param eventQualifiers The qualifiers the event was fired with
+     * @param stillToTell     Whether the observers not yet told are still to be told, asked before each of them
+     */
+    public void notifyObserversWhileRunning(Object event, Argument<?> declaredType, Set<Annotation> eventQualifiers,
+                                            BooleanSupplier stillToTell) {
+        if (!stillToTell.getAsBoolean() || ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
+            // nothing of the event can be resolved through a context that has stopped, its type included
+            return;
+        }
+        CdiTypes.EventType eventType = CdiTypes.eventTypeAndClosureOf(typeIndex(), event.getClass(), declaredType);
+        List<CdiQualifier> qualifiers = CdiQualifier.ofInstances(types(), eventQualifiers);
+        EventMetadata metadata = new CdiEventMetadata(beanContext, qualifiers, null, eventType.type());
+        for (ObserverMethod<?> observer : resolve(eventType.type(), eventType.above(), qualifiers, false)) {
+            if (!stillToTell.getAsBoolean() || ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
+                return;
+            }
+            ((CdiNotifiable) observer).notifyWith(event, metadata);
+        }
     }
 
     /**
