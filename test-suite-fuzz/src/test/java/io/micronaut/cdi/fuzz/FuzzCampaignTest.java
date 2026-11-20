@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A campaign: the seeds {@code fuzz.seed} to {@code fuzz.seed + fuzz.count - 1}, or the one seed
- * {@code fuzz.replay}. It runs only from the {@code fuzz} task, and it does not fail on a divergence: what it
+ * A campaign: the seeds {@code fuzz.seed} to {@code fuzz.seed + fuzz.count - 1}, or the seeds {@code fuzz.replay}
+ * lists. It runs only from the {@code fuzz} task, and it does not fail on a divergence: what it
  * found is in {@code build/fuzz}, one directory per seed that diverged, and in {@code build/fuzz/summary.md}.
  */
 @Tag("campaign")
@@ -49,15 +49,15 @@ class FuzzCampaignTest {
     @Test
     void campaign() {
         Fuzzer fuzzer = new Fuzzer(FuzzConfig.reportDir(), FuzzConfig.size());
-        Long replay = FuzzConfig.replay();
-        long first = replay != null ? replay : FuzzConfig.seed();
-        int count = replay != null ? 1 : FuzzConfig.count();
+        List<Long> replay = FuzzConfig.replay();
+        long first = replay != null ? replay.get(0) : FuzzConfig.seed();
+        int count = replay != null ? replay.size() : FuzzConfig.count();
         Map<String, Integer> tally = new TreeMap<>();
         fuzzer.appendSummary("\n## Campaign from seed " + Long.toUnsignedString(first) + ", " + count + " scenarios, "
             + FuzzConfig.size() + "\n\n| seed | severity | divergence | known | size | shrunk to | report |\n"
             + "| --- | --- | --- | --- | --- | --- | --- |");
         try {
-            for (long seed : seeds(first, count)) {
+            for (long seed : replay != null ? replay : seeds(first, count)) {
                 long started = System.nanoTime();
                 SeedResult result = fuzzer.runSeed(seed, FuzzConfig.shrink(), FuzzConfig.shrinkBudget(),
                     FuzzConfig.keepAll());

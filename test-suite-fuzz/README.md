@@ -14,7 +14,7 @@ disagree.
 | --- | --- | --- |
 | `fuzz.seed` | `1` | The first seed of the campaign |
 | `fuzz.count` | `100` | How many consecutive seeds to run |
-| `fuzz.replay` | | Run only this seed. Use it to reproduce a finding |
+| `fuzz.replay` | | Run only these seeds, separated by commas. Use it to reproduce findings |
 | `fuzz.size` | `medium` | `small`, `medium` or `large` scenarios |
 | `fuzz.shrink` | `true` | Shrink each scenario that diverges |
 | `fuzz.shrinkBudget` | `150` | The most runs one shrink may spend |
