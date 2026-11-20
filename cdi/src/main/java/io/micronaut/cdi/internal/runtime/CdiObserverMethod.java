@@ -325,6 +325,10 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             // a provider of the application's own supplies it, as it does a field of the bean
             return CdiResolution.fromApplicationProvider(beanContext, declaring, argument);
         }
+        if (CdiBeanMetadataFactory.isDefaultMetadata(argument)) {
+            // the metadata of the bean declaring the observer method (section 5.5.8)
+            return declaringBean();
+        }
         if (!CdiResolution.isResolvedByTheContainer(argument.getAnnotationMetadata())) {
             // one Micronaut resolves itself, which the processor left unmarked - a lookup, the event metadata
             Argument<Object> point = (Argument<Object>) argument;

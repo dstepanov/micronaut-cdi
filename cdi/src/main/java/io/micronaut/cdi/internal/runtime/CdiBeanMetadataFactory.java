@@ -70,6 +70,27 @@ public final class CdiBeanMetadataFactory extends AbstractCdiInjectionPointBeanD
     }
 
     /**
+     * Whether a parameter asks for the {@code @Default Bean} metadata, which the container hands a parameter that is
+     * no injection point of a bean being created itself - a parameter of an observer method, handed the metadata of
+     * the bean declaring it, and one of a disposer method, handed the metadata of the bean it disposes of - since the
+     * resolution of such a parameter starts a path of its own that names neither.
+     *
+     * @param argument The parameter
+     * @return Whether it is the {@code @Default Bean}
+     */
+    static boolean isDefaultMetadata(Argument<?> argument) {
+        if (argument.getType() != Bean.class) {
+            return false;
+        }
+        for (CdiQualifier qualifier : CdiQualifier.declared(argument.getAnnotationMetadata())) {
+            if (!qualifier.isDefault()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * The bean that declares the injection point being resolved: the bean being created, as the first segment of
      * the path names it, or the bean of the injection point a lookup was made at.
      *
@@ -81,6 +102,13 @@ public final class CdiBeanMetadataFactory extends AbstractCdiInjectionPointBeanD
         Iterator<BeanResolutionContext.Segment<?, ?>> segments = resolutionContext.getPath().iterator();
         if (segments.hasNext()) {
             BeanResolutionContext.Segment<?, ?> self = segments.next();
+            if (self.getDeclaringType() instanceof AbstractCdiInjectionPointBeanDefinition<?>) {
+                // the creation of the metadata itself heads a resolution of its own - a parameter of an observer or a
+                // disposer, which the container hands the metadata itself (isDefaultMetadata), or a plain lookup of
+                // the metadata - which names no bean it is injected into
+                throw new IllegalStateException("Bean metadata is the metadata of the bean it is injected into, and "
+                    + "this resolution is injecting into no bean");
+            }
             if (self instanceof LookupSegment<?, ?> lookup) {
                 Bean<?> bean = lookup.selected().getBean();
                 if (bean != null) {

@@ -107,6 +107,33 @@ class BeanMetadataInjectionTest {
         }
     }
 
+    @Test
+    void anObserverMethodIsHandedTheMetadataOfItsDeclaringBean() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            ObservingSelf.SEEN.set(null);
+            container.getEvent().select(Ping.class).fire(new Ping());
+            assertMetadata(container.resolve(container.getBeans(ObservingSelf.class)), ObservingSelf.SEEN.get(),
+                ObservingSelf.class);
+        }
+    }
+
+    @Test
+    void aDisposerMethodIsHandedTheMetadataOfTheBeanItDisposes() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            DisposedFactory.DISPOSED.set(null);
+            jakarta.enterprise.inject.Instance.Handle<Disposed> handle =
+                container.createInstance().select(Disposed.class).getHandle();
+            handle.get();
+            handle.destroy();
+            Bean<?> expected = container.resolve(container.getBeans(Disposed.class));
+            assertNotNull(DisposedFactory.DISPOSED.get(), "the disposer ran");
+            assertEquals(expected, DisposedFactory.DISPOSED.get());
+            assertEquals(expected.getTypes(), DisposedFactory.DISPOSED.get().getTypes());
+        }
+    }
+
     private static void assertMetadata(Bean<?> expected, Bean<?> injected, Class<?> beanClass) {
         assertNotNull(injected);
         assertEquals(expected, injected);
@@ -177,6 +204,49 @@ class BeanMetadataInjectionTest {
 
         public Bean<ApplicationScopedSelf> initializer() {
             return initializer;
+        }
+    }
+
+    /**
+     * The event observed below.
+     */
+    public record Ping() {
+    }
+
+    /**
+     * Told its own metadata at a parameter of its observer method.
+     */
+    @Dependent
+    public static class ObservingSelf {
+
+        static final AtomicReference<Bean<?>> SEEN = new AtomicReference<>();
+
+        void observe(@jakarta.enterprise.event.Observes Ping ping, Bean<ObservingSelf> bean) {
+            SEEN.set(bean);
+        }
+    }
+
+    /**
+     * What the factory below produces and disposes of.
+     */
+    public record Disposed(String name) {
+    }
+
+    /**
+     * Declares a disposer method told the metadata of the bean it disposes of.
+     */
+    @Dependent
+    public static class DisposedFactory {
+
+        static final AtomicReference<Bean<?>> DISPOSED = new AtomicReference<>();
+
+        @Produces
+        Disposed produce() {
+            return new Disposed("disposed");
+        }
+
+        void dispose(@jakarta.enterprise.inject.Disposes Disposed disposed, Bean<Disposed> bean) {
+            DISPOSED.set(bean);
         }
     }
 
