@@ -144,7 +144,6 @@ def beyondLiteScenarios = [
     'org/jboss/cdi/tck/tests/full/extensions/beanManager/equivalence/qualifier/**',
     'org/jboss/cdi/tck/tests/full/lookup/injectionpoint/broken/reference/**',
     'org/jboss/cdi/tck/tests/full/interceptors/tests/contract/method/**',
-    'org/jboss/cdi/tck/tests/full/interceptors/contract/invocationContext/**',
     'org/jboss/cdi/tck/tests/full/interceptors/definition/interceptorOrder/**',
     'org/jboss/cdi/tck/tests/full/implementation/builtin/metadata/broken/injection/**',
     'org/jboss/cdi/tck/tests/full/lookup/el/**',

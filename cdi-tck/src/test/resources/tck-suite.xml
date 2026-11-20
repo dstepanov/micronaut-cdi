@@ -209,7 +209,9 @@
             <class name="org.jboss.cdi.tck.tests.full.lookup.injectionpoint.broken.reference.ambiguous.AmbiguousInjectableReferenceTest"/>
             <class name="org.jboss.cdi.tck.tests.full.lookup.injectionpoint.broken.reference.unresolved.UnsatisfiedInjectableReferenceTest"/>
             <class name="org.jboss.cdi.tck.tests.full.interceptors.tests.contract.method.MethodLevelInterceptorTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.interceptors.contract.invocationContext.InterceptorBindingsWithAtInterceptorsTest"/>
+            <!-- InterceptorBindingsWithAtInterceptorsTest is left out by name: its package holds a normal scoped
+                 producer with a parameter of CDI Full's InterceptionFactory, which CDI Lite has no bean for, so a
+                 container that validates the parameters of producers refuses the deployment (see CONFORMANCE.md) -->
             <class name="org.jboss.cdi.tck.tests.full.interceptors.definition.interceptorOrder.InterceptorOrderTest"/>
             <!-- decorators are not implemented, and asking for the metadata of one is refused as the
                  definition error the specification makes it -->

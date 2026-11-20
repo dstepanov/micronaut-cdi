@@ -1190,12 +1190,11 @@ The kit's broken deployments of CDI 5.0 whose packages are not named for it - th
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 22 tests, all passing, which makes 994 in all. Each asserts something this implementation answers although
+own: 21 tests, all passing, which makes 993 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
-`@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorBindingsWithAtInterceptorsTest`,
-`InterceptorOrderTest`), the definition error of injecting the metadata of a decorator — `Decorator<X>` or
+`@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorOrderTest`), the definition error of injecting the metadata of a decorator — `Decorator<X>` or
 the `@Decorated` `Bean<X>` — into a bean that is not one (the four tests of
 `implementation/builtin/metadata/broken/injection`), and the expression language of `micronaut-cdi-el`: names
 resolved to beans (`full.lookup.el.ResolutionByNameTest`), a wrapped factory of someone else's
@@ -1206,6 +1205,12 @@ application is compiled against, the processor compiles the public methods of ea
 as executable methods; a bean without a name, and an application without the module, gets none of it. Their scenario packages are compiled by name (`beyondLiteScenarios` in
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
+
+One class of the kit that used to run in this block is left out by name: `InterceptorBindingsWithAtInterceptorsTest`.
+Its package, `full/interceptors/contract/invocationContext`, holds an `@ApplicationScoped` producer method with a
+parameter of CDI Full's `InterceptionFactory`, which CDI Lite has no bean for. The parameter of a producer method is
+an injection point, so the deployment has an unsatisfied dependency and is refused as the container starts (section
+5.2.2); the test ran only while the parameters of a producer in a normal scope went unvalidated.
 
 The `tckSignatureTest` task checks the API dependencies resolved with `micronaut-cdi-reflection` against the
 official CDI 5.0.0 baseline (`jakarta.cdi-tck-core-impl-5.0.0-jdk17.sigfile`), using Jakarta SigTest 2.2 and its
