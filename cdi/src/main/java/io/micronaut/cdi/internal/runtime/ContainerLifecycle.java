@@ -125,6 +125,10 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
             // going down without having started
             return;
         }
+        // what the bootstrap asked to be checked before anything of the application runs
+        for (StartCheck check : beanContext.getBeansOfType(StartCheck.class)) {
+            check.check(beanContext);
+        }
         // the portable extensions an SE bootstrap asked for run first: what they add - a context, an observer,
         // a qualifier - is there by the time the application is told the container has started
         beanContext.findBean(PortableExtensions.Request.class)

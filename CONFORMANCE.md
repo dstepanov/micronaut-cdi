@@ -59,7 +59,7 @@ visible in a test report as what passes.
 | 25 (SE) | The SE bootstrap: `SeContainerInitializer` through the service loader, `SeContainer` over a Micronaut context, discovery turned off as a narrowed one | `MicronautSeContainerInitializer`, `MicronautSeContainer` |
 | 25.1 | An alternative no priority selected, enabled by `selectAlternatives`/`selectAlternativeStereotypes` as the container is built | `CdiSelectableAlternative`, `UnselectedAlternative` |
 | 6.5.2 | `@ActivateRequestContext` as the built-in Jakarta interceptor at `PLATFORM_BEFORE + 100`, so the application's interceptors stand on either side of it | `ActivateRequestContextJakartaInterceptor` |
-| 6.6 | The request context active during any bean's `@PostConstruct` and during asynchronous observer notification, and its `@Initialized`/`@BeforeDestroyed`/`@Destroyed` events | `RequestScope`, `ObserverRegistry` |
+| 6.6 | The request context active during any bean's `@PostConstruct` and during asynchronous observer notification, and its `@Initialized`/`@BeforeDestroyed`/`@Destroyed` events for a request the application begins; see "The request of an asynchronous notification or a `@PostConstruct` is not announced" under Differences | `RequestScope`, `ObserverRegistry` |
 | 10 | Method invokers: `InvokerFactory` in the registration phase, validated as the bean compiles, invoking the compiled executable method at runtime with the instance and argument lookups of the specification | `ElementInvokerFactory`, `RecordedInvoker` |
 | 2.8, 5.1.2, 5.2.2 (5.0) | Reserves: `@Reserve` on a class or a producer or through a stereotype, disabled unless a priority of its own selects it (a reserve producer does not take its class's), a producer of a disabled reserve disabled with it, a reserve that is also an alternative and a reserve that declares an alternative producer as definition errors, and the resolution of section 5.2.2 - reserves give way to any other bean, the highest priority wins among reserves alone - for injection points, lookups, names and the bean manager alike | `BeanAttributes`, `BeanDiscoveryVisitor`, `ProducerVisitor`, `UnselectedReserve`, `CdiResolution` |
 | 2.9 (5.0) | Eager initialization: `@Eager` on an application scoped class, producer, synthetic bean or stereotype, its contextual instance created before `Startup`; on a bean of another normal scope or the dependent pseudo-scope, or a stereotype declaring one, a definition error | `BeanAttributes`, `ContainerLifecycle`, `SynthesisPhase` |
@@ -290,7 +290,7 @@ injection point is validated whatever package its type is in: what the container
 the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
 manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
 overload its producer recorded, which is the one invoked. Collections, arrays, streams, maps and `Optional`
-injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied. An
+injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied, though not ambiguous. An
 injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`, or of their Micronaut forms, resolves
 late by design and is not validated, and neither is one Micronaut resolves itself - the context, a value of the
 configuration - which the processor leaves unmarked.
@@ -828,7 +828,7 @@ What an extension can do:
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
   place of the container's own (a context a build compatible extension registers for the request scope stands beside
   the container's own instead, CDI 5.0 section 6.4); `addObserverMethod(ObserverMethod)` adds an observer method; and
-  `getAnnotatedType`/`getAnnotatedTypes` describe a class. A context added for a normal scope the application
+  `getAnnotatedType`/`getAnnotatedTypes` describe a discovered class, whose id is its name, with the qualifiers the extensions added, and nothing for another class or id. A context added for a normal scope the application
   declares with `@NormalScope` serves the beans of that scope - a class declaring it, inheriting it or carrying it
   with a stereotype, and a producer declaring it: an instance is created into the context and found in it again,
   an inactive one throws `ContextNotActiveException` rather than being stepped around, and what it destroys is
@@ -1041,6 +1041,20 @@ close it, the container closes that group as it stops
 (`CdiBeanContainer.closeAtShutdown`, `OwnerlessLookupTest`). Such an instance therefore lives until the container
 stops, not until the bean it escaped was destroyed, unless the program destroys it with `Instance.destroy` or closes
 the lookup.
+
+### The request of an asynchronous notification or a `@PostConstruct` is not announced
+
+*CDI 4.1 sections 6.7.1 and 2.8.5.3.* The specification has `@Initialized(RequestScoped.class)` fired
+synchronously immediately after the request context is initialized, and `@BeforeDestroyed` and `@Destroyed` as it
+ends, with no exception for the request context the container activates on its own. Here those events are fired for
+a request the application begins - through `RequestContextController`, `@ActivateRequestContext`, or the
+`RequestScope` forms that run work as one request - and not for the request the container gives the notification of
+an asynchronous observer method, one around each invocation, nor for the one it gives a `@PostConstruct` callback on
+a thread that has none. Announcing those would notify every observer of `Object` - which observes events of any
+qualifier - at every asynchronous notification and at the creation of beans outside a request, an observer the
+application wrote for events it fires itself (`EventTest.anEventFiredAsynchronouslyNotifiesOnlyTheAsynchronousObservers`).
+The request is
+active, new for each invocation, and destroyed as the invocation ends, as the specification has it.
 
 ### Known limitations a review has named
 

@@ -16,12 +16,15 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiBuiltInvokers;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiRecordedInvoker;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -116,6 +119,7 @@ final class DeploymentValidation {
             }
             validateDisposer(definition);
             validateObservers(definition);
+            validateInvokers(definition);
         }
         validateNames(beans);
         if (!problems.isEmpty()) {
@@ -158,6 +162,24 @@ final class DeploymentValidation {
         for (int i = 0; i < arguments.length; i++) {
             if (i != disposer.disposedParameter()) {
                 validate(definition, arguments[i]);
+            }
+        }
+    }
+
+    /**
+     * Every invoker an extension built for a method of the bean that looks something up resolves each lookup to
+     * one bean (section 10.3.1), whether or not the extension handed it to a synthetic component.
+     */
+    private void validateInvokers(BeanDefinition<?> definition) {
+        for (AnnotationValue<CdiBuiltInvokers> built
+            : definition.getAnnotationMetadata().getAnnotationValuesByType(CdiBuiltInvokers.class)) {
+            for (AnnotationValue<CdiRecordedInvoker> record
+                : built.getAnnotations(AnnotationMetadata.VALUE_MEMBER, CdiRecordedInvoker.class)) {
+                try {
+                    RecordedInvoker.of(container.beanContext(), record).validateLookups();
+                } catch (DeploymentException e) {
+                    problems.add(e);
+                }
             }
         }
     }
@@ -248,7 +270,7 @@ final class DeploymentValidation {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
-            if (container.micronautDefinitionOf((Argument) argument, null) == null) {
+            if (container.micronautDefinitionOf((Argument) argument, null) == null && !argument.isNullable()) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }
@@ -268,10 +290,6 @@ final class DeploymentValidation {
             // a point Micronaut resolves itself, which the processor left unmarked: a lookup, an event, the
             // injection point metadata, the context, a value of the configuration; or one a provider of the
             // application's own supplies, which needs no bean
-            return;
-        }
-        if (argument.isNullable()) {
-            // An explicitly nullable injection point may have no bean.
             return;
         }
         // what the point is resolved to as the bean is created
@@ -294,10 +312,14 @@ final class DeploymentValidation {
                         + unproxyable + " (CDI 4.1 section 5.4)"));
                 }
             }
-            case Selection.Unselected.UNSATISFIED ->
-                problems.add(new DeploymentException("The injection point " + argument + " of "
-                    + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
-                    + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+            case Selection.Unselected.UNSATISFIED -> {
+                // an explicitly nullable injection point may have no bean, but not two
+                if (!argument.isNullable()) {
+                    problems.add(new DeploymentException("The injection point " + argument + " of "
+                        + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
+                        + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+                }
+            }
             case Selection.Unselected.MICRONAUT -> validateByMicronaut(definition, argument);
         }
     }

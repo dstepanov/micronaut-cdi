@@ -309,8 +309,8 @@ public final class CdiResolution {
      *
      * <p>The steps of section 5.2.2 of CDI 5.0: the reserves are eliminated; one bean left is the one. Where only
      * reserves were candidates, the ones of the highest priority are kept. Otherwise the beans that are not
-     * alternatives are eliminated - a producer of an alternative is one - and of the alternatives, which a priority
-     * selected, the ones of the highest priority are kept.</p>
+     * alternatives are eliminated - a producer of an alternative is one - and, where every alternative left has a
+     * priority, the ones of the highest priority are kept; one without a priority leaves them all.</p>
      *
      * @param candidates  The candidates
      * @param reserve     Whether a candidate is a reserve
@@ -345,6 +345,16 @@ public final class CdiResolution {
         }
         if (alternatives.isEmpty()) {
             return List.copyOf(others);
+        }
+        if (alternatives.size() > 1) {
+            for (T candidate : alternatives) {
+                if (priority.applyAsInt(candidate) == Integer.MIN_VALUE) {
+                    // the highest priority decides only where every alternative left has one (section 5.2.2): an
+                    // alternative selected without a priority - by the SE bootstrap - leaves the dependency
+                    // ambiguous
+                    return List.copyOf(alternatives);
+                }
+            }
         }
         return highestPriority(alternatives, priority);
     }

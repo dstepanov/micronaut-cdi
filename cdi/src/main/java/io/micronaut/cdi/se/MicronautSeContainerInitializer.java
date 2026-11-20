@@ -27,6 +27,7 @@ import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.cdi.internal.runtime.UndiscoveredSubclass;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
+import io.micronaut.cdi.internal.runtime.StartCheck;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.context.DefaultBeanContext;
@@ -262,12 +263,16 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         builder.singletons(new PortableExtensions.Request(List.copyOf(extensionInstances),
             List.copyOf(extensionClasses), classLoader,
             name -> classpath == null || classpath.contains(outerClassOf(name))));
+        if (!buildCompatibleExtensions.isEmpty()) {
+            // checked as the container starts, before Startup is observed: an extension the compilation did not run
+            // refuses the deployment before anything of the application has run
+            builder.singletons(new ExtensionsRanCheck(this));
+        }
         ApplicationContext context = builder.build();
         boolean startReturned = false;
         try {
             ApplicationContext started = context.start();
             startReturned = true;
-            checkBuildCompatibleExtensionsRan(started);
             return new MicronautSeContainer(started);
         } catch (RuntimeException | Error e) {
             // whatever the start failed with, what it created is destroyed and its container is not left as the one
@@ -508,5 +513,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         }
         int inner = simple.indexOf('$');
         return packagePrefix + (inner < 0 ? simple : simple.substring(0, inner));
+    }
+
+    /**
+     * The check that every build compatible extension handed to the bootstrap is one the compilation ran, as the
+     * container starts.
+     *
+     * @param initializer The bootstrap
+     */
+    private record ExtensionsRanCheck(MicronautSeContainerInitializer initializer) implements StartCheck {
+        @Override
+        public void check(BeanContext beanContext) {
+            initializer.checkBuildCompatibleExtensionsRan(beanContext);
+        }
     }
 }

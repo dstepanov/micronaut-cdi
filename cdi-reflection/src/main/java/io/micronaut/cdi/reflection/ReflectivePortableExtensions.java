@@ -117,9 +117,13 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
 
         QualifierOverlay overlay = context.getBean(QualifierOverlay.class);
         CompiledAnnotationTypes types = CompiledAnnotationTypes.of(context);
+        // the classes that were discovered, each with what the observers added to it, which AfterBeanDiscovery
+        // describes and no other
+        Map<Class<?>, List<Annotation>> discovered = new LinkedHashMap<>();
         for (Class<?> type : beanClassesOf(applicationBeans(container, extensions))) {
             PortableEvents.AnnotatedTypeEvent<?> event = new PortableEvents.AnnotatedTypeEvent<>(type, types);
             fire(observers, event, Argument.of(ProcessAnnotatedType.class, Argument.of(type)), problems);
+            discovered.put(type, List.copyOf(event.added()));
             for (Annotation added : event.added()) {
                 overlay.add(type.getName(), CdiQualifier.ofInstance(types, added));
             }
@@ -145,7 +149,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         }
 
         fire(observers, new PortableEvents.AfterBeans(contexts, context.getBean(ObserverRegistry.class),
-            container::isNormalScope, problems), Argument.of(AfterBeanDiscovery.class), problems);
+            container::isNormalScope, discovered, problems), Argument.of(AfterBeanDiscovery.class), problems);
         if (!problems.isEmpty()) {
             throw withTheRest(new DefinitionException(problems.get(0)), problems);
         }
@@ -268,9 +272,11 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         // declares the producer
         Annotated annotated = producerOf((CdiBean<?>) bean, producer.stringValue("member").orElse(""),
             producer.booleanValue("field").orElse(false));
-        Class<?> produced = ((CdiBean<?>) bean).definition().getBeanType();
+        // the type the producer declares, with its arguments: an observer of ProcessBeanAttributes<List<String>> is
+        // told of a producer of List<String>, and not of one of List<Integer>
+        Argument<?> produced = CdiBean.producedType(((CdiBean<?>) bean).definition());
         fire(observers, new PortableEvents.BeanAttributesEvent(bean, annotated, problems),
-            Argument.of(ProcessBeanAttributes.class, Argument.of(produced)), problems);
+            Argument.of(ProcessBeanAttributes.class, produced), problems);
         fire(observers, new PortableEvents.BeanEvent("ProcessBean", bean, annotated, problems),
             Argument.of(ProcessBean.class, Argument.of(beanClass)), problems);
     }
