@@ -31,8 +31,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * The contextual instance of a bean in a normal scope that declares a producer of a dependent bean is the one each
- * product is produced on, and lives as long as its context: producing, iterating and destroying a product leaves it
+ * The contextual instance of a bean in a normal scope that declares a producer of a dependent bean, or of a bean of
+ * its own normal scope, is the one each product is produced on, and lives as long as its context: producing, iterating and destroying a product leaves it
  * be, and it is destroyed as the context ends (CDI 4.1 sections 3.2 and 6.4.2). Only a dependent declaring instance
  * obtained for one call of a producer, disposer or observer method is destroyed once the call completes.
  */
@@ -68,12 +68,62 @@ class NormalScopedFactoryLifecycleTest {
             EVENTS.subList(Math.min(3, EVENTS.size()), EVENTS.size()).stream().sorted().toList(), EVENTS.toString());
     }
 
+    @Test
+    @Disabled("Micronaut Core destroys the factory it recorded for a product once the product is created, as a bean "
+        + "of its own rather than as a dependent: for a bean in a normal scope that is its client proxy, whose "
+        + "destruction removes the contextual instance from its scope (see CONFORMANCE.md, Open points in Micronaut "
+        + "Core)")
+    void theDeclaringInstanceOutlivesAProductOfItsOwnScope() {
+        EVENTS.clear();
+        try (ApplicationContext context = ApplicationContext.run()) {
+            Ornament ornament = context.getBean(CdiBeanContainer.class).createInstance().select(Ornament.class).get();
+            EVENTS.add("made " + ornament.name());
+            EVENTS.add("stopping");
+        }
+        assertEquals(List.of("made ornament", "stopping"), EVENTS.subList(0, Math.min(2, EVENTS.size())),
+            EVENTS.toString());
+        assertEquals(List.of("Atelier destroyed", "Ornament destroyed"),
+            EVENTS.subList(Math.min(2, EVENTS.size()), EVENTS.size()).stream().sorted().toList(), EVENTS.toString());
+    }
+
     /**
      * Produced by a method.
      *
      * @param name What produced it
      */
     public record Widget(String name) {
+    }
+
+    /**
+     * Produced in the application scope by a bean of the application scope.
+     */
+    public static class Ornament {
+
+        public String name() {
+            return "ornament";
+        }
+    }
+
+    /**
+     * An application scoped bean producing an application scoped bean.
+     */
+    @ApplicationScoped
+    public static class Atelier {
+
+        @Produces
+        @ApplicationScoped
+        Ornament ornament() {
+            return new Ornament();
+        }
+
+        void dispose(@jakarta.enterprise.inject.Disposes Ornament ornament) {
+            EVENTS.add("Ornament destroyed");
+        }
+
+        @PreDestroy
+        void destroyed() {
+            EVENTS.add("Atelier destroyed");
+        }
     }
 
     /**

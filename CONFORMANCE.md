@@ -1154,9 +1154,9 @@ A bean of a normal scope that injects the product of its own producer method fai
 no way to reach the instance under construction from the producer; see "Open points in Micronaut Core". Inject an
 `Instance` of the product, or move the producer to another bean.
 
-A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
-after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in
-Micronaut Core". Declare such a producer on a `@Dependent` bean, or make the product's scope the declaring bean's,
+A bean in a normal scope that declares a producer has its contextual instance destroyed after each product is
+created, whether the product is of another scope or of the declaring bean's own, because of how Micronaut Core
+destroys the factory it recorded; see "Open points in Micronaut Core". Declare such a producer on a `@Dependent` bean
 until it is fixed there.
 
 A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
@@ -1364,8 +1364,10 @@ own rather than the first one alone.
   as a bean that is not a dependent. Where the declaring bean is in a normal scope, the registration is that of its
   client proxy, and destroying a proxy that is not a dependent removes its target from the scope: the contextual
   instance of an `@ApplicationScoped` bean that produces a `@Dependent` bean has its `@PreDestroy` run after every
-  product, a fresh one serves the next, and none is destroyed as the context ends
-  (`NormalScopedFactoryLifecycleTest`, disabled). Destroying the recorded factory as a dependent - which leaves a
+  product, a fresh one serves the next, and none is destroyed as the context ends; one that produces an
+  `@ApplicationScoped` bean has it run once its product is created (`NormalScopedFactoryLifecycleTest`, both cases
+  disabled). Commit 7c5014595c on Micronaut Core's `denis/uninterceptable-close` branch destroys the proxy as a
+  dependent, by its description; this module has not been run against it. Destroying the recorded factory as a dependent - which leaves a
   scoped target in its scope, as the destruction of any other dependent proxy does - would close it; only a
   `@Dependent` declaring instance is to be destroyed once the call completes (CDI 4.1 section 6.4.2).
 - **The bean declaring a producer is resolved by its class.** `BeanResolutionContext.getFactoryBean` looks the
