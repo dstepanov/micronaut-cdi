@@ -117,6 +117,7 @@ class SeFailedStartupTest {
     }
 
     static final AtomicBoolean FAIL_AFTER_CREATION = new AtomicBoolean();
+    static volatile boolean failEveryCreation;
     static final List<String> STARTED_EVENTS = new CopyOnWriteArrayList<>();
     static volatile boolean recordingStarted;
 
@@ -128,7 +129,7 @@ class SeFailedStartupTest {
     public static class FailingAfterStartup implements BeanCreatedEventListener<ContainerLifecycle> {
         @Override
         public ContainerLifecycle onCreated(BeanCreatedEvent<ContainerLifecycle> event) {
-            if (FAIL_AFTER_CREATION.getAndSet(false)) {
+            if (FAIL_AFTER_CREATION.getAndSet(false) || failEveryCreation) {
                 throw new IllegalStateException("the creation failed after the container started");
             }
             return event.getBean();
@@ -143,6 +144,18 @@ class SeFailedStartupTest {
         static void onShutdown(@Observes Shutdown shutdown) {
             if (recordingStarted) {
                 STARTED_EVENTS.add("shutdown");
+            }
+        }
+
+        static void onBeforeDestroyed(@Observes @BeforeDestroyed(ApplicationScoped.class) Object event) {
+            if (recordingStarted && failEveryCreation) {
+                STARTED_EVENTS.add("before destroyed");
+            }
+        }
+
+        static void onDestroyed(@Observes @Destroyed(ApplicationScoped.class) Object event) {
+            if (recordingStarted && failEveryCreation) {
+                STARTED_EVENTS.add("destroyed");
             }
         }
     }
@@ -162,6 +175,22 @@ class SeFailedStartupTest {
         // Startup was fired to its end before the start failed, so the rollback is the shutdown of an application
         // that started, whichever instance of the container's lifecycle listens to it
         assertEquals(List.of("startup", "shutdown"), STARTED_EVENTS);
+    }
+
+    @Test
+    void anApplicationToldItStartedIsToldItShutsDownWhereTheLifecycleCannotBeCreatedAgain() {
+        STARTED_EVENTS.clear();
+        recordingStarted = true;
+        failEveryCreation = true;
+        try {
+            assertThrows(RuntimeException.class, () -> SeContainerInitializer.newInstance().disableDiscovery()
+                .addBeanClasses(FailingAfterStartup.class).initialize());
+        } finally {
+            recordingStarted = false;
+            failEveryCreation = false;
+        }
+        // the rollback cannot create the container's lifecycle again, and the application is told all the same
+        assertEquals(List.of("startup", "shutdown", "before destroyed", "destroyed"), STARTED_EVENTS);
     }
 
     @Test
