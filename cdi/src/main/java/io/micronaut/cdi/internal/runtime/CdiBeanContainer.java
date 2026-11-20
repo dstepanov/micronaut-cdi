@@ -157,10 +157,12 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     }
 
     /**
-     * Takes the container of a context that failed to start off what {@code CDI.current()} resolves to: Micronaut
-     * destroys the beans of a context that is running alone, so the container of one whose start failed is not
-     * destroyed, and would otherwise stay the current one. Nothing is installed: where the specification's API holds
-     * no provider of this module, the container registered with one of its own, which nothing reaches.
+     * Takes the container of a context that failed to start off what {@code CDI.current()} resolves to, where the
+     * rollback of the start did not: the SE bootstrap rolls a failed start back with Micronaut's
+     * {@code DefaultBeanContext.stopFailedStart}, which destroys the container with the other singletons, and this
+     * is what is left for a container that registered itself and was never a singleton of the context, its creation
+     * having failed after its constructor. Nothing is installed: where the specification's API holds no provider of
+     * this module, the container registered with one of its own, which nothing reaches.
      *
      * @param beanContext The context that failed to start
      */
@@ -331,7 +333,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * qualifier of the point ({@code getQualifiedBean}), which the bean context creates and holds such a bean for, as a
      * lookup by that qualifier would. A point with no qualifier is created through the definition alone, which the
      * bean context holds under {@code @Any} where a lookup by type alone holds it under none: two instances of an
-     * {@code @Any} singleton, an open point of Micronaut Core (see Conformance).</p>
+     * {@code @Any} singleton, an open point of Micronaut Core that micronaut-core #14500 closes with no change here
+     * (see Conformance).</p>
      *
      * @param point     The injection point
      * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point

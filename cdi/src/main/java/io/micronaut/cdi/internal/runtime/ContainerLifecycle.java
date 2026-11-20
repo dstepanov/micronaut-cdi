@@ -17,9 +17,11 @@ package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.cdi.internal.context.ApplicationScope;
+import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.metadata.CdiBeanAttributes;
 import io.micronaut.cdi.spi.PortableExtensions;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.context.event.ShutdownEvent;
@@ -55,11 +57,13 @@ import org.slf4j.LoggerFactory;
  * moment it fires the first of those events.</p>
  *
  * <p>The way down starts at the event Micronaut publishes as a context begins to stop, which is before it
- * destroys any bean: {@code Shutdown} is fired, then the {@code BeforeDestroyed} of the application context
- * (section 2.5.6.2), then what was obtained through the container itself is released and the application context
- * is destroyed - its beans and what depends on them - and then
- * its {@code Destroyed} is fired. The singletons, which are of a pseudo-scope and of no context, are destroyed by
- * Micronaut after that.</p>
+ * destroys any bean: {@code Shutdown} is fired, then the requests still open anywhere are destroyed, each told so,
+ * then the {@code BeforeDestroyed} of the application context (section 2.5.6.2) is fired, then what was obtained
+ * through the container itself is released and the application context is destroyed - its beans and what depends on
+ * them - and then its {@code Destroyed} is fired. The singletons, which are of a pseudo-scope and of no context, are
+ * destroyed by Micronaut after that. A request scoped bean that uses an application scoped bean or a singleton as it
+ * is destroyed therefore finds the instance it used while the request ran, whatever order Micronaut destroys the
+ * singletons in.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -73,17 +77,44 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final BeanContext beanContext;
     private final ObserverRegistry observers;
     private final ApplicationScope applicationScope;
+    private final RequestScope requestScope;
     // what was obtained through the container itself and is released as it stops, see addShutdownCallback
     private final List<Runnable> releases = new CopyOnWriteArrayList<>();
+    /**
+     * Whether the application was told the container started: only then is it told it stops. A start that failed
+     * before {@code Startup} was fired is rolled back with no event of the shutdown.
+     */
+    private volatile boolean started;
 
-    public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope) {
+    public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope,
+                              RequestScope requestScope) {
         this.beanContext = beanContext;
         this.observers = observers;
         this.applicationScope = applicationScope;
+        this.requestScope = requestScope;
+    }
+
+    /**
+     * Whether a context has stopped, or its start failed: it does not run and is not starting either, which
+     * Micronaut's own context tells apart ({@link DefaultBeanContext#isStoppingOrStopped()}). A context that is
+     * stopping still runs until its stop ends, so the shutdown callbacks see it running.
+     *
+     * @param beanContext The context
+     * @return Whether it has stopped or failed to start
+     */
+    public static boolean isStoppedOrFailedToStart(BeanContext beanContext) {
+        return !beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
+            && context.isStoppingOrStopped();
     }
 
     @PostConstruct
     void started() {
+        if (beanContext instanceof DefaultBeanContext context && context.isStoppingOrStopped()) {
+            // created by the shutdown event of a context whose start failed, which is being rolled back
+            // (DefaultBeanContext.stopFailedStart): nothing is run, validated or fired for a container that is
+            // going down without having started
+            return;
+        }
         // the portable extensions an SE bootstrap asked for run first: what they add - a context, an observer,
         // a qualifier - is there by the time the application is told the container has started
         beanContext.findBean(PortableExtensions.Request.class)
@@ -104,6 +135,7 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
         initializeEagerBeans();
         fire(new Startup(), Startup.class, Set.of());
+        started = true;
     }
 
     /**
@@ -145,13 +177,19 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
 
     @Override
     public void onApplicationEvent(ShutdownEvent event) {
-        if (event.getSource() != beanContext) {
+        if (event.getSource() != beanContext || !started) {
+            // a container whose start failed before the application was told it started tells it of no shutdown:
+            // what its start created is destroyed by Micronaut, the scopes with it
             return;
         }
         // Shutdown first, then the application context says it is going. One observer throwing must not
         // silence the events after it - cleanup keyed on Destroyed still runs - nor stop the context from
         // stopping, so what an observer threw is logged, as what a bean throws as it is destroyed is
         during("Shutdown", () -> fire(new Shutdown(), Shutdown.class, Set.of()));
+        // the requests still open are the first context to go: what their beans use as they are destroyed - an
+        // application scoped bean, a singleton - is still there, and the observers of their end are told before
+        // the application context says it is going
+        during("the destruction of the requests still open", requestScope::destroyLive);
         during("@BeforeDestroyed(ApplicationScoped.class)",
             () -> fire(new Object(), Object.class, Set.of(BeforeDestroyed.Literal.of(ApplicationScoped.class))));
         // what was looked up through the container itself goes first, while the beans it uses are there

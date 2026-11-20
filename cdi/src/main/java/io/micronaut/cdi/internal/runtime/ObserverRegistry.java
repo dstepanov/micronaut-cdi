@@ -75,6 +75,11 @@ public final class ObserverRegistry {
      * The container, which the observers resolve their parameters through and which depends on this registry.
      */
     private final BeanProvider<CdiBeanContainer> container;
+    /**
+     * The request scope, which an asynchronous observer is notified in a request of its own of, and which depends on
+     * this registry to tell the observers of a request's lifecycle.
+     */
+    private final BeanProvider<RequestScope> requestScope;
     private final List<ObserverMethod<?>> synthetic = new ArrayList<>();
     /**
      * The observer methods, sorted by priority: made again from the observing definitions and the synthetic
@@ -84,11 +89,12 @@ public final class ObserverRegistry {
     private volatile @Nullable List<ObserverMethod<?>> observers;
 
     public ObserverRegistry(BeanContext beanContext, CompiledAnnotationTypes types, RecordedTypeIndex typeIndex,
-                            BeanProvider<CdiBeanContainer> container) {
+                            BeanProvider<CdiBeanContainer> container, BeanProvider<RequestScope> requestScope) {
         this.beanContext = beanContext;
         this.types = types;
         this.typeIndex = typeIndex;
         this.container = container;
+        this.requestScope = requestScope;
         if (beanContext instanceof WatchableBeanContext watchable) {
             // every change of the definitions: a replacement need not observe anything to take observers away.
             // The watch belongs to this bean, and is closed as it is destroyed
@@ -315,23 +321,18 @@ public final class ObserverRegistry {
         EventMetadata metadata =
             new CdiEventMetadata(beanContext, eventQualifiers, firedFrom, eventType);
         List<Throwable> thrown = new ArrayList<>(0);
-        RequestScope requestScope =
-            beanContext.findBean(RequestScope.class).orElse(null);
+        RequestScope requests = requestScope.get();
         for (ObserverMethod<?> observer : resolve(eventType, above, eventQualifiers, true)) {
             try {
-                if (requestScope == null) {
+                // section 2.5.6: the request context is active during the notification of an asynchronous
+                // observer method, one span around each invocation — quietly, the way the footing under a
+                // @PostConstruct callback is, so that no lifecycle event the application did not ask for
+                // reaches its observers. Section 2.8.5.3: it is a new context, and not the one of whoever
+                // fired the event, where the executor runs the notification on the firing thread
+                requests.inNewRequest(() -> {
                     ((CdiNotifiable) observer).notifyWith(event, metadata);
-                } else {
-                    // section 2.5.6: the request context is active during the notification of an asynchronous
-                    // observer method, one span around each invocation — quietly, the way the footing under a
-                    // @PostConstruct callback is, so that no lifecycle event the application did not ask for
-                    // reaches its observers. Section 2.8.5.3: it is a new context, and not the one of whoever
-                    // fired the event, where the executor runs the notification on the firing thread
-                    requestScope.inNewRequest(() -> {
-                        ((CdiNotifiable) observer).notifyWith(event, metadata);
-                        return null;
-                    });
-                }
+                    return null;
+                });
             } catch (VirtualMachineError e) {
                 // no failure of the observer but of the virtual machine, which notifying the others would only
                 // make worse: it ends the notification, as it does a synchronous one

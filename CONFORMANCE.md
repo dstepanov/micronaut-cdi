@@ -196,8 +196,9 @@ The injection points of a bean of Micronaut's own are not resolved by the contai
 own `BeanContext.getBean`. Where several beans are candidates for one and no primary bean decides, Micronaut asks
 the container's resolution customizer (`CdiResolutionCustomizer.resolveNonUniqueBean`), which picks among the
 beans of the specification as the specification does: one that names no qualifier resolves to the bean with the
-default qualifier rather than being ambiguous, and a selected alternative of the highest priority outranks the
-rest. No bean is declared Micronaut's `@Primary` for it, so an application's own primary bean decides as it does
+default qualifier rather than being ambiguous - by the qualifiers the container records of each bean, so a bean a
+portable extension gave a qualifier of its own is no longer a default one (`PortableQualifierDefaultBeanTest`) -
+and a selected alternative of the highest priority outranks the rest. No bean is declared Micronaut's `@Primary` for it, so an application's own primary bean decides as it does
 without this module, a class written with the singleton pseudo-scope alone among them. The difference left is
 there: at a point of a bean of Micronaut's own, or in a `BeanContext.getBean`, that names no
 qualifier where every candidate is qualified, the specification has no bean to resolve, and Micronaut resolves
@@ -443,9 +444,15 @@ needs only `micronaut-cdi`, and
 ### The application context is destroyed as the context begins to stop
 
 *Sections 6.6.2 and 9.6.* As a Micronaut context begins to stop, before it destroys any bean, `Shutdown` is
-fired, then `@BeforeDestroyed(ApplicationScoped.class)`; the application context is then destroyed - every
-application scoped bean, and the dependent objects of each - and `@Destroyed(ApplicationScoped.class)` is fired.
-Two things follow from the order. A bean of the singleton pseudo-scope belongs to no context and is destroyed by
+fired; then every request still open - left active on a thread, suspended, or the work of a request that has not
+returned - is destroyed, each told `@BeforeDestroyed(RequestScoped.class)` and `@Destroyed(RequestScoped.class)`
+where it was told it was initialized; then `@BeforeDestroyed(ApplicationScoped.class)` is fired, the application
+context is destroyed - every application scoped bean, and the dependent objects of each - and
+`@Destroyed(ApplicationScoped.class)` is fired. A request scoped bean that uses an application scoped bean or a
+singleton as it is destroyed therefore reaches the instance it used while the request ran, whatever order Micronaut
+destroys the singletons in (`RequestOpenAtShutdownTest`); a request begun after that - by a shutdown callback, or by
+a bean as it is destroyed - is destroyed as Micronaut stops the request scope, the last moment there is. Two more
+things follow from the order. A bean of the singleton pseudo-scope belongs to no context and is destroyed by
 Micronaut afterwards, so after `@Destroyed(ApplicationScoped.class)`. And an application scoped bean that
 observes `@Destroyed(ApplicationScoped.class)`, or is reached by a singleton as it is destroyed, is a new
 instance created for that, and is destroyed when the context has stopped. What an observer of these events
@@ -1005,10 +1012,13 @@ of its scope, which is also what guarantees one instance per context. A creation
 creating a different bean, of the same scope or another, goes ahead (`CrossThreadCreationTest`).
 
 A request still open as the container closes - left active by `activate()` on any thread, suspended, or the request
-of work that has not returned - is destroyed by the container, once, while the observers are still beans of the
-context: told `@BeforeDestroyed(RequestScoped.class)`, its beans destroyed while it is active, then told
-`@Destroyed(RequestScoped.class)`, as its own end would have told it, where it was told it was initialized
-(`RequestDestructionTest`). Whichever of the container and the request's own end claims it first destroys it: an
+of work that has not returned - is destroyed by the container, once, as it begins to stop: after `Shutdown` and
+before `@BeforeDestroyed(ApplicationScoped.class)`, so the observers, and the application scoped beans and
+singletons its beans use as they are destroyed, are still the instances they were (`RequestOpenAtShutdownTest`).
+It is told `@BeforeDestroyed(RequestScoped.class)`, its beans are destroyed while it is active, and it is told
+`@Destroyed(RequestScoped.class)`, as its own end would have told it, where its observers were told, or are being
+told, it was initialized (`RequestDestructionTest`). A request begun after that, by a shutdown callback or a bean as
+it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
 end that has begun telling its observers is left to finish, even past the close, and then tells a context that
 stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
 propagated context as it deactivates, and is then told the context is not active.
@@ -1198,6 +1208,14 @@ own rather than the first one alone.
   not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
   generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
   would make each question a lookup, cover every bean, and remove both the record and the index.
+- **Whether Micronaut may write a definition of a class is decided in a private method.** The processor reads the
+  members of a class for its qualifier and binding types only where Micronaut may write a definition of it
+  (`AnnotationTypesVisitor.mayHaveADefinition`), and restates for that the decision of
+  `BeanDefinitionCreatorFactory.produceInternal` - of which only `isDeclaredBeanInMetadata` is public - including a
+  copy of its private `containsInjectPoint`. The copy accepts a superset today, so nothing is missed; a way of
+  becoming a bean Core adds later would leave the record of such a class empty, and a qualifier or binding type only
+  its members use unknown, with no error. A public `BeanDefinitionCreatorFactory.mayProduce(ClassElement)`, being
+  proposed to Core, would replace the copy.
 - **An `@Any` singleton reached with no qualifier through its definition is another instance.** A point of a bean of
   the specification left to Micronaut's rules is created through the definition Micronaut found
   (`CdiBeanContainer.resolveSelected`); with no qualifier on the point that is `getBean(definition, type)`, which
@@ -1206,8 +1224,8 @@ own rather than the first one alone.
   the plain definition. A Micronaut factory `@Any @Singleton Engine engine(Qualifier<Engine>)` then makes two
   engines, the CDI point's handed `@Any` and Micronaut's handed none. No clean adapter fix exists: a lookup by type
   would let a bean of the specification the point rejected back in, and a lookup by `NonCdiBeanQualifier` keys the
-  singleton by that qualifier. The core change being made resolves a definition declared `@Any` for the qualifier
-  given, `null` included, in `getBeanRegistration` and `resolveBeanRegistration`, so that a definition asked for with
+  singleton by that qualifier. The core change being made (micronaut-core #14500, open) resolves a definition
+  declared `@Any` for the qualifier given, `null` included, in `getBeanRegistration` and `resolveBeanRegistration`, so that a definition asked for with
   no qualifier is what a lookup by type alone is; `MicronautAnyFactoryTest.anUnqualifiedPointSharesTheInstanceOfAnUnqualifiedLookup`
   is disabled until it lands.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
@@ -1224,14 +1242,16 @@ own rather than the first one alone.
 - **KSP reads no resource of the class path.** `VisitorContext.getClasspathResources` is empty under KSP, so an async
   handler registered on the class path of a Kotlin compilation is not found; the processor warns a compilation with
   extensions of it. An implementation for KSP would close it.
-- **A failed start is not rolled back.** `DefaultBeanContext.start()` rethrows a startup failure without destroying
-  what was created, and `stop()` destroys only a running context. The SE bootstrap's rollback is therefore partial:
-  on any failure it takes the failed container off `CDI.current()` and attempts cleanup by closing the context, but
-  the singletons and scoped beans created before the failure are not destroyed and are left to the garbage
-  collector. A full rollback belongs in Core. Outside the SE bootstrap - a plain `ApplicationContext.run()` whose
-  start fails after the container was created - nothing takes the container off; `CDI.current()` passes over, and
-  lets go of, a container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so
-  it resolves to a container still running, or hands over as when none runs (`CurrentContainerTest`).
+- **A failed start is rolled back through an internal API.** The SE bootstrap rolls a failed start back with
+  `DefaultBeanContext.stopFailedStart`, which destroys the singletons and scoped beans the start created - the
+  container among them, which takes itself off `CDI.current()` - and stops the environment (`SeFailedStartupTest`);
+  the API is `@Internal @Experimental` in Core. The shutdown event of the rollback tells the application nothing
+  where it was never told the container started: `ContainerLifecycle` fires `Shutdown` and the application
+  context's events only after it fired `Startup`, and does nothing where the event is what creates it. Outside the
+  SE bootstrap - a plain `ApplicationContext.run()` whose start fails after the container was created - it is for
+  whoever started the context to roll it back; until it does, `CDI.current()` passes over, and lets go of, a
+  container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so it resolves to
+  a container still running, or hands over as when none runs (`CurrentContainerTest`).
 - **A runtime definition's generic metadata is incomplete.** `RuntimeBeanDefinition.Builder.typeArguments` answers
   `getTypeArguments(Class)` for the types it was given; `getTypeArguments(String)`, `getTypeArgumentKeys()` and a
   query for another supertype still read the bean class reflectively. A synthetic bean hands its definition the
@@ -1368,10 +1388,16 @@ own rather than the first one alone.
   API takes an installed provider as set manually, never leaves it and rethrows what it throws, so the provider hands
   over itself: while none of its containers runs, `CDI.current()` resolves through the first of the other providers
   the service loader of the API's class loader finds, by descending priority, that answers (`CurrentContainerTest`),
-  and fails as the API does where none answers. That service loading, through Micronaut's `SoftServiceLoader`, is
-  the one the runtime does, allowed where it is by the build's reflection check. The service entry of the provider stays: an instance the API finds
+  and fails as the API does where none answers. That service loading, through the JDK's `ServiceLoader` with the
+  API's class loader as the API itself loads them - so a provider a named module declares only with `provides` is
+  found too - is the one the runtime does, allowed where it is by the build's reflection check. It is done again on
+  every `CDI.current()` while no container of this module runs, each other provider instantiated anew, as the API
+  does each time it looks: keeping what was found would be a static of the module's own, so a program that keeps
+  calling `CDI.current()` on another implementation after a Micronaut container stopped in the same JVM pays a
+  service lookup each time. The service entry of the provider stays: an instance the API finds
   before any container started hands over the same way, and a container that starts registers with it. A container
-  whose start failed takes itself off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
+  whose SE start failed is destroyed by the rollback and takes itself off; one that registered and never became a
+  bean of its context is taken off without installing anything (`CdiBeanContainer.failedToStart`). A provider a
   program set itself is left in place, and a container then registers with a provider of its own that the entry point
   does not reach;
   `AnnotationBuilder.of` reaches the `BuildServices` through the specification's static resolver, set as each

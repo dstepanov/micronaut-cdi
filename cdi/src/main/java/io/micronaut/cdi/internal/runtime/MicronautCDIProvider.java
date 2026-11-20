@@ -16,14 +16,16 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.DefaultBeanContext;
-import io.micronaut.core.io.service.SoftServiceLoader;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.CDIProvider;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -79,22 +81,12 @@ public final class MicronautCDIProvider implements CDIProvider {
         Object[] containers = running.toArray();
         for (int i = containers.length - 1; i >= 0; i--) {
             CdiBeanContainer container = (CdiBeanContainer) containers[i];
-            if (!failedToStart(container.beanContext())) {
+            if (!ContainerLifecycle.isStoppedOrFailedToStart(container.beanContext())) {
                 return container;
             }
             running.remove(container);
         }
         return null;
-    }
-
-    /**
-     * Whether the start of a context failed: it does not run, and is not starting either, which Micronaut's own
-     * context tells apart ({@link DefaultBeanContext#isStoppingOrStopped()}). A context that stopped takes its
-     * container off as it stops.
-     */
-    private static boolean failedToStart(BeanContext beanContext) {
-        return !beanContext.isRunning() && beanContext instanceof DefaultBeanContext context
-            && context.isStoppingOrStopped();
     }
 
     @Override
@@ -113,18 +105,44 @@ public final class MicronautCDIProvider implements CDIProvider {
 
     /**
      * What the first provider of another implementation that answers resolves to, the providers taken as the
-     * specification's API finds them: through the service loader of the API's class loader, by descending priority.
-     * A provider of this module - this class, from whichever class loader - is passed over: it holds no container,
-     * and would hand over in turn.
+     * specification's API finds them: through {@link ServiceLoader} with the API's class loader, by descending
+     * priority. The JDK's service loader is the one the API uses, so a provider declared only by a {@code provides}
+     * clause of a named module is found as the API finds it, which a scan of {@code META-INF/services} would miss. A
+     * provider of this module - this class, from whichever class loader - is passed over before it is instantiated:
+     * it holds no container, and would hand over in turn. One that cannot be loaded or instantiated is passed over.
+     *
+     * <p>The providers are found and instantiated again on every call while no container of this module runs,
+     * which is what the API does each time it looks: keeping them would be a static of this module's own.</p>
      *
      * @return The entry point of another implementation, or {@code null} where none answers
      */
+    // the one service loading of the runtime, and no reflection of its own: the specification's API finds its
+    // providers this way, and the hand-over finds the ones it would have found
+    @SuppressWarnings("NoReflection")
     private static @Nullable CDI<Object> otherImplementation() {
-        // the one service loading of the runtime, and no reflection of its own: the specification's API finds its
-        // providers this way, and the hand-over finds the ones it would have found
-        @SuppressWarnings("NoReflection")
-        List<CDIProvider> providers = SoftServiceLoader.load(CDIProvider.class, CDI.class.getClassLoader())
-            .collectAll(provider -> !provider.getClass().getName().equals(MicronautCDIProvider.class.getName()));
+        List<CDIProvider> providers = new ArrayList<>();
+        Iterator<ServiceLoader.Provider<CDIProvider>> found =
+            ServiceLoader.load(CDIProvider.class, CDI.class.getClassLoader()).stream().iterator();
+        while (true) {
+            ServiceLoader.Provider<CDIProvider> provider;
+            try {
+                if (!found.hasNext()) {
+                    break;
+                }
+                provider = found.next();
+            } catch (ServiceConfigurationError e) {
+                // the services cannot be read further: the ones found so far are the ones there are
+                break;
+            }
+            if (provider.type().getName().equals(MicronautCDIProvider.class.getName())) {
+                continue;
+            }
+            try {
+                providers.add(provider.get());
+            } catch (ServiceConfigurationError e) {
+                // a provider that cannot be instantiated answers nothing
+            }
+        }
         providers.sort(Comparator.comparingInt(CDIProvider::getPriority).reversed());
         for (CDIProvider provider : providers) {
             try {
