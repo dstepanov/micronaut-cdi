@@ -89,6 +89,12 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private final Set<Instances> live = ConcurrentHashMap.newKeySet();
 
     /**
+     * Whether the container has begun to stop, destroying the requests still open ({@link #destroyLive()}): from
+     * then on a request's lifecycle is told only by the container.
+     */
+    private volatile boolean stopping;
+
+    /**
      * Whether a request of the propagated context is a live one of this scope. A request of another container -
      * one running alongside, or one already shut down whose request was never ended - may sit above this
      * container's on the same thread; and a request that has ended stays in every propagated context captured
@@ -148,26 +154,31 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * Tells the observers of section 2.8.6 that a request context was initialized, is about to be destroyed,
      * or was destroyed: the qualifier carries the moment, and the payload in SE is a plain object, there being
      * no request object to hand over.
+     *
+     * <p>Once the container has begun to stop ({@link #destroyLive()}), only what it fires itself, as it destroys the
+     * requests still open, is told: a notification under way on another thread tells no more observers of a request
+     * the container destroyed meanwhile, so that none is told it began after being told it was destroyed, and a
+     * request ending on its own as the container goes down ends quietly. A context that stopped, or never started,
+     * has no observers left to tell at all.</p>
+     *
+     * @param moment         The qualifier that carries the moment
+     * @param byTheContainer Whether the container fires it as it destroys a request on its way down
      */
-    private void requestContextEvent(Annotation moment) {
-        // a context that stopped, or never started, has no observers left to tell: a request whose work ends after
-        // the container closed ends quietly, and one whose observers are being told as it closes tells no more of them
-        observers.notifyObserversWhileRunning(new Object(), Argument.OBJECT_ARGUMENT, Set.of(moment));
+    private void requestContextEvent(Annotation moment, boolean byTheContainer) {
+        observers.notifyObserversWhileRunning(new Object(), Argument.OBJECT_ARGUMENT, Set.of(moment),
+            byTheContainer ? () -> true : () -> !stopping);
     }
 
     private void initializedEvent() {
-        requestContextEvent(Initialized.Literal.of(
-            RequestScoped.class));
+        requestContextEvent(Initialized.Literal.of(RequestScoped.class), false);
     }
 
-    private void beforeDestroyedEvent() {
-        requestContextEvent(BeforeDestroyed.Literal.of(
-            RequestScoped.class));
+    private void beforeDestroyedEvent(boolean byTheContainer) {
+        requestContextEvent(BeforeDestroyed.Literal.of(RequestScoped.class), byTheContainer);
     }
 
-    private void destroyedEvent() {
-        requestContextEvent(Destroyed.Literal.of(
-            RequestScoped.class));
+    private void destroyedEvent(boolean byTheContainer) {
+        requestContextEvent(Destroyed.Literal.of(RequestScoped.class), byTheContainer);
     }
 
     @Override
@@ -249,7 +260,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             });
         } finally {
             if (begun.get()) {
-                destroyedEvent();
+                destroyedEvent(false);
             }
         }
     }
@@ -356,7 +367,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * told.</p>
      */
     private void initialized(Instances instances) {
-        instances.told().set(true);
+        // a request begun once the container has begun to stop is told nothing, its end included
+        instances.told().set(!stopping);
         try {
             initializedEvent();
         } catch (RuntimeException | Error e) {
@@ -476,6 +488,8 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * application scoped bean, a singleton - is still the instance it used while the request ran.
      */
     public void destroyLive() {
+        // from here on only the container tells a request's lifecycle: a notification under way elsewhere stops
+        stopping = true;
         Throwable failure = null;
         for (Instances instances : List.copyOf(live)) {
             // each as the request it is: whichever thread it was left on, its beans reach one another as they go.
@@ -535,7 +549,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 activation.end();
             } finally {
                 if (ended || failed) {
-                    destroyedEvent();
+                    destroyedEvent(false);
                 }
             }
         }
@@ -579,7 +593,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         }
         try {
             // fired while the request is still being handled, which is what "before" means
-            beforeDestroyedEvent();
+            beforeDestroyedEvent(false);
         } finally {
             destroyClaimed(instances);
         }
@@ -600,13 +614,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             return;
         }
         try {
-            beforeDestroyedEvent();
+            beforeDestroyedEvent(true);
         } finally {
             try {
                 destroyClaimed(instances);
             } finally {
                 // told it was destroyed though an observer of its imminent destruction threw
-                destroyedEvent();
+                destroyedEvent(true);
             }
         }
     }
