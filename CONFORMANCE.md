@@ -206,8 +206,9 @@ directory of their own - Gradle's `build/resources/main` - is not narrowed until
 *CDI 5.0 section 2.5.1.* An implementation that does not support CDI Full ignores a `beans.xml` except for its bean
 discovery mode, and this one reads nothing else of it. The descriptors are found at runtime, as the
 `META-INF/beans.xml` resources the application's class loader lists, each standing for the archive whose URL prefix
-it was found under - a jar, or a directory of classes with its descriptor beside them; the mode is read outside the
-descriptor's comments, and an empty descriptor or one that names no mode is `annotated` (`BeanArchives`).
+it was found under - a jar, or a directory of classes with its descriptor beside them; the mode is the attribute of
+the descriptor's root element as an XML parser reads it, an empty descriptor or one that names no mode is
+`annotated`, and one that is not well formed is a deployment problem (`BeanArchives`).
 
 - `all` belongs to CDI Full: an archive that declares it is a deployment problem, a jakarta `DeploymentException`
   reported by the deployment validation as the container starts, whether it is started by the SE bootstrap or as a
@@ -1119,7 +1120,21 @@ told, it was initialized (`RequestDestructionTest`). A request begun after that,
 it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
 end that has begun telling its observers is left to finish, even past the close, and then tells a context that
 stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
-propagated context as it deactivates, and is then told the context is not active.
+propagated context as it deactivates, and is then told the context is not active; where something was propagated
+on the thread after it - a request begun since in another container, say - the activation is left in place, since
+ending it would take out what came after it too (`ControllerAfterShutdownTest`).
+
+The container takes itself down from the shutdown event Micronaut publishes before it destroys any bean. Micronaut
+stops publishing that event at the first listener that throws, so where a listener of the shutdown ordered before the
+container's throws, the container goes down from its own `@PreDestroy` instead: `Shutdown`, the requests still open
+and the application context are each still announced and destroyed, but by then Micronaut may already have destroyed
+singletons the container does not depend on, which a request scoped bean that uses one as it is destroyed then finds
+closed. Shutdown listeners that may throw should catch what they throw.
+
+A `Typed` that names an array type on a producer is refused as the bean compiles: Micronaut does not expose an array
+type as a bean type it can look up. A producer of an array has exactly the array type and `Object` as bean types
+(section 3.2.1), so leave the `Typed` out. For the same reason a synthetic bean of an array type is not matched to a
+registration method of a build compatible extension that asks for the array type.
 
 A class level interceptor binding of a bean class reaches the beans its producer methods produce: their lifecycle
 callback interceptors - `@AroundConstruct`, `@PostConstruct`, `@PreDestroy` - run on the produced object, which is no
