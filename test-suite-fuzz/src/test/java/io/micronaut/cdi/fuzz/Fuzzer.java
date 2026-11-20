@@ -31,12 +31,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
  * Generates, runs, compares, shrinks and reports.
  */
 final class Fuzzer {
+
+    private static final Pattern WELD_CODE = Pattern.compile("WELD-\\d+");
 
     private final Path reportDir;
     private final Path workRoot;
@@ -122,20 +128,40 @@ final class Fuzzer {
         Evaluation shrunk = null;
         int runs = 0;
         if (shrink && original.divergence() != null && original.known().isEmpty()) {
-            String signature = original.divergence().signature();
-            // the outcomes must stay the same too: a side that refuses for another reason, such as Weld refusing an
-            // empty deployment, is another divergence
-            Shrinker shrinker = new Shrinker(candidate -> {
-                Evaluation e = evaluate(candidate);
-                return e.divergence() != null && e.divergence().signature().equals(signature)
-                    && e.micronaut().outcome() == original.micronaut().outcome()
-                    && e.weld().outcome() == original.weld().outcome();
-            }, shrinkBudget);
+            Shrinker shrinker = new Shrinker(candidate -> reproduces(original, evaluate(candidate)), shrinkBudget);
             Scenario reduced = shrinker.shrink(scenario);
             runs = shrinker.runs();
             shrunk = evaluate(reduced);
         }
         return new SeedResult(seed, original, shrunk, writeReport(seed, original, shrunk, runs));
+    }
+
+    /**
+     * Whether a shrunk scenario still shows the divergence of the original: the same signature, the same outcomes - a
+     * side that refuses for another reason, such as Weld refusing an empty deployment, is another divergence - and
+     * Weld refusing for the same problems, so that a candidate that took out the problem micronaut-cdi missed,
+     * leaving another that Weld reports with the same outcome, is not taken for it.
+     */
+    static boolean reproduces(Evaluation original, Evaluation candidate) {
+        return candidate.divergence() != null
+            && candidate.divergence().signature().equals(original.divergence().signature())
+            && candidate.micronaut().outcome() == original.micronaut().outcome()
+            && candidate.weld().outcome() == original.weld().outcome()
+            && weldProblems(candidate.weld()).equals(weldProblems(original.weld()));
+    }
+
+    /**
+     * The codes of the problems Weld reported refusing a deployment, such as {@code WELD-001408}.
+     */
+    static Set<String> weldProblems(RunResult weld) {
+        Set<String> codes = new TreeSet<>();
+        if (weld.outcome().isRefusal() && weld.detail() != null) {
+            Matcher matcher = WELD_CODE.matcher(weld.detail());
+            while (matcher.find()) {
+                codes.add(matcher.group());
+            }
+        }
+        return codes;
     }
 
     private Path writeReport(long seed, Evaluation original, Evaluation shrunk, int shrinkRuns) {

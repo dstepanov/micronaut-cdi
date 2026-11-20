@@ -135,6 +135,21 @@ class HarnessTest {
     }
 
     @Test
+    void aShrunkScenarioReproducesOnlyWhereWeldRefusesItForTheSameProblems() {
+        RunResult deployed = RunResult.deployed(List.of());
+        RunResult both = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
+            "WELD-001408: Unsatisfied dependencies ... WELD-001443: Pseudo scoped bean has circular dependencies");
+        RunResult cycleOnly = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
+            "WELD-001443: Pseudo scoped bean has circular dependencies");
+        Divergence divergence = TraceComparison.compare(deployed, both);
+        Fuzzer.Evaluation original = new Fuzzer.Evaluation(null, null, deployed, both, divergence,
+            java.util.Optional.empty());
+        assertTrue(Fuzzer.reproduces(original, original));
+        assertTrue(!Fuzzer.reproduces(original, new Fuzzer.Evaluation(null, null, deployed, cycleOnly,
+            TraceComparison.compare(deployed, cycleOnly), java.util.Optional.empty())));
+    }
+
+    @Test
     void whatIsLoggedOutsideAStretchIsCompared() {
         RunResult a = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "get=B2"));
         RunResult b = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "!jakarta.enterprise.inject.AmbiguousResolutionException"));
