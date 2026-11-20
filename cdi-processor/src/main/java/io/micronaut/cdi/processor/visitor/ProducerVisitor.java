@@ -130,6 +130,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         for (MethodElement disposer : disposers) {
             checkDisposer(disposer, interceptorClass, context);
         }
+        if (producers.isEmpty() && excludeInheritedProducerFields(element)) {
+            // a subclass of a class with producer fields: Micronaut would take each field, which carries the
+            // qualifiers of its product, for a field to inject, and inject a product into the subclass's instance.
+            // As a factory it claims the fields as producer fields instead, whose products the class's condition
+            // takes out, a producer being no member a subclass inherits (section 4.2)
+            element.annotate(Factory.class);
+        }
         if (producers.isEmpty()) {
             if (!interceptorClass && !disposers.isEmpty()) {
                 // section 3.3.7: a disposer belongs to a producer of the same class, and this class has none
@@ -346,8 +353,10 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      * producer is no member a subclass inherits (section 4.2). The fields are recorded on the class, and its condition
      * ({@code InheritedProducer}) leaves out the products of the recorded ones; the metadata of a field is the same
      * whichever class it is read through, so the field itself cannot be told so.
+     *
+     * @return Whether the class inherits producer fields
      */
-    private static void excludeInheritedProducerFields(ClassElement element) {
+    private static boolean excludeInheritedProducerFields(ClassElement element) {
         List<String> inherited = new ArrayList<>();
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.includeHiddenElements())) {
             if (field.hasDeclaredAnnotation(Cdi.PRODUCES) && !field.getDeclaringType().getName().equals(element.getName())) {
@@ -355,12 +364,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             }
         }
         if (inherited.isEmpty()) {
-            return;
+            return false;
         }
         element.annotate(io.micronaut.cdi.internal.metadata.CdiInheritedProducers.class,
             builder -> builder.values(inherited.toArray(new String[0])));
         element.annotate(io.micronaut.context.annotation.Requires.class, builder -> builder.member("condition",
             new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.InheritedProducer")));
+        return true;
     }
 
     /**
