@@ -1,5 +1,8 @@
 package org.example.cdi.se;
 
+import io.micronaut.cdi.internal.runtime.ContainerLifecycle;
+import io.micronaut.context.event.BeanCreatedEvent;
+import io.micronaut.context.event.BeanCreatedEventListener;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.BeforeDestroyed;
@@ -18,6 +21,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -110,6 +114,54 @@ class SeFailedStartupTest {
                 EVENTS.add("destroyed");
             }
         }
+    }
+
+    static final AtomicBoolean FAIL_AFTER_CREATION = new AtomicBoolean();
+    static final List<String> STARTED_EVENTS = new CopyOnWriteArrayList<>();
+    static volatile boolean recordingStarted;
+
+    /**
+     * Fails the start once the container told the application it started: a listener of the creation of the bean
+     * that tells it, which runs after the bean's {@code @PostConstruct} returned.
+     */
+    @Singleton
+    public static class FailingAfterStartup implements BeanCreatedEventListener<ContainerLifecycle> {
+        @Override
+        public ContainerLifecycle onCreated(BeanCreatedEvent<ContainerLifecycle> event) {
+            if (FAIL_AFTER_CREATION.getAndSet(false)) {
+                throw new IllegalStateException("the creation failed after the container started");
+            }
+            return event.getBean();
+        }
+
+        static void onStartup(@Observes Startup startup) {
+            if (recordingStarted) {
+                STARTED_EVENTS.add("startup");
+            }
+        }
+
+        static void onShutdown(@Observes Shutdown shutdown) {
+            if (recordingStarted) {
+                STARTED_EVENTS.add("shutdown");
+            }
+        }
+    }
+
+    @Test
+    void anApplicationToldItStartedIsToldItShutsDownAsTheFailedStartIsRolledBack() {
+        STARTED_EVENTS.clear();
+        recordingStarted = true;
+        FAIL_AFTER_CREATION.set(true);
+        try {
+            assertThrows(RuntimeException.class, () -> SeContainerInitializer.newInstance().disableDiscovery()
+                .addBeanClasses(FailingAfterStartup.class).initialize());
+        } finally {
+            recordingStarted = false;
+            FAIL_AFTER_CREATION.set(false);
+        }
+        // Startup was fired to its end before the start failed, so the rollback is the shutdown of an application
+        // that started, whichever instance of the container's lifecycle listens to it
+        assertEquals(List.of("startup", "shutdown"), STARTED_EVENTS);
     }
 
     @Test
