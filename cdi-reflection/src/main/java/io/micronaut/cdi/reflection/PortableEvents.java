@@ -60,6 +60,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -514,14 +515,17 @@ final class PortableEvents {
         private final ExtensionContexts contexts;
         private final ObserverRegistry observers;
         private final Predicate<Class<? extends Annotation>> normalScope;
+        private final Map<Class<?>, List<Annotation>> discovered;
         private final List<Throwable> problems;
 
         AfterBeans(ExtensionContexts contexts, ObserverRegistry observers,
-                   Predicate<Class<? extends Annotation>> normalScope, List<Throwable> problems) {
+                   Predicate<Class<? extends Annotation>> normalScope, Map<Class<?>, List<Annotation>> discovered,
+                   List<Throwable> problems) {
             super("AfterBeanDiscovery");
             this.contexts = contexts;
             this.observers = observers;
             this.normalScope = normalScope;
+            this.discovered = discovered;
             this.problems = problems;
         }
 
@@ -560,15 +564,18 @@ final class PortableEvents {
         }
 
         @Override
-        public <T> AnnotatedType<T> getAnnotatedType(Class<T> type, String id) {
+        public <T> @Nullable AnnotatedType<T> getAnnotatedType(Class<T> type, String id) {
             whileNotifying();
-            return new ReflectiveAnnotatedType<>(type);
+            // a discovered class is the one annotated type of its class, and its id is the name of the class
+            List<Annotation> added = discovered.get(type);
+            return added == null || !type.getName().equals(id) ? null : new ReflectiveAnnotatedType<>(type, added);
         }
 
         @Override
         public <T> Iterable<AnnotatedType<T>> getAnnotatedTypes(Class<T> type) {
             whileNotifying();
-            return List.of(new ReflectiveAnnotatedType<>(type));
+            List<Annotation> added = discovered.get(type);
+            return added == null ? List.of() : List.of(new ReflectiveAnnotatedType<>(type, added));
         }
     }
 

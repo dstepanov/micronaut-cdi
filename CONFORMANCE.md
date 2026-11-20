@@ -793,7 +793,7 @@ What an extension can do:
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
   place of the container's own (a context a build compatible extension registers for the request scope stands beside
   the container's own instead, CDI 5.0 section 6.4); `addObserverMethod(ObserverMethod)` adds an observer method; and
-  `getAnnotatedType`/`getAnnotatedTypes` describe a class. A context added for a normal scope the application
+  `getAnnotatedType`/`getAnnotatedTypes` describe a discovered class, whose id is its name, with the qualifiers the extensions added, and nothing for another class or id. A context added for a normal scope the application
   declares with `@NormalScope` serves the beans of that scope - a class declaring it, inheriting it or carrying it
   with a stereotype, and a producer declaring it: an instance is created into the context and found in it again,
   an inactive one throws `ContextNotActiveException` rather than being stepped around, and what it destroys is
