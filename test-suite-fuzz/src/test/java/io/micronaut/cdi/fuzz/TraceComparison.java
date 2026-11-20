@@ -118,7 +118,8 @@ final class TraceComparison {
     }
 
     /**
-     * The trace with the order the specification leaves open taken out of it: an unordered stretch sorted, and the
+     * The trace with the order the specification leaves open taken out of it: an unordered stretch sorted with the
+     * sequence of observer priorities it notified in kept, and the
      * notification of an event reduced to the lines it logged, sorted, and the sequence of observer priorities it
      * notified in, sorted - so that observers notified out of the order of their priorities still differ. What
      * the container did as it started, before the first probe, is a notification of its lifecycle events.
@@ -144,11 +145,9 @@ final class TraceComparison {
                 }
                 List<String> stretch = trace.subList(i + 1, Math.min(end, trace.size()));
                 out.add(line);
-                if (line.equals("{")) {
-                    out.addAll(stretch.stream().sorted().toList());
-                } else {
-                    out.addAll(notification(stretch));
-                }
+                // an unordered stretch is sorted too, and the observers it notified - of Shutdown, or of the end of a
+                // context, as the container shuts down - are still notified in the order of their priorities
+                out.addAll(notification(stretch));
                 out.add(close);
                 i = end + 1;
             } else {

@@ -93,6 +93,17 @@ class HarnessTest {
     }
 
     @Test
+    void observersNotifiedOutOfTheOrderOfTheirPrioritiesAsTheContainerShutsDownDiffer() {
+        RunResult a = RunResult.deployed(List.of("#shutdown", "{", "destroy B1", "p=2500 O3@B1 Shutdown",
+            "p=5 O1@B2 Shutdown", "}"));
+        RunResult b = RunResult.deployed(List.of("#shutdown", "{", "p=5 O1@B2 Shutdown", "p=2500 O3@B1 Shutdown",
+            "destroy B1", "}"));
+        Divergence divergence = TraceComparison.compare(a, b);
+        assertEquals(Severity.HARD, divergence.severity());
+        assertEquals(Category.TRACE, divergence.category());
+    }
+
+    @Test
     void whatIsLoggedOutsideAStretchIsCompared() {
         RunResult a = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "get=B2"));
         RunResult b = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "!jakarta.enterprise.inject.AmbiguousResolutionException"));
