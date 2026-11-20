@@ -73,7 +73,7 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
         // the singleton pseudo-scope is read as Micronaut's own rather than into a CdiScope, and a class written
         // with it is a bean that may ask for the default name like any other
         if (SpecificationBeans.isBean(element)) {
-            nameIfAskedFor(element, defaultClassName(unqualified(element.getSimpleName())));
+            nameIfAskedFor(element, defaultClassName(unqualified(element)));
             if (element.getAnnotationMetadata().hasStereotype(NAMED) && reachableFromAnExpression(context)) {
                 // a bean with a name is what an expression reaches, and an expression invokes a method through
                 // the executable metadata compiled for it rather than reflectively: the public methods of the
@@ -122,10 +122,20 @@ public final class BeanNameVisitor implements TypeElementVisitor<Object, Object>
      * <p>Section 2.6.3 gives a bean the unqualified name of its class, and the simple name Micronaut reports for a
      * nested class is the binary one, with the outer class in front of a dollar: {@code Outer$Inner} where the
      * language calls it {@code Inner}. A dollar the class was named with is part of its name: a top level class
-     * called {@code $Money} is named {@code $money}, so only a dollar with a name in front of it separates a
-     * nested class from the class it is nested in.</p>
+     * called {@code $Money} is named {@code $money} and one called {@code Price$USD} is named {@code price$USD}, so
+     * only the name of the enclosing class and the dollar after it are taken off a nested class's name.</p>
      */
-    private static String unqualified(String simpleName) {
+    private static String unqualified(ClassElement element) {
+        String simpleName = element.getSimpleName();
+        ClassElement enclosing = element.getEnclosingType().orElse(null);
+        if (enclosing == null) {
+            // a top level class: a dollar it was named with, anywhere in the name, is part of it
+            return simpleName;
+        }
+        String outer = enclosing.getSimpleName() + '$';
+        if (simpleName.startsWith(outer)) {
+            return simpleName.substring(outer.length());
+        }
         int nested = simpleName.lastIndexOf('$');
         return nested < 1 ? simpleName : simpleName.substring(nested + 1);
     }

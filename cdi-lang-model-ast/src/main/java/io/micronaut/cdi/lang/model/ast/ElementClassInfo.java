@@ -167,7 +167,18 @@ public final class ElementClassInfo extends ElementDeclarationInfo implements Cl
     public String simpleName() {
         // the simple name of a nested class is its own, not outer-dollar-inner, which is how the language
         // model of the specification reads (and how java.lang.Class#getSimpleName answers)
-        String simple = element.get().getSimpleName();
+        // A dollar a top level class was named with is part of its name: only the enclosing class's name and the
+        // dollar after it are taken off
+        ClassElement current = element.get();
+        String simple = current.getSimpleName();
+        ClassElement enclosing = current.getEnclosingType().orElse(null);
+        if (enclosing == null) {
+            return simple;
+        }
+        String outer = enclosing.getSimpleName() + '$';
+        if (simple.startsWith(outer)) {
+            return simple.substring(outer.length());
+        }
         int nested = simple.lastIndexOf('$');
         return nested < 0 ? simple : simple.substring(nested + 1);
     }
