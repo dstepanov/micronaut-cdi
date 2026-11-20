@@ -15,9 +15,13 @@
  */
 package io.micronaut.cdi.processor.extension;
 
+import io.micronaut.cdi.internal.metadata.CdiBuiltInvokers;
+import io.micronaut.cdi.internal.metadata.CdiRecordedInvoker;
 import io.micronaut.cdi.lang.model.ast.ElementMethodInfo;
 import io.micronaut.cdi.processor.visitor.RecordedTypeValues;
 import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -29,6 +33,7 @@ import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.invoke.InvokerBuilder;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -119,6 +124,13 @@ final class ElementInvokerFactory implements InvokerFactory {
 
         @Override
         public InvokerBuilder<InvokerInfo> withArgumentLookup(int position) {
+            int parameters = method.getParameters().length;
+            if (position < 0 || position >= parameters) {
+                // the builder's contract names the exception, and it is thrown as the lookup is asked for
+                throw new IllegalArgumentException("The argument lookup at " + position + " is out of the "
+                    + "method's parameters: " + beanClass.getName() + "#" + method.getName() + " takes "
+                    + parameters);
+            }
             argumentLookups.add(position);
             return this;
         }
@@ -143,8 +155,27 @@ final class ElementInvokerFactory implements InvokerFactory {
             }
             // whether the method is asynchronous - it matches exactly one async handler (CDI 5.0) - is known here,
             // where the handlers' type arguments and the method's signature are
-            return new ElementInvokerInfo(beanClass.getName(), method.getName(), parameterTypeNames,
-                method.isStatic(), instanceLookup, lookups, AsyncHandlerTypes.match(method, asyncHandlers));
+            ElementInvokerInfo invoker = new ElementInvokerInfo(beanClass.getName(), method.getName(),
+                parameterTypeNames, method.isStatic(), instanceLookup, lookups,
+                AsyncHandlerTypes.match(method, asyncHandlers));
+            if (instanceLookup || !argumentLookups.isEmpty()) {
+                // every invoker that looks something up is validated as the container starts, whether or not the
+                // extension hands it to a synthetic component (section 10.3.1): it is recorded on its class
+                recordOnClass(invoker);
+            }
+            return invoker;
+        }
+
+        private void recordOnClass(ElementInvokerInfo invoker) {
+            List<AnnotationValue<CdiRecordedInvoker>> recorded = new ArrayList<>(beanClass.getAnnotationMetadata()
+                .getAnnotationValuesByType(CdiBuiltInvokers.class).stream()
+                .flatMap(built -> built.getAnnotations(AnnotationMetadata.VALUE_MEMBER, CdiRecordedInvoker.class)
+                    .stream())
+                .toList());
+            recorded.add(invoker.toRecord());
+            beanClass.removeAnnotation(CdiBuiltInvokers.class);
+            beanClass.annotate(AnnotationValue.builder(CdiBuiltInvokers.class)
+                .values(recorded.toArray(new AnnotationValue<?>[0])).build());
         }
     }
 }

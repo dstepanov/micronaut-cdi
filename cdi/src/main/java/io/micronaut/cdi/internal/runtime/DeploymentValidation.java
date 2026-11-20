@@ -16,12 +16,15 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiBuiltInvokers;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiRecordedInvoker;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -109,6 +112,7 @@ final class DeploymentValidation {
             }
             validateDisposer(definition);
             validateObservers(definition);
+            validateInvokers(definition);
         }
         validateNames(beans);
         if (!problems.isEmpty()) {
@@ -151,6 +155,24 @@ final class DeploymentValidation {
         for (int i = 0; i < arguments.length; i++) {
             if (i != disposer.disposedParameter()) {
                 validate(definition, arguments[i]);
+            }
+        }
+    }
+
+    /**
+     * Every invoker an extension built for a method of the bean that looks something up resolves each lookup to
+     * one bean (section 10.3.1), whether or not the extension handed it to a synthetic component.
+     */
+    private void validateInvokers(BeanDefinition<?> definition) {
+        for (AnnotationValue<CdiBuiltInvokers> built
+            : definition.getAnnotationMetadata().getAnnotationValuesByType(CdiBuiltInvokers.class)) {
+            for (AnnotationValue<CdiRecordedInvoker> record
+                : built.getAnnotations(AnnotationMetadata.VALUE_MEMBER, CdiRecordedInvoker.class)) {
+                try {
+                    RecordedInvoker.of(container.beanContext(), record).validateLookups();
+                } catch (DeploymentException e) {
+                    problems.add(e);
+                }
             }
         }
     }
