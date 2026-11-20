@@ -7,7 +7,7 @@ disagree.
 ## Running it
 
 ```
-./gradlew :micronaut-cdi-test-suite-fuzz:fuzz -Pfuzz.seed=1 -Pfuzz.count=200
+./gradlew :test-suite-fuzz:fuzz -Pfuzz.seed=1 -Pfuzz.count=200
 ```
 
 | Property | Default | Meaning |

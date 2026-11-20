@@ -63,7 +63,7 @@ tasks.named('test', Test) { Test test ->
     }
 }
 
-// ./gradlew :micronaut-cdi-test-suite-fuzz:fuzz -Pfuzz.seed=1 -Pfuzz.count=200 [-Pfuzz.shrink=true]
+// ./gradlew :test-suite-fuzz:fuzz -Pfuzz.seed=1 -Pfuzz.count=200 [-Pfuzz.shrink=true]
 // [-Pfuzz.shrinkBudget=150] [-Pfuzz.size=medium]
 tasks.register('fuzz', Test) { Test test ->
     description = 'Runs a campaign of the differential fuzzer against Weld.'
