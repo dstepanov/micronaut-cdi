@@ -132,6 +132,7 @@ final class DeploymentCompiler {
         "Error finalizing type visitor",
         "Error initializing bean element visitor",
         "Error finalizing bean element visitor",
+        "Error occurred visiting BeanElementVisitor",
         "Unexpected error:");
 
     /**

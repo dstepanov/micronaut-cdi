@@ -77,6 +77,7 @@ class DeploymentCompilerClassificationTest {
             "Error finalizing type visitor [V]: boom",
             "Error initializing bean element visitor [V]: boom",
             "Error finalizing bean element visitor [V]: boom",
+            "Error occurred visiting BeanElementVisitor of type [V]: boom",
             "Unexpected error: boom")) {
             RuntimeException failure = new RuntimeException("compilation failed");
             RuntimeException classified = DeploymentCompiler.classified(List.of(processorError(crash)), failure);
