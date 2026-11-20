@@ -94,10 +94,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     @Internal
     public static final String RESTRICTED_CLASSPATH = "micronaut.cdi.se.restricted-classpath";
 
-    private static final String BEANS_XML = "META-INF/beans.xml";
-    private static final Pattern DISCOVERS_NOTHING =
-        Pattern.compile("bean-discovery-mode\\s*=\\s*[\"']\\s*none\\s*[\"']");
-
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
     private final Set<String> recursivePackages = new LinkedHashSet<>();
