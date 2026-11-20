@@ -62,6 +62,22 @@ class ProducerTypedRulesTest {
     }
 
     @Test
+    void anArrayProducerTypedToAnotherArrayTypeIsRefused() {
+        assertRefused("""
+            package broken;
+
+            @jakarta.enterprise.context.Dependent
+            public class Subject {
+                @jakarta.enterprise.inject.Produces
+                @jakarta.enterprise.inject.Typed(Integer[].class)
+                String[] produce() {
+                    return new String[0];
+                }
+            }
+            """);
+    }
+
+    @Test
     void aProducerTypedToTypesItHasCompiles() {
         try (JavaParser parser = new JavaParser()) {
             assertDoesNotThrow(() -> parser.generate("valid.Subject", """
@@ -78,6 +94,12 @@ class ProducerTypedRulesTest {
                     @jakarta.enterprise.inject.Produces
                     @jakarta.enterprise.inject.Typed
                     StringBuilder produced = new StringBuilder();
+
+                    @jakarta.enterprise.inject.Produces
+                    @jakarta.enterprise.inject.Typed(int[][].class)
+                    int[][] matrix() {
+                        return new int[0][];
+                    }
                 }
                 """));
         }

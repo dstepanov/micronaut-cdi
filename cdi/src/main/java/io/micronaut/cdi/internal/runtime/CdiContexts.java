@@ -21,6 +21,8 @@ import io.micronaut.cdi.internal.extension.ExtensionContexts;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.WatchableBeanContext;
+import io.micronaut.context.watch.BeanDefinitionChange;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
@@ -39,6 +41,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,6 +70,9 @@ final class CdiContexts {
         Singleton.class.getName(), Singleton.class);
 
     private final BeanContext beanContext;
+    // the normality of the scopes the compiled beans carry, see recordedNormalities; null until read, and again once
+    // the definitions change
+    private volatile @Nullable Map<String, Boolean> normalities;
     /**
      * The contexts of the built-in scopes, which hold no state of their own beyond the scope they read: made once
      * rather than for each event an observer of a bean in one of them is notified of.
@@ -88,6 +94,10 @@ final class CdiContexts {
         this.applicationContexts = List.of(CdiContext.ofApplication(ApplicationScoped.class, applicationScope));
         this.singletonContexts = List.of(CdiContext.ofSingleton(Singleton.class, beanContext));
         this.dependentContexts = List.of(CdiContext.holdingNothing(Dependent.class));
+        if (beanContext instanceof WatchableBeanContext watchable) {
+            // a definition registered or replaced at runtime may carry a scope of its own
+            watchable.definitions().watch(this::definitionsChanged);
+        }
     }
 
     /**
@@ -151,13 +161,44 @@ final class CdiContexts {
      * where no bean was compiled into the scope.
      */
     private @Nullable Boolean recordedNormality(String scopeName) {
-        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class))) {
-            AnnotationMetadata metadata = definition.getAnnotationMetadata();
-            if (scopeName.equals(metadata.stringValue(CdiScope.class).orElse(null))) {
-                return CdiResolution.isNormalScoped(metadata);
+        return recordedNormalities().get(scopeName);
+    }
+
+    /**
+     * Whether each scope a compiled bean carries is normal, by the scope's name, read from the definitions once and
+     * kept until they change: {@code isScope} and {@code isNormalScope} are asked as often as a program likes, and a
+     * walk of every definition each time would cost each of them that.
+     *
+     * @return The normality of each recorded scope
+     */
+    Map<String, Boolean> recordedNormalities() {
+        Map<String, Boolean> read = normalities;
+        if (read == null) {
+            synchronized (this) {
+                read = normalities;
+                if (read == null) {
+                    Map<String, Boolean> found = new HashMap<>();
+                    for (BeanDefinition<Object> definition
+                        : beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class))) {
+                        AnnotationMetadata metadata = definition.getAnnotationMetadata();
+                        String scope = metadata.stringValue(CdiScope.class).orElse(null);
+                        if (scope != null) {
+                            // the first definition of a scope says, as the walk this replaces had it
+                            found.putIfAbsent(scope, CdiResolution.isNormalScoped(metadata));
+                        }
+                    }
+                    read = Map.copyOf(found);
+                    normalities = read;
+                }
             }
         }
-        return null;
+        return read;
+    }
+
+    private synchronized void definitionsChanged(BeanDefinitionChange<Object> change) {
+        if (!change.initial()) {
+            normalities = null;
+        }
     }
 
     private boolean isRegisteredScope(Class<? extends Annotation> annotationType) {

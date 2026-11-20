@@ -281,11 +281,15 @@ public final class ObserverRegistry {
         CdiTypes.EventType eventType = CdiTypes.eventTypeAndClosureOf(typeIndex(), event.getClass(), declaredType);
         List<CdiQualifier> qualifiers = CdiQualifier.ofInstances(types(), eventQualifiers);
         EventMetadata metadata = new CdiEventMetadata(beanContext, qualifiers, null, eventType.type());
+        BooleanSupplier running = () -> stillToTell.getAsBoolean()
+            && !ContainerLifecycle.isStoppedOrFailedToStart(beanContext);
         for (ObserverMethod<?> observer : resolve(eventType.type(), eventType.above(), qualifiers, false)) {
-            if (!stillToTell.getAsBoolean() || ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
+            if (!running.getAsBoolean()) {
                 return;
             }
-            ((CdiNotifiable) observer).notifyWith(event, metadata);
+            // asked again once the observer's arguments are resolved, which may take long enough for the container
+            // to destroy meanwhile what the event announces
+            ((CdiNotifiable) observer).notifyWith(event, metadata, running);
         }
     }
 

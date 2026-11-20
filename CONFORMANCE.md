@@ -52,6 +52,7 @@ visible in a test report as what passes.
 | 12.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each registered as a bean definition of the class the extension named, without a source | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
 | 12.6 | The `@Validation` phase, whose errors fail the compilation | `BuildCompatibleExtensionVisitor` |
 | 12.4 | A synthetic bean described to a `@Registration` method by the bean types its builder declared, as a class bean is by its bean types | `ExtensionMethods` |
+| 12.4 | `BeanInfo.injectionPoints()` of a producer method: its own parameters, those of its disposer told through `disposer()`, as the bean's `Bean` lists them at runtime | `ElementBeanInfo` |
 | 12 | The extension methods of a build compatible extension, the ones it inherits from its superclasses included, a method it overrides run once, as the override | `ExtensionMethods` |
 | 12 (5.0) | An exception an extension method of any phase throws, an error it reports through `Messages`, and a parameter of a type the phase does not hand, as deployment problems that fail the compilation; a malformed extension method - none or more than one parameter naming what it is told about - as a definition error, as the kit has it; an argument lookup out of the method's parameters refused by `InvokerBuilder.withArgumentLookup` with `IllegalArgumentException` as it is asked for | `ExtensionMethods`, `ElementInvokerFactory` |
 | 12.4 | The `@Registration` phase, run over each bean and observer as it is compiled, and over the synthetic beans and observers and the built-in beans once synthesis has run | `ElementBeanInfo`, `ElementObserverInfo`, `SyntheticBeanInfo`, `SyntheticObserverInfo`, `BuildCompatibleExtensionVisitor` |
@@ -1118,23 +1119,29 @@ It is told `@BeforeDestroyed(RequestScoped.class)`, its beans are destroyed whil
 `@Destroyed(RequestScoped.class)`, as its own end would have told it, where its observers were told, or are being
 told, it was initialized (`RequestDestructionTest`). A request begun after that, by a shutdown callback or a bean as
 it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
-end that has begun telling its observers is left to finish, even past the close, and then tells a context that
-stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
+end that has begun telling its observers is left to finish, even past the close: one that began telling them before
+the container began to stop tells them the request was destroyed as well (`RequestEndingAtShutdownTest`), and a
+context that has stopped is told nothing more. An observer of a request's beginning is asked whether it is still to
+be told once its parameters are created as well as before: one whose parameter was still being created as the
+container destroyed the request is not told the request began after it was told it was destroyed
+(`RequestInitializingAtShutdownTest`). A thread whose activated request the container destroyed takes the activation out of its
 propagated context as it deactivates, and is then told the context is not active; where something was propagated
 on the thread after it - a request begun since in another container, say - the activation is left in place, since
 ending it would take out what came after it too (`ControllerAfterShutdownTest`).
 
 The container takes itself down from the shutdown event Micronaut publishes before it destroys any bean. Micronaut
 stops publishing that event at the first listener that throws, so where a listener of the shutdown ordered before the
-container's throws, the container goes down from its own `@PreDestroy` instead: `Shutdown`, the requests still open
-and the application context are each still announced and destroyed, but by then Micronaut may already have destroyed
-singletons the container does not depend on, which a request scoped bean that uses one as it is destroyed then finds
-closed. Shutdown listeners that may throw should catch what they throw.
+container's throws, the container goes down as Micronaut is about to destroy the first bean of the stopping context
+instead (`ContainerStopGuard`, a listener of the destruction of beans, which Micronaut destroys after the beans it
+listens to): `Shutdown`, the requests still open and the application context are each still announced and destroyed,
+while every singleton is still there, whatever order Micronaut destroys the singletons in (`ShutdownFallbackTest`).
 
-A `Typed` that names an array type on a producer is refused as the bean compiles: Micronaut does not expose an array
-type as a bean type it can look up. A producer of an array has exactly the array type and `Object` as bean types
-(section 3.2.1), so leave the `Typed` out. For the same reason a synthetic bean of an array type is not matched to a
-registration method of a build compatible extension that asks for the array type.
+A `Typed` that names an array type on a producer of that array narrows nothing Micronaut is told: Micronaut cannot name
+an array type among the types a bean is resolvable by, and a producer of an array has exactly the array type and
+`Object` as bean types (section 3.2.1), which is what the container reads from the `Typed` (`TypedArrayProducerTest`).
+A synthetic bean of an array type is refused as its extension describes it: Micronaut registers a bean for a class, and
+an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
+type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
 A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
 after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in

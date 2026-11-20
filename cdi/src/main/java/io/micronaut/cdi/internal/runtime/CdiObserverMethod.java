@@ -43,6 +43,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 /**
  * One observer method, read from the executable method the annotation processor found and marked.
@@ -201,7 +202,17 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
         notify((T) event, metadata);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public void notifyWith(Object event, EventMetadata metadata, BooleanSupplier stillToTell) {
+        notify((T) event, metadata, stillToTell);
+    }
+
     void notify(T event, EventMetadata metadata) {
+        notify(event, metadata, () -> true);
+    }
+
+    private void notify(T event, EventMetadata metadata, BooleanSupplier stillToTell) {
         // a dependent observer bean, and a dependent parameter, exist for the one notification: they are created
         // for it, and they and everything created along with them are destroyed when it completes, the last
         // created first
@@ -247,6 +258,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                 } else {
                     parameters[i] = resolve(arguments[i], dependents);
                 }
+            }
+            if (!stillToTell.getAsBoolean()) {
+                // what the event announces went meanwhile - the request whose beginning it is was destroyed while a
+                // parameter was being created - and the observer is told nothing of it after it was told it went
+                return;
             }
             invoke(target, parameters);
         }

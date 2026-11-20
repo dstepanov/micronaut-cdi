@@ -50,6 +50,15 @@ public final class TypedAnnotationMapper implements NamedAnnotationMapper {
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         AnnotationClassValue<?>[] types = annotation.annotationClassValues(AnnotationMetadata.VALUE_MEMBER);
+        for (AnnotationClassValue<?> type : types) {
+            if (type.getName().startsWith("[") || type.getName().endsWith("[]")) {
+                // only the producer of exactly that array may name an array type (section 3.2.1), whose bean types are
+                // the array type and Object whatever its Typed says beside it: nothing is narrowed to Micronaut, which
+                // cannot name an array type among the types a bean is resolvable by, and the container reads the bean
+                // types from the Typed itself
+                return List.of();
+            }
+        }
         if (types.length == 0) {
             // a Typed naming nothing leaves the bean with Object as its only bean type (section 2.2.4); an
             // empty typed member reads to Micronaut as no restriction at all, so Object is named outright

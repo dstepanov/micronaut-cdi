@@ -426,13 +426,10 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
                 }
             }
         } else {
+            // the parameters of the producer method; those of its disposer are told through disposer(), as the bean's
+            // Bean has them at runtime and as ArC describes a producer
             if (producer instanceof MethodElement method) {
                 addParameters(points, method, -1);
-            }
-            SpecificationBeans.Disposer disposer =
-                SpecificationBeans.disposerOf(declaringElement(), producer, context.visitorContext());
-            if (disposer != null) {
-                addParameters(points, disposer.method(), disposer.disposedParameter());
             }
         }
         return points;
