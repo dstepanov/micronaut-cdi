@@ -49,7 +49,20 @@ final class KnownDifferences {
         new Rule("An unproxyable normal scoped bean is detected as it is compiled; "
             + "What takes the whole deployment is validated as the container starts",
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.REFUSAL_KIND
-                && micronaut.atCompile())
+                && micronaut.atCompile()),
+        // a chain of dependent beans that leads back to its start, with no bean in a normal scope on it: Weld
+        // refuses it as it deploys (WELD-001443), micronaut-cdi deploys it, and what resolving it does is not
+        // portable - section 5.4 requires a container to support only the circularities a normal scoped bean
+        // breaks. Resolving one is a stack overflow on Weld and an exception on micronaut-cdi
+        new Rule("A circular chain of dependent beans (section 5.4)",
+            (scenario, divergence, micronaut, weld) -> divergence.category() == Category.DEPLOYMENT
+                && weld.detail().contains("WELD-001443") && !weld.detail().contains("Exception List")
+                || divergence.category() == Category.TRACE
+                && weld.trace().stream().anyMatch(line -> line.contains("java.lang.StackOverflowError"))),
+        // the order of what the specification leaves unordered: what an Instance iterates over, what is destroyed
+        // as the container shuts down, the observers of one priority. A difference only there is no finding
+        new Rule("Order the specification leaves open: Instance iteration, destruction at shutdown, observers of one priority",
+            (scenario, divergence, micronaut, weld) -> divergence.category() == Category.ORDER)
     );
 
     private KnownDifferences() {

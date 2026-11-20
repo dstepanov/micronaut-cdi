@@ -110,6 +110,33 @@ class HarnessTest {
     }
 
     @Test
+    void noDecoratorIsGenerated() {
+        for (long seed = 0; seed < 100; seed++) {
+            assertTrue(ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE).decorators().isEmpty());
+        }
+    }
+
+    @Test
+    void whatTheSpecificationLeavesOpenIsAKnownDifference() {
+        Scenario empty = new Scenario(0, List.of(), List.of(), List.of(), List.of());
+        RunResult a = RunResult.deployed(List.of("#shutdown", "{", "B1.preDestroy@B1", "B2.preDestroy@B2", "}"));
+        RunResult b = RunResult.deployed(List.of("#shutdown", "{", "B2.preDestroy@B2", "B1.preDestroy@B1", "}"));
+        Divergence order = TraceComparison.compare(a, b);
+        assertTrue(KnownDifferences.match(empty, order, a, b).isPresent());
+
+        RunResult deployed = RunResult.deployed(List.of());
+        RunResult cycle = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
+            "org.jboss.weld.exceptions.DeploymentException: WELD-001443: Pseudo scoped bean has circular dependencies.");
+        Divergence divergence = TraceComparison.compare(deployed, cycle);
+        assertTrue(KnownDifferences.match(empty, divergence, deployed, cycle).isPresent());
+
+        RunResult unsatisfied = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
+            "org.jboss.weld.exceptions.DeploymentException: WELD-001408: Unsatisfied dependencies");
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(deployed, unsatisfied), deployed, unsatisfied)
+            .isEmpty());
+    }
+
+    @Test
     void theShrinkerKeepsOnlyWhatReproduces() {
         Scenario scenario = ScenarioGenerator.generate(7, ScenarioGenerator.Size.LARGE);
         BeanDef culprit = new BeanDef("Culprit", Scope.APPLICATION, List.of("S1"), null, false, List.of(), null, true,

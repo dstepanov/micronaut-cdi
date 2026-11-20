@@ -49,6 +49,11 @@ final class ScenarioGenerator {
     private static final List<Integer> INTERCEPTOR_PRIORITIES = List.of(100, 200, 200);
     private static final List<Integer> DECORATOR_PRIORITIES = List.of(10, 20, 20);
 
+    /**
+     * Whether decorators are generated: they are CDI Full, so not for this implementation.
+     */
+    static final boolean GENERATE_DECORATORS = false;
+
     private final Random random;
     private final Size size;
     private int producers;
@@ -91,11 +96,16 @@ final class ScenarioGenerator {
         for (int i = 1; i <= interceptorCount; i++) {
             interceptors.add(interceptor("I" + i));
         }
+        // decorators are CDI Full, which this implementation does not claim: none is generated. The draws are
+        // still made, so that a seed generates the scenario it generated before decorators were left out
         List<DecoratorDef> decorators = new ArrayList<>();
         int decoratorCount = chance(0.5) ? 0 : random.nextInt(size.maxInterceptorsAndDecorators + 1);
         for (int i = 1; i <= decoratorCount; i++) {
-            decorators.add(new DecoratorDef("D" + i, pick(Scenario.SERVICE_TYPES), delegateQualifiers(),
-                pick(DECORATOR_PRIORITIES)));
+            DecoratorDef unused = new DecoratorDef("D" + i, pick(Scenario.SERVICE_TYPES), delegateQualifiers(),
+                pick(DECORATOR_PRIORITIES));
+            if (GENERATE_DECORATORS) {
+                decorators.add(unused);
+            }
         }
         List<Probe> probes = new ArrayList<>();
         int probeCount = 3 + random.nextInt(size.maxProbes - 2);

@@ -46,7 +46,7 @@ correctly, and a simple scenario agrees end to end.
    - observers of class, subclass, generic and wildcard event types, of `Startup` and `Shutdown`, with
      priorities, qualifiers and `IF_EXISTS`;
    - lifecycle callbacks, interceptors (around-invoke, post-construct, pre-destroy, `@Inherited` bindings, bindings
-     on the class or on a method, a bean's own `@AroundInvoke`), and decorators with `@Delegate` qualifiers;
+     on the class or on a method, a bean's own `@AroundInvoke`);
    - probes, which the driver runs once the container is up: `select`, iterating an `Instance` (with
      `Instance.destroy` as an option), calling `describe()` on a bean with injection points, and firing an event
      through `BeanContainer.getEvent()`.
@@ -76,7 +76,9 @@ correctly, and a simple scenario agrees end to end.
    - `CRASH` (hard): one side crashed or timed out (60 s).
 5. **Filter known differences.** `KnownDifferences` holds one rule per intended difference recorded in
    CONFORMANCE.md, and each rule names its heading. A matching divergence is tagged `known`, not shrunk, and
-   still listed.
+   still listed. The rules cover: an unproxyable bean refused at compile time; a circular chain of dependent beans,
+   which section 5.4 leaves non-portable and Weld refuses (WELD-001443); and any `ORDER` divergence, since the
+   comparison only produces those for order the specification leaves open.
 6. **Shrink.** `Shrinker` is greedy. It tries removing half of the probes, then whole beans, interceptors,
    decorators and probes, then a bean's members, then single annotations. It keeps the first reduction that still
    diverges with the same signature (category plus the probe or side involved) and repeats until nothing reduces or
@@ -84,6 +86,8 @@ correctly, and a simple scenario agrees end to end.
 
 ## What it leaves out, and why
 
+- **Decorators.** They are CDI Full, which this implementation does not claim. The model and renderer still
+  support them, so `ScenarioGenerator.GENERATE_DECORATORS` turns them back on.
 - **The request scope.** Its context is not active where the driver runs. The two containers' handling of that
   is not what the fuzzer is looking for.
 - **Asynchronous events, build compatible and portable extensions, stereotypes, `@Named`, reserves and `@Eager`.**
