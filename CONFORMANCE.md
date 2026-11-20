@@ -271,7 +271,10 @@ A class written with the singleton pseudo-scope alone, `jakarta.inject.Singleton
 and its name as a bean of the specification is (`SpecificationBeans.isBean`), since the specification names the
 pseudo-scope a scope of its own and Micronaut writes the same annotation; the rules a bean of the specification is
 held to as it compiles, and the container's resolution of its injection points, are not applied to it, since
-Micronaut's own beans carry the same annotation.
+Micronaut's own beans carry the same annotation. That includes the rule of section 6.5.3 that only a dependent bean
+may be handed the `@Default InjectionPoint`: such a class injected with one compiles (`InjectionPointScopeRulesTest`).
+A producer that declares `@Singleton` or a pseudo-scope of the application's own, which is a bean of the
+specification, is held to the rule.
 
 A bean whose `Typed` leaves its own class out of its bean types, or names no type, is still the bean that declares its
 producers, disposers and observer methods, and is created as `Object` where the container already chose it

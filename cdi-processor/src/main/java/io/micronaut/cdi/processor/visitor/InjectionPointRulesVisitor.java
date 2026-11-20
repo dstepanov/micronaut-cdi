@@ -98,12 +98,13 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
         }
         leaveUninjected(element);
         boolean normalScoped = SpecificationBeans.isNormalScoped(element);
+        boolean dependent = SpecificationBeans.isDependent(element);
         // a type variable of a generic class is resolved by whoever extends it, where the class is no bean of
         // its own; a bean has nothing to resolve its variable, and an injection point of it is the definition
         // error of CDI 4.1 section 5.2.3, as is one declared anywhere else
         boolean genericClass = !element.getDeclaredGenericPlaceholders().isEmpty() && !declaresABean(element);
         // a constructor's parameters are a bean's own injection points, held to the rules of the class
-        InjectionSiteRules constructorRules = InjectionSiteRules.ofBean(element, normalScoped, genericClass);
+        InjectionSiteRules constructorRules = InjectionSiteRules.ofBean(element, normalScoped, dependent, genericClass);
         int injectedConstructors = 0;
         for (ConstructorElement constructor : element.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {
             for (ParameterElement parameter : constructor.getParameters()) {
@@ -143,7 +144,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     context.fail("An injected field may not be final (CDI 4.1 section 3.6)", field);
                 }
                 checkType(field.getGenericField(), field, InjectionSiteRules.ofBean(element, normalScoped,
-                    genericClass || resolvedByTheBean(field, element)), context);
+                    dependent, genericClass || resolvedByTheBean(field, element)), context);
             }
         }
         for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
@@ -196,6 +197,7 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             // rather than on the scope of the class
             InjectionSiteRules rules = new InjectionSiteRules(element,
                 producer ? isNormalScopedProducer(method, context) : normalScoped,
+                producer ? isDependentProducer(method, context) : dependent,
                 genericClass || resolvedByTheBean(method, element), disposer, observer, allowedMetadataType);
             for (ParameterElement parameter : method.getParameters()) {
                 if (parameter.hasDeclaredAnnotation(Cdi.DISPOSES)
@@ -305,6 +307,9 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             if (rules.normalScoped()) {
                 context.fail("A bean of a normal scope outlives any one injection point and cannot be told "
                     + "which it is at (section 2.5.2.5)", at);
+            } else if (!rules.dependent() && isQualifiedByDefault(at)) {
+                context.fail("A bean of a pseudo-scope other than @Dependent outlives any one injection point and "
+                    + "cannot be told which it is at (section 6.5.3)", at);
             } else if (rules.disposer()) {
                 context.fail("A disposer method destroys its parameter rather than being injected anywhere, "
                     + "and has no injection point to be told of", at);
@@ -481,6 +486,17 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
     }
 
     /**
+     * Whether a producer method produces dependent beans: it declares the dependent pseudo-scope, or no scope, which
+     * leaves it dependent, read from what the member itself declares as {@link #isNormalScopedProducer} reads it.
+     */
+    private static boolean isDependentProducer(MethodElement producer, VisitorContext context) {
+        AnnotationMetadata declared = producer.getAnnotationMetadata().getDeclaredMetadata();
+        AnnotationValue<CdiScope> written = declared.hasAnnotation(CdiScope.class)
+            ? declared.getAnnotation(CdiScope.class) : CdiScopeVisitor.scopeRecordOf(producer, context);
+        return written == null || written.stringValue().map(Cdi.DEPENDENT::equals).orElse(false);
+    }
+
+    /**
      * The rules the injection points of one site - a constructor, a field, a method - are held to.
      *
      * <p>A disposer and an observer stay two flags rather than one role: a method that declares both a disposed
@@ -490,6 +506,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * @param declaring            The bean class the points are injection points of
      * @param normalScoped         Whether the bean they are injected into lives in a normal scope, and outlives any
      *                             one injection point: for a producer method, the scope it produces in
+     * @param dependent            Whether the bean they are injected into is dependent: for a producer method, the
+     *                             scope it produces in
      * @param typeVariablesAllowed Whether a point may be of a type variable, which a class extending a generic
      *                             one resolves
      * @param disposer             Whether the site is a disposer method
@@ -497,14 +515,17 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
      * @param allowedMetadataType  The type besides the declaring class whose {@code Bean} metadata the site may be
      *                             told: what a producer produces or a disposer disposes of
      */
-    private record InjectionSiteRules(ClassElement declaring, boolean normalScoped, boolean typeVariablesAllowed,
+    private record InjectionSiteRules(ClassElement declaring, boolean normalScoped, boolean dependent,
+                                      boolean typeVariablesAllowed,
                                       boolean disposer, boolean observer, @Nullable String allowedMetadataType) {
 
         /**
          * The rules of a bean's own injection points: a constructor's parameters, a field.
          */
-        static InjectionSiteRules ofBean(ClassElement declaring, boolean normalScoped, boolean typeVariablesAllowed) {
-            return new InjectionSiteRules(declaring, normalScoped, typeVariablesAllowed, false, false, null);
+        static InjectionSiteRules ofBean(ClassElement declaring, boolean normalScoped, boolean dependent,
+                                         boolean typeVariablesAllowed) {
+            return new InjectionSiteRules(declaring, normalScoped, dependent, typeVariablesAllowed, false, false,
+                null);
         }
     }
 }
