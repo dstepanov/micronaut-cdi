@@ -1315,6 +1315,14 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A static producer of a product of a normal scope on a bean of a normal scope does not compile.** The scope of the
+  product is written on the producer method, and a normal scope is a scoped proxy, an around advice, to Micronaut.
+  Where the declaring class is an AOP proxy itself - a bean of a normal scope - Micronaut's processor visits its
+  methods for advice, and `DeclaredBeanElementCreator.visitAopMethod` takes the around advice the static method
+  declares for its own and refuses it ("Method defines AOP advice but is declared static",
+  `StaticScopedProducerTest`, disabled). A non-static producer is claimed as a factory member before that. Skipping a
+  member that declares a bean - the `Bean` stereotype - in `visitAopMethod`, as `FactoryBeanElementCreator.visitMethod`
+  does, would close it; until then, declare the producer non-static, or on a bean of a pseudo-scope.
 - **A product of a normal scope declared by an intercepted dependent bean cannot be created.** A dependent bean bound to
   an interceptor, at its class or at a method, is the subclass Micronaut generates for it. Creating the contextual
   instance of a product of a normal scope it declares, the product's definition looks its factory up
