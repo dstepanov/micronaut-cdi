@@ -238,6 +238,24 @@ class HarnessTest {
     }
 
     @Test
+    void aProducerOfAnUnselectedAlternativeIsAKnownDifference() {
+        Scenario.ProducerDef producer = new Scenario.ProducerDef("P3", false, false, Scope.DEPENDENT, "Gen<String>",
+            List.of(), null, true, 20, false, List.of());
+        BeanDef declaring = new BeanDef("B8", Scope.DEPENDENT, List.of(), null, false, List.of(), null, true, null,
+            List.of(), List.of(), false, false, false, List.of(), List.of(producer), List.of());
+        Scenario scenario = new Scenario(313, List.of(declaring), List.of(), List.of(),
+            List.of(new Probe("X13", ProbeKind.SELECT, "Gen<String>", List.of(), false)));
+        RunResult micronaut = RunResult.deployed(List.of("#X13", "unsatisfied=true ambiguous=false",
+            "!jakarta.enterprise.inject.UnsatisfiedResolutionException", "#shutdown"));
+        RunResult weld = RunResult.deployed(List.of("#X13", "unsatisfied=false ambiguous=false", "produce P3", "get=P3",
+            "#shutdown"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(micronaut, weld), micronaut, weld)
+            .isPresent());
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(weld, micronaut), weld, micronaut)
+            .isEmpty());
+    }
+
+    @Test
     void theShrinkerKeepsOnlyWhatReproduces() {
         Scenario scenario = ScenarioGenerator.generate(7, ScenarioGenerator.Size.LARGE);
         BeanDef culprit = new BeanDef("Culprit", Scope.APPLICATION, List.of("S1"), null, false, List.of(), null, true,

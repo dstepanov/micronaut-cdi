@@ -72,6 +72,11 @@ final class KnownDifferences {
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
                 && otherNotifications(weld) > otherNotifications(micronaut)
                 && agreeWithoutOtherNotifications(micronaut, weld)),
+        // an alternative producer with a priority, declared on an alternative class nothing selects: Weld enables
+        // the producer, micronaut-cdi follows section 5.1.2, under which a producer of a disabled bean is disabled
+        new Rule("A prioritized alternative producer of an unselected alternative class is not enabled",
+            (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
+                && producerOfUnselectedAlternativeUsed(scenario, micronaut, weld)),
         // the order of what the specification leaves unordered: what an Instance iterates over, what is destroyed
         // as the container shuts down, the observers of one priority. A difference only there is no finding
         new Rule("Order the specification leaves open: Instance iteration, destruction at shutdown, observers of one priority",
@@ -127,6 +132,30 @@ final class KnownDifferences {
     private static RunResult withoutOtherNotifications(RunResult run) {
         return RunResult.deployed(run.trace().stream()
             .filter(line -> !OTHER_NOTIFICATION.matcher(line).matches()).toList());
+    }
+
+    /**
+     * Whether Weld used a prioritized alternative producer of an unselected alternative class that micronaut-cdi did
+     * not use.
+     */
+    static boolean producerOfUnselectedAlternativeUsed(Scenario scenario, RunResult micronaut, RunResult weld) {
+        for (Scenario.BeanDef bean : scenario.beans()) {
+            if (!bean.alternative() || bean.priority() != null) {
+                continue;
+            }
+            for (Scenario.ProducerDef producer : bean.producers()) {
+                if (producer.alternative() && producer.priority() != null
+                    && usesProduct(weld, producer.name()) && !usesProduct(micronaut, producer.name())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean usesProduct(RunResult run, String producer) {
+        java.util.regex.Pattern use = java.util.regex.Pattern.compile("(^produce |[=\\[ ,])" + producer + "\\b");
+        return run.trace().stream().anyMatch(line -> use.matcher(line).find());
     }
 
     private static long count(List<String> trace, String suffix) {
