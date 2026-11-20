@@ -130,7 +130,7 @@ final class Fuzzer {
         if (shrink && (original.divergence() != null && original.known().isEmpty() || processorCrash(original) != null)) {
             Shrinker shrinker = new Shrinker(candidate -> original.divergence() != null
                 ? reproduces(original, evaluate(candidate))
-                : processorCrash(original).equals(processorCrash(evaluate(candidate))), shrinkBudget);
+                : crashesAlike(original, evaluate(candidate)), shrinkBudget);
             Scenario reduced = shrinker.shrink(scenario);
             runs = shrinker.runs();
             shrunk = evaluate(reduced);
@@ -155,6 +155,15 @@ final class Fuzzer {
     }
 
     /**
+     * Whether a processor throws compiling the candidate what it threw compiling the original, while Weld does with
+     * the candidate what it did with the original: a reduction that makes the scenario invalid is another crash.
+     */
+    static boolean crashesAlike(Evaluation original, Evaluation candidate) {
+        return processorCrash(original).equals(processorCrash(candidate))
+            && candidate.weld().outcome() == original.weld().outcome();
+    }
+
+    /**
      * The first line of what a processor threw compiling a scenario for micronaut-cdi, or {@code null} where none
      * threw: a crash is a finding of its own, shrunk to the scenario that still throws the same.
      */
@@ -162,7 +171,8 @@ final class Fuzzer {
         if (e.micronaut() == null || e.micronaut().outcome() != Outcome.HARNESS_ERROR || !e.micronaut().atCompile()) {
             return null;
         }
-        return e.micronaut().detail().lines().findFirst().orElse("");
+        // the package of each variant differs: compared without it
+        return e.micronaut().detail().lines().findFirst().orElse("").replaceAll("fuzz\\.s\\d+\\.v\\d+\\.", "");
     }
 
     /**
