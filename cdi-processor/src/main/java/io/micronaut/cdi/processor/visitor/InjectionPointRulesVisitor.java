@@ -373,10 +373,13 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                 || argument instanceof WildcardElement) {
                 return;
             }
-            if (!argument.getName().equals(declaring.getName())
-                && !argument.getName().equals(allowedMetadataType)) {
+            // a producer's or a disposer's parameter is handed the metadata of the bean produced or disposed of, any
+            // other point that of the bean declaring it (section 5.5.8)
+            String expected = allowedMetadataType != null ? allowedMetadataType : declaring.getName();
+            if (!argument.getName().equals(expected)) {
                 context.fail("A bean may only be told about itself: Bean<" + argument.getSimpleName()
-                    + "> is not the metadata of " + declaring.getSimpleName() + " (section 9.4)", at);
+                    + "> is not the metadata of " + (allowedMetadataType != null ? allowedMetadataType
+                    : declaring.getSimpleName()) + " (section 5.5.8)", at);
             }
         } else if ("jakarta.enterprise.inject.spi.Interceptor".equals(name)) {
             Collection<ClassElement> arguments = type.getTypeArguments().values();
