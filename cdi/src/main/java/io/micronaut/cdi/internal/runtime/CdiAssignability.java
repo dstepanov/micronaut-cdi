@@ -341,14 +341,14 @@ public final class CdiAssignability {
             return false;
         }
         if (CdiTypes.isParameterized(observed)) {
+            if (observedRaw != eventRaw) {
+                // a subtype - parameterized or not - says nothing of the arguments of its supertype: the event's
+                // closure carries the supertype as its own entry, of the observed raw type, with the arguments
+                // the subtype gave it, and that one is what the observed type is judged against (section 9.3.1)
+                return false;
+            }
             if (!CdiTypes.isParameterized(event)) {
                 return saysNothing(observed.getTypeParameters());
-            }
-            if (observedRaw != eventRaw) {
-                // not the comparable pair: the arguments of a subtype say nothing of those of its supertype,
-                // which the event's closure carries as its own entry, of the observed raw type, and that one is
-                // what the observed type is judged against (section 9.3.1)
-                return false;
             }
             return allMatch(index, observed.getTypeParameters(), event.getTypeParameters(), true);
         }
