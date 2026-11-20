@@ -214,7 +214,7 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
                     overlay = overlay();
                     overlayRead = true;
                 }
-                List<CdiQualifier> declared = CdiQualifier.declared(candidate.getAnnotationMetadata());
+                List<CdiQualifier> declared = CdiQualifier.ofBean(candidate.getAnnotationMetadata());
                 List<CdiQualifier> qualifiers = overlay != null ? overlay.apply(candidate, declared) : declared;
                 if (!CdiAssignability.areQualifiersMatching(qualifiers, List.of())) {
                     continue;

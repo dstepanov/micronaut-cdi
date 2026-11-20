@@ -182,7 +182,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
                 // null-qualifier rules
                 @SuppressWarnings("unchecked")
                 Object looked = lookupOf(lookup).selectArgument((Argument<Object>) Argument.of(beanClass),
-                    CdiQualifier.declared(definition.getAnnotationMetadata())).get();
+                    CdiQualifier.ofBean(definition.getAnnotationMetadata())).get();
                 target = looked;
             } else {
                 if (instance == null) {
@@ -277,7 +277,7 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         }
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
         if (instanceLookup && !staticMethod) {
-            resolvable(lookup, Argument.of(beanClass), CdiQualifier.declared(definition.getAnnotationMetadata()),
+            resolvable(lookup, Argument.of(beanClass), CdiQualifier.ofBean(definition.getAnnotationMetadata()),
                 "the instance of " + beanClassName);
         }
         Argument<?>[] methodArguments = method.getArguments();
