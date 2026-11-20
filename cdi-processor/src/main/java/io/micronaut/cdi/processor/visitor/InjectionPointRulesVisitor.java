@@ -37,6 +37,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The definition errors of section 2.5 that live on an injection point, detected as the class compiles: a
@@ -57,6 +58,11 @@ import java.util.List;
  */
 @Internal
 public final class InjectionPointRulesVisitor implements TypeElementVisitor<Object, Object> {
+
+    /**
+     * The qualifiers a point of a built-in metadata type may declare and still be the built-in one's.
+     */
+    private static final Set<String> DEFAULT_QUALIFIERS = Cdi.withMicronautQualifiers(Cdi.DEFAULT);
 
     private static final String INSTANCE = "jakarta.enterprise.inject.Instance";
     private static final String EVENT = "jakarta.enterprise.event.Event";
@@ -287,7 +293,8 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
             return;
         }
         checkMetadataInjection(type, at, rules.declaring(), rules.allowedMetadataType(), context);
-        if (!rules.observer() && "jakarta.enterprise.inject.spi.EventMetadata".equals(type.getName())) {
+        if (!rules.observer() && "jakarta.enterprise.inject.spi.EventMetadata".equals(type.getName())
+            && isQualifiedByDefault(at)) {
             // the metadata of an event exists only while an observer method is being notified: everywhere
             // else there is no event to describe
             context.fail("EventMetadata can only be injected into an observer method's parameter "
@@ -303,6 +310,21 @@ public final class InjectionPointRulesVisitor implements TypeElementVisitor<Obje
                     + "and has no injection point to be told of", at);
             }
         }
+    }
+
+    /**
+     * Whether the point declares no qualifier but the default one: the built-in metadata beans are of the default
+     * qualifier, and a point of their type with a qualifier of the application's asks for a bean of the application
+     * (section 9.4.3).
+     */
+    private static boolean isQualifiedByDefault(Element at) {
+        for (String qualifier : at.getAnnotationMetadata().getDeclaredMetadata()
+            .getAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER)) {
+            if (!DEFAULT_QUALIFIERS.contains(qualifier)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

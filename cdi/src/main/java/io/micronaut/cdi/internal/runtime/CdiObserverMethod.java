@@ -237,8 +237,10 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             for (int i = 0; i < arguments.length; i++) {
                 if (i == observedParameter) {
                     parameters[i] = event;
-                } else if (arguments[i].getType() == EventMetadata.class) {
-                    // the metadata of the firing is supplied by the notification rather than resolved
+                } else if (arguments[i].getType() == EventMetadata.class
+                    && isQualifiedByDefault(arguments[i])) {
+                    // the metadata of the firing is supplied by the notification rather than resolved; a parameter
+                    // with a qualifier of the application's asks for a bean of the application (section 9.4.3)
                     parameters[i] = metadata;
                 } else {
                     parameters[i] = resolve(arguments[i], dependents);
@@ -246,6 +248,15 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
             }
             invoke(target, parameters);
         }
+    }
+
+    private static boolean isQualifiedByDefault(Argument<?> argument) {
+        for (CdiQualifier qualifier : CdiQualifier.declared(argument.getAnnotationMetadata())) {
+            if (!qualifier.equals(CdiQualifier.DEFAULT)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static <B> B instanceOf(BeanDefinition<B> definition, OwnedDependents dependents) {
