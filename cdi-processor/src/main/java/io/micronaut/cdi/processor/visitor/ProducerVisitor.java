@@ -130,11 +130,12 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         for (MethodElement disposer : disposers) {
             checkDisposer(disposer, interceptorClass, context);
         }
-        if (producers.isEmpty() && excludeInheritedProducerFields(element)) {
-            // a subclass of a class with producer fields: Micronaut would take each field, which carries the
-            // qualifiers of its product, for a field to inject, and inject a product into the subclass's instance.
-            // As a factory it claims the fields as producer fields instead, whose products the class's condition
-            // takes out, a producer being no member a subclass inherits (section 4.2)
+        if (producers.isEmpty() && excludeInheritedProducers(element)) {
+            // a subclass of a class with producers: Micronaut would take each producer field, which carries the
+            // qualifiers of its product, for a field to inject, and each producer method of a normal scope, which
+            // carries the client proxy of its product, for a method to intercept, making the subclass a proxy that
+            // is never destroyed as itself. As a factory it claims them as producers instead, whose products the
+            // class's condition takes out, a producer being no member a subclass inherits (section 4.2)
             element.annotate(Factory.class);
         }
         if (producers.isEmpty()) {
@@ -148,7 +149,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
-        excludeInheritedProducerFields(element);
+        excludeInheritedProducers(element);
 
         DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
@@ -348,19 +349,24 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
-     * Takes out of a class that produces the products Micronaut would build under it of the producer fields it
-     * inherits: Micronaut builds the products of every producer field of a factory, those it inherits included, and a
-     * producer is no member a subclass inherits (section 4.2). The fields are recorded on the class, and its condition
-     * ({@code InheritedProducer}) leaves out the products of the recorded ones; the metadata of a field is the same
-     * whichever class it is read through, so the field itself cannot be told so.
+     * Takes out of a class that produces the products Micronaut would build under it of the producers it inherits:
+     * Micronaut builds the products of every producer field and producer method of a factory, those it inherits
+     * included, and a producer is no member a subclass inherits (section 4.2). The producers are recorded on the
+     * class, and its condition ({@code InheritedProducer}) leaves out the products of the recorded ones; the metadata
+     * of a member is the same whichever class it is read through, so the member itself cannot be told so.
      *
-     * @return Whether the class inherits producer fields
+     * @return Whether the class inherits producers
      */
-    private static boolean excludeInheritedProducerFields(ClassElement element) {
+    private static boolean excludeInheritedProducers(ClassElement element) {
         List<String> inherited = new ArrayList<>();
         for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.includeHiddenElements())) {
             if (field.hasDeclaredAnnotation(Cdi.PRODUCES) && !field.getDeclaringType().getName().equals(element.getName())) {
                 inherited.add(field.getDeclaringType().getName() + "#" + field.getName());
+            }
+        }
+        for (MethodElement method : element.getEnclosedElements(ElementQuery.ALL_METHODS)) {
+            if (method.hasDeclaredAnnotation(Cdi.PRODUCES) && !method.getDeclaringType().getName().equals(element.getName())) {
+                inherited.add(method.getDeclaringType().getName() + "#" + method.getName());
             }
         }
         if (inherited.isEmpty()) {

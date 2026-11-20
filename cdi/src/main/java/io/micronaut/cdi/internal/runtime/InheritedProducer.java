@@ -22,10 +22,12 @@ import io.micronaut.context.condition.ConditionContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.MethodInjectionPoint;
 
 /**
- * The condition of a class that inherits producer fields, which takes out of it the products Micronaut builds of
- * those fields under it ({@link CdiInheritedProducers}): a producer is no member a subclass inherits (CDI 4.1 section
+ * The condition of a class that inherits producers, which takes out of it the products Micronaut builds of
+ * those producers under it ({@link CdiInheritedProducers}): a producer is no member a subclass inherits (CDI 4.1 section
  * 4.2), and its product is the one the class declaring it produces. A definition whose condition never holds is never
  * a candidate for anything, so the products are no beans, no candidates of a lookup of Micronaut's, and are never
  * created. The class itself and the products of its own producers are left as they are.
@@ -38,13 +40,22 @@ public final class InheritedProducer implements Condition {
 
     @Override
     public boolean matches(ConditionContext context) {
+        Object component = context.getComponent();
         AnnotationMetadata metadata = context.getComponent().getAnnotationMetadata();
         AnnotationValue<CdiProducer> producer = metadata.getAnnotation(CdiProducer.class);
-        if (producer == null) {
+        String produced;
+        if (producer != null) {
+            produced = producer.stringValue("declaringType").orElse("") + "#" + producer.stringValue("member").orElse("");
+        } else if (component instanceof BeanDefinition<?> definition
+            && definition.getConstructor() instanceof MethodInjectionPoint<?, ?> method
+            && definition.getDeclaringType().isPresent()) {
+            // the product of an inherited producer method may carry no record of its producer: the record is
+            // written on the member as the class declaring it is visited, which a subclass's factory may read before
+            // that, or from a class compiled apart. Micronaut's own definition still names the method it calls
+            produced = definition.getDeclaringType().get().getName() + "#" + method.getName();
+        } else {
             return true;
         }
-        String declaring = producer.stringValue("declaringType").orElse("");
-        String produced = declaring + "#" + producer.stringValue("member").orElse("");
         for (String inherited : metadata.stringValues(CdiInheritedProducers.class)) {
             if (inherited.equals(produced)) {
                 return false;

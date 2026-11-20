@@ -24,10 +24,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Records, on a class that declares producers and extends a class that declares producer fields, which producer
- * fields of its superclasses Micronaut would produce again under it: Micronaut builds the products of every producer
- * field of a factory, those it inherits included, while a producer is no member a subclass inherits (CDI 4.1 section
- * 4.2). A condition of the class takes the products of those fields out of it.
+ * Records, on a class that extends a class that declares producers, which producers of its superclasses Micronaut
+ * would produce again under it: Micronaut builds the products of every producer field and producer method of a
+ * factory, those it inherits included, while a producer is no member a subclass inherits (CDI 4.1 section
+ * 4.2). A condition of the class takes the products of those producers out of it.
  *
  * @author Denis Stepanov
  * @since 1.0
@@ -39,9 +39,9 @@ import java.lang.annotation.Target;
 public @interface CdiInheritedProducers {
 
     /**
-     * The inherited producer fields, each as the binary name of the class declaring it, {@code #} and its name.
+     * The inherited producers, each as the binary name of the class declaring it, {@code #} and its name.
      *
-     * @return The fields
+     * @return The producers
      */
     String[] value();
 }
