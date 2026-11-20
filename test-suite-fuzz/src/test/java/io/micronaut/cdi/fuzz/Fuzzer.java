@@ -127,8 +127,10 @@ final class Fuzzer {
         }
         Evaluation shrunk = null;
         int runs = 0;
-        if (shrink && original.divergence() != null && original.known().isEmpty()) {
-            Shrinker shrinker = new Shrinker(candidate -> reproduces(original, evaluate(candidate)), shrinkBudget);
+        if (shrink && (original.divergence() != null && original.known().isEmpty() || processorCrash(original) != null)) {
+            Shrinker shrinker = new Shrinker(candidate -> original.divergence() != null
+                ? reproduces(original, evaluate(candidate))
+                : processorCrash(original).equals(processorCrash(evaluate(candidate))), shrinkBudget);
             Scenario reduced = shrinker.shrink(scenario);
             runs = shrinker.runs();
             shrunk = evaluate(reduced);
@@ -150,6 +152,17 @@ final class Fuzzer {
             && candidate.micronaut().outcome() == original.micronaut().outcome()
             && candidate.weld().outcome() == original.weld().outcome()
             && weldProblems(candidate.weld()).equals(weldProblems(original.weld()));
+    }
+
+    /**
+     * The first line of what a processor threw compiling a scenario for micronaut-cdi, or {@code null} where none
+     * threw: a crash is a finding of its own, shrunk to the scenario that still throws the same.
+     */
+    static String processorCrash(Evaluation e) {
+        if (e.micronaut() == null || e.micronaut().outcome() != Outcome.HARNESS_ERROR || !e.micronaut().atCompile()) {
+            return null;
+        }
+        return e.micronaut().detail().lines().findFirst().orElse("");
     }
 
     /**
