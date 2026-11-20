@@ -1135,10 +1135,12 @@ instead (`ContainerStopGuard`, a listener of the destruction of beans, which Mic
 listens to): `Shutdown`, the requests still open and the application context are each still announced and destroyed,
 while every singleton is still there, whatever order Micronaut destroys the singletons in (`ShutdownFallbackTest`).
 
-A `Typed` that names an array type on a producer is refused as the bean compiles: Micronaut does not expose an array
-type as a bean type it can look up. A producer of an array has exactly the array type and `Object` as bean types
-(section 3.2.1), so leave the `Typed` out. For the same reason a synthetic bean of an array type is not matched to a
-registration method of a build compatible extension that asks for the array type.
+A `Typed` that names an array type on a producer of that array narrows nothing Micronaut is told: Micronaut cannot name
+an array type among the types a bean is resolvable by, and a producer of an array has exactly the array type and
+`Object` as bean types (section 3.2.1), which is what the container reads from the `Typed` (`TypedArrayProducerTest`).
+A synthetic bean of an array type is refused as its extension describes it: Micronaut registers a bean for a class, and
+an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
+type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
 A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
 after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in

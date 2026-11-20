@@ -304,6 +304,14 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             : ((FieldElement) producer).getGenericType();
         for (AnnotationClassValue<?> type : typed.annotationClassValues(AnnotationMetadata.VALUE_MEMBER)) {
             String typedName = type.getName();
+            if (typedName.startsWith("[") || typedName.endsWith("[]")) {
+                // an array type is a bean type of a producer of exactly that array (section 3.2.1)
+                if (!produced.isArray() || !arrayName(produced).equals(sourceArrayName(typedName))) {
+                    context.fail("The producer " + producer.getName() + " restricts its bean types to "
+                        + sourceArrayName(typedName) + ", which is not one of its types (section 2.2.2)", producer);
+                }
+                continue;
+            }
             // the metadata holds binary names, in which a nested type is Outer$Inner; assignability is asked with the
             // source form
             if (!"java.lang.Object".equals(typedName) && !produced.isAssignable(typedName)
@@ -312,6 +320,49 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                     + ", which is not one of its types (section 2.2.2)", producer);
             }
         }
+    }
+
+    /**
+     * The source name of an array type, as {@code java.lang.String[][]}.
+     */
+    private static String arrayName(ClassElement array) {
+        StringBuilder name = new StringBuilder();
+        ClassElement component = array;
+        int dimensions = 0;
+        while (component.isArray()) {
+            component = component.fromArray();
+            dimensions++;
+        }
+        name.append(component.getName().replace('$', '.'));
+        name.append("[]".repeat(dimensions));
+        return name.toString();
+    }
+
+    /**
+     * The source name of an array type recorded by its binary name, {@code [Ljava.lang.String;}, or already in source
+     * form.
+     */
+    private static String sourceArrayName(String recorded) {
+        if (!recorded.startsWith("[")) {
+            return recorded.replace('$', '.');
+        }
+        int dimensions = 0;
+        while (recorded.charAt(dimensions) == '[') {
+            dimensions++;
+        }
+        String component = recorded.substring(dimensions);
+        component = switch (component) {
+            case "Z" -> "boolean";
+            case "B" -> "byte";
+            case "C" -> "char";
+            case "S" -> "short";
+            case "I" -> "int";
+            case "J" -> "long";
+            case "F" -> "float";
+            case "D" -> "double";
+            default -> component.substring(1, component.length() - 1);
+        };
+        return component.replace('$', '.') + "[]".repeat(dimensions);
     }
 
     /**
