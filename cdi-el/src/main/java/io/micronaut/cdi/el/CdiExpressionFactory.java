@@ -26,8 +26,10 @@ import jakarta.el.ExpressionFactory;
 import jakarta.el.FunctionMapper;
 import jakarta.el.ImportHandler;
 import jakarta.el.MethodExpression;
+import jakarta.el.MethodReference;
 import jakarta.el.MethodInfo;
 import jakarta.el.ValueExpression;
+import jakarta.el.ValueReference;
 import jakarta.el.VariableMapper;
 import org.jspecify.annotations.Nullable;
 
@@ -321,6 +323,11 @@ final class CdiExpressionFactory extends ExpressionFactory {
         public boolean isLiteralText() {
             return wrapped.isLiteralText();
         }
+
+        @Override
+        public ValueReference getValueReference(ELContext context) {
+            return evaluate(context, wrapped::getValueReference);
+        }
     }
 
     private final class BeanAwareMethodExpression extends MethodExpression {
@@ -359,6 +366,16 @@ final class CdiExpressionFactory extends ExpressionFactory {
         @Override
         public boolean isLiteralText() {
             return wrapped.isLiteralText();
+        }
+
+        @Override
+        public boolean isParametersProvided() {
+            return wrapped.isParametersProvided();
+        }
+
+        @Override
+        public MethodReference getMethodReference(ELContext context) {
+            return evaluate(context, wrapped::getMethodReference);
         }
     }
 }

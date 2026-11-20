@@ -101,7 +101,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             return bean;
         }
         return event.withDependencies(dependencies -> {
-            invoke(disposer, bean, dependencies);
+            invoke(disposer, definition, bean, dependencies);
             closeIfAutoClose(definition, bean);
             return bean;
         });
@@ -148,8 +148,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         }
         boolean staticMethod = disposer.booleanValue("staticMethod").orElse(false);
         // the bean of the declaring class itself: a selected alternative that extends it is another bean
-        BeanDefinition<?> declaring = CdiResolution.declaringBeanOf(
-            beanContext.getBeanDefinitions(declaringType.get()), declaringType.get().getName());
+        BeanDefinition<?> declaring = CdiResolution.declaringBeanOf(beanContext, declaringType.get());
         if (declaring == null) {
             throw new NoSuchBeanException(declaringType.get());
         }
@@ -166,13 +165,20 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
      * Invokes the disposer: its parameters are resolved first, then the instance it is invoked on, where it is not
      * static.
      */
-    private void invoke(Disposer disposer, Object bean, BeanDependencyGroup dependencies) {
+    private void invoke(Disposer disposer, BeanDefinition<?> disposed, Object bean, BeanDependencyGroup dependencies) {
         ExecutableMethod<?, ?> method = disposer.method();
         int disposedParameter = disposer.disposedParameter();
         Argument<?>[] arguments = method.getArguments();
         Object[] parameters = new Object[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
-            parameters[i] = i == disposedParameter ? bean : resolve(arguments[i], dependencies);
+            if (i == disposedParameter) {
+                parameters[i] = bean;
+            } else if (CdiBeanMetadataFactory.isDefaultMetadata(arguments[i])) {
+                // the metadata of the bean disposed of (section 5.5.8)
+                parameters[i] = container.get().beanOf(disposed);
+            } else {
+                parameters[i] = resolve(arguments[i], dependencies);
+            }
         }
         Object host = null;
         if (!disposer.staticMethod()) {

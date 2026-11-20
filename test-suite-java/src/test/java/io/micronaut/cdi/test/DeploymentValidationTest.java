@@ -180,6 +180,85 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void aProgrammaticLookupOfAnUnproxyableNormalScopedBeanIsAnUnproxyableResolution() throws Exception {
+        try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
+            package valid;
+
+            @jakarta.enterprise.context.ApplicationScoped
+            public class Consumer {
+                public final void x() {
+                }
+            }
+            """)) {
+            Class<?> consumer = context.getClassLoader().loadClass("valid.Consumer");
+            jakarta.enterprise.inject.Instance<Object> instance =
+                context.getBean(jakarta.enterprise.inject.spi.BeanManager.class).createInstance();
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> instance.select(consumer).get());
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> instance.select(consumer).getHandle().get());
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> instance.select(consumer).iterator());
+        }
+    }
+
+    @Test
+    void anUnsatisfiedInjectionPointOfAnEnabledInterceptorIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.interceptor.Interceptor
+            @jakarta.annotation.Priority(jakarta.interceptor.Interceptor.Priority.APPLICATION)
+            @Consumer.Logged
+            public class Consumer {
+
+                @jakarta.inject.Inject
+                Missing missing;
+
+                @jakarta.interceptor.AroundInvoke
+                Object around(jakarta.interceptor.InvocationContext context) throws Exception {
+                    return context.proceed();
+                }
+
+                public interface Missing {
+                }
+
+                @jakarta.interceptor.InterceptorBinding
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                @java.lang.annotation.Target({java.lang.annotation.ElementType.TYPE,
+                    java.lang.annotation.ElementType.METHOD})
+                public @interface Logged {
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
+    void anAmbiguousNullableInjectionPointIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                @io.micronaut.core.annotation.Nullable
+                Service service;
+
+                public interface Service {
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class First implements Service {
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class Second implements Service {
+                }
+            }
+            """, "is ambiguous");
+    }
+
+    @Test
     void missingOptionalAndCollectionProducersAreDeploymentProblems() {
         for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
             "java.util.Set<Element>", "java.util.Collection<Element>", "java.util.Map<String, Element>",

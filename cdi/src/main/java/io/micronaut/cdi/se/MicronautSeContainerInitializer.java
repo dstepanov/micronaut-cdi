@@ -21,11 +21,13 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.spi.PortableExtensions;
+import io.micronaut.cdi.internal.runtime.BeanArchives;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.cdi.internal.runtime.UndiscoveredSubclass;
 import io.micronaut.cdi.internal.runtime.UnselectedAlternative;
 import io.micronaut.cdi.internal.runtime.CdiInterceptorEnablement;
+import io.micronaut.cdi.internal.runtime.StartCheck;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.context.DefaultBeanContext;
@@ -248,19 +250,29 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         if (discoveryDisabled) {
             builder.beansPredicate(bean -> belongsToSyntheticArchive(bean)
                 && (classpath == null || onClasspath(bean, classpath)));
-        } else if (classpath != null) {
-            builder.beansPredicate(bean -> onClasspath(bean, classpath));
+        } else {
+            // an archive whose beans.xml discovers nothing is not a bean archive (section 2.5.1): what the processor
+            // compiled into it is no bean of a container that discovers
+            List<String> excluded = BeanArchives.discoveringNothing(classLoader);
+            if (!excluded.isEmpty() || classpath != null) {
+                builder.beansPredicate(bean -> !BeanArchives.isCompiledIntoAnyOf(bean, excluded)
+                    && (classpath == null || onClasspath(bean, classpath)));
+            }
         }
         // what the portable extensions of this bootstrap are, for the container to run as it starts
         builder.singletons(new PortableExtensions.Request(List.copyOf(extensionInstances),
             List.copyOf(extensionClasses), classLoader,
             name -> classpath == null || classpath.contains(outerClassOf(name))));
+        if (!buildCompatibleExtensions.isEmpty()) {
+            // checked as the container starts, before Startup is observed: an extension the compilation did not run
+            // refuses the deployment before anything of the application has run
+            builder.singletons(new ExtensionsRanCheck(this));
+        }
         ApplicationContext context = builder.build();
         boolean startReturned = false;
         try {
             ApplicationContext started = context.start();
             startReturned = true;
-            checkBuildCompatibleExtensionsRan(started);
             return new MicronautSeContainer(started);
         } catch (RuntimeException | Error e) {
             // whatever the start failed with, what it created is destroyed and its container is not left as the one
@@ -501,5 +513,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         }
         int inner = simple.indexOf('$');
         return packagePrefix + (inner < 0 ? simple : simple.substring(0, inner));
+    }
+
+    /**
+     * The check that every build compatible extension handed to the bootstrap is one the compilation ran, as the
+     * container starts.
+     *
+     * @param initializer The bootstrap
+     */
+    private record ExtensionsRanCheck(MicronautSeContainerInitializer initializer) implements StartCheck {
+        @Override
+        public void check(BeanContext beanContext) {
+            initializer.checkBuildCompatibleExtensionsRan(beanContext);
+        }
     }
 }

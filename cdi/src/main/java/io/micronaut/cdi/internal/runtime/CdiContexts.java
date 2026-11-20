@@ -18,8 +18,12 @@ package io.micronaut.cdi.internal.runtime;
 import io.micronaut.cdi.internal.context.ApplicationScope;
 import io.micronaut.cdi.internal.context.RequestScope;
 import io.micronaut.cdi.internal.extension.ExtensionContexts;
+import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.spi.CdiReflection;
 import io.micronaut.context.BeanContext;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ConversationScoped;
 import jakarta.enterprise.context.Dependent;
@@ -109,6 +113,9 @@ final class CdiContexts {
         if (NORMAL_SCOPES.containsKey(name) || PSEUDO_SCOPES.containsKey(name) || isRegisteredScope(annotationType)) {
             return true;
         }
+        if (recordedNormality(name) != null) {
+            return true;
+        }
         CdiReflection reflection = reflection("BeanContainer.isScope", annotationType);
         return reflection.isAnnotated(annotationType, Scope.class)
             || reflection.isAnnotated(annotationType, NormalScope.class);
@@ -132,7 +139,25 @@ final class CdiContexts {
             // a scope an extension registered is normal where the extension registered it as one
             return extensionContexts.isNormal(annotationType);
         }
+        Boolean recorded = recordedNormality(name);
+        if (recorded != null) {
+            return recorded;
+        }
         return reflection("BeanContainer.isNormalScope", annotationType).isAnnotated(annotationType, NormalScope.class);
+    }
+
+    /**
+     * Whether a scope a compiled bean carries is normal, as the processor recorded it with the bean, or {@code null}
+     * where no bean was compiled into the scope.
+     */
+    private @Nullable Boolean recordedNormality(String scopeName) {
+        for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(Qualifiers.byStereotype(CdiScope.class))) {
+            AnnotationMetadata metadata = definition.getAnnotationMetadata();
+            if (scopeName.equals(metadata.stringValue(CdiScope.class).orElse(null))) {
+                return CdiResolution.isNormalScoped(metadata);
+            }
+        }
+        return null;
     }
 
     private boolean isRegisteredScope(Class<? extends Annotation> annotationType) {

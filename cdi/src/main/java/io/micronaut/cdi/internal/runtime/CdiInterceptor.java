@@ -217,6 +217,21 @@ public final class CdiInterceptor<T> implements Interceptor<T> {
         return methods.isEmpty() ? null : methods;
     }
 
+    /**
+     * An interceptor is equal to every other one of the same interceptor class, as a bean is to every other of its
+     * definition: the one {@code resolveInterceptors} answers with and the one injected into the interceptor itself
+     * are the same interceptor.
+     */
+    @Override
+    public boolean equals(Object o) {
+        return this == o || o instanceof CdiInterceptor<?> other && bean.equals(other.bean);
+    }
+
+    @Override
+    public int hashCode() {
+        return bean.hashCode();
+    }
+
     @Override
     public String toString() {
         return "Interceptor[" + getBeanClass().getName() + "]";

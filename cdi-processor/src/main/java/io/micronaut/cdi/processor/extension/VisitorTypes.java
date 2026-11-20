@@ -29,6 +29,7 @@ import jakarta.enterprise.lang.model.types.PrimitiveType;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.VoidType;
 import jakarta.enterprise.lang.model.types.WildcardType;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,13 +89,16 @@ final class VisitorTypes implements Types {
     }
 
     @Override
-    public ClassType ofClass(String name) {
-        return (ClassType) element(name);
+    public @Nullable ClassType ofClass(String name) {
+        // a class that is not there is null, so that an extension can probe for an optional dependency
+        return context.visitorContext().getClassElement(name)
+            .map(element -> (ClassType) ElementTypes.rawClassOf(element, List.of(), context))
+            .orElse(null);
     }
 
     @Override
     public ClassType ofClass(ClassInfo clazz) {
-        return ofClass(clazz.name());
+        return (ClassType) element(clazz.name());
     }
 
     @Override
@@ -119,7 +123,7 @@ final class VisitorTypes implements Types {
 
     @Override
     public ParameterizedType parameterized(Class<?> genericType, Type... typeArguments) {
-        return parameterized(ofClass(genericType.getName()), typeArguments);
+        return parameterized((ClassType) element(genericType.getName()), typeArguments);
     }
 
     @Override
@@ -149,7 +153,7 @@ final class VisitorTypes implements Types {
 
     @Override
     public WildcardType wildcardUnbounded() {
-        return ElementTypes.wildcardWithUpperBound(ofClass(Object.class.getName()), context);
+        return ElementTypes.wildcardWithUpperBound(element(Object.class.getName()), context);
     }
 
     private Type element(String name) {

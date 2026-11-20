@@ -186,6 +186,16 @@ public class CdiBean<T> implements Bean<T> {
      * produced bean in a normal scope is of the subclass Micronaut generates, and holds the type arguments of the
      * type the bean was produced as under that type.
      */
+    /**
+     * The type a producer declares it produces, with the arguments it was written with.
+     *
+     * @param definition The definition of the produced bean
+     * @return The type
+     */
+    public static Argument<?> producedType(BeanDefinition<?> definition) {
+        return producedTypeOf(definition);
+    }
+
     private static Argument<?> producedTypeOf(BeanDefinition<?> definition) {
         Argument<?> declared = definition.getDeclaredBeanType();
         if (definition instanceof ProxyBeanDefinition<?> proxy && proxy.getTargetType() != declared.getType()) {
@@ -236,10 +246,14 @@ public class CdiBean<T> implements Bean<T> {
         // the types a bean narrowed itself to are the ones it named with Typed, which is asked for rather than
         // Micronaut's own set of exposed types: those are what Micronaut resolves the bean by, and it exposes an
         // array by its component type as well, which is not a bean type of the array
-        Class<?>[] narrowed = definition.getAnnotationMetadata()
-            .classValues(Typed.class);
-        List<Argument<?>> closure = new ArrayList<>();
         boolean produced = definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class);
+        // a producer narrows the types of what it produces with a Typed of its own (section 2.2.2): the metadata
+        // of a member of a class carries the class's annotations as well, and a Typed of the declaring class
+        // narrows the class bean alone
+        AnnotationMetadata typedBy = produced ? definition.getAnnotationMetadata().getDeclaredMetadata()
+            : definition.getAnnotationMetadata();
+        Class<?>[] narrowed = typedBy.classValues(Typed.class);
+        List<Argument<?>> closure = new ArrayList<>();
         List<Argument<?>> recorded = index != null
             && index.hasCompleteRecord(produced ? producedTypeOf(definition).getType() : beanClass)
             ? null : recordedClosureOf(definition);
@@ -289,7 +303,7 @@ public class CdiBean<T> implements Bean<T> {
                 }
             }
         }
-        if (definition.getAnnotationMetadata().hasAnnotation(Typed.class)) {
+        if (typedBy.hasAnnotation(Typed.class)) {
             // the types the bean named with Typed keep the parameters the closure gives them: an Emu typed
             // FlightlessBird is a bean of FlightlessBird<Australian>, which is what it extends
             Set<Class<?>> kept = new LinkedHashSet<>(Arrays.asList(narrowed));

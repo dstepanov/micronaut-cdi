@@ -65,6 +65,8 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
         "jakarta.enterprise.event.Event",
         "jakarta.enterprise.inject.spi.InjectionPoint",
         "jakarta.enterprise.inject.spi.EventMetadata",
+        "jakarta.enterprise.inject.spi.Bean",
+        "jakarta.enterprise.inject.spi.Interceptor",
         "io.micronaut.cdi.MicronautInstance",
         "io.micronaut.cdi.MicronautEvent",
         "io.micronaut.cdi.MicronautInjectionPoint"
@@ -201,7 +203,7 @@ public final class ContainerInjectionVisitor implements TypeElementVisitor<Objec
      * Whether Micronaut resolves the point itself rather than by a bean of its type: a value of the configuration,
      * a registration, the context itself, its own injection point, the qualifier the bean is resolved by, or one of
      * the kinds resolved late - a lookup, an event, the injection
-     * point metadata - whose beans are built-in ones that read the point they are injected into.
+     * point metadata, the bean metadata - whose beans are built-in ones that read the point they are injected into.
      */
     private static boolean isResolvedByMicronaut(Element element, ClassElement type) {
         if (element.hasStereotype(Value.class)

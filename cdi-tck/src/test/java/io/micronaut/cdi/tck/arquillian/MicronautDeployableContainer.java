@@ -156,11 +156,9 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         } catch (RuntimeException e) {
             // the container validates the deployment as it starts: the problem the specification names is in
             // the cause chain of the failure to start
-            for (Throwable cause = e; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
-                if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
-                    || cause instanceof jakarta.enterprise.inject.spi.DeploymentException) {
-                    throw new DeploymentException("The deployment was rejected as it started", cause);
-                }
+            Throwable problem = deploymentProblemIn(e);
+            if (problem != null) {
+                throw new DeploymentException("The deployment was rejected as it started", problem);
             }
             throw new DeploymentException("The deployment could not be started", e);
         }
@@ -209,11 +207,9 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
         } catch (RuntimeException e) {
             // what an extension threw travels wrapped in the compiler's own reporting: the problem the
             // specification names is in the cause chain
-            for (Throwable cause = e; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
-                if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
-                    || cause instanceof jakarta.enterprise.inject.spi.DeploymentException) {
-                    throw new DeploymentException("The deployment was rejected as it compiled", cause);
-                }
+            Throwable problem = deploymentProblemIn(e);
+            if (problem != null) {
+                throw new DeploymentException("The deployment was rejected as it compiled", problem);
             }
             throw e;
         }
@@ -273,15 +269,13 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
             return new ProtocolMetaData();
         } catch (RuntimeException e) {
             releaseDeployedLoader();
-            for (Throwable cause = e; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
-                if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
-                    || cause instanceof jakarta.enterprise.inject.spi.DeploymentException) {
-                    throw new DeploymentException("The deployment could not be started", cause);
-                }
+            Throwable problem = deploymentProblemIn(e);
+            if (problem != null) {
+                throw new DeploymentException("The deployment was rejected as it started", problem);
             }
-            throw new DeploymentException("The deployment could not be started",
-                new jakarta.enterprise.inject.spi.DeploymentException(
-                    "The deployment could not be started", e));
+            // anything else is a failure of the container rather than a problem with the deployment, which fails a
+            // test that expects one instead of passing it
+            throw new DeploymentException("The deployment could not be started", e);
         }
     }
 
@@ -389,6 +383,26 @@ public final class MicronautDeployableContainer implements DeployableContainer<M
     @Override
     public void undeploy(Descriptor descriptor) throws DeploymentException {
         throw new UnsupportedOperationException("A descriptor is not a deployment here");
+    }
+
+    /**
+     * The deployment problem a failure to start stands for: a jakarta {@code DefinitionException} or
+     * {@code DeploymentException} in its cause chain. The container's deployment validation reports what it finds
+     * as one, and the kit's deployments need no Micronaut exception read as one: a failure to start with none in
+     * its cause chain - a crash, an unsatisfied dependency Micronaut found where the validation did not - is a
+     * failure of the container, which fails a test that expects a deployment problem.
+     *
+     * @param failure The failure to start
+     * @return The problem, or {@code null} where the failure is no deployment problem
+     */
+    static @org.jspecify.annotations.Nullable Throwable deploymentProblemIn(Throwable failure) {
+        for (Throwable cause = failure; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
+            if (cause instanceof jakarta.enterprise.inject.spi.DefinitionException
+                || cause instanceof jakarta.enterprise.inject.spi.DeploymentException) {
+                return cause;
+            }
+        }
+        return null;
     }
 
     /**

@@ -172,11 +172,12 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             if (staticMethod) {
                 target = null;
             } else if (instanceLookup) {
-                // resolved the way the specification's lookup resolves — the @Default bean of the class, by
-                // the rules of typesafe resolution — rather than by Micronaut's own null-qualifier rules
+                // resolved the way the specification's lookup resolves - the target bean, by its class and its
+                // qualifiers, by the rules of typesafe resolution (section 10.3.1) - rather than by Micronaut's own
+                // null-qualifier rules
                 @SuppressWarnings("unchecked")
-                Object looked = lookupOf(lookup).selectArgument((Argument<Object>) Argument.of(beanClass), List.of())
-                    .get();
+                Object looked = lookupOf(lookup).selectArgument((Argument<Object>) Argument.of(beanClass),
+                    CdiQualifier.declared(definition.getAnnotationMetadata())).get();
                 target = looked;
             } else {
                 if (instance == null) {
@@ -257,8 +258,9 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         }
         Class<?> beanClass;
         ExecutableMethod<Object, Object> method;
+        BeanDefinition<?> definition;
         try {
-            BeanDefinition<?> definition = definitionOf(beanContext);
+            definition = definitionOf(beanContext);
             beanClass = beanClassOf(definition);
             method = executable(definition);
         } catch (IllegalStateException e) {
@@ -270,20 +272,22 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
         }
         CdiInstance<Object> lookup = new CdiInstance<>(beanContext, Argument.OBJECT_ARGUMENT);
         if (instanceLookup && !staticMethod) {
-            resolvable(lookup, Argument.of(beanClass), "the instance of " + beanClassName);
+            resolvable(lookup, Argument.of(beanClass), CdiQualifier.declared(definition.getAnnotationMetadata()),
+                "the instance of " + beanClassName);
         }
         Argument<?>[] methodArguments = method.getArguments();
         for (int i = 0; i < methodArguments.length; i++) {
             if (argumentLookups[i]) {
                 resolvable(lookup, methodArguments[i],
+                    CdiQualifier.declared(methodArguments[i].getAnnotationMetadata()),
                     "the argument at " + i + " of " + beanClassName + "#" + methodName);
             }
         }
     }
 
-    private static void resolvable(CdiInstance<Object> lookup, Argument<?> argument, String what) {
-        CdiInstance<?> selected = lookup.selectArgument(argument,
-            CdiQualifier.declared(argument.getAnnotationMetadata()));
+    private static void resolvable(CdiInstance<Object> lookup, Argument<?> argument, List<CdiQualifier> qualifiers,
+                                   String what) {
+        CdiInstance<?> selected = lookup.selectArgument(argument, qualifiers);
         if (selected.isUnsatisfied()) {
             throw new DeploymentException(
                 "The lookup of " + what + " has no bean to satisfy it");

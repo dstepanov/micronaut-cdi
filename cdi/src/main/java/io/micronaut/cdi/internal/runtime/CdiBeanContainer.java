@@ -220,6 +220,11 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
     public Object getReference(Bean<?> bean, Type beanType, CreationalContext<?> ctx) {
         boolean amongTheTypes = false;
         Argument<?> required = Argument.of(beanType);
+        if (hasWildcard(required)) {
+            // a parameterized type with a wildcard among its arguments is never a bean type (section 2.2.1)
+            throw new IllegalArgumentException("The type " + beanType.getTypeName()
+                + " has a wildcard, and is not among the bean types of " + bean);
+        }
         List<Argument<?>> types = bean instanceof CdiBean<?> own ? own.types()
             : SpecificationTypes.argumentsOf(bean.getTypes());
         for (Argument<?> type : types) {
@@ -231,7 +236,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
             // parameterized request matches only exactly: a List<String> bean is not a List<Integer>
             if (CdiTypes.isClass(required)) {
                 Class<?> beanRaw = CdiTypes.rawClassOf(type);
-                if (beanRaw != null && CdiTypes.boxedOf(beanRaw) == CdiTypes.boxedOf(required.getType())) {
+                if (beanRaw != null && CdiTypes.boxedOf(beanRaw) == CdiTypes.boxedOf(required.getType())
+                    && asksNothingOfItsArguments(type)) {
                     amongTheTypes = true;
                     break;
                 }
@@ -262,6 +268,31 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
             }
         }
         return create(bean, ctx);
+    }
+
+    private static boolean hasWildcard(Argument<?> type) {
+        if (type.isWildcard()) {
+            return true;
+        }
+        for (Argument<?> argument : type.getTypeParameters()) {
+            if (hasWildcard(argument)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a bean type is assignable to its raw class as a required type (section 5.2.4): it is not
+     * parameterized, or each of its arguments is {@code Object} or a type variable with no bound.
+     */
+    private static boolean asksNothingOfItsArguments(Argument<?> type) {
+        for (Argument<?> argument : type.getTypeParameters()) {
+            if (argument.getType() != Object.class || argument.isWildcard() || argument.getTypeParameters().length > 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -960,7 +991,9 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
 
     @Override
     public MicronautEvent<Object> getEvent() {
-        return new CdiEvent<>(observers, Argument.OBJECT_ARGUMENT, Set.of());
+        // the specified type Object and the specified qualifier @Default (section 11.3.10), which an event selected
+        // from this one keeps beside the qualifiers it adds
+        return new CdiEvent<>(observers, Argument.OBJECT_ARGUMENT, List.of(CdiQualifier.DEFAULT), null);
     }
 
     @Override

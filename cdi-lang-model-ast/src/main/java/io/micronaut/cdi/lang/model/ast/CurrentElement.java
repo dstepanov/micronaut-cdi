@@ -209,7 +209,9 @@ public final class CurrentElement<E extends Element> {
         if (member instanceof MethodElement method) {
             key.append('(');
             for (ParameterElement parameter : method.getParameters()) {
-                key.append(parameter.getType().getName()).append(',');
+                ClassElement type = parameter.getType();
+                // the name of an array type is the name of its component: the dimensions are kept apart
+                key.append(type.getName()).append("[]".repeat(type.getArrayDimensions())).append(',');
             }
             key.append(')');
         }

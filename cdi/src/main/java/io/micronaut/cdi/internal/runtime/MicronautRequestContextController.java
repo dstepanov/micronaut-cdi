@@ -58,6 +58,9 @@ public final class MicronautRequestContextController implements RequestContextCo
     @Override
     public void deactivate() throws ContextNotActiveException {
         if (!requestScope.isActive()) {
+            // a request this controller began on this thread that the container destroyed as it closed leaves its
+            // activation in the thread's propagated context, which only this thread can take out
+            requestScope.deactivate(this);
             throw new ContextNotActiveException("The request scope is not active on the current thread");
         }
         // the request being handled is ended only where it is the one this controller began, on this thread

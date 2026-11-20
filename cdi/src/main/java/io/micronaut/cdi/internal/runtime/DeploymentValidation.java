@@ -16,15 +16,20 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.internal.metadata.CdiBuiltIn;
+import io.micronaut.cdi.internal.metadata.CdiBuiltInvokers;
 import io.micronaut.cdi.internal.metadata.CdiDisposer;
 import io.micronaut.cdi.internal.metadata.CdiObserver;
+import io.micronaut.cdi.internal.metadata.CdiRecordedInvoker;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer.Selection;
 import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.context.BeanContext;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.FieldInjectionPoint;
@@ -48,13 +53,14 @@ import java.util.Map;
  * injection point that resolves to no bean, or to more than one that cannot be told apart, is a deployment
  * problem (CDI 4.1 section 5.2.2), and so is one that resolves to a bean in a normal scope that cannot be proxied
  * (sections 3.10 and 5.4). So are two beans of one name, and a name that is the path prefix of another
- * (section 5.3.1). The bean is not rejected on its own: one nothing is injected with is
+ * (section 5.3.1). So is an archive whose {@code beans.xml} declares the bean discovery mode {@code all} of CDI Full
+ * (CDI 5.0 section 2.5.1, {@link BeanArchives}). The bean is not rejected on its own: one nothing is injected with is
  * refused only when a contextual reference to it is asked for. Every problem found is reported, the first as
  * the failure and the rest beside it.</p>
  *
  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
- * {@code Event}, the injection point itself - are left to their own lateness, and so are injection points
+ * {@code Event}, the injection point itself, the bean and interceptor metadata - are left to their own lateness, and so are injection points
  * marked nullable. So are the types Micronaut resolves without a bean definition: the context itself, under each
  * interface it is handed out as, and Micronaut's own injection point. Container injection points require a bean of their full declared type, just like other
  * CDI injection points.</p>
@@ -78,12 +84,21 @@ final class DeploymentValidation {
      * @throws DeploymentException Where the deployment is invalid
      */
     void validate() {
+        try {
+            // what an archive's beans.xml asks for is the business of the container however it is started
+            BeanArchives.requireNoneDiscoversAll(container.beanContext().getClassLoader());
+        } catch (DeploymentException e) {
+            problems.add(e);
+        }
         List<CdiBean<?>> beans = container.beans();
+        List<BeanDefinition<?>> validated = new ArrayList<>(beans.size());
         for (CdiBean<?> bean : beans) {
-            BeanDefinition<?> definition = bean.definition();
-            if (!isOfTheSpecification(definition)) {
-                continue;
+            if (isOfTheSpecification(bean.definition())) {
+                validated.add(bean.definition());
             }
+        }
+        validated.addAll(enabledInterceptors());
+        for (BeanDefinition<?> definition : validated) {
             boolean proxy = CdiResolution.isProxyDefinition(definition);
             for (Argument<?> argument : definition.getConstructor().getArguments()) {
                 // what the container itself hands the constructor of a generated subclass is no injection point
@@ -104,6 +119,7 @@ final class DeploymentValidation {
             }
             validateDisposer(definition);
             validateObservers(definition);
+            validateInvokers(definition);
         }
         validateNames(beans);
         if (!problems.isEmpty()) {
@@ -151,6 +167,24 @@ final class DeploymentValidation {
     }
 
     /**
+     * Every invoker an extension built for a method of the bean that looks something up resolves each lookup to
+     * one bean (section 10.3.1), whether or not the extension handed it to a synthetic component.
+     */
+    private void validateInvokers(BeanDefinition<?> definition) {
+        for (AnnotationValue<CdiBuiltInvokers> built
+            : definition.getAnnotationMetadata().getAnnotationValuesByType(CdiBuiltInvokers.class)) {
+            for (AnnotationValue<CdiRecordedInvoker> record
+                : built.getAnnotations(AnnotationMetadata.VALUE_MEMBER, CdiRecordedInvoker.class)) {
+                try {
+                    RecordedInvoker.of(container.beanContext(), record).validateLookups();
+                } catch (DeploymentException e) {
+                    problems.add(e);
+                }
+            }
+        }
+    }
+
+    /**
      * The parameters of an observer method other than the observed one are injection points.
      */
     private void validateObservers(BeanDefinition<?> definition) {
@@ -180,6 +214,24 @@ final class DeploymentValidation {
         return CdiResolution.isBeanOfTheSpecification(definition)
             && !definition.hasAnnotation(CdiBuiltIn.class)
             && !definition.getAnnotationMetadata().hasAnnotation(Interceptor.class);
+    }
+
+    /**
+     * The interceptors that are enabled: their injection points are those of a bean
+     * (section 5.2.2), validated as the container starts whether or not anything intercepted has been created yet.
+     */
+    private List<BeanDefinition<?>> enabledInterceptors() {
+        BeanContext beanContext = container.beanContext();
+        CdiInterceptorEnablement enablement = beanContext.getBean(CdiInterceptorEnablement.class);
+        List<BeanDefinition<?>> interceptors = new ArrayList<>();
+        // an interceptor class has no scope of the specification: it is found by the annotation that makes it one
+        for (BeanDefinition<Object> definition
+            : beanContext.getBeanDefinitions(Qualifiers.byStereotype(Interceptor.class))) {
+            if (!definition.isAbstract() && enablement.isEnabled(definition)) {
+                interceptors.add(definition);
+            }
+        }
+        return interceptors;
     }
 
     /**
@@ -218,7 +270,7 @@ final class DeploymentValidation {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
-            if (container.micronautDefinitionOf((Argument) argument, null) == null) {
+            if (container.micronautDefinitionOf((Argument) argument, null) == null && !argument.isNullable()) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }
@@ -238,10 +290,6 @@ final class DeploymentValidation {
             // a point Micronaut resolves itself, which the processor left unmarked: a lookup, an event, the
             // injection point metadata, the context, a value of the configuration; or one a provider of the
             // application's own supplies, which needs no bean
-            return;
-        }
-        if (argument.isNullable()) {
-            // An explicitly nullable injection point may have no bean.
             return;
         }
         // what the point is resolved to as the bean is created
@@ -264,10 +312,14 @@ final class DeploymentValidation {
                         + unproxyable + " (CDI 4.1 section 5.4)"));
                 }
             }
-            case Selection.Unselected.UNSATISFIED ->
-                problems.add(new DeploymentException("The injection point " + argument + " of "
-                    + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
-                    + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+            case Selection.Unselected.UNSATISFIED -> {
+                // an explicitly nullable injection point may have no bean, but not two
+                if (!argument.isNullable()) {
+                    problems.add(new DeploymentException("The injection point " + argument + " of "
+                        + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
+                        + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+                }
+            }
             case Selection.Unselected.MICRONAUT -> validateByMicronaut(definition, argument);
         }
     }

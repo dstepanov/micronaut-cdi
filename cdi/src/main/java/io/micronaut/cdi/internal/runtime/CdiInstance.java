@@ -16,6 +16,8 @@
 package io.micronaut.cdi.internal.runtime;
 
 import io.micronaut.cdi.MicronautInstance;
+import io.micronaut.cdi.internal.context.RequestScope;
+import io.micronaut.cdi.internal.metadata.CdiUnproxyable;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.BeanResolutionContext;
@@ -31,6 +33,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.UnproxyableResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -279,15 +282,18 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
         OwnedDependents dependents, BeanContext beanContext, Argument<U> selected, BeanDefinition<U> definition,
         @Nullable InjectionPoint lookedUpAt,
         BeanResolutionContext.@Nullable Segment<?, ?> injectionSegment) {
+        requireProxyable(definition);
         try {
             // the definition is the one the lookup chose: resolved as it is, with no candidate lookup of its own. One
             // created for the point already current - the injection point metadata - is resolved within the creation
             // the lookup is made in, where there is one, whose path says what that point is. Any other is created on a
             // path that says what the lookup's injection point is
             Argument<U> asked = askedAs(beanContext, selected, definition);
-            return lookedUpAt == null
+            // the request context is active during the PostConstruct of any bean (section 6.7.1): one of its own
+            // spans the creation where the thread has none
+            return beanContext.getBean(RequestScope.class).duringCreation(() -> lookedUpAt == null
                 ? dependents.registrationAtCurrentPoint(definition, asked)
-                : dependents.registrationAt(injectionSegment, lookedUpAt, definition, asked);
+                : dependents.registrationAt(injectionSegment, lookedUpAt, definition, asked));
         } catch (BeanCreationException e) {
             // what the bean's own code — or an interceptor around its construction — threw comes out as
             // it was thrown when it is unchecked, and wrapped when it is checked (section 6.1.1)
@@ -296,10 +302,23 @@ public final class CdiInstance<T> implements MicronautInstance<T>, AutoCloseable
     }
 
     /**
+     * Refuses a bean of a normal scope the processor found unproxyable: it is left a prototype only so that it
+     * deploys, and the contextual reference a lookup hands out is its client proxy, which cannot exist (section
+     * 3.10).
+     */
+    private static void requireProxyable(BeanDefinition<?> definition) {
+        String unproxyable = definition.getAnnotationMetadata().stringValue(CdiUnproxyable.class).orElse(null);
+        if (unproxyable != null) {
+            throw new UnproxyableResolutionException(unproxyable);
+        }
+    }
+
+    /**
      * Resolves the instance of a bean that has a scope, which may be what creates it: what its creation throws
      * comes out as what a dependent creation throws does.
      */
     static <U> U resolve(BeanContext beanContext, BeanDefinition<U> definition) {
+        requireProxyable(definition);
         try {
             return beanContext.getBean(definition);
         } catch (BeanCreationException e) {

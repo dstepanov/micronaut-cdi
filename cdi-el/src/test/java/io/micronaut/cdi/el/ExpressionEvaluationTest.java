@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -68,6 +69,11 @@ class ExpressionEvaluationTest {
 
         public String getName() {
             return "guest";
+        }
+
+        @io.micronaut.context.annotation.Executable
+        public String greet(String who) {
+            return "hello " + who;
         }
     }
 
@@ -123,6 +129,25 @@ class ExpressionEvaluationTest {
             // whose release destroys what was injected into the producer once
             assertEquals(1, AbsentProducer.PRODUCED.get(), "one reference for both appearances of the name");
             assertEquals(1, Witness.DESTROYED.get(), "one creational context released as the evaluation completed");
+        }
+    }
+
+    @Test
+    void aWrappedExpressionTellsWhatItsExpressionTells() {
+        try (ApplicationContext context = ApplicationContext.run()) {
+            ELAwareBeanManager manager = (ELAwareBeanManager) context.getBean(BeanManager.class);
+            ExpressionFactory factory = manager.wrapExpressionFactory(ExpressionFactory.newInstance());
+            ELContext el = new StandardELContext(factory);
+
+            jakarta.el.MethodExpression method = factory.createMethodExpression(el, "${visitor.greet('you')}",
+                String.class, new Class<?>[0]);
+            assertTrue(method.isParametersProvided());
+            jakarta.el.MethodReference reference = method.getMethodReference(el);
+            assertEquals("greet", reference.getMethodInfo().getName());
+
+            ValueExpression value = factory.createValueExpression(el, "${visitor.name}", String.class);
+            jakarta.el.ValueReference valueReference = value.getValueReference(el);
+            assertEquals("name", valueReference.getProperty());
         }
     }
 

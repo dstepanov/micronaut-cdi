@@ -39,9 +39,23 @@ import java.util.Set;
 final class ReflectiveAnnotatedType<X> implements AnnotatedType<X> {
 
     private final Class<X> type;
+    /**
+     * The annotations portable extensions added to the class so far, which read as the class's own.
+     */
+    private final List<Annotation> added;
 
     ReflectiveAnnotatedType(Class<X> type) {
+        this(type, List.of());
+    }
+
+    /**
+     * @param type  The class
+     * @param added The annotations added to it so far, read as they are when asked: an observer of
+     *              {@code ProcessAnnotatedType} sees what the observers before it added (section 11.5.6)
+     */
+    ReflectiveAnnotatedType(Class<X> type, List<Annotation> added) {
         this.type = type;
+        this.added = added;
     }
 
     @Override
@@ -79,22 +93,35 @@ final class ReflectiveAnnotatedType<X> implements AnnotatedType<X> {
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+        for (Annotation annotation : added) {
+            if (annotation.annotationType() == annotationType && annotationType.isInstance(annotation)) {
+                return annotationType.cast(annotation);
+            }
+        }
         return type.getAnnotation(annotationType);
     }
 
     @Override
     public <T extends Annotation> Set<T> getAnnotations(Class<T> annotationType) {
-        return new LinkedHashSet<>(List.of(type.getAnnotationsByType(annotationType)));
+        Set<T> annotations = new LinkedHashSet<>(List.of(type.getAnnotationsByType(annotationType)));
+        for (Annotation annotation : added) {
+            if (annotation.annotationType() == annotationType && annotationType.isInstance(annotation)) {
+                annotations.add(annotationType.cast(annotation));
+            }
+        }
+        return annotations;
     }
 
     @Override
     public Set<Annotation> getAnnotations() {
-        return new LinkedHashSet<>(List.of(type.getAnnotations()));
+        Set<Annotation> annotations = new LinkedHashSet<>(List.of(type.getAnnotations()));
+        annotations.addAll(added);
+        return annotations;
     }
 
     @Override
     public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
-        return type.isAnnotationPresent(annotationType);
+        return getAnnotation(annotationType) != null;
     }
 
     @Override
