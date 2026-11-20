@@ -28,7 +28,6 @@ import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
 import jakarta.interceptor.InvocationContext;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.ElementType;
@@ -51,9 +50,6 @@ class ProducedLifecycleInterceptionTest {
     static final List<String> EVENTS = new CopyOnWriteArrayList<>();
 
     @Test
-    @Disabled("The Jakarta Interceptors processor writes the interception of a produced bean, which shadows the one "
-        + "the factory class declares for itself, only where the producer or the produced type declares interception "
-        + "of its own, so the product inherits the factory's (see CONFORMANCE.md, Known limitations)")
     void theLifecycleInterceptorsOfTheDeclaringClassDoNotRunOnItsProduct() {
         EVENTS.clear();
         try (ApplicationContext context = ApplicationContext.run()) {

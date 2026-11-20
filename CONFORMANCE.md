@@ -1136,16 +1136,6 @@ type as a bean type it can look up. A producer of an array has exactly the array
 (section 3.2.1), so leave the `Typed` out. For the same reason a synthetic bean of an array type is not matched to a
 registration method of a build compatible extension that asks for the array type.
 
-A class level interceptor binding of a bean class reaches the beans its producer methods produce: their lifecycle
-callback interceptors - `@AroundConstruct`, `@PostConstruct`, `@PreDestroy` - run on the produced object, which is no
-instance of a managed bean (CDI 4.1 sections 7.2 and 9), while the producer method itself is rightly intercepted as a
-business method (`ProducedLifecycleInterceptionTest`, disabled). Micronaut reads the metadata of a produced bean
-together with that of its factory, and the Jakarta Interceptors processor writes the interception of the produced
-bean on the producer, which shadows the factory's own, only where the producer or the produced type declares
-interception of its own (`BeanInterceptionWriter.interceptProduced` returns early otherwise). Writing that record
-whenever the factory class declares interception - an empty one where nothing else binds the product - closes it in
-Micronaut Jakarta Interceptors; until then, bind a factory's business methods one by one rather than at its class.
-
 A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
 after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in
 Micronaut Core". Declare such a producer on a `@Dependent` bean, or make the product's scope the declaring bean's,
