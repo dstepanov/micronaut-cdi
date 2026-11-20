@@ -56,9 +56,20 @@ final class ScenarioCompiler {
      *
      * @param success Whether it compiled
      * @param errors  The error diagnostics, as the compiler worded them
+     * @param crashed Whether a processor crashed rather than reported a finding: no verdict on the scenario
      */
-    record Result(boolean success, List<String> errors) {
+    record Result(boolean success, List<String> errors, boolean crashed) {
     }
+
+    // what Micronaut's processing reports where a visitor threw rather than reported
+    private static final List<String> PROCESSOR_CRASHES = List.of(
+        "Error initializing type visitor",
+        "Error finishing the round of type visitor",
+        "Error finalizing type visitor",
+        "Error initializing bean element visitor",
+        "Error finalizing bean element visitor",
+        "Error occurred visiting BeanElementVisitor",
+        "Unexpected error:");
 
     /**
      * Compiles for micronaut-cdi: the test classpath, which holds the container, and the processors.
@@ -122,23 +133,32 @@ final class ScenarioCompiler {
                 for (Throwable cause = e.getCause(); cause != null; cause = cause.getCause()) {
                     errors.add("caused by " + cause);
                 }
-                return new Result(false, errors);
+                return new Result(false, errors, true);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
         List<String> errors = new ArrayList<>();
+        boolean crashed = false;
+        boolean finding = false;
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
             if (diagnostic.getKind() == Diagnostic.Kind.ERROR) {
+                String message = diagnostic.getMessage(null);
+                if (PROCESSOR_CRASHES.stream().anyMatch(message::startsWith)) {
+                    crashed = true;
+                } else {
+                    finding = true;
+                }
                 String where = diagnostic.getSource() == null ? "" : diagnostic.getSource().getName()
                     .replace("string:///", "") + ":" + diagnostic.getLineNumber() + ": ";
-                errors.add(where + diagnostic.getMessage(null));
+                errors.add(where + message);
             }
         }
         if (!success && errors.isEmpty()) {
             errors.add(compilerOutput.toString());
         }
-        return new Result(success, errors);
+        // a crash beside a finding is a consequence of the finding, as the kit's adapter reads it
+        return new Result(success, errors, crashed && !finding);
     }
 
     /**

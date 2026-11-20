@@ -127,6 +127,14 @@ class HarnessTest {
     }
 
     @Test
+    void aProcessorThatCrashedGivesNoVerdict() {
+        assertEquals(Outcome.HARNESS_ERROR, Runners.refusedByCompiler(new ScenarioCompiler.Result(false,
+            List.of("the compiler threw java.lang.RuntimeException: java.lang.NoClassDefFoundError: X"), true)).outcome());
+        assertEquals(Outcome.DEFINITION_ERROR, Runners.refusedByCompiler(new ScenarioCompiler.Result(false,
+            List.of("S.java:3: A method may not be annotated both Inject and Produces"), false)).outcome());
+    }
+
+    @Test
     void whatIsLoggedOutsideAStretchIsCompared() {
         RunResult a = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "get=B2"));
         RunResult b = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "!jakarta.enterprise.inject.AmbiguousResolutionException"));

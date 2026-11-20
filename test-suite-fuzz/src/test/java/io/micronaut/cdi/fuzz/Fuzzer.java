@@ -68,7 +68,8 @@ final class Fuzzer {
                       Divergence divergence, Optional<Rule> known) {
 
         boolean harnessError() {
-            return weld.outcome() == Outcome.HARNESS_ERROR;
+            return weld.outcome() == Outcome.HARNESS_ERROR
+                || (micronaut != null && micronaut.outcome() == Outcome.HARNESS_ERROR);
         }
     }
 
@@ -98,6 +99,10 @@ final class Fuzzer {
                 return new Evaluation(scenario, rendered, null, weld, null, Optional.empty());
             }
             RunResult micronaut = Runners.runMicronaut(rendered, work);
+            if (micronaut.outcome() == Outcome.HARNESS_ERROR) {
+                // a processor crashed: nothing to compare
+                return new Evaluation(scenario, rendered, micronaut, weld, null, Optional.empty());
+            }
             Divergence divergence = TraceComparison.compare(micronaut, weld);
             Optional<Rule> known = divergence == null ? Optional.empty()
                 : KnownDifferences.match(scenario, divergence, micronaut, weld);

@@ -69,7 +69,7 @@ final class Runners {
         Path output = workDir.resolve("micronaut-classes");
         ScenarioCompiler.Result compiled = ScenarioCompiler.compileForMicronaut(rendered.sources(), output);
         if (!compiled.success()) {
-            return RunResult.refusedByCompiler(compiled.errors());
+            return refusedByCompiler(compiled);
         }
         return withTimeout(() -> {
             try (URLClassLoader loader = new URLClassLoader(new URL[] {output.toUri().toURL()},
@@ -92,6 +92,16 @@ final class Runners {
                 });
             }
         });
+    }
+
+    /**
+     * What a compilation for micronaut-cdi that failed says: a refusal of the scenario where the processor reported a
+     * finding, and no verdict at all where a processor crashed, which is a bug of the harness or of the processor
+     * rather than a definition error to compare with what Weld says.
+     */
+    static RunResult refusedByCompiler(ScenarioCompiler.Result compiled) {
+        return compiled.crashed() ? RunResult.of(Outcome.HARNESS_ERROR, true, String.join("\n", compiled.errors()))
+            : RunResult.refusedByCompiler(compiled.errors());
     }
 
     static RunResult runWeld(Rendered rendered, Path workDir) {
