@@ -281,8 +281,9 @@ specification, is held to the rule.
 A bean whose `Typed` leaves its own class out of its bean types, or names no type, is still the bean that declares its
 producers, disposers and observer methods, and is created as `Object` where the container already chose it
 (`CdiResolution.creationTypeOf`, `TypedAwayDeclaringBeanTest`). The definition Micronaut generates for a product
-resolves the bean declaring its producer by the declaring class (`BeanResolutionContext.getFactoryBean`), so the
-processor keeps a class that declares producers resolvable by its class to Micronaut: `BeanContext.getBean` of the
+resolves the bean declaring its producer by the declaring class (`BeanResolutionContext.getFactoryBean`), and the
+interceptors runtime finds the definition describing the around-invoke methods a class declares or inherits by the
+class, so the processor keeps every such class resolvable by its class to Micronaut: `BeanContext.getBean` of the
 class finds such a bean, while the container's resolution - injection points, `Instance`, `BeanContainer.getBeans` -
 compares the bean types its `Typed` gives it, and does not. Micronaut gives the product of a producer field the types its class is resolvable by as
 well; the processor writes the product's own types on the field, and a product is no candidate of a class it is no

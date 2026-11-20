@@ -141,7 +141,6 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
-        keepResolvableByItsClass(element);
 
         DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
@@ -386,11 +385,13 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     /**
      * Keeps a class whose {@code Typed} leaves the class out of its bean types resolvable by the class to Micronaut:
      * the definition of each product resolves the bean declaring its producer by the declaring class
-     * ({@code BeanResolutionContext.getFactoryBean}), and such a bean still declares its producers (section 3.2). The
+     * ({@code BeanResolutionContext.getFactoryBean}), and the interceptors runtime finds the definition describing the
+     * around-invoke methods a class declares or inherits by the class, and such a bean still declares its producers
+     * (section 3.2) and is still its own interceptor class. The
      * container reads the bean types of a bean of the specification from its {@code Typed}, which this leaves as it
      * is, so the class is still no bean type of it; Micronaut's own lookup of the class finds it.
      */
-    private static void keepResolvableByItsClass(ClassElement element) {
+    static void keepResolvableByItsClass(ClassElement element) {
         AnnotationValue<?> typedAnnotation = element.getDeclaredAnnotation(Cdi.TYPED);
         if (typedAnnotation == null) {
             return;

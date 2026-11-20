@@ -90,6 +90,9 @@ public final class BeanDiscoveryVisitor implements TypeElementVisitor<Object, Ob
                 return;
             }
         }
+        // a bean whose Typed leaves its class out is still found by its class where Micronaut looks it up so - the
+        // declaring bean of its producers, the interceptor class of the around-invoke methods it declares or inherits
+        ProducerVisitor.keepResolvableByItsClass(element);
         if (element.hasDeclaredAnnotation("jakarta.decorator.Decorator")) {
             // decorators belong to CDI Full; a class written as one is not a bean of CDI Lite, and treating it
             // as a plain bean would be worse than leaving it out — its delegate injection point would be an
