@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,6 +98,11 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final RequestScope requestScope;
     // what was obtained through the container itself and is released as it stops, see addShutdownCallback
     private final List<Runnable> releases = new CopyOnWriteArrayList<>();
+    // the same records, kept on this bean as well: Micronaut clears the attributes of the bean context as it begins
+    // to stop, before it destroys any singleton, so the way down taken from destroyed() reads them here
+    private volatile boolean applicationContextInitialized;
+    private volatile boolean applicationStarted;
+    private final AtomicBoolean stopped = new AtomicBoolean();
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope,
                               RequestScope requestScope) {
@@ -124,7 +130,11 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         if (beanContext instanceof DefaultBeanContext context && context.isStoppingOrStopped()) {
             // created by the shutdown event of a context whose start failed, which is being rolled back
             // (DefaultBeanContext.stopFailedStart): nothing is run, validated or fired for a container that is
-            // going down without having started
+            // going down without having started. What the failed instance recorded on the context is kept here as
+            // well, for the way down to read once the attributes are cleared
+            applicationContextInitialized = beanContext.getAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.class)
+                .isPresent();
+            applicationStarted = beanContext.getAttribute(APPLICATION_STARTED, Boolean.class).isPresent();
             return;
         }
         // the portable extensions an SE bootstrap asked for run first: what they add - a context, an observer,
@@ -147,12 +157,14 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         // before its observers are told, so that one failing after another was told still has the application
         // context's destruction announced as the failed start is rolled back (section 6.7.2)
         beanContext.setAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.TRUE);
+        applicationContextInitialized = true;
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
         initializeEagerBeans();
         fire(new Startup(), Startup.class, Set.of());
         // only then is the application told it shuts down: a start that failed before is rolled back with no
         // Shutdown, its application context destroyed between its two events where it was announced
         beanContext.setAttribute(APPLICATION_STARTED, Boolean.TRUE);
+        applicationStarted = true;
     }
 
     /**
@@ -204,7 +216,8 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
      * event at the first listener that throws, and this one is the last, so a listener of the shutdown before it
      * that throws would otherwise leave the requests still open, the application context and their events to
      * Micronaut's destruction of the scopes alone. This bean depends on both scopes, so it is destroyed before
-     * them, while they still hold what they hold. Where the event got here, there is nothing left to do.
+     * them, while they still hold what they hold. The attributes of the bean context are cleared by then, so the way
+     * down reads what this bean kept of them. Where the event got here, there is nothing left to do.
      */
     @PreDestroy
     void destroyed() {
@@ -215,8 +228,14 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
      * The way down, once: the records it reads are taken off the bean context as it begins.
      */
     private void stop() {
+        if (!stopped.compareAndSet(false, true)) {
+            return;
+        }
         boolean startupFired = beanContext.removeAttribute(APPLICATION_STARTED, Boolean.class).isPresent();
-        if (beanContext.removeAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.class).isEmpty()) {
+        startupFired = startupFired || applicationStarted;
+        boolean initialized = beanContext.removeAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.class).isPresent();
+        initialized = initialized || applicationContextInitialized;
+        if (!initialized) {
             // a container whose start failed before the application was told its application context was
             // initialized tells it nothing of the way down: what its start created is destroyed by Micronaut, the
             // scopes with it
