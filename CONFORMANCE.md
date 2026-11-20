@@ -1145,6 +1145,10 @@ A synthetic bean of an array type is refused as its extension describes it: Micr
 an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
 type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
+A dependent bean bound to an interceptor cannot declare a producer of a bean of a normal scope: creating the product
+fails; see "Open points in Micronaut Core". Declare the producer on a bean that is not intercepted, or produce in the
+dependent pseudo-scope.
+
 A bean of a normal scope that injects the product of its own producer method fails to be created, since Micronaut has
 no way to reach the instance under construction from the producer; see "Open points in Micronaut Core". Inject an
 `Instance` of the product, or move the producer to another bean.
@@ -1310,6 +1314,14 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A product of a normal scope declared by an intercepted dependent bean cannot be created.** A dependent bean bound to
+  an interceptor, at its class or at a method, is the subclass Micronaut generates for it. Creating the contextual
+  instance of a product of a normal scope it declares - the instance its client proxy stands in front of - Micronaut
+  finds that intercepted definition as the factory (`Found concrete candidate ... $Definition$Intercepted`), then looks
+  the declaring class up a second time and finds no candidate, and the creation fails with `NoSuchBeanException` for
+  the declaring class (`InterceptedFactoryTest`, the normal scoped case disabled). A dependent product of the same
+  bean is created. The second lookup is Micronaut's own, made as the product's definition reaches the factory instance
+  it invokes the producer on; resolving that instance from the intercepted definition already found would close it.
 - **A scoped bean under construction is not reachable from its own injection (section 5.4).** A bean of a normal scope
   that injects what its own producer method produces - a field or initializer injected with the product - has the
   producer invoked on it through its client proxy while it is being created, and Weld hands the producer the instance
