@@ -23,8 +23,6 @@ import io.micronaut.context.BeanProvider;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.RuntimeBeanDefinition;
 import io.micronaut.context.BeanDependencyGroup;
-import io.micronaut.context.event.BeanDestroyedEvent;
-import io.micronaut.context.event.BeanDestroyedEventListener;
 import io.micronaut.context.event.BeanPreDestroyEvent;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.context.exceptions.NoSuchBeanException;
@@ -54,19 +52,20 @@ import java.util.Optional;
  * parameters, which are injection points and are resolved from the container as any other injection point is.</p>
  *
  * <p>It also closes an instance of an auto-closeable bean whose class implements {@code AutoCloseable} (CDI 5.0,
- * section 2.10): a produced one right after its disposer method, as section 7.3.2 orders it, and any other once
- * Micronaut has destroyed it, which is after its {@code PreDestroy} callbacks. The call is made on the instance
- * itself - the target of a client proxy - so that it is no business method invocation, and what it throws is
- * logged, since destruction may not throw. A synthetic bean is closed by the disposer of its runtime definition
- * instead, which runs before its creation's dependents are released.</p>
+ * section 2.10): a produced one right after its disposer method, as section 7.3.2 orders it, and a managed one
+ * after its {@code PreDestroy} callbacks and before its dependent objects are destroyed (section 7.3.1), in the step
+ * Micronaut runs between the two ({@link BeanPreDestroyEvent#afterPreDestroy(Runnable)}). The call is made on the
+ * instance itself - the target of a client proxy - and, on the subclass Micronaut generated for an intercepted
+ * bean, past its interceptors ({@link BeanDefinition#findUninterceptedMethod(String, Class[])}), so that it is no
+ * business method invocation; what it throws is logged, since destruction may not throw. A synthetic bean is closed
+ * by the disposer of its runtime definition instead, which runs before its creation's dependents are released.</p>
  *
  * @author Denis Stepanov
  * @since 1.0
  */
 @Singleton
 @Internal
-public final class DisposerInvoker implements BeanPreDestroyEventListener<Object>,
-    BeanDestroyedEventListener<Object> {
+public final class DisposerInvoker implements BeanPreDestroyEventListener<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DisposerInvoker.class);
 
@@ -91,6 +90,11 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             // every bean of the context is destroyed through here, and few of them were produced
             if (definition.hasAnnotation(CdiProducer.class)) {
                 closeIfAutoClose(definition, bean);
+            } else if (!(definition instanceof RuntimeBeanDefinition<?>) && bean instanceof AutoCloseable
+                && CdiResolution.isAutoClose(definition)) {
+                // a managed bean is closed after its PreDestroy callbacks, while its dependents are alive; a
+                // synthetic one by the disposer of its runtime definition
+                event.afterPreDestroy(() -> closeManagedBean(definition, bean));
             }
             return bean;
         }
@@ -107,13 +111,21 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
         });
     }
 
-    @Override
-    public void onDestroyed(BeanDestroyedEvent<Object> event) {
-        BeanDefinition<Object> definition = event.getBeanDefinition();
-        // a produced bean was closed after its disposer, before its dependents went, and a synthetic one by the
-        // disposer of its runtime definition
-        if (!definition.hasAnnotation(CdiProducer.class) && !(definition instanceof RuntimeBeanDefinition<?>)) {
-            closeIfAutoClose(definition, event.getBean());
+    /**
+     * Closes an instance of an auto-closeable managed bean as it is destroyed: on the subclass generated for an
+     * intercepted bean past its interceptors, since the call is no business method invocation (CDI 5.0), which a
+     * client's call of {@code close()} is.
+     */
+    private static void closeManagedBean(BeanDefinition<Object> definition, Object bean) {
+        try {
+            Optional<ExecutableMethod<Object, Object>> close = definition.findUninterceptedMethod("close");
+            if (close.isPresent()) {
+                close.get().invoke(bean);
+            } else {
+                ((AutoCloseable) bean).close();
+            }
+        } catch (Exception e) {
+            LOG.error("Closing the auto-closeable bean {} failed", definition.getBeanType().getName(), e);
         }
     }
 

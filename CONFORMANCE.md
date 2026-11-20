@@ -99,21 +99,19 @@ stereotypes while it compiles and recorded on its definition (`CdiBeanAttributes
 producer so that what its class says does not reach it - none of the three is inherited by a producer. A reserve
 that no priority selects is no bean, as an unselected alternative is, and a producer of one is not a producer.
 
-### An auto-closeable class bean is closed once it is destroyed
+### An auto-closeable bean is closed past its interceptors, before its dependents
 
 *CDI 5.0 sections 2.10 and 7.3.1.* `close()` is to be called after the `PreDestroy` callbacks of an
-auto-closeable managed bean and before its dependent objects are destroyed. Micronaut Core destroys a bean as one
-step - pre-destroy listeners, `PreDestroy` methods, the release of the dependents - with no hook between the last
-two, so a class bean is closed by a `BeanDestroyedEventListener`, after its dependents. A produced bean is closed in
-the right place, right after its disposer method, which the container invokes from the pre-destroy listener, and so
-is a synthetic bean, by the disposer of the runtime definition it is registered with, after its extension's disposer. The
-kit's `SimpleBeanLifecycleTest#testDependentsDestroyedAfterPreDestroyAndAutoClose`, which asserts the order, is left
-out by name.
+auto-closeable managed bean and before its dependent objects are destroyed. The pre-destroy listener registers the
+call with `BeanPreDestroyEvent#afterPreDestroy`, which Micronaut Core runs between the bean's `PreDestroy` methods
+and the release of its dependents. A produced bean is closed right after its disposer method, which the container
+invokes from the same listener, and a synthetic bean by the disposer of the runtime definition it is registered
+with, after its extension's disposer.
 
-Calling `close()` on the instance is no business method invocation, so it is not to be intercepted. An intercepted
-bean is the subclass Micronaut generated for it, whose `close()` intercepts wherever it is called from, and Micronaut
-Core offers no way to call the method past its interceptors; `InterceptorInvocationTest#testCloseIsNotInterceptedDuringDestruction`
-is left out by name. Both are open points in Micronaut Core below.
+Calling `close()` on the instance is no business method invocation, so it is not to be intercepted, while a
+client's call of `close()` is. An intercepted bean is the subclass Micronaut generated for it, so the container
+invokes the method `BeanDefinition#findUninterceptedMethod` finds, which runs the class's own `close()` past the
+subclass's interceptors - the method the chain of interceptors itself ends with.
 
 ### Async handlers are found as the application compiles
 
@@ -1081,18 +1079,16 @@ this module's processor, which depends on it, so the two are kept in step by han
 The `tckSuite` task runs the suite of `tck-suite.xml`: the kit's CDI Lite `tests/**` packages — the SE bootstrap,
 the invokers and the CDI 5.0 reserves, eager and auto-closeable beans, asynchronous invokers and synthetic bean
 injection points included — together with the Jakarta Interceptors kit (`interceptors/tests/**`). The kit has 982
-test methods outside `tests/full` (816 in 4.1.0), and 972 of them run, all passing, as part of `check`. The
-ten that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
+test methods outside `tests/full` (816 in 4.1.0), and 974 of them run, all passing, as part of `check`. The
+eight that do not are three methods the kit itself tags `cdi-full` inside Lite packages, which the exclusion of
 that group drops, all three about passivation -
 `event.implicit.ImplicitEventTest#testImplicitEventIsPassivationCapable`,
 `lookup.clientProxy.ClientProxyTest#testSimpleBeanClientProxyIsSerializable` and
-`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the three SE tests above, and four
+`lookup.dynamic.builtin.BuiltinInstanceTest#testInstanceIsPassivationCapable` - the three SE tests above, and two
 left out by name for the differences recorded above, each with its reason in `tck-suite.xml` as well:
 
 | Test | Reason |
 | --- | --- |
-| `implementation.simple.lifecycle.SimpleBeanLifecycleTest#testDependentsDestroyedAfterPreDestroyAndAutoClose` | An auto-closeable class bean is closed after its dependents (no Core hook between `PreDestroy` and the release of dependents) |
-| `interceptors.invocation.InterceptorInvocationTest#testCloseIsNotInterceptedDuringDestruction` | `close()` of an intercepted bean cannot be called past its interceptors |
 | `eager.synthetic.bean.EagerSyntheticBeanTest#testUnqualified`, `#testQualified` | A synthetic bean of a normal scope has no client proxy (known limitation) |
 
 The kit's broken deployments of CDI 5.0 whose packages are not named for it - the async handlers that
@@ -1165,19 +1161,6 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
-- **No destruction step between a bean's `PreDestroy` methods and the release of its dependents (CDI 5.0).**
-  `DefaultBeanContext.destroyRegistration` runs the pre-destroy listeners, the bean's `PreDestroy` methods and then
-  releases the dependents, with nothing to hook between the last two; `@AutoClose` asks for `close()` there. Core's
-  `@Bean(preDestroy = "close")` would call it in the right place, but it takes the method off the bean's advice -
-  a client's call of `close()` would no longer be intercepted - and it needs the method on the declared type, where
-  `@AutoClose` asks about the class of the instance. A disposal step that calls `close()` on an instance that
-  implements `AutoCloseable`, on the target rather than through its interceptors, would close both of the kit tests
-  left out for it.
-- **A method of an intercepted bean cannot be called past its interceptors (CDI 5.0).** An intercepted bean is the
-  subclass Micronaut generates for it, and every call of an advised method goes through the chain. `close()` of an
-  auto-closeable bean called as the bean is destroyed is no business method invocation, so it is not to be
-  intercepted; a way to invoke the superclass's method on the generated subclass - which the generated chain does
-  itself as it ends - would let the container do that.
 - **An implicitly sealed enum reports no permitted subclasses (CDI 5.0 language model).** An enum whose constants
   declare bodies is sealed and permits the anonymous classes of those bodies. javac reports the `sealed` modifier of
   such an enum compiled from source but no permitted subclasses, and `JavaClassElement.isSealed()` and
