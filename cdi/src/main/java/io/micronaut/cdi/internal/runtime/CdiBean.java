@@ -186,6 +186,16 @@ public class CdiBean<T> implements Bean<T> {
      * produced bean in a normal scope is of the subclass Micronaut generates, and holds the type arguments of the
      * type the bean was produced as under that type.
      */
+    /**
+     * The type a producer declares it produces, with the arguments it was written with.
+     *
+     * @param definition The definition of the produced bean
+     * @return The type
+     */
+    public static Argument<?> producedType(BeanDefinition<?> definition) {
+        return producedTypeOf(definition);
+    }
+
     private static Argument<?> producedTypeOf(BeanDefinition<?> definition) {
         Argument<?> declared = definition.getDeclaredBeanType();
         if (definition instanceof ProxyBeanDefinition<?> proxy && proxy.getTargetType() != declared.getType()) {

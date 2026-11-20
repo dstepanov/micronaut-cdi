@@ -272,9 +272,11 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         // declares the producer
         Annotated annotated = producerOf((CdiBean<?>) bean, producer.stringValue("member").orElse(""),
             producer.booleanValue("field").orElse(false));
-        Class<?> produced = ((CdiBean<?>) bean).definition().getBeanType();
+        // the type the producer declares, with its arguments: an observer of ProcessBeanAttributes<List<String>> is
+        // told of a producer of List<String>, and not of one of List<Integer>
+        Argument<?> produced = CdiBean.producedType(((CdiBean<?>) bean).definition());
         fire(observers, new PortableEvents.BeanAttributesEvent(bean, annotated, problems),
-            Argument.of(ProcessBeanAttributes.class, Argument.of(produced)), problems);
+            Argument.of(ProcessBeanAttributes.class, produced), problems);
         fire(observers, new PortableEvents.BeanEvent("ProcessBean", bean, annotated, problems),
             Argument.of(ProcessBean.class, Argument.of(beanClass)), problems);
     }
