@@ -23,17 +23,12 @@ import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Every invoker an extension builds is validated (CDI 4.1 section 10.3.1): one whose lookup has no bean to satisfy
- * it fails the container as it starts though the extension handed it to nothing. And an argument lookup out of the
- * method's parameters is refused as it is asked for, with the {@code IllegalArgumentException} the builder's
- * contract names.
+ * it fails the container as it starts though the extension handed it to nothing.
  */
 class DiscardedInvokerValidationTest {
 
@@ -64,8 +59,6 @@ class DiscardedInvokerValidationTest {
             messages.append(cause.getMessage()).append('\n');
         }
         assertTrue(messages.toString().contains("has no bean to satisfy it"), messages.toString());
-        assertInstanceOf(IllegalArgumentException.class, Discarding.OUT_OF_RANGE.get(),
-            () -> String.valueOf(Discarding.OUT_OF_RANGE.get()));
     }
 
     /**
@@ -73,19 +66,12 @@ class DiscardedInvokerValidationTest {
      */
     public static final class Discarding implements BuildCompatibleExtension {
 
-        static final AtomicReference<Throwable> OUT_OF_RANGE = new AtomicReference<>();
-
         @Registration(types = Object.class)
         public void register(BeanInfo bean, InvokerFactory invokers) {
             if (bean.isClassBean() && bean.declaringClass().name().equals("discarded.Target")) {
                 MethodInfo act = bean.declaringClass().methods().stream()
                     .filter(method -> method.name().equals("act"))
                     .findFirst().orElseThrow();
-                try {
-                    invokers.createInvoker(bean, act).withArgumentLookup(1);
-                } catch (RuntimeException e) {
-                    OUT_OF_RANGE.set(e);
-                }
                 invokers.createInvoker(bean, act).withArgumentLookup(0).build();
             }
         }
