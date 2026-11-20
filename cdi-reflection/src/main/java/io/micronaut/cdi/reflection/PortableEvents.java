@@ -51,6 +51,8 @@ import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.core.reflect.ClassUtils;
 import io.micronaut.core.type.Argument;
 import io.micronaut.reflection.ReflectionArguments;
+import jakarta.enterprise.inject.spi.DefinitionException;
+import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.invoke.AsyncHandler;
 import jakarta.enterprise.invoke.Invoker;
@@ -548,7 +550,24 @@ final class PortableEvents {
         @Override
         public void addObserverMethod(ObserverMethod<?> observerMethod) {
             whileNotifying();
+            if (!overridesNotify(observerMethod)) {
+                // section 11.5.3: an observer method that implements neither notify method is a definition error
+                problems.add(new DefinitionException("The observer method " + observerMethod + " implements neither "
+                    + "notify(T) nor notify(EventContext<T>)"));
+                return;
+            }
             observers.registerSynthetic(observerMethod);
+        }
+
+        private static boolean overridesNotify(ObserverMethod<?> observerMethod) {
+            Class<?> type = observerMethod.getClass();
+            try {
+                return type.getMethod("notify", Object.class).getDeclaringClass() != ObserverMethod.class
+                    || type.getMethod("notify", EventContext.class).getDeclaringClass() != ObserverMethod.class;
+            } catch (NoSuchMethodException e) {
+                // both are declared by the interface every observer method implements
+                return true;
+            }
         }
 
         @Override
