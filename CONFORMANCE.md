@@ -35,7 +35,7 @@ visible in a test report as what passes.
 | 5.2 | The rules of resolution applied to types and qualifiers on their own | `CdiAssignability` |
 | 11.1.9 | Interceptor resolution through the bean container | `CdiBeanContainer` |
 | 9.2 | Firing an event, synchronously and asynchronously, and narrowing one with `select` | `CdiEvent` |
-| 9.3 | Observer resolution by the event's type and qualifiers | `ObserverRegistry`, `CdiAssignability` |
+| 9.3 | Observer resolution by the event's type and qualifiers, a raw event type observed by a parameterized type only where its every parameter is an unbounded type variable or `Object`, not a wildcard (9.3.1) | `ObserverRegistry`, `CdiAssignability` |
 | 9.4 | Observer methods, including static ones, `Reception.IF_EXISTS` and `@Priority` | `ObserverVisitor`, `CdiObserverMethod` |
 | 9.5 | Observer notification, in ascending order of priority | `ObserverRegistry` |
 | 9.6 | The container lifecycle events: `Startup`, `Shutdown`, `@Initialized`, `@BeforeDestroyed`, `@Destroyed` | `ContainerLifecycle` |
