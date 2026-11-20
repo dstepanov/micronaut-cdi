@@ -75,11 +75,20 @@ visible in a test report as what passes.
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
 | 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
+| 5.5.8 (5.0) | Bean metadata: the dependent `@Default Bean` of the bean an injection point belongs to - a class bean at a field, constructor or initializer, the produced bean at a parameter of its producer method, a synthetic bean through `SyntheticInjections` - and the `@Default Interceptor` of an interceptor class, each the container's own `Bean` or `Interceptor` of it, read off the resolution path as the bean is created; the `@Intercepted Bean` is not yet implemented, see below | `CdiBeanMetadataFactory`, `CdiInterceptorMetadataFactory`, `ContainerInjectionVisitor` |
 
 ## Not yet implemented
 
 The transaction phases an observer may name (9.4) have no transactions to observe here and are notified as
 if `IN_PROGRESS`.
+
+The `@Intercepted Bean` of section 5.5.8 - the metadata of the bean an interceptor instance intercepts - is not
+built. The processor accepts the point on an interceptor as written `Bean<?>` and refuses it elsewhere, but creating
+an interceptor instance that declares one fails with an `UnsupportedOperationException`. The metadata of the bean an
+injection point belongs to is read off the resolution path, and an interceptor instance is created by the Jakarta
+Interceptors advice through the `BeanDependencyResolver` Micronaut hands it, whose resolution begins a path of its
+own: it names the interceptor's own construction and nothing of the bean being intercepted, whose
+`InterceptionTarget` only the advice is handed. See "Open points in Micronaut Core".
 
 ## Differences
 
@@ -1178,6 +1187,13 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A dependent created through a bean's `BeanDependencyResolver` does not know whose dependent it is (CDI 5.0,
+  section 5.5.8).** The Jakarta Interceptors advice of a bean creates the bean's interceptor instances with
+  `dependencies.getBean(...)`, and the resolution that starts has a path of its own, a null root definition and no
+  attribute naming the bean that owns the resolver, so the built-in `@Intercepted Bean` cannot tell which bean an
+  interceptor instance intercepts. Either a resolver that carries its owner's resolution path into the resolutions it
+  starts, or one that exposes the definition it was created for (the `InterceptionTarget` of the advice) to the
+  resolution context, would let `CdiBeanMetadataFactory` answer it as it answers the `@Default Bean`.
 - **No destruction step between a bean's `PreDestroy` methods and the release of its dependents (CDI 5.0).**
   `DefaultBeanContext.destroyRegistration` runs the pre-destroy listeners, the bean's `PreDestroy` methods and then
   releases the dependents, with nothing to hook between the last two; `@AutoClose` asks for `close()` there. Core's

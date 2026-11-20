@@ -56,7 +56,7 @@ import java.util.Map;
  *
  * <p>Only the beans of the specification are validated: a bean of Micronaut's own that shares the context is
  * resolved by Micronaut's rules. Kinds that resolve late by design - {@code Instance}, {@code Provider},
- * {@code Event}, the injection point itself - are left to their own lateness, and so are injection points
+ * {@code Event}, the injection point itself, the bean and interceptor metadata - are left to their own lateness, and so are injection points
  * marked nullable. So are the types Micronaut resolves without a bean definition: the context itself, under each
  * interface it is handed out as, and Micronaut's own injection point. Container injection points require a bean of their full declared type, just like other
  * CDI injection points.</p>
