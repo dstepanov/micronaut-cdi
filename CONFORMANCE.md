@@ -255,7 +255,7 @@ injection point is validated whatever package its type is in: what the container
 the constructor of the subclass Micronaut generates for an intercepted bean is told by what it is, and the bean
 manager, a built-in bean, is handed the context it belongs to. A disposer's parameters are validated as the
 overload its producer recorded, which is the one invoked. Collections, arrays, streams, maps and `Optional`
-injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied. An
+injection require a bean of the full declared type. Explicitly nullable injection may be unsatisfied, though not ambiguous. An
 injection point of `Instance`, `Provider`, `Event` or `InjectionPoint`, or of their Micronaut forms, resolves
 late by design and is not validated, and neither is one Micronaut resolves itself - the context, a value of the
 configuration - which the processor leaves unmarked.

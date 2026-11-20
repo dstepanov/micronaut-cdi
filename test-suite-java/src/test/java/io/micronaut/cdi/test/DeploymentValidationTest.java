@@ -234,6 +234,31 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void anAmbiguousNullableInjectionPointIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.inject.Inject
+                @io.micronaut.core.annotation.Nullable
+                Service service;
+
+                public interface Service {
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class First implements Service {
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class Second implements Service {
+                }
+            }
+            """, "is ambiguous");
+    }
+
+    @Test
     void missingOptionalAndCollectionProducersAreDeploymentProblems() {
         for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
             "java.util.Set<Element>", "java.util.Collection<Element>", "java.util.Map<String, Element>",

@@ -263,7 +263,7 @@ final class DeploymentValidation {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void validateByMicronaut(BeanDefinition<?> definition, Argument<?> argument) {
         try {
-            if (container.micronautDefinitionOf((Argument) argument, null) == null) {
+            if (container.micronautDefinitionOf((Argument) argument, null) == null && !argument.isNullable()) {
                 problems.add(new DeploymentException("The injection point " + argument + " of "
                     + definition.getBeanType().getName() + " has no bean to satisfy it (CDI 4.1 section 5.2.2)"));
             }
@@ -283,10 +283,6 @@ final class DeploymentValidation {
             // a point Micronaut resolves itself, which the processor left unmarked: a lookup, an event, the
             // injection point metadata, the context, a value of the configuration; or one a provider of the
             // application's own supplies, which needs no bean
-            return;
-        }
-        if (argument.isNullable()) {
-            // An explicitly nullable injection point may have no bean.
             return;
         }
         // what the point is resolved to as the bean is created
@@ -309,10 +305,14 @@ final class DeploymentValidation {
                         + unproxyable + " (CDI 4.1 section 5.4)"));
                 }
             }
-            case Selection.Unselected.UNSATISFIED ->
-                problems.add(new DeploymentException("The injection point " + argument + " of "
-                    + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
-                    + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+            case Selection.Unselected.UNSATISFIED -> {
+                // an explicitly nullable injection point may have no bean, but not two
+                if (!argument.isNullable()) {
+                    problems.add(new DeploymentException("The injection point " + argument + " of "
+                        + definition.getBeanType().getName() + " has no bean to satisfy it, qualified "
+                        + CdiQualifier.declared(argument.getAnnotationMetadata()) + " (CDI 4.1 section 5.2.2)"));
+                }
+            }
             case Selection.Unselected.MICRONAUT -> validateByMicronaut(definition, argument);
         }
     }
