@@ -2,6 +2,8 @@ package org.example.cdi.se;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.BeforeDestroyed;
+import jakarta.enterprise.context.Destroyed;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Shutdown;
 import jakarta.enterprise.event.Startup;
@@ -27,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 /**
  * An SE bootstrap that fails as the container starts does not leave the failed container current: it is not the
  * container {@code CDI.current()} resolves to, a failure whose causes refer to each other is still reported, and what
- * was created before the failure is destroyed, the container telling nothing of a shutdown it never started.
+ * was created before the failure is destroyed, the container telling nothing of a shutdown it never started but
+ * announcing the destruction of the application context it announced was initialized.
  */
 class SeFailedStartupTest {
 
@@ -94,6 +97,19 @@ class SeFailedStartupTest {
                 EVENTS.add("observer destroyed");
             }
         }
+
+        // static, so that telling them creates nothing of a context that is going down
+        static void onBeforeDestroyed(@Observes @BeforeDestroyed(ApplicationScoped.class) Object event) {
+            if (failWithResources) {
+                EVENTS.add("before destroyed");
+            }
+        }
+
+        static void onDestroyed(@Observes @Destroyed(ApplicationScoped.class) Object event) {
+            if (failWithResources) {
+                EVENTS.add("destroyed");
+            }
+        }
     }
 
     @Test
@@ -107,10 +123,15 @@ class SeFailedStartupTest {
             failWithResources = false;
         }
         // the singleton and the application scoped instance the start created are destroyed; the container,
-        // which never told the application it started, tells it of no shutdown, and is not started again by it
-        assertEquals(Set.of("startup", "resource closed", "observer destroyed"), Set.copyOf(EVENTS));
-        assertEquals(1, EVENTS.stream().filter("startup"::equals).count(), EVENTS::toString);
-        assertEquals(3, EVENTS.size(), EVENTS::toString);
+        // which never told the application it started, tells it of no shutdown, and is not started again by it.
+        // The application context, which the application was told was initialized, is destroyed between its two
+        // events, each told once (section 6.7.2)
+        assertEquals(Set.of("startup", "before destroyed", "observer destroyed", "destroyed", "resource closed"),
+            Set.copyOf(EVENTS));
+        assertEquals(5, EVENTS.size(), EVENTS::toString);
+        assertEquals(List.of("startup", "before destroyed", "observer destroyed", "destroyed"),
+            EVENTS.stream().filter(event -> !event.equals("resource closed")).toList(),
+            "the application context is destroyed between its two events: " + EVENTS);
     }
 
     @Test

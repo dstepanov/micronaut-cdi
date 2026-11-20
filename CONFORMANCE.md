@@ -1245,9 +1245,12 @@ own rather than the first one alone.
 - **A failed start is rolled back through an internal API.** The SE bootstrap rolls a failed start back with
   `DefaultBeanContext.stopFailedStart`, which destroys the singletons and scoped beans the start created - the
   container among them, which takes itself off `CDI.current()` - and stops the environment (`SeFailedStartupTest`);
-  the API is `@Internal @Experimental` in Core. The shutdown event of the rollback tells the application nothing
-  where it was never told the container started: `ContainerLifecycle` fires `Shutdown` and the application
-  context's events only after it fired `Startup`, and does nothing where the event is what creates it. Outside the
+  the API is `@Internal @Experimental` in Core. The shutdown event of the rollback fires `Shutdown` only where
+  `Startup` was fired to its end, and the application context's `BeforeDestroyed` and `Destroyed` around its
+  destruction only where its `Initialized` was fired (section 6.7.2), as Quarkus' ArC does: a failing eager bean or
+  `Startup` observer has the application context's destruction announced, and no `Shutdown`. `ContainerLifecycle`
+  records the announcement on the bean context, since the rollback's event is listened to by a new instance of it,
+  the failed one never having become a singleton, and does nothing else where the event is what creates it. Outside the
   SE bootstrap - a plain `ApplicationContext.run()` whose start fails after the container was created - it is for
   whoever started the context to roll it back; until it does, `CDI.current()` passes over, and lets go of, a
   container whose context neither runs nor is starting (`DefaultBeanContext.isStoppingOrStopped`), so it resolves to
