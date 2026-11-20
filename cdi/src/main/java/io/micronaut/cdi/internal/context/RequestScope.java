@@ -260,7 +260,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
             });
         } finally {
             if (begun.get()) {
-                destroyedEvent(false);
+                destroyedEvent(instances.endTold().get());
             }
         }
     }
@@ -554,7 +554,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
                 activation.end();
             } finally {
                 if (ended || failed) {
-                    destroyedEvent(false);
+                    destroyedEvent(activation.instances().endTold().get());
                 }
             }
         }
@@ -578,7 +578,7 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     private Instances newInstances() {
         Instances instances = new Instances(this, new RequestBeans(), new AtomicBoolean(), new AtomicBoolean(),
-            new AtomicBoolean());
+            new AtomicBoolean(), new AtomicBoolean());
         live.add(instances);
         return instances;
     }
@@ -596,6 +596,9 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         if (!claim(instances)) {
             return false;
         }
+        // where the container has not begun to stop as the end begins to tell the request's observers, the end tells
+        // them all of it, the Destroyed as well, however long an observer holds it up while the container stops
+        instances.endTold().set(!stopping);
         try {
             // fired while the request is still being handled, which is what "before" means
             beforeDestroyedEvent(false);
@@ -721,9 +724,11 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * @param ended      Whether the request has ended, its beans destroyed
      * @param destroying Whether the destruction of the request has begun, which happens once
      * @param told       Whether its observers are or were told it was initialized, and so are told it is destroyed
+     * @param endTold    Whether its own end began telling its observers it is about to be destroyed, and so tells them
+     *                   it was, whatever the container has begun meanwhile
      */
     private record Instances(RequestScope owner, RequestBeans beans,
-                             AtomicBoolean ended, AtomicBoolean destroying, AtomicBoolean told)
+                             AtomicBoolean ended, AtomicBoolean destroying, AtomicBoolean told, AtomicBoolean endTold)
         implements PropagatedContextElement {
 
         // one request is one object: the generated equality would compare the bean maps, making every

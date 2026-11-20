@@ -1118,8 +1118,9 @@ It is told `@BeforeDestroyed(RequestScoped.class)`, its beans are destroyed whil
 `@Destroyed(RequestScoped.class)`, as its own end would have told it, where its observers were told, or are being
 told, it was initialized (`RequestDestructionTest`). A request begun after that, by a shutdown callback or a bean as
 it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
-end that has begun telling its observers is left to finish, even past the close, and then tells a context that
-stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
+end that has begun telling its observers is left to finish, even past the close: one that began telling them before
+the container began to stop tells them the request was destroyed as well (`RequestEndingAtShutdownTest`), and a
+context that has stopped is told nothing more. A thread whose activated request the container destroyed takes the activation out of its
 propagated context as it deactivates, and is then told the context is not active; where something was propagated
 on the thread after it - a request begun since in another container, say - the activation is left in place, since
 ending it would take out what came after it too (`ControllerAfterShutdownTest`).
