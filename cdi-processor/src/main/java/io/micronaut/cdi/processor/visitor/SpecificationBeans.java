@@ -176,15 +176,6 @@ public final class SpecificationBeans {
     }
 
     /**
-     * The disposer method of a producer, and the position of its disposed parameter.
-     *
-     * @param method            The disposer method
-     * @param disposedParameter The position of its disposed parameter
-     */
-    public record Disposer(MethodElement method, int disposedParameter) {
-    }
-
-    /**
      * The disposer method of the class that disposes of what the producer produces (section 3.4.3), matched the
      * way the producer's own compilation matched it.
      *
@@ -322,5 +313,14 @@ public final class SpecificationBeans {
             }
         }
         return false;
+    }
+
+    /**
+     * The disposer method of a producer, and the position of its disposed parameter.
+     *
+     * @param method            The disposer method
+     * @param disposedParameter The position of its disposed parameter
+     */
+    public record Disposer(MethodElement method, int disposedParameter) {
     }
 }

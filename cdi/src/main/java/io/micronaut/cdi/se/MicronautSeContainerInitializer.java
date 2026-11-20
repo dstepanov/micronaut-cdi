@@ -99,6 +99,10 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     @Internal
     public static final String RESTRICTED_CLASSPATH = "micronaut.cdi.se.restricted-classpath";
 
+    private static final String BEANS_XML = "META-INF/beans.xml";
+    private static final Pattern DISCOVERS_NOTHING =
+        Pattern.compile("bean-discovery-mode\\s*=\\s*[\"']\\s*none\\s*[\"']");
+
     private final Set<String> beanClasses = new LinkedHashSet<>();
     private final Set<String> packages = new LinkedHashSet<>();
     private final Set<String> recursivePackages = new LinkedHashSet<>();
@@ -112,10 +116,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     private final Set<String> buildCompatibleExtensions = new LinkedHashSet<>();
 
     private boolean discoveryDisabled;
-    private static final String BEANS_XML = "META-INF/beans.xml";
-    private static final Pattern DISCOVERS_NOTHING =
-        Pattern.compile("bean-discovery-mode\\s*=\\s*[\"']\\s*none\\s*[\"']");
-
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     @Override
@@ -308,19 +308,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 throw said;
             }
             throw e;
-        }
-    }
-
-    /**
-     * The check that every build compatible extension handed to the bootstrap is one the compilation ran, as the
-     * container starts.
-     *
-     * @param initializer The bootstrap
-     */
-    private record ExtensionsRanCheck(MicronautSeContainerInitializer initializer) implements StartCheck {
-        @Override
-        public void check(BeanContext beanContext) {
-            initializer.checkBuildCompatibleExtensionsRan(beanContext);
         }
     }
 
@@ -585,5 +572,18 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         }
         int inner = simple.indexOf('$');
         return packagePrefix + (inner < 0 ? simple : simple.substring(0, inner));
+    }
+
+    /**
+     * The check that every build compatible extension handed to the bootstrap is one the compilation ran, as the
+     * container starts.
+     *
+     * @param initializer The bootstrap
+     */
+    private record ExtensionsRanCheck(MicronautSeContainerInitializer initializer) implements StartCheck {
+        @Override
+        public void check(BeanContext beanContext) {
+            initializer.checkBuildCompatibleExtensionsRan(beanContext);
+        }
     }
 }
