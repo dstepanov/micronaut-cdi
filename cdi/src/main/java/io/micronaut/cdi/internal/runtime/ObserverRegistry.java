@@ -260,6 +260,32 @@ public final class ObserverRegistry {
     }
 
     /**
+     * Notifies the observer methods an event notifies, in order, for as long as the context has not stopped: a
+     * notification still under way on another thread as the container closes leaves the observers after the one it
+     * is in untold, since they could not be resolved through a context that has stopped. What the container fires on
+     * its own behalf at any moment - a request beginning or ending - is notified this way.
+     *
+     * @param event           The event
+     * @param declaredType    The type the event was declared as
+     * @param eventQualifiers The qualifiers the event was fired with
+     */
+    public void notifyObserversWhileRunning(Object event, Argument<?> declaredType, Set<Annotation> eventQualifiers) {
+        if (ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
+            // nothing of the event can be resolved through a context that has stopped, its type included
+            return;
+        }
+        CdiTypes.EventType eventType = CdiTypes.eventTypeAndClosureOf(typeIndex(), event.getClass(), declaredType);
+        List<CdiQualifier> qualifiers = CdiQualifier.ofInstances(types(), eventQualifiers);
+        EventMetadata metadata = new CdiEventMetadata(beanContext, qualifiers, null, eventType.type());
+        for (ObserverMethod<?> observer : resolve(eventType.type(), eventType.above(), qualifiers, false)) {
+            if (ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
+                return;
+            }
+            ((CdiNotifiable) observer).notifyWith(event, metadata);
+        }
+    }
+
+    /**
      * Notifies the observer methods an event notifies, in order, telling each where the event came from.
      *
      * @param event           The event

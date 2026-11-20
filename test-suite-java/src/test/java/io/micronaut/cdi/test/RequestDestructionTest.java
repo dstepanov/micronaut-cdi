@@ -5,6 +5,7 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.propagation.PropagatedContext;
 import io.micronaut.core.propagation.PropagatedContextElement;
 import jakarta.annotation.PreDestroy;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.ContextNotActiveException;
@@ -16,6 +17,7 @@ import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.context.control.RequestContextController;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import jakarta.interceptor.Interceptor;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +78,28 @@ class RequestDestructionTest {
         void destroyed(@Observes @Destroyed(RequestScoped.class) Object event) {
             if (recording) {
                 EVENTS.add("destroyed");
+            }
+        }
+    }
+
+    /**
+     * Observers of a request's lifecycle told after {@link Lifecycle}'s, in a bean of a normal scope: a notification
+     * still under way as the container closes reaches them only through the stopped context, which tells no more of
+     * them rather than failing the request's work.
+     */
+    @ApplicationScoped
+    public static class LateLifecycle {
+        void initialized(@Observes @Priority(Interceptor.Priority.APPLICATION + 900) @Initialized(RequestScoped.class)
+                         Object event) {
+            if (recording && initializedReached != null) {
+                EVENTS.add("late initialized");
+            }
+        }
+
+        void beforeDestroyed(@Observes @Priority(Interceptor.Priority.APPLICATION + 900)
+                             @BeforeDestroyed(RequestScoped.class) Object event) {
+            if (recording && beforeDestroyedReached != null) {
+                EVENTS.add("late before destroyed");
             }
         }
     }

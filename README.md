@@ -257,14 +257,13 @@ The boundary is checked while the modules compile, by the `NoReflection` check o
 check matches the method a call resolves to and names the kind of reflection it reaches for. The processor, the
 language model it runs inside javac, and
 `micronaut-cdi-reflection` are allowed all of it. In `micronaut-cdi` and `micronaut-cdi-el` no class or package is
-allowed any, and no call is suppressed in the source. What `micronaut-cdi` allows is a list of calls, none of which
-looks anything up on a class: the accessors of a `java.lang.reflect.Type` that was handed in - the raw type and
-arguments of a `ParameterizedType`, the bounds of a `TypeVariable` and of a `WildcardType`, the component of a
-`GenericArrayType` - since the specification's interfaces are written in that type, and the constructors of the
-container's own implementations of those interfaces. Inside the container a type is a Micronaut `Argument`: a
-`Type` is read into one where a program hands it in and made from one where the specification reports it, both
-in the package `io.micronaut.cdi.internal.type`. The list is in [cdi/build.gradle](cdi/build.gradle).
-Reflection anywhere else fails the build.
+allowed any, and neither allows any call: [cdi/build.gradle](cdi/build.gradle) lists none. Inside the container a
+type is a Micronaut `Argument`: a `java.lang.reflect.Type` a program hands in is read into one by core's
+`Argument.of(Type)`, which calls only the accessors of the type, and a type the specification reports is the one
+Micronaut renders an argument into (`Argument.asType()`), which reads no class either. The one call suppressed in
+the source is the service loading of `MicronautCDIProvider`, which hands `CDI.current()` over to the providers of
+other implementations through the JDK's `ServiceLoader`, as the specification's API finds them. Reflection
+anywhere else fails the build.
 
 The check reads the sources written here, not what is generated, nor what Micronaut Core does when it is called,
 so `micronaut-cdi` alone is not free of reflection at runtime. What remains, and why:

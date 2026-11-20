@@ -18,7 +18,6 @@ package io.micronaut.cdi.internal.context;
 import io.micronaut.cdi.internal.metadata.CdiRequestScope;
 import io.micronaut.cdi.internal.runtime.ContainerLifecycle;
 import io.micronaut.cdi.internal.runtime.ObserverRegistry;
-import io.micronaut.context.BeanContext;
 import io.micronaut.context.scope.AbstractConcurrentCustomScope;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
@@ -72,7 +71,6 @@ import java.util.function.Supplier;
 @Internal
 public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequestScope> {
 
-    private final BeanContext beanContext;
     /**
      * The observers the lifecycle events of a request are fired to, held rather than looked up: a request the
      * container destroys as it goes down tells the registry it was created with, whichever of the two Micronaut
@@ -100,11 +98,10 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
     private final Predicate<Instances> liveRequestOfThisScope =
         instances -> instances.owner() == this && !instances.ended().get();
 
-    public RequestScope(BeanContext beanContext, ObserverRegistry observers) {
+    public RequestScope(ObserverRegistry observers) {
         // each bean is created under a lock of its own, so that a creation may wait for another thread creating
         // another bean of the scope
         super(CdiRequestScope.class, true);
-        this.beanContext = beanContext;
         this.observers = observers;
     }
 
@@ -153,12 +150,9 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * no request object to hand over.
      */
     private void requestContextEvent(Annotation moment) {
-        if (ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
-            // a context that stopped, or never started, has no observers left to tell: a request whose work ends
-            // after the container closed ends quietly
-            return;
-        }
-        observers.notifyObservers(new Object(), Argument.OBJECT_ARGUMENT, Set.of(moment), false);
+        // a context that stopped, or never started, has no observers left to tell: a request whose work ends after
+        // the container closed ends quietly, and one whose observers are being told as it closes tells no more of them
+        observers.notifyObserversWhileRunning(new Object(), Argument.OBJECT_ARGUMENT, Set.of(moment));
     }
 
     private void initializedEvent() {
