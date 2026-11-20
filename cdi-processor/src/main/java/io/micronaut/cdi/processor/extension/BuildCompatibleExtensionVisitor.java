@@ -202,6 +202,19 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
     }
 
     /**
+     * Reports a definition error or a deployment problem an extension's phase found as a compilation error: a
+     * deployment problem with {@link VisitorMessages#DEPLOYMENT_PROBLEM} ahead of it, so that a reader of the
+     * compilation tells it from a definition error, unless it already says so.
+     */
+    private static void report(VisitorContext context, RuntimeException problem) {
+        String message = String.valueOf(problem.getMessage());
+        if (problem instanceof DeploymentException && !message.startsWith(VisitorMessages.DEPLOYMENT_PROBLEM)) {
+            message = VisitorMessages.DEPLOYMENT_PROBLEM + message;
+        }
+        context.fail(message, null);
+    }
+
+    /**
      * What the discovery phase said and which classes the compiler visited, which the compilation made as it
      * started this visitor.
      */
@@ -230,7 +243,15 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
         // others that it never starts. The discovery phase runs once, as it is first started
         DiscoveredClasses started = discovered;
         if (started == null) {
-            ExtensionMethods loaded = ExtensionMethods.load(context, asyncHandlers);
+            ExtensionMethods loaded;
+            try {
+                loaded = ExtensionMethods.load(context, asyncHandlers);
+            } catch (DefinitionException | DeploymentException e) {
+                // a malformed extension method is a definition error of the deployment, reported as any other
+                // rather than left to escape as a visitor that failed to start
+                report(context, e);
+                return;
+            }
             extensions = loaded;
             useBuildServicesOf(context);
             if (!loaded.isEmpty() && context.getLanguage() == VisitorContext.Language.KOTLIN) {
@@ -243,7 +264,13 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             started = new DiscoveredClasses();
             discovered = started;
             started.compilation(context);
-            loaded.discover(started, context);
+            try {
+                loaded.discover(started, context);
+            } catch (DefinitionException | DeploymentException e) {
+                // what the discovery phase registered may be a problem of the deployment - a context for a global
+                // scope - reported as any other
+                report(context, e);
+            }
         } else {
             useBuildServicesOf(context);
         }
@@ -308,8 +335,14 @@ public final class BuildCompatibleExtensionVisitor implements TypeElementVisitor
             return;
         }
         Messages messages = new VisitorMessages(context);
-        for (ClassElement element : started.takeUnregistered()) {
-            register(element, messages, context);
+        try {
+            for (ClassElement element : started.takeUnregistered()) {
+                register(element, messages, context);
+            }
+        } catch (DefinitionException | DeploymentException e) {
+            // an invoker the registration phase built that cannot invoke its method is a deployment problem, reported
+            // as any other rather than left to escape as a visitor that failed to finish its round
+            report(context, e);
         }
         if (!started.contributors().isEmpty() && started.firstRoundFinished()) {
             new ScannedClassRegistrar(this, started).importScannedClasses(context);
