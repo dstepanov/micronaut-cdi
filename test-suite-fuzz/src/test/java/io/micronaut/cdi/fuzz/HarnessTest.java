@@ -213,6 +213,13 @@ class HarnessTest {
         Divergence divergence = TraceComparison.compare(micronaut, weld);
         assertTrue(KnownDifferences.match(scenario, divergence, micronaut, weld).isPresent());
 
+        RunResult intercepted = RunResult.deployed(List.of("#X5", "{", "I1.preDestroy@B1", "each=P1", "produce P1", "}",
+            "#shutdown", "{", "}"));
+        RunResult weldIntercepted = RunResult.deployed(List.of("#X5", "{", "each=P1", "produce P1", "}", "#shutdown",
+            "{", "I1.preDestroy@B1", "}"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(intercepted, weldIntercepted), intercepted,
+            weldIntercepted).isPresent());
+
         RunResult missing = RunResult.deployed(List.of("#X5", "{", "}", "#shutdown", "{", "B1.preDestroy@B1", "}"));
         assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(missing, weld), missing, weld).isEmpty());
     }

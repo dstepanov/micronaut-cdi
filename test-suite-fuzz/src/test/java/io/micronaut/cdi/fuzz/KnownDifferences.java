@@ -87,7 +87,7 @@ final class KnownDifferences {
      */
     static boolean destroyedByItsProducer(Scenario scenario, RunResult micronaut, RunResult weld) {
         for (Scenario.BeanDef bean : scenario.beans()) {
-            if (bean.scope() != Scenario.Scope.APPLICATION || !(bean.preDestroy() || bean.postConstruct())) {
+            if (bean.scope() != Scenario.Scope.APPLICATION) {
                 continue;
             }
             boolean producesAnotherScope = bean.producers().stream()
@@ -95,11 +95,12 @@ final class KnownDifferences {
             if (!producesAnotherScope) {
                 continue;
             }
-            // destroyed, or created again: a bean with no PreDestroy shows it by its second PostConstruct
-            String destroyed = bean.name() + ".preDestroy@";
-            String created = bean.name() + ".postConstruct@";
-            if (beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.startsWith(destroyed))
-                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.startsWith(destroyed))
+            // destroyed, or created again: a bean with no PreDestroy shows it by its second PostConstruct. A callback
+            // is logged by the class or interceptor declaring it, at the instance it runs on
+            String destroyed = ".preDestroy@" + bean.name();
+            String created = ".postConstruct@" + bean.name();
+            if (beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.endsWith(destroyed))
+                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.endsWith(destroyed))
                 || count(micronaut.trace(), created) > count(weld.trace(), created)) {
                 return true;
             }
@@ -128,8 +129,8 @@ final class KnownDifferences {
             .filter(line -> !OTHER_NOTIFICATION.matcher(line).matches()).toList());
     }
 
-    private static long count(List<String> trace, String prefix) {
-        return trace.stream().filter(line -> line.startsWith(prefix)).count();
+    private static long count(List<String> trace, String suffix) {
+        return trace.stream().filter(line -> line.endsWith(suffix)).count();
     }
 
     private static List<String> beforeShutdown(List<String> trace) {
