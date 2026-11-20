@@ -27,6 +27,9 @@ import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -170,6 +173,42 @@ public final class SpecificationBeans {
      */
     public static boolean isProducer(Element member) {
         return member.hasDeclaredAnnotation(Cdi.PRODUCES);
+    }
+
+    /**
+     * The disposer method of a producer, and the position of its disposed parameter.
+     *
+     * @param method            The disposer method
+     * @param disposedParameter The position of its disposed parameter
+     */
+    public record Disposer(MethodElement method, int disposedParameter) {
+    }
+
+    /**
+     * The disposer method of the class that disposes of what the producer produces (section 3.4.3), matched the
+     * way the producer's own compilation matched it.
+     *
+     * @param declaring The class that declares the producer
+     * @param producer  The producer
+     * @param context   The compilation
+     * @return The disposer, or {@code null} where none disposes of what the producer produces
+     */
+    public static @Nullable Disposer disposerOf(ClassElement declaring, MemberElement producer,
+                                                VisitorContext context) {
+        List<MethodElement> disposers = new ArrayList<>(1);
+        for (MethodElement method : declaring.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())) {
+            for (ParameterElement parameter : method.getParameters()) {
+                if (parameter.hasDeclaredAnnotation(Cdi.DISPOSES)) {
+                    disposers.add(method);
+                    break;
+                }
+            }
+        }
+        if (disposers.isEmpty()) {
+            return null;
+        }
+        DisposerMatcher.DisposerCandidate found = DisposerMatcher.of(disposers).find(producer, context);
+        return found == null ? null : new Disposer(found.method(), found.disposedParameter());
     }
 
     /**

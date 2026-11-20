@@ -27,6 +27,11 @@ import io.micronaut.cdi.lang.model.ast.ElementTypes;
 import io.micronaut.cdi.internal.metadata.CdiScope;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.visitor.BeanTypesVisitor;
+import io.micronaut.cdi.processor.visitor.SpecificationBeans;
+import io.micronaut.inject.ast.ConstructorElement;
+import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.ParameterElement;
+import jakarta.enterprise.lang.model.declarations.ParameterInfo;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -363,22 +368,110 @@ public sealed class ElementBeanInfo implements BeanInfo permits ElementIntercept
 
     @Override
     public @Nullable DisposerInfo disposer() {
-        // the disposer of a produced bean is resolved while the producer is compiled, and is reported by the
-        // method it resolved to rather than by a model of it
-        return null;
+        MemberElement producer = producer();
+        if (producer == null) {
+            return null;
+        }
+        SpecificationBeans.Disposer disposer =
+            SpecificationBeans.disposerOf(declaringElement(), producer, context.visitorContext());
+        if (disposer == null) {
+            return null;
+        }
+        MethodInfo method = new ElementMethodInfo(disposer.method(), declaringClass(), context);
+        return new ElementDisposerInfo(method, method.parameters().get(disposer.disposedParameter()));
     }
 
+    /**
+     * The stereotypes the bean declares, directly or through another stereotype (section 2.7.1), each read off
+     * its annotation type. A producer declares its own, not its class's.
+     */
     @Override
     public Collection<StereotypeInfo> stereotypes() {
-        // a stereotype carries a scope, qualifiers and a name, each of which is reported on the bean itself
-        return List.of();
+        List<StereotypeInfo> stereotypes = new ArrayList<>();
+        for (String name : declared().getAnnotationNamesByStereotype(Cdi.STEREOTYPE)) {
+            if (name.startsWith("io.micronaut.")) {
+                continue;
+            }
+            context.visitorContext().getClassElement(name).ifPresent(annotation ->
+                stereotypes.add(new ElementStereotypeInfo(name, annotation.getAnnotationMetadata(), context)));
+        }
+        return stereotypes;
     }
 
+    /**
+     * The injection points of the bean (section 5.1): the injected fields, the parameters of the bean constructor
+     * and of the initializer methods of a class bean, its superclasses' included; the parameters of a producer
+     * method, and the parameters of its disposer method other than the disposed one.
+     */
     @Override
     public Collection<InjectionPointInfo> injectionPoints() {
-        // the injection points of a bean are resolved by Micronaut as it injects them, and are not described
-        // again here
-        return List.of();
+        List<InjectionPointInfo> points = new ArrayList<>();
+        MemberElement producer = producer();
+        if (producer == null) {
+            ClassElement bean = declaringElement();
+            for (FieldElement field : bean.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
+                if (SpecificationBeans.isInjected(field)) {
+                    points.add(new ElementInjectionPointInfo(ElementTypes.of(field.getGenericType(), context),
+                        qualifiersOf(field), new ElementFieldInfo(field, classInfoOf(field), context)));
+                }
+            }
+            for (ConstructorElement constructor : bean.getEnclosedElements(ElementQuery.CONSTRUCTORS)) {
+                if (SpecificationBeans.isInjected(constructor)) {
+                    addParameters(points, constructor, -1);
+                }
+            }
+            for (MethodElement method : bean.getEnclosedElements(ElementQuery.ALL_METHODS)) {
+                if (SpecificationBeans.isInjected(method)) {
+                    addParameters(points, method, -1);
+                }
+            }
+        } else {
+            if (producer instanceof MethodElement method) {
+                addParameters(points, method, -1);
+            }
+            SpecificationBeans.Disposer disposer =
+                SpecificationBeans.disposerOf(declaringElement(), producer, context.visitorContext());
+            if (disposer != null) {
+                addParameters(points, disposer.method(), disposer.disposedParameter());
+            }
+        }
+        return points;
+    }
+
+    private void addParameters(List<InjectionPointInfo> points, MethodElement method, int skipped) {
+        List<ParameterInfo> parameters = new ElementMethodInfo(method, classInfoOf(method), context).parameters();
+        ParameterElement[] elements = method.getParameters();
+        for (int i = 0; i < elements.length; i++) {
+            if (i != skipped) {
+                points.add(new ElementInjectionPointInfo(ElementTypes.of(elements[i].getGenericType(), context),
+                    qualifiersOf(elements[i]), parameters.get(i)));
+            }
+        }
+    }
+
+    private ClassInfo classInfoOf(MemberElement member) {
+        return member.getDeclaringType().getName().equals(declaringElement().getName())
+            ? declaringClass() : new ElementClassInfo(member.getDeclaringType(), context);
+    }
+
+    /**
+     * The qualifiers an injection point declares, or {@code Default} where it declares none (section 2.3.4).
+     */
+    private List<AnnotationInfo> qualifiersOf(Element point) {
+        List<AnnotationInfo> qualifiers = new ArrayList<>();
+        AnnotationMetadata metadata = point.getAnnotationMetadata().getDeclaredMetadata();
+        for (String name : metadata.getAnnotationNamesByStereotype(Cdi.QUALIFIER)) {
+            if (NOT_QUALIFIERS_OF_THE_BEAN.contains(name) && !Cdi.ANY.equals(name)) {
+                continue;
+            }
+            for (AnnotationValue<?> annotation : metadata.getAnnotationValuesByName(name)) {
+                qualifiers.add(new ElementAnnotationInfo(annotation, context));
+            }
+        }
+        if (qualifiers.isEmpty()) {
+            qualifiers.add(new ElementAnnotationInfo(AnnotationValue.builder(Cdi.DEFAULT).build(), context));
+        }
+        return qualifiers;
     }
 
     @Override
