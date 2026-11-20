@@ -960,7 +960,9 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
 
     @Override
     public MicronautEvent<Object> getEvent() {
-        return new CdiEvent<>(observers, Argument.OBJECT_ARGUMENT, Set.of());
+        // the specified type Object and the specified qualifier @Default (section 11.3.10), which an event selected
+        // from this one keeps beside the qualifiers it adds
+        return new CdiEvent<>(observers, Argument.OBJECT_ARGUMENT, List.of(CdiQualifier.DEFAULT), null);
     }
 
     @Override
