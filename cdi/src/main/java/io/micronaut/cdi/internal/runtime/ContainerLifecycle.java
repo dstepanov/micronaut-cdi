@@ -31,6 +31,7 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.context.Destroyed;
@@ -193,9 +194,27 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
 
     @Override
     public void onApplicationEvent(ShutdownEvent event) {
-        if (event.getSource() != beanContext) {
-            return;
+        if (event.getSource() == beanContext) {
+            stop();
         }
+    }
+
+    /**
+     * Takes the container down where the shutdown event did not get to this listener: Micronaut stops publishing an
+     * event at the first listener that throws, and this one is the last, so a listener of the shutdown before it
+     * that throws would otherwise leave the requests still open, the application context and their events to
+     * Micronaut's destruction of the scopes alone. This bean depends on both scopes, so it is destroyed before
+     * them, while they still hold what they hold. Where the event got here, there is nothing left to do.
+     */
+    @PreDestroy
+    void destroyed() {
+        stop();
+    }
+
+    /**
+     * The way down, once: the records it reads are taken off the bean context as it begins.
+     */
+    private void stop() {
         boolean startupFired = beanContext.removeAttribute(APPLICATION_STARTED, Boolean.class).isPresent();
         if (beanContext.removeAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.class).isEmpty()) {
             // a container whose start failed before the application was told its application context was
