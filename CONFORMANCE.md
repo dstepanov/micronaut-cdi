@@ -1120,7 +1120,10 @@ told, it was initialized (`RequestDestructionTest`). A request begun after that,
 it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
 end that has begun telling its observers is left to finish, even past the close: one that began telling them before
 the container began to stop tells them the request was destroyed as well (`RequestEndingAtShutdownTest`), and a
-context that has stopped is told nothing more. A thread whose activated request the container destroyed takes the activation out of its
+context that has stopped is told nothing more. An observer of a request's beginning is asked whether it is still to
+be told once its parameters are created as well as before: one whose parameter was still being created as the
+container destroyed the request is not told the request began after it was told it was destroyed
+(`RequestInitializingAtShutdownTest`). A thread whose activated request the container destroyed takes the activation out of its
 propagated context as it deactivates, and is then told the context is not active; where something was propagated
 on the thread after it - a request begun since in another container, say - the activation is left in place, since
 ending it would take out what came after it too (`ControllerAfterShutdownTest`).

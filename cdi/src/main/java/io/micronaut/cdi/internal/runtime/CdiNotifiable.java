@@ -20,6 +20,7 @@ import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.EventMetadata;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
  * What the registry notifies: an observer method that takes the event and the metadata of its firing.
@@ -37,6 +38,21 @@ public interface CdiNotifiable {
      * @param metadata What the observer may ask about the firing
      */
     void notifyWith(Object event, EventMetadata metadata);
+
+    /**
+     * Notifies the observer of an event, with the metadata of the firing, where it is still to be told once what it is
+     * handed has been resolved: the creation of a parameter may take long enough for the container to have destroyed
+     * meanwhile what the event announces.
+     *
+     * @param event       The event
+     * @param metadata    What the observer may ask about the firing
+     * @param stillToTell Whether it is still to be told, asked once its arguments are resolved
+     */
+    default void notifyWith(Object event, EventMetadata metadata, BooleanSupplier stillToTell) {
+        if (stillToTell.getAsBoolean()) {
+            notifyWith(event, metadata);
+        }
+    }
 
     /**
      * The qualifiers the observer observes, as resolution compares them.
