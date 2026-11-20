@@ -218,7 +218,14 @@ too: a proxy is a subclass it does not permit. This module detects them as
 the class compiles. An intercepted bean that cannot be proxied is refused by the compiler. A bean in a normal
 scope deploys, as the specification has it, and what is wrong with it is recorded: an injection point that
 resolves to it is a `DeploymentException` the container reports as it starts, whichever way it was started
-(CDI 4.1 section 5.4), and a contextual reference asked for at runtime is an `UnproxyableResolutionException`.
+(CDI 4.1 section 5.4), and a contextual reference asked for at runtime - through the bean manager, or through
+`Instance` by `get()`, a handle or iteration - is an `UnproxyableResolutionException`
+(`DeploymentValidationTest.aProgrammaticLookupOfAnUnproxyableNormalScopedBeanIsAnUnproxyableResolution`). The
+check is made against the bean's class rather than the type an injection point declares: section 3.10 asks only
+that the declared type be proxyable, so an `@Inject Service` resolving to a final `@RequestScoped` class
+implementing the interface `Service` deploys in Weld, while here it is a deployment problem. Micronaut's scoped
+proxy extends the bean's class; a proxy implementing only the interfaces of the injection point would be a class
+the processor does not generate.
 The kit's deployments that exist to be rejected are excluded from the scenarios compiled here for that reason,
 listed by name in `cdi-tck/build.gradle`.
 

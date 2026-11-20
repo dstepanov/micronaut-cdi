@@ -180,6 +180,29 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void aProgrammaticLookupOfAnUnproxyableNormalScopedBeanIsAnUnproxyableResolution() throws Exception {
+        try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
+            package valid;
+
+            @jakarta.enterprise.context.ApplicationScoped
+            public class Consumer {
+                public final void x() {
+                }
+            }
+            """)) {
+            Class<?> consumer = context.getClassLoader().loadClass("valid.Consumer");
+            jakarta.enterprise.inject.Instance<Object> instance =
+                context.getBean(jakarta.enterprise.inject.spi.BeanManager.class).createInstance();
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> instance.select(consumer).get());
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> instance.select(consumer).getHandle().get());
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> instance.select(consumer).iterator());
+        }
+    }
+
+    @Test
     void missingOptionalAndCollectionProducersAreDeploymentProblems() {
         for (String type : java.util.List.of("java.util.Optional<Element>", "java.util.List<Element>",
             "java.util.Set<Element>", "java.util.Collection<Element>", "java.util.Map<String, Element>",
