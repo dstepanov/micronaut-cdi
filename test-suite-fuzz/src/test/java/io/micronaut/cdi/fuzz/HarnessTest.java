@@ -104,6 +104,22 @@ class HarnessTest {
     }
 
     @Test
+    void noTwoInterceptorsShareAPriorityAndAConditionalObserverIsNotifiedLast() {
+        for (long seed = 1; seed <= 2000; seed++) {
+            Scenario scenario = ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE);
+            List<Integer> priorities = scenario.interceptors().stream().map(i -> i.priority()).toList();
+            assertEquals(priorities.size(), new java.util.HashSet<>(priorities).size(), "seed " + seed);
+            for (BeanDef bean : scenario.beans()) {
+                for (ObserverDef observer : bean.observers()) {
+                    if (observer.ifExists()) {
+                        assertTrue(observer.priority() != null && observer.priority() > 2500, "seed " + seed);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void whatIsLoggedOutsideAStretchIsCompared() {
         RunResult a = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "get=B2"));
         RunResult b = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "!jakarta.enterprise.inject.AmbiguousResolutionException"));

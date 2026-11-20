@@ -47,6 +47,8 @@ final class ScenarioGenerator {
     private static final List<Integer> ALTERNATIVE_PRIORITIES = List.of(10, 20, 20, 30);
     private static final List<Integer> OBSERVER_PRIORITIES = List.of(1, 5, 5, 10);
     private static final List<Integer> INTERCEPTOR_PRIORITIES = List.of(100, 200, 200);
+    // past the default priority of an observer, Interceptor.Priority.APPLICATION + 500
+    private static final int IF_EXISTS_PRIORITY = 5000;
     private static final List<Integer> DECORATOR_PRIORITIES = List.of(10, 20, 20);
 
     /**
@@ -94,7 +96,7 @@ final class ScenarioGenerator {
         List<InterceptorDef> interceptors = new ArrayList<>();
         int interceptorCount = random.nextInt(size.maxInterceptorsAndDecorators + 1);
         for (int i = 1; i <= interceptorCount; i++) {
-            interceptors.add(interceptor("I" + i));
+            interceptors.add(interceptor("I" + i, i));
         }
         // decorators are CDI Full, which this implementation does not claim: none is generated. The draws are
         // still made, so that a seed generates the scenario it generated before decorators were left out
@@ -175,9 +177,14 @@ final class ScenarioGenerator {
                 // an observer of every event is static: Weld recurses without end notifying one of a dependent
                 // bean that has callbacks, a scenario this fuzzer does not need
                 boolean isStatic = eventType.equals("Object") || chance(0.15);
-                observerDefs.add(new ObserverDef("O" + (++observers), eventType,
-                    chance(0.2) ? List.of(qualifier()) : List.of(),
-                    chance(0.5) ? pick(OBSERVER_PRIORITIES) : null, ifExists && !isStatic, isStatic));
+                boolean conditional = ifExists && !isStatic;
+                int number = ++observers;
+                // a conditional observer is notified after every other, by a priority of its own: one of the
+                // priority of an observer that creates its bean may be notified before or after it, either legally
+                Integer observerPriority = conditional ? Integer.valueOf(IF_EXISTS_PRIORITY + number)
+                    : chance(0.5) ? pick(OBSERVER_PRIORITIES) : null;
+                observerDefs.add(new ObserverDef("O" + number, eventType,
+                    chance(0.2) ? List.of(qualifier()) : List.of(), observerPriority, conditional, isStatic));
             }
         }
         return new BeanDef(name, scope, interfaces, superBean, generic, chance(0.35) ? qualifiers() : List.of(),
@@ -291,15 +298,17 @@ final class ScenarioGenerator {
             alternative ? pick(ALTERNATIVE_PRIORITIES) : null, chance(0.3), parameters);
     }
 
-    private InterceptorDef interceptor(String name) {
+    private InterceptorDef interceptor(String name, int index) {
         boolean aroundInvoke = chance(0.8);
         boolean postConstruct = chance(0.3);
         boolean preDestroy = chance(0.3);
         if (!aroundInvoke && !postConstruct && !preDestroy) {
             aroundInvoke = true;
         }
-        return new InterceptorDef(name, List.of(pick(Scenario.BINDINGS)), pick(INTERCEPTOR_PRIORITIES), aroundInvoke,
-            postConstruct, preDestroy);
+        // no two of one priority: the order of interceptors of one priority is not specified (Jakarta Interceptors
+        // 2.2 section 5.2.1), and either nesting is legal
+        return new InterceptorDef(name, List.of(pick(Scenario.BINDINGS)), pick(INTERCEPTOR_PRIORITIES) + index,
+            aroundInvoke, postConstruct, preDestroy);
     }
 
     private List<QualUse> delegateQualifiers() {
