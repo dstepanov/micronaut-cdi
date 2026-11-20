@@ -50,7 +50,8 @@ import java.util.Map;
  * injection point that resolves to no bean, or to more than one that cannot be told apart, is a deployment
  * problem (CDI 4.1 section 5.2.2), and so is one that resolves to a bean in a normal scope that cannot be proxied
  * (sections 3.10 and 5.4). So are two beans of one name, and a name that is the path prefix of another
- * (section 5.3.1). The bean is not rejected on its own: one nothing is injected with is
+ * (section 5.3.1). So is an archive whose {@code beans.xml} declares the bean discovery mode {@code all} of CDI Full
+ * (CDI 5.0 section 2.5.1, {@link BeanArchives}). The bean is not rejected on its own: one nothing is injected with is
  * refused only when a contextual reference to it is asked for. Every problem found is reported, the first as
  * the failure and the rest beside it.</p>
  *
@@ -80,6 +81,12 @@ final class DeploymentValidation {
      * @throws DeploymentException Where the deployment is invalid
      */
     void validate() {
+        try {
+            // what an archive's beans.xml asks for is the business of the container however it is started
+            BeanArchives.requireNoneDiscoversAll(container.beanContext().getClassLoader());
+        } catch (DeploymentException e) {
+            problems.add(e);
+        }
         List<CdiBean<?>> beans = container.beans();
         List<BeanDefinition<?>> validated = new ArrayList<>(beans.size());
         for (CdiBean<?> bean : beans) {

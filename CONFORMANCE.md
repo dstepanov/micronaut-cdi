@@ -75,6 +75,7 @@ visible in a test report as what passes.
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
 | 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
+| 2.5.1 (5.0) | The bean discovery mode of `beans.xml`: `all` a deployment problem as any container starts, `none` no bean archive of an SE container that discovers; nothing else of a descriptor is read | `BeanArchives`, `DeploymentValidation`, `MicronautSeContainerInitializer` |
 | 5.5.8 (5.0) | Bean metadata: the dependent `@Default Bean` of the bean an injection point belongs to - a class bean at a field, constructor or initializer, the produced bean at a parameter of its producer method, a synthetic bean through `SyntheticInjections` - and the `@Default Interceptor` of an interceptor class, each the container's own `Bean` or `Interceptor` of it, read off the resolution path as the bean is created; the `@Intercepted Bean` is not yet implemented, see below | `CdiBeanMetadataFactory`, `CdiInterceptorMetadataFactory`, `ContainerInjectionVisitor` |
 
 ## Not yet implemented
@@ -195,6 +196,31 @@ when it discovers, leaves out every bean whose definition was compiled into that
 from, because the processor compiles a library before it is packaged with its descriptor; a directory of classes
 counts as an archive only where its `beans.xml` sits beside the classes, so a build that keeps resources in a
 directory of their own - Gradle's `build/resources/main` - is not narrowed until it is packaged.
+
+### beans.xml and bean archives
+
+*CDI 5.0 section 2.5.1.* An implementation that does not support CDI Full ignores a `beans.xml` except for its bean
+discovery mode, and this one reads nothing else of it. The descriptors are found at runtime, as the
+`META-INF/beans.xml` resources the application's class loader lists, each standing for the archive whose URL prefix
+it was found under - a jar, or a directory of classes with its descriptor beside them; the mode is read outside the
+descriptor's comments, and an empty descriptor or one that names no mode is `annotated` (`BeanArchives`).
+
+- `all` belongs to CDI Full: an archive that declares it is a deployment problem, a jakarta `DeploymentException`
+  reported by the deployment validation as the container starts, whether it is started by the SE bootstrap or as a
+  Micronaut application context with this module on the class path (`AllDiscoveryArchiveTest`).
+- `none` makes an archive no bean archive. The SE bootstrap, when it discovers, leaves out the beans compiled into it,
+  as described above; a Micronaut application context started directly deploys what the processor compiled, an
+  archive with such a descriptor included, since what is deployed there is decided by what was compiled with the
+  processor rather than by archives.
+- An archive that registers a portable or build compatible extension and has no `beans.xml` is no bean archive: only
+  the classes its extensions add are beans of it. This is not enforced by the container. The processor compiles a
+  library before it is packaged, with or without a descriptor, and a class an extension adds through
+  `ScannedClasses` is compiled as any other, so telling the two apart at runtime would take a record of the scanned
+  classes of each archive beside the descriptors the class loader lists, and the archives a program or test builds in
+  memory have no URL to list them by. The kit's adapter decides it for the archives it deploys
+  (`MicronautDeployableContainer`), from the archive's entries, keeping only the classes the deployment's extensions
+  scanned. An application whose library registers an extension and should contribute no beans of its own leaves that
+  library's classes out of the processor's compilation, or vetoes them.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 

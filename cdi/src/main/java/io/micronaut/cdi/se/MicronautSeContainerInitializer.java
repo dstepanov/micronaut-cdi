@@ -21,6 +21,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticObserver;
 import io.micronaut.cdi.internal.metadata.CdiSyntheticBean;
 import io.micronaut.cdi.spi.PortableExtensions;
+import io.micronaut.cdi.internal.runtime.BeanArchives;
 import io.micronaut.cdi.internal.runtime.CdiBeanContainer;
 import io.micronaut.cdi.internal.extension.ExtensionComponents;
 import io.micronaut.cdi.internal.runtime.UndiscoveredSubclass;
@@ -41,14 +42,9 @@ import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.inject.spi.Extension;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -56,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.regex.Pattern;
 
 /**
  * The SE bootstrap of the specification: what {@code SeContainerInitializer.newInstance()} finds through the
@@ -111,10 +106,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
     private final Set<String> buildCompatibleExtensions = new LinkedHashSet<>();
 
     private boolean discoveryDisabled;
-    private static final String BEANS_XML = "META-INF/beans.xml";
-    private static final Pattern DISCOVERS_NOTHING =
-        Pattern.compile("bean-discovery-mode\\s*=\\s*[\"']\\s*none\\s*[\"']");
-
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     @Override
@@ -261,9 +252,9 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
         } else {
             // an archive whose beans.xml discovers nothing is not a bean archive (section 2.5.1): what the processor
             // compiled into it is no bean of a container that discovers
-            List<String> excluded = archivesDiscoveringNothing(classLoader);
+            List<String> excluded = BeanArchives.discoveringNothing(classLoader);
             if (!excluded.isEmpty() || classpath != null) {
-                builder.beansPredicate(bean -> !inAnyOf(bean, excluded)
+                builder.beansPredicate(bean -> !BeanArchives.isCompiledIntoAnyOf(bean, excluded)
                     && (classpath == null || onClasspath(bean, classpath)));
             }
         }
@@ -389,56 +380,6 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
             }
         }
         return Set.copyOf(classes);
-    }
-
-    /**
-     * The roots of the archives on the class path whose {@code META-INF/beans.xml} declares the bean discovery
-     * mode {@code none}, as the prefix every resource of the archive's URL starts with.
-     */
-    private static List<String> archivesDiscoveringNothing(@Nullable ClassLoader loader) {
-        List<String> roots = new ArrayList<>(0);
-        try {
-            Enumeration<URL> descriptors = loader != null ? loader.getResources(BEANS_XML)
-                : ClassLoader.getSystemResources(BEANS_XML);
-            while (descriptors.hasMoreElements()) {
-                URL descriptor = descriptors.nextElement();
-                String content;
-                try (InputStream in = descriptor.openStream()) {
-                    content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                }
-                if (DISCOVERS_NOTHING.matcher(content).find()) {
-                    String url = descriptor.toExternalForm();
-                    roots.add(url.substring(0, url.length() - BEANS_XML.length()));
-                }
-            }
-        } catch (IOException e) {
-            throw new DeploymentException("The bean archive descriptors could not be read", e);
-        }
-        return roots;
-    }
-
-    /**
-     * Whether the bean was compiled into one of the given archives: its definition is generated beside its class, so
-     * the archive the definition's class is loaded from is the bean's.
-     */
-    private static boolean inAnyOf(BeanType<?> bean, List<String> roots) {
-        if (roots.isEmpty()) {
-            return false;
-        }
-        Class<?> definition = bean.getClass();
-        ClassLoader loader = definition.getClassLoader();
-        String resource = definition.getName().replace('.', '/') + ".class";
-        URL location = loader != null ? loader.getResource(resource) : ClassLoader.getSystemResource(resource);
-        if (location == null) {
-            return false;
-        }
-        String url = location.toExternalForm();
-        for (String root : roots) {
-            if (url.startsWith(root)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static String joined(Set<String> names) {
