@@ -1336,6 +1336,17 @@ own rather than the first one alone.
   declaring class (`InterceptedFactoryTest`, the normal scoped case disabled). A dependent product of the same bean is
   created. `isFactoryOf` comparing with `isAssignableFrom`, or with the intercepted type of an advised definition,
   would close it.
+- **The factory of a product whose definition is intercepted is taken to be the first dependent it resolved.** A
+  producer method of a class with an interceptor binding of its own, bound to an interceptor or not, has a product
+  definition that is an `InterceptedBeanDefinition`, the class's bindings being in the product's metadata, and its
+  `instantiate` resolves the parameters of the producer method before `doInstantiate` looks up the declaring instance
+  through `BeanResolutionContext.getFactoryBean`. `AbstractBeanResolutionContext.markDependentAsFactory` then takes the
+  first dependent that is no interceptor for the factory, which is the first dependent parameter: it is destroyed as
+  soon as the product is created, as the factory is, while a dependent declaring instance stays a dependent of the
+  product and is destroyed only with it (sections 6.4.1 and 6.4.2;
+  `UnboundInterceptorBindingDeclaringBeanTest`, the two cases with a parameter disabled). With a declaring bean of a
+  normal scope the parameter is destroyed as the product is created. `getFactoryBean` marking the registration its own
+  `getBean` added - the dependents past the count before it - would close it.
 - **A scoped bean under construction is not reachable from its own injection (section 5.4).** A bean of a normal scope
   that injects what its own producer method produces - a field or initializer injected with the product - has the
   producer invoked on it through its client proxy while it is being created, and Weld hands the producer the instance
