@@ -118,9 +118,13 @@ final class Fuzzer {
         int runs = 0;
         if (shrink && original.divergence() != null && original.known().isEmpty()) {
             String signature = original.divergence().signature();
+            // the outcomes must stay the same too: a side that refuses for another reason, such as Weld refusing an
+            // empty deployment, is another divergence
             Shrinker shrinker = new Shrinker(candidate -> {
                 Evaluation e = evaluate(candidate);
-                return e.divergence() != null && e.divergence().signature().equals(signature);
+                return e.divergence() != null && e.divergence().signature().equals(signature)
+                    && e.micronaut().outcome() == original.micronaut().outcome()
+                    && e.weld().outcome() == original.weld().outcome();
             }, shrinkBudget);
             Scenario reduced = shrinker.shrink(scenario);
             runs = shrinker.runs();
