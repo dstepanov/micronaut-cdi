@@ -120,6 +120,13 @@ class HarnessTest {
     }
 
     @Test
+    void whatAStreamOfAnInstanceCreatesIsAnUnorderedStretch() {
+        String log = ScenarioRenderer.render(ScenarioGenerator.generate(1, ScenarioGenerator.Size.SMALL), "fuzz.log")
+            .sources().values().stream().filter(source -> source.contains("class Log")).findFirst().orElseThrow();
+        assertTrue(log.contains("unorderedCall(() -> String.valueOf(instance.stream()"), log);
+    }
+
+    @Test
     void whatIsLoggedOutsideAStretchIsCompared() {
         RunResult a = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "get=B2"));
         RunResult b = RunResult.deployed(List.of("#X1", "get=B1", "#X2", "!jakarta.enterprise.inject.AmbiguousResolutionException"));

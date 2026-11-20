@@ -209,7 +209,18 @@ final class ScenarioRenderer {
                 return "unsatisfied=" + call(() -> String.valueOf(instance.isUnsatisfied()))
                     + " ambiguous=" + call(() -> String.valueOf(instance.isAmbiguous()))
                     + " get=" + call(() -> instance.get().id())
-                    + " all=" + call(() -> String.valueOf(instance.stream().map(Svc::id).sorted().toList()));
+                    + " all=" + unorderedCall(() -> String.valueOf(instance.stream().map(Svc::id).sorted().toList()));
+            }
+
+            // what a call logs as it runs - the callbacks of the instances a stream creates, in the order it visits
+            // them, which is not specified - is an unordered stretch
+            public static String unorderedCall(java.util.function.Supplier<String> call) {
+                add("{");
+                try {
+                    return call(call);
+                } finally {
+                    add("}");
+                }
             }
 
             public static void unordered(Runnable run) {
