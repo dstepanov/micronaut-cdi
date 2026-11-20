@@ -1100,8 +1100,17 @@ The kit's own unmodified test classes run here, through a purpose-built Arquilli
 the archive's classes; a deployment the kit expects to be rejected is compiled per-deployment with the module's
 processor, and what the compiler refuses is reported to Arquillian as the `DefinitionException` or
 `DeploymentException` the test asserts — deployment here *is* compilation. What the container validates as it
-starts is reported the same way, from the cause chain of the failure to start; the adapter has no validation of
-its own. An SE test the kit runs without Arquillian bootstraps over the class path its own `Deployment` declares,
+starts is reported the same way, from the cause chain of the failure to start. The adapter validates no bean
+itself, but decides two things of its own. It classifies failures (`DeploymentCompiler`,
+`MicronautDeployableContainer.deploymentProblemIn`): a compile error a processor reported is a `DefinitionException`,
+or a `DeploymentException` where the diagnostic names a bean that cannot be proxied, a final method under a class
+level interceptor binding, or a deployment problem an extension reported; a failure to start is a deployment problem
+only where a jakarta `DefinitionException` or `DeploymentException` is in its cause chain, and no Micronaut exception
+is read as one, as the kit needs none; a compilation that javac alone rejects or in which a visitor of the processor
+crashed with nothing reported beside it, and any other failure to start, fail the test rather than pass one that
+expects a rejected deployment. And it decides which classes of an archive are beans: each deployment is narrowed to
+its archive's classes, and an archive that carries an extension and no `beans.xml` keeps only the classes its
+extensions scanned (see "beans.xml and bean archives"). An SE test the kit runs without Arquillian bootstraps over the class path its own `Deployment` declares,
 as it would in the JVM the kit launches for it. An archive carrying a build
 compatible extension is likewise compiled per deployment, with that archive's extensions alone, and so is an
 archive carrying the service entries of async handlers (CDI 5.0), which the compilation is handed through
