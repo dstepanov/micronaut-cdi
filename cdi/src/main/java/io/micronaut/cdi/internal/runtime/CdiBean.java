@@ -507,7 +507,7 @@ public class CdiBean<T> implements Bean<T> {
             if (isDependent() && owner != null) {
                 // a dependent instance belongs to whoever asked for it, and what was created along with it
                 // belongs to it: releasing the creational context destroys both
-                return owner.registration(definition, definition.asArgument()).bean();
+                return owner.registration(definition, CdiResolution.creationTypeOf(definition)).bean();
             }
             // section 2.5.1: create() creates a new contextual instance. That a scope has one instance is the
             // business of its context, which creates it once and hands the same one out - scopedInstance()

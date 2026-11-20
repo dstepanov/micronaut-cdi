@@ -213,7 +213,7 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
     }
 
     private static <T> T resolveDefinition(BeanDefinition<T> definition, BeanDependencyGroup dependencies) {
-        return dependencies.getBean(definition, definition.asArgument());
+        return dependencies.getBean(definition, CdiResolution.creationTypeOf(definition));
     }
 
     @SuppressWarnings("unchecked")

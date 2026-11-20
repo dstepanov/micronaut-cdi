@@ -260,7 +260,8 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     private static <B> B instanceOf(BeanDefinition<B> definition, OwnedDependents dependents) {
-        return dependents.registration(definition, definition.asArgument()).bean();
+        // a bean whose Typed leaves its own class out of its bean types still declares its observer methods
+        return dependents.registration(definition, CdiResolution.creationTypeOf(definition)).bean();
     }
 
     private boolean isDependent() {

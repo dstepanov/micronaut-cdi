@@ -251,6 +251,16 @@ pseudo-scope a scope of its own and Micronaut writes the same annotation; the ru
 held to as it compiles, and the container's resolution of its injection points, are not applied to it, since
 Micronaut's own beans carry the same annotation.
 
+A bean whose `Typed` leaves its own class out of its bean types, or names no type, is still the bean that declares its
+producers, disposers and observer methods, and is created as `Object` where the container already chose it
+(`CdiResolution.creationTypeOf`, `TypedAwayDeclaringBeanTest`). The definition Micronaut generates for a product
+resolves the bean declaring its producer by the declaring class (`BeanResolutionContext.getFactoryBean`), so the
+processor keeps a class that declares producers resolvable by its class to Micronaut: `BeanContext.getBean` of the
+class finds such a bean, while the container's resolution - injection points, `Instance`, `BeanContainer.getBeans` -
+compares the bean types its `Typed` gives it, and does not. A `getFactoryBean` that resolved the declaring
+definition the product names rather than a bean of its class would make this unnecessary; see "Open points in
+Micronaut Core".
+
 ### An unproxyable normal scoped bean is detected as it is compiled
 
 *Section 3.10.* A bean in a normal scope has to be proxyable, and the specification has the container detect a
@@ -1237,6 +1247,10 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **The bean declaring a producer is resolved by its class.** `BeanResolutionContext.getFactoryBean` looks the
+  factory up with `getBean(factoryType, qualifier)`, which a bean whose `Typed` leaves its class out of its bean
+  types is no candidate of. The processor widens Micronaut's `typed` of such a class to keep it resolvable; resolving
+  the definition the product's factory is (the product definition knows it) would need no such widening.
 - **A dependent created through a bean's `BeanDependencyResolver` does not know whose dependent it is (CDI 5.0,
   section 5.5.8).** The Jakarta Interceptors advice of a bean creates the bean's interceptor instances with
   `dependencies.getBean(...)`, and the resolution that starts has a path of its own, a null root definition and no
