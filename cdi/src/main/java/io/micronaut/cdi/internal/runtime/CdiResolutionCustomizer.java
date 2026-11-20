@@ -275,8 +275,25 @@ public final class CdiResolutionCustomizer implements BeanResolutionCustomizer {
         return delegate.shouldPreserveLazyProxyTargetResolutionPath(resolutionContext, proxyBeanDefinition);
     }
 
+    /**
+     * Whether a produced bean is asked for by a class it is no instance of: the metadata of a producer field carries
+     * the bean annotation of the class declaring it, and Micronaut adds the types that class is resolvable by to the
+     * types the product is exposed as - the class itself, where its Typed leaves it out of its bean types and the
+     * processor keeps it resolvable to Micronaut. The product is no candidate of that class, and a lookup of the
+     * class, which Micronaut makes to find the bean declaring the producer, would otherwise find it too.
+     */
+    private static boolean isLeakedDeclaringClass(Argument<?> beanType, QualifiedBeanType<?> candidate) {
+        Class<?> asked = beanType.getType();
+        return asked != Object.class && !asked.isPrimitive() && !asked.isArray()
+            && candidate.getAnnotationMetadata().hasDeclaredAnnotation(io.micronaut.cdi.internal.metadata.CdiProducer.class)
+            && !candidate.getBeanType().isPrimitive() && !asked.isAssignableFrom(candidate.getBeanType());
+    }
+
     @Override
     public boolean isCandidateBean(Argument<?> beanType, QualifiedBeanType<?> candidate) {
+        if (isLeakedDeclaringClass(beanType, candidate)) {
+            return false;
+        }
         if ((beanType.getTypeParameters().length > 0 || CdiTypes.isArray(beanType))
             && candidate instanceof BeanDefinition<?> definition
             && CdiResolution.isBeanOfTheSpecification(definition)) {

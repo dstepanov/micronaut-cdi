@@ -45,6 +45,7 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -166,6 +167,23 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 }
             }
             producer.annotate(Bean.class);
+            if (producer instanceof FieldElement field && !producer.hasDeclaredAnnotation(Cdi.TYPED)
+                && element.hasDeclaredAnnotation(Cdi.TYPED)) {
+                // the Typed of the class narrows the class bean alone (section 2.2.2), but the metadata of a producer
+                // field carries the class's, and Micronaut would expose the product only by the types the class is
+                // narrowed to: the types of the product itself, written on the member, shadow them
+                ClassElement produced = field.getGenericType();
+                List<AnnotationClassValue<?>> types = new ArrayList<>();
+                types.add(new AnnotationClassValue<>(produced.getName()));
+                for (ClassElement supertype : BeanTypesVisitor.closureOf(produced)) {
+                    if (!supertype.getName().equals(produced.getName())) {
+                        types.add(new AnnotationClassValue<>(supertype.getName()));
+                    }
+                }
+                AnnotationClassValue<?>[] written = types.toArray(new AnnotationClassValue<?>[0]);
+                producer.removeAnnotation(Bean.class);
+                producer.annotate(Bean.class, builder -> builder.member("typed", written));
+            }
             selectIfAlternative(producer, element);
             // what produced the bean is recorded so that the container can report it without working it out
             boolean isField = producer instanceof FieldElement;
