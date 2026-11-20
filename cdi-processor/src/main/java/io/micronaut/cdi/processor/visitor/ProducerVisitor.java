@@ -141,6 +141,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
+        excludeInheritedProducerFields(element);
 
         DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
@@ -340,6 +341,29 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     }
 
     /**
+     * Takes out of a class that produces the products Micronaut would build under it of the producer fields it
+     * inherits: Micronaut builds the products of every producer field of a factory, those it inherits included, and a
+     * producer is no member a subclass inherits (section 4.2). The fields are recorded on the class, and its condition
+     * ({@code InheritedProducer}) leaves out the products of the recorded ones; the metadata of a field is the same
+     * whichever class it is read through, so the field itself cannot be told so.
+     */
+    private static void excludeInheritedProducerFields(ClassElement element) {
+        List<String> inherited = new ArrayList<>();
+        for (FieldElement field : element.getEnclosedElements(ElementQuery.ALL_FIELDS.includeHiddenElements())) {
+            if (field.hasDeclaredAnnotation(Cdi.PRODUCES) && !field.getDeclaringType().getName().equals(element.getName())) {
+                inherited.add(field.getDeclaringType().getName() + "#" + field.getName());
+            }
+        }
+        if (inherited.isEmpty()) {
+            return;
+        }
+        element.annotate(io.micronaut.cdi.internal.metadata.CdiInheritedProducers.class,
+            builder -> builder.values(inherited.toArray(new String[0])));
+        element.annotate(io.micronaut.context.annotation.Requires.class, builder -> builder.member("condition",
+            new AnnotationClassValue<>("io.micronaut.cdi.internal.runtime.InheritedProducer")));
+    }
+
+    /**
      * The source name of an array type, as {@code java.lang.String[][]}.
      */
     private static String arrayName(ClassElement array) {
@@ -406,8 +430,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         AnnotationClassValue<?>[] widened = java.util.Arrays.copyOf(typed, typed.length + 1);
         widened[typed.length] = new AnnotationClassValue<>(element.getName());
         if (typed.length == 0) {
-            widened = new AnnotationClassValue<?>[] {new AnnotationClassValue<>(Object.class),
-                new AnnotationClassValue<>(element.getName())};
+            // Object goes without saying to Micronaut, which finds every bean by it: it is left out, so that the
+            // types a producer field of no type names, which Micronaut merges with the class's, are not named twice
+            widened = new AnnotationClassValue<?>[] {new AnnotationClassValue<>(element.getName())};
         }
         AnnotationClassValue<?>[] written = widened;
         element.removeAnnotation(io.micronaut.context.annotation.Bean.class);

@@ -22,7 +22,7 @@ visible in a test report as what passes.
 | 2.4, 6.6 | The application scope, read as a proxied Micronaut scope | `ApplicationScope`, `CdiApplicationScope` |
 | 2.4, 6.6 | The request scope, and the `ContextNotActiveException` of reaching for it outside a request | `RequestScope`, `CdiRequestScope` |
 | 2.3, 3.8 | Qualifiers, and the rule that a bean declaring none has the default qualifier and an injection point declaring none requires it | `DefaultQualifierVisitor`, `CdiBeanContainer` |
-| 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields | `ProducerVisitor` |
+| 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields; a producer field not inherited by a subclass that is a factory itself, whose products of it a condition takes out (4.2) | `ProducerVisitor`, `InheritedProducer` |
 | 3.4 | Disposer methods, resolved to their producer while it is compiled | `ProducerVisitor`, `DisposerInvoker` |
 | 3.5, 3.6, 3.7 | Bean constructors, injected fields and initializer methods, each point resolved by the container | Micronaut's own injection, `CdiBeanInjectionProvider` |
 | 2.2 | Narrowing the bean types of a bean with `@Typed`, a type it names that a bean class or a producer does not have a definition error | `TypedAnnotationMapper`, `BeanDiscoveryVisitor`, `ProducerVisitor` |
