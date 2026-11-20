@@ -76,9 +76,11 @@ class AllDiscoveryArchiveTest {
             "<beans xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" bean-discovery-mode=\"annotated\" version=\"4.0\"/>",
             "<beans xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" bean-discovery-mode=\"none\" version=\"4.0\"/>",
             "<!-- bean-discovery-mode=\"all\" --><beans xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" version=\"4.0\"/>",
+            // the schema's enumeration is case sensitive: ALL names no mode of it, CDI Full's or another
+            "<beans xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" bean-discovery-mode=\"ALL\" version=\"4.0\"/>",
             ""}) {
-            Files.deleteIfExists(directory.resolve("other.jar"));
-            try (URLClassLoader loader = loaderOf(archive("other.jar", beansXml));
+            // an archive of its own each: the JDK caches an opened jar by its URL
+            try (URLClassLoader loader = loaderOf(archive("other-" + beansXml.hashCode() + ".jar", beansXml));
                  ApplicationContext context = ApplicationContext.builder(loader).start()) {
                 assertTrue(context.isRunning(), beansXml);
             }

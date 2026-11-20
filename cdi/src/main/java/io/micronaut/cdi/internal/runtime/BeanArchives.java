@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -154,7 +153,8 @@ public final class BeanArchives {
      */
     static @Nullable String discoveryModeOf(String content) {
         Matcher mode = DISCOVERY_MODE.matcher(COMMENT.matcher(content).replaceAll(""));
-        return mode.find() ? mode.group(1).toLowerCase(Locale.ROOT) : null;
+        // as written: the values of the schema's enumeration are case sensitive
+        return mode.find() ? mode.group(1) : null;
     }
 
     /**
