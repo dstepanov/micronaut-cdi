@@ -277,7 +277,8 @@ compiler. Which bean an injection point resolves to, and which beans share a nam
 a bean may be compiled in another module, or be registered as the container starts - so the container validates
 its beans as it starts, from what they were compiled with, through the SE bootstrap and an `ApplicationContext`
 alike, and with portable extensions before `AfterDeploymentValidation`. An injection point of a bean's fields,
-constructor, initializer methods, and observer and disposer methods that resolves to no bean, to more than one
+constructor, initializer methods, producer methods, and observer and disposer methods - those of a bean in a normal
+scope read from the definition its client proxy stands in front of - that resolves to no bean, to more than one
 that cannot be told apart, or to a bean in a normal scope that cannot be proxied; two beans of one name; and a
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported. A bean another
 one replaces with Micronaut's `Replaces` is no bean of the deployment: its dependencies and its name are not

@@ -131,6 +131,47 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void anUnsatisfiedProducerMethodParameterIsADeploymentProblem() {
+        assertRejected("""
+            package invalid;
+
+            @jakarta.enterprise.context.Dependent
+            public class Consumer {
+                @jakarta.enterprise.inject.Produces
+                StringBuilder value(Runnable missing) {
+                    return new StringBuilder();
+                }
+            }
+            """, "has no bean to satisfy it");
+    }
+
+    @Test
+    void anAmbiguousParameterOfANormalScopedProducerIsADeploymentProblem() {
+        // the parameter resolves to the producer's own product and to the class declaring it, both a Service
+        assertRejected("""
+            package invalid;
+
+            public class Consumer {
+
+                public interface Service {
+                }
+
+                public interface Product extends Service {
+                }
+
+                @jakarta.enterprise.context.Dependent
+                public static class Declaring implements Service {
+                    @jakarta.enterprise.inject.Produces
+                    @jakarta.enterprise.context.ApplicationScoped
+                    Product produce(Service service) {
+                        return new Product() { };
+                    }
+                }
+            }
+            """, "is ambiguous");
+    }
+
+    @Test
     void twoBeansOfOneNameAreADeploymentProblem() {
         assertRejected("""
             package invalid;
