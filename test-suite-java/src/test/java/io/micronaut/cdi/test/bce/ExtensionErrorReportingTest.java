@@ -56,6 +56,10 @@ class ExtensionErrorReportingTest {
 
             private void hidden() {
             }
+
+            public String greet(String name) {
+                return name;
+            }
         }
         """;
 
@@ -78,9 +82,54 @@ class ExtensionErrorReportingTest {
     @Test
     void anInvokerOfAPrivateMethodIsADeploymentProblem() {
         String errors = errorsOf(PrivateInvoker.class);
-        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM + "The private method reported.Target#hidden"),
-            errors);
+        // reported as the deployment problem a registration method that throws is, naming what the invoker refused
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM), errors);
+        assertTrue(errors.contains("The private method reported.Target#hidden cannot be invoked"), errors);
         assertFalse(errors.contains("Error finishing the round of type visitor"), errors);
+    }
+
+    @Test
+    void anExceptionADiscoveryMethodThrowsIsADeploymentProblem() {
+        String errors = errorsOf(ThrowingDiscovery.class);
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM), errors);
+        assertTrue(errors.contains("discovery failed on purpose"), errors);
+    }
+
+    @Test
+    void anExceptionAnEnhancementMethodThrowsIsADeploymentProblem() {
+        String errors = errorsOf(ThrowingEnhancement.class);
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM), errors);
+        assertTrue(errors.contains("enhancement failed on purpose"), errors);
+    }
+
+    @Test
+    void anExceptionARegistrationMethodThrowsIsADeploymentProblem() {
+        String errors = errorsOf(ThrowingRegistration.class);
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM), errors);
+        assertTrue(errors.contains("registration failed on purpose"), errors);
+    }
+
+    @Test
+    void aParameterOfATypeThePhaseDoesNotHandIsADeploymentProblem() {
+        String errors = errorsOf(UnsupportedParameter.class);
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM), errors);
+        assertTrue(errors.contains("which the phase does not hand to one"), errors);
+    }
+
+    @Test
+    void anArgumentLookupOutOfRangeIsRefusedAsItIsAskedFor() {
+        LookupOutOfRange.REFUSED.clear();
+        String errors = errorsOf(LookupOutOfRange.class);
+        assertTrue(LookupOutOfRange.REFUSED.stream().allMatch(IllegalArgumentException.class::isInstance)
+            && !LookupOutOfRange.REFUSED.isEmpty(), "withArgumentLookup threw " + LookupOutOfRange.REFUSED);
+        // the registration method let it through, which fails the deployment
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM), errors);
+    }
+
+    @Test
+    void anErrorARegistrationMethodReportsIsADeploymentProblem() {
+        String errors = errorsOf(ReportingRegistration.class);
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM + "reported on purpose"), errors);
     }
 
     private static String errorsOf(Class<? extends BuildCompatibleExtension> extension) {
@@ -91,6 +140,85 @@ class ExtensionErrorReportingTest {
                 .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
                 .map(diagnostic -> diagnostic.getMessage(null))
                 .collect(Collectors.joining("\n"));
+        }
+    }
+
+    /**
+     * A registration method that reports an error through its messages.
+     */
+    public static final class ReportingRegistration implements BuildCompatibleExtension {
+        @Registration(types = Object.class)
+        public void register(BeanInfo bean, jakarta.enterprise.inject.build.compatible.spi.Messages messages) {
+            if (bean.isClassBean() && bean.declaringClass().name().equals("reported.Target")) {
+                messages.error("reported on purpose");
+            }
+        }
+    }
+
+    /**
+     * A discovery method that throws.
+     */
+    public static final class ThrowingDiscovery implements BuildCompatibleExtension {
+        @Discovery
+        public void discover(MetaAnnotations meta) {
+            throw new IllegalStateException("discovery failed on purpose");
+        }
+    }
+
+    /**
+     * An enhancement method that throws.
+     */
+    public static final class ThrowingEnhancement implements BuildCompatibleExtension {
+        @jakarta.enterprise.inject.build.compatible.spi.Enhancement(types = Object.class, withSubtypes = true)
+        public void enhance(jakarta.enterprise.inject.build.compatible.spi.ClassConfig type) {
+            if (type.info().name().equals("reported.Target")) {
+                throw new IllegalStateException("enhancement failed on purpose");
+            }
+        }
+    }
+
+    /**
+     * A registration method that throws.
+     */
+    public static final class ThrowingRegistration implements BuildCompatibleExtension {
+        @Registration(types = Object.class)
+        public void register(BeanInfo bean) {
+            if (bean.isClassBean() && bean.declaringClass().name().equals("reported.Target")) {
+                throw new IllegalStateException("registration failed on purpose");
+            }
+        }
+    }
+
+    /**
+     * An enhancement method asking for what the phase does not hand.
+     */
+    public static final class UnsupportedParameter implements BuildCompatibleExtension {
+        @jakarta.enterprise.inject.build.compatible.spi.Enhancement(types = Object.class, withSubtypes = true)
+        public void enhance(jakarta.enterprise.inject.build.compatible.spi.ClassConfig type,
+                            jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents components) {
+        }
+    }
+
+    /**
+     * Asks for an argument lookup out of the method's parameters, recording what the builder threw, and lets it
+     * through.
+     */
+    public static final class LookupOutOfRange implements BuildCompatibleExtension {
+
+        static final List<RuntimeException> REFUSED = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        @Registration(types = Object.class)
+        public void register(BeanInfo bean, InvokerFactory invokers) {
+            if (bean.isClassBean() && bean.declaringClass().name().equals("reported.Target")) {
+                MethodInfo greet = bean.declaringClass().methods().stream()
+                    .filter(method -> method.name().equals("greet")).findFirst().orElseThrow();
+                try {
+                    invokers.createInvoker(bean, greet).withArgumentLookup(3);
+                } catch (RuntimeException e) {
+                    REFUSED.add(e);
+                    throw e;
+                }
+            }
         }
     }
 

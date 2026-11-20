@@ -124,6 +124,14 @@ final class ElementInvokerFactory implements InvokerFactory {
 
         @Override
         public InvokerBuilder<InvokerInfo> withArgumentLookup(int position) {
+            int parameters = method.getParameters().length;
+            if (position < 0 || position >= parameters) {
+                // the builder's contract names the exception, and it is thrown as the lookup is asked for; a
+                // registration method that lets it through fails the deployment as any exception it throws does
+                throw new IllegalArgumentException("The argument lookup at " + position + " is out of the "
+                    + "method's parameters: " + beanClass.getName() + "#" + method.getName() + " takes "
+                    + parameters);
+            }
             argumentLookups.add(position);
             return this;
         }

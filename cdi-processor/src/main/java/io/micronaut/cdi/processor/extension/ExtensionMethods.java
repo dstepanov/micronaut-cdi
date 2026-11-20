@@ -712,22 +712,25 @@ final class ExtensionMethods {
                 arguments[i] = Phase.DISCOVERY.argument(parameterTypes[i], new VisitorMessages(context.visitorContext()),
                     context);
             } else {
-                throw new IllegalStateException("The discovery method " + method + " asks for a "
-                    + parameterTypes[i].getName() + ", which this module does not hand to one");
+                throw Phase.DISCOVERY.unsupported(method, parameterTypes[i]);
             }
         }
         try {
             invokePhaseMethod(method, extension, arguments);
         } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof DeploymentException deployment) {
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            if (cause instanceof DeploymentException deployment) {
                 // a deployment problem the discovery phase reports, such as a context registered for a global
                 // scope (CDI 5.0, section 6.4): reported as one, which a harness tells from a definition error
                 throw new DeploymentException(VisitorMessages.DEPLOYMENT_PROBLEM + deployment.getMessage(),
                     deployment);
             }
-            throw new IllegalStateException("The discovery method " + method + " failed", e);
+            // whatever else an extension method throws, the container treats as a deployment problem (section 12)
+            throw new DeploymentException(VisitorMessages.DEPLOYMENT_PROBLEM + "the discovery method " + method
+                + " failed: " + cause, cause);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("The discovery method " + method + " failed", e);
+            throw new DeploymentException(VisitorMessages.DEPLOYMENT_PROBLEM + "the discovery method " + method
+                + " could not be invoked: " + e, e);
         }
     }
 
@@ -746,12 +749,9 @@ final class ExtensionMethods {
                 + " could not be invoked: " + e, null);
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause() == null ? e : e.getCause();
-            if (cause instanceof DefinitionException) {
-                context.fail("The " + phase + " method " + method + " failed: " + cause, null);
-            } else {
-                context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the " + phase + " method " + method
-                    + " failed: " + cause, null);
-            }
+            // whatever an extension method throws, the container treats as a deployment problem (section 12)
+            context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the " + phase + " method " + method
+                + " failed: " + cause, null);
         }
         return false;
     }
@@ -864,11 +864,13 @@ final class ExtensionMethods {
             try {
                 invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
-                context.visitorContext().fail("The registration method " + method + " could not be invoked: " + e, null);
+                context.visitorContext().fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the registration method " + method
+                    + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause() == null ? e : e.getCause();
-                rethrowDeploymentProblem(cause);
-                context.visitorContext().fail("The registration method " + method + " failed: " + cause, null);
+                // whatever an extension method throws, the container treats as a deployment problem (section 12)
+                context.visitorContext().fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the registration method " + method
+                    + " failed: " + cause, null);
             }
         }
 
@@ -892,24 +894,14 @@ final class ExtensionMethods {
             try {
                 invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
-                context.visitorContext().fail("The registration method " + method + " could not be invoked: " + e, null);
+                context.visitorContext().fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the registration method " + method
+                    + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause() == null ? e : e.getCause();
-                rethrowDeploymentProblem(cause);
-                context.visitorContext().fail("The registration method " + method + " failed: " + cause, null);
-            }
-        }
-
-        /**
-         * Lets a definition or deployment problem the extension reported travel out as itself, so that what
-         * stops the deployment is the exception the specification names rather than a compile diagnostic.
-         */
-        private static void rethrowDeploymentProblem(Throwable cause) {
-            if (cause instanceof DeploymentException deployment) {
-                throw deployment;
-            }
-            if (cause instanceof DefinitionException definition) {
-                throw definition;
+                // whatever an extension method throws, the container treats as a deployment problem (section 12):
+                // an invoker that cannot be built among it
+                context.visitorContext().fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the registration method " + method
+                    + " failed: " + cause, null);
             }
         }
     }
@@ -1042,10 +1034,13 @@ final class ExtensionMethods {
             try {
                 invokePhaseMethod(method, extension, arguments);
             } catch (IllegalAccessException e) {
-                context.fail("The enhancement method " + method + " could not be invoked: " + e, null);
+                context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the enhancement method " + method
+                    + " could not be invoked: " + e, null);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause() == null ? e : e.getCause();
-                context.fail("The enhancement method " + method + " failed: " + cause, null);
+                // whatever an extension method throws, the container treats as a deployment problem (section 12)
+                context.fail(VisitorMessages.DEPLOYMENT_PROBLEM + "the enhancement method " + method
+                    + " failed: " + cause, null);
             }
         }
 
@@ -1163,8 +1158,10 @@ final class ExtensionMethods {
                 + parameterType.getName());
         }
 
-        DefinitionException unsupported(Method method, Class<?> parameterType) {
-            return new DefinitionException("The " + annotation + " method " + method
+        DeploymentException unsupported(Method method, Class<?> parameterType) {
+            // a parameter of a type the phase does not hand is a deployment problem (section 12)
+            return new DeploymentException(VisitorMessages.DEPLOYMENT_PROBLEM + "the " + annotation + " method "
+                + method
                 + " declares a parameter of type " + parameterType.getName()
                 + ", which the phase does not hand to one (section " + section + ")");
         }
