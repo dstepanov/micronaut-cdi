@@ -270,6 +270,10 @@ public final class ObserverRegistry {
      * @param eventQualifiers The qualifiers the event was fired with
      */
     public void notifyObserversWhileRunning(Object event, Argument<?> declaredType, Set<Annotation> eventQualifiers) {
+        if (ContainerLifecycle.isStoppedOrFailedToStart(beanContext)) {
+            // nothing of the event can be resolved through a context that has stopped, its type included
+            return;
+        }
         CdiTypes.EventType eventType = CdiTypes.eventTypeAndClosureOf(typeIndex(), event.getClass(), declaredType);
         List<CdiQualifier> qualifiers = CdiQualifier.ofInstances(types(), eventQualifiers);
         EventMetadata metadata = new CdiEventMetadata(beanContext, qualifiers, null, eventType.type());
