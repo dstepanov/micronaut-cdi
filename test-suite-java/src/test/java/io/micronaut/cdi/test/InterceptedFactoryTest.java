@@ -136,9 +136,9 @@ class InterceptedFactoryTest {
     }
 
     @Test
-    @Disabled("Micronaut Core finds the intercepted declaring bean as it creates the product's contextual instance, "
-        + "then looks the declaring class up a second time and finds no candidate (see CONFORMANCE.md, Open points in "
-        + "Micronaut Core)")
+    @Disabled("Micronaut Core does not recognise the generated subclass of an intercepted bean as the factory of the "
+        + "product it creates, and resolves the factory through the product's scope "
+        + "(DefaultBeanContext.findInjectionPointDeclaredScope, see CONFORMANCE.md, Open points in Micronaut Core)")
     void aNormalScopedProductOfAnInterceptedDependentBeanIsCreated() {
         try (ApplicationContext context = ApplicationContext.run()) {
             CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
