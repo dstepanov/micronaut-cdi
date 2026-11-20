@@ -51,6 +51,8 @@ import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -80,6 +82,8 @@ import java.util.Set;
  */
 @Internal
 public class CdiBean<T> implements Bean<T> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CdiBean.class);
 
     private final BeanContext beanContext;
     private final BeanDefinition<T> definition;
@@ -631,7 +635,6 @@ public class CdiBean<T> implements Bean<T> {
     }
 
     @Override
-    @SuppressWarnings("EmptyCatch")
     public void destroy(T instance, CreationalContext<T> creationalContext) {
         try {
             if (creationalContext instanceof CdiCreationalContext<T> tracking && tracking.hasTracked()) {
@@ -652,7 +655,8 @@ public class CdiBean<T> implements Bean<T> {
             }
         } catch (RuntimeException e) {
             // section 6.1.1: destroy catches what destruction throws, so that one failing pre-destroy does not
-            // stop the rest of a context from being destroyed
+            // stop the rest of a context from being destroyed; what it threw is logged rather than lost
+            LOG.error("Destroying an instance of the bean {} failed", this, e);
         } finally {
             // whatever destruction did, the creational context is released: dependents go, and whoever handed
             // the context in sees the release
