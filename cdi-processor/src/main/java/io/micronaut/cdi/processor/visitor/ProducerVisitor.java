@@ -152,6 +152,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 context.fail("An interceptor may not declare a producer", producer);
             }
             checkProducedType(producer, context);
+            checkTyped(producer, context);
             if (producer instanceof MethodElement producerMethod) {
                 for (ParameterElement parameter : producerMethod.getParameters()) {
                     if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
@@ -287,6 +288,29 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 return;
             }
             // legal: the compiled bean type keeps the variables, which resolution reads (section 2.4.2.1)
+        }
+    }
+
+    /**
+     * Section 2.2.2: every type a producer's own {@code Typed} names must be a bean type of what it produces, as it
+     * must be of a bean class.
+     */
+    private static void checkTyped(MemberElement producer, VisitorContext context) {
+        AnnotationValue<?> typed = producer.getDeclaredAnnotation(Cdi.TYPED);
+        if (typed == null) {
+            return;
+        }
+        ClassElement produced = producer instanceof MethodElement method ? method.getGenericReturnType()
+            : ((FieldElement) producer).getGenericType();
+        for (AnnotationClassValue<?> type : typed.annotationClassValues(AnnotationMetadata.VALUE_MEMBER)) {
+            String typedName = type.getName();
+            // the metadata holds binary names, in which a nested type is Outer$Inner; assignability is asked with the
+            // source form
+            if (!"java.lang.Object".equals(typedName) && !produced.isAssignable(typedName)
+                && !produced.isAssignable(typedName.replace('$', '.'))) {
+                context.fail("The producer " + producer.getName() + " restricts its bean types to " + typedName
+                    + ", which is not one of its types (section 2.2.2)", producer);
+            }
         }
     }
 

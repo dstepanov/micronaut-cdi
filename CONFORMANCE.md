@@ -25,7 +25,7 @@ visible in a test report as what passes.
 | 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields | `ProducerVisitor` |
 | 3.4 | Disposer methods, resolved to their producer while it is compiled | `ProducerVisitor`, `DisposerInvoker` |
 | 3.5, 3.6, 3.7 | Bean constructors, injected fields and initializer methods, each point resolved by the container | Micronaut's own injection, `CdiBeanInjectionProvider` |
-| 2.2 | Narrowing the bean types of a bean with `@Typed` | `TypedAnnotationMapper` |
+| 2.2 | Narrowing the bean types of a bean with `@Typed`, a type it names that a bean class or a producer does not have a definition error | `TypedAnnotationMapper`, `BeanDiscoveryVisitor`, `ProducerVisitor` |
 | 8 | Interceptor bindings | deferred to Micronaut Jakarta Interceptors |
 | 5.6 | Programmatic lookup through `Instance`, including handles | `CdiInstance` |
 | 11.1 | The `BeanContainer`, and the `Bean` a lookup resolves to | `CdiBeanContainer`, `CdiBean` |
