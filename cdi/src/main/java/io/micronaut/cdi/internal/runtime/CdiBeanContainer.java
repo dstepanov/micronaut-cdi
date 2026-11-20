@@ -641,6 +641,15 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      *
      * @return The overlay
      */
+    /**
+     * The contexts of the container's scopes.
+     *
+     * @return The contexts
+     */
+    CdiContexts contexts() {
+        return contexts;
+    }
+
     QualifierOverlay overlay() {
         return overlay;
     }
