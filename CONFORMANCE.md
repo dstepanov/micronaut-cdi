@@ -1143,6 +1143,10 @@ A synthetic bean of an array type is refused as its extension describes it: Micr
 an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
 type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
+A bean of a normal scope that injects the product of its own producer method fails to be created, since Micronaut has
+no way to reach the instance under construction from the producer; see "Open points in Micronaut Core". Inject an
+`Instance` of the product, or move the producer to another bean.
+
 A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
 after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in
 Micronaut Core". Declare such a producer on a `@Dependent` bean, or make the product's scope the declaring bean's,
@@ -1304,6 +1308,17 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **A scoped bean under construction is not reachable from its own injection (section 5.4).** A bean of a normal scope
+  that injects what its own producer method produces - a field or initializer injected with the product - has the
+  producer invoked on it through its client proxy while it is being created, and Weld hands the producer the instance
+  under construction. Micronaut resolves the proxy's target through the scope again, which finds no instance yet and
+  begins a second creation of the bean, which fails with a `BeanInstantiationException` that names no cause
+  (`SelfProducingShutdownObserverTest`, disabled). The bean is then not created at all: where it observes
+  `Shutdown`, the failure aborts the notification of the observers after it, as a failing observer does, and is
+  logged by the container. Core registers an instance under construction as in flight only for
+  `BeanContext.inject(instance)`; doing the same for a scoped bean as its constructor returns - on the resolution
+  context of its creation, consulted by `getProxyTargetBean` - would hand the producer the instance. A constructor
+  injected with the product of the bean's own producer cannot be supported by any container.
 - **The factory of a product is destroyed as a bean of its own once the product is created.** Once a bean produced by
   a factory method or field has been created, `DefaultBeanContext.createRegistrationInContext` destroys the factory
   registration the resolution recorded (`getAndResetDependentFactoryBean`) with `destroyBean(registration)`, that is
