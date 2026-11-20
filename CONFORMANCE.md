@@ -180,6 +180,12 @@ a CDI archive; compile such a module with the processor to have its beans select
 where such a subclass was a bean: the common case is a mock written as `@Alternative @Priority(1) class Mock extends
 Real`, which is now no bean and leaves `Real` in place. The processor warns where a class it does not discover
 declares `@Alternative`, `@Priority`, `@Named`, a qualifier, an interceptor binding or an `@Inject` member.
+An archive whose `META-INF/beans.xml` declares `bean-discovery-mode="none"` is not a bean archive: the SE bootstrap,
+when it discovers, leaves out every bean whose definition was compiled into that archive
+(`SeNoneDiscoveryArchiveTest`). The descriptor is read at runtime, by the archive the definition's class is loaded
+from, because the processor compiles a library before it is packaged with its descriptor; a directory of classes
+counts as an archive only where its `beans.xml` sits beside the classes, so a build that keeps resources in a
+directory of their own - Gradle's `build/resources/main` - is not narrowed until it is packaged.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
