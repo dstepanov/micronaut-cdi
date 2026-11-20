@@ -75,6 +75,10 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
      * The async type the compiler matched the method by, empty for a method that is not asynchronous.
      */
     private final String asyncType;
+    /**
+     * The container's cache of what invokers invoke, found as this invoker is first invoked.
+     */
+    private volatile @Nullable InvokerTargets targets;
 
     public RecordedInvoker(BeanContext beanContext, String beanClassName, @Nullable Class<?> beanType,
                            String methodName, String[] parameterTypeNames,
@@ -144,9 +148,10 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
     @Override
     public @Nullable Object invoke(@Nullable Object instance, Object @Nullable [] arguments) throws Exception {
         // the candidates of the bean class are the ones the bean context keeps for it
-        BeanDefinition<?> definition = definitionOf(beanContext);
-        Class<?> beanClass = beanClassOf(definition);
-        ExecutableMethod<Object, Object> method = executable(definition);
+        Target resolved = target();
+        BeanDefinition<?> definition = resolved.definition();
+        Class<?> beanClass = resolved.beanClass();
+        ExecutableMethod<Object, Object> method = resolved.method();
         Class<?>[] parameterTypes = method.getArgumentTypes();
 
         if (arguments == null) {
@@ -364,6 +369,35 @@ public final class RecordedInvoker implements Invoker<Object, Object> {
             throw new IllegalStateException("No bean of " + beanClassName + " to invoke");
         }
         return found;
+    }
+
+    /**
+     * The bean and the executable method the invoker invokes: found among the definitions once for every invoker of
+     * the same method, and kept by the container ({@link InvokerTargets}) until the definitions change, since a
+     * framework invokes one invoker over and over and may build the same invoker again.
+     *
+     * @return The target
+     */
+    Target target() {
+        InvokerTargets cache = targets;
+        if (cache == null) {
+            cache = beanContext.getBean(InvokerTargets.class);
+            targets = cache;
+        }
+        return cache.targetOf(new InvokerTargets.Key(beanClassName, methodName, List.of(parameterTypeNames)), () -> {
+            BeanDefinition<?> definition = definitionOf(beanContext);
+            return new Target(definition, beanClassOf(definition), executable(definition));
+        });
+    }
+
+    /**
+     * What an invoker invokes.
+     *
+     * @param definition The definition of the bean
+     * @param beanClass  The class of the bean
+     * @param method     The executable method
+     */
+    record Target(BeanDefinition<?> definition, Class<?> beanClass, ExecutableMethod<Object, Object> method) {
     }
 
     private static Class<?> beanClassOf(BeanDefinition<?> definition) {
