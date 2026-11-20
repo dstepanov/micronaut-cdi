@@ -50,6 +50,10 @@ class RequestDestructionTest {
     static volatile @Nullable CountDownLatch beforeDestroyedRelease;
     static volatile @Nullable CountDownLatch initializedReached;
     static volatile @Nullable CountDownLatch initializedRelease;
+    /**
+     * Run by the observer of a request's destruction, after it recorded it, where a test wants to act at that moment.
+     */
+    static volatile @Nullable Runnable onDestroyed;
 
     @ApplicationScoped
     public static class Lifecycle {
@@ -78,6 +82,10 @@ class RequestDestructionTest {
         void destroyed(@Observes @Destroyed(RequestScoped.class) Object event) {
             if (recording) {
                 EVENTS.add("destroyed");
+                Runnable action = onDestroyed;
+                if (action != null) {
+                    action.run();
+                }
             }
         }
     }
@@ -172,6 +180,7 @@ class RequestDestructionTest {
         beforeDestroyedRelease = null;
         initializedReached = null;
         initializedRelease = null;
+        onDestroyed = null;
     }
 
     @Test
@@ -345,6 +354,49 @@ class RequestDestructionTest {
             work.get(10, TimeUnit.SECONDS);
             // destroyed once, by the end; the context it would tell it was destroyed has stopped
             assertEquals(List.of("before destroyed", "ticket closed"), EVENTS);
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void aRequestWhoseObserversResumeWhileTheContainerStopsIsToldNothingAfterItWasDestroyed() throws Exception {
+        CountDownLatch reached = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        CountDownLatch workDone = new CountDownLatch(1);
+        initializedReached = reached;
+        initializedRelease = release;
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<?> work;
+            try (ApplicationContext context = ApplicationContext.run()) {
+                context.getBean(Lifecycle.class);
+                RequestScope scope = context.getBean(RequestScope.class);
+                recording = true;
+                // while the container stops - it has destroyed the request, and runs on - the observer of the
+                // request's beginning resumes, and the work finishes, before the container goes on
+                onDestroyed = () -> {
+                    onDestroyed = null;
+                    release.countDown();
+                    try {
+                        workDone.await(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                };
+                work = executor.submit(() -> {
+                    try {
+                        scope.run(() -> EVENTS.add("work"));
+                    } finally {
+                        workDone.countDown();
+                    }
+                });
+                assertTrue(reached.await(10, TimeUnit.SECONDS));
+            }
+            work.get(10, TimeUnit.SECONDS);
+            // the observers after the one that was running are not told the request began once it was destroyed
+            assertEquals(List.of("initialized", "before destroyed", "destroyed", "work"), EVENTS);
         } finally {
             release.countDown();
             executor.shutdownNow();
