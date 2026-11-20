@@ -351,8 +351,9 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      * included, and a producer is no member a subclass inherits (section 4.2). The producers are recorded on the
      * class, and its condition ({@code InheritedProducer}) leaves out the products of the recorded ones. What is written
      * on a member read through this class reaches the products Micronaut builds of it under this class and not those
-     * of the class declaring it: a producer field is given the types of its own that its class does not name, which
-     * Micronaut compiles with those of the class.
+     * of the class declaring it: each inherited producer is given the record of its producer, which the condition
+     * reads, and a producer field the types of its own that its class does not name, which Micronaut compiles with
+     * those of the class.
      *
      * @return Whether the class inherits producers
      */
@@ -375,7 +376,16 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
         for (MemberElement member : members) {
             String declaring = member.getDeclaringType().getName();
             inherited.add(declaring + "#" + member.getName());
-            if (member instanceof FieldElement) {
+            // what is written on a member read through this class is written for the products Micronaut builds of
+            // it under this class alone, which the condition is to recognise: the record its declaring class writes
+            // is not seen through this one
+            boolean isField = member instanceof FieldElement;
+            member.removeAnnotation(CdiProducer.class);
+            member.annotate(CdiProducer.class, builder -> builder
+                .member("declaringType", new AnnotationClassValue<>(declaring))
+                .member("member", member.getName())
+                .member("field", isField));
+            if (isField) {
                 // Micronaut exposes the product of a field by the types the field names followed by those its class
                 // names, and compiles no type named twice
                 Set<String> types = new LinkedHashSet<>(

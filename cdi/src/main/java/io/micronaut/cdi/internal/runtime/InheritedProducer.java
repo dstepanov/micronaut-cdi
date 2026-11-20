@@ -22,8 +22,6 @@ import io.micronaut.context.condition.ConditionContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.MethodInjectionPoint;
 
 /**
  * The condition of a class that inherits producers, which takes out of it the products Micronaut builds of
@@ -40,22 +38,14 @@ public final class InheritedProducer implements Condition {
 
     @Override
     public boolean matches(ConditionContext context) {
-        Object component = context.getComponent();
         AnnotationMetadata metadata = context.getComponent().getAnnotationMetadata();
+        // the processor records the producer on every inherited producer as it is read through the class inheriting
+        // it, so a product Micronaut builds of it under that class carries the record too
         AnnotationValue<CdiProducer> producer = metadata.getAnnotation(CdiProducer.class);
-        String produced;
-        if (producer != null) {
-            produced = producer.stringValue("declaringType").orElse("") + "#" + producer.stringValue("member").orElse("");
-        } else if (component instanceof BeanDefinition<?> definition
-            && definition.getConstructor() instanceof MethodInjectionPoint<?, ?> method
-            && definition.getDeclaringType().isPresent()) {
-            // the product of an inherited producer method may carry no record of its producer: the record is
-            // written on the member as the class declaring it is visited, which a subclass's factory may read before
-            // that, or from a class compiled apart. Micronaut's own definition still names the method it calls
-            produced = definition.getDeclaringType().get().getName() + "#" + method.getName();
-        } else {
+        if (producer == null) {
             return true;
         }
+        String produced = producer.stringValue("declaringType").orElse("") + "#" + producer.stringValue("member").orElse("");
         for (String inherited : metadata.stringValues(CdiInheritedProducers.class)) {
             if (inherited.equals(produced)) {
                 return false;
