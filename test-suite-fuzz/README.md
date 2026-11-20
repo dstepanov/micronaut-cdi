@@ -77,7 +77,8 @@ correctly, and a simple scenario agrees end to end.
 5. **Filter known differences.** `KnownDifferences` holds one rule per intended difference recorded in
    CONFORMANCE.md, and each rule names its heading. A matching divergence is tagged `known`, not shrunk, and
    still listed. The rules cover: an unproxyable bean refused at compile time; a circular chain of dependent beans,
-   which section 5.4 leaves non-portable and Weld refuses (WELD-001443); and any `ORDER` divergence, since the
+   which section 5.4 leaves non-portable and Weld refuses (WELD-001443); an application scoped bean destroyed
+   after each product of a producer of another scope it declares, a known limitation; and any `ORDER` divergence, since the
    comparison only produces those for order the specification leaves open.
 6. **Shrink.** `Shrinker` is greedy. It tries removing half of the probes, then whole beans, interceptors,
    decorators and probes, then a bean's members, then single annotations. It keeps the first reduction that still

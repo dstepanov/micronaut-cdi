@@ -194,6 +194,25 @@ class HarnessTest {
     }
 
     @Test
+    void anApplicationScopedBeanDestroyedByItsProducerIsAKnownDifference() {
+        Scenario.ProducerDef product = new Scenario.ProducerDef("P1", false, false, Scope.DEPENDENT, "Gen<Integer>",
+            List.of(), null, false, null, false, List.of());
+        BeanDef declaring = new BeanDef("B1", Scope.APPLICATION, List.of(), null, false, List.of(), null, false, null,
+            List.of(), List.of(), false, true, false, List.of(), List.of(product), List.of());
+        Scenario scenario = new Scenario(56, List.of(declaring), List.of(), List.of(),
+            List.of(new Probe("X5", ProbeKind.ITERATE, "Svc", List.of(), false)));
+        RunResult micronaut = RunResult.deployed(List.of("#X5", "{", "B1.preDestroy@B1", "each=P1", "produce P1", "}",
+            "#shutdown", "{", "}"));
+        RunResult weld = RunResult.deployed(List.of("#X5", "{", "each=P1", "produce P1", "}", "#shutdown", "{",
+            "B1.preDestroy@B1", "}"));
+        Divergence divergence = TraceComparison.compare(micronaut, weld);
+        assertTrue(KnownDifferences.match(scenario, divergence, micronaut, weld).isPresent());
+
+        RunResult missing = RunResult.deployed(List.of("#X5", "{", "}", "#shutdown", "{", "B1.preDestroy@B1", "}"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(missing, weld), missing, weld).isEmpty());
+    }
+
+    @Test
     void theShrinkerKeepsOnlyWhatReproduces() {
         Scenario scenario = ScenarioGenerator.generate(7, ScenarioGenerator.Size.LARGE);
         BeanDef culprit = new BeanDef("Culprit", Scope.APPLICATION, List.of("S1"), null, false, List.of(), null, true,

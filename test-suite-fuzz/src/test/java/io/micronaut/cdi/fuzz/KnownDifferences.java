@@ -51,14 +51,20 @@ final class KnownDifferences {
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.REFUSAL_KIND
                 && micronaut.atCompile()),
         // a chain of dependent beans that leads back to its start, with no bean in a normal scope on it: Weld
-        // refuses it as it deploys (WELD-001443), micronaut-cdi deploys it, and what resolving it does is not
-        // portable - section 5.4 requires a container to support only the circularities a normal scoped bean
-        // breaks. Resolving one is a stack overflow on Weld and an exception on micronaut-cdi
-        new Rule("A circular chain of dependent beans (section 5.4)",
+        // refuses it as it deploys (WELD-001443), micronaut-cdi deploys it and fails as it creates a bean of it.
+        // Section 5.4 requires a container to support only the circularities a normal scoped bean breaks.
+        // Resolving one is a stack overflow on Weld and an exception on micronaut-cdi
+        new Rule("A cycle of pseudo-scoped beans fails as it is created",
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.DEPLOYMENT
                 && weld.detail().contains("WELD-001443") && !weld.detail().contains("Exception List")
                 || divergence.category() == Category.TRACE
                 && weld.trace().stream().anyMatch(line -> line.contains("java.lang.StackOverflowError"))),
+        // an application scoped bean declaring a producer of a bean of another scope: micronaut-cdi destroys its
+        // contextual instance after each product is created, which Weld does only as the container shuts down
+        new Rule("Known limitations a review has named: a bean in a normal scope that declares a producer of a bean "
+            + "of another scope",
+            (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
+                && destroyedByItsProducer(scenario, micronaut, weld)),
         // the order of what the specification leaves unordered: what an Instance iterates over, what is destroyed
         // as the container shuts down, the observers of one priority. A difference only there is no finding
         new Rule("Order the specification leaves open: Instance iteration, destruction at shutdown, observers of one priority",
@@ -66,6 +72,31 @@ final class KnownDifferences {
     );
 
     private KnownDifferences() {
+    }
+
+    /**
+     * Whether micronaut-cdi destroyed, before the container shut down, an application scoped bean that declares a
+     * producer of another scope, and Weld did not.
+     */
+    static boolean destroyedByItsProducer(Scenario scenario, RunResult micronaut, RunResult weld) {
+        for (Scenario.BeanDef bean : scenario.beans()) {
+            if (bean.scope() != Scenario.Scope.APPLICATION || !bean.preDestroy()) {
+                continue;
+            }
+            boolean producesAnotherScope = bean.producers().stream()
+                .anyMatch(p -> !p.isStatic() && p.scope() != bean.scope());
+            String destroyed = bean.name() + ".preDestroy@";
+            if (producesAnotherScope && beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.startsWith(destroyed))
+                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.startsWith(destroyed))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<String> beforeShutdown(List<String> trace) {
+        int shutdown = trace.indexOf("#shutdown");
+        return shutdown < 0 ? trace : trace.subList(0, shutdown);
     }
 
     static Optional<Rule> match(Scenario scenario, Divergence divergence, RunResult micronaut, RunResult weld) {
