@@ -94,6 +94,37 @@ class ExtensionsRecordedTest {
         }
     }
 
+    @Test
+    void anExtensionRegisteredOnlyAtRuntimeIsRefusedBeforeStartupIsObserved() {
+        StartupWitness.STARTED.set(false);
+        assertThrows(DeploymentException.class, () -> {
+            try (SeContainer container = SeContainerInitializer.newInstance().disableDiscovery()
+                .addBeanClasses(StartupWitness.class)
+                .addBuildCompatibleExtensions(UnrecordedExtension.class).initialize()) {
+                container.isRunning();
+            }
+        });
+        assertTrue(!StartupWitness.STARTED.get(), "Startup was observed before the deployment was refused");
+    }
+
+    /**
+     * An extension no compilation of the application ran.
+     */
+    public static final class UnrecordedExtension implements BuildCompatibleExtension {
+    }
+
+    /**
+     * Observes the start of the application.
+     */
+    @jakarta.enterprise.context.Dependent
+    public static class StartupWitness {
+        static final java.util.concurrent.atomic.AtomicBoolean STARTED = new java.util.concurrent.atomic.AtomicBoolean();
+
+        void started(@jakarta.enterprise.event.Observes jakarta.enterprise.event.Startup startup) {
+            STARTED.set(true);
+        }
+    }
+
     /**
      * Describes nothing, so that only the record of the compilation names it.
      */
