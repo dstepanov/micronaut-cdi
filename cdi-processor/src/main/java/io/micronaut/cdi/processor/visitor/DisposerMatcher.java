@@ -105,7 +105,8 @@ final class DisposerMatcher {
             // section 3.3.7 matches the disposed parameter by the rules of typesafe resolution: a disposer of
             // the supertype disposes of what a producer of the subtype produces — and the type arguments take
             // part, which Micronaut's erased assignability alone would miss
-            if (!isAssignableToDisposed(produced, candidate.disposedType())) {
+            if (!isAssignableToDisposed(produced, candidate.disposedType())
+                || !isAmongTypedTypes(producer, candidate.disposedType())) {
                 continue;
             }
             if (producerQualifiers == null) {
@@ -159,6 +160,25 @@ final class DisposerMatcher {
             }
         }
         return true;
+    }
+
+    /**
+     * Whether the disposed parameter's class is a bean type the producer kept: one that restricts its bean types with
+     * {@code Typed} has only the types it names and {@code Object} (section 2.2.2), so a disposer of any other of the
+     * produced class's types disposes of nothing.
+     */
+    private static boolean isAmongTypedTypes(MemberElement producer, ClassElement disposed) {
+        if (!producer.hasDeclaredAnnotation(Cdi.TYPED) || isObject(disposed)) {
+            return true;
+        }
+        String disposedName = disposed.getName();
+        for (String typedName : producer.getAnnotationMetadata().stringValues(Cdi.TYPED)) {
+            // the metadata holds binary names, in which a nested type is Outer$Inner
+            if (typedName.equals(disposedName) || typedName.replace('$', '.').equals(disposedName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isAny(Element element) {

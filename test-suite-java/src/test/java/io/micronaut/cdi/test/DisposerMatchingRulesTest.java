@@ -123,4 +123,20 @@ class DisposerMatchingRulesTest {
             "@Produces @Start(\"a\") @Start(\"b\") String make() { return \"\"; }",
             "void dispose(@Disposes @Start(\"b\") @Start(\"a\") String made) { }");
     }
+
+    @Test
+    void aTypeTheProducerLeavesOutWithTypedIsNotDisposedOf() {
+        InjectionDefinitionErrorTest.assertRefused(maker(
+            "@Produces @jakarta.enterprise.inject.Typed(CharSequence.class) String make() { return \"\"; }",
+            "void dispose(@Disposes String made) { }"), NO_PRODUCER);
+        InjectionDefinitionErrorTest.assertRefused(maker(
+            "@Produces @jakarta.enterprise.inject.Typed(CharSequence.class) String make() { return \"\"; }",
+            "void dispose(@Disposes Comparable<String> made) { }"), NO_PRODUCER);
+        assertMatches(
+            "@Produces @jakarta.enterprise.inject.Typed(CharSequence.class) String make() { return \"\"; }",
+            "void dispose(@Disposes CharSequence made) { }");
+        assertMatches(
+            "@Produces @jakarta.enterprise.inject.Typed(CharSequence.class) String make() { return \"\"; }",
+            "void dispose(@Disposes Object made) { }");
+    }
 }
