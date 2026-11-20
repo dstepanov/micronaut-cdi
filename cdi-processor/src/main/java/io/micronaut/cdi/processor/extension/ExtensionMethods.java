@@ -70,12 +70,15 @@ import org.jspecify.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceConfigurationError;
+import java.util.Set;
 
 /**
  * The build compatible extensions of a compilation and the methods of their phases (section 2.10): found as the
@@ -764,9 +767,29 @@ final class ExtensionMethods {
      * under one.
      */
     private static List<Method> declaredMethodsOf(Class<?> type) {
-        List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
-        methods.sort(Comparator.comparing(Method::getName)
-            .thenComparing(method -> Arrays.toString(method.getParameterTypes())));
+        // the methods the extension class declares and the ones it inherits from its superclasses, a method it
+        // overrides taken once, as the override: an extension may well be written as a subclass of a base that
+        // declares its phases
+        List<Method> methods = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Class<?> declaring = type; declaring != null && declaring != Object.class;
+             declaring = declaring.getSuperclass()) {
+            List<Method> declared = new ArrayList<>(Arrays.asList(declaring.getDeclaredMethods()));
+            declared.sort(Comparator.comparing(Method::getName)
+                .thenComparing(method -> Arrays.toString(method.getParameterTypes())));
+            for (Method method : declared) {
+                if (method.isSynthetic() || method.isBridge()) {
+                    continue;
+                }
+                boolean overridable = !Modifier.isPrivate(method.getModifiers())
+                    && !Modifier.isStatic(method.getModifiers());
+                String signature = method.getName() + Arrays.toString(method.getParameterTypes());
+                if (overridable && !seen.add(signature)) {
+                    continue;
+                }
+                methods.add(method);
+            }
+        }
         return methods;
     }
 
