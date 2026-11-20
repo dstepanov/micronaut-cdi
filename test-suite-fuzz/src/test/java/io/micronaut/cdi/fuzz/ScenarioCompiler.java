@@ -17,15 +17,22 @@ package io.micronaut.cdi.fuzz;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
+import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +68,7 @@ final class ScenarioCompiler {
             "-classpath", System.getProperty("java.class.path"),
             "-processorpath", FuzzConfig.processorPath(),
             "-proc:full",
-            "-parameters"));
+            "-parameters"), FuzzConfig.processorPath());
     }
 
     /**
@@ -71,10 +78,11 @@ final class ScenarioCompiler {
         return compile(sources, output, List.of(
             "-classpath", FuzzConfig.weldPath(),
             "-proc:none",
-            "-parameters"));
+            "-parameters"), null);
     }
 
-    private static Result compile(Map<String, String> sources, Path output, List<String> baseOptions) {
+    private static Result compile(Map<String, String> sources, Path output, List<String> baseOptions,
+                                  String processorPath) {
         try {
             Files.createDirectories(output);
         } catch (IOException e) {
@@ -96,7 +104,15 @@ final class ScenarioCompiler {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         StringWriter compilerOutput = new StringWriter();
         boolean success;
-        try (StandardJavaFileManager fileManager = JAVAC.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8)) {
+        try (StandardJavaFileManager standard = JAVAC.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
+             ProcessorLoader processors = processorPath == null ? null : ProcessorLoader.of(processorPath)) {
+            JavaFileManager fileManager = processors == null ? standard : new ForwardingJavaFileManager<>(standard) {
+                @Override
+                public ClassLoader getClassLoader(Location location) {
+                    return location == StandardLocation.ANNOTATION_PROCESSOR_PATH ? processors
+                        : super.getClassLoader(location);
+                }
+            };
             try {
                 success = JAVAC.getTask(compilerOutput, fileManager, diagnostics, options, null, files).call();
             } catch (RuntimeException e) {
@@ -123,5 +139,41 @@ final class ScenarioCompiler {
             errors.add(compilerOutput.toString());
         }
         return new Result(success, errors);
+    }
+
+    /**
+     * The class loader of the processors. javac would make the test class loader its parent, and the test class path
+     * holds micronaut-inject too, so the processors' copy and the test's would split its packages. This loader sees the
+     * platform classes and the compiler's own API, and nothing else of the test class path.
+     */
+    private static final class ProcessorLoader extends URLClassLoader {
+
+        private static final ClassLoader COMPILER = ScenarioCompiler.class.getClassLoader();
+
+        private ProcessorLoader(URL[] urls) {
+            super("fuzz-processors", urls, ClassLoader.getPlatformClassLoader());
+        }
+
+        static ProcessorLoader of(String path) {
+            List<URL> urls = new ArrayList<>();
+            for (String entry : path.split(File.pathSeparator)) {
+                if (!entry.isEmpty()) {
+                    try {
+                        urls.add(new File(entry).toURI().toURL());
+                    } catch (MalformedURLException e) {
+                        throw new IllegalArgumentException(entry, e);
+                    }
+                }
+            }
+            return new ProcessorLoader(urls.toArray(URL[]::new));
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (name.startsWith("com.sun.source.") || name.startsWith("com.sun.tools.javac.")) {
+                return COMPILER.loadClass(name);
+            }
+            return super.loadClass(name, resolve);
+        }
     }
 }
