@@ -25,17 +25,17 @@ visible in a test report as what passes.
 | 3.2, 3.3 | Producer methods and producer fields, read as Micronaut factory methods and fields | `ProducerVisitor` |
 | 3.4 | Disposer methods, resolved to their producer while it is compiled | `ProducerVisitor`, `DisposerInvoker` |
 | 3.5, 3.6, 3.7 | Bean constructors, injected fields and initializer methods, each point resolved by the container | Micronaut's own injection, `CdiBeanInjectionProvider` |
-| 2.2 | Narrowing the bean types of a bean with `@Typed` | `TypedAnnotationMapper` |
+| 2.2 | Narrowing the bean types of a bean with `@Typed`, a type it names that a bean class or a producer does not have a definition error | `TypedAnnotationMapper`, `BeanDiscoveryVisitor`, `ProducerVisitor` |
 | 8 | Interceptor bindings | deferred to Micronaut Jakarta Interceptors |
 | 5.6 | Programmatic lookup through `Instance`, including handles | `CdiInstance` |
 | 11.1 | The `BeanContainer`, and the `Bean` a lookup resolves to | `CdiBeanContainer`, `CdiBean` |
 | 11.1 | The `BeanManager` of CDI Full, as far as CDI Lite can answer it, and injectable as a bean | `CdiBeanContainer` |
 | 11.1 | `CDI.current()`, installed with `CDI.setCDIProvider` as a container starts, handing over to the providers the service loader finds while none runs | `MicronautCDIProvider`, `MicronautCDI` |
-| 6.2 | The `Context` of each scope, and whether it is active | `CdiContext` |
+| 6.2 | The `Context` of each scope, and whether it is active; `BeanContainer.getContext` throwing `ContextNotActiveException` for a scope with no active context, one with no context registered included, and `IllegalArgumentException` for more than one active context or an annotation that is no scope | `CdiContext`, `CdiBeanContainer` |
 | 5.2 | The rules of resolution applied to types and qualifiers on their own | `CdiAssignability` |
 | 11.1.9 | Interceptor resolution through the bean container | `CdiBeanContainer` |
 | 9.2 | Firing an event, synchronously and asynchronously, and narrowing one with `select` | `CdiEvent` |
-| 9.3 | Observer resolution by the event's type and qualifiers | `ObserverRegistry`, `CdiAssignability` |
+| 9.3 | Observer resolution by the event's type and qualifiers, a raw event type observed by a parameterized type only where its every parameter is an unbounded type variable or `Object`, not a wildcard (9.3.1) | `ObserverRegistry`, `CdiAssignability` |
 | 9.4 | Observer methods, including static ones, `Reception.IF_EXISTS` and `@Priority` | `ObserverVisitor`, `CdiObserverMethod` |
 | 9.5 | Observer notification, in ascending order of priority | `ObserverRegistry` |
 | 9.6 | The container lifecycle events: `Startup`, `Shutdown`, `@Initialized`, `@BeforeDestroyed`, `@Destroyed` | `ContainerLifecycle` |
@@ -51,6 +51,9 @@ visible in a test report as what passes.
 | 12.2 | The `@Discovery` phase, registering an annotation as a qualifier, an interceptor binding or a stereotype | `DiscoveredClasses` |
 | 12.5 | The `@Synthesis` phase, run once the classes of a compilation have been registered, and the synthetic beans and observers it describes, each registered as a bean definition of the class the extension named, without a source | `BuildCompatibleExtensionVisitor`, `SynthesisPhase` |
 | 12.6 | The `@Validation` phase, whose errors fail the compilation | `BuildCompatibleExtensionVisitor` |
+| 12.4 | A synthetic bean described to a `@Registration` method by the bean types its builder declared, as a class bean is by its bean types | `ExtensionMethods` |
+| 12 | The extension methods of a build compatible extension, the ones it inherits from its superclasses included, a method it overrides run once, as the override | `ExtensionMethods` |
+| 12 (5.0) | An exception an extension method of any phase throws, an error it reports through `Messages`, and a parameter of a type the phase does not hand, as deployment problems that fail the compilation; a malformed extension method - none or more than one parameter naming what it is told about - as a definition error, as the kit has it; an argument lookup out of the method's parameters refused by `InvokerBuilder.withArgumentLookup` with `IllegalArgumentException` as it is asked for | `ExtensionMethods`, `ElementInvokerFactory` |
 | 12.4 | The `@Registration` phase, run over each bean and observer as it is compiled, and over the synthetic beans and observers and the built-in beans once synthesis has run | `ElementBeanInfo`, `ElementObserverInfo`, `SyntheticBeanInfo`, `SyntheticObserverInfo`, `BuildCompatibleExtensionVisitor` |
 | 12 | `AnnotationBuilder` and `Types`, composing annotation values and types of the one language model | `ElementAnnotationBuilder`, `ElementBuildServices`, `VisitorTypes` |
 | 12.5 | Synthetic beans and synthetic observers at runtime, registered from what was recorded, with the creation and disposal functions, the parameters and the lookup they are handed | `RecordedSynthesis`, `CdiParameters`, `SyntheticObserverMethod` |
@@ -75,8 +78,9 @@ visible in a test report as what passes.
 | 5.6.1, 9.2 (5.0) | The built-in `Instance` and `Event` beans reporting `@Any` and `@Default` | `CdiBean` |
 | 12 (5.0) | `ClassInfo.isSealed()` and `permittedSubclasses()` of the language model | `ElementClassInfo` |
 | 25 (SE, 5.0) | `SeContainerInitializer.addBuildCompatibleExtensions`, accepting an extension a compilation of the application recorded running | `MicronautSeContainerInitializer`, `CdiDeploymentRecord` |
+| 7.2 | The container's invocations of observer, producer and disposer methods as business method invocations, intercepted by the bean's method interceptors - through the client proxy of a normal scoped bean where the method is bound to interceptors, whether the bean declares it or inherits it | `CdiObserverMethod`, `DisposerInvoker`, `CdiResolution` |
 | 2.5.1 (5.0) | The bean discovery mode of `beans.xml`: `all` a deployment problem as any container starts, `none` no bean archive of an SE container that discovers; nothing else of a descriptor is read | `BeanArchives`, `DeploymentValidation`, `MicronautSeContainerInitializer` |
-| 5.5.8 (5.0) | Bean metadata: the dependent `@Default Bean` of the bean an injection point belongs to - a class bean at a field, constructor or initializer, the produced bean at a parameter of its producer or disposer method, the declaring bean at a parameter of an observer method, a synthetic bean through `SyntheticInjections` - and the `@Default Interceptor` of an interceptor class, each the container's own `Bean` or `Interceptor` of it, read off the resolution path as the bean is created; the `@Intercepted Bean` is not yet implemented, see below | `CdiBeanMetadataFactory`, `CdiInterceptorMetadataFactory`, `ContainerInjectionVisitor`, `CdiObserverMethod`, `DisposerInvoker` |
+| 5.5.8 (5.0) | Bean metadata: the dependent `@Default Bean` of the bean an injection point belongs to - a class bean at a field, constructor or initializer, the produced bean at a parameter of its producer or disposer method, the declaring bean at a parameter of an observer method, a synthetic bean through `SyntheticInjections` - and the `@Default Interceptor` of an interceptor class, each the container's own `Bean` or `Interceptor` of it, read off the resolution path as the bean is created, a `Bean` of another type than the one the point is handed - of the declaring class at a producer or disposer parameter among them - a definition error; the `@Intercepted Bean` is not yet implemented, see below | `CdiBeanMetadataFactory`, `CdiInterceptorMetadataFactory`, `ContainerInjectionVisitor`, `CdiObserverMethod`, `DisposerInvoker` |
 
 ## Not yet implemented
 
@@ -202,8 +206,9 @@ directory of their own - Gradle's `build/resources/main` - is not narrowed until
 *CDI 5.0 section 2.5.1.* An implementation that does not support CDI Full ignores a `beans.xml` except for its bean
 discovery mode, and this one reads nothing else of it. The descriptors are found at runtime, as the
 `META-INF/beans.xml` resources the application's class loader lists, each standing for the archive whose URL prefix
-it was found under - a jar, or a directory of classes with its descriptor beside them; the mode is read outside the
-descriptor's comments, and an empty descriptor or one that names no mode is `annotated` (`BeanArchives`).
+it was found under - a jar, or a directory of classes with its descriptor beside them; the mode is the attribute of
+the descriptor's root element as an XML parser reads it, an empty descriptor or one that names no mode is
+`annotated`, and one that is not well formed is a deployment problem (`BeanArchives`).
 
 - `all` belongs to CDI Full: an archive that declares it is a deployment problem, a jakarta `DeploymentException`
   reported by the deployment validation as the container starts, whether it is started by the SE bootstrap or as a
@@ -221,6 +226,24 @@ descriptor's comments, and an empty descriptor or one that names no mode is `ann
   (`MicronautDeployableContainer`), from the archive's entries, keeping only the classes the deployment's extensions
   scanned. An application whose library registers an extension and should contribute no beans of its own leaves that
   library's classes out of the processor's compilation, or vetoes them.
+
+### A class written as a decorator is no bean
+
+*CDI Full, chapter 8 of 4.1.* Decorators belong to CDI Full and are not implemented. A class annotated
+`jakarta.decorator.Decorator` is no bean here (`BeanDiscoveryVisitor`): it is not resolvable, decorates nothing, and
+is not reported as an error, so the beans it would have decorated are invoked undecorated
+(`FullOnlyDeploymentsTest`). It is left out rather than made a plain bean, whose delegate injection point would be
+ambiguous between the decorator and what it decorates. Asking for the metadata of a decorator - `Decorator<X>`, the
+`@Decorated Bean<X>` - is a definition error as the class compiles (`DecoratorMetadataInjectionTest`).
+
+### A cycle of pseudo-scoped beans fails as it is created
+
+*Section 5.4.* The container supports a dependency cycle when one of the beans in it has a normal scope, through its
+client proxy, and the specification requires no more. A cycle through beans of pseudo-scopes alone - `@Dependent`,
+`@Singleton` - is not detected as the container starts: the deployment deploys, and the creation of a bean of the
+cycle fails with Micronaut's circular dependency failure (`FullOnlyDeploymentsTest`). Weld rejects such a deployment
+as it starts; this container validates the injection points of each bean one at a time, and does not walk the graph
+of the deployment for cycles.
 
 ### A lookup of Micronaut's resolves to the default bean through the resolution customizer
 
@@ -249,7 +272,20 @@ A class written with the singleton pseudo-scope alone, `jakarta.inject.Singleton
 and its name as a bean of the specification is (`SpecificationBeans.isBean`), since the specification names the
 pseudo-scope a scope of its own and Micronaut writes the same annotation; the rules a bean of the specification is
 held to as it compiles, and the container's resolution of its injection points, are not applied to it, since
-Micronaut's own beans carry the same annotation.
+Micronaut's own beans carry the same annotation. That includes the rule of section 6.5.3 that only a dependent bean
+may be handed the `@Default InjectionPoint`: such a class injected with one compiles (`InjectionPointScopeRulesTest`).
+A producer that declares `@Singleton` or a pseudo-scope of the application's own, which is a bean of the
+specification, is held to the rule.
+
+A bean whose `Typed` leaves its own class out of its bean types, or names no type, is still the bean that declares its
+producers, disposers and observer methods, and is created as `Object` where the container already chose it
+(`CdiResolution.creationTypeOf`, `TypedAwayDeclaringBeanTest`). The definition Micronaut generates for a product
+resolves the bean declaring its producer by the declaring class (`BeanResolutionContext.getFactoryBean`), so the
+processor keeps a class that declares producers resolvable by its class to Micronaut: `BeanContext.getBean` of the
+class finds such a bean, while the container's resolution - injection points, `Instance`, `BeanContainer.getBeans` -
+compares the bean types its `Typed` gives it, and does not. A `getFactoryBean` that resolved the declaring
+definition the product names rather than a bean of its class would make this unnecessary; see "Open points in
+Micronaut Core".
 
 ### An unproxyable normal scoped bean is detected as it is compiled
 
@@ -277,7 +313,8 @@ compiler. Which bean an injection point resolves to, and which beans share a nam
 a bean may be compiled in another module, or be registered as the container starts - so the container validates
 its beans as it starts, from what they were compiled with, through the SE bootstrap and an `ApplicationContext`
 alike, and with portable extensions before `AfterDeploymentValidation`. An injection point of a bean's fields,
-constructor, initializer methods, and observer and disposer methods that resolves to no bean, to more than one
+constructor, initializer methods, producer methods, and observer and disposer methods - those of a bean in a normal
+scope read from the definition its client proxy stands in front of - that resolves to no bean, to more than one
 that cannot be told apart, or to a bean in a normal scope that cannot be proxied; two beans of one name; and a
 name that is the path prefix of another - each is a `DeploymentException`, every one found being reported. A bean another
 one replaces with Micronaut's `Replaces` is no bean of the deployment: its dependencies and its name are not
@@ -1083,7 +1120,36 @@ told, it was initialized (`RequestDestructionTest`). A request begun after that,
 it is destroyed, is destroyed the same way as Micronaut stops the request scope. Whichever of the container and the request's own end claims it first destroys it: an
 end that has begun telling its observers is left to finish, even past the close, and then tells a context that
 stopped nothing more. A thread whose activated request the container destroyed takes the activation out of its
-propagated context as it deactivates, and is then told the context is not active.
+propagated context as it deactivates, and is then told the context is not active; where something was propagated
+on the thread after it - a request begun since in another container, say - the activation is left in place, since
+ending it would take out what came after it too (`ControllerAfterShutdownTest`).
+
+The container takes itself down from the shutdown event Micronaut publishes before it destroys any bean. Micronaut
+stops publishing that event at the first listener that throws, so where a listener of the shutdown ordered before the
+container's throws, the container goes down from its own `@PreDestroy` instead: `Shutdown`, the requests still open
+and the application context are each still announced and destroyed, but by then Micronaut may already have destroyed
+singletons the container does not depend on, which a request scoped bean that uses one as it is destroyed then finds
+closed. Shutdown listeners that may throw should catch what they throw.
+
+A `Typed` that names an array type on a producer is refused as the bean compiles: Micronaut does not expose an array
+type as a bean type it can look up. A producer of an array has exactly the array type and `Object` as bean types
+(section 3.2.1), so leave the `Typed` out. For the same reason a synthetic bean of an array type is not matched to a
+registration method of a build compatible extension that asks for the array type.
+
+A class level interceptor binding of a bean class reaches the beans its producer methods produce: their lifecycle
+callback interceptors - `@AroundConstruct`, `@PostConstruct`, `@PreDestroy` - run on the produced object, which is no
+instance of a managed bean (CDI 4.1 sections 7.2 and 9), while the producer method itself is rightly intercepted as a
+business method (`ProducedLifecycleInterceptionTest`, disabled). Micronaut reads the metadata of a produced bean
+together with that of its factory, and the Jakarta Interceptors processor writes the interception of the produced
+bean on the producer, which shadows the factory's own, only where the producer or the produced type declares
+interception of its own (`BeanInterceptionWriter.interceptProduced` returns early otherwise). Writing that record
+whenever the factory class declares interception - an empty one where nothing else binds the product - closes it in
+Micronaut Jakarta Interceptors; until then, bind a factory's business methods one by one rather than at its class.
+
+A bean in a normal scope that declares a producer of a bean of another scope has its contextual instance destroyed
+after each product is created, because of how Micronaut Core destroys the factory it recorded; see "Open points in
+Micronaut Core". Declare such a producer on a `@Dependent` bean, or make the product's scope the declaring bean's,
+until it is fixed there.
 
 A synthetic bean in a normal scope has no client proxy. It is registered as the container starts as a Micronaut
 `RuntimeBeanDefinition` routed to the context of its scope, so a lookup within the scope's active context finds
@@ -1174,12 +1240,11 @@ The kit's broken deployments of CDI 5.0 whose packages are not named for it - th
 regression tests beside the kit's own.
 
 Beyond Lite, the suite runs a few of the classes the kit marks as CDI Full, in a `beyond-lite` block of their
-own: 22 tests, all passing, which makes 994 in all. Each asserts something this implementation answers although
+own: 21 tests, all passing, which makes 993 in all. Each asserts something this implementation answers although
 the kit files it under Full — the bean manager's comparison and hash code of qualifiers
 (`QualifierEquivalenceTest`), an injectable reference that is unsatisfied or ambiguous
 (`UnsatisfiedInjectableReferenceTest`, `AmbiguousInjectableReferenceTest`), interceptors bound with
-`@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorBindingsWithAtInterceptorsTest`,
-`InterceptorOrderTest`), the definition error of injecting the metadata of a decorator — `Decorator<X>` or
+`@Interceptors` (`MethodLevelInterceptorTest`, `InterceptorOrderTest`), the definition error of injecting the metadata of a decorator — `Decorator<X>` or
 the `@Decorated` `Bean<X>` — into a bean that is not one (the four tests of
 `implementation/builtin/metadata/broken/injection`), and the expression language of `micronaut-cdi-el`: names
 resolved to beans (`full.lookup.el.ResolutionByNameTest`), a wrapped factory of someone else's
@@ -1190,6 +1255,12 @@ application is compiled against, the processor compiles the public methods of ea
 as executable methods; a bean without a name, and an application without the module, gets none of it. Their scenario packages are compiled by name (`beyondLiteScenarios` in
 `cdi-tck/build.gradle`), and the `cdi-full` group stays excluded from every other block. CDI Full as a whole is
 still not claimed.
+
+One class of the kit that used to run in this block is left out by name: `InterceptorBindingsWithAtInterceptorsTest`.
+Its package, `full/interceptors/contract/invocationContext`, holds an `@ApplicationScoped` producer method with a
+parameter of CDI Full's `InterceptionFactory`, which CDI Lite has no bean for. The parameter of a producer method is
+an injection point, so the deployment has an unsatisfied dependency and is refused as the container starts (section
+5.2.2); the test ran only while the parameters of a producer in a normal scope went unvalidated.
 
 The `tckSignatureTest` task checks the API dependencies resolved with `micronaut-cdi-reflection` against the
 official CDI 5.0.0 baseline (`jakarta.cdi-tck-core-impl-5.0.0-jdk17.sigfile`), using Jakarta SigTest 2.2 and its
@@ -1236,6 +1307,20 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
+- **The factory of a product is destroyed as a bean of its own once the product is created.** Once a bean produced by
+  a factory method or field has been created, `DefaultBeanContext.createRegistrationInContext` destroys the factory
+  registration the resolution recorded (`getAndResetDependentFactoryBean`) with `destroyBean(registration)`, that is
+  as a bean that is not a dependent. Where the declaring bean is in a normal scope, the registration is that of its
+  client proxy, and destroying a proxy that is not a dependent removes its target from the scope: the contextual
+  instance of an `@ApplicationScoped` bean that produces a `@Dependent` bean has its `@PreDestroy` run after every
+  product, a fresh one serves the next, and none is destroyed as the context ends
+  (`NormalScopedFactoryLifecycleTest`, disabled). Destroying the recorded factory as a dependent - which leaves a
+  scoped target in its scope, as the destruction of any other dependent proxy does - would close it; only a
+  `@Dependent` declaring instance is to be destroyed once the call completes (CDI 4.1 section 6.4.2).
+- **The bean declaring a producer is resolved by its class.** `BeanResolutionContext.getFactoryBean` looks the
+  factory up with `getBean(factoryType, qualifier)`, which a bean whose `Typed` leaves its class out of its bean
+  types is no candidate of. The processor widens Micronaut's `typed` of such a class to keep it resolvable; resolving
+  the definition the product's factory is (the product definition knows it) would need no such widening.
 - **A dependent created through a bean's `BeanDependencyResolver` does not know whose dependent it is (CDI 5.0,
   section 5.5.8).** The Jakarta Interceptors advice of a bean creates the bean's interceptor instances with
   `dependencies.getBean(...)`, and the resolution that starts has a path of its own, a null root definition and no

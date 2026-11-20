@@ -928,7 +928,19 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
 
     @Override
     public Context getContext(Class<? extends Annotation> scopeType) {
-        Context active = activeContext(scopeType);
+        if (contexts.of(scopeType).isEmpty() && isScope(scopeType)) {
+            // a scope no context is registered for has no active context; an annotation that is no scope at all
+            // is refused below as the argument it is
+            throw new ContextNotActiveException("No context of " + scopeType.getName()
+                + " is registered, so none is active");
+        }
+        Context active;
+        try {
+            active = activeContext(scopeType);
+        } catch (IllegalStateException e) {
+            // more than one active context of the scope, which BeanContainer.getContext names an illegal argument
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
         if (active != null) {
             return active;
         }

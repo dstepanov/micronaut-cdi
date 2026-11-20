@@ -428,10 +428,15 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
      * this scope and the closed context, in scope for good.
      */
     private void endDestroyedActivation(Predicate<Activation> ofTheCaller) {
-        Activation destroyed = PropagatedContext.getOrEmpty().findOrNull(Activation.class,
+        PropagatedContext current = PropagatedContext.getOrEmpty();
+        Activation destroyed = current.findOrNull(Activation.class,
             activation -> activation.instances().owner() == this && activation.instances().ended().get()
                 && !activation.suspended() && activation.isOfTheCallingThread() && ofTheCaller.test(activation));
-        if (destroyed != null) {
+        // only where it is the innermost element of the context: ending the propagation it began restores the
+        // context from before it, which would take out whatever was propagated since - a request begun on this
+        // thread in another container, say - so an activation with something propagated after it is left in place
+        List<PropagatedContextElement> elements = current.getAllElements();
+        if (destroyed != null && !elements.isEmpty() && elements.getLast() == destroyed) {
             destroyed.end();
         }
     }

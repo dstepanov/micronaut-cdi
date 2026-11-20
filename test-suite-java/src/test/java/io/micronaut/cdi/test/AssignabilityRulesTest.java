@@ -293,6 +293,16 @@ class AssignabilityRulesTest {
             literal(new TypeLiteral<Box<String[]>>() { })), "String[] is no Runnable");
     }
 
+    @Test
+    <E> void aRawEventTypeIsObservedByAParameterizedTypeWhoseParametersAreObjectOrUnboundedVariables() {
+        // section 9.3.1: a raw event type is assignable to a parameterized observed type of the same raw type when
+        // every parameter of the observed type is an unbounded type variable or Object, which a wildcard is not
+        assertTrue(event(literal(new TypeLiteral<Foo<Object>>() { }), Foo.class), "Object says nothing");
+        assertTrue(event(literal(new TypeLiteral<Foo<E>>() { }), Foo.class), "an unbounded variable says nothing");
+        assertFalse(event(literal(new TypeLiteral<Foo<?>>() { }), Foo.class), "a wildcard is no type variable");
+        assertFalse(event(literal(new TypeLiteral<Foo<String>>() { }), Foo.class), "an actual type says something");
+    }
+
     private static Type literal(TypeLiteral<?> literal) {
         return literal.getType();
     }

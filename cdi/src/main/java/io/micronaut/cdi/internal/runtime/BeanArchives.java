@@ -20,15 +20,19 @@ import io.micronaut.inject.BeanType;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import org.jspecify.annotations.Nullable;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The bean archive descriptors of an application: the {@code META-INF/beans.xml} of every archive a class loader
@@ -48,9 +52,7 @@ import java.util.regex.Pattern;
 public final class BeanArchives {
 
     private static final String BEANS_XML = "META-INF/beans.xml";
-    private static final Pattern COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
-    private static final Pattern DISCOVERY_MODE =
-        Pattern.compile("bean-discovery-mode\\s*=\\s*[\"']\\s*([A-Za-z]*)\\s*[\"']");
+    private static final String DISCOVERY_MODE = "bean-discovery-mode";
 
     private BeanArchives() {
     }
@@ -148,13 +150,35 @@ public final class BeanArchives {
     }
 
     /**
-     * The bean discovery mode a descriptor declares, read outside its comments, or {@code null} where it declares
-     * none - an empty descriptor among them - which CDI 4.0 and later read as {@code annotated}.
+     * The bean discovery mode a descriptor declares, the attribute of its root element as XML reads it, or
+     * {@code null} where it declares none - an empty descriptor among them - which CDI 4.0 and later read as
+     * {@code annotated}. As written: the values of the schema's enumeration are case sensitive.
+     *
+     * @throws DeploymentException Where the descriptor is not well formed
      */
     static @Nullable String discoveryModeOf(String content) {
-        Matcher mode = DISCOVERY_MODE.matcher(COMMENT.matcher(content).replaceAll(""));
-        // as written: the values of the schema's enumeration are case sensitive
-        return mode.find() ? mode.group(1) : null;
+        if (content.isBlank()) {
+            return null;
+        }
+        XMLInputFactory factory = XMLInputFactory.newFactory();
+        // a descriptor is read for one attribute: nothing it declares or refers to outside itself is read
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        try {
+            XMLStreamReader reader = factory.createXMLStreamReader(new StringReader(content));
+            try {
+                while (reader.hasNext()) {
+                    if (reader.next() == XMLStreamConstants.START_ELEMENT) {
+                        return reader.getAttributeValue(null, DISCOVERY_MODE);
+                    }
+                }
+                return null;
+            } finally {
+                reader.close();
+            }
+        } catch (XMLStreamException e) {
+            throw new DeploymentException("A beans.xml is not well formed: " + e.getMessage(), e);
+        }
     }
 
     /**

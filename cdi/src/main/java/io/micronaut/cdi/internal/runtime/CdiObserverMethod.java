@@ -225,9 +225,11 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                     target = instanceOf(declaring, dependents);
                 } else {
                     target = beanContext.getBean(declaring);
-                    if (target instanceof InterceptedProxy<?> proxy) {
+                    if (target instanceof InterceptedProxy<?> proxy && !CdiResolution.isBoundToInterceptors(method.getAnnotationMetadata())) {
                         // the observer method may be protected, which a client proxy does not delegate: the
-                        // notification goes to the instance the context holds
+                        // notification goes to the instance the context holds. One bound to interceptors is a
+                        // business method the proxy intercepts, and the container's call of it is a business method
+                        // invocation (section 7.2), so it goes through the proxy
                         target = proxy.interceptedTarget();
                     }
                 }
@@ -260,7 +262,8 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
     }
 
     private static <B> B instanceOf(BeanDefinition<B> definition, OwnedDependents dependents) {
-        return dependents.registration(definition, definition.asArgument()).bean();
+        // a bean whose Typed leaves its own class out of its bean types still declares its observer methods
+        return dependents.registration(definition, CdiResolution.creationTypeOf(definition)).bean();
     }
 
     private boolean isDependent() {

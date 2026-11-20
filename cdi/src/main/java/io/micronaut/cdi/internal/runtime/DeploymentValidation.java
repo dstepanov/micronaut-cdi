@@ -94,7 +94,10 @@ final class DeploymentValidation {
         List<BeanDefinition<?>> validated = new ArrayList<>(beans.size());
         for (CdiBean<?> bean : beans) {
             if (isOfTheSpecification(bean.definition())) {
-                validated.add(bean.definition());
+                // a bean in a normal scope is its client proxy, whose constructor is the proxy's own: the injection
+                // points are those of the definition it stands in front of - the parameters of a producer method
+                // among them (section 3.2.2)
+                validated.add(targetOf(bean.definition()));
             }
         }
         validated.addAll(enabledInterceptors());
@@ -129,6 +132,10 @@ final class DeploymentValidation {
             }
             throw failure;
         }
+    }
+
+    private <T> BeanDefinition<T> targetOf(BeanDefinition<T> definition) {
+        return container.beanContext().findProxyTargetBeanDefinition(definition).orElse(definition);
     }
 
     /**

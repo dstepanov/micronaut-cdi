@@ -38,10 +38,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * What a disposer is invoked on and in which order its arguments are resolved: a public disposer of a bean in a
- * normal scope is invoked through the client proxy, and so through the interceptors bound to it, while one that is
- * not public is invoked on the contextual instance behind the proxy; and the parameters of a disposer are resolved
- * before the instance it is invoked on.
+ * What a disposer is invoked on and in which order its arguments are resolved: a disposer of a bean in a normal
+ * scope that is public or bound to interceptors is invoked through the client proxy, and so through the interceptors
+ * bound to it (CDI 4.1 section 7.2), while any other is invoked on the contextual instance behind the proxy; and the
+ * parameters of a disposer are resolved before the instance it is invoked on.
  */
 class DisposerInvocationTargetTest {
 
@@ -134,7 +134,7 @@ class DisposerInvocationTargetTest {
     }
 
     @Test
-    void aPublicDisposerIsInterceptedAndOneThatIsNotPublicIsInvokedOnTheInstance() {
+    void aDisposerBoundToAnInterceptorIsInterceptedWhetherOrNotItIsPublic() {
         try (ApplicationContext context = ApplicationContext.run()) {
             Instance<PublicProduct> publicProducts = CDI.current().select(PublicProduct.class);
             Instance<HiddenProduct> hiddenProducts = CDI.current().select(HiddenProduct.class);
@@ -145,7 +145,9 @@ class DisposerInvocationTargetTest {
             assertEquals(List.of("intercepted releasePublic", "disposed public"), SEEN);
             SEEN.clear();
             hiddenProducts.destroy(hiddenProduct);
-            assertEquals(List.of("disposed hidden"), SEEN);
+            // bound to the interceptor as well: the container's call of a disposer is a business method invocation
+            // (section 7.2), whether or not the method is public
+            assertEquals(List.of("intercepted releaseHidden", "disposed hidden"), SEEN);
         }
     }
 

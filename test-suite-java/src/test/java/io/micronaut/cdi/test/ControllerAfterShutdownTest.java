@@ -44,4 +44,29 @@ class ControllerAfterShutdownTest {
             executor.shutdownNow();
         }
     }
+
+    @Test
+    void aControllerDeactivatingARequestTheContainerDestroyedLeavesTheRequestOfAnotherContainerBegunSinceActive()
+        throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            RequestContextController first;
+            try (ApplicationContext context = ApplicationContext.run()) {
+                first = context.getBean(RequestContextController.class);
+                RequestContextController activating = first;
+                assertTrue(executor.submit(activating::activate).get(10, TimeUnit.SECONDS));
+            }
+            RequestContextController closed = first;
+            try (ApplicationContext context = ApplicationContext.run()) {
+                RequestContextController second = context.getBean(RequestContextController.class);
+                assertTrue(executor.submit(second::activate).get(10, TimeUnit.SECONDS));
+                executor.submit(() -> assertThrows(ContextNotActiveException.class, closed::deactivate))
+                    .get(10, TimeUnit.SECONDS);
+                // the request begun since, in the other container, is still the thread's, and its own controller ends it
+                executor.submit(second::deactivate).get(10, TimeUnit.SECONDS);
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+    }
 }

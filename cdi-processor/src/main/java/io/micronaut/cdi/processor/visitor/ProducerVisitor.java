@@ -140,6 +140,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
 
         // the class produces beans rather than only being one, which is what Micronaut calls a factory
         element.annotate(Factory.class);
+        keepResolvableByItsClass(element);
 
         DisposerMatcher disposerMatcher = DisposerMatcher.of(disposers);
         Set<MethodElement> matchedDisposers = new HashSet<>();
@@ -151,6 +152,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 context.fail("An interceptor may not declare a producer", producer);
             }
             checkProducedType(producer, context);
+            checkTyped(producer, context);
             if (producer instanceof MethodElement producerMethod) {
                 for (ParameterElement parameter : producerMethod.getParameters()) {
                     if (parameter.hasDeclaredAnnotation(Cdi.OBSERVES)
@@ -287,6 +289,59 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
             }
             // legal: the compiled bean type keeps the variables, which resolution reads (section 2.4.2.1)
         }
+    }
+
+    /**
+     * Section 2.2.2: every type a producer's own {@code Typed} names must be a bean type of what it produces, as it
+     * must be of a bean class.
+     */
+    private static void checkTyped(MemberElement producer, VisitorContext context) {
+        AnnotationValue<?> typed = producer.getDeclaredAnnotation(Cdi.TYPED);
+        if (typed == null) {
+            return;
+        }
+        ClassElement produced = producer instanceof MethodElement method ? method.getGenericReturnType()
+            : ((FieldElement) producer).getGenericType();
+        for (AnnotationClassValue<?> type : typed.annotationClassValues(AnnotationMetadata.VALUE_MEMBER)) {
+            String typedName = type.getName();
+            // the metadata holds binary names, in which a nested type is Outer$Inner; assignability is asked with the
+            // source form
+            if (!"java.lang.Object".equals(typedName) && !produced.isAssignable(typedName)
+                && !produced.isAssignable(typedName.replace('$', '.'))) {
+                context.fail("The producer " + producer.getName() + " restricts its bean types to " + typedName
+                    + ", which is not one of its types (section 2.2.2)", producer);
+            }
+        }
+    }
+
+    /**
+     * Keeps a class whose {@code Typed} leaves the class out of its bean types resolvable by the class to Micronaut:
+     * the definition of each product resolves the bean declaring its producer by the declaring class
+     * ({@code BeanResolutionContext.getFactoryBean}), and such a bean still declares its producers (section 3.2). The
+     * container reads the bean types of a bean of the specification from its {@code Typed}, which this leaves as it
+     * is, so the class is still no bean type of it; Micronaut's own lookup of the class finds it.
+     */
+    private static void keepResolvableByItsClass(ClassElement element) {
+        AnnotationValue<?> typedAnnotation = element.getDeclaredAnnotation(Cdi.TYPED);
+        if (typedAnnotation == null) {
+            return;
+        }
+        AnnotationClassValue<?>[] typed = typedAnnotation.annotationClassValues(AnnotationMetadata.VALUE_MEMBER);
+        for (AnnotationClassValue<?> type : typed) {
+            if (type.getName().equals(element.getName())) {
+                return;
+            }
+        }
+        // what the Typed annotation mapper wrote, Object standing for a Typed naming nothing, and the class
+        AnnotationClassValue<?>[] widened = java.util.Arrays.copyOf(typed, typed.length + 1);
+        widened[typed.length] = new AnnotationClassValue<>(element.getName());
+        if (typed.length == 0) {
+            widened = new AnnotationClassValue<?>[] {new AnnotationClassValue<>(Object.class),
+                new AnnotationClassValue<>(element.getName())};
+        }
+        AnnotationClassValue<?>[] written = widened;
+        element.removeAnnotation(io.micronaut.context.annotation.Bean.class);
+        element.annotate(io.micronaut.context.annotation.Bean.class, builder -> builder.member("typed", written));
     }
 
     private static boolean containsWildcard(ClassElement type) {

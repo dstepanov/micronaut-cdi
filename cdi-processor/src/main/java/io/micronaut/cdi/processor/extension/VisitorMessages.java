@@ -47,8 +47,14 @@ public final class VisitorMessages implements Messages {
     private final VisitorContext context;
     private final String errorPrefix;
 
+    /**
+     * The messages handed to an extension method of any phase: an error it reports is a deployment problem, as
+     * {@code Messages} says.
+     *
+     * @param context The compilation
+     */
     VisitorMessages(VisitorContext context) {
-        this(context, "");
+        this(context, DEPLOYMENT_PROBLEM);
     }
 
     private VisitorMessages(VisitorContext context, String errorPrefix) {

@@ -37,6 +37,7 @@ class PortableDiscoveredTypesTest {
             read.add("left out " + count(event.getAnnotatedTypes(LeftOut.class)));
             read.add("by its id " + (event.getAnnotatedType(Included.class, Included.class.getName()) != null));
             read.add("by another id " + (event.getAnnotatedType(Included.class, "never-registered") != null));
+            read.add("by no id " + (event.getAnnotatedType(Included.class, null) != null));
             read.add("left out by id " + (event.getAnnotatedType(LeftOut.class, LeftOut.class.getName()) != null));
         }
 
@@ -54,7 +55,7 @@ class PortableDiscoveredTypesTest {
         Reading extension = new Reading();
         try (SeContainer ignored = SeContainerInitializer.newInstance().disableDiscovery()
             .addBeanClasses(Included.class).addExtensions(extension).initialize()) {
-            assertEquals(List.of("included 1", "left out 0", "by its id true", "by another id false",
+            assertEquals(List.of("included 1", "left out 0", "by its id true", "by another id false", "by no id true",
                 "left out by id false"), extension.read);
         }
     }

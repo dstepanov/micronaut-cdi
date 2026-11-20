@@ -473,6 +473,34 @@ public final class CdiResolution {
         return found;
     }
 
+    /**
+     * Whether a method is bound to interceptors, by an interceptor binding or {@code Interceptors} of its own or of
+     * its bean's class: a business method of an intercepted bean, which the bean's client proxy intercepts, and which
+     * the container calls through the proxy - an observer, producer or disposer method (CDI 4.1 section 7.2).
+     *
+     * @param metadata The metadata of the method
+     * @return Whether it is bound to interceptors
+     */
+    public static boolean isBoundToInterceptors(AnnotationMetadata metadata) {
+        return metadata.hasStereotype(jakarta.interceptor.InterceptorBinding.class)
+            || metadata.hasAnnotation(jakarta.interceptor.Interceptors.class);
+    }
+
+    /**
+     * The type a definition the container already chose is created as: its own class, or {@code Object} where its
+     * {@code Typed} leaves the class out of its bean types - which makes it no candidate of a lookup of the class to
+     * Micronaut, although it is the bean, and still declares its producers, disposers and observer methods.
+     *
+     * @param definition The definition
+     * @param <T>        The bean type
+     * @return The type to create it as
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Argument<T> creationTypeOf(BeanDefinition<T> definition) {
+        Argument<T> own = definition.asArgument();
+        return definition.isCandidateBean(own) ? own : (Argument<T>) Argument.OBJECT_ARGUMENT;
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static NonUniqueBeanException nonUnique(List<BeanDefinition<?>> found) {
         List raw = found;

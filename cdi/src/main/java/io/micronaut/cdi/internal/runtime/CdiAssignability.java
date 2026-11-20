@@ -348,7 +348,9 @@ public final class CdiAssignability {
                 return false;
             }
             if (!CdiTypes.isParameterized(event)) {
-                return saysNothing(observed.getTypeParameters());
+                // a raw event type is observed by a parameterized type whose every parameter is an unbounded type
+                // variable or Object (section 9.3.1); a wildcard is neither
+                return saysNothingOfABean(observed.getTypeParameters());
             }
             return allMatch(index, observed.getTypeParameters(), event.getTypeParameters(), true);
         }
@@ -754,9 +756,9 @@ public final class CdiAssignability {
     }
 
     /**
-     * Whether the arguments of a parameterized type say nothing by the rules of section 2.4.2.4, which match a
-     * raw type with a parameterized one: every one an unbounded variable or {@code Object}. Unlike the
-     * language's assignability, an unbounded wildcard is not among them.
+     * Whether the arguments of a parameterized type say nothing by the rules of sections 2.4.2.4 and 9.3.1, which
+     * match a raw type with a parameterized one, as a bean type or as an event type: every one an unbounded variable
+     * or {@code Object}. Unlike the language's assignability, an unbounded wildcard is not among them.
      */
     private static boolean saysNothingOfABean(Argument<?>[] arguments) {
         for (Argument<?> argument : arguments) {
