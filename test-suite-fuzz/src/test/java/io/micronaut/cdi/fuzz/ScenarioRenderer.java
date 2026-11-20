@@ -150,12 +150,22 @@ final class ScenarioRenderer {
          */
         public final class Log {
             private static final List<String> LINES = new ArrayList<>();
+            private static final List<Throwable> ERRORS = new ArrayList<>();
 
             private Log() {
             }
 
             public static synchronized void add(String line) {
                 LINES.add(line);
+            }
+
+            /**
+             * What the probes caught, for the report: the trace names only the class of each.
+             */
+            public static synchronized List<Throwable> errors() {
+                List<Throwable> copy = new ArrayList<>(ERRORS);
+                ERRORS.clear();
+                return copy;
             }
 
             public static synchronized List<String> drain() {
@@ -169,6 +179,9 @@ final class ScenarioRenderer {
              * specification, so that the exceptions of the two implementations are compared as the API names them.
              */
             public static String kind(Throwable t) {
+                synchronized (Log.class) {
+                    ERRORS.add(t);
+                }
                 Class<?> type = t.getClass();
                 while (!(type.getName().startsWith("java.") || type.getName().startsWith("jakarta."))) {
                     type = type.getSuperclass();

@@ -57,7 +57,17 @@ record RunResult(Outcome outcome, boolean atCompile, String detail, List<String>
     }
 
     static RunResult deployed(List<String> trace) {
-        return new RunResult(Outcome.DEPLOYED, false, "", trace);
+        return deployed(trace, "");
+    }
+
+    /**
+     * A deployment that ran its probes.
+     *
+     * @param trace  What they logged
+     * @param caught The stack traces of what they caught
+     */
+    static RunResult deployed(List<String> trace, String caught) {
+        return new RunResult(Outcome.DEPLOYED, false, caught, trace);
     }
 
     static RunResult of(Outcome outcome, boolean atCompile, String detail) {

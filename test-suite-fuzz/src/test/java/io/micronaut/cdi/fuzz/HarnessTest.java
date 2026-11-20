@@ -187,10 +187,47 @@ class HarnessTest {
         Divergence divergence = TraceComparison.compare(deployed, cycle);
         assertTrue(KnownDifferences.match(empty, divergence, deployed, cycle).isPresent());
 
+        RunResult cycles = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
+            "Exception List with 2 exceptions: Exception 0 : WELD-001443: Pseudo scoped bean has circular dependencies."
+                + " Exception 1 : WELD-001443: Pseudo scoped bean has circular dependencies.");
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(deployed, cycles), deployed, cycles).isPresent());
+
         RunResult unsatisfied = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
             "org.jboss.weld.exceptions.DeploymentException: WELD-001408: Unsatisfied dependencies");
         assertTrue(KnownDifferences.match(empty, TraceComparison.compare(deployed, unsatisfied), deployed, unsatisfied)
             .isEmpty());
+    }
+
+    @Test
+    void anApplicationScopedBeanDestroyedByItsProducerIsAKnownDifference() {
+        Scenario.ProducerDef product = new Scenario.ProducerDef("P1", false, false, Scope.DEPENDENT, "Gen<Integer>",
+            List.of(), null, false, null, false, List.of());
+        BeanDef declaring = new BeanDef("B1", Scope.APPLICATION, List.of(), null, false, List.of(), null, false, null,
+            List.of(), List.of(), false, true, false, List.of(), List.of(product), List.of());
+        Scenario scenario = new Scenario(56, List.of(declaring), List.of(), List.of(),
+            List.of(new Probe("X5", ProbeKind.ITERATE, "Svc", List.of(), false)));
+        RunResult micronaut = RunResult.deployed(List.of("#X5", "{", "B1.preDestroy@B1", "each=P1", "produce P1", "}",
+            "#shutdown", "{", "}"));
+        RunResult weld = RunResult.deployed(List.of("#X5", "{", "each=P1", "produce P1", "}", "#shutdown", "{",
+            "B1.preDestroy@B1", "}"));
+        Divergence divergence = TraceComparison.compare(micronaut, weld);
+        assertTrue(KnownDifferences.match(scenario, divergence, micronaut, weld).isPresent());
+
+        RunResult missing = RunResult.deployed(List.of("#X5", "{", "}", "#shutdown", "{", "B1.preDestroy@B1", "}"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(missing, weld), missing, weld).isEmpty());
+    }
+
+    @Test
+    void theUnannouncedRequestOfAPostConstructIsAKnownDifference() {
+        Scenario empty = new Scenario(0, List.of(), List.of(), List.of(), List.of());
+        RunResult micronaut = RunResult.deployed(List.of("#X3", "B1.postConstruct@B1", "get=B1", "#shutdown"));
+        RunResult weld = RunResult.deployed(List.of("#X3", "p=2500 O2@B2 other", "B1.postConstruct@B1",
+            "p=2500 O2@B2 other", "p=2500 O2@B2 other", "get=B1", "#shutdown"));
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(micronaut, weld), micronaut, weld).isPresent());
+
+        RunResult failed = RunResult.deployed(List.of("#X3", "B1.postConstruct@B1", "!java.lang.ClassCastException",
+            "#shutdown"));
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(failed, weld), failed, weld).isEmpty());
     }
 
     @Test
