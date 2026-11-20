@@ -19,8 +19,13 @@ import jakarta.enterprise.inject.spi.DefinitionException;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import org.junit.jupiter.api.Test;
 
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -62,5 +67,73 @@ class DeploymentCompilerClassificationTest {
                 """)));
         assertFalse(failure instanceof DefinitionException || failure instanceof DeploymentException,
             "a source javac rejects is reported as it failed, not as a finding: " + failure);
+    }
+
+    @Test
+    void aVisitorThatCrashedWithNothingReportedBesideItIsNoDefinitionError() {
+        for (String crash : List.of(
+            "Error initializing type visitor [V]: boom",
+            "Error finishing the round of type visitor [V]: boom",
+            "Error finalizing type visitor [V]: boom",
+            "Error initializing bean element visitor [V]: boom",
+            "Error finalizing bean element visitor [V]: boom",
+            "Unexpected error: boom")) {
+            RuntimeException failure = new RuntimeException("compilation failed");
+            RuntimeException classified = DeploymentCompiler.classified(List.of(processorError(crash)), failure);
+            assertEquals(IllegalStateException.class, classified.getClass(), crash);
+        }
+        assertInstanceOf(DefinitionException.class, DeploymentCompiler.classified(
+            List.of(processorError("A method may not be annotated both Inject and Produces"),
+                processorError("Unexpected error: boom")), new RuntimeException("compilation failed")),
+            "a crash beside a finding is a consequence of the finding");
+    }
+
+    private static Diagnostic<JavaFileObject> processorError(String message) {
+        return new Diagnostic<>() {
+            @Override
+            public Kind getKind() {
+                return Kind.ERROR;
+            }
+
+            @Override
+            public JavaFileObject getSource() {
+                return null;
+            }
+
+            @Override
+            public long getPosition() {
+                return NOPOS;
+            }
+
+            @Override
+            public long getStartPosition() {
+                return NOPOS;
+            }
+
+            @Override
+            public long getEndPosition() {
+                return NOPOS;
+            }
+
+            @Override
+            public long getLineNumber() {
+                return NOPOS;
+            }
+
+            @Override
+            public long getColumnNumber() {
+                return NOPOS;
+            }
+
+            @Override
+            public String getCode() {
+                return "compiler.err.proc.messager";
+            }
+
+            @Override
+            public String getMessage(Locale locale) {
+                return message;
+            }
+        };
     }
 }
