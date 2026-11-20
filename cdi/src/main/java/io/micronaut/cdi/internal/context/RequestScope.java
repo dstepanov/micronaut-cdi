@@ -524,13 +524,17 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
 
     private void end(Activation activation) {
         boolean ended = false;
+        // what endWhileActive throws comes from telling or destroying a request it claimed: the request was
+        // destroyed, and is told so though an observer of its imminent destruction threw
+        boolean failed = true;
         try {
             ended = endWhileActive(activation.instances());
+            failed = false;
         } finally {
             try {
                 activation.end();
             } finally {
-                if (ended) {
+                if (ended || failed) {
                     destroyedEvent();
                 }
             }
@@ -598,9 +602,13 @@ public final class RequestScope extends AbstractConcurrentCustomScope<CdiRequest
         try {
             beforeDestroyedEvent();
         } finally {
-            destroyClaimed(instances);
+            try {
+                destroyClaimed(instances);
+            } finally {
+                // told it was destroyed though an observer of its imminent destruction threw
+                destroyedEvent();
+            }
         }
-        destroyedEvent();
     }
 
     /**
