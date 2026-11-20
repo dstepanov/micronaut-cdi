@@ -56,7 +56,7 @@ final class KnownDifferences {
         // Resolving one is a stack overflow on Weld and an exception on micronaut-cdi
         new Rule("A cycle of pseudo-scoped beans fails as it is created",
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.DEPLOYMENT
-                && weld.detail().contains("WELD-001443") && !weld.detail().contains("Exception List")
+                && Fuzzer.weldProblems(weld).equals(java.util.Set.of("WELD-001443"))
                 || divergence.category() == Category.TRACE
                 && weld.trace().stream().anyMatch(line -> line.contains("java.lang.StackOverflowError"))),
         // an application scoped bean declaring a producer of a bean of another scope: micronaut-cdi destroys its
@@ -65,6 +65,13 @@ final class KnownDifferences {
             + "of another scope",
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
                 && destroyedByItsProducer(scenario, micronaut, weld)),
+        // Weld runs a @PostConstruct in a request context it announces - @Initialized, @BeforeDestroyed and
+        // @Destroyed of RequestScoped, which an observer of Object logs as "other" - and micronaut-cdi does not
+        // announce it. A difference only in those notifications is no finding
+        new Rule("The request of an asynchronous notification or a `@PostConstruct` is not announced",
+            (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
+                && otherNotifications(weld) > otherNotifications(micronaut)
+                && agreeWithoutOtherNotifications(micronaut, weld)),
         // the order of what the specification leaves unordered: what an Instance iterates over, what is destroyed
         // as the container shuts down, the observers of one priority. A difference only there is no finding
         new Rule("Order the specification leaves open: Instance iteration, destruction at shutdown, observers of one priority",
@@ -76,22 +83,53 @@ final class KnownDifferences {
 
     /**
      * Whether micronaut-cdi destroyed, before the container shut down, an application scoped bean that declares a
-     * producer of another scope, and Weld did not.
+     * producer of another scope, and Weld did not, or created it more often than Weld did.
      */
     static boolean destroyedByItsProducer(Scenario scenario, RunResult micronaut, RunResult weld) {
         for (Scenario.BeanDef bean : scenario.beans()) {
-            if (bean.scope() != Scenario.Scope.APPLICATION || !bean.preDestroy()) {
+            if (bean.scope() != Scenario.Scope.APPLICATION || !(bean.preDestroy() || bean.postConstruct())) {
                 continue;
             }
             boolean producesAnotherScope = bean.producers().stream()
                 .anyMatch(p -> !p.isStatic() && p.scope() != bean.scope());
+            if (!producesAnotherScope) {
+                continue;
+            }
+            // destroyed, or created again: a bean with no PreDestroy shows it by its second PostConstruct
             String destroyed = bean.name() + ".preDestroy@";
-            if (producesAnotherScope && beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.startsWith(destroyed))
-                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.startsWith(destroyed))) {
+            String created = bean.name() + ".postConstruct@";
+            if (beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.startsWith(destroyed))
+                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.startsWith(destroyed))
+                || count(micronaut.trace(), created) > count(weld.trace(), created)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static final java.util.regex.Pattern OTHER_NOTIFICATION =
+        java.util.regex.Pattern.compile("^p=-?\\d+ O\\d+@\\S+ other$");
+
+    private static long otherNotifications(RunResult run) {
+        return run.trace().stream().filter(line -> OTHER_NOTIFICATION.matcher(line).matches()).count();
+    }
+
+    /**
+     * Whether the two runs agree, but for their order, once the notifications of events of no type of the scenario
+     * or the specification's lifecycle are taken out of both.
+     */
+    static boolean agreeWithoutOtherNotifications(RunResult micronaut, RunResult weld) {
+        Divergence rest = TraceComparison.compare(withoutOtherNotifications(micronaut), withoutOtherNotifications(weld));
+        return rest == null || rest.category() == Category.ORDER;
+    }
+
+    private static RunResult withoutOtherNotifications(RunResult run) {
+        return RunResult.deployed(run.trace().stream()
+            .filter(line -> !OTHER_NOTIFICATION.matcher(line).matches()).toList());
+    }
+
+    private static long count(List<String> trace, String prefix) {
+        return trace.stream().filter(line -> line.startsWith(prefix)).count();
     }
 
     private static List<String> beforeShutdown(List<String> trace) {

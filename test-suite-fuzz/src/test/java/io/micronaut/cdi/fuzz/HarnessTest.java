@@ -187,6 +187,11 @@ class HarnessTest {
         Divergence divergence = TraceComparison.compare(deployed, cycle);
         assertTrue(KnownDifferences.match(empty, divergence, deployed, cycle).isPresent());
 
+        RunResult cycles = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
+            "Exception List with 2 exceptions: Exception 0 : WELD-001443: Pseudo scoped bean has circular dependencies."
+                + " Exception 1 : WELD-001443: Pseudo scoped bean has circular dependencies.");
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(deployed, cycles), deployed, cycles).isPresent());
+
         RunResult unsatisfied = RunResult.of(Outcome.DEPLOYMENT_ERROR, false,
             "org.jboss.weld.exceptions.DeploymentException: WELD-001408: Unsatisfied dependencies");
         assertTrue(KnownDifferences.match(empty, TraceComparison.compare(deployed, unsatisfied), deployed, unsatisfied)
@@ -210,6 +215,19 @@ class HarnessTest {
 
         RunResult missing = RunResult.deployed(List.of("#X5", "{", "}", "#shutdown", "{", "B1.preDestroy@B1", "}"));
         assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(missing, weld), missing, weld).isEmpty());
+    }
+
+    @Test
+    void theUnannouncedRequestOfAPostConstructIsAKnownDifference() {
+        Scenario empty = new Scenario(0, List.of(), List.of(), List.of(), List.of());
+        RunResult micronaut = RunResult.deployed(List.of("#X3", "B1.postConstruct@B1", "get=B1", "#shutdown"));
+        RunResult weld = RunResult.deployed(List.of("#X3", "p=2500 O2@B2 other", "B1.postConstruct@B1",
+            "p=2500 O2@B2 other", "p=2500 O2@B2 other", "get=B1", "#shutdown"));
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(micronaut, weld), micronaut, weld).isPresent());
+
+        RunResult failed = RunResult.deployed(List.of("#X3", "B1.postConstruct@B1", "!java.lang.ClassCastException",
+            "#shutdown"));
+        assertTrue(KnownDifferences.match(empty, TraceComparison.compare(failed, weld), failed, weld).isEmpty());
     }
 
     @Test

@@ -83,7 +83,8 @@ final class Runners {
                     }
                     try {
                         Method run = loader.loadClass(rendered.packageName() + ".Driver").getMethod("run", SeContainer.class);
-                        return RunResult.deployed(traceOf(run.invoke(null, container)));
+                        List<String> trace = traceOf(run.invoke(null, container));
+                        return RunResult.deployed(trace, caught(loader, rendered));
                     } catch (InvocationTargetException e) {
                         return RunResult.of(Outcome.CRASH, false, RunResult.stackTrace(e.getCause()));
                     } finally {
@@ -137,7 +138,8 @@ final class Runners {
                     Class<?> seContainer = loader.loadClass("jakarta.enterprise.inject.se.SeContainer");
                     try {
                         Method run = loader.loadClass(rendered.packageName() + ".Driver").getMethod("run", seContainer);
-                        return RunResult.deployed(traceOf(run.invoke(null, container)));
+                        List<String> trace = traceOf(run.invoke(null, container));
+                        return RunResult.deployed(trace, caught(loader, rendered));
                     } catch (InvocationTargetException e) {
                         return RunResult.of(Outcome.CRASH, false, RunResult.stackTrace(e.getCause()));
                     } finally {
@@ -152,6 +154,21 @@ final class Runners {
                 });
             }
         });
+    }
+
+    /**
+     * The stack traces of what the probes of a run caught, which its trace names only by class.
+     */
+    private static String caught(ClassLoader loader, Rendered rendered) {
+        StringBuilder out = new StringBuilder();
+        try {
+            for (Object t : (List<?>) loader.loadClass(rendered.packageName() + ".Log").getMethod("errors").invoke(null)) {
+                out.append(RunResult.stackTrace((Throwable) t)).append('\n');
+            }
+        } catch (ReflectiveOperationException e) {
+            out.append("the errors the probes caught could not be read: ").append(e);
+        }
+        return out.toString();
     }
 
     private static List<String> traceOf(Object value) {

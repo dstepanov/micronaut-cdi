@@ -140,10 +140,12 @@ final class Fuzzer {
      * Whether a shrunk scenario still shows the divergence of the original: the same signature, the same outcomes - a
      * side that refuses for another reason, such as Weld refusing an empty deployment, is another divergence - and
      * Weld refusing for the same problems, so that a candidate that took out the problem micronaut-cdi missed,
-     * leaving another that Weld reports with the same outcome, is not taken for it.
+     * leaving another that Weld reports with the same outcome, is not taken for it; nor is a candidate whose
+     * divergence is a known difference, which a reduction - a scope simplified - can turn a finding into.
      */
     static boolean reproduces(Evaluation original, Evaluation candidate) {
         return candidate.divergence() != null
+            && candidate.known().isEmpty()
             && candidate.divergence().signature().equals(original.divergence().signature())
             && candidate.micronaut().outcome() == original.micronaut().outcome()
             && candidate.weld().outcome() == original.weld().outcome()
