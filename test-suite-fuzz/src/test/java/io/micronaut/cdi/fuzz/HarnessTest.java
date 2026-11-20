@@ -183,4 +183,11 @@ class HarnessTest {
             fuzzer.close();
         }
     }
+
+    @Test
+    void theLastSeedThereIsIsReplayed() {
+        assertEquals(List.of(Long.MAX_VALUE), FuzzCampaignTest.seeds(Long.MAX_VALUE, 1));
+        assertEquals(List.of(Long.MAX_VALUE - 1, Long.MAX_VALUE, Long.MIN_VALUE),
+            FuzzCampaignTest.seeds(Long.MAX_VALUE - 1, 3));
+    }
 }

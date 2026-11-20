@@ -21,6 +21,8 @@ import io.micronaut.cdi.fuzz.RunResult.Outcome;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -31,6 +33,18 @@ import java.util.TreeMap;
  */
 @Tag("campaign")
 class FuzzCampaignTest {
+
+    /**
+     * The seeds of a campaign, counted apart from the seed, which may be any long: the first plus the count wraps
+     * past {@link Long#MAX_VALUE}.
+     */
+    static List<Long> seeds(long first, int count) {
+        List<Long> seeds = new ArrayList<>(count);
+        for (int index = 0; index < count; index++) {
+            seeds.add(first + index);
+        }
+        return seeds;
+    }
 
     @Test
     void campaign() {
@@ -43,7 +57,7 @@ class FuzzCampaignTest {
             + FuzzConfig.size() + "\n\n| seed | severity | divergence | known | size | shrunk to | report |\n"
             + "| --- | --- | --- | --- | --- | --- | --- |");
         try {
-            for (long seed = first; seed < first + count; seed++) {
+            for (long seed : seeds(first, count)) {
                 long started = System.nanoTime();
                 SeedResult result = fuzzer.runSeed(seed, FuzzConfig.shrink(), FuzzConfig.shrinkBudget(),
                     FuzzConfig.keepAll());
