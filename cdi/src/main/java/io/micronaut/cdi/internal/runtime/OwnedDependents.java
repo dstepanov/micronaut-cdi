@@ -449,15 +449,20 @@ public final class OwnedDependents implements AutoCloseable {
      * has closed what it held by then, so the group opened for it is handed to the container, which closes it as it
      * stops ({@link CdiBeanContainer#closeAtShutdown}, {@code OwnerlessLookupTest}): what it creates lives until then
      * rather than until the bean was destroyed, unless {@code Instance.destroy} or closing the lookup destroys it
-     * first. A refusal while the owner is still open is Micronaut's to report.</p>
+     * first. A refusal while the owner is still open is Micronaut's to report, and so is one of an owner destroyed
+     * while the lookup was creating.</p>
      */
     private <T> BeanRegistration<T> resolve(
         Function<BeanDependencyResolver, BeanRegistration<T>> lookup) {
         BeanDependencyResolver owner = owner();
+        // only a lookup the owner refused for having been destroyed before it began is made again: the refusal comes
+        // before anything is created. An owner destroyed while the lookup creates - by the creation itself - refuses
+        // only as the creation is done, and making it again would call its producers and constructors twice
+        boolean closedBefore = isClosed();
         try {
             return lookup.apply(owner);
         } catch (IllegalStateException e) {
-            if (owner != resolver || !isClosed()) {
+            if (owner != resolver || !closedBefore) {
                 throw e;
             }
             return lookup.apply(ownGroup());
