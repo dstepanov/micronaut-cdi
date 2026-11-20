@@ -82,6 +82,13 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
      */
     private static final String APPLICATION_CONTEXT_INITIALIZED =
         ContainerLifecycle.class.getName() + ".applicationContextInitialized";
+    /**
+     * The attribute of the bean context that says the application was told the container started - {@code Startup}
+     * was fired to its end - and so is told it shuts down. Held on the context for the same reason: a creation of this
+     * bean that fails after its {@code @PostConstruct} returned, in a listener of its creation, leaves no singleton
+     * behind either.
+     */
+    private static final String APPLICATION_STARTED = ContainerLifecycle.class.getName() + ".applicationStarted";
 
     private final BeanContext beanContext;
     private final ObserverRegistry observers;
@@ -89,12 +96,6 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
     private final RequestScope requestScope;
     // what was obtained through the container itself and is released as it stops, see addShutdownCallback
     private final List<Runnable> releases = new CopyOnWriteArrayList<>();
-    /**
-     * Whether the application was told the container started: only then is it told it shuts down. A start that
-     * failed before {@code Startup} was fired is rolled back with no {@code Shutdown}, its application context
-     * destroyed between its two events where it was announced ({@link #APPLICATION_CONTEXT_INITIALIZED}).
-     */
-    private volatile boolean started;
 
     public ContainerLifecycle(BeanContext beanContext, ObserverRegistry observers, ApplicationScope applicationScope,
                               RequestScope requestScope) {
@@ -148,7 +149,9 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         fire(new Object(), Object.class, Set.of(Initialized.Literal.of(ApplicationScoped.class)));
         initializeEagerBeans();
         fire(new Startup(), Startup.class, Set.of());
-        started = true;
+        // only then is the application told it shuts down: a start that failed before is rolled back with no
+        // Shutdown, its application context destroyed between its two events where it was announced
+        beanContext.setAttribute(APPLICATION_STARTED, Boolean.TRUE);
     }
 
     /**
@@ -190,8 +193,11 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
 
     @Override
     public void onApplicationEvent(ShutdownEvent event) {
-        if (event.getSource() != beanContext
-            || beanContext.removeAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.class).isEmpty()) {
+        if (event.getSource() != beanContext) {
+            return;
+        }
+        boolean startupFired = beanContext.removeAttribute(APPLICATION_STARTED, Boolean.class).isPresent();
+        if (beanContext.removeAttribute(APPLICATION_CONTEXT_INITIALIZED, Boolean.class).isEmpty()) {
             // a container whose start failed before the application was told its application context was
             // initialized tells it nothing of the way down: what its start created is destroyed by Micronaut, the
             // scopes with it
@@ -203,7 +209,7 @@ public final class ContainerLifecycle implements ApplicationEventListener<Shutdo
         // pairs with Startup: a start that failed before Startup was fired to its end, which is rolled back, is no
         // shutdown of an application that started, and the application context, which was announced, is still
         // destroyed between its two events, as Quarkus' ArC does
-        if (started) {
+        if (startupFired) {
             during("Shutdown", () -> fire(new Shutdown(), Shutdown.class, Set.of()));
         }
         // the requests still open are the first context to go: what their beans use as they are destroyed - an
