@@ -50,6 +50,20 @@ class SeNoneDiscoveryArchiveTest {
         assertTrue(isBean(archive("plain.jar", null)));
     }
 
+    @Test
+    void aClassOfAnArchiveThatDiscoversNothingAddedToTheSyntheticArchiveIsABean() throws Exception {
+        Path archive = archive("none.jar",
+            "<beans xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" bean-discovery-mode=\"none\" version=\"4.0\"/>");
+        try (URLClassLoader loader = new URLClassLoader(new URL[] {archive.toUri().toURL()},
+            SeNoneDiscoveryArchiveTest.class.getClassLoader())) {
+            Class<?> library = loader.loadClass("nodiscovery.Library");
+            try (SeContainer container = SeContainerInitializer.newInstance().setClassLoader(loader)
+                .addBeanClasses(library).initialize()) {
+                assertTrue(container.select(library).isResolvable());
+            }
+        }
+    }
+
     private static boolean isBean(Path archive) throws Exception {
         try (URLClassLoader loader = new URLClassLoader(new URL[] {archive.toUri().toURL()},
             SeNoneDiscoveryArchiveTest.class.getClassLoader())) {

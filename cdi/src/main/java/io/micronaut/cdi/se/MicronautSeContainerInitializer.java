@@ -252,10 +252,11 @@ public final class MicronautSeContainerInitializer extends SeContainerInitialize
                 && (classpath == null || onClasspath(bean, classpath)));
         } else {
             // an archive whose beans.xml discovers nothing is not a bean archive (section 2.5.1): what the processor
-            // compiled into it is no bean of a container that discovers
+            // compiled into it is no bean of a container that discovers, unless it was handed to the synthetic archive
             List<String> excluded = BeanArchives.discoveringNothing(classLoader);
             if (!excluded.isEmpty() || classpath != null) {
-                builder.beansPredicate(bean -> !BeanArchives.isCompiledIntoAnyOf(bean, excluded)
+                builder.beansPredicate(bean -> (belongsToSyntheticArchive(bean)
+                    || !BeanArchives.isCompiledIntoAnyOf(bean, excluded))
                     && (classpath == null || onClasspath(bean, classpath)));
             }
         }
