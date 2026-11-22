@@ -363,9 +363,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
      * A definition declared with Micronaut's {@code @Any} is created through the definition as well, but for the
      * qualifier of the point ({@code getQualifiedBean}), which the bean context creates and holds such a bean for, as a
      * lookup by that qualifier would. A point with no qualifier is created through the definition alone, which the
-     * bean context holds under {@code @Any} where a lookup by type alone holds it under none: two instances of an
-     * {@code @Any} singleton, an open point of Micronaut Core that micronaut-core #14500 closes with no change here
-     * (see Conformance).</p>
+     * bean context resolves for no qualifier, as a lookup by type alone (Micronaut Core 5.3, #14500): one instance
+     * of an {@code @Any} singleton.</p>
      *
      * @param point     The injection point
      * @param qualifier The qualifier Micronaut handed over for it, or {@code null} to read it off the point
