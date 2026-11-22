@@ -1368,14 +1368,6 @@ own rather than the first one alone.
   not known, and is asked of its class by the reflection module. Registering those facts beside the defaults the
   generated metadata already registers (`AnnotationMetadataSupport.registerDefaultValues`), with a public reader,
   would make each question a lookup, cover every bean, and remove both the record and the index.
-- **Whether Micronaut may write a definition of a class is decided in a private method.** The processor reads the
-  members of a class for its qualifier and binding types only where Micronaut may write a definition of it
-  (`AnnotationTypesVisitor.mayHaveADefinition`), and restates for that the decision of
-  `BeanDefinitionCreatorFactory.produceInternal` - of which only `isDeclaredBeanInMetadata` is public - including a
-  copy of its private `containsInjectPoint`. The copy accepts a superset today, so nothing is missed; a way of
-  becoming a bean Core adds later would leave the record of such a class empty, and a qualifier or binding type only
-  its members use unknown, with no error. A public `BeanDefinitionCreatorFactory.mayProduce(ClassElement)`, being
-  proposed to Core, would replace the copy.
 - **`VisitorContext.registerBean` refuses a class the compilation writes a definition for itself.** Under javac a
   class a build compatible extension scanned is imported by a generated `ScannedClassesImport` source, so that a
   later round makes a bean of it; KSP and Groovy register it with `registerBean`. Tolerating a class the same

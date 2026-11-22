@@ -19,11 +19,6 @@ import io.micronaut.cdi.internal.metadata.CdiAnnotationTypes;
 import io.micronaut.cdi.internal.metadata.CdiExtensionQualifiers;
 import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.cdi.processor.mapper.NonbindingMembers;
-import io.micronaut.context.annotation.ConfigurationReader;
-import io.micronaut.context.annotation.Executable;
-import io.micronaut.context.annotation.Factory;
-import io.micronaut.context.annotation.Property;
-import io.micronaut.context.annotation.Value;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -56,7 +51,8 @@ import java.util.Set;
  * being loaded.
  *
  * <p>Every class the compilation visits is marked with the record, which says it was compiled with this processor.
- * Its members are read only where Micronaut may write a definition of the class, which is all the record is read
+ * Its members are read only where Micronaut may write a definition of the class ({@link
+ * BeanDefinitionCreatorFactory#mayProduce}), which is all the record is read
  * from: its constructors, fields and methods - inherited ones included - and their parameters, each from the class
  * itself, while a class that cannot be a bean - a plain value class, one extending a large library class - has none
  * of its members' metadata built for it. Nothing is kept from one class to the next. What is written is annotation
@@ -97,45 +93,12 @@ public final class AnnotationTypesVisitor implements TypeElementVisitor<Object, 
             return;
         }
         Types types = new Types();
-        if (mayHaveADefinition(element)) {
+        // the choice of creator Micronaut's BeanDefinitionCreatorFactory makes, read after the other visitors of this
+        // module wrote their scopes and markers: a class it hands no creator has no definition to read the record from
+        if (BeanDefinitionCreatorFactory.mayProduce(element)) {
             readMembers(element, types);
         }
         element.annotate(types.record(context));
-    }
-
-    /**
-     * Whether Micronaut may write a definition of the class, as its {@code BeanDefinitionCreatorFactory} decides: a
-     * class declared a bean ({@link BeanDefinitionCreatorFactory#isDeclaredBeanInMetadata}), executable, qualified, a
-     * factory, configuration, advised or introduced - the scopes and markers the other visitors of this module wrote
-     * included, as they ran before this one - or a concrete class with an injected constructor, field or method. A
-     * class that is none of these has no definition to read the record of its members from.
-     */
-    private static boolean mayHaveADefinition(ClassElement element) {
-        AnnotationMetadata metadata = element.getAnnotationMetadata();
-        if (BeanDefinitionCreatorFactory.isDeclaredBeanInMetadata(metadata)
-            || metadata.hasStereotype(Executable.class)
-            || metadata.hasStereotype(AnnotationUtil.QUALIFIER)
-            || metadata.hasStereotype(Factory.class)
-            || metadata.hasStereotype(ConfigurationReader.class)
-            || metadata.hasStereotype(AnnotationUtil.ANN_AROUND)
-            || metadata.hasStereotype(AnnotationUtil.ANN_INTRODUCTION)
-            || metadata.hasStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS)) {
-            return true;
-        }
-        if (element.isAbstract()) {
-            return false;
-        }
-        return element.getEnclosedElement(ElementQuery.CONSTRUCTORS
-                .annotated(constructor -> constructor.hasStereotype(AnnotationUtil.INJECT))).isPresent()
-            || element.getEnclosedElement(ElementQuery.ALL_FIELDS
-                .annotated(AnnotationTypesVisitor::isInjectedField)).isPresent()
-            || element.getEnclosedElement(ElementQuery.ALL_METHODS
-                .annotated(method -> method.hasStereotype(AnnotationUtil.INJECT))).isPresent();
-    }
-
-    private static boolean isInjectedField(AnnotationMetadata field) {
-        return field.hasStereotype(AnnotationUtil.INJECT) || field.hasStereotype(Value.class)
-            || field.hasStereotype(Property.class);
     }
 
     /**
