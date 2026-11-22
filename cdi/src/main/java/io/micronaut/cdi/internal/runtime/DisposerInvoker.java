@@ -54,7 +54,7 @@ import java.util.Optional;
  * <p>It also closes an instance of an auto-closeable bean whose class implements {@code AutoCloseable} (CDI 5.0,
  * section 2.10): a produced one right after its disposer method, as section 7.3.2 orders it, and a managed one
  * after its {@code PreDestroy} callbacks and before its dependent objects are destroyed (section 7.3.1), in the step
- * Micronaut runs between the two ({@link BeanPreDestroyEvent#afterPreDestroy(Runnable)}). The call is made on the
+ * Micronaut runs between the two ({@link BeanPreDestroyEvent#afterPreDestroy(io.micronaut.core.util.functional.ThrowingRunnable)}). The call is made on the
  * instance itself - the target of a client proxy - and, on the subclass Micronaut generated for an intercepted
  * bean, past its interceptors ({@link BeanDefinition#findUninterceptedMethod(String, Class[])}), so that it is no
  * business method invocation; what it throws is logged, since destruction may not throw. A synthetic bean is closed
