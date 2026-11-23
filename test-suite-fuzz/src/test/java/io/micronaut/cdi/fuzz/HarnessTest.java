@@ -107,7 +107,8 @@ class HarnessTest {
     void noTwoInterceptorsShareAPriorityAndAConditionalObserverIsNotifiedLast() {
         for (long seed = 1; seed <= 2000; seed++) {
             Scenario scenario = ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE);
-            List<Integer> priorities = scenario.interceptors().stream().map(i -> i.priority()).toList();
+            List<Integer> priorities = scenario.interceptors().stream().map(i -> i.priority())
+                .filter(java.util.Objects::nonNull).toList();
             assertEquals(priorities.size(), new java.util.HashSet<>(priorities).size(), "seed " + seed);
             for (BeanDef bean : scenario.beans()) {
                 for (ObserverDef observer : bean.observers()) {
@@ -164,6 +165,53 @@ class HarnessTest {
         assertEquals("DEPLOYMENT:micronaut-refuses", TraceComparison.compare(refused, deployed).signature());
         assertEquals("DEPLOYMENT:weld-refuses", TraceComparison.compare(deployed, refused).signature());
         assertNull(TraceComparison.compare(refused, RunResult.of(Outcome.DEFINITION_ERROR, false, "")));
+    }
+
+    @Test
+    void everyShapeOfInterceptionIsGenerated() {
+        java.util.Set<String> seen = new java.util.TreeSet<>();
+        for (long seed = 1; seed <= 300; seed++) {
+            Scenario scenario = ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE);
+            for (BeanDef bean : scenario.beans()) {
+                if (!bean.callBindings().isEmpty()) {
+                    seen.add("callBindings");
+                }
+                if (bean.inheritsCall() && bean.superBean() != null) {
+                    seen.add("inheritsCall");
+                }
+            }
+            for (Scenario.InterceptorDef interceptor : scenario.interceptors()) {
+                if (interceptor.bindings().size() > 1) {
+                    seen.add("twoBindings");
+                }
+                if (interceptor.bindings().stream().anyMatch(b -> b.startsWith("Bind3"))) {
+                    seen.add("bindingWithMembers");
+                }
+                if (interceptor.priority() == null) {
+                    seen.add("disabled");
+                }
+                if (interceptor.aroundConstruct()) {
+                    seen.add("aroundConstruct");
+                }
+                if (interceptor.shortCircuit()) {
+                    seen.add("shortCircuit");
+                }
+                if (interceptor.stateful()) {
+                    seen.add("stateful");
+                }
+                if (interceptor.base()) {
+                    seen.add("base");
+                }
+                if (interceptor.reportsBindings()) {
+                    seen.add("reportsBindings");
+                }
+            }
+            if (scenario.probes().stream().anyMatch(p -> p.kind() == ProbeKind.INVOKE)) {
+                seen.add("invoke");
+            }
+        }
+        assertEquals(new java.util.TreeSet<>(List.of("aroundConstruct", "base", "bindingWithMembers", "callBindings",
+            "disabled", "inheritsCall", "invoke", "reportsBindings", "shortCircuit", "stateful", "twoBindings")), seen);
     }
 
     @Test

@@ -57,6 +57,19 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
      */
     static final List<String> BINDINGS = List.of("Bind1", "Bind2");
 
+    /**
+     * Every interceptor binding as an interceptor or a bean may use it: {@code Bind3} has a binding {@code value}
+     * and a {@code @Nonbinding note}, so that two uses of it bind only where their values are equal.
+     */
+    static final List<String> ALL_BINDINGS = List.of("Bind1", "Bind2", "Bind3(\"a\")", "Bind3(\"b\")");
+
+    /**
+     * The uses of {@code Bind3} a bean may write, the {@code note} differing from an interceptor's, which does not
+     * matter.
+     */
+    static final List<String> BEAN_ONLY_BINDINGS = List.of("Bind3(value = \"a\", note = \"x\")",
+        "Bind3(value = \"b\", note = \"y\")");
+
     Scenario {
         beans = List.copyOf(beans);
         interceptors = List.copyOf(interceptors);
@@ -135,7 +148,8 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
         int size = interceptors.size() + decorators.size() + probes.size();
         for (BeanDef bean : beans) {
             size += 1 + bean.producers().size() + bean.observers().size() + bean.injectionPoints().size()
-                + bean.qualifiers().size() + bean.bindings().size() + bean.methodBindings().size();
+                + bean.qualifiers().size() + bean.bindings().size() + bean.methodBindings().size()
+                + bean.callBindings().size();
         }
         return size;
     }
@@ -303,12 +317,32 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
      * @param injectionPoints  Its injection points; a bean with any implements {@code Probe}
      * @param producers        Its producers
      * @param observers        Its observers
+     * @param callBindings     The interceptor bindings of its {@code call(String)} method
+     * @param inheritsCall     Whether it inherits {@code call(String)} from the bean it extends rather than declaring
+     *                         its own, so that the method's bindings are the superclass's
      */
     record BeanDef(String name, Scope scope, List<String> interfaces, String superBean, boolean generic,
                    List<QualUse> qualifiers, List<String> typed, boolean alternative, Integer priority,
                    List<String> bindings, List<String> methodBindings, boolean postConstruct, boolean preDestroy,
                    boolean selfInterceptor, List<InjectionPointDef> injectionPoints, List<ProducerDef> producers,
-                   List<ObserverDef> observers) {
+                   List<ObserverDef> observers, List<String> callBindings, boolean inheritsCall) {
+
+        BeanDef(String name, Scope scope, List<String> interfaces, String superBean, boolean generic,
+                List<QualUse> qualifiers, List<String> typed, boolean alternative, Integer priority,
+                List<String> bindings, List<String> methodBindings, boolean postConstruct, boolean preDestroy,
+                boolean selfInterceptor, List<InjectionPointDef> injectionPoints, List<ProducerDef> producers,
+                List<ObserverDef> observers) {
+            this(name, scope, interfaces, superBean, generic, qualifiers, typed, alternative, priority, bindings,
+                methodBindings, postConstruct, preDestroy, selfInterceptor, injectionPoints, producers, observers,
+                List.of(), false);
+        }
+
+        /**
+         * Whether its class declares {@code call(String)}: it does unless it inherits one.
+         */
+        boolean declaresCall() {
+            return !inheritsCall || superBean == null;
+        }
 
         BeanDef {
             interfaces = List.copyOf(interfaces);
@@ -319,6 +353,7 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
             injectionPoints = List.copyOf(injectionPoints);
             producers = List.copyOf(producers);
             observers = List.copyOf(observers);
+            callBindings = List.copyOf(callBindings);
         }
 
         BeanDef with(UnaryOperator<Builder> change) {
@@ -370,6 +405,8 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
             List<InjectionPointDef> injectionPoints;
             List<ProducerDef> producers;
             List<ObserverDef> observers;
+            List<String> callBindings;
+            boolean inheritsCall;
 
             Builder(BeanDef b) {
                 name = b.name;
@@ -389,12 +426,14 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
                 injectionPoints = b.injectionPoints;
                 producers = b.producers;
                 observers = b.observers;
+                callBindings = b.callBindings;
+                inheritsCall = b.inheritsCall;
             }
 
             BeanDef build() {
                 return new BeanDef(name, scope, interfaces, superBean, generic, qualifiers, typed, alternative,
                     priority, bindings, methodBindings, postConstruct, preDestroy, selfInterceptor, injectionPoints,
-                    producers, observers);
+                    producers, observers, callBindings, inheritsCall);
             }
         }
     }
@@ -408,11 +447,61 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
      * @param aroundInvoke  Whether it intercepts business methods
      * @param postConstruct Whether it intercepts {@code @PostConstruct}
      * @param preDestroy    Whether it intercepts {@code @PreDestroy}
+     * @param aroundConstruct Whether it intercepts the construction of the beans it is bound to
+     * @param shortCircuit  Whether it returns from {@code call(String)} without proceeding
+     * @param stateful      Whether it counts the invocations of {@code call(String)} it has seen, which shows
+     *                      whether one interceptor instance serves one target instance
+     * @param base          Whether it extends a class declaring an {@code @AroundInvoke} method of its own, which
+     *                      runs before the interceptor's
+     * @param reportsBindings Whether it logs {@code InvocationContext.getInterceptorBindings()}
      */
-    record InterceptorDef(String name, List<String> bindings, int priority, boolean aroundInvoke,
-                          boolean postConstruct, boolean preDestroy) {
+    record InterceptorDef(String name, List<String> bindings, Integer priority, boolean aroundInvoke,
+                          boolean postConstruct, boolean preDestroy, boolean aroundConstruct, boolean shortCircuit,
+                          boolean stateful, boolean base, boolean reportsBindings) {
         InterceptorDef {
             bindings = List.copyOf(bindings);
+        }
+
+        InterceptorDef(String name, List<String> bindings, int priority, boolean aroundInvoke, boolean postConstruct,
+                       boolean preDestroy) {
+            this(name, bindings, priority, aroundInvoke, postConstruct, preDestroy, false, false, false, false, false);
+        }
+
+        InterceptorDef with(UnaryOperator<Builder> change) {
+            return change.apply(new Builder(this)).build();
+        }
+
+        static final class Builder {
+            String name;
+            List<String> bindings;
+            Integer priority;
+            boolean aroundInvoke;
+            boolean postConstruct;
+            boolean preDestroy;
+            boolean aroundConstruct;
+            boolean shortCircuit;
+            boolean stateful;
+            boolean base;
+            boolean reportsBindings;
+
+            Builder(InterceptorDef i) {
+                name = i.name;
+                bindings = i.bindings;
+                priority = i.priority;
+                aroundInvoke = i.aroundInvoke;
+                postConstruct = i.postConstruct;
+                preDestroy = i.preDestroy;
+                aroundConstruct = i.aroundConstruct;
+                shortCircuit = i.shortCircuit;
+                stateful = i.stateful;
+                base = i.base;
+                reportsBindings = i.reportsBindings;
+            }
+
+            InterceptorDef build() {
+                return new InterceptorDef(name, bindings, priority, aroundInvoke, postConstruct, preDestroy,
+                    aroundConstruct, shortCircuit, stateful, base, reportsBindings);
+            }
         }
     }
 
@@ -462,6 +551,10 @@ record Scenario(long seed, List<BeanDef> beans, List<InterceptorDef> interceptor
         /**
          * {@code BeanContainer.getEvent().select(type, qualifiers).fire(...)}.
          */
-        FIRE
+        FIRE,
+        /**
+         * {@code call(String)} of a bean looked up by its class, twice on the one instance, and what it returns.
+         */
+        INVOKE
     }
 }

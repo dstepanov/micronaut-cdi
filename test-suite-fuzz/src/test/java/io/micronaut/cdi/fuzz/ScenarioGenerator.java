@@ -57,6 +57,9 @@ final class ScenarioGenerator {
     static final boolean GENERATE_DECORATORS = false;
 
     private final Random random;
+    // what was added after the first campaigns draws from a stream of its own, so that a seed still generates the
+    // beans, interceptors and probes it generated before, now with these additions
+    private final Random extra;
     private final Size size;
     private int producers;
     private int observers;
@@ -80,6 +83,7 @@ final class ScenarioGenerator {
 
     private ScenarioGenerator(long seed, Size size) {
         this.random = new Random(seed);
+        this.extra = new Random(seed * 31 + 17);
         this.size = size;
     }
 
@@ -115,7 +119,97 @@ final class ScenarioGenerator {
         for (int i = 1; i <= probeCount; i++) {
             probes.add(probe("X" + i, beans, describable));
         }
-        return new Scenario(seed, beans, interceptors, decorators, probes);
+        return interception(new Scenario(seed, beans, interceptors, decorators, probes));
+    }
+
+    /**
+     * The interception a scenario adds on the stream of its own: the bindings of {@code call(String)}, a binding
+     * with members, interceptors bound to two bindings, disabled, intercepting construction, short-circuiting,
+     * counting, extending a class with an interceptor method of its own, reporting their bindings, and the probes
+     * that invoke {@code call(String)}.
+     */
+    private Scenario interception(Scenario scenario) {
+        List<BeanDef> beans = new ArrayList<>();
+        for (BeanDef bean : scenario.beans()) {
+            List<String> callBindings = extraChance(0.3) ? List.of(extraPick(bindingsOfBeans())) : List.of();
+            boolean inheritsCall = bean.superBean() != null && extraChance(0.4);
+            List<String> classBindings = new ArrayList<>(bean.bindings());
+            if (extraChance(0.12)) {
+                String binding = extraPick(bindingsOfBeans());
+                if (classBindings.stream().noneMatch(b -> sameBinding(b, binding))) {
+                    classBindings.add(binding);
+                }
+            }
+            beans.add(bean.with(b -> {
+                b.callBindings = callBindings;
+                b.inheritsCall = inheritsCall;
+                b.bindings = classBindings;
+                return b;
+            }));
+        }
+        List<InterceptorDef> interceptors = new ArrayList<>();
+        for (InterceptorDef interceptor : scenario.interceptors()) {
+            List<String> bindings = new ArrayList<>(interceptor.bindings());
+            if (extraChance(0.25)) {
+                bindings.set(0, extraPick(Scenario.ALL_BINDINGS));
+            }
+            if (extraChance(0.2)) {
+                String second = extraPick(Scenario.ALL_BINDINGS);
+                if (bindings.stream().noneMatch(b -> sameBinding(b, second))) {
+                    bindings.add(second);
+                }
+            }
+            // an interceptor no priority enables is not enabled in CDI Lite
+            Integer priority = extraChance(0.08) ? null : interceptor.priority();
+            boolean aroundConstruct = extraChance(0.25);
+            boolean shortCircuit = interceptor.aroundInvoke() && extraChance(0.08);
+            boolean stateful = interceptor.aroundInvoke() && extraChance(0.3);
+            boolean base = interceptor.aroundInvoke() && extraChance(0.2);
+            boolean reportsBindings = interceptor.aroundInvoke() && extraChance(0.3);
+            interceptors.add(interceptor.with(b -> {
+                b.bindings = bindings;
+                b.priority = priority;
+                b.aroundConstruct = aroundConstruct;
+                b.shortCircuit = shortCircuit;
+                b.stateful = stateful;
+                b.base = base;
+                b.reportsBindings = reportsBindings;
+                return b;
+            }));
+        }
+        List<Probe> probes = new ArrayList<>(scenario.probes());
+        int invocations = extraChance(0.7) ? 1 + extra.nextInt(3) : 0;
+        for (int i = 1; i <= invocations && !beans.isEmpty(); i++) {
+            probes.add(extra.nextInt(probes.size() + 1),
+                new Probe("Y" + i, ProbeKind.INVOKE, extraPick(beans).name(), List.of(), extraChance(0.3)));
+        }
+        return new Scenario(scenario.seed(), beans, interceptors, scenario.decorators(), probes);
+    }
+
+    private static List<String> bindingsOfBeans() {
+        List<String> all = new ArrayList<>(Scenario.ALL_BINDINGS);
+        all.addAll(Scenario.BEAN_ONLY_BINDINGS);
+        return all;
+    }
+
+    /**
+     * Whether two uses are of one binding annotation, which a class or method may declare once.
+     */
+    static boolean sameBinding(String a, String b) {
+        return bindingType(a).equals(bindingType(b));
+    }
+
+    static String bindingType(String binding) {
+        int paren = binding.indexOf('(');
+        return paren < 0 ? binding : binding.substring(0, paren);
+    }
+
+    private boolean extraChance(double probability) {
+        return extra.nextDouble() < probability;
+    }
+
+    private <T> T extraPick(List<T> values) {
+        return values.get(extra.nextInt(values.size()));
     }
 
     private BeanDef bean(String name, List<BeanDef> earlier) {

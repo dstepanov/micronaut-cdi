@@ -155,6 +155,13 @@ final class Shrinker {
                 int index = i;
                 out.add(replaceBean(s, bean, b -> set(b, x -> x.methodBindings = without(x.methodBindings, index))));
             }
+            for (int i = 0; i < bean.callBindings().size(); i++) {
+                int index = i;
+                out.add(replaceBean(s, bean, b -> set(b, x -> x.callBindings = without(x.callBindings, index))));
+            }
+            if (bean.inheritsCall()) {
+                out.add(replaceBean(s, bean, b -> set(b, x -> x.inheritsCall = false)));
+            }
             for (int i = 0; i < bean.interfaces().size(); i++) {
                 int index = i;
                 out.add(replaceBean(s, bean, b -> set(b, x -> x.interfaces = without(x.interfaces, index))));
@@ -190,14 +197,44 @@ final class Shrinker {
             InterceptorDef in = s.interceptors().get(i);
             int index = i;
             Function<InterceptorDef, Scenario> with = r -> s.withInterceptors(replace(s.interceptors(), index, r));
+            java.util.function.Consumer<java.util.function.Consumer<InterceptorDef.Builder>> simpler = change ->
+                out.add(with.apply(in.with(b -> {
+                    change.accept(b);
+                    return b;
+                })));
             if (in.postConstruct()) {
-                out.add(with.apply(new InterceptorDef(in.name(), in.bindings(), in.priority(), in.aroundInvoke(), false, in.preDestroy())));
+                simpler.accept(b -> b.postConstruct = false);
             }
             if (in.preDestroy()) {
-                out.add(with.apply(new InterceptorDef(in.name(), in.bindings(), in.priority(), in.aroundInvoke(), in.postConstruct(), false)));
+                simpler.accept(b -> b.preDestroy = false);
             }
-            if (in.aroundInvoke() && (in.postConstruct() || in.preDestroy())) {
-                out.add(with.apply(new InterceptorDef(in.name(), in.bindings(), in.priority(), false, in.postConstruct(), in.preDestroy())));
+            if (in.aroundInvoke() && (in.postConstruct() || in.preDestroy() || in.aroundConstruct())) {
+                simpler.accept(b -> {
+                    b.aroundInvoke = false;
+                    b.shortCircuit = false;
+                    b.stateful = false;
+                    b.base = false;
+                    b.reportsBindings = false;
+                });
+            }
+            if (in.aroundConstruct()) {
+                simpler.accept(b -> b.aroundConstruct = false);
+            }
+            if (in.shortCircuit()) {
+                simpler.accept(b -> b.shortCircuit = false);
+            }
+            if (in.stateful()) {
+                simpler.accept(b -> b.stateful = false);
+            }
+            if (in.base()) {
+                simpler.accept(b -> b.base = false);
+            }
+            if (in.reportsBindings()) {
+                simpler.accept(b -> b.reportsBindings = false);
+            }
+            for (int j = 0; in.bindings().size() > 1 && j < in.bindings().size(); j++) {
+                int binding = j;
+                simpler.accept(b -> b.bindings = without(b.bindings, binding));
             }
         }
         for (int i = 0; i < s.decorators().size(); i++) {
