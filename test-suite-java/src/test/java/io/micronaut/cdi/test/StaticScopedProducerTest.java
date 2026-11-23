@@ -30,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class StaticScopedProducerTest {
 
     @Test
+    @Disabled("Micronaut's processor takes the scoped proxy the method declares for its product for advice of the "
+        + "method, which is static (DeclaredBeanElementCreator.visitAopMethod, see CONFORMANCE.md, Open points in "
+        + "Micronaut Core)")
     void aStaticProducerOfANormalScopedProductOnANormalScopedBeanProduces() throws Exception {
         try (ApplicationContext context = InMemoryDeployment.start("staticproducer.Warehouse", """
             package staticproducer;
