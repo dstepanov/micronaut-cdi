@@ -107,7 +107,8 @@ class HarnessTest {
     void noTwoInterceptorsShareAPriorityAndAConditionalObserverIsNotifiedLast() {
         for (long seed = 1; seed <= 2000; seed++) {
             Scenario scenario = ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE);
-            List<Integer> priorities = scenario.interceptors().stream().map(i -> i.priority()).toList();
+            List<Integer> priorities = scenario.interceptors().stream().map(i -> i.priority())
+                .filter(java.util.Objects::nonNull).toList();
             assertEquals(priorities.size(), new java.util.HashSet<>(priorities).size(), "seed " + seed);
             for (BeanDef bean : scenario.beans()) {
                 for (ObserverDef observer : bean.observers()) {
@@ -167,6 +168,53 @@ class HarnessTest {
     }
 
     @Test
+    void everyShapeOfInterceptionIsGenerated() {
+        java.util.Set<String> seen = new java.util.TreeSet<>();
+        for (long seed = 1; seed <= 300; seed++) {
+            Scenario scenario = ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE);
+            for (BeanDef bean : scenario.beans()) {
+                if (!bean.callBindings().isEmpty()) {
+                    seen.add("callBindings");
+                }
+                if (bean.inheritsCall() && bean.superBean() != null) {
+                    seen.add("inheritsCall");
+                }
+            }
+            for (Scenario.InterceptorDef interceptor : scenario.interceptors()) {
+                if (interceptor.bindings().size() > 1) {
+                    seen.add("twoBindings");
+                }
+                if (interceptor.bindings().stream().anyMatch(b -> b.startsWith("Bind3"))) {
+                    seen.add("bindingWithMembers");
+                }
+                if (interceptor.priority() == null) {
+                    seen.add("disabled");
+                }
+                if (interceptor.aroundConstruct()) {
+                    seen.add("aroundConstruct");
+                }
+                if (interceptor.shortCircuit()) {
+                    seen.add("shortCircuit");
+                }
+                if (interceptor.stateful()) {
+                    seen.add("stateful");
+                }
+                if (interceptor.base()) {
+                    seen.add("base");
+                }
+                if (interceptor.reportsBindings()) {
+                    seen.add("reportsBindings");
+                }
+            }
+            if (scenario.probes().stream().anyMatch(p -> p.kind() == ProbeKind.INVOKE)) {
+                seen.add("invoke");
+            }
+        }
+        assertEquals(new java.util.TreeSet<>(List.of("aroundConstruct", "base", "bindingWithMembers", "callBindings",
+            "disabled", "inheritsCall", "invoke", "reportsBindings", "shortCircuit", "stateful", "twoBindings")), seen);
+    }
+
+    @Test
     void noDecoratorIsGenerated() {
         for (long seed = 0; seed < 100; seed++) {
             assertTrue(ScenarioGenerator.generate(seed, ScenarioGenerator.Size.LARGE).decorators().isEmpty());
@@ -213,6 +261,13 @@ class HarnessTest {
         Divergence divergence = TraceComparison.compare(micronaut, weld);
         assertTrue(KnownDifferences.match(scenario, divergence, micronaut, weld).isPresent());
 
+        RunResult intercepted = RunResult.deployed(List.of("#X5", "{", "I1.preDestroy@B1", "each=P1", "produce P1", "}",
+            "#shutdown", "{", "}"));
+        RunResult weldIntercepted = RunResult.deployed(List.of("#X5", "{", "each=P1", "produce P1", "}", "#shutdown",
+            "{", "I1.preDestroy@B1", "}"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(intercepted, weldIntercepted), intercepted,
+            weldIntercepted).isPresent());
+
         RunResult missing = RunResult.deployed(List.of("#X5", "{", "}", "#shutdown", "{", "B1.preDestroy@B1", "}"));
         assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(missing, weld), missing, weld).isEmpty());
     }
@@ -228,6 +283,24 @@ class HarnessTest {
         RunResult failed = RunResult.deployed(List.of("#X3", "B1.postConstruct@B1", "!java.lang.ClassCastException",
             "#shutdown"));
         assertTrue(KnownDifferences.match(empty, TraceComparison.compare(failed, weld), failed, weld).isEmpty());
+    }
+
+    @Test
+    void aProducerOfAnUnselectedAlternativeIsAKnownDifference() {
+        Scenario.ProducerDef producer = new Scenario.ProducerDef("P3", false, false, Scope.DEPENDENT, "Gen<String>",
+            List.of(), null, true, 20, false, List.of());
+        BeanDef declaring = new BeanDef("B8", Scope.DEPENDENT, List.of(), null, false, List.of(), null, true, null,
+            List.of(), List.of(), false, false, false, List.of(), List.of(producer), List.of());
+        Scenario scenario = new Scenario(313, List.of(declaring), List.of(), List.of(),
+            List.of(new Probe("X13", ProbeKind.SELECT, "Gen<String>", List.of(), false)));
+        RunResult micronaut = RunResult.deployed(List.of("#X13", "unsatisfied=true ambiguous=false",
+            "!jakarta.enterprise.inject.UnsatisfiedResolutionException", "#shutdown"));
+        RunResult weld = RunResult.deployed(List.of("#X13", "unsatisfied=false ambiguous=false", "produce P3", "get=P3",
+            "#shutdown"));
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(micronaut, weld), micronaut, weld)
+            .isPresent());
+        assertTrue(KnownDifferences.match(scenario, TraceComparison.compare(weld, micronaut), weld, micronaut)
+            .isEmpty());
     }
 
     @Test

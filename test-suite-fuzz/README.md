@@ -14,7 +14,7 @@ disagree.
 | --- | --- | --- |
 | `fuzz.seed` | `1` | The first seed of the campaign |
 | `fuzz.count` | `100` | How many consecutive seeds to run |
-| `fuzz.replay` | | Run only this seed. Use it to reproduce a finding |
+| `fuzz.replay` | | Run only these seeds, separated by commas. Use it to reproduce findings |
 | `fuzz.size` | `medium` | `small`, `medium` or `large` scenarios |
 | `fuzz.shrink` | `true` | Shrink each scenario that diverges |
 | `fuzz.shrinkBudget` | `150` | The most runs one shrink may spend |
@@ -45,11 +45,20 @@ correctly, and a simple scenario agrees end to end.
    - producer methods and fields, static or not and scoped or not, with disposers;
    - observers of class, subclass, generic and wildcard event types, of `Startup` and `Shutdown`, with
      priorities, qualifiers and `IF_EXISTS`;
-   - lifecycle callbacks, interceptors (around-invoke, post-construct, pre-destroy, `@Inherited` bindings, bindings
-     on the class or on a method, a bean's own `@AroundInvoke`);
+   - lifecycle callbacks, interceptors (around-invoke, around-construct, post-construct, pre-destroy, `@Inherited`
+     bindings, bindings on the class or on a method, a bean's own `@AroundInvoke`);
+   - interception of a business method with an argument and a result, `call(String)`: bindings on the method, the
+     method inherited from a superclass bean with its bindings, a binding with a binding member and a
+     `@Nonbinding` member (`Bind3`), interceptors bound to two bindings, interceptors no `@Priority` enables,
+     interceptors that change the argument and wrap the result (which shows their nesting), that return without
+     proceeding, that count their invocations (one interceptor instance per target instance), that extend a class
+     with an `@AroundInvoke` method of its own, and that log `InvocationContext.getInterceptorBindings()`;
    - probes, which the driver runs once the container is up: `select`, iterating an `Instance` (with
-     `Instance.destroy` as an option), calling `describe()` on a bean with injection points, and firing an event
-     through `BeanContainer.getEvent()`.
+     `Instance.destroy` as an option), calling `describe()` on a bean with injection points, firing an event
+     through `BeanContainer.getEvent()`, and invoking `call(String)` twice on a bean looked up by its class.
+
+   The interception shapes draw from a random stream of their own, so a seed still generates the beans,
+   interceptors and probes it generated before they were added.
 
    The generator is tuned so that about 60% of scenarios deploy on Weld. The rest exercise definition errors and
    deployment problems on purpose.

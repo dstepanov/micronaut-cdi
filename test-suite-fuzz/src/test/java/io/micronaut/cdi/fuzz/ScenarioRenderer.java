@@ -84,6 +84,11 @@ final class ScenarioRenderer {
         for (InterceptorDef interceptor : scenario.interceptors()) {
             sources.put(packageName + "." + interceptor.name(), file(packageName, interceptor(interceptor)));
             beanClasses.add(packageName + "." + interceptor.name());
+            if (interceptor.base()) {
+                // no bean: a class an interceptor extends, whose interceptor method runs before the interceptor's
+                sources.put(packageName + "." + interceptor.name() + "Base",
+                    file(packageName, interceptorBase(interceptor)));
+            }
         }
         for (DecoratorDef decorator : scenario.decorators()) {
             sources.put(packageName + "." + decorator.name(), file(packageName, decorator(decorator)));
@@ -132,6 +137,8 @@ final class ScenarioRenderer {
         String bindingTargets = "@Retention(RetentionPolicy.RUNTIME)\n@Target({ElementType.TYPE, ElementType.METHOD})\n";
         put(sources, pkg, "Bind1", "@InterceptorBinding\n@Inherited\n" + bindingTargets + "public @interface Bind1 {\n}\n");
         put(sources, pkg, "Bind2", "@InterceptorBinding\n" + bindingTargets + "public @interface Bind2 {\n}\n");
+        put(sources, pkg, "Bind3", "@InterceptorBinding\n" + bindingTargets + "public @interface Bind3 {\n"
+            + "    String value();\n    @Nonbinding String note() default \"\";\n}\n");
         put(sources, pkg, "Ev", "public class Ev {\n}\n");
         put(sources, pkg, "EvA", "public class EvA extends Ev {\n}\n");
         put(sources, pkg, "EvB", "public class EvB extends Ev {\n}\n");
@@ -194,11 +201,33 @@ final class ScenarioRenderer {
              * generates.
              */
             public static String self(Object o) {
-                Class<?> type = o.getClass();
+                return cls(o.getClass());
+            }
+
+            /**
+             * The class of the scenario a class is, past the subclasses an implementation generates.
+             */
+            public static String cls(Class<?> type) {
                 while (type.getSimpleName().contains("$") || type.getSimpleName().isEmpty()) {
                     type = type.getSuperclass();
                 }
                 return type.getSimpleName();
+            }
+
+            /**
+             * The interceptor bindings an interception reports, by name and binding value, sorted.
+             */
+            public static String bindings(jakarta.interceptor.InvocationContext ctx) {
+                List<String> out = new ArrayList<>();
+                for (Annotation binding : ctx.getInterceptorBindings()) {
+                    String name = binding.annotationType().getSimpleName();
+                    if (binding instanceof Bind3 bind3) {
+                        name += "(" + bind3.value() + ")";
+                    }
+                    out.add(name);
+                }
+                Collections.sort(out);
+                return out.toString();
             }
 
             public static String ev(Object event) {
@@ -380,6 +409,14 @@ final class ScenarioRenderer {
         bean.methodBindings().forEach(b -> out.append("    @").append(b).append('\n'));
         out.append("    public String id() {\n        return \"").append(n).append("\";\n    }\n");
 
+        if (bean.declaresCall()) {
+            out.append('\n');
+            bean.callBindings().forEach(b -> out.append("    @").append(b).append('\n'));
+            out.append("    public String call(String arg) {\n        Log.add(\"").append(n)
+                .append(".call(\" + arg + \")@\" + Log.self(this));\n        return \"").append(n)
+                .append("(\" + arg + \")\";\n    }\n");
+        }
+
         if (probe) {
             out.append("\n    @Override\n    public String describe() {\n        StringBuilder out = new StringBuilder(\"")
                 .append(n).append("\");\n");
@@ -489,14 +526,49 @@ final class ScenarioRenderer {
         StringBuilder out = new StringBuilder();
         out.append("@Interceptor\n");
         i.bindings().forEach(b -> out.append('@').append(b).append('\n'));
-        out.append("@Priority(").append(i.priority()).append(")\n");
-        out.append("public class ").append(i.name()).append(" {\n");
+        if (i.priority() != null) {
+            out.append("@Priority(").append(i.priority()).append(")\n");
+        }
+        out.append("public class ").append(i.name());
+        if (i.base()) {
+            out.append(" extends ").append(i.name()).append("Base");
+        }
+        out.append(" {\n");
         String n = i.name();
+        if (i.stateful()) {
+            out.append("\n    private int calls;\n");
+        }
         if (i.aroundInvoke()) {
             out.append("\n    @AroundInvoke\n    Object aroundInvoke(InvocationContext ctx) throws Exception {\n")
                 .append("        Log.add(\"").append(n).append(">\" + ctx.getMethod().getName());\n")
-                .append("        try {\n            return ctx.proceed();\n        } finally {\n")
+                .append("        boolean call = ctx.getMethod().getName().equals(\"call\");\n");
+            if (i.reportsBindings()) {
+                out.append("        if (call) {\n            Log.add(\"").append(n)
+                    .append(" bindings=\" + Log.bindings(ctx));\n        }\n");
+            }
+            if (i.stateful()) {
+                out.append("        if (call) {\n            Log.add(\"").append(n)
+                    .append("#\" + (++calls) + \"@\" + Log.self(ctx.getTarget()));\n        }\n");
+            }
+            out.append("        try {\n            if (call) {\n");
+            if (i.shortCircuit()) {
+                out.append("                return \"").append(n).append("!\";\n");
+            } else {
+                out.append("                Object[] parameters = ctx.getParameters();\n")
+                    .append("                parameters[0] = parameters[0] + \"+").append(n).append("\";\n")
+                    .append("                ctx.setParameters(parameters);\n")
+                    .append("                return \"").append(n).append("[\" + ctx.proceed() + \"]\";\n");
+            }
+            out.append("            }\n            return ctx.proceed();\n        } finally {\n")
                 .append("            Log.add(\"").append(n).append("<\");\n        }\n    }\n");
+        }
+        if (i.aroundConstruct()) {
+            out.append("\n    @AroundConstruct\n    void aroundConstruct(InvocationContext ctx) throws Exception {\n")
+                .append("        Log.add(\"").append(n)
+                .append(".aroundConstruct>\" + Log.cls(ctx.getConstructor().getDeclaringClass()));\n")
+                .append("        ctx.proceed();\n")
+                .append("        Log.add(\"").append(n).append(".aroundConstruct<\" + Log.self(ctx.getTarget()));\n")
+                .append("    }\n");
         }
         if (i.postConstruct()) {
             out.append("\n    @PostConstruct\n    void postConstruct(InvocationContext ctx) throws Exception {\n")
@@ -510,6 +582,14 @@ final class ScenarioRenderer {
         }
         out.append("}\n");
         return out.toString();
+    }
+
+    private static String interceptorBase(InterceptorDef i) {
+        String n = i.name() + "Base";
+        return "public class " + n + " {\n\n"
+            + "    @AroundInvoke\n    Object baseAroundInvoke(InvocationContext ctx) throws Exception {\n"
+            + "        Log.add(\"" + n + ">\" + ctx.getMethod().getName());\n"
+            + "        return ctx.proceed();\n    }\n}\n";
     }
 
     private static String decorator(DecoratorDef d) {
@@ -553,6 +633,18 @@ final class ScenarioRenderer {
                     out.append("        Log.notification(() -> container.getBeanManager().getEvent().select(")
                         .append(selectType(type)).append(literals(probe.qualifiers())).append(").fire(")
                         .append(payload).append("));\n");
+                }
+                case INVOKE -> {
+                    out.append("        try {\n")
+                        .append("            var instance = container.select(").append(probe.type())
+                        .append(".class, jakarta.enterprise.inject.Any.Literal.INSTANCE);\n")
+                        .append("            var got = instance.get();\n")
+                        .append("            Log.add(\"call=\" + got.call(\"x\"));\n")
+                        .append("            Log.add(\"call=\" + got.call(\"y\"));\n");
+                    if (probe.destroy()) {
+                        out.append("            instance.destroy(got);\n            Log.add(\"destroyed\");\n");
+                    }
+                    out.append("        } catch (Throwable t) {\n            Log.add(\"!\" + Log.kind(t));\n        }\n");
                 }
                 default -> throw new IllegalStateException(probe.kind().name());
             }

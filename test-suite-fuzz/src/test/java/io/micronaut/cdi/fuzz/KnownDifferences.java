@@ -72,6 +72,11 @@ final class KnownDifferences {
             (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
                 && otherNotifications(weld) > otherNotifications(micronaut)
                 && agreeWithoutOtherNotifications(micronaut, weld)),
+        // an alternative producer with a priority, declared on an alternative class nothing selects: Weld enables
+        // the producer, micronaut-cdi follows section 5.1.2, under which a producer of a disabled bean is disabled
+        new Rule("A prioritized alternative producer of an unselected alternative class is not enabled",
+            (scenario, divergence, micronaut, weld) -> divergence.category() == Category.TRACE
+                && producerOfUnselectedAlternativeUsed(scenario, micronaut, weld)),
         // the order of what the specification leaves unordered: what an Instance iterates over, what is destroyed
         // as the container shuts down, the observers of one priority. A difference only there is no finding
         new Rule("Order the specification leaves open: Instance iteration, destruction at shutdown, observers of one priority",
@@ -87,7 +92,7 @@ final class KnownDifferences {
      */
     static boolean destroyedByItsProducer(Scenario scenario, RunResult micronaut, RunResult weld) {
         for (Scenario.BeanDef bean : scenario.beans()) {
-            if (bean.scope() != Scenario.Scope.APPLICATION || !(bean.preDestroy() || bean.postConstruct())) {
+            if (bean.scope() != Scenario.Scope.APPLICATION) {
                 continue;
             }
             boolean producesAnotherScope = bean.producers().stream()
@@ -95,11 +100,12 @@ final class KnownDifferences {
             if (!producesAnotherScope) {
                 continue;
             }
-            // destroyed, or created again: a bean with no PreDestroy shows it by its second PostConstruct
-            String destroyed = bean.name() + ".preDestroy@";
-            String created = bean.name() + ".postConstruct@";
-            if (beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.startsWith(destroyed))
-                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.startsWith(destroyed))
+            // destroyed, or created again: a bean with no PreDestroy shows it by its second PostConstruct. A callback
+            // is logged by the class or interceptor declaring it, at the instance it runs on
+            String destroyed = ".preDestroy@" + bean.name();
+            String created = ".postConstruct@" + bean.name();
+            if (beforeShutdown(micronaut.trace()).stream().anyMatch(l -> l.endsWith(destroyed))
+                && beforeShutdown(weld.trace()).stream().noneMatch(l -> l.endsWith(destroyed))
                 || count(micronaut.trace(), created) > count(weld.trace(), created)) {
                 return true;
             }
@@ -128,8 +134,32 @@ final class KnownDifferences {
             .filter(line -> !OTHER_NOTIFICATION.matcher(line).matches()).toList());
     }
 
-    private static long count(List<String> trace, String prefix) {
-        return trace.stream().filter(line -> line.startsWith(prefix)).count();
+    /**
+     * Whether Weld used a prioritized alternative producer of an unselected alternative class that micronaut-cdi did
+     * not use.
+     */
+    static boolean producerOfUnselectedAlternativeUsed(Scenario scenario, RunResult micronaut, RunResult weld) {
+        for (Scenario.BeanDef bean : scenario.beans()) {
+            if (!bean.alternative() || bean.priority() != null) {
+                continue;
+            }
+            for (Scenario.ProducerDef producer : bean.producers()) {
+                if (producer.alternative() && producer.priority() != null
+                    && usesProduct(weld, producer.name()) && !usesProduct(micronaut, producer.name())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean usesProduct(RunResult run, String producer) {
+        java.util.regex.Pattern use = java.util.regex.Pattern.compile("(^produce |[=\\[ ,])" + producer + "\\b");
+        return run.trace().stream().anyMatch(line -> use.matcher(line).find());
+    }
+
+    private static long count(List<String> trace, String suffix) {
+        return trace.stream().filter(line -> line.endsWith(suffix)).count();
     }
 
     private static List<String> beforeShutdown(List<String> trace) {
