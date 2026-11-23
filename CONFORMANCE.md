@@ -1156,8 +1156,8 @@ A synthetic bean of an array type is refused as its extension describes it: Micr
 an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
 type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
-A dependent bean bound to an interceptor cannot declare a producer of a bean of a normal scope: creating the product
-fails; see "Open points in Micronaut Core". Declare the producer on a bean that is not intercepted, or produce in the
+A dependent bean bound to an interceptor, or with an interceptor binding at any of its methods even if no interceptor
+is bound to it, cannot declare a producer of a bean of a normal scope: creating the product fails; see "Open points in Micronaut Core". Declare the producer on a bean that is not intercepted, or produce in the
 dependent pseudo-scope.
 
 A bean of a normal scope that injects the product of its own producer method fails to be created, since Micronaut has
@@ -1325,16 +1325,22 @@ handed them as the first lifecycle event's registry is created: a parameterized 
 by the rules of section 2.4.2.1 as well, and a builder that builds two contexts serves each with a customizer of its
 own rather than the first one alone.
 
-- **A static producer of a product of a normal scope on a bean of a normal scope does not compile.** The scope of the
+- **A static producer of a product of a normal scope on a bean of a normal scope, or on an intercepted bean, does not
+  compile.** The scope of the
   product is written on the producer method, and a normal scope is a scoped proxy, an around advice, to Micronaut.
-  Where the declaring class is an AOP proxy itself - a bean of a normal scope - Micronaut's processor visits its
+  Where the declaring class is an AOP proxy itself - a bean of a normal scope, or a dependent bean with an interceptor
+  binding at its class, bound to an interceptor or not (the differential fuzzer's run 3) - Micronaut's processor visits its
   methods for advice, and `DeclaredBeanElementCreator.visitAopMethod` takes the around advice the static method
   declares for its own and refuses it ("Method defines AOP advice but is declared static",
-  `StaticScopedProducerTest`, disabled). A non-static producer is claimed as a factory member before that. Skipping a
+  `StaticScopedProducerTest`, both cases disabled). A non-static producer is claimed as a factory member before that. Skipping a
   member that declares a bean - the `Bean` stereotype - in `visitAopMethod`, as `FactoryBeanElementCreator.visitMethod`
-  does, would close it; until then, declare the producer non-static, or on a bean of a pseudo-scope.
+  does, would close it (CORE_PR_N8); until then, declare the producer non-static, or on a bean of a pseudo-scope that
+  is not intercepted.
 - **A product of a normal scope declared by an intercepted dependent bean cannot be created.** A dependent bean bound to
-  an interceptor, at its class or at a method, is the subclass Micronaut generates for it. Creating the contextual
+  an interceptor, at its class or at a method, is the subclass Micronaut generates for it; so is one with an
+  interceptor binding no interceptor is bound to, even at a method that has nothing to do with the producer, and a
+  producer field fails as a producer method does (`MemberInterceptorBindingDeclaringBeanTest`, the differential
+  fuzzer's run 3). Creating the contextual
   instance of a product of a normal scope it declares, the product's definition looks its factory up
   (`AbstractBeanResolutionContext.getFactoryBean`), and `DefaultBeanContext.resolveBeanRegistration` asks
   `findCustomScope` for the scope of the factory, a prototype: `findInjectionPointDeclaredScope` returns the scope the
@@ -1345,7 +1351,7 @@ own rather than the first one alone.
   which an intercepted dependent bean does not have, and the creation fails with `NoSuchBeanException` for the
   declaring class (`InterceptedFactoryTest`, the normal scoped case disabled). A dependent product of the same bean is
   created. `isFactoryOf` comparing with `isAssignableFrom`, or with the intercepted type of an advised definition,
-  would close it.
+  would close it (CORE_PR_N6).
 - **The factory of a product whose definition is intercepted is taken to be the first dependent it resolved.** A
   producer method of a class with an interceptor binding of its own, bound to an interceptor or not, has a product
   definition that is an `InterceptedBeanDefinition`, the class's bindings being in the product's metadata, and its
@@ -1354,12 +1360,14 @@ own rather than the first one alone.
   first dependent that is no interceptor for the factory, which is the first dependent parameter: it is destroyed as
   soon as the product is created, as the factory is, while a dependent declaring instance stays a dependent of the
   product and is destroyed only with it (sections 6.4.1 and 6.4.2;
-  `UnboundInterceptorBindingDeclaringBeanTest`, the two cases with a parameter disabled). With a declaring bean of a
+  `UnboundInterceptorBindingDeclaringBeanTest`, the two cases with a parameter disabled, and
+  `MemberInterceptorBindingDeclaringBeanTest` for a binding with a member). With a declaring bean of a
   normal scope the parameter is destroyed as the product is created. Where that parameter is a bean of a normal scope,
   its client proxy is destroyed as the factory is, which removes the contextual instance from its scope; if that
   instance holds the `Instance` the product was looked up through, the lookup fails with an `IllegalStateException`
   as the product is done, its owner having been destroyed (`InterceptedProducerLookupCountTest`). `getFactoryBean`
-  marking the registration its own `getBean` added - the dependents past the count before it - would close it.
+  marking the registration its own `getBean` added - the dependents past the count before it - would close it
+  (CORE_PR_N13).
 - **A scoped bean under construction is not reachable from its own injection (section 5.4).** A bean of a normal scope
   that injects what its own producer method produces - a field or initializer injected with the product - has the
   producer invoked on it through its client proxy while it is being created, and Weld hands the producer the instance

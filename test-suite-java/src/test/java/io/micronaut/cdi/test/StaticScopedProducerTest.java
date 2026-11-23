@@ -24,7 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * A static producer method of a product of a normal scope, declared by a bean of a normal scope, compiles and
- * produces (CDI 4.1 section 3.2): the scope of what it produces is no advice of the method, which is static.
+ * produces (CDI 4.1 section 3.2), and so does one declared by a dependent bean with an interceptor binding at its
+ * class: the scope of what it produces is no advice of the method, which is static.
  */
 class StaticScopedProducerTest {
 
@@ -55,6 +56,50 @@ class StaticScopedProducerTest {
             Class<?> crate = context.getClassLoader().loadClass("staticproducer.Warehouse$Crate");
             Object produced = context.getBean(CdiBeanContainer.class).createInstance().select(crate).get();
             assertEquals("crate", crate.getMethod("label").invoke(produced));
+        }
+    }
+
+    @Test
+    @Disabled("Micronaut's processor takes the scoped proxy the method declares for its product for advice of the "
+        + "method, which is static (DeclaredBeanElementCreator.visitAopMethod, see CONFORMANCE.md, Open points in "
+        + "Micronaut Core)")
+    void aStaticProducerOfANormalScopedProductOnAnInterceptedDependentBeanProduces() throws Exception {
+        // the differential fuzzer's run 3 seed 489
+        try (ApplicationContext context = InMemoryDeployment.start("staticproducer.Depot", """
+            package staticproducer;
+
+            @jakarta.enterprise.context.Dependent
+            @Depot.Tagged("b")
+            public class Depot {
+
+                @jakarta.interceptor.InterceptorBinding
+                @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+                @java.lang.annotation.Target({java.lang.annotation.ElementType.TYPE,
+                    java.lang.annotation.ElementType.METHOD})
+                public @interface Tagged {
+                    String value();
+                }
+
+                public static class Pallet {
+                    public String label() {
+                        return "pallet";
+                    }
+                }
+
+                public String call(String arg) {
+                    return arg;
+                }
+
+                @jakarta.enterprise.inject.Produces
+                @jakarta.enterprise.context.ApplicationScoped
+                static Pallet pallet() {
+                    return new Pallet();
+                }
+            }
+            """)) {
+            Class<?> pallet = context.getClassLoader().loadClass("staticproducer.Depot$Pallet");
+            Object produced = context.getBean(CdiBeanContainer.class).createInstance().select(pallet).get();
+            assertEquals("pallet", pallet.getMethod("label").invoke(produced));
         }
     }
 }
