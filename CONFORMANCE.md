@@ -1357,12 +1357,14 @@ own rather than the first one alone.
   first dependent that is no interceptor for the factory, which is the first dependent parameter: it is destroyed as
   soon as the product is created, as the factory is, while a dependent declaring instance stays a dependent of the
   product and is destroyed only with it (sections 6.4.1 and 6.4.2;
-  `UnboundInterceptorBindingDeclaringBeanTest`, the two cases with a parameter disabled). With a declaring bean of a
+  `UnboundInterceptorBindingDeclaringBeanTest`, the two cases with a parameter disabled, and
+  `MemberInterceptorBindingDeclaringBeanTest` for a binding with a member). With a declaring bean of a
   normal scope the parameter is destroyed as the product is created. Where that parameter is a bean of a normal scope,
   its client proxy is destroyed as the factory is, which removes the contextual instance from its scope; if that
   instance holds the `Instance` the product was looked up through, the lookup fails with an `IllegalStateException`
   as the product is done, its owner having been destroyed (`InterceptedProducerLookupCountTest`). `getFactoryBean`
-  marking the registration its own `getBean` added - the dependents past the count before it - would close it.
+  marking the registration its own `getBean` added - the dependents past the count before it - would close it
+  (CORE_PR_N13).
 - **A scoped bean under construction is not reachable from its own injection (section 5.4).** A bean of a normal scope
   that injects what its own producer method produces - a field or initializer injected with the product - has the
   producer invoked on it through its client proxy while it is being created, and Weld hands the producer the instance
