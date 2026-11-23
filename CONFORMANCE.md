@@ -1156,8 +1156,8 @@ A synthetic bean of an array type is refused as its extension describes it: Micr
 an array class is none it can register. Closing that would take Micronaut Core registering a bean definition whose
 type is an array (`VisitorContext.registerBean` for an array `ClassElement`).
 
-A dependent bean bound to an interceptor cannot declare a producer of a bean of a normal scope: creating the product
-fails; see "Open points in Micronaut Core". Declare the producer on a bean that is not intercepted, or produce in the
+A dependent bean bound to an interceptor, or with an interceptor binding at any of its methods even if no interceptor
+is bound to it, cannot declare a producer of a bean of a normal scope: creating the product fails; see "Open points in Micronaut Core". Declare the producer on a bean that is not intercepted, or produce in the
 dependent pseudo-scope.
 
 A bean of a normal scope that injects the product of its own producer method fails to be created, since Micronaut has
@@ -1334,7 +1334,10 @@ own rather than the first one alone.
   member that declares a bean - the `Bean` stereotype - in `visitAopMethod`, as `FactoryBeanElementCreator.visitMethod`
   does, would close it; until then, declare the producer non-static, or on a bean of a pseudo-scope.
 - **A product of a normal scope declared by an intercepted dependent bean cannot be created.** A dependent bean bound to
-  an interceptor, at its class or at a method, is the subclass Micronaut generates for it. Creating the contextual
+  an interceptor, at its class or at a method, is the subclass Micronaut generates for it; so is one with an
+  interceptor binding no interceptor is bound to, even at a method that has nothing to do with the producer, and a
+  producer field fails as a producer method does (`MemberInterceptorBindingDeclaringBeanTest`, the differential
+  fuzzer's run 3). Creating the contextual
   instance of a product of a normal scope it declares, the product's definition looks its factory up
   (`AbstractBeanResolutionContext.getFactoryBean`), and `DefaultBeanContext.resolveBeanRegistration` asks
   `findCustomScope` for the scope of the factory, a prototype: `findInjectionPointDeclaredScope` returns the scope the
@@ -1345,7 +1348,7 @@ own rather than the first one alone.
   which an intercepted dependent bean does not have, and the creation fails with `NoSuchBeanException` for the
   declaring class (`InterceptedFactoryTest`, the normal scoped case disabled). A dependent product of the same bean is
   created. `isFactoryOf` comparing with `isAssignableFrom`, or with the intercepted type of an advised definition,
-  would close it.
+  would close it (CORE_PR_N6).
 - **The factory of a product whose definition is intercepted is taken to be the first dependent it resolved.** A
   producer method of a class with an interceptor binding of its own, bound to an interceptor or not, has a product
   definition that is an `InterceptedBeanDefinition`, the class's bindings being in the product's metadata, and its
