@@ -79,6 +79,7 @@ final class ElementInterceptorInfo extends ElementBeanInfo implements Intercepto
             case AROUND_CONSTRUCT -> "jakarta.interceptor.AroundConstruct";
             case POST_CONSTRUCT -> "jakarta.annotation.PostConstruct";
             case PRE_DESTROY -> "jakarta.annotation.PreDestroy";
+            case AROUND_TIMEOUT -> "jakarta.interceptor.AroundTimeout";
             default -> null;
         };
         if (marker == null) {

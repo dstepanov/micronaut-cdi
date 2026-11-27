@@ -201,7 +201,8 @@ final class SynthesisPhase {
     private static List<String> alternativeStereotypesOf(RecordingBeanBuilder<?> bean) {
         List<String> alternatives = new ArrayList<>();
         for (ClassElement stereotype : bean.stereotypes()) {
-            if (stereotype.hasDeclaredAnnotation(Cdi.ALTERNATIVE)) {
+            // written on the stereotype or on a stereotype it declares, however deep (section 2.7.1.4)
+            if (stereotype.hasStereotype(Cdi.ALTERNATIVE)) {
                 alternatives.add(stereotype.getName());
             }
         }
