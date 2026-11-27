@@ -201,6 +201,11 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
                 // proxy - goes with it
                 CdiScopeVisitor.takeOffTheNormalScopeItOverrides(producer);
             }
+            if (producer.getAnnotationMetadata().getDeclaredMetadata()
+                .booleanValue(CdiScope.class, "normal").orElse(false)) {
+                // a product in a normal scope is reached through a client proxy of its type (section 3.11)
+                ProxyabilityVisitor.checkProducer(producer, producedType(producer));
+            }
             recordAttributes(producer, element, classAttributes, context);
             // section 3.2.2: a producer of a dependent instance may return null, and the null is what is
             // injected — the definition says so, so that resolution hands the null on instead of failing
@@ -325,7 +330,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
     /**
      * The source name of an array type, as {@code java.lang.String[][]}.
      */
-    private static String arrayName(ClassElement array) {
+    static String arrayName(ClassElement array) {
         StringBuilder name = new StringBuilder();
         ClassElement component = array;
         int dimensions = 0;
@@ -342,7 +347,7 @@ public final class ProducerVisitor implements TypeElementVisitor<Object, Object>
      * The source name of an array type recorded by its binary name, {@code [Ljava.lang.String;}, or already in source
      * form.
      */
-    private static String sourceArrayName(String recorded) {
+    static String sourceArrayName(String recorded) {
         if (!recorded.startsWith("[")) {
             return recorded.replace('$', '.');
         }

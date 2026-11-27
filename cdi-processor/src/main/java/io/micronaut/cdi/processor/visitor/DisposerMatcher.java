@@ -171,6 +171,17 @@ final class DisposerMatcher {
         if (!producer.hasDeclaredAnnotation(Cdi.TYPED) || isObject(disposed)) {
             return true;
         }
+        if (disposed.isArray()) {
+            // an array type is named as one, in the binary form a class value of an array has (section 3.2.1)
+            String disposedArray = ProducerVisitor.arrayName(disposed);
+            for (String typedName : producer.getAnnotationMetadata().stringValues(Cdi.TYPED)) {
+                if ((typedName.startsWith("[") || typedName.endsWith("[]"))
+                    && ProducerVisitor.sourceArrayName(typedName).equals(disposedArray)) {
+                    return true;
+                }
+            }
+            return false;
+        }
         String disposedName = disposed.getName();
         for (String typedName : producer.getAnnotationMetadata().stringValues(Cdi.TYPED)) {
             // the metadata holds binary names, in which a nested type is Outer$Inner
