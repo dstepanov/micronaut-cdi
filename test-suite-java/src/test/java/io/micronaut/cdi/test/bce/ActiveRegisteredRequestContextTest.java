@@ -24,6 +24,11 @@ import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.Discovery;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
+import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Annotation;
@@ -81,6 +86,58 @@ class ActiveRegisteredRequestContextTest {
             Object holder = container.createInstance().select(holderClass).get();
             assertEquals(3, holderClass.getMethod("visit").invoke(holder), "injected through its client proxy");
             assertEquals(1, ActiveContext.INSTANCES.size());
+        }
+    }
+
+    @Test
+    void anActiveRegisteredRequestContextServesASyntheticBeanOfTheScope() {
+        ActiveContext.INSTANCES.clear();
+        try (ApplicationContext context = ExtensionDeployment.start(RegisteringWithSyntheticExtension.class,
+            "served.Visit", SOURCE)) {
+            CdiBeanContainer container = context.getBean(CdiBeanContainer.class);
+            // a synthetic bean of the request scope is held by the context that serves the scope, as a compiled one
+            // is: the container's own request context is not active
+            Counter counter = container.createInstance().select(Counter.class).get();
+            assertEquals(1, counter.next());
+            assertSame(counter, container.createInstance().select(Counter.class).get());
+            assertEquals(1, ActiveContext.INSTANCES.size());
+        }
+    }
+
+    /**
+     * Registers a context for the request scope that is always active, and a synthetic bean of the scope.
+     */
+    public static final class RegisteringWithSyntheticExtension implements BuildCompatibleExtension {
+        @Discovery
+        public void discover(MetaAnnotations meta) {
+            meta.addContext(RequestScoped.class, ActiveContext.class);
+        }
+
+        @Synthesis
+        public void synthesise(SyntheticComponents components) {
+            components.addBean(Counter.class).type(Counter.class).scope(RequestScoped.class)
+                .createWith(CounterCreator.class);
+        }
+    }
+
+    /**
+     * Creates the synthetic bean.
+     */
+    public static final class CounterCreator implements SyntheticBeanCreator<Counter> {
+        @Override
+        public Counter create(SyntheticInjections injections, Parameters params) {
+            return new Counter();
+        }
+    }
+
+    /**
+     * The synthetic bean of the request scope.
+     */
+    public static final class Counter {
+        private int count;
+
+        public int next() {
+            return ++count;
         }
     }
 

@@ -27,6 +27,7 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.event.ObserverException;
 import jakarta.enterprise.event.Reception;
@@ -226,9 +227,12 @@ public final class CdiObserverMethod<T> implements ObserverMethod<T>, CdiNotifia
                     return;
                 }
                 if (!ifExists && !contextIsActive()) {
-                    // a bean in a normal scope is reachable only while its context is active; while it is not,
-                    // the observer is simply not notified
-                    return;
+                    // section 10.5: an observer that is not conditional is notified on the contextual instance of
+                    // its bean, which is obtained from the active context of the bean's scope - and where there is
+                    // none, obtaining it throws (section 6.5.2) rather than the observer being stepped around
+                    throw new ContextNotActiveException("The observer method " + method.getMethodName() + " of "
+                        + declaring.getBeanType().getName() + " is not conditional, and no context of the scope of "
+                        + "its bean is active");
                 }
                 if (isDependent()) {
                     // the registration of this very definition, rather than of whatever re-resolving its type

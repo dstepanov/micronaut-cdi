@@ -128,6 +128,19 @@ public final class ExtensionContexts {
                 .typeArguments(Argument.of(scopeAnnotation))
                 .annotationMetadata(builtForContext())
                 .build());
+            if (REQUEST_SCOPED.equals(scopeName)) {
+                // a bean of the request scope compiled without the extension, and a synthetic one, is held by the
+                // scope the compiler reads RequestScoped into: it is served by the same contexts, the container's
+                // own among them, so that the one that is active holds it
+                beanContext.registerBeanDefinition(RuntimeBeanDefinition
+                    .builder(CustomScope.class,
+                        () -> new ExtensionCustomScope(CdiRequestScope.class, contextsOfScope, beanContext))
+                    .singleton(true)
+                    .typeArguments(Argument.of(CdiRequestScope.class))
+                    .annotationMetadata(builtForContext())
+                    .replaces(RequestScope.class)
+                    .build());
+            }
         }
     }
 

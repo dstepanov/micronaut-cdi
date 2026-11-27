@@ -289,6 +289,18 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             }
             return;
         }
+        String pseudoScope = winningPseudoScopeOf(element, context);
+        if (pseudoScope != null) {
+            // a pseudo-scope the class declares - the singleton one, or one of the application's own - is its scope:
+            // a scope is inherited only by a class that declares none (section 4.1), and one written on the class
+            // outright wins over a normal scope a stereotype it declares carries (section 2.7.2). What the mappers
+            // and the superclass would have it held and proxied in goes
+            takeOffTheDependentPseudoScope(element);
+            takeOffTheNormalScopeItOverrides(element);
+            // the record of the pseudo-scope shadows the one of a normal scope the class would inherit
+            element.annotate(CdiScopes.recordOf(pseudoScope, false));
+            return;
+        }
         String resolved = resolveScope(element, context);
         takeOffTheDependentPseudoScope(element);
         if (resolved == null) {
@@ -538,6 +550,27 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * The pseudo-scope other than the dependent one the element declares, directly or through a stereotype it
      * declares: the singleton pseudo-scope, or an annotation the application declared a scope.
      */
+    /**
+     * The pseudo-scope other than the dependent one the class declares where it is the class's scope: one it declares
+     * while it declares no normal scope - whatever it would inherit - or one written on it outright beside a normal
+     * scope only a stereotype it declares carries; {@code null} otherwise.
+     */
+    private static @Nullable String winningPseudoScopeOf(ClassElement element, VisitorContext context) {
+        String pseudo = pseudoScopeDeclaredOn(element, context);
+        if (pseudo == null || !SpecificationBeans.isNormalScoped(element)) {
+            // a class with no normal scope to override is read as it always was: a singleton alone is Micronaut's
+            return null;
+        }
+        DeclaredScope normal = scopeDeclaredOn(element, context);
+        if (normal == null) {
+            return pseudo;
+        }
+        if (Cdi.DEPENDENT.equals(normal.scope())) {
+            return null;
+        }
+        return element.hasDeclaredAnnotation(pseudo) && !normal.contributedBy().equals(normal.scope()) ? pseudo : null;
+    }
+
     private static @Nullable String pseudoScopeDeclaredOn(Element element, VisitorContext context) {
         for (String candidate : element.getAnnotationMetadata().getAnnotationNamesByStereotype(PSEUDO_SCOPE)) {
             String scope = resolveToPseudoScope(candidate, context, new HashSet<>());
@@ -582,6 +615,8 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
      * declared a normal scope, written on the class directly or carried by a stereotype the class declares.
      */
     private static @Nullable DeclaredScope scopeDeclaredOn(Element element, VisitorContext context) {
+        // a scope written on the class outright wins over one a stereotype it declares carries (section 2.7.2)
+        DeclaredScope throughAStereotype = null;
         for (String candidate : element.getAnnotationMetadata().getAnnotationNamesByStereotype(Cdi.NORMAL_SCOPE)) {
             // what the index hands back is the annotation credited with the stereotype, which for a transitive
             // chain is the annotation the class declares — a stereotype, as often as not — rather than the
@@ -592,8 +627,16 @@ public final class CdiScopeVisitor implements TypeElementVisitor<Object, Object>
             }
             String contributor = declaredContributorOf(element, candidate, context);
             if (contributor != null) {
-                return new DeclaredScope(scope, contributor);
+                if (contributor.equals(scope)) {
+                    return new DeclaredScope(scope, contributor);
+                }
+                if (throughAStereotype == null) {
+                    throughAStereotype = new DeclaredScope(scope, contributor);
+                }
             }
+        }
+        if (throughAStereotype != null) {
+            return throughAStereotype;
         }
         if (element.getAnnotationMetadata().hasStereotype(Cdi.DEPENDENT)) {
             String contributor = declaredContributorOf(element, Cdi.DEPENDENT, context);
