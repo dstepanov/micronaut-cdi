@@ -298,6 +298,12 @@ public final class DiscoveredClasses implements ScannedClasses, MetaAnnotations 
             throw new DeploymentException("The scope " + scopeName + " is global, and a build compatible extension "
                 + "may not register a context for it: " + contextClass.getName() + " (section 6.4)");
         }
+        if ("jakarta.inject.Singleton".equals(scopeName)) {
+            // the singleton pseudo-scope is the container's own, as the dependent one is: a context registered for
+            // it would never be asked for an instance, so it is refused rather than ignored
+            throw new DeploymentException("The pseudo-scope " + scopeName + " is implemented by the container, and a "
+                + "build compatible extension may not register a context for it: " + contextClass.getName());
+        }
         List<String> contextsOfScope = contexts.computeIfAbsent(scopeName, name -> new ArrayList<>());
         contextsOfScope.add(contextClass.getName());
         if (contextsOfScope.size() > 1) {

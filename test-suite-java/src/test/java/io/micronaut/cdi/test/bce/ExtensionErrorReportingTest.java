@@ -80,6 +80,14 @@ class ExtensionErrorReportingTest {
     }
 
     @Test
+    void aContextForTheSingletonPseudoScopeIsADeploymentProblem() {
+        String errors = errorsOf(SingletonScopeContext.class);
+        assertTrue(errors.contains(VisitorMessages.DEPLOYMENT_PROBLEM + "The pseudo-scope "
+            + jakarta.inject.Singleton.class.getName() + " is implemented by the container"), errors);
+        assertFalse(errors.contains("Error initializing type visitor"), errors);
+    }
+
+    @Test
     void anInvokerOfAPrivateMethodIsADeploymentProblem() {
         String errors = errorsOf(PrivateInvoker.class);
         // reported as the deployment problem a registration method that throws is, naming what the invoker refused
@@ -238,6 +246,16 @@ class ExtensionErrorReportingTest {
         @Discovery
         public void discover(MetaAnnotations meta) {
             meta.addContext(ApplicationScoped.class, Global.class);
+        }
+    }
+
+    /**
+     * Registers a context for the singleton pseudo-scope, which the container implements itself.
+     */
+    public static final class SingletonScopeContext implements BuildCompatibleExtension {
+        @Discovery
+        public void discover(MetaAnnotations meta) {
+            meta.addContext(jakarta.inject.Singleton.class, Global.class);
         }
     }
 

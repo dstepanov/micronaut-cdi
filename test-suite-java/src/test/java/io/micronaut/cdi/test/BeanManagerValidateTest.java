@@ -67,7 +67,7 @@ class BeanManagerValidateTest {
         }
     }
 
-    private static InjectionPoint pointOf(Type type) {
+    static InjectionPoint pointOf(Type type) {
         return new InjectionPoint() {
             @Override
             public Type getType() {

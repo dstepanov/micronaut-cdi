@@ -266,6 +266,26 @@ class DeploymentValidationTest {
     }
 
     @Test
+    void validatingAnInjectionPointOfAnUnproxyableNormalScopedBeanIsAnUnproxyableResolution() throws Exception {
+        try (ApplicationContext context = InMemoryDeployment.start("valid.Consumer", """
+            package valid;
+
+            @jakarta.enterprise.context.ApplicationScoped
+            public class Consumer {
+                public final void x() {
+                }
+            }
+            """)) {
+            Class<?> consumer = context.getClassLoader().loadClass("valid.Consumer");
+            jakarta.enterprise.inject.spi.BeanManager manager =
+                context.getBean(jakarta.enterprise.inject.spi.BeanManager.class);
+            // section 3.11: the point the program hands over is validated as the points of the container's beans are
+            assertThrows(jakarta.enterprise.inject.UnproxyableResolutionException.class,
+                () -> manager.validate(BeanManagerValidateTest.pointOf(consumer)));
+        }
+    }
+
+    @Test
     void anUnsatisfiedInjectionPointOfAnEnabledInterceptorIsADeploymentProblem() {
         assertRejected("""
             package invalid;

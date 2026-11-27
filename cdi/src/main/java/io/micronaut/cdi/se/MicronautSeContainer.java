@@ -52,9 +52,14 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
     private final ApplicationContext context;
     private final CdiInstance<Object> lookup;
     /**
-     * Whether the container was shut down: taken once, by the one call to {@link #close()} that shuts it down.
+     * Whether the container is being shut down: taken once, by the one call to {@link #close()} that shuts it down.
      */
     private final AtomicBoolean shutDown = new AtomicBoolean();
+    /**
+     * Whether the shutdown finished: until then the container still runs, for the observers of {@code Shutdown},
+     * which may look beans up through it.
+     */
+    private volatile boolean stopped;
 
     MicronautSeContainer(ApplicationContext context) {
         this.context = context;
@@ -72,13 +77,18 @@ final class MicronautSeContainer implements SeContainer, MicronautInstance<Objec
             throw new IllegalStateException("The container is not running: it was already shut down, and a "
                 + "container is shut down once");
         }
-        context.close();
+        try {
+            context.close();
+        } finally {
+            stopped = true;
+        }
     }
 
     @Override
     public boolean isRunning() {
-        // the context the container runs may be closed without the container, by whoever holds it
-        return !shutDown.get() && context.isRunning();
+        // the context the container runs may be closed without the container, by whoever holds it; and the
+        // container runs while it shuts down, until the observers of the shutdown were told
+        return !stopped && (shutDown.get() || context.isRunning());
     }
 
     @Override

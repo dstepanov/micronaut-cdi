@@ -117,6 +117,7 @@ import java.util.function.Supplier;
 public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBeanContainer {
 
     private final BeanContext beanContext;
+    private final ExtensionContexts extensionContexts;
     private final RecordedTypeIndex typeIndex;
     private final CompiledAnnotationTypes types;
     private final QualifierOverlay overlay;
@@ -147,6 +148,7 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         this.typeIndex = typeIndex;
         this.types = types;
         this.overlay = overlay;
+        this.extensionContexts = extensionContexts;
         this.contexts = new CdiContexts(beanContext, requestScope, applicationScope, extensionContexts);
         // the container of a running application is what CDI.current() resolves to, and there is nothing else
         // for it to resolve through: the specification's own entry point is static. It is registered with the
@@ -758,7 +760,8 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
 
     private void named(String name, io.micronaut.context.Qualifier<Object> carrying, Set<Bean<?>> beans) {
         for (BeanDefinition<Object> definition : beanContext.getBeanDefinitions(carrying)) {
-            if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isBean(definition)) {
+            // section 11.3.2: the beans of the name that are available for injection, which no interceptor is
+            if (name.equals(CdiBean.nameOf(definition)) && CdiBeanQualifier.isInjectable(definition)) {
                 beans.add(beanOf(definition));
             }
         }
@@ -1130,12 +1133,22 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
 
     /**
      * Validates an injection point a program hands over as the container validates the points of its beans as it
-     * starts, by resolving it (section 5.2.2): one no bean satisfies, or more than one does, is reported as the
-     * {@code InjectionException} of that resolution. No bean is created.
+     * starts, by resolving it (section 5.2.2): one no bean satisfies, or more than one does, or one that resolves to
+     * a bean in a normal scope that cannot be proxied, is reported as the {@code InjectionException} of that
+     * resolution. No bean is created.
      */
     @Override
     public void validate(InjectionPoint injectionPoint) {
-        resolvedFor(injectionPoint);
+        Bean<?> bean = resolvedFor(injectionPoint);
+        if (bean instanceof CdiBean<?> cdiBean) {
+            // section 3.11: a point that resolves to a bean in a normal scope that cannot be proxied is a
+            // deployment problem, which the container reports for the points of its own beans as it starts
+            String unproxyable = cdiBean.definition().getAnnotationMetadata()
+                .stringValue(CdiUnproxyable.class).orElse(null);
+            if (unproxyable != null) {
+                throw new UnproxyableResolutionException(unproxyable);
+            }
+        }
     }
 
     /**
@@ -1247,7 +1260,9 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
 
     @Override
     public <T extends Extension> T getExtension(Class<T> extensionClass) {
-        throw belongsToFull("A portable extension");
+        // section 11.3.25: the instance of the extension the container runs, which is registered as the
+        // container starts (ExtensionContexts.registerExtension)
+        return extensionContexts.extension(extensionClass);
     }
 
     @Override

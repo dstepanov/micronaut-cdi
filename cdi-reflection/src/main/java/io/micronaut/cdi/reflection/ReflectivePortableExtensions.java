@@ -352,6 +352,14 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
                     }
                     Annotation[][] annotations = method.getParameterAnnotations();
                     for (int i = 0; i < annotations.length; i++) {
+                        if (has(annotations[i], jakarta.enterprise.event.ObservesAsync.class)
+                            && isLifecycleEvent(method.getParameterTypes()[i])) {
+                            // section 11.5: a container lifecycle event is observed synchronously, and an
+                            // asynchronous observer of one is a definition error rather than one never notified
+                            throw new DefinitionException("The observer method " + method + " of the extension "
+                                + "observes the container lifecycle event "
+                                + method.getParameterTypes()[i].getName() + " asynchronously (section 11.5)");
+                        }
                         if (!has(annotations[i], Observes.class)) {
                             continue;
                         }

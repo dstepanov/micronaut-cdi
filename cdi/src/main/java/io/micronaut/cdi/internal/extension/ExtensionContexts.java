@@ -76,6 +76,7 @@ public final class ExtensionContexts {
     private final BeanContext beanContext;
     private final Map<String, List<AlterableContext>> contextsByScope = new LinkedHashMap<>();
     private final Set<String> normalScopes = new LinkedHashSet<>();
+    private final List<Object> extensions = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     public ExtensionContexts(BeanContext beanContext) {
         this.beanContext = beanContext;
@@ -203,6 +204,7 @@ public final class ExtensionContexts {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void registerExtension(Object extension) {
+        extensions.add(extension);
         MutableAnnotationMetadata metadata =
             new MutableAnnotationMetadata();
         metadata.addDeclaredAnnotation("jakarta.enterprise.inject.Default", Map.of());
@@ -217,6 +219,25 @@ public final class ExtensionContexts {
             .singleton(true)
             .annotationMetadata(metadata)
             .build());
+    }
+
+    /**
+     * The instance of a portable extension class the container runs (section 11.3.25): the one whose class is
+     * exactly the given one.
+     *
+     * @param extensionClass The class of the extension
+     * @param <T>            The type of the extension
+     * @return The instance
+     * @throws IllegalArgumentException Where the container runs no extension of the class
+     */
+    public <T> T extension(Class<T> extensionClass) {
+        for (Object extension : extensions) {
+            if (extension.getClass() == extensionClass) {
+                return extensionClass.cast(extension);
+            }
+        }
+        throw new IllegalArgumentException("The container runs no portable extension of the class "
+            + extensionClass.getName());
     }
 
     /**
