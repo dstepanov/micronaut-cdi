@@ -38,6 +38,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ProxyBeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import io.micronaut.interceptor.spi.InterceptorBindings;
 import jakarta.el.ELResolver;
@@ -730,6 +731,22 @@ public final class CdiBeanContainer implements ELAwareBeanManager, MicronautBean
         Set<Bean<?>> beans = new LinkedHashSet<>();
         named(name, Qualifiers.byStereotype(CdiName.class), beans);
         named(name, Qualifiers.byStereotype(AnnotationUtil.NAMED), beans);
+        if (!overlay.isEmpty()) {
+            // and the beans of the classes a portable extension gave the name to by adding Named
+            Set<String> classesNamed = overlay.classesNamed();
+            if (!classesNamed.isEmpty()) {
+                for (BeanDefinition<?> definition : beanContext.getAllBeanDefinitions()) {
+                    Class<?> type = definition instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType()
+                        : definition.getBeanType();
+                    if (classesNamed.contains(type.getName()) && CdiBeanQualifier.isInjectable(definition)) {
+                        Bean<?> bean = beanOf(definition);
+                        if (name.equals(bean.getName())) {
+                            beans.add(bean);
+                        }
+                    }
+                }
+            }
+        }
         return beans;
     }
 

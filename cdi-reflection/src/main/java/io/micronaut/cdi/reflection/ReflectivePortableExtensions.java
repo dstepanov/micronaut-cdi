@@ -38,6 +38,8 @@ import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.reflect.exception.InstantiationException;
 import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Any;
@@ -120,12 +122,23 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         // the classes that were discovered, each with what the observers added to it, which AfterBeanDiscovery
         // describes and no other
         Map<Class<?>, List<Annotation>> discovered = new LinkedHashMap<>();
-        for (Class<?> type : beanClassesOf(applicationBeans(container, extensions))) {
+        Set<Class<?>> discoveredTypes = beanClassesOf(applicationBeans(container, extensions));
+        // an interceptor is a type the container discovers as well, though it is never injected (section 11.5.6)
+        discoveredTypes.addAll(interceptorClassesOf(container));
+        for (Class<?> type : discoveredTypes) {
             PortableEvents.AnnotatedTypeEvent<?> event = new PortableEvents.AnnotatedTypeEvent<>(type, types);
             fire(observers, event, Argument.of(ProcessAnnotatedType.class, Argument.of(type)), problems);
             discovered.put(type, List.copyOf(event.added()));
             for (Annotation added : event.added()) {
                 overlay.add(type.getName(), CdiQualifier.ofInstance(types, added));
+            }
+            for (Annotation written : type.getDeclaredAnnotations()) {
+                // an annotation BeforeBeanDiscovery made a qualifier qualifies the class that was written with it,
+                // which was compiled before it was one (section 11.5.1)
+                String name = written.annotationType().getName();
+                if (Boolean.TRUE.equals(types.isQualifier(name)) && !compiledAsAQualifier(written)) {
+                    overlay.add(type.getName(), CdiQualifier.ofInstance(types, written));
+                }
             }
         }
         // the beans are read again, with what was added
@@ -145,7 +158,7 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
             problems);
 
         for (Bean<?> bean : beans) {
-            describe(bean, observers, problems);
+            describe(bean, observers, discovered, problems);
         }
 
         fire(observers, new PortableEvents.AfterBeans(contexts, context.getBean(ObserverRegistry.class),
@@ -246,6 +259,27 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         return types;
     }
 
+    /**
+     * Whether the annotation type was a qualifier as the application compiled: meta-annotated {@code Qualifier}.
+     */
+    private static boolean compiledAsAQualifier(Annotation annotation) {
+        return annotation.annotationType().isAnnotationPresent(jakarta.inject.Qualifier.class);
+    }
+
+    /**
+     * The classes of the interceptors of the application.
+     */
+    private static Set<Class<?>> interceptorClassesOf(CdiBeanContainer container) {
+        Set<Class<?>> types = new LinkedHashSet<>();
+        for (BeanDefinition<Object> definition : container.beanContext().getBeanDefinitions(
+            Qualifiers.byStereotype(Interceptor.class))) {
+            if (!definition.isAbstract() && !ExtensionComponents.isInfrastructure(definition)) {
+                types.add(definition.getBeanType());
+            }
+        }
+        return types;
+    }
+
     private static @Nullable AnnotationValue<CdiProducer> producerOf(Bean<?> bean) {
         return bean instanceof CdiBean<?> compiled
             ? compiled.definition().getAnnotationMetadata().getAnnotation(CdiProducer.class) : null;
@@ -255,12 +289,16 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
      * Fires the events that describe one bean, in the order bean discovery has them (section 3.10.4.4).
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static void describe(Bean<?> bean, List<Observer> observers, List<Throwable> problems) {
+    private static void describe(Bean<?> bean, List<Observer> observers,
+                                 Map<Class<?>, List<Annotation>> discovered, List<Throwable> problems) {
         Class<?> beanClass = bean.getBeanClass();
         AnnotationValue<CdiProducer> producer = producerOf(bean);
         if (producer == null) {
-            AnnotatedType<?> type = new ReflectiveAnnotatedType<>(beanClass);
-            fire(observers, new PortableEvents.InjectionTargetEvent<>(beanClass, problems),
+            // the class as the observers of ProcessAnnotatedType left it (section 11.5.6): what they added is read
+            // as the class's own by the events that follow
+            AnnotatedType<?> type = new ReflectiveAnnotatedType<>(beanClass,
+                discovered.getOrDefault(beanClass, List.of()));
+            fire(observers, new PortableEvents.InjectionTargetEvent<>(type, problems),
                 Argument.of(ProcessInjectionTarget.class, Argument.of(beanClass)), problems);
             fire(observers, new PortableEvents.BeanAttributesEvent(bean, type, problems),
                 Argument.of(ProcessBeanAttributes.class, Argument.of(beanClass)), problems);
@@ -277,8 +315,9 @@ public final class ReflectivePortableExtensions implements PortableExtensions {
         Argument<?> produced = CdiBean.producedType(((CdiBean<?>) bean).definition());
         fire(observers, new PortableEvents.BeanAttributesEvent(bean, annotated, problems),
             Argument.of(ProcessBeanAttributes.class, produced), problems);
+        // section 11.5.11: the bean of a producer is a ProcessBean of the type it produces
         fire(observers, new PortableEvents.BeanEvent("ProcessBean", bean, annotated, problems),
-            Argument.of(ProcessBean.class, Argument.of(beanClass)), problems);
+            Argument.of(ProcessBean.class, produced), problems);
     }
 
     /**

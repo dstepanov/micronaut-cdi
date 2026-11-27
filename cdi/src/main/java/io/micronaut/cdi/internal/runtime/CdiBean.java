@@ -398,7 +398,12 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public @Nullable String getName() {
-        return nameOf(definition);
+        String name = nameOf(definition);
+        if (name == null && overlay != null) {
+            // a name a portable extension gave the class by adding Named to it (section 11.5.6)
+            name = overlay.nameAdded(definition);
+        }
+        return name;
     }
 
     /**
