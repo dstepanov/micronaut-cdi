@@ -20,11 +20,14 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.inject.Singleton;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The qualifiers a portable extension added to a bean class as the container started, which the compiled
@@ -91,6 +94,57 @@ public final class QualifierOverlay {
      * @param declared   The qualifiers it was compiled with
      * @return The qualifiers
      */
+    /**
+     * The name a portable extension gave the bean by adding {@code Named} to its class, or {@code null} where none
+     * did.
+     *
+     * @param definition The definition of the bean
+     * @return The name
+     */
+    @Nullable String nameAdded(BeanDefinition<?> definition) {
+        Map<String, List<CdiQualifier>> snapshot = added;
+        if (snapshot.isEmpty() || definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {
+            return null;
+        }
+        Class<?> type = definition instanceof ProxyBeanDefinition<?> proxy ? proxy.getTargetType()
+            : definition.getBeanType();
+        List<CdiQualifier> extra = snapshot.get(type.getName());
+        if (extra == null) {
+            return null;
+        }
+        for (CdiQualifier qualifier : extra) {
+            if (qualifier.isNamed()) {
+                // section 2.6: Named added without a value names the bean as the class would be named by default
+                String name = qualifier.written().stringValue().orElse("");
+                if (name.isEmpty()) {
+                    String className = type.getName();
+                    String simple = className.substring(Math.max(className.lastIndexOf('.'),
+                        className.lastIndexOf('$')) + 1);
+                    name = Character.toLowerCase(simple.charAt(0)) + simple.substring(1);
+                }
+                return name;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The names of the classes a {@code Named} qualifier was added to.
+     *
+     * @return The names of the classes
+     */
+    Set<String> classesNamed() {
+        Set<String> named = new LinkedHashSet<>();
+        for (Map.Entry<String, List<CdiQualifier>> entry : added.entrySet()) {
+            for (CdiQualifier qualifier : entry.getValue()) {
+                if (qualifier.isNamed()) {
+                    named.add(entry.getKey());
+                }
+            }
+        }
+        return named;
+    }
+
     List<CdiQualifier> apply(BeanDefinition<?> definition, List<CdiQualifier> declared) {
         Map<String, List<CdiQualifier>> snapshot = added;
         if (snapshot.isEmpty() || definition.getAnnotationMetadata().hasAnnotation(CdiProducer.class)) {

@@ -50,6 +50,8 @@ import java.util.List;
 @Internal
 final class SyntheticBeanInfo implements BeanInfo {
 
+    private static final String NAMED = "jakarta.inject.Named";
+
     private final RecordingBeanBuilder<?> bean;
     private final SynthesisPhase.Scope scope;
     private final boolean alternative;
@@ -95,12 +97,27 @@ final class SyntheticBeanInfo implements BeanInfo {
         List<AnnotationInfo> qualifiers = new ArrayList<>();
         qualifiers.add(new ElementAnnotationInfo(
             AnnotationValue.builder(Cdi.ANY).build(), context));
-        if (bean.qualifiers().isEmpty()) {
+        // section 2.2.8: a bean has Default unless it has a qualifier other than Any and Named
+        boolean onlyAnyOrNamed = true;
+        boolean named = false;
+        for (AnnotationValue<?> qualifier : bean.qualifiers()) {
+            String qualifierName = qualifier.getAnnotationName();
+            named |= NAMED.equals(qualifierName);
+            onlyAnyOrNamed &= Cdi.ANY.equals(qualifierName) || NAMED.equals(qualifierName);
+        }
+        if (onlyAnyOrNamed) {
             qualifiers.add(new ElementAnnotationInfo(
                 AnnotationValue.builder(Cdi.DEFAULT).build(), context));
         }
         for (AnnotationValue<?> qualifier : bean.qualifiers()) {
-            qualifiers.add(new ElementAnnotationInfo(qualifier, context));
+            if (!Cdi.ANY.equals(qualifier.getAnnotationName())) {
+                qualifiers.add(new ElementAnnotationInfo(qualifier, context));
+            }
+        }
+        String name = bean.name();
+        if (name != null && !named) {
+            // a named bean has the name among its qualifiers (section 2.6)
+            qualifiers.add(new ElementAnnotationInfo(AnnotationValue.builder(NAMED).value(name).build(), context));
         }
         return qualifiers;
     }
@@ -178,8 +195,14 @@ final class SyntheticBeanInfo implements BeanInfo {
 
     @Override
     public Collection<StereotypeInfo> stereotypes() {
-        // a stereotype carries a scope, qualifiers and a name, each of which is reported on the bean itself
-        return List.of();
+        // the stereotypes the extension gave the bean; what each carries - a scope, qualifiers, a name - is
+        // reported on the bean itself as well
+        List<StereotypeInfo> stereotypes = new ArrayList<>(bean.stereotypes().size());
+        for (ClassElement stereotype : bean.stereotypes()) {
+            stereotypes.add(new ElementStereotypeInfo(stereotype.getName(), stereotype.getAnnotationMetadata(),
+                context));
+        }
+        return stereotypes;
     }
 
     /**

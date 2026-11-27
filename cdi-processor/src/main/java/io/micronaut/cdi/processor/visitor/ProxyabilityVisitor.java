@@ -22,6 +22,7 @@ import io.micronaut.cdi.processor.Cdi;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -67,6 +68,10 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
         if (element.isAbstract() || element.isInterface() || element.isEnum()) {
             return;
         }
+        // a class that is no bean (section 3.1.1) is not held to the rules of a normal scope it declares, or
+        // inherits: what would have it proxied is still taken off where the proxy cannot exist
+        boolean bean = !SpecificationBeans.isVetoed(element) && SpecificationBeans.hasABeanConstructor(element)
+            && !element.hasDeclaredAnnotation("jakarta.decorator.Decorator");
         if (element.hasDeclaredAnnotation("jakarta.interceptor.Interceptor")) {
             // an interceptor class is invoked, not proxied
             return;
@@ -77,7 +82,7 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             return;
         }
         String reached = normalScoped ? "its normal scope" : "the interception of its methods";
-        if (normalScoped) {
+        if (normalScoped && bean) {
             for (FieldElement field
                 : element.getEnclosedElements(ElementQuery.ALL_FIELDS)) {
                 if (field.isPublic() && !field.isStatic()) {
@@ -95,6 +100,9 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
             return;
         }
         if (!normalScoped) {
+            if (!bean) {
+                return;
+            }
             // an intercepted bean that cannot be proxied cannot be intercepted at all, which is the
             // deployment problem the message names
             context.fail("The bean " + element.getName() + " cannot be proxied for " + reached
@@ -111,6 +119,31 @@ public final class ProxyabilityVisitor implements TypeElementVisitor<Object, Obj
         // the scope annotations, which carry the proxying — is taken off, and why is remembered instead. The
         // bean stays a bean: it deploys, and every attempt at a contextual reference reads the reason and
         // throws the UnproxyableResolutionException of section 3.11
+        markUnproxyable(element, reason);
+    }
+
+    /**
+     * Checks a producer in a normal scope the way a class bean is checked: a product whose type a client proxy
+     * cannot extend is a bean that deploys, and every attempt at a contextual reference of it - an injection point the
+     * deployment validation reports, a lookup - is the {@code UnproxyableResolutionException} of section 3.11.
+     *
+     * @param producer The producer, its scope written
+     * @param produced The type it produces
+     */
+    static void checkProducer(Element producer, ClassElement produced) {
+        if (produced.isInterface() && !produced.isArray()) {
+            // a proxy implements an interface, whatever it declares
+            return;
+        }
+        String unproxyable = whyUnproxyable(produced, true);
+        if (unproxyable == null) {
+            return;
+        }
+        markUnproxyable(producer, "The product of " + producer.getName() + " cannot be proxied for its normal "
+            + "scope: " + unproxyable + " (section 3.11)");
+    }
+
+    private static void markUnproxyable(Element element, String reason) {
         for (String proxying : element.getAnnotationMetadata()
             .getAnnotationNamesByStereotype("io.micronaut.runtime.context.scope.ScopedProxy")) {
             element.removeAnnotation(proxying);

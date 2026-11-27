@@ -101,8 +101,13 @@ public final class DisposerInvoker implements BeanPreDestroyEventListener<Object
             return bean;
         }
         return event.withDependencies(dependencies -> {
-            invoke(disposer, definition, bean, dependencies);
-            closeIfAutoClose(definition, bean);
+            try {
+                invoke(disposer, definition, bean, dependencies);
+            } finally {
+                // an auto-closeable product is closed even where its disposer, or resolving the disposer's
+                // parameters, failed (CDI 5.0, section 2.10): what the disposer threw is still reported
+                closeIfAutoClose(definition, bean);
+            }
             return bean;
         });
     }

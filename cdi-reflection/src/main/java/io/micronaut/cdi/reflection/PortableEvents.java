@@ -348,9 +348,9 @@ final class PortableEvents {
         private final AnnotatedType<X> type;
         private final List<Throwable> problems;
 
-        InjectionTargetEvent(Class<X> type, List<Throwable> problems) {
+        InjectionTargetEvent(AnnotatedType<X> type, List<Throwable> problems) {
             super("ProcessInjectionTarget");
-            this.type = new ReflectiveAnnotatedType<>(type);
+            this.type = type;
             this.problems = problems;
         }
 

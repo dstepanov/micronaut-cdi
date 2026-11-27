@@ -398,7 +398,12 @@ public class CdiBean<T> implements Bean<T> {
 
     @Override
     public @Nullable String getName() {
-        return nameOf(definition);
+        String name = nameOf(definition);
+        if (name == null && overlay != null) {
+            // a name a portable extension gave the class by adding Named to it (section 11.5.6)
+            name = overlay.nameAdded(definition);
+        }
+        return name;
     }
 
     /**
@@ -563,7 +568,9 @@ public class CdiBean<T> implements Bean<T> {
      */
     private @Nullable CreatedBean<T> createOutsideOfScope(
         @Nullable OwnedDependents owner) {
-        if (isNormalScoped() || definition.isSingleton()) {
+        // every bean but a dependent one: one in a normal scope, a singleton, and one of a pseudo-scope of the
+        // application's or of Micronaut's own, whose context would otherwise hand back the instance it holds
+        if (!isDependent()) {
             return beanContext.getBean(RequestScope.class)
                 .duringCreation(() -> owner != null
                     ? owner.fresh(targetDefinition()) : beanContext.createBeanRegistration(targetDefinition()));
