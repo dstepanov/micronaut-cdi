@@ -848,20 +848,25 @@ Micronaut `ApplicationContext` rather than through the SE bootstrap runs no port
 
 The beans exist before the container starts, so the events describe them rather than discover them. They are
 fired before `@Initialized(ApplicationScoped.class)` and `Startup`, in the order of section 24.2:
-`BeforeBeanDiscovery`; `ProcessAnnotatedType` for each bean class of the application; `AfterTypeDiscovery`; for
-each bean `ProcessInjectionTarget` (a managed bean), `ProcessBeanAttributes` and `ProcessBean` - a
-`ProcessManagedBean` for a managed bean; `AfterBeanDiscovery`; and `AfterDeploymentValidation`. The observers of
-an event are notified in the order of the `@Priority` of their event parameter, and an observer may take the
-`BeanManager` beside the event. An extension is a bean: one instance, with the default qualifier.
+`BeforeBeanDiscovery`; `ProcessAnnotatedType` for each bean class and each interceptor class of the application;
+`AfterTypeDiscovery`; for each bean `ProcessInjectionTarget` (a managed bean), `ProcessBeanAttributes` and
+`ProcessBean` - a `ProcessManagedBean` for a managed bean - which read the class with what the observers of
+`ProcessAnnotatedType` added; `AfterBeanDiscovery`; and `AfterDeploymentValidation`. The observers of an event are
+notified in the order of the `@Priority` of their event parameter, and an observer may take the `BeanManager` beside
+the event; an extension that observes a lifecycle event with `@ObservesAsync` is a definition error. An extension is
+a bean: one instance, with the default qualifier, which `BeanManager.getExtension` returns.
 
 What an extension can do:
 
-- `BeforeBeanDiscovery.addQualifier(Class)` makes an annotation a qualifier for that container;
+- `BeforeBeanDiscovery.addQualifier(Class)` makes an annotation a qualifier for that container, which qualifies the
+  beans of the classes written with it; an injection point written with it is not qualified by it, its qualifiers
+  being read from what was compiled;
 - `ProcessAnnotatedType.configureAnnotatedType().add(qualifier)` adds a qualifier to a bean class. It is seen
   where this container compares qualifiers - an injection point of a bean of the specification, `Instance`, the
   SE container and `BeanContainer` lookups, `Bean.getQualifiers()` - and takes the default qualifier away as a
-  written one does. It is not seen by an injection point of a bean of Micronaut's own, which Micronaut resolves
-  from the compiled metadata of the definitions;
+  written one does; an added `Named` names the bean for `Bean.getName()` and a lookup by name. It is not seen by an
+  injection point of a bean of Micronaut's own, which Micronaut resolves from the compiled metadata of the
+  definitions;
 - `AfterTypeDiscovery.getAlternatives()` lists the classes of the selected alternatives, and cannot change them;
 - `AfterBeanDiscovery.addContext` adds a context, which for `@RequestScoped` or `@ApplicationScoped` takes the
   place of the container's own (a context a build compatible extension registers for the request scope stands beside
@@ -891,12 +896,13 @@ to be used while the event is notified, and is refused afterwards like the event
 
 Not fired: `ProcessInjectionPoint`, `ProcessProducer`, `ProcessObserverMethod`, `ProcessProducerMethod`,
 `ProcessProducerField`, `ProcessSyntheticBean`, `ProcessSyntheticAnnotatedType` and `BeforeShutdown`; a produced
-bean is described by `ProcessBeanAttributes` and a plain `ProcessBean`, and `getAnnotated()` of a producer
-method is not described. An extension with an observer of any other event - an event of the application among
-them - is refused as the bootstrap starts, rather than left waiting for it. The beans Micronaut and this
-container bring of their own are not described: the beans of classes compiled without the processor of this module,
-which records on every class it visits what its members use (`CdiAnnotationTypes`), whatever their package
-(`ExtensionComponents.isInfrastructure`), the SE bootstrap selecting the beans of an archive by the same rule. A
+bean is described by `ProcessBeanAttributes` and a plain `ProcessBean` of the type it produces, and
+`getAnnotated()` of a producer method is not described. An extension with an observer of any other event - an
+event of the application among them - is refused as the bootstrap starts, rather than left waiting for it. The
+beans Micronaut and this container bring of their own are not described: the beans of classes compiled without the
+processor of this module, which records on every class it visits what its members use (`CdiAnnotationTypes`),
+whatever their package (`ExtensionComponents.isInfrastructure`), the SE bootstrap selecting the beans of an archive
+by the same rule. A
 bean the container knows by its class alone, with no definition, is the container's where its class is under
 `io.micronaut` or `jakarta`.
 
